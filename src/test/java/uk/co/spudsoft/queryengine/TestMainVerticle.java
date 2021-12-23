@@ -1,4 +1,4 @@
-package uk.co.spudsoft.query_engine;
+package uk.co.spudsoft.queryengine;
 
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
