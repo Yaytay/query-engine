@@ -5,6 +5,8 @@
 package uk.co.spudsoft.queryengine;
 
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 
 /**
@@ -12,6 +14,8 @@ import org.testcontainers.containers.GenericContainer;
  * @author jtalbut
  */
 public class TestStartContainers {
+  
+  private static final Logger logger = LoggerFactory.getLogger(TestStartContainers.class);
   
   @Test
   public void startAllContainers() {
