@@ -9,7 +9,11 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.mssqlclient.MSSQLConnectOptions;
 import io.vertx.mssqlclient.MSSQLPool;
+import io.vertx.pgclient.PgConnectOptions;
+import io.vertx.pgclient.PgPool;
+import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
+import io.vertx.sqlclient.SqlClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
@@ -32,8 +36,8 @@ public class TestStartContainers {
     container = ServerProvider.getMySqlContainer();
     container = ServerProvider.getPgSqlContainer();
 
-    // Create the client pool
-    MSSQLPool client = MSSQLPool.pool(
+    // Create the MS client pool
+    SqlClient msClient = MSSQLPool.pool(
             new MSSQLConnectOptions()
                     .setPort(ServerProvider.getMsSqlContainer().getMappedPort(1433))
                     .setHost("localhost")
@@ -42,11 +46,22 @@ public class TestStartContainers {
              new PoolOptions()
                     .setMaxSize(5)
     );
-    ServerProvider.prepareMsSqlDatabase(vertx, client)
-            .compose(v -> ServerProvider.prepareMsSqlDatabase(vertx, client))
+    // Create the client pool
+    SqlClient pgClient = PgPool.client(
+            new PgConnectOptions()
+                    .setPort(ServerProvider.getPgSqlContainer().getMappedPort(5432))
+                    .setHost("localhost")
+                    .setUser("postgres ")
+                    .setPassword(ServerProvider.ROOT_PASSWORD),
+             new PoolOptions()
+                    .setMaxSize(5)
+    );
+
+    ServerProvider.prepareMsSqlDatabase(vertx, msClient)
+            .compose(v -> ServerProvider.prepareMsSqlDatabase(vertx, msClient))
             .compose(v -> {
-              logger.debug("Running query now");
-              return client.preparedQuery(
+              logger.debug("Running MS query now");
+              return msClient.preparedQuery(
                       """
                       select top 30 d.id, d.instant, l.value as ref, d.value 
                       from testData d
@@ -56,7 +71,22 @@ public class TestStartContainers {
               ).execute();
             })
             .onSuccess(rs -> {
-              logger.debug("Query results: {}", ServerProvider.toString(rs));
+              logger.debug("MS Query results: {}", RowSetHelper.toString(rs));
+            })
+            .compose(v -> ServerProvider.preparePgSqlDatabase(vertx, pgClient))
+            .compose(v -> {
+              logger.debug("Running PG query now");
+              return msClient.preparedQuery(
+                      """
+                      select top 30 d.id, d.instant, l.value as ref, d.value 
+                      from testData d
+                      join testRefData l on d.lookup = l.id  
+                      order by d.id
+                      """
+              ).execute();
+            })
+            .onSuccess(rs -> {
+              logger.debug("PG Query results: {}", RowSetHelper.toString(rs));
             })
             .onComplete(ar -> {
               if (ar.succeeded()) {

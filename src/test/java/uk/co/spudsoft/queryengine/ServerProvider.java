@@ -8,10 +8,11 @@ import com.google.common.collect.Iterators;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
-import io.vertx.mssqlclient.MSSQLPool;
+import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PreparedQuery;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.SqlClient;
 import io.vertx.sqlclient.Tuple;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -77,8 +78,8 @@ public class ServerProvider {
       if (!mssqlserver.isRunning()) {
         mssqlserver.start();
         logger.info("Started test instance of Microsoft SQL Server with ports {} in {}s",
-                 mssqlserver.getExposedPorts().stream().map(p -> Integer.toString((Integer) p) + ":" + Integer.toString(mssqlserver.getMappedPort((Integer) p))).collect(Collectors.toList()),
-                 (System.currentTimeMillis() - start) / 1000.0
+                mssqlserver.getExposedPorts().stream().map(p -> Integer.toString((Integer) p) + ":" + Integer.toString(mssqlserver.getMappedPort((Integer) p))).collect(Collectors.toList()),
+                (System.currentTimeMillis() - start) / 1000.0
         );
       }
     }
@@ -100,8 +101,8 @@ public class ServerProvider {
       if (!mysqlserver.isRunning()) {
         mysqlserver.start();
         logger.info("Started test instance of MySQL with ports {} in {}s",
-                 mysqlserver.getExposedPorts().stream().map(p -> Integer.toString((Integer) p) + ":" + Integer.toString(mysqlserver.getMappedPort((Integer) p))).collect(Collectors.toList()),
-                 (System.currentTimeMillis() - start) / 1000.0
+                mysqlserver.getExposedPorts().stream().map(p -> Integer.toString((Integer) p) + ":" + Integer.toString(mysqlserver.getMappedPort((Integer) p))).collect(Collectors.toList()),
+                (System.currentTimeMillis() - start) / 1000.0
         );
       }
     }
@@ -123,8 +124,8 @@ public class ServerProvider {
       if (!pgsqlserver.isRunning()) {
         pgsqlserver.start();
         logger.info("Started test instance of PostgreSQL with ports {} in {}s",
-                 pgsqlserver.getExposedPorts().stream().map(p -> Integer.toString((Integer) p) + ":" + Integer.toString(pgsqlserver.getMappedPort((Integer) p))).collect(Collectors.toList()),
-                 (System.currentTimeMillis() - start) / 1000.0
+                pgsqlserver.getExposedPorts().stream().map(p -> Integer.toString((Integer) p) + ":" + Integer.toString(pgsqlserver.getMappedPort((Integer) p))).collect(Collectors.toList()),
+                (System.currentTimeMillis() - start) / 1000.0
         );
       }
     }
@@ -139,16 +140,16 @@ public class ServerProvider {
     return result;
   }
 
-  private static final String CREATE_REF_DATA_TABLE = 
-          """
+  private static final String CREATE_REF_DATA_TABLE
+          = """
           create table testRefData (
             id GUID not null
             , value varchar(100) not null
           )
           """;
 
-  private static final String CREATE_DATA_TABLE = 
-          """
+  private static final String CREATE_DATA_TABLE
+          = """
           create table testData (
             id int not null primary key
             , lookup GUID not null
@@ -157,88 +158,162 @@ public class ServerProvider {
           )
           """;
 
-  public static Future<Void> prepareMsSqlDatabase(Vertx vertx, MSSQLPool client) {
+  public static Future<Void> prepareMsSqlDatabase(Vertx vertx, SqlClient client) {
 
-    return client.getConnection()
-            .compose(conn -> {
-              return conn.preparedQuery("select count(*) from sys.databases where name = 'test'").execute()
-                      .compose(rs -> {
-                        int existingTable = rs.iterator().next().getInteger(0);
-                        if (existingTable == 0) {
-                          return conn.preparedQuery("create database test").execute();
-                        } else {
-                          return Future.succeededFuture();
-                        }
-                      })
-                      .onSuccess(rs -> {
-                        if (rs != null) {
-                          logger.info("Database created: {}", toString(rs));
-                        }
-                      })
-                      .compose(rs -> conn.preparedQuery("select count(*) from sysobjects where name='testRefData' and xtype='U'").execute())
-                      .compose(rs -> {
-                        int existingTable = rs.iterator().next().getInteger(0);
-                        if (existingTable == 0) {
-                          return conn.preparedQuery(CREATE_REF_DATA_TABLE
-                                  .replaceAll("GUID", "uniqueidentifier")
-                          ).execute();
-                        } else {
-                          return Future.succeededFuture();
-                        }
-                      })                          
-                      .onSuccess(rs -> {
-                        if (rs != null) {
-                          logger.info("testRefData table created: {}", toString(rs));
-                        }
-                      })
-                      .compose(rs -> conn.preparedQuery("select count(*) from testRefData").execute())
-                      .compose(rs -> {
-                        int existingRows = rs.iterator().next().getInteger(0);
-                        Iterator<Map.Entry<UUID, String>> iter = REF_DATA.entrySet().iterator();
-                        iter = Iterators.limit(iter, REF_ROWS);
-                        Iterators.advance(iter, existingRows);
-                        return doRefDataInserts(
-                                conn.preparedQuery("insert into testRefData (id, value) values (@p1, @p2)"),
-                                 iter
-                        );
-                      })
-                      .compose(rs -> conn.preparedQuery("select count(*) from sysobjects where name='testData' and xtype='U'").execute())
-                      .compose(rs -> {
-                        int existingTable = rs.iterator().next().getInteger(0);
-                        if (existingTable == 0) {
-                          return conn.preparedQuery(CREATE_DATA_TABLE
-                                  .replaceAll("GUID", "uniqueidentifier")
-                                  .replaceAll("DATETIME", "datetime2")
-                          ).execute();
-                        } else {
-                          return Future.succeededFuture();
-                        }
-                      })                          
-                      .onSuccess(rs -> {
-                        if (rs != null) {
-                          logger.info("testData table created: {}", toString(rs));
-                        }
-                      })
-                      .compose(rs -> conn.preparedQuery("select count(*) from testData").execute())
-                      .compose(rs -> {
-                        int existingRows = rs.iterator().next().getInteger(0);
-                        return doDataInserts(
-                                conn.preparedQuery("insert into testData (id, lookup, instant, value) values (@p1, @p2, @p3, @p4)")
-                                , existingRows
-                                , DATA_ROWS
-                        );
-                      })
-                      .onFailure(ex -> {
-                        logger.error("Failed: ", ex);
-                      })
-                      .mapEmpty();
-            });
+    return client
+            .preparedQuery("select count(*) from sys.databases where name = 'test'").execute()
+            .compose(rs -> {
+              int existingTable = rs.iterator().next().getInteger(0);
+              if (existingTable == 0) {
+                return client.preparedQuery("create database test").execute();
+              } else {
+                return Future.succeededFuture();
+              }
+            })
+            .onSuccess(rs -> {
+              if (rs != null) {
+                logger.info("Database created: {}", RowSetHelper.toString(rs));
+              }
+            })
+            .compose(rs -> client.preparedQuery("select count(*) from sysobjects where name='testRefData' and xtype='U'").execute())
+            .compose(rs -> {
+              int existingTable = rs.iterator().next().getInteger(0);
+              if (existingTable == 0) {
+                return client
+                        .preparedQuery(CREATE_REF_DATA_TABLE
+                                .replaceAll("GUID", "uniqueidentifier")
+                        ).execute();
+              } else {
+                return Future.succeededFuture();
+              }
+            })
+            .onSuccess(rs -> {
+              if (rs != null) {
+                logger.info("testRefData table created: {}", RowSetHelper.toString(rs));
+              }
+            })
+            .compose(rs -> client.preparedQuery("select count(*) from testRefData").execute())
+            .compose(rs -> {
+              int existingRows = rs.iterator().next().getInteger(0);
+              Iterator<Map.Entry<UUID, String>> iter = REF_DATA.entrySet().iterator();
+              iter = Iterators.limit(iter, REF_ROWS);
+              Iterators.advance(iter, existingRows);
+              return doRefDataInserts(
+                      client.preparedQuery("insert into testRefData (id, value) values (@p1, @p2)"),
+                      iter
+              );
+            })
+            .compose(rs -> client.preparedQuery("select count(*) from sysobjects where name='testData' and xtype='U'").execute())
+            .compose(rs -> {
+              int existingTable = rs.iterator().next().getInteger(0);
+              if (existingTable == 0) {
+                return client.preparedQuery(CREATE_DATA_TABLE
+                        .replaceAll("GUID", "uniqueidentifier")
+                        .replaceAll("DATETIME", "datetime2")
+                ).execute();
+              } else {
+                return Future.succeededFuture();
+              }
+            })
+            .onSuccess(rs -> {
+              if (rs != null) {
+                logger.info("testData table created: {}", RowSetHelper.toString(rs));
+              }
+            })
+            .compose(rs -> client.preparedQuery("select count(*) from testData").execute())
+            .compose(rs -> {
+              int existingRows = rs.iterator().next().getInteger(0);
+              return doDataInserts(
+                      client.preparedQuery("insert into testData (id, lookup, instant, value) values (@p1, @p2, @p3, @p4)"),
+                       existingRows,
+                       DATA_ROWS
+              );
+            })
+            .onFailure(ex -> {
+              logger.error("Failed: ", ex);
+            })
+            .mapEmpty();
+  }
 
+  public static Future<Void> preparePgSqlDatabase(Vertx vertx, SqlClient client) {
+
+    return client
+            .preparedQuery("select count(*) from sys.databases where name = 'test'").execute()
+            .compose(rs -> {
+              int existingTable = rs.iterator().next().getInteger(0);
+              if (existingTable == 0) {
+                return client.preparedQuery("create database test").execute();
+              } else {
+                return Future.succeededFuture();
+              }
+            })
+            .onSuccess(rs -> {
+              if (rs != null) {
+                logger.info("Database created: {}", RowSetHelper.toString(rs));
+              }
+            })
+            .compose(rs -> client.preparedQuery("select count(*) from sysobjects where name='testRefData' and xtype='U'").execute())
+            .compose(rs -> {
+              int existingTable = rs.iterator().next().getInteger(0);
+              if (existingTable == 0) {
+                return client.preparedQuery(CREATE_REF_DATA_TABLE
+                        .replaceAll("GUID", "uniqueidentifier")
+                ).execute();
+              } else {
+                return Future.succeededFuture();
+              }
+            })
+            .onSuccess(rs -> {
+              if (rs != null) {
+                logger.info("testRefData table created: {}", RowSetHelper.toString(rs));
+              }
+            })
+            .compose(rs -> client.preparedQuery("select count(*) from testRefData").execute())
+            .compose(rs -> {
+              int existingRows = rs.iterator().next().getInteger(0);
+              Iterator<Map.Entry<UUID, String>> iter = REF_DATA.entrySet().iterator();
+              iter = Iterators.limit(iter, REF_ROWS);
+              Iterators.advance(iter, existingRows);
+              return doRefDataInserts(
+                      client.preparedQuery("insert into testRefData (id, value) values (@p1, @p2)"),
+                      iter
+              );
+            })
+            .compose(rs -> client.preparedQuery("select count(*) from sysobjects where name='testData' and xtype='U'").execute())
+            .compose(rs -> {
+              int existingTable = rs.iterator().next().getInteger(0);
+              if (existingTable == 0) {
+                return client.preparedQuery(CREATE_DATA_TABLE
+                        .replaceAll("GUID", "uniqueidentifier")
+                        .replaceAll("DATETIME", "datetime2")
+                ).execute();
+              } else {
+                return Future.succeededFuture();
+              }
+            })
+            .onSuccess(rs -> {
+              if (rs != null) {
+                logger.info("testData table created: {}", RowSetHelper.toString(rs));
+              }
+            })
+            .compose(rs -> client.preparedQuery("select count(*) from testData").execute())
+            .compose(rs -> {
+              int existingRows = rs.iterator().next().getInteger(0);
+              return doDataInserts(
+                      client.preparedQuery("insert into testData (id, lookup, instant, value) values (@p1, @p2, @p3, @p4)"),
+                       existingRows,
+                       DATA_ROWS
+              );
+            })
+            .onFailure(ex -> {
+              logger.error("Failed: ", ex);
+            })
+            .mapEmpty();
   }
 
   private static Future<Void> doRefDataInserts(
           PreparedQuery<RowSet<Row>> stmt,
-           Iterator<Map.Entry<UUID, String>> iter
+          Iterator<Map.Entry<UUID, String>> iter
   ) {
     List<Tuple> args = new ArrayList<>();
     for (int i = 0; i < 100 && iter.hasNext(); ++i) {
@@ -256,9 +331,9 @@ public class ServerProvider {
   }
 
   private static Future<Void> doDataInserts(
-          PreparedQuery<RowSet<Row>> stmt
-          , int currentRow
-          , int totalRows
+          PreparedQuery<RowSet<Row>> stmt,
+           int currentRow,
+           int totalRows
   ) {
     List<Tuple> args = new ArrayList<>();
     LocalDateTime base = LocalDateTime.now();
@@ -276,15 +351,6 @@ public class ServerProvider {
       return stmt.executeBatch(args)
               .compose(v -> doDataInserts(stmt, currentRowForNextBatch, totalRows));
     }
-
-  }
-
-  public static String toString(RowSet<Row> rowSet) {
-    JsonArray ja = new JsonArray();
-    for (Row row : rowSet) {
-      ja.add(row.toJson());
-    }
-    return ja.encode();
 
   }
 
