@@ -44,6 +44,20 @@ public class TestStartContainers {
     );
     ServerProvider.prepareMsSqlDatabase(vertx, client)
             .compose(v -> ServerProvider.prepareMsSqlDatabase(vertx, client))
+            .compose(v -> {
+              logger.debug("Running query now");
+              return client.preparedQuery(
+                      """
+                      select top 30 d.id, d.instant, l.value as ref, d.value 
+                      from testData d
+                      join testRefData l on d.lookup = l.id  
+                      order by d.id
+                      """
+              ).execute();
+            })
+            .onSuccess(rs -> {
+              logger.debug("Query results: {}", ServerProvider.toString(rs));
+            })
             .onComplete(ar -> {
               if (ar.succeeded()) {
                 testContext.completeNow();
