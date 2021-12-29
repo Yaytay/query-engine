@@ -7,8 +7,6 @@ package uk.co.spudsoft.queryengine;
 import com.google.common.collect.Iterators;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonArray;
-import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PreparedQuery;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
@@ -24,8 +22,10 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.MSSQLServerContainer;
+import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.containers.Network;
+import org.testcontainers.containers.PostgreSQLContainer;
 
 /**
  *
@@ -47,9 +47,9 @@ public class ServerProvider {
 
   private static final Object lock = new Object();
   private static Network network;
-  private static GenericContainer mssqlserver;
-  private static GenericContainer mysqlserver;
-  private static GenericContainer pgsqlserver;
+  private static MSSQLServerContainer<?> mssqlserver;
+  private static MySQLContainer<?> mysqlserver;
+  private static PostgreSQLContainer<?> pgsqlserver;
 
   public static final String ROOT_PASSWORD = UUID.randomUUID().toString();
 
@@ -62,14 +62,14 @@ public class ServerProvider {
     return network;
   }
 
-  public static GenericContainer getMsSqlContainer() {
+  public static MSSQLServerContainer<?> getMsSqlContainer() {
     synchronized (lock) {
       if (network == null) {
         network = Network.newNetwork();
       }
       long start = System.currentTimeMillis();
       if (mssqlserver == null) {
-        mssqlserver = new GenericContainer(MSSQL_IMAGE_NAME)
+        mssqlserver = new MSSQLServerContainer<>(MSSQL_IMAGE_NAME)
                 .withEnv("ACCEPT_EULA", "Y")
                 .withEnv("SA_PASSWORD", ROOT_PASSWORD)
                 .withExposedPorts(1433)
@@ -86,14 +86,14 @@ public class ServerProvider {
     return mssqlserver;
   }
 
-  public static GenericContainer getMySqlContainer() {
+  public static MySQLContainer<?> getMySqlContainer() {
     synchronized (lock) {
       if (network == null) {
         network = Network.newNetwork();
       }
       long start = System.currentTimeMillis();
       if (mysqlserver == null) {
-        mysqlserver = new GenericContainer(MYSQL_IMAGE_NAME)
+        mysqlserver = new MySQLContainer<>(MYSQL_IMAGE_NAME)
                 .withEnv("MYSQL_ROOT_PASSWORD", ROOT_PASSWORD)
                 .withExposedPorts(3306)
                 .withNetwork(network);
@@ -109,17 +109,19 @@ public class ServerProvider {
     return mysqlserver;
   }
 
-  public static GenericContainer getPgSqlContainer() {
+  public static PostgreSQLContainer<?> getPgSqlContainer() {
     synchronized (lock) {
       if (network == null) {
         network = Network.newNetwork();
       }
       long start = System.currentTimeMillis();
       if (pgsqlserver == null) {
-        pgsqlserver = new GenericContainer(PGSQL_IMAGE_NAME)
+        pgsqlserver = new PostgreSQLContainer<>(PGSQL_IMAGE_NAME)
                 .withEnv("POSTGRES_PASSWORD", ROOT_PASSWORD)
                 .withExposedPorts(5432)
-                .withNetwork(network);
+                .withNetwork(network)
+                .withDatabaseName("test")
+                ;
       }
       if (!pgsqlserver.isRunning()) {
         pgsqlserver.start();
@@ -337,7 +339,7 @@ public class ServerProvider {
   ) {
     List<Tuple> args = new ArrayList<>();
     LocalDateTime base = LocalDateTime.now();
-    List<UUID> lookups = new ArrayList(REF_DATA.keySet());
+    List<UUID> lookups = new ArrayList<>(REF_DATA.keySet());
     for (int i = 0; i < 100 && currentRow <= totalRows; ++i, ++currentRow) {
       UUID lookup = lookups.get(currentRow % lookups.size());
       LocalDateTime instant = base.plusSeconds(currentRow);
