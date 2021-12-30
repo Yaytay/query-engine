@@ -63,8 +63,8 @@ public class ServerProviderMsSQL extends ServerProviderBase implements ServerPro
   @Override
   public Future<Void> prepareTestDatabase(Vertx vertx, SqlClient client) {
 
-    return client
-            .preparedQuery("select count(*) from sys.databases where name = 'test'").execute()
+    return Future.succeededFuture()
+            .compose(v -> client.preparedQuery("select count(*) from sys.databases where name = 'test'").execute())
             .compose(rs -> {
               int existingTable = rs.iterator().next().getInteger(0);
               if (existingTable == 0) {
@@ -135,7 +135,8 @@ public class ServerProviderMsSQL extends ServerProviderBase implements ServerPro
             .onFailure(ex -> {
               logger.error("Failed: ", ex);
             })
-            .mapEmpty();
+            .mapEmpty()
+            ;
 
   }
   

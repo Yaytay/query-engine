@@ -63,7 +63,8 @@ public class ServerProviderPostgreSQL extends ServerProviderBase implements Serv
   @Override
   public Future<Void> prepareTestDatabase(Vertx vertx, SqlClient client) {
 
-    return client.preparedQuery("select count(*) from information_schema.tables where table_schema='public' and table_name='testRefData'").execute()
+    return Future.succeededFuture()
+            .compose(v -> client.preparedQuery("select count(*) from information_schema.tables where table_schema='public' and table_name='testRefData'").execute())
             .compose(rs -> {
               int existingTable = rs.iterator().next().getInteger(0);
               if (existingTable == 0) {

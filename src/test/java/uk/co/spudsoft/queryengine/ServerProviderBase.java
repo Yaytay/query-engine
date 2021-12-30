@@ -30,7 +30,7 @@ public class ServerProviderBase {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ServerProviderBase.class);
   
-  public static final String ROOT_PASSWORD = UUID.randomUUID().toString();
+  public static final String ROOT_PASSWORD = "T0p-secret"; // UUID.randomUUID().toString();
   
   public static final int REF_ROWS = 123;
   public static final int DATA_ROWS = 1000;
@@ -83,7 +83,7 @@ public class ServerProviderBase {
     List<Tuple> args = new ArrayList<>();
     for (int i = 0; i < 100 && iter.hasNext(); ++i) {
       Map.Entry<UUID, String> entry = iter.next();
-      args.add(Tuple.of(entry.getKey(), entry.getValue()));
+      ServerProviderBase.this.prepareRefDataInsertTuple(args, entry);
     }
     if (args.isEmpty()) {
       return Future.succeededFuture();
@@ -95,6 +95,10 @@ public class ServerProviderBase {
 
   }
 
+  protected void prepareRefDataInsertTuple(List<Tuple> args, Map.Entry<UUID, String> entry) {
+    args.add(Tuple.of(entry.getKey(), entry.getValue()));
+  }
+
   protected Future<Void> doDataInserts(
           PreparedQuery<RowSet<Row>> stmt,
            int currentRow,
@@ -103,10 +107,10 @@ public class ServerProviderBase {
     List<Tuple> args = new ArrayList<>();
     LocalDateTime base = LocalDateTime.now();
     List<UUID> lookups = new ArrayList<>(REF_DATA.keySet());
-    for (int i = 0; i < 100 && currentRow <= totalRows; ++i, ++currentRow) {
+    for (int i = 0; i < 1000 && currentRow <= totalRows; ++i, ++currentRow) {
       UUID lookup = lookups.get(currentRow % lookups.size());
       LocalDateTime instant = base.plusSeconds(currentRow);
-      args.add(Tuple.of(currentRow, lookup, instant, Integer.toHexString(i)));
+      prepareDataInsertTuple(args, currentRow, lookup, instant, i);
     }
     if (args.isEmpty()) {
       return Future.succeededFuture();
@@ -117,6 +121,10 @@ public class ServerProviderBase {
               .compose(v -> doDataInserts(stmt, currentRowForNextBatch, totalRows));
     }
 
+  }
+
+  protected void prepareDataInsertTuple(List<Tuple> args, int currentRow, UUID lookup, LocalDateTime instant, int i) {
+    args.add(Tuple.of(currentRow, lookup, instant, Integer.toHexString(i)));
   }
   
 }
