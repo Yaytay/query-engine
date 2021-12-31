@@ -7,7 +7,11 @@ package uk.co.spudsoft.queryengine;
 import com.google.common.collect.Iterators;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.pgclient.PgConnectOptions;
+import io.vertx.pgclient.PgPool;
+import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.SqlClient;
+import io.vertx.sqlclient.SqlConnectOptions;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
@@ -28,13 +32,57 @@ public class ServerProviderPostgreSQL extends ServerProviderBase implements Serv
   
   public static final String PGSQL_IMAGE_NAME = "postgres:14.1-alpine";
 
+  private static final Object lock = new Object();
+  private static Network network;
   private static PostgreSQLContainer<?> pgsqlserver;
+  
+  @Override
+  public String getName() {
+    return "PostgreSQL";
+  }
+  
+  @Override
+  public Network getNetwork() {
+    synchronized (lock) {
+      if (network == null) {
+        network = Network.newNetwork();
+      }
+    }
+    return network;
+  }
   
   public ServerProviderPostgreSQL init() {
     getContainer();
     return this;
   }
-  
+
+  @Override
+  public Future<PostgreSQLContainer<?>> prepareContainer(Vertx vertx) {
+    return vertx.executeBlocking(p -> {
+      try {
+        p.complete(getContainer());
+      } catch(Throwable ex) {
+        p.fail(ex);
+      }
+    });
+  }
+    
+  @Override
+  public SqlConnectOptions getOptions() {
+    return new PgConnectOptions()
+            .setPort(getContainer().getMappedPort(5432))
+            .setHost("localhost")
+            .setUser("postgres")
+            .setDatabase("test")
+            .setPassword(ServerProviderBase.ROOT_PASSWORD)
+            ;
+  }
+
+  @Override
+  public SqlClient createClient(Vertx vertx, SqlConnectOptions options, PoolOptions poolOptions) {
+    return PgPool.client(vertx, (PgConnectOptions) options, poolOptions);
+  }
+    
   @Override
   public PostgreSQLContainer<?> getContainer() {
     synchronized (lock) {
@@ -64,7 +112,7 @@ public class ServerProviderPostgreSQL extends ServerProviderBase implements Serv
   public Future<Void> prepareTestDatabase(Vertx vertx, SqlClient client) {
 
     return Future.succeededFuture()
-            .compose(v -> client.preparedQuery("select count(*) from information_schema.tables where table_schema='public' and table_name='testRefData'").execute())
+            .compose(v -> client.preparedQuery("select count(*) from information_schema.tables where table_name='testrefdata'").execute())
             .compose(rs -> {
               int existingTable = rs.iterator().next().getInteger(0);
               if (existingTable == 0) {
@@ -92,7 +140,7 @@ public class ServerProviderPostgreSQL extends ServerProviderBase implements Serv
                       iter
               );
             })
-            .compose(rs -> client.preparedQuery("select count(*) from information_schema.tables where table_schema='public' and table_name='testData'").execute())
+            .compose(rs -> client.preparedQuery("select count(*) from information_schema.tables where table_name='testdata'").execute())
             .compose(rs -> {
               int existingTable = rs.iterator().next().getInteger(0);
               if (existingTable == 0) {
@@ -124,5 +172,10 @@ public class ServerProviderPostgreSQL extends ServerProviderBase implements Serv
             .mapEmpty();
 
   }
-  
+
+  @Override
+  public String limit(int maxRows, String sql) {
+    return sql + " limit " + maxRows;
+  }
+    
 }

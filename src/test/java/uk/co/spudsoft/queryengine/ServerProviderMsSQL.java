@@ -7,7 +7,11 @@ package uk.co.spudsoft.queryengine;
 import com.google.common.collect.Iterators;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.mssqlclient.MSSQLConnectOptions;
+import io.vertx.mssqlclient.MSSQLPool;
+import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.SqlClient;
+import io.vertx.sqlclient.SqlConnectOptions;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
@@ -28,12 +32,55 @@ public class ServerProviderMsSQL extends ServerProviderBase implements ServerPro
   
   public static final String MSSQL_IMAGE_NAME = "mcr.microsoft.com/mssql/server:2019-latest";
 
+  private static final Object lock = new Object();
+  private static Network network;
   private static MSSQLServerContainer<?> mssqlserver;
+
+  @Override
+  public String getName() {
+    return "MS SQL Server";
+  }
+  
+  @Override
+  public Network getNetwork() {
+    synchronized (lock) {
+      if (network == null) {
+        network = Network.newNetwork();
+      }
+    }
+    return network;
+  }
   
   public ServerProviderMsSQL init() {
     getContainer();
     return this;
   }
+  
+  @Override
+  public Future<MSSQLServerContainer<?>> prepareContainer(Vertx vertx) {
+    return vertx.executeBlocking(p -> {
+      try {
+        p.complete(getContainer());
+      } catch(Throwable ex) {
+        p.fail(ex);
+      }
+    });
+  }
+
+  @Override
+  public SqlConnectOptions getOptions() {
+    return new MSSQLConnectOptions()
+            .setPort(getContainer().getMappedPort(1433))
+            .setHost("localhost")
+            .setUser("sa")
+            .setPassword(ServerProviderBase.ROOT_PASSWORD)
+            ;
+  }
+
+  @Override
+  public SqlClient createClient(Vertx vertx, SqlConnectOptions options, PoolOptions poolOptions) {
+    return MSSQLPool.pool(vertx, (MSSQLConnectOptions) options, poolOptions);
+  }  
   
   @Override
   public MSSQLServerContainer<?> getContainer() {
@@ -138,6 +185,11 @@ public class ServerProviderMsSQL extends ServerProviderBase implements ServerPro
             .mapEmpty()
             ;
 
+  }
+
+  @Override
+  public String limit(int maxRows, String sql) {
+    return sql.replaceFirst("select ", "select top " + maxRows + " ");
   }
   
 }

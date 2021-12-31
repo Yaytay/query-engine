@@ -24,9 +24,9 @@ import org.slf4j.LoggerFactory;
  * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
-public class TestStartContainers {
+public class TestStartContainers1 {
 
-  private static final Logger logger = LoggerFactory.getLogger(TestStartContainers.class);
+  private static final Logger logger = LoggerFactory.getLogger(TestStartContainers1.class);
   
   @Test
   @Timeout(value = 10, timeUnit = TimeUnit.MINUTES)

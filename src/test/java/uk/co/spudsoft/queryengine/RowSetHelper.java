@@ -20,7 +20,6 @@ public class RowSetHelper {
       ja.add(row.toJson());
     }
     return ja.encode();
-
   }
 
 }

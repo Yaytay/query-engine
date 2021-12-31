@@ -8,7 +8,11 @@ import com.google.common.collect.Iterators;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.mysqlclient.MySQLConnectOptions;
+import io.vertx.mysqlclient.MySQLPool;
+import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.SqlClient;
+import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.Tuple;
 import java.time.LocalDateTime;
 import java.util.Iterator;
@@ -32,11 +36,57 @@ public class ServerProviderMySQL extends ServerProviderBase implements ServerPro
   
   public static final String MYSQL_IMAGE_NAME = "mysql:8.0";
 
+  private static final Object lock = new Object();
+  private static Network network;
   private static MySQLContainer<?> mysqlserver;
+  
+  @Override
+  public String getName() {
+    return "MySQL";
+  }
+  
+  @Override
+  public Network getNetwork() {
+    synchronized (lock) {
+      if (network == null) {
+        network = Network.newNetwork();
+      }
+    }
+    return network;
+  }
   
   public ServerProviderMySQL init() {
     getContainer();
     return this;
+  }
+  
+  
+  
+  @Override
+  public Future<MySQLContainer<?>> prepareContainer(Vertx vertx) {
+    return vertx.executeBlocking(p -> {
+      try {
+        p.complete(getContainer());
+      } catch(Throwable ex) {
+        p.fail(ex);
+      }
+    });
+  }
+
+  @Override
+  public SqlConnectOptions getOptions() {
+    return new MySQLConnectOptions()
+            .setPort(getContainer().getMappedPort(3306))
+            .setHost("localhost")
+            .setUser("user")
+            .setDatabase("test")
+            .setPassword(ServerProviderBase.ROOT_PASSWORD)
+            ;
+  }
+
+  @Override
+  public SqlClient createClient(Vertx vertx, SqlConnectOptions options, PoolOptions poolOptions) {
+    return MySQLPool.pool(vertx, (MySQLConnectOptions) options, poolOptions);
   }
   
   @Override
@@ -69,7 +119,7 @@ public class ServerProviderMySQL extends ServerProviderBase implements ServerPro
   public Future<Void> prepareTestDatabase(Vertx vertx, SqlClient client) {
 
     return Future.succeededFuture()
-            .compose(v -> client.preparedQuery("select count(*) from information_schema.tables where table_schema='public' and table_name='testRefData'").execute())
+            .compose(v -> client.preparedQuery("select count(*) from information_schema.tables where table_name='testRefData'").execute())
             .compose(rs -> {
               int existingTable = rs.iterator().next().getInteger(0);
               if (existingTable == 0) {
@@ -97,7 +147,7 @@ public class ServerProviderMySQL extends ServerProviderBase implements ServerPro
                       iter
               );
             })
-            .compose(v -> client.preparedQuery("select count(*) from information_schema.tables where table_schema='public' and table_name='testData'").execute())
+            .compose(v -> client.preparedQuery("select count(*) from information_schema.tables where table_name='testData'").execute())
             .compose(rs -> {
               int existingTable = rs.iterator().next().getInteger(0);
               if (existingTable == 0) {
@@ -147,5 +197,10 @@ public class ServerProviderMySQL extends ServerProviderBase implements ServerPro
   protected void prepareDataInsertTuple(List<Tuple> args, int currentRow, UUID lookup, LocalDateTime instant, int i) {
     args.add(Tuple.of(currentRow, uuidToArray(lookup), instant, Integer.toHexString(i)));
   }  
+
+  @Override
+  public String limit(int maxRows, String sql) {
+    return sql + " limit 0," + maxRows;
+  }
   
 }

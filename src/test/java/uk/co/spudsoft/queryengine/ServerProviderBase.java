@@ -18,14 +18,13 @@ import java.util.Map;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testcontainers.containers.Network;
 
 
 /**
  *
  * @author jtalbut
  */
-public class ServerProviderBase {
+public abstract class ServerProviderBase {
   
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ServerProviderBase.class);
@@ -37,18 +36,6 @@ public class ServerProviderBase {
 
   public static final Map<UUID, String> REF_DATA = createRefDataMap();
   
-  protected static final Object lock = new Object();
-  protected static Network network;
-  
-  public static Network getNetwork() {
-    synchronized (lock) {
-      if (network == null) {
-        network = Network.newNetwork();
-      }
-    }
-    return network;
-  }
-
   private static Map<UUID, String> createRefDataMap() {
     Map<UUID, String> result = new HashMap<>();
     for (int i = 0; i < REF_ROWS; ++i) {
@@ -57,6 +44,8 @@ public class ServerProviderBase {
     return result;
   }
 
+  protected abstract String getName();
+  
   protected static final String CREATE_REF_DATA_TABLE
           = """
           create table testRefData (
@@ -88,7 +77,7 @@ public class ServerProviderBase {
     if (args.isEmpty()) {
       return Future.succeededFuture();
     } else {
-      logger.debug("Running insert batch with {} tuples", args.size());
+      logger.debug("{}: Running insert batch with {} tuples", getName(), args.size());
       return stmt.executeBatch(args)
               .compose(v -> doRefDataInserts(stmt, iter));
     }
@@ -115,7 +104,7 @@ public class ServerProviderBase {
     if (args.isEmpty()) {
       return Future.succeededFuture();
     } else {
-      logger.debug("Running insert batch with {} tuples", args.size());
+      logger.debug("{}: Running insert batch with {} tuples", getName(), args.size());
       int currentRowForNextBatch = currentRow;
       return stmt.executeBatch(args)
               .compose(v -> doDataInserts(stmt, currentRowForNextBatch, totalRows));
