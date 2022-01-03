@@ -6,32 +6,26 @@ package uk.co.spudsoft.queryengine;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.SqlClient;
 import io.vertx.sqlclient.SqlConnectOptions;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.Network;
 
 /**
  *
  * @author jtalbut
- * @param <T>
  */
-public interface ServerProviderInstance<T extends GenericContainer<?>> {
+public interface ServerProviderInstance {
   
   String getName();
   
-  Future<T> prepareContainer(Vertx vertx);
+  Future<Void> prepareContainer(Vertx vertx);
 
-  Network getNetwork();
-  
-  T getContainer();
+  Future<Void> prepareTestDatabase(Vertx vertx, SqlClient client);
   
   SqlConnectOptions getOptions();
   
-  SqlClient createClient(Vertx vertx, SqlConnectOptions options, PoolOptions poolOptions);
-  
-  Future<Void> prepareTestDatabase(Vertx vertx, SqlClient client);
+  Pool createPool(Vertx vertx, SqlConnectOptions options, PoolOptions poolOptions);
   
   String limit(int maxRows, String sql);
   

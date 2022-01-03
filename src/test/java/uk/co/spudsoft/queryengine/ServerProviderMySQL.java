@@ -4,17 +4,20 @@
  */
 package uk.co.spudsoft.queryengine;
 
+import com.github.dockerjava.api.model.Container;
 import com.google.common.collect.Iterators;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.mysqlclient.MySQLConnectOptions;
 import io.vertx.mysqlclient.MySQLPool;
+import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.SqlClient;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.Tuple;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -23,13 +26,12 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.containers.Network;
 
 /**
  *
  * @author jtalbut
  */
-public class ServerProviderMySQL extends ServerProviderBase implements ServerProviderInstance<MySQLContainer<?>> {
+public class ServerProviderMySQL extends ServerProviderBase implements ServerProviderInstance {
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ServerProviderMySQL.class);
@@ -37,22 +39,12 @@ public class ServerProviderMySQL extends ServerProviderBase implements ServerPro
   public static final String MYSQL_IMAGE_NAME = "mysql:8.0";
 
   private static final Object lock = new Object();
-  private static Network network;
   private static MySQLContainer<?> mysqlserver;
+  private static int port;
   
   @Override
   public String getName() {
     return "MySQL";
-  }
-  
-  @Override
-  public Network getNetwork() {
-    synchronized (lock) {
-      if (network == null) {
-        network = Network.newNetwork();
-      }
-    }
-    return network;
   }
   
   public ServerProviderMySQL init() {
@@ -60,13 +52,12 @@ public class ServerProviderMySQL extends ServerProviderBase implements ServerPro
     return this;
   }
   
-  
-  
   @Override
-  public Future<MySQLContainer<?>> prepareContainer(Vertx vertx) {
+  public Future<Void> prepareContainer(Vertx vertx) {
     return vertx.executeBlocking(p -> {
       try {
-        p.complete(getContainer());
+        getContainer();
+        p.complete();
       } catch(Throwable ex) {
         p.fail(ex);
       }
@@ -75,8 +66,9 @@ public class ServerProviderMySQL extends ServerProviderBase implements ServerPro
 
   @Override
   public SqlConnectOptions getOptions() {
+    getContainer();
     return new MySQLConnectOptions()
-            .setPort(getContainer().getMappedPort(3306))
+            .setPort(port)
             .setHost("localhost")
             .setUser("user")
             .setDatabase("test")
@@ -85,24 +77,26 @@ public class ServerProviderMySQL extends ServerProviderBase implements ServerPro
   }
 
   @Override
-  public SqlClient createClient(Vertx vertx, SqlConnectOptions options, PoolOptions poolOptions) {
+  public Pool createPool(Vertx vertx, SqlConnectOptions options, PoolOptions poolOptions) {
     return MySQLPool.pool(vertx, (MySQLConnectOptions) options, poolOptions);
   }
   
-  @Override
   public MySQLContainer<?> getContainer() {
     synchronized (lock) {
-      if (network == null) {
-        network = Network.newNetwork();
-      }
       long start = System.currentTimeMillis();
+      
+      Container createdContainer = findContainer("/query-engine-mysql-1");
+      if (createdContainer != null) {
+        port = Arrays.asList(createdContainer.ports).stream().filter(cp -> cp.getPrivatePort() == 3306).map(cp -> cp.getPublicPort()).findFirst().orElse(0);
+        return null;
+      } 
       if (mysqlserver == null) {
         mysqlserver = new MySQLContainer<>(MYSQL_IMAGE_NAME)
                 .withUsername("user")
                 .withPassword(ROOT_PASSWORD)
                 .withExposedPorts(3306)
                 .withDatabaseName("test")
-                .withNetwork(network);
+                ;
       }
       if (!mysqlserver.isRunning()) {
         mysqlserver.start();
@@ -110,6 +104,7 @@ public class ServerProviderMySQL extends ServerProviderBase implements ServerPro
                 mysqlserver.getExposedPorts().stream().map(p -> Integer.toString(p) + ":" + Integer.toString(mysqlserver.getMappedPort(p))).collect(Collectors.toList()),
                 (System.currentTimeMillis() - start) / 1000.0
         );
+        port = mysqlserver.getMappedPort(3306);
       }
     }
     return mysqlserver;
@@ -119,6 +114,7 @@ public class ServerProviderMySQL extends ServerProviderBase implements ServerPro
   public Future<Void> prepareTestDatabase(Vertx vertx, SqlClient client) {
 
     return Future.succeededFuture()
+            
             .compose(v -> client.preparedQuery("select count(*) from information_schema.tables where table_name='testRefData'").execute())
             .compose(rs -> {
               int existingTable = rs.iterator().next().getInteger(0);
@@ -147,6 +143,7 @@ public class ServerProviderMySQL extends ServerProviderBase implements ServerPro
                       iter
               );
             })
+            
             .compose(v -> client.preparedQuery("select count(*) from information_schema.tables where table_name='testData'").execute())
             .compose(rs -> {
               int existingTable = rs.iterator().next().getInteger(0);
@@ -173,6 +170,38 @@ public class ServerProviderMySQL extends ServerProviderBase implements ServerPro
                        DATA_ROWS
               );
             })
+
+            .compose(v -> client.preparedQuery("select count(*) from information_schema.tables where table_name='testManyData'").execute())
+            .compose(rs -> {
+              int existingTable = rs.iterator().next().getInteger(0);
+              if (existingTable == 0) {
+                return client.preparedQuery(CREATE_MANY_DATA_TABLE
+                        .replaceAll("GUID", "binary(16)")
+                ).execute();
+              } else {
+                return Future.succeededFuture();
+              }
+            })
+            .onSuccess(rs -> {
+              if (rs != null) {
+                logger.info("testManyData table created: {}", RowSetHelper.toString(rs));
+              }
+            })
+            .compose(rs -> {
+              return doManyInserts(
+                      client.preparedQuery(
+                              """
+                               insert into testManyData (dataId, refId) 
+                               select d.id, ? 
+                               from testData d left join testManyData m on d.id = m.dataId and m.refId = ? 
+                               where id % ? >= ? and m.dataId is null 
+                               order by id  
+                              """
+                      )
+                      , 0
+              );
+            })
+
             .onFailure(ex -> {
               logger.error("Failed: ", ex);
             })
@@ -180,7 +209,8 @@ public class ServerProviderMySQL extends ServerProviderBase implements ServerPro
 
   }
 
-  private Buffer uuidToArray(UUID uuid) {
+  @Override
+  protected Object convertUuid(UUID uuid) {
     Buffer b = Buffer.buffer(16);
     b.appendLong(uuid.getMostSignificantBits());
     b.appendLong(uuid.getLeastSignificantBits());
@@ -189,13 +219,13 @@ public class ServerProviderMySQL extends ServerProviderBase implements ServerPro
   
   @Override
   protected void prepareRefDataInsertTuple(List<Tuple> args, Map.Entry<UUID, String> entry) {
-    args.add(Tuple.of(uuidToArray(entry.getKey()), entry.getValue()));
+    args.add(Tuple.of(convertUuid(entry.getKey()), entry.getValue()));
   }
   
   
   @Override
   protected void prepareDataInsertTuple(List<Tuple> args, int currentRow, UUID lookup, LocalDateTime instant, int i) {
-    args.add(Tuple.of(currentRow, uuidToArray(lookup), instant, Integer.toHexString(i)));
+    args.add(Tuple.of(currentRow, convertUuid(lookup), instant, Integer.toHexString(i)));
   }  
 
   @Override

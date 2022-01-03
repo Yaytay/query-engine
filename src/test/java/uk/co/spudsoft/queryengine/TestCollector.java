@@ -6,15 +6,16 @@ import io.vertx.core.Vertx;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import io.vertx.sqlclient.Cursor;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
+import io.vertx.sqlclient.Row;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
@@ -29,9 +30,9 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
  * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
-public class TestStartContainers {
+public class TestCollector {
 
-  private static final Logger logger = LoggerFactory.getLogger(TestStartContainers.class);
+  private static final Logger logger = LoggerFactory.getLogger(TestCollector.class);
 
   @BeforeAll
   public static void setup() {
@@ -40,8 +41,7 @@ public class TestStartContainers {
   }
   
   @Test
-  @Timeout(value = 10, timeUnit = TimeUnit.MINUTES)
-  @Disabled
+  @Timeout(value = 30, timeUnit = TimeUnit.MINUTES)
   public void startAllContainers(Vertx vertx, VertxTestContext testContext) {
        
     List<ServerProviderInstance> instances = Arrays.asList(
@@ -58,7 +58,12 @@ public class TestStartContainers {
               .compose(container -> {
                 logger.debug("{} - {}s: Container started", instance.getName(), (System.currentTimeMillis() - startTime) / 1000.0);
                 try {
-                  Pool pool = instance.createPool(vertx, instance.getOptions(), new PoolOptions().setMaxSize(4));
+                  Pool pool = instance.createPool(vertx, instance.getOptions()
+                          , new PoolOptions()
+                                  .setShared(false)
+                                  .setMaxSize(4)
+                                  .setEventLoopSize(3)
+                  );
                   return Future.succeededFuture(pool);
                 } catch(Throwable ex) {
                   return Future.failedFuture(ex);
@@ -81,21 +86,32 @@ public class TestStartContainers {
                                             order by d.id
                                           """
                                           );
-                          return conn.prepare(sql)
-                                  .compose(ps -> {
-                                    Cursor cursor = ps.cursor();
-                                    return cursor.read(10)
-                                            .onSuccess(rs -> {
-                                              int count = rs.size();
-                                              logger.debug("{}: Rows: {} vs {}", instance.getName(), rs.rowCount(), rs.size());
-                                              logger.debug("{} - {}s: Results: {}"
-                                                      , instance.getName()
-                                                      , (System.currentTimeMillis() - startTime) / 1000.0
-                                                      , RowSetHelper.toString(rs)
-                                              );
-                                              logger.debug("{}: Rows: {} vs {}", instance.getName(), rs.rowCount(), rs.size());
-                                            });
-                                  });
+                          Collector<Row, ?, Integer> collector = Collectors.summingInt(row -> {
+                            logger.debug("{}: {}", instance.getName(), row.toJson());
+//                            try {
+//                              Thread.sleep(1000);
+//                            } catch(Throwable ex) {
+//                            }
+                            return 1;
+                          });
+                          return conn.preparedQuery(sql)
+                                  .collecting(collector)
+                                  .execute()
+                                  .onSuccess(result -> {
+                                    logger.debug("{} - {}: Rows: {}"
+                                            , instance.getName()
+                                            , (System.currentTimeMillis() - startTime) / 1000.0
+                                            , result.value()
+                                    );
+                                  })
+                                  .onFailure(ex -> {
+                                    logger.debug("{} - {}: Failed: "
+                                            , instance.getName()
+                                            , (System.currentTimeMillis() - startTime) / 1000.0
+                                            , ex
+                                    );
+                                  })
+                                  ;
                         })
                         ;
               })
@@ -104,8 +120,14 @@ public class TestStartContainers {
     }
     
     CompositeFuture.all(futures)
-            .onFailure(ex -> testContext.failNow(ex))
-            .onSuccess(cf -> testContext.completeNow())
+            .onFailure(ex -> {
+              logger.error("Something failed: ", ex);
+              testContext.failNow(ex);
+            })
+            .onSuccess(cf -> {
+              logger.info("Everything worked");
+              testContext.completeNow();
+            })
             ;
     
   }

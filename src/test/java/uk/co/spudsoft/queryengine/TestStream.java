@@ -6,15 +6,15 @@ import io.vertx.core.Vertx;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import io.vertx.sqlclient.Cursor;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
@@ -29,9 +29,9 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
  * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
-public class TestStartContainers {
+public class TestStream {
 
-  private static final Logger logger = LoggerFactory.getLogger(TestStartContainers.class);
+  private static final Logger logger = LoggerFactory.getLogger(TestStream.class);
 
   @BeforeAll
   public static void setup() {
@@ -40,8 +40,7 @@ public class TestStartContainers {
   }
   
   @Test
-  @Timeout(value = 10, timeUnit = TimeUnit.MINUTES)
-  @Disabled
+  @Timeout(value = 30, timeUnit = TimeUnit.MINUTES)
   public void startAllContainers(Vertx vertx, VertxTestContext testContext) {
        
     List<ServerProviderInstance> instances = Arrays.asList(
@@ -54,6 +53,16 @@ public class TestStartContainers {
     
     for (ServerProviderInstance instance : instances) {
       long startTime = System.currentTimeMillis();
+      String sql = instance.limit(30
+                      , 
+                      """
+                        select d.id, d.instant, l.value as ref, d.value 
+                        from testData d
+                        join testRefData l on d.lookup = l.id  
+                        order by d.id
+                      """
+                      );
+      
       Future future = instance.prepareContainer(vertx)
               .compose(container -> {
                 logger.debug("{} - {}s: Container started", instance.getName(), (System.currentTimeMillis() - startTime) / 1000.0);
@@ -72,29 +81,31 @@ public class TestStartContainers {
                           return sqlPool.getConnection();
                         })
                         .compose(conn -> {
-                          String sql = instance.limit(30
-                                          , 
-                                          """
-                                            select d.id, d.instant, l.value as ref, d.value 
-                                            from testData d
-                                            join testRefData l on d.lookup = l.id  
-                                            order by d.id
-                                          """
-                                          );
                           return conn.prepare(sql)
-                                  .compose(ps -> {
-                                    Cursor cursor = ps.cursor();
-                                    return cursor.read(10)
-                                            .onSuccess(rs -> {
-                                              int count = rs.size();
-                                              logger.debug("{}: Rows: {} vs {}", instance.getName(), rs.rowCount(), rs.size());
-                                              logger.debug("{} - {}s: Results: {}"
-                                                      , instance.getName()
-                                                      , (System.currentTimeMillis() - startTime) / 1000.0
-                                                      , RowSetHelper.toString(rs)
-                                              );
-                                              logger.debug("{}: Rows: {} vs {}", instance.getName(), rs.rowCount(), rs.size());
-                                            });
+                                  .onSuccess(ps -> {
+                                    conn.begin().onSuccess(tran -> {
+                                      RowStream<Row> stream = ps.createStream(10);
+                                      stream.handler(row -> {
+                                        logger.debug("{}: Row: {}"
+                                                , instance.getName()
+                                                , row.toJson()
+                                        );
+                                      });
+                                      stream.endHandler(v -> {
+                                        logger.error("{} - {}s: Finished stream"
+                                                , instance.getName()
+                                                , (System.currentTimeMillis() - startTime) / 1000.0
+                                        );
+                                      });
+                                      stream.exceptionHandler(ex -> {
+                                        logger.error("{} - {}s: Failed to stream: "
+                                                , instance.getName()
+                                                , (System.currentTimeMillis() - startTime) / 1000.0
+                                                , ex
+                                        );
+
+                                      });                                      
+                                    });
                                   });
                         })
                         ;
