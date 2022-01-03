@@ -101,7 +101,7 @@ public class ServerProviderPostgreSQL extends ServerProviderBase implements Serv
                 (System.currentTimeMillis() - start) / 1000.0
         );
       }
-      port = getContainer().getMappedPort(5432);
+      port = pgsqlserver.getMappedPort(5432);
     }
     return pgsqlserver;
   }
