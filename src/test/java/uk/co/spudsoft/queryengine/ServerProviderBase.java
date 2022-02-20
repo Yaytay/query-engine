@@ -6,6 +6,7 @@ package uk.co.spudsoft.queryengine;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.model.Container;
+import com.google.common.base.Strings;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.PreparedQuery;
 import io.vertx.sqlclient.Row;
@@ -40,7 +41,7 @@ public abstract class ServerProviderBase {
   public static final String ROOT_PASSWORD = "T0p-secret"; // UUID.randomUUID().toString();
   
   public static final int REF_ROWS = 123;
-  public static final int DATA_ROWS = 1000;
+  public static final int DATA_ROWS = getRowsInTestDb();
   public static final int MANY_DATA_MAX_ROWS = 7;
 
   public static final Map<UUID, String> REF_DATA;
@@ -56,6 +57,19 @@ public abstract class ServerProviderBase {
     }
     REF_DATA = map;
     REF_DATA_KEYS = list;
+  }
+  
+  private static int getRowsInTestDb() {
+    String value = System.getProperty("rows.in.testdb");
+    if (!Strings.isNullOrEmpty(value)) {
+      try {
+        int rowsInTestDb = Integer.parseInt(value);
+        logger.info("Using {} rows in test db", rowsInTestDb);
+      } catch(NumberFormatException ex) {
+        logger.warn("System property rows.in.testdb has the value {} and is not an integer: {}", value, ex.getMessage());
+      }
+    }
+    return 1000;
   }
 
   protected abstract String getName();

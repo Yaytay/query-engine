@@ -1,8 +1,11 @@
 package uk.co.spudsoft.queryengine;
 
 import io.vertx.core.CompositeFuture;
+import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.impl.EventLoopContext;
+import io.vertx.core.impl.VertxInternal;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
@@ -20,7 +23,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
@@ -35,10 +37,9 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
  * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
-@Disabled
-public class TestCollector {
+public class CollectorToStreamIT {
 
-  private static final Logger logger = LoggerFactory.getLogger(TestCollector.class);
+  private static final Logger logger = LoggerFactory.getLogger(CollectorToStreamIT.class);
 
   @BeforeAll
   public static void setup() {
@@ -47,20 +48,24 @@ public class TestCollector {
   }
   
   @Test
-  @Timeout(value = 30, timeUnit = TimeUnit.MINUTES)
+  @Timeout(value = 60, timeUnit = TimeUnit.MINUTES)
   public void startAllContainers(Vertx vertx, VertxTestContext testContext) {
        
     List<ServerProviderInstance> instances = Arrays.asList(
             new ServerProviderMsSQL()
-            //, new ServerProviderMySQL()
-            //, new ServerProviderPostgreSQL()
+            , new ServerProviderMySQL()
+            , new ServerProviderPostgreSQL()
     );
     
     List<Future> futures = new ArrayList<>();
     
     for (ServerProviderInstance instance : instances) {
+      Context ctx = vertx.getOrCreateContext();
+      EventLoopContext ctx2 = ((VertxInternal) vertx).createEventLoopContext();
+      logger.debug("Context: {}, EventLoopContext: {}", ctx, ctx2);
       long startTime = System.currentTimeMillis();
-      Future future = instance.prepareContainer(vertx)
+      Future future = 
+              instance.prepareContainer(vertx, ctx2)
               .compose(container -> {
                 logger.debug("{} - {}s: Container started", instance.getName(), (System.currentTimeMillis() - startTime) / 1000.0);
                 try {
@@ -83,7 +88,13 @@ public class TestCollector {
                           return sqlPool.getConnection();
                         })
                         .compose(conn -> {
-                          String sql = instance.limit(30
+                          BlockingReadStream<JsonObject> stream = new BlockingReadStream<>(vertx.getOrCreateContext(), 10);
+                          stream.handler(jo -> {
+                            logger.debug("{}: Row: {}", instance.getName(), jo);
+                          });
+                          stream.endHandler(v -> {logger.error("{}: Ended", instance.getName());});
+                          stream.exceptionHandler(ex -> {logger.error("{}: Failed: {}", instance.getName(), ex);});
+                          String sql = instance.limit(10000
                                           , 
                                           """
                                             select d.id, d.instant, l.value as ref, d.value 
@@ -95,16 +106,20 @@ public class TestCollector {
                           Collector<Row, ?, Integer> collector = Collectors.summingInt(row -> {
                             JsonObject jo = row.toJson();
                             logger.debug("{}: {}", instance.getName(), jo);
-//                            try {
-//                              Thread.sleep(1000);
-//                            } catch(Throwable ex) {
-//                            }
+                            try {
+                              stream.put(jo);
+                            } catch(Throwable ex) {
+                              logger.debug("{}: Failed to add to stream: ", instance.getName(), ex);                              
+                            }
                             return 1;
                           });
                           PreparedQuery<RowSet<Row>> pq = conn.preparedQuery(sql);
                           PreparedQuery<SqlResult<Integer>> pq2 = pq.collecting(collector);
                           return pq2
                                   .execute()
+                                  .onComplete(ar -> {
+                                    stream.end();
+                                  })
                                   .onSuccess(result -> {
                                     logger.debug("{} - {}: Rows: {}"
                                             , instance.getName()

@@ -6,6 +6,7 @@ package uk.co.spudsoft.queryengine;
 
 import com.github.dockerjava.api.model.Container;
 import com.google.common.collect.Iterators;
+import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.pgclient.PgConnectOptions;
@@ -50,7 +51,12 @@ public class ServerProviderPostgreSQL extends ServerProviderBase implements Serv
 
   @Override
   public Future<Void> prepareContainer(Vertx vertx) {
-    return vertx.executeBlocking(p -> {
+    return prepareContainer(vertx, vertx.getOrCreateContext());
+  }
+  
+  @Override
+  public Future<Void> prepareContainer(Vertx vertx, Context context) {    
+    return context.executeBlocking(p -> {
       try {
         getContainer();
         p.complete();

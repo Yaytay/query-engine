@@ -4,6 +4,7 @@
  */
 package uk.co.spudsoft.queryengine;
 
+import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.sqlclient.Pool;
@@ -20,6 +21,8 @@ public interface ServerProviderInstance {
   String getName();
   
   Future<Void> prepareContainer(Vertx vertx);
+
+  Future<Void> prepareContainer(Vertx vertx, Context context);
 
   Future<Void> prepareTestDatabase(Vertx vertx, SqlClient client);
   

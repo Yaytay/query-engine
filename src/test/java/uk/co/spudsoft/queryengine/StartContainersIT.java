@@ -14,7 +14,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
@@ -29,9 +28,9 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
  * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
-public class TestStartContainers {
+public class StartContainersIT {
 
-  private static final Logger logger = LoggerFactory.getLogger(TestStartContainers.class);
+  private static final Logger logger = LoggerFactory.getLogger(StartContainersIT.class);
 
   @BeforeAll
   public static void setup() {
@@ -41,7 +40,6 @@ public class TestStartContainers {
   
   @Test
   @Timeout(value = 10, timeUnit = TimeUnit.MINUTES)
-  @Disabled
   public void startAllContainers(Vertx vertx, VertxTestContext testContext) {
        
     List<ServerProviderInstance> instances = Arrays.asList(
@@ -72,7 +70,7 @@ public class TestStartContainers {
                           return sqlPool.getConnection();
                         })
                         .compose(conn -> {
-                          String sql = instance.limit(30
+                          String sql = instance.limit(10000
                                           , 
                                           """
                                             select d.id, d.instant, l.value as ref, d.value 

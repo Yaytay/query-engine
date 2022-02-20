@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
@@ -29,6 +30,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
  * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
+@Disabled
 public class TestStream {
 
   private static final Logger logger = LoggerFactory.getLogger(TestStream.class);
