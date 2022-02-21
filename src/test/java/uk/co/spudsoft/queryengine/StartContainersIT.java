@@ -31,6 +31,10 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 public class StartContainersIT {
 
   private static final Logger logger = LoggerFactory.getLogger(StartContainersIT.class);
+  
+  private static final ServerProviderMsSQL mssql = new ServerProviderMsSQL().init();
+  private static final ServerProviderMySQL mysql = new ServerProviderMySQL().init();
+  private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
 
   @BeforeAll
   public static void setup() {
@@ -43,10 +47,11 @@ public class StartContainersIT {
   public void startAllContainers(Vertx vertx, VertxTestContext testContext) {
        
     List<ServerProviderInstance> instances = Arrays.asList(
-            new ServerProviderMsSQL()
-            , new ServerProviderMySQL()
-            , new ServerProviderPostgreSQL()
+            mssql
+            , mysql
+            , postgres
     );
+    
     
     List<Future> futures = new ArrayList<>();
     
@@ -70,7 +75,7 @@ public class StartContainersIT {
                           return sqlPool.getConnection();
                         })
                         .compose(conn -> {
-                          String sql = instance.limit(10000
+                          String sql = instance.limit(10
                                           , 
                                           """
                                             select d.id, d.instant, l.value as ref, d.value 

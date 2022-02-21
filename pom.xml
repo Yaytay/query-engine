@@ -146,7 +146,7 @@
     <dependency>
       <groupId>com.microsoft.sqlserver</groupId>
       <artifactId>mssql-jdbc</artifactId>
-      <version>10.2.0.jre17</version>
+      <version>9.5.0.jre17-preview</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -393,7 +393,7 @@
           </execution>        
         </executions>            
         <configuration>
-          <forkCount>${fork.count}</forkCount>
+          <forkCount>1</forkCount>
           <reuseForks>false</reuseForks>
           <systemProperties>
             <rows.in.testdb>${rows.in.testdb}</rows.in.testdb>

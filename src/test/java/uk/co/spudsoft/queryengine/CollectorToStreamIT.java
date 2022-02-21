@@ -90,7 +90,7 @@ public class CollectorToStreamIT {
                         .compose(conn -> {
                           BlockingReadStream<JsonObject> stream = new BlockingReadStream<>(vertx.getOrCreateContext(), 10);
                           stream.handler(jo -> {
-                            logger.debug("{}: Row: {}", instance.getName(), jo);
+                            // logger.debug("{}: Row: {}", instance.getName(), jo);
                           });
                           stream.endHandler(v -> {logger.error("{}: Ended", instance.getName());});
                           stream.exceptionHandler(ex -> {logger.error("{}: Failed: {}", instance.getName(), ex);});
@@ -105,7 +105,7 @@ public class CollectorToStreamIT {
                                           );
                           Collector<Row, ?, Integer> collector = Collectors.summingInt(row -> {
                             JsonObject jo = row.toJson();
-                            logger.debug("{}: {}", instance.getName(), jo);
+                            // logger.debug("{}: {}", instance.getName(), jo);
                             try {
                               stream.put(jo);
                             } catch(Throwable ex) {

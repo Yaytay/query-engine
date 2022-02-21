@@ -4,13 +4,17 @@
  */
 package uk.co.spudsoft.query.main;
 
+import org.junit.jupiter.api.Test;
+
 /**
  *
  * @author jtalbut
  */
 public class MainTest {
   
-  public MainTest() {
+  @Test
+  public void testMain() {
+    Main main = new Main();
   }
   
 }
