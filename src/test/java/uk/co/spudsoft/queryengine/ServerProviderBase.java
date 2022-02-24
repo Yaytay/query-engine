@@ -173,6 +173,13 @@ public abstract class ServerProviderBase {
     Container createdContainer = dockerClient.listContainersCmd().withShowAll(true).exec().stream().filter(container -> {
       return Arrays.asList(container.getNames()).contains(containerName);
     }).findFirst().orElse(null);
+    if (createdContainer != null) {
+      logger.info("Container {} has state {}", createdContainer.getNames(), createdContainer.getState());
+      logger.info("Container {} has status {}", createdContainer.getNames(), createdContainer.getStatus());
+      if (!"running".equals(createdContainer.getState())) {
+        return null;
+      }
+    }
     return createdContainer;
   }
   

@@ -13,8 +13,24 @@ import org.junit.jupiter.api.Test;
 public class MainTest {
   
   @Test
-  public void testMain() {
+  public void testMainExitOnRun() {
     Main main = new Main();
+    main.testMain(new String[]{
+      "query-engine.exitOnRun"
+    });
+  }
+  
+  @Test
+  public void testMainDaemon() {
+    Main main = new Main();
+    main.testMain(new String[]{
+    });
+  }
+  
+  @Test
+  public void testMain() {
+    Main.main(new String[]{
+    });
   }
   
 }

@@ -32,7 +32,9 @@
         <module name="SuppressWarningsHolder"/>
         <module name="JavadocType"/>
         <module name="JavadocStyle"/>
-        <module name="ConstantName"/>
+        <module name="ConstantName">
+          <property name="format" value="^logger$|^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$"/>
+        </module>
         <module name="LocalFinalVariableName"/>
         <module name="NoFinalizer"/>
         <module name="LocalVariableName"/>
