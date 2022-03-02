@@ -16,7 +16,7 @@
     <junit-jupiter.version>5.8.2</junit-jupiter.version>
     <junit-platform.version>1.8.2</junit-platform.version>
     <testcontainers.version>1.16.3</testcontainers.version>
-    <rows.in.testdb>1000</rows.in.testdb>
+    <rows.in.testdb>100000</rows.in.testdb>
     <fork.count>4</fork.count>
   </properties>
 
@@ -29,7 +29,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>31.0.1-jre</version>
+      <version>31.1-jre</version>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
@@ -166,7 +166,7 @@
     <dependency>
       <groupId>com.microsoft.sqlserver</groupId>
       <artifactId>mssql-jdbc</artifactId>
-      <version>9.5.0.jre17-preview</version>
+      <version>10.2.0.jre17</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -366,7 +366,7 @@
           <dependency>
             <groupId>com.puppycrawl.tools</groupId>
             <artifactId>checkstyle</artifactId>
-            <version>9.3</version>
+            <version>10.0</version>
           </dependency>
         </dependencies>
       </plugin>
@@ -378,15 +378,9 @@
         <configuration>
           <forkCount>${fork.count}</forkCount>
           <reuseForks>true</reuseForks>
-          <systemPropertyVariables>
-            <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
-            <org.jboss.logging.provider>slf4j</org.jboss.logging.provider>
-            <java.security.egd>file:/dev/urandom</java.security.egd>
-            <sun.rmi.transport.tcp.maxConnectionThreads>0</sun.rmi.transport.tcp.maxConnectionThreads>
-            <sun.net.http.allowRestrictedHeaders>true</sun.net.http.allowRestrictedHeaders>
-          </systemPropertyVariables>
-          <environmentVariables>
-          </environmentVariables>
+          <systemProperties>
+            <rows.in.testdb>${rows.in.testdb}</rows.in.testdb>
+          </systemProperties>
           <trimStackTrace>false</trimStackTrace>
           <excludes>
             <exclude>**/sandbox/**</exclude>

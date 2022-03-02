@@ -65,6 +65,7 @@ public abstract class ServerProviderBase {
       try {
         int rowsInTestDb = Integer.parseInt(value);
         logger.info("Using {} rows in test db", rowsInTestDb);
+        return rowsInTestDb;
       } catch(NumberFormatException ex) {
         logger.warn("System property rows.in.testdb has the value {} and is not an integer: {}", value, ex.getMessage());
       }
@@ -140,7 +141,7 @@ public abstract class ServerProviderBase {
     if (args.isEmpty()) {
       return Future.succeededFuture();
     } else {
-      logger.debug("{}: Running data insert batch with {} tuples", getName(), args.size());
+      logger.debug("{}: Running data insert batch with {} tuples (currentRows = {} and totalRows = {})", getName(), args.size(), currentRows, totalRows);
       int currentRowForNextBatch = currentRows;
       return stmt.executeBatch(args)
               .compose(v -> doDataInserts(stmt, currentRowForNextBatch, totalRows));

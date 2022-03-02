@@ -28,6 +28,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
+import uk.co.spudsoft.query.main.exec.sql.AbstractBlockingQueryProcessor;
 
 
 
@@ -64,6 +65,14 @@ public class CollectorToStreamIT {
       EventLoopContext ctx2 = ((VertxInternal) vertx).createEventLoopContext();
       logger.debug("Context: {}, EventLoopContext: {}", ctx, ctx2);
       long startTime = System.currentTimeMillis();
+      
+      AbstractBlockingQueryProcessor stream = new AbstractBlockingQueryProcessor(vertx.getOrCreateContext(), 10);
+      stream.handler(jo -> {
+        logger.debug("{}: Row: {}", instance.getName(), jo);
+      });
+      stream.endHandler(v -> {logger.error("{}: Ended", instance.getName());});
+      stream.exceptionHandler(ex -> {logger.error("{}: Failed: {}", instance.getName(), ex);});
+      
       Future future = 
               instance.prepareContainer(vertx, ctx2)
               .compose(container -> {
@@ -79,64 +88,50 @@ public class CollectorToStreamIT {
                 } catch(Throwable ex) {
                   return Future.failedFuture(ex);
                 }
-              })
-              .compose(sqlPool -> {
-                return instance.prepareTestDatabase(vertx, sqlPool)
-                        .compose(v -> {
-                          logger.debug("{} - {}s: Test data prepared", instance.getName(), (System.currentTimeMillis() - startTime) / 1000.0);
-                          
-                          return sqlPool.getConnection();
-                        })
-                        .compose(conn -> {
-                          BlockingReadStream<JsonObject> stream = new BlockingReadStream<>(vertx.getOrCreateContext(), 10);
-                          stream.handler(jo -> {
-                            // logger.debug("{}: Row: {}", instance.getName(), jo);
-                          });
-                          stream.endHandler(v -> {logger.error("{}: Ended", instance.getName());});
-                          stream.exceptionHandler(ex -> {logger.error("{}: Failed: {}", instance.getName(), ex);});
-                          String sql = instance.limit(10000
-                                          , 
-                                          """
-                                            select d.id, d.instant, l.value as ref, d.value 
-                                            from testData d
-                                            join testRefData l on d.lookup = l.id  
-                                            order by d.id
-                                          """
-                                          );
-                          Collector<Row, ?, Integer> collector = Collectors.summingInt(row -> {
-                            JsonObject jo = row.toJson();
-                            // logger.debug("{}: {}", instance.getName(), jo);
-                            try {
-                              stream.put(jo);
-                            } catch(Throwable ex) {
-                              logger.debug("{}: Failed to add to stream: ", instance.getName(), ex);                              
-                            }
-                            return 1;
-                          });
-                          PreparedQuery<RowSet<Row>> pq = conn.preparedQuery(sql);
-                          PreparedQuery<SqlResult<Integer>> pq2 = pq.collecting(collector);
-                          return pq2
-                                  .execute()
-                                  .onComplete(ar -> {
-                                    stream.end();
-                                  })
-                                  .onSuccess(result -> {
-                                    logger.debug("{} - {}: Rows: {}"
-                                            , instance.getName()
-                                            , (System.currentTimeMillis() - startTime) / 1000.0
-                                            , result.value()
-                                    );
-                                  })
-                                  .onFailure(ex -> {
-                                    logger.debug("{} - {}: Failed: "
-                                            , instance.getName()
-                                            , (System.currentTimeMillis() - startTime) / 1000.0
-                                            , ex
-                                    );
-                                  })
-                                  ;
-                        })
-                        ;
+              }).compose(sqlPool -> {
+                return instance.prepareTestDatabase(vertx, sqlPool).map(sqlPool);
+              }).compose(sqlPool -> {
+                logger.debug("{} - {}s: Test data prepared", instance.getName(), (System.currentTimeMillis() - startTime) / 1000.0);
+                return sqlPool.getConnection();
+              }).compose(conn -> {
+                String sql = instance.limit(10000
+                                , 
+                                """
+                                  select d.id, d.instant, l.value as ref, d.value 
+                                  from testData d
+                                  join testRefData l on d.lookup = l.id  
+                                  order by d.id
+                                """
+                                );
+                return conn.prepare(sql);
+              }).compose(ps -> {
+                PreparedQuery<RowSet<Row>> pq = ps.query();
+                Collector<Row, ?, Integer> collector = Collectors.summingInt(row -> {
+                  JsonObject jo = row.toJson();
+                  logger.debug("{}: {}", instance.getName(), jo);
+                  try {
+                    stream.add(jo);
+                  } catch(Throwable ex) {
+                    logger.debug("{}: Failed to add to stream: ", instance.getName(), ex);                              
+                  }
+                  return 1;
+                });
+                PreparedQuery<SqlResult<Integer>> pq2 = pq.collecting(collector);
+                return pq2.execute();
+              }).onComplete(ar -> {
+                stream.end();
+              }).onSuccess(result -> {
+                logger.debug("{} - {}: Rows: {}"
+                        , instance.getName()
+                        , (System.currentTimeMillis() - startTime) / 1000.0
+                        , result.value()
+                );
+              }).onFailure(ex -> {
+                logger.debug("{} - {}: Failed: "
+                        , instance.getName()
+                        , (System.currentTimeMillis() - startTime) / 1000.0
+                        , ex
+                );
               })
               ;
       futures.add(future);
