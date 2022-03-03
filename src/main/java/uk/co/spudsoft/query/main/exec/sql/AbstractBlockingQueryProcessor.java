@@ -17,11 +17,11 @@ import uk.co.spudsoft.query.main.exec.QueryProcessor;
  * 
  * This is designed specifically for SQL queries that feed data as a (non-reactive) collector.
  * This class is based very closely on the {@link io.vertx.core.streams.impl.InboundBuffer} but is blocking on input if the queue is full.
- 
- The (potentially blocking) add method will be called in a Vert.x event thread by a SqlClient collector.
- This is bad, so try to size the queue and the subsequent pipeline to ensure it doesn't happen.
- 
- The handler will be called either on the same thread that called add or on a thread in the context passed in to the constructor.
+ * 
+ * The (potentially blocking) add method will be called in a Vert.x event thread by a SqlClient collector.
+ * This is bad, so try to size the queue and the subsequent pipeline to ensure it doesn't happen.
+ * 
+ * The handler will be called either on the same thread that called add or on a thread in the context passed in to the constructor.
  * 
  * @author jtalbut
  */
@@ -166,10 +166,11 @@ public class AbstractBlockingQueryProcessor implements QueryProcessor {
    * If this method throws an InterruptedException the item will not have been added and will be lost if the caller does not handle this correctly.
    * 
    * @param item The item to add to the stream.
+   * @return The approximate current count of items queued for processing, this intended as a hint to the caller to slow things down.
    * @throws InterruptedException if the thread is interrupted whilst waiting for the queue to have space.
    * @throws IllegalStateException if the stream has already been ended.
    */
-  public void add(JsonObject item) throws InterruptedException {
+  public int add(JsonObject item) throws InterruptedException {
     Handler<JsonObject> handler = null;
     boolean put = false;
     synchronized (this) {
@@ -188,16 +189,19 @@ public class AbstractBlockingQueryProcessor implements QueryProcessor {
     }
     if (put) {
       queue.put(item);
+      return queue.size();
     } else {
       drainQueue();
       handleEvent(handler, item);
+      return 0;
     }
   }
   
   /**
    * Drain the queue by calling the handler for each item in it until either the queue is empty or the demand has been satisfied.
+   * @return The approximate current count of items queued for processing, this intended as a hint to the caller to slow things down.
    */
-  private void drainQueue() {
+  private int drainQueue() {
     Handler<Void> configuredDrainHandler = null;
     Handler<Void> configuredEndHandler = null;
     int size;    
@@ -231,6 +235,7 @@ public class AbstractBlockingQueryProcessor implements QueryProcessor {
     if (configuredEndHandler != null) {
       ended(configuredEndHandler);
     }
+    return size;
   }
   
   /**

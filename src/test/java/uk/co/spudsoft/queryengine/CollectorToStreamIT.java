@@ -4,8 +4,6 @@ import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.impl.EventLoopContext;
-import io.vertx.core.impl.VertxInternal;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
@@ -62,8 +60,8 @@ public class CollectorToStreamIT {
     
     for (ServerProviderInstance instance : instances) {
       Context ctx = vertx.getOrCreateContext();
-      EventLoopContext ctx2 = ((VertxInternal) vertx).createEventLoopContext();
-      logger.debug("Context: {}, EventLoopContext: {}", ctx, ctx2);
+      // EventLoopContext ctx2 = ((VertxInternal) vertx).createEventLoopContext();
+      // logger.debug("Context: {}, EventLoopContext: {}", ctx, ctx2);
       long startTime = System.currentTimeMillis();
       
       AbstractBlockingQueryProcessor stream = new AbstractBlockingQueryProcessor(vertx.getOrCreateContext(), 10);
@@ -74,7 +72,7 @@ public class CollectorToStreamIT {
       stream.exceptionHandler(ex -> {logger.error("{}: Failed: {}", instance.getName(), ex);});
       
       Future future = 
-              instance.prepareContainer(vertx, ctx2)
+              instance.prepareContainer(vertx, ctx)
               .compose(container -> {
                 logger.debug("{} - {}s: Container started", instance.getName(), (System.currentTimeMillis() - startTime) / 1000.0);
                 try {

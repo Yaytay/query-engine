@@ -145,6 +145,7 @@ public class ServerProviderMsSQL extends ServerProviderBase implements ServerPro
             
             .compose(rs -> client.preparedQuery("select count(*) from sysobjects where name='testRefData' and xtype='U'").execute())
             .compose(rs -> {
+              logger.info("Creating testRefData table");
               int existingTable = rs.iterator().next().getInteger(0);
               if (existingTable == 0) {
                 return client
@@ -162,6 +163,7 @@ public class ServerProviderMsSQL extends ServerProviderBase implements ServerPro
             })
             .compose(rs -> client.preparedQuery("select count(*) from testRefData").execute())
             .compose(rs -> {
+              logger.info("Inserting testRefData");
               int existingRows = rs.iterator().next().getInteger(0);
               Iterator<Map.Entry<UUID, String>> iter = REF_DATA.entrySet().iterator();
               iter = Iterators.limit(iter, REF_ROWS);
@@ -174,6 +176,7 @@ public class ServerProviderMsSQL extends ServerProviderBase implements ServerPro
             
             .compose(rs -> client.preparedQuery("select count(*) from sysobjects where name='testData' and xtype='U'").execute())
             .compose(rs -> {
+              logger.info("Creating testData table");
               int existingTable = rs.iterator().next().getInteger(0);
               if (existingTable == 0) {
                 return client.preparedQuery(CREATE_DATA_TABLE
@@ -191,6 +194,7 @@ public class ServerProviderMsSQL extends ServerProviderBase implements ServerPro
             })
             .compose(rs -> client.preparedQuery("select count(*) from testData").execute())
             .compose(rs -> {
+              logger.info("Inserting testData");
               int existingRows = rs.iterator().next().getInteger(0);
               return doDataInserts(
                       client.preparedQuery("insert into testData (id, lookup, instant, value) values (@p1, @p2, @p3, @p4)"),
@@ -201,6 +205,7 @@ public class ServerProviderMsSQL extends ServerProviderBase implements ServerPro
 
             .compose(rs -> client.preparedQuery("select count(*) from sysobjects where name='testManyData' and xtype='U'").execute())
             .compose(rs -> {
+              logger.info("Creating testManyData table");
               int existingTable = rs.iterator().next().getInteger(0);
               if (existingTable == 0) {
                 return client.preparedQuery(CREATE_MANY_DATA_TABLE
@@ -217,6 +222,7 @@ public class ServerProviderMsSQL extends ServerProviderBase implements ServerPro
             })
             .compose(rs -> client.preparedQuery("select count(*) from testManyData").execute())
             .compose(rs -> {
+              logger.info("Inserting testManyData");
               return doManyInserts(
                       client.preparedQuery(
                               """
