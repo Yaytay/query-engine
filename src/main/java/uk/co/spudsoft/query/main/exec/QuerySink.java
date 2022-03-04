@@ -5,13 +5,14 @@
 package uk.co.spudsoft.query.main.exec;
 
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.streams.ReadStream;
+import io.vertx.core.streams.WriteStream;
 
 /**
- * A QueryProcessor is simply a stream of JsonObjects (rows).
- * 
+ *
  * @author jtalbut
  */
-public interface QueryProcessor extends ReadStream<JsonObject> {
+public interface QuerySink {
+  
+  WriteStream<JsonObject> getWriteStream();
   
 }

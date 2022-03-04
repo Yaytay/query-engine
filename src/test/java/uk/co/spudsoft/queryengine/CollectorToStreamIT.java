@@ -26,7 +26,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
-import uk.co.spudsoft.query.main.exec.sql.AbstractBlockingQueryProcessor;
+import uk.co.spudsoft.query.main.exec.sql.BlockingReadStream;
 
 
 
@@ -64,7 +64,7 @@ public class CollectorToStreamIT {
       // logger.debug("Context: {}, EventLoopContext: {}", ctx, ctx2);
       long startTime = System.currentTimeMillis();
       
-      AbstractBlockingQueryProcessor stream = new AbstractBlockingQueryProcessor(vertx.getOrCreateContext(), 10);
+      BlockingReadStream<JsonObject> stream = new BlockingReadStream<>(vertx.getOrCreateContext(), 10);
       stream.handler(jo -> {
         logger.debug("{}: Row: {}", instance.getName(), jo);
       });

@@ -6,16 +6,13 @@ package uk.co.spudsoft.query.main.exec.sql;
 
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.ReadStream;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import uk.co.spudsoft.query.main.exec.QueryProcessor;
 
 /**
- * The AbstractBlockingQueryProcessor implements QueryProcessor (which is just ReadStream&lt;JsonObject>) using a BlockingQueue.
+ * The BlockingReadStream implements QueryProcessor (which is just ReadStream&lt;T>) using a BlockingQueue.This is designed specifically for SQL queries that feed data as a (non-reactive) collector.
  * 
- * This is designed specifically for SQL queries that feed data as a (non-reactive) collector.
  * This class is based very closely on the {@link io.vertx.core.streams.impl.InboundBuffer} but is blocking on input if the queue is full.
  * 
  * The (potentially blocking) add method will be called in a Vert.x event thread by a SqlClient collector.
@@ -24,10 +21,11 @@ import uk.co.spudsoft.query.main.exec.QueryProcessor;
  * The handler will be called either on the same thread that called add or on a thread in the context passed in to the constructor.
  * 
  * @author jtalbut
+ * @param <T> The type of item processed by the ReadStream (usually JsonObject).
  */
-public class AbstractBlockingQueryProcessor implements QueryProcessor {
+public class BlockingReadStream<T> implements ReadStream<T> {
 
-  private final BlockingQueue<JsonObject> queue;
+  private final BlockingQueue<T> queue;
 
   /**
    * Handler called when the stream is complete.
@@ -42,7 +40,7 @@ public class AbstractBlockingQueryProcessor implements QueryProcessor {
   /**
    * Handler for processing each individual item.
    */
-  private Handler<JsonObject> itemHandler;
+  private Handler<T> itemHandler;
   
   /**
    * Handler called for any exceptions encountered during processing.
@@ -78,7 +76,7 @@ public class AbstractBlockingQueryProcessor implements QueryProcessor {
    * @param context The vertx context upon which the handler will be called when processing a backlog of items.
    * @param queueSize The maximum size of the queue of items to be processed.
    */
-  public AbstractBlockingQueryProcessor(Context context, int queueSize) {
+  public BlockingReadStream(Context context, int queueSize) {
     if (queueSize <= 0) {
       throw new IllegalArgumentException("queueSize (" + queueSize + ") must be >= 1");
     }
@@ -95,7 +93,7 @@ public class AbstractBlockingQueryProcessor implements QueryProcessor {
    * @param handler the drain handler.
    * @return this.
    */
-  public ReadStream<JsonObject> drainHandler(Handler<Void> handler) {
+  public ReadStream<T> drainHandler(Handler<Void> handler) {
     synchronized (this) {
       this.drainHandler = handler;
     }
@@ -109,7 +107,7 @@ public class AbstractBlockingQueryProcessor implements QueryProcessor {
    * @return this.
    */
   @Override
-  public ReadStream<JsonObject> exceptionHandler(Handler<Throwable> handler) {
+  public ReadStream<T> exceptionHandler(Handler<Throwable> handler) {
     synchronized (this) {
       this.exceptionHandler = handler;
     }
@@ -119,13 +117,13 @@ public class AbstractBlockingQueryProcessor implements QueryProcessor {
   /**
    * Set the item handler.
    * The item handler is called for each item added.
-   * If the queue is empty the item handler will be called on the same thread that called {@link #add(io.vertx.core.json.JsonObject)}, 
+   * If the queue is empty the item handler will be called on the same thread that called {@link #add(io.vertx.core.json.T)}, 
    * otherwise it will be called on a context thread.
    * @param handler the item handler.
    * @return this.
    */
   @Override
-  public ReadStream<JsonObject> handler(Handler<JsonObject> handler) {
+  public ReadStream<T> handler(Handler<T> handler) {
     synchronized(this) {
       this.itemHandler = handler;
     }
@@ -139,7 +137,7 @@ public class AbstractBlockingQueryProcessor implements QueryProcessor {
    * @return this.
    */
   @Override
-  public ReadStream<JsonObject> endHandler(Handler<Void> handler) {
+  public ReadStream<T> endHandler(Handler<Void> handler) {
     synchronized(this) {
       this.endHandler = handler;
     }
@@ -170,8 +168,8 @@ public class AbstractBlockingQueryProcessor implements QueryProcessor {
    * @throws InterruptedException if the thread is interrupted whilst waiting for the queue to have space.
    * @throws IllegalStateException if the stream has already been ended.
    */
-  public int add(JsonObject item) throws InterruptedException {
-    Handler<JsonObject> handler = null;
+  public int add(T item) throws InterruptedException {
+    Handler<T> handler = null;
     boolean put = false;
     synchronized (this) {
       if (ended) {
@@ -206,8 +204,8 @@ public class AbstractBlockingQueryProcessor implements QueryProcessor {
     Handler<Void> configuredEndHandler = null;
     int size;    
     while (true) {
-      JsonObject element;
-      Handler<JsonObject> h;
+      T element;
+      Handler<T> h;
       synchronized (this) {
         size = queue.size();
         if (size == 0 && ended) {
@@ -266,7 +264,7 @@ public class AbstractBlockingQueryProcessor implements QueryProcessor {
     }
   }
 
-  private void handleEvent(Handler<JsonObject> handler, JsonObject element) {
+  private void handleEvent(Handler<T> handler, T element) {
     if (handler != null) {
       try {
         handler.handle(element);
@@ -285,7 +283,7 @@ public class AbstractBlockingQueryProcessor implements QueryProcessor {
   }  
 
   @Override
-  public ReadStream<JsonObject> pause() {
+  public ReadStream<T> pause() {
     synchronized (this) {
       demand = 0L;
     }
@@ -293,12 +291,12 @@ public class AbstractBlockingQueryProcessor implements QueryProcessor {
   }
 
   @Override
-  public ReadStream<JsonObject> resume() {
+  public ReadStream<T> resume() {
     return fetch(Long.MAX_VALUE);
   }
 
   @Override
-  public ReadStream<JsonObject> fetch(long amount) {
+  public ReadStream<T> fetch(long amount) {
     if (amount < 0L) {
       throw new IllegalArgumentException();
     }
