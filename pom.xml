@@ -86,6 +86,12 @@
       <artifactId>js</artifactId>
       <version>22.0.0.2</version>
     </dependency>
+    <dependency>
+      <groupId>com.github.spotbugs</groupId>
+      <artifactId>spotbugs-annotations</artifactId>
+      <version>4.5.3</version>
+    </dependency>
+    
     
 
     <!-- Testing -->

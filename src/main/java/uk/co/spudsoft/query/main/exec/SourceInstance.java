@@ -9,13 +9,14 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.ReadStream;
 import java.util.Map;
 import uk.co.spudsoft.query.main.defn.Endpoint;
+import uk.co.spudsoft.query.main.defn.Source;
 
 /**
- * A QuerySource is simply a stream of JsonObjects (rows).
+ * A SourceInstance is simply a stream of JsonObjects (rows).
  * 
  * @author jtalbut
  */
-public interface QuerySource {
+public interface SourceInstance<T extends Source> {
   
   Future<Void> initialize(Map<String, Endpoint> endpoints);
   ReadStream<JsonObject> getReadStream();

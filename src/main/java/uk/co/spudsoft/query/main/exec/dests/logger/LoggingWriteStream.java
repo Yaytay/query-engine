@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package uk.co.spudsoft.query.main.exec;
+package uk.co.spudsoft.query.main.exec.dests.logger;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 /**
  *
  * @author jtalbut
+ * @param <T> Type of object passed in to the WriteStream.
  */
 public class LoggingWriteStream<T> implements WriteStream<T> {
   

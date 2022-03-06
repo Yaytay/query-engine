@@ -8,8 +8,6 @@ package uk.co.spudsoft.query.main.defn;
  *
  * @author jtalbut
  */
-public enum SourceType {
-  TEST
-  , SQL
-  , HTTP  
+public enum DestinationType {
+  Logger
 }

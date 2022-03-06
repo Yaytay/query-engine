@@ -2,8 +2,9 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/UnitTests/JUnit4TestClass.java to edit this template
  */
-package uk.co.spudsoft.query.main.exec.sql;
+package uk.co.spudsoft.query.main.exec.sources.sql;
 
+import uk.co.spudsoft.query.main.exec.sources.sql.BlockingReadStream;
 import com.google.common.collect.ImmutableMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;

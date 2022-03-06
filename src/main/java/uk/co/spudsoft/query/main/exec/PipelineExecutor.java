@@ -4,7 +4,9 @@
  */
 package uk.co.spudsoft.query.main.exec;
 
+import io.vertx.core.Context;
 import io.vertx.core.Future;
+import uk.co.spudsoft.query.main.defn.Pipeline;
 
 /**
  *
@@ -12,7 +14,19 @@ import io.vertx.core.Future;
  */
 public class PipelineExecutor {
   
-  public Future<Void> executePipeline(Pipeline pipeline) {
+  public Future<Void> validatePipeline(Pipeline definition) {
+    return Future.succeededFuture();
+  }
+  
+  public PipelineInstance buildPipelineFromDefinition(Context context, Pipeline definition) {
+    return PipelineInstance.builder()
+            .sourceEndpoints(definition.getSourceEndpoints())
+            .source(definition.getSource().getFactory().create(context, definition.getSource()))
+            .sink(definition.getDestination().getFactory().create(context, definition.getDestination()))
+            .build();
+  }
+  
+  public Future<Void> executePipeline(PipelineInstance pipeline) {
             
     return pipeline.getSource().initialize(pipeline.getSourceEndpoints())
             .compose(v -> pipeline.getSource().getReadStream().pipeTo(pipeline.getSink().getWriteStream()));

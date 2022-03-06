@@ -26,7 +26,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
-import uk.co.spudsoft.query.main.exec.sql.BlockingReadStream;
+import uk.co.spudsoft.query.main.exec.sources.sql.BlockingReadStream;
 
 
 

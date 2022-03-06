@@ -1,0 +1,19 @@
+{
+  "sourceEndpoints" : {
+    "primary" : {
+      "type" : "SQL"
+      , "driver" : "MS"
+      , "url" : ""
+      , "username" : ""
+      , "password" : ""
+    }
+  }
+  , "source" : {    
+      "type" : "SQL"
+    , "endpoint" : "primary"
+    , "query" : "select d.id, d.instant, l.value as ref, d.value from testData d join testRefData l on d.lookup = l.id order by d.id"
+  }
+  , "destination" : {
+      "type" : "Logger"
+  }
+}

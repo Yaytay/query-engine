@@ -11,7 +11,7 @@ import io.vertx.core.streams.WriteStream;
  *
  * @author jtalbut
  */
-public interface QuerySink {
+public interface DestinationInstance {
   
   WriteStream<JsonObject> getWriteStream();
   
