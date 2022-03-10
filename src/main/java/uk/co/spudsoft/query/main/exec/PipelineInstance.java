@@ -21,23 +21,23 @@ public class PipelineInstance {
   
   // private List<SourceGenerator> sourceGenerators;
   
-  private final SourceInstance source;
-  private final ImmutableList<PipelineProcessor> processors;
-  private final DestinationInstance sink;
+  private final SourceInstance<?> source;
+  private final ImmutableList<ProcessorInstance<?>> processors;
+  private final DestinationInstance<?> sink;
 
   public Map<String, Endpoint> getSourceEndpoints() {
     return sourceEndpoints;
   }
 
-  public SourceInstance getSource() {
+  public SourceInstance<?> getSource() {
     return source;
   }
 
-  public List<PipelineProcessor> getProcessors() {
+  public List<ProcessorInstance<?>> getProcessors() {
     return processors;
   }
 
-  public DestinationInstance getSink() {
+  public DestinationInstance<?> getSink() {
     return sink;
   }
 
@@ -45,9 +45,9 @@ public class PipelineInstance {
   public static class Builder {
 
     private Map<String, Endpoint> sourceEndpoints;
-    private SourceInstance source;
-    private List<PipelineProcessor> processors;
-    private DestinationInstance sink;
+    private SourceInstance<?> source;
+    private List<ProcessorInstance<?>> processors;
+    private DestinationInstance<?> sink;
 
     private Builder() {
     }
@@ -57,17 +57,17 @@ public class PipelineInstance {
       return this;
     }
 
-    public Builder source(final SourceInstance value) {
+    public Builder source(final SourceInstance<?> value) {
       this.source = value;
       return this;
     }
 
-    public Builder processors(final List<PipelineProcessor> value) {
+    public Builder processors(final List<ProcessorInstance<?>> value) {
       this.processors = value;
       return this;
     }
 
-    public Builder sink(final DestinationInstance value) {
+    public Builder sink(final DestinationInstance<?> value) {
       this.sink = value;
       return this;
     }
@@ -81,10 +81,14 @@ public class PipelineInstance {
     return new PipelineInstance.Builder();
   }
 
-  private PipelineInstance(final Map<String, Endpoint> sourceEndpoints, final SourceInstance source, final List<PipelineProcessor> processors, final DestinationInstance sink) {
-    this.sourceEndpoints = sourceEndpoints == null ? null :ImmutableMap.copyOf(sourceEndpoints);
+  private PipelineInstance(final Map<String, Endpoint> sourceEndpoints
+          , final SourceInstance<?> source
+          , final List<ProcessorInstance<?>> processors
+          , final DestinationInstance<?> sink
+  ) {
+    this.sourceEndpoints = sourceEndpoints == null ? ImmutableMap.of() : ImmutableMap.copyOf(sourceEndpoints);
     this.source = source;
-    this.processors = processors == null ? null : ImmutableList.copyOf(processors);
+    this.processors = processors == null ? ImmutableList.of() : ImmutableList.copyOf(processors);
     this.sink = sink;
   }
 

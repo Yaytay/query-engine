@@ -5,9 +5,10 @@
 package uk.co.spudsoft.query.main.defn;
 
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import uk.co.spudsoft.query.main.exec.SourceInstanceFactory;
+import io.vertx.core.Context;
+import io.vertx.core.Vertx;
+import uk.co.spudsoft.query.main.exec.SourceInstance;
 import uk.co.spudsoft.query.main.exec.sources.test.TestSource;
-import uk.co.spudsoft.query.main.exec.sources.test.TestSourceFactory;
 
 /**
  *
@@ -15,25 +16,21 @@ import uk.co.spudsoft.query.main.exec.sources.test.TestSourceFactory;
  */
 public class SourceTest extends Source {
 
-  private static final TestSourceFactory FACTORY = new TestSourceFactory();
-  
   private final int rowCount;
 
   public int getRowCount() {
     return rowCount;
   }
-  
-  @Override
-  public SourceInstanceFactory<SourceTest, TestSource> getFactory() {
-    return FACTORY;
-  }
 
+  @Override
+  public SourceInstance<? extends Source> createInstance(Vertx vertx, Context context) {
+    return new TestSource(context, this);
+  }
+  
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
-    private SourceType type;
-    private String endpoint;
-    private String query;
+    private SourceType type = SourceType.TEST;
     private int rowCount;
 
     private Builder() {
@@ -44,23 +41,13 @@ public class SourceTest extends Source {
       return this;
     }
 
-    public Builder endpoint(final String value) {
-      this.endpoint = value;
-      return this;
-    }
-
-    public Builder query(final String value) {
-      this.query = value;
-      return this;
-    }
-
     public Builder rowCount(final int value) {
       this.rowCount = value;
       return this;
     }
 
     public SourceTest build() {
-      return new SourceTest(type, endpoint, query, rowCount);
+      return new SourceTest(type, rowCount);
     }
   }
 
@@ -68,8 +55,8 @@ public class SourceTest extends Source {
     return new Builder();
   }
 
-  private SourceTest(final SourceType type, final String endpoint, final String query, final int rowCount) {
-    super(type, endpoint, query);
+  private SourceTest(final SourceType type, final int rowCount) {
+    super(type);
     this.rowCount = rowCount;
   }
     

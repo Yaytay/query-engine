@@ -15,17 +15,12 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 public class Endpoint {
   
   private final EndpointType type;
-  private final String driver;
   private final String url;
   private final String username;
   private final String password;
 
   public EndpointType getType() {
     return type;
-  }
-
-  public String getDriver() {
-    return driver;
   }
 
   public String getUrl() {
@@ -44,7 +39,6 @@ public class Endpoint {
   public static class Builder {
 
     private EndpointType type;
-    private String driver;
     private String url;
     private String username;
     private String password;
@@ -54,11 +48,6 @@ public class Endpoint {
 
     public Builder type(final EndpointType value) {
       this.type = value;
-      return this;
-    }
-
-    public Builder driver(final String value) {
-      this.driver = value;
       return this;
     }
 
@@ -78,7 +67,7 @@ public class Endpoint {
     }
 
     public Endpoint build() {
-      return new uk.co.spudsoft.query.main.defn.Endpoint(type, driver, url, username, password);
+      return new uk.co.spudsoft.query.main.defn.Endpoint(type, url, username, password);
     }
   }
 
@@ -86,9 +75,8 @@ public class Endpoint {
     return new Endpoint.Builder();
   }
 
-  private Endpoint(final EndpointType type, final String driver, final String url, final String username, final String password) {
+  private Endpoint(final EndpointType type, final String url, final String username, final String password) {
     this.type = type;
-    this.driver = driver;
     this.url = url;
     this.username = username;
     this.password = password;

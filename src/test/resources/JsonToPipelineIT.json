@@ -1,19 +1,51 @@
 {
-  "sourceEndpoints" : {
-    "primary" : {
-      "type" : "SQL"
-      , "driver" : "MS"
-      , "url" : ""
-      , "username" : ""
-      , "password" : ""
+  "arguments": {
+    "key": {
+      "type": "String"
+    }
+    , "port": {
+      "type": "Integer"
+    }
+  },
+  "sourceEndpoints": {
+    "MS SQL Server": {
+      "type": "SQL",
+      "url": "$sqlserver://localhost:<port>/test",
+      "username": "sa",
+      "password": "T0p-secret"
+    },
+    "MySQL": {
+      "type": "SQL",
+      "url": "$mysql://localhost:<port>/test",
+      "username": "user",
+      "password": "T0p-secret"
+    }
+    ,
+    "PostgreSQL": {
+      "type": "SQL",
+      "url": "$postgresql://localhost:<port>/test",
+      "username": "postgres",
+      "password": "T0p-secret"
     }
   }
-  , "source" : {    
-      "type" : "SQL"
-    , "endpoint" : "primary"
-    , "query" : "select d.id, d.instant, l.value as ref, d.value from testData d join testRefData l on d.lookup = l.id order by d.id"
+  ,
+  "source": {    
+    "type": "SQL",
+    "endpoint": "$<key>",
+    "blockingProcessor": false,
+    "rowsQueuedBeforeDiscard": 10,
+    "streamingFetchSize": 5,
+    "query": "select d.id, d.instant, l.value as ref, d.value from testData d join testRefData l on d.lookup = l.id where d.id < 100 order by d.id"
   }
-  , "destination" : {
-      "type" : "Logger"
+  ,
+  "processors": [
+    {
+      "type":"LIMIT",
+      "limit":13
+    }
+  ]
+  ,
+  "destination": {
+    "type": "Logger"
   }
 }

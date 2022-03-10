@@ -6,6 +6,7 @@ package uk.co.spudsoft.query.main.defn;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
@@ -18,14 +19,19 @@ import java.util.Map;
 @JsonDeserialize(builder = Pipeline.Builder.class)
 public class Pipeline {
   
+  private final ImmutableMap<String, Argument> arguments;
   private final ImmutableMap<String, Endpoint> sourceEndpoints;
   
   // private List<SourceGenerator> sourceGenerators;  
   private final Source source;
-  // private final List<Processor> processors;
-  private final Destination destination;
+  private final ImmutableList<Processor> processors;
+  private final Destination destination;  
 
   public void validate() {    
+  }
+
+  public ImmutableMap<String, Argument> getArguments() {
+    return arguments;
   }
   
   public Map<String, Endpoint> getSourceEndpoints() {
@@ -36,6 +42,10 @@ public class Pipeline {
     return source;
   }
 
+  public List<Processor> getProcessors() {
+    return processors;
+  }
+
   public Destination getDestination() {
     return destination;
   }
@@ -44,12 +54,18 @@ public class Pipeline {
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
+    private Map<String, Argument> arguments;
     private Map<String, Endpoint> sourceEndpoints;
     private Source source;
     private List<Processor> processors;
     private Destination destination;
 
     private Builder() {
+    }
+
+    public Builder arguments(final Map<String, Argument> value) {
+      this.arguments = value;
+      return this;
     }
 
     public Builder sourceEndpoints(final Map<String, Endpoint> value) {
@@ -73,7 +89,7 @@ public class Pipeline {
     }
 
     public Pipeline build() {
-      return new Pipeline(sourceEndpoints, source, processors, destination);
+      return new Pipeline(arguments, sourceEndpoints, source, processors, destination);
     }
   }
 
@@ -81,13 +97,12 @@ public class Pipeline {
     return new Pipeline.Builder();
   }
 
-  private Pipeline(final Map<String, Endpoint> sourceEndpoints, final Source source, final List<Processor> processors, final Destination destination) {
-    this.sourceEndpoints = sourceEndpoints == null ? null : ImmutableMap.copyOf(sourceEndpoints);
+  public Pipeline(Map<String, Argument> arguments, Map<String, Endpoint> sourceEndpoints, Source source, List<Processor> processors, Destination destination) {
+    this.arguments = arguments == null ? ImmutableMap.of() : ImmutableMap.copyOf(arguments);
+    this.sourceEndpoints = sourceEndpoints == null ? ImmutableMap.of() : ImmutableMap.copyOf(sourceEndpoints);
     this.source = source;
-    // this.processors = processors == null ? null : ImmutableList.copyOf(processors);
+    this.processors = processors == null ? ImmutableList.of() : ImmutableList.copyOf(processors);
     this.destination = destination;
-  }
-
-  
+  }  
   
 }

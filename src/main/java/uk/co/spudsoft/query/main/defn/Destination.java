@@ -7,7 +7,9 @@ package uk.co.spudsoft.query.main.defn;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import uk.co.spudsoft.query.main.exec.DestinationInstanceFactory;
+import io.vertx.core.Context;
+import io.vertx.core.Vertx;
+import uk.co.spudsoft.query.main.exec.DestinationInstance;
 
 /**
  *
@@ -25,7 +27,7 @@ public abstract class Destination {
   private final DestinationType type;
 
   @JsonIgnore
-  public abstract DestinationInstanceFactory getFactory();
+  public abstract DestinationInstance<? extends Destination> createInstance(Vertx vertx, Context context);
   
   public DestinationType getType() {
     return type;

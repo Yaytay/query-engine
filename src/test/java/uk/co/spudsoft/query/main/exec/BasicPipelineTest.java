@@ -10,7 +10,7 @@ import io.vertx.junit5.VertxTestContext;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import uk.co.spudsoft.query.main.defn.SourceTest;
-import uk.co.spudsoft.query.main.exec.dests.logger.DestinationLogger;
+import uk.co.spudsoft.query.main.exec.dests.logger.DestinationLoggerInstance;
 import uk.co.spudsoft.query.main.exec.sources.test.TestSource;
 
 /**
@@ -24,7 +24,7 @@ public class BasicPipelineTest {
   public void testBasicPipeline(Vertx vertx, VertxTestContext testContext) {
     PipelineInstance pipeline = PipelineInstance.builder()
             .source(new TestSource(vertx.getOrCreateContext(), SourceTest.builder().rowCount(100).build()))
-            .sink(new DestinationLogger())
+            .sink(new DestinationLoggerInstance())
             .build();
     PipelineExecutor executor = new PipelineExecutor();
     executor.executePipeline(pipeline)

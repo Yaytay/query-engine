@@ -6,8 +6,10 @@ package uk.co.spudsoft.query.main.defn;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import uk.co.spudsoft.query.main.exec.dests.logger.SinkLoggerFactory;
-import uk.co.spudsoft.query.main.exec.DestinationInstanceFactory;
+import io.vertx.core.Context;
+import io.vertx.core.Vertx;
+import uk.co.spudsoft.query.main.exec.DestinationInstance;
+import uk.co.spudsoft.query.main.exec.dests.logger.DestinationLoggerInstance;
 
 /**
  *
@@ -16,17 +18,15 @@ import uk.co.spudsoft.query.main.exec.DestinationInstanceFactory;
 @JsonDeserialize(builder = DestinationLogger.Builder.class)
 public class DestinationLogger extends Destination {
 
-  private static final SinkLoggerFactory FACTORY = new SinkLoggerFactory();
-  
   @Override
-  public DestinationInstanceFactory getFactory() {
-    return FACTORY;
+  public DestinationInstance<? extends Destination> createInstance(Vertx vertx, Context context) {
+    return new DestinationLoggerInstance();
   }
 
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
-    private DestinationType type;
+    private DestinationType type = DestinationType.Logger;
 
     private Builder() {
     }

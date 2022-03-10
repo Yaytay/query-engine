@@ -6,9 +6,12 @@ package uk.co.spudsoft.query.main.defn;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import uk.co.spudsoft.query.main.exec.sources.sql.BlockingSqlQuerySourceFactory;
-import uk.co.spudsoft.query.main.exec.SourceInstanceFactory;
-import uk.co.spudsoft.query.main.exec.sources.sql.BlockingSqlQuerySource;
+import io.vertx.core.Context;
+import io.vertx.core.Vertx;
+import io.vertx.sqlclient.PoolOptions;
+import uk.co.spudsoft.query.main.exec.SourceInstance;
+import uk.co.spudsoft.query.main.exec.sources.sql.SourceSqlBlockingInstance;
+import uk.co.spudsoft.query.main.exec.sources.sql.SourceSqlStreamingInstance;
 
 /**
  *
@@ -17,19 +20,56 @@ import uk.co.spudsoft.query.main.exec.sources.sql.BlockingSqlQuerySource;
 @JsonDeserialize(builder = SourceSql.Builder.class)
 public class SourceSql extends Source {
 
-  private static final BlockingSqlQuerySourceFactory FACTORY = new BlockingSqlQuerySourceFactory();
-
   @Override
-  public SourceInstanceFactory<SourceSql, BlockingSqlQuerySource> getFactory() {
-    return FACTORY;
+  public SourceInstance<? extends Source> createInstance(Vertx vertx, Context context) {
+    if (blockingProcessor) {
+      return new SourceSqlBlockingInstance(vertx, context, this);
+    } else {
+      return new SourceSqlStreamingInstance(vertx, context, this);
+    }
   }
+
+  private final String endpoint;
+  private final String query;
+  private final PoolOptions poolOptions;
+  private final boolean blockingProcessor;
+  private final int rowsQueuedBeforeDiscard;
+  private final int streamingFetchSize;
+
+  public String getEndpoint() {
+    return endpoint;
+  }
+
+  public String getQuery() {
+    return query;
+  }
+  
+  public PoolOptions getPoolOptions() {
+    return poolOptions;
+  }
+
+  public boolean isBlockingProcessor() {
+    return blockingProcessor;
+  }
+
+  public int getRowsQueuedBeforeDiscard() {
+    return rowsQueuedBeforeDiscard;
+  }    
+
+  public int getStreamingFetchSize() {
+    return streamingFetchSize;
+  }    
 
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
-    private SourceType type;
+    private SourceType type = SourceType.SQL;
     private String endpoint;
     private String query;
+    private PoolOptions poolOptions;
+    private boolean blockingProcessor = false;
+    private int rowsQueuedBeforeDiscard = 1000;
+    private int streamingFetchSize = 1000;
 
     private Builder() {
     }
@@ -49,8 +89,28 @@ public class SourceSql extends Source {
       return this;
     }
 
+    public Builder poolOptions(final PoolOptions value) {
+      this.poolOptions = value;
+      return this;
+    }
+
+    public Builder blockingProcessor(final boolean value) {
+      this.blockingProcessor = value;
+      return this;
+    }
+
+    public Builder rowsQueuedBeforeDiscard(final int value) {
+      this.rowsQueuedBeforeDiscard = value;
+      return this;
+    }
+
+    public Builder streamingFetchSize(final int value) {
+      this.streamingFetchSize = value;
+      return this;
+    }
+
     public SourceSql build() {
-      return new SourceSql(type, endpoint, query);
+      return new SourceSql(type, endpoint, query, poolOptions, blockingProcessor, rowsQueuedBeforeDiscard, streamingFetchSize);
     }
   }
 
@@ -58,8 +118,21 @@ public class SourceSql extends Source {
     return new Builder();
   }
 
-  private SourceSql(final SourceType type, final String endpoint, final String query) {
-    super(type, endpoint, query);
+  private SourceSql(final SourceType type
+          , final String endpoint
+          , final String query
+          , final PoolOptions poolOptions
+          , final boolean blockingProcessor
+          , final int rowsQueuedBeforeDiscard
+          , final int streamingFetchSize
+  ) {
+    super(type);
+    this.endpoint = endpoint;
+    this.query = query;
+    this.poolOptions = poolOptions;
+    this.blockingProcessor = blockingProcessor;
+    this.rowsQueuedBeforeDiscard = rowsQueuedBeforeDiscard;
+    this.streamingFetchSize = streamingFetchSize;
   }
 
 }

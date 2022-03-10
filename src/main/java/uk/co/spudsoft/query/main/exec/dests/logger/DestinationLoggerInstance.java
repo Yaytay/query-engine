@@ -8,18 +8,19 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.WriteStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.main.defn.DestinationLogger;
 import uk.co.spudsoft.query.main.exec.DestinationInstance;
 
 /**
  *
  * @author jtalbut
  */
-public class DestinationLogger implements DestinationInstance {
+public class DestinationLoggerInstance implements DestinationInstance<DestinationLogger> {
  
   @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(DestinationLogger.class);
+  private static final Logger logger = LoggerFactory.getLogger(DestinationLoggerInstance.class);
 
-  public DestinationLogger() {
+  public DestinationLoggerInstance() {
   }
 
   @Override

@@ -4,10 +4,38 @@
  */
 package uk.co.spudsoft.query.main.defn;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.vertx.core.Context;
+import io.vertx.core.Vertx;
+import uk.co.spudsoft.query.main.exec.ProcessorInstance;
+
 /**
  *
  * @author jtalbut
  */
-public class Processor {
+@JsonTypeInfo(
+  use = JsonTypeInfo.Id.NAME, 
+  include = JsonTypeInfo.As.PROPERTY, 
+  property = "type")
+@JsonSubTypes({ 
+  @JsonSubTypes.Type(value = ProcessorLimit.class, name = "LIMIT") 
+})
+public abstract class Processor {
+  
+  private final ProcessorType type;
+
+  @JsonIgnore
+  public abstract ProcessorInstance<? extends Processor> createInstance(Vertx vertx, Context context);
+  
+  public ProcessorType getType() {
+    return type;
+  }
+
+  protected Processor(final ProcessorType type) {
+    this.type = type;
+  }
+  
   
 }
