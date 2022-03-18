@@ -10,11 +10,17 @@ import uk.co.spudsoft.query.main.defn.Destination;
 
 /**
  *
+ * A DestinationInstance is created from a Destination (based on DestinationType).
+ * 
  * @author jtalbut
- * @param <T>
+ * @param <T> The type of destination configuration used to create this DestinationInstance.
  */
 public interface DestinationInstance<T extends Destination> {
   
+  /**
+   * Return the write stream that the data will be passed to.
+   * @return the write stream that the data will be passed to.
+   */
   WriteStream<JsonObject> getWriteStream();
   
 }

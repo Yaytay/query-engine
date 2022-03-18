@@ -6,8 +6,6 @@ package uk.co.spudsoft.query.main.exec.dests.logger;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.WriteStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.main.defn.DestinationLogger;
 import uk.co.spudsoft.query.main.exec.DestinationInstance;
 
@@ -17,9 +15,9 @@ import uk.co.spudsoft.query.main.exec.DestinationInstance;
  */
 public class DestinationLoggerInstance implements DestinationInstance<DestinationLogger> {
  
-  @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(DestinationLoggerInstance.class);
-
+  /**
+   * Constructor.
+   */
   public DestinationLoggerInstance() {
   }
 

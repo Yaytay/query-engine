@@ -26,7 +26,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.main.defn.Pipeline;
 import uk.co.spudsoft.query.main.json.TemplateDeserializerModule;
-import uk.co.spudsoft.query.main.testcontainers.ServerProviderMySQL;
+import uk.co.spudsoft.query.main.testcontainers.ServerProvider;
+import uk.co.spudsoft.query.main.testcontainers.ServerProviderPostgreSQL;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -42,7 +43,7 @@ public class JsonToPipelineIT {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(JsonToPipelineIT.class);
 
-  private final ServerProviderMySQL serverProvider = new ServerProviderMySQL();
+  private final ServerProvider serverProvider = new ServerProviderPostgreSQL();
   
   @BeforeAll
   public void prepData(Vertx vertx, VertxTestContext testContext) {
@@ -88,36 +89,36 @@ public class JsonToPipelineIT {
     });
   }
 
-  @Test
-  @Timeout(value = 1, timeUnit = TimeUnit.MINUTES)
-  public void testParsingJsonToPipelineBlocking(Vertx vertx, VertxTestContext testContext) throws Throwable {
-    String jsonString;
-    try (InputStream stream = this.getClass().getResourceAsStream("/JsonToPipelineIT.json")) {
-      jsonString = new String(stream.readAllBytes(), StandardCharsets.UTF_8)
-              .replaceAll("\"blockingProcessor\": false", "\"blockingProcessor\": true");
-    }
-    ObjectMapper objectMapper = DatabindCodec.mapper();
-    objectMapper.registerModule(new TemplateDeserializerModule());
-    
-    Map<String, String> args = ImmutableMap.<String, String>builder()
-            .put("key", serverProvider.getName())
-            .put("port", Integer.toString(serverProvider.getPort()))
-            .build();
-    vertx.getOrCreateContext().runOnContext(v -> {
-      Vertx.currentContext().put("ARGUMENTS", args);
-
-      Pipeline pipeline = parsePipelineDefinition(jsonString, testContext);
-      logger.debug("Pipeline: {}", Json.encode(pipeline));
-      assertNotNull(pipeline);
-
-      PipelineExecutor executor = new PipelineExecutor();      
-      PipelineInstance instance = buildPipelineInstance(executor, vertx, pipeline, testContext);
-      assertNotNull(instance);
-      
-      executor.executePipeline(instance)
-              .onComplete(testContext.succeedingThenComplete());
-    });
-  }
+//  @Test
+//  @Timeout(value = 1, timeUnit = TimeUnit.MINUTES)
+//  public void testParsingJsonToPipelineBlocking(Vertx vertx, VertxTestContext testContext) throws Throwable {
+//    String jsonString;
+//    try (InputStream stream = this.getClass().getResourceAsStream("/JsonToPipelineIT.json")) {
+//      jsonString = new String(stream.readAllBytes(), StandardCharsets.UTF_8)
+//              .replaceAll("\"blockingProcessor\": false", "\"blockingProcessor\": true");
+//    }
+//    ObjectMapper objectMapper = DatabindCodec.mapper();
+//    objectMapper.registerModule(new TemplateDeserializerModule());
+//    
+//    Map<String, String> args = ImmutableMap.<String, String>builder()
+//            .put("key", serverProvider.getName())
+//            .put("port", Integer.toString(serverProvider.getPort()))
+//            .build();
+//    vertx.getOrCreateContext().runOnContext(v -> {
+//      Vertx.currentContext().put("ARGUMENTS", args);
+//
+//      Pipeline pipeline = parsePipelineDefinition(jsonString, testContext);
+//      logger.debug("Pipeline: {}", Json.encode(pipeline));
+//      assertNotNull(pipeline);
+//
+//      PipelineExecutor executor = new PipelineExecutor();      
+//      PipelineInstance instance = buildPipelineInstance(executor, vertx, pipeline, testContext);
+//      assertNotNull(instance);
+//      
+//      executor.executePipeline(instance)
+//              .onComplete(testContext.succeedingThenComplete());
+//    });
+//  }
 
   protected Pipeline parsePipelineDefinition(String jsonString, VertxTestContext testContext) {
     Pipeline pipeline = null;

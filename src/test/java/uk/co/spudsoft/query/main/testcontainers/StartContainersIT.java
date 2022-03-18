@@ -1,6 +1,5 @@
-package uk.co.spudsoft.queryengine;
+package uk.co.spudsoft.query.main.testcontainers;
 
-import uk.co.spudsoft.query.main.testhelpers.RowSetHelper;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -10,6 +9,7 @@ import io.vertx.junit5.VertxTestContext;
 import io.vertx.sqlclient.Cursor;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
+import io.vertx.sqlclient.SqlConnectOptions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -20,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
+import uk.co.spudsoft.query.main.testhelpers.RowSetHelper;
 
 
 
@@ -47,7 +48,7 @@ public class StartContainersIT {
   @Timeout(value = 10, timeUnit = TimeUnit.MINUTES)
   public void startAllContainers(Vertx vertx, VertxTestContext testContext) {
        
-    List<ServerProviderInstance> instances = Arrays.asList(
+    List<ServerProvider> instances = Arrays.asList(
             mssql
             , mysql
             , postgres
@@ -56,35 +57,36 @@ public class StartContainersIT {
     
     List<Future> futures = new ArrayList<>();
     
-    for (ServerProviderInstance instance : instances) {
+    for (ServerProvider instance : instances) {
       long startTime = System.currentTimeMillis();
-      Future future = instance.prepareContainer(vertx)
+      Future<?> future = instance.prepareContainer(vertx)
               .compose(container -> {
                 logger.debug("{} - {}s: Container started", instance.getName(), (System.currentTimeMillis() - startTime) / 1000.0);
                 try {
-                  Pool pool = instance.createPool(vertx, instance.getOptions(), new PoolOptions().setMaxSize(4));
+                  SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(instance.getUrl());
+                  connectOptions.setUser(instance.getUser());
+                  connectOptions.setPassword(instance.getPassword());
+                  Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(4));
                   return Future.succeededFuture(pool);
                 } catch(Throwable ex) {
                   return Future.failedFuture(ex);
                 }
               })
               .compose(sqlPool -> {
-                return instance.prepareTestDatabase(vertx, sqlPool)
+                return instance.prepareTestDatabase(vertx)
                         .compose(v -> {
                           logger.debug("{} - {}s: Test data prepared", instance.getName(), (System.currentTimeMillis() - startTime) / 1000.0);
                           
                           return sqlPool.getConnection();
                         })
                         .compose(conn -> {
-                          String sql = instance.limit(10
-                                          , 
-                                          """
-                                            select d.id, d.instant, l.value as ref, d.value 
-                                            from testData d
-                                            join testRefData l on d.lookup = l.id  
-                                            order by d.id
-                                          """
-                                          );
+                          String sql = """
+                                       select d.id, d.instant, l.value as ref, d.value 
+                                       from testData d
+                                       join testRefData l on d.lookup = l.id  
+                                       order by d.id
+                                       """
+                                       ;
                           return conn.prepare(sql)
                                   .compose(ps -> {
                                     Cursor cursor = ps.cursor();

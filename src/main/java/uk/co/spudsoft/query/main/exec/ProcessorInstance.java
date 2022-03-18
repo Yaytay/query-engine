@@ -15,7 +15,7 @@ import uk.co.spudsoft.query.main.defn.Processor;
 /**
  *
  * @author jtalbut
- * @param <T>
+ * @param <T> The type of processor configuration used to create this ProcessorInstance.
  */
 public interface ProcessorInstance<T extends Processor> {
   

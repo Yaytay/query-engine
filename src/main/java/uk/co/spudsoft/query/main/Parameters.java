@@ -54,21 +54,35 @@ public class Parameters {
   /**
    * Get the exitOnRun value.
    * When the exitOnRun value is set to true the process will end rather than waiting for requests.
-   * This is expected to be useful for things such as JIT compilers or 
+   * This is expected to be useful for things such as JIT compilers or CDS preparation.
    * @return the exitOnRun value.
    */
   public boolean isExitOnRun() {
     return exitOnRun;
   }
 
+  /**
+   * Set the exitOnRun value.
+   * When the exitOnRun value is set to true the process will end rather than waiting for requests.
+   * This is expected to be useful for things such as JIT compilers or CDS preparation.
+   * @param exitOnRun the exitOnRun value.
+   */
   public void setExitOnRun(boolean exitOnRun) {
     this.exitOnRun = exitOnRun;
   }
 
+  /**
+   * Get the path to the root of the configuration files.
+   * @return the path to the root of the configuration files.
+   */
   public String getBaseConfigPath() {
     return baseConfigPath;
   }
 
+  /**
+   * Set the path to the root of the configuration files.
+   * @param baseConfigPath the path to the root of the configuration files.
+   */
   public void setBaseConfigPath(String baseConfigPath) {
     this.baseConfigPath = baseConfigPath;
   }

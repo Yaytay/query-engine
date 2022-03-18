@@ -7,6 +7,7 @@ package uk.co.spudsoft.query.main.defn;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  *
@@ -20,6 +21,11 @@ public class DestinationLoggerTest {
     assertEquals(DestinationType.Logger, instance.getType());
     instance = DestinationLogger.builder().type(DestinationType.Logger).build();
     assertEquals(DestinationType.Logger, instance.getType());
+    try {
+      DestinationLogger.builder().type(DestinationType.Nothing).build();
+      fail("Should have thrown exception");
+    } catch(IllegalArgumentException ex) {      
+    }
   }
   
 }

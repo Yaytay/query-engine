@@ -4,6 +4,7 @@
  */
 package uk.co.spudsoft.queryengine;
 
+import uk.co.spudsoft.query.main.testhelpers.RowSetHelper;
 import com.github.dockerjava.api.model.Container;
 import com.google.common.collect.Iterators;
 import io.vertx.core.Context;
@@ -124,6 +125,7 @@ public class ServerProviderMsSQL extends ServerProviderBase implements ServerPro
                 .withPassword(ROOT_PASSWORD)
                 .withEnv("ACCEPT_EULA", "Y")
                 .withExposedPorts(1433)
+                .withUrlParam("trustServerCertificate", "true")
                 ;
       }
       if (!mssqlserver.isRunning()) {

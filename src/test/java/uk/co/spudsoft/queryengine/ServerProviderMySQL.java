@@ -4,6 +4,7 @@
  */
 package uk.co.spudsoft.queryengine;
 
+import uk.co.spudsoft.query.main.testhelpers.RowSetHelper;
 import com.github.dockerjava.api.model.Container;
 import com.google.common.collect.Iterators;
 import io.vertx.core.Context;

@@ -15,7 +15,7 @@ import uk.co.spudsoft.query.main.defn.Source;
  * A SourceInstance is simply a stream of JsonObjects (rows).
  * 
  * @author jtalbut
- * @param <T>
+ * @param <T> The type of source configuration used to create this SourceInstance.
  */
 public interface SourceInstance<T extends Source> {
   

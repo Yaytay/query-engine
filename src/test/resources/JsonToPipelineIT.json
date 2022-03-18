@@ -34,8 +34,8 @@
     "endpoint": "$<key>",
     "blockingProcessor": false,
     "rowsQueuedBeforeDiscard": 10,
-    "streamingFetchSize": 5,
-    "query": "select d.id, d.instant, l.value as ref, d.value from testData d join testRefData l on d.lookup = l.id where d.id < 100 order by d.id"
+    "streamingFetchSize": 9,
+    "query": "select d.id, d.instant, l.value as ref, d.value from testData d join testRefData l on d.lookup = l.id where d.id < 20 order by d.id"
   }
   ,
   "processors": [

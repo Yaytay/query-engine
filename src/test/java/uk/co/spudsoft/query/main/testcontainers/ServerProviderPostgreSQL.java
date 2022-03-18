@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
-import uk.co.spudsoft.queryengine.RowSetHelper;
+import uk.co.spudsoft.query.main.testhelpers.RowSetHelper;
 
 import static uk.co.spudsoft.query.main.testcontainers.ServerProviderBase.ROOT_PASSWORD;
 
@@ -27,7 +27,7 @@ import static uk.co.spudsoft.query.main.testcontainers.ServerProviderBase.ROOT_P
  *
  * @author jtalbut
  */
-public class ServerProviderPostgreSQL extends ServerProviderBase implements ServerProviderInstance {
+public class ServerProviderPostgreSQL extends ServerProviderBase implements ServerProvider {
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ServerProviderPostgreSQL.class);
@@ -63,6 +63,16 @@ public class ServerProviderPostgreSQL extends ServerProviderBase implements Serv
   @Override
   public String getUrl() {
     return "postgresql://localhost:" + port + "/test";
+  }
+
+  @Override
+  public String getUser() {
+    return "postgres";
+  }
+
+  @Override
+  public String getPassword() {
+    return ServerProviderBase.ROOT_PASSWORD;
   }
 
   @Override

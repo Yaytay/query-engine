@@ -4,7 +4,6 @@
  */
 package uk.co.spudsoft.query.main.testcontainers;
 
-import uk.co.spudsoft.queryengine.*;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.model.Container;
 import com.google.common.base.Strings;

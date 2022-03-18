@@ -18,6 +18,7 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
+import io.vertx.sqlclient.Transaction;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,10 @@ public class SourceSqlStreamingInstance implements SourceInstance<SourceSql> {
   private final Vertx vertx;
   private final SourceSql definition;
   private RowStreamWrapper rowStreamWrapper;
+  
+  private SqlConnection connection;
+  private PreparedStatement preparedStatement;
+  private Transaction transaction;
 
   public SourceSqlStreamingInstance(Vertx vertx, Context context, SourceSql definition) {
     this.vertx = vertx;
@@ -66,14 +71,19 @@ public class SourceSqlStreamingInstance implements SourceInstance<SourceSql> {
     Pool pool = Pool.pool(vertx, connectOptions, definition.getPoolOptions() == null ? new PoolOptions() : definition.getPoolOptions());
     return pool.getConnection()
             .compose(conn -> {
-              return prepareSqlStatement(conn);
+              connection = conn;
+              return prepareSqlStatement(connection);
             }).compose(ps -> {
-              RowStream<Row> stream = ps.createStream(definition.getStreamingFetchSize());
-              rowStreamWrapper = new RowStreamWrapper(stream);
+              preparedStatement = ps;
+              return connection.begin();
+            }).compose(tran -> {
+              transaction = tran;
+              logger.debug("Creating SQL stream");
+              RowStream<Row> stream = preparedStatement.createStream(definition.getStreamingFetchSize());
+              rowStreamWrapper = new RowStreamWrapper(transaction, stream);
               return Future.succeededFuture();
             }).mapEmpty()
-            ;
-    
+            ;    
   }
 
   @Override

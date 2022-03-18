@@ -11,10 +11,12 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.ReadStream;
 import io.vertx.core.streams.WriteStream;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.main.defn.Endpoint;
 import uk.co.spudsoft.query.main.defn.ProcessorLimit;
 import uk.co.spudsoft.query.main.exec.ProcessorInstance;
-import uk.co.spudsoft.query.main.exec.procs.PassthroughStream;
+import uk.co.spudsoft.query.main.exec.procs.PassthroughStream2;
 
 /**
  *
@@ -22,21 +24,30 @@ import uk.co.spudsoft.query.main.exec.procs.PassthroughStream;
  */
 public class ProcessorLimitInstance implements ProcessorInstance<ProcessorLimit> {
   
+  @SuppressWarnings("constantname")
+  private static final Logger logger = LoggerFactory.getLogger(ProcessorLimitInstance.class);
+  
   private final ProcessorLimit definition;
-  private final PassthroughStream<JsonObject> stream;
+  private final PassthroughStream2<JsonObject> stream;
   
   private int count;
 
   public ProcessorLimitInstance(Vertx vertx, Context context, ProcessorLimit definition) {
     this.definition = definition;
-    this.stream = new PassthroughStream<>(this::process, context, 100);
+    this.stream = new PassthroughStream2<>(this::process, context);
   }  
   
-  private Future<JsonObject> process(JsonObject data) {
-    if (++count <= definition.getLimit()) {
-      return Future.succeededFuture(data);
-    } else {
-      return Future.succeededFuture();
+  private Future<Void> process(JsonObject data, PassthroughStream2.AsyncProcessor<JsonObject> chain) {
+    try {
+      logger.info("process {}", data);
+      //if (++count <= definition.getLimit()) {
+        return chain.handle(data);
+      //} else {
+      //return Future.succeededFuture();
+      //}
+    } catch(Throwable ex) {
+      logger.error("Failed to process {}: ", data, ex);
+      return Future.failedFuture(ex);
     }
   }
   
@@ -47,12 +58,12 @@ public class ProcessorLimitInstance implements ProcessorInstance<ProcessorLimit>
 
   @Override
   public ReadStream<JsonObject> getReadStream() {
-    return stream.getReadStream();
+    return stream.readStream();
   }
 
   @Override
   public WriteStream<JsonObject> getWriteStream() {
-    return stream;    
+    return stream.writeStream();
   }  
   
 }

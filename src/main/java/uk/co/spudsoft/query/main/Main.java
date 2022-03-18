@@ -22,6 +22,11 @@ public class Main {
   
   private static final String NAME = "query-engine";
  
+  /**
+   * Main method.
+   * @param args Command line arguments that should have the same form as properties with the query-engine prefix, no dashes are required.
+   *   
+   */
   public static void main(String[] args) {
     Main main = new Main();
     int statusCode = main.innerMain(args);
@@ -30,6 +35,11 @@ public class Main {
     }
   }
   
+  /**
+   * Method to allow test code to call main with no risk of System.exit being called.
+   * @param args Command line arguments.
+   * @return The status code that would have been returned if this was a real command line execution.
+   */
   public int testMain(String[] args) {
     int statusCode = innerMain(args);
     if (statusCode > 0) {

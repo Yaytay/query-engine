@@ -27,7 +27,7 @@ public class RowStreamWrapperTest {
   public void testPause() {
     @SuppressWarnings("unchecked")
     RowStream<Row> target = mock(RowStream.class);
-    RowStreamWrapper instance = new RowStreamWrapper(target);
+    RowStreamWrapper instance = new RowStreamWrapper(null, target);
     instance.pause();
     verify(target).pause();
   }
@@ -36,7 +36,7 @@ public class RowStreamWrapperTest {
   public void testResume() {
     @SuppressWarnings("unchecked")
     RowStream<Row> target = mock(RowStream.class);
-    RowStreamWrapper instance = new RowStreamWrapper(target);
+    RowStreamWrapper instance = new RowStreamWrapper(null, target);
     instance.resume();
     verify(target).resume();
   }
@@ -45,7 +45,7 @@ public class RowStreamWrapperTest {
   public void testFetch() {
     @SuppressWarnings("unchecked")
     RowStream<Row> target = mock(RowStream.class);
-    RowStreamWrapper instance = new RowStreamWrapper(target);
+    RowStreamWrapper instance = new RowStreamWrapper(null, target);
     instance.fetch(12);
     verify(target).fetch(12);
   }
@@ -54,7 +54,7 @@ public class RowStreamWrapperTest {
   public void testHandlerWithoutExceptionHandler() {
     @SuppressWarnings("unchecked")
     RowStream<Row> target = mock(RowStream.class);
-    RowStreamWrapper instance = new RowStreamWrapper(target);
+    RowStreamWrapper instance = new RowStreamWrapper(null, target);
     @SuppressWarnings("unchecked")
     ArgumentCaptor<Handler<Row>> handlerCaptor = ArgumentCaptor.forClass(Handler.class);
     instance.handler((JsonObject jo) -> {
@@ -69,7 +69,7 @@ public class RowStreamWrapperTest {
   public void testHandlerWithExceptionHandler() {
     @SuppressWarnings("unchecked")
     RowStream<Row> target = mock(RowStream.class);
-    RowStreamWrapper instance = new RowStreamWrapper(target);
+    RowStreamWrapper instance = new RowStreamWrapper(null, target);
     @SuppressWarnings("unchecked")
     ArgumentCaptor<Handler<Row>> handlerCaptor = ArgumentCaptor.forClass(Handler.class);
     AtomicBoolean called = new AtomicBoolean();

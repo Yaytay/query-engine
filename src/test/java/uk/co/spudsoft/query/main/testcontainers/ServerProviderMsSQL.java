@@ -4,7 +4,7 @@
  */
 package uk.co.spudsoft.query.main.testcontainers;
 
-import uk.co.spudsoft.queryengine.*;
+import uk.co.spudsoft.query.main.testhelpers.RowSetHelper;
 import com.github.dockerjava.api.model.Container;
 import com.google.common.collect.Iterators;
 import io.vertx.core.Future;
@@ -27,7 +27,7 @@ import org.testcontainers.containers.MSSQLServerContainer;
  *
  * @author jtalbut
  */
-public class ServerProviderMsSQL extends ServerProviderBase implements ServerProviderInstance {
+public class ServerProviderMsSQL extends ServerProviderBase implements ServerProvider {
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ServerProviderMsSQL.class);
@@ -95,6 +95,16 @@ public class ServerProviderMsSQL extends ServerProviderBase implements ServerPro
   }
 
   @Override
+  public String getUser() {
+    return "sa";
+  }
+
+  @Override
+  public String getPassword() {
+    return ServerProviderBase.ROOT_PASSWORD;
+  }
+
+  @Override
   public int getPort() {
     return port;
   }
@@ -114,6 +124,7 @@ public class ServerProviderMsSQL extends ServerProviderBase implements ServerPro
                 .withPassword(ROOT_PASSWORD)
                 .withEnv("ACCEPT_EULA", "Y")
                 .withExposedPorts(1433)
+                .withUrlParam("trustServerCertificate", "true")
                 ;
       }
       if (!mssqlserver.isRunning()) {

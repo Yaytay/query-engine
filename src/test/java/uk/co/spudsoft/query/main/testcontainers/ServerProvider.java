@@ -11,7 +11,7 @@ import io.vertx.core.Vertx;
  *
  * @author jtalbut
  */
-public interface ServerProviderInstance {
+public interface ServerProvider {
   
   String getName();
   
@@ -20,6 +20,10 @@ public interface ServerProviderInstance {
   Future<Void> prepareTestDatabase(Vertx vertx);
   
   String getUrl();
+  
+  String getUser();
+  
+  String getPassword();
   
   int getPort();
   

@@ -8,7 +8,7 @@
   </appender>
   <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator" />
 
-  <logger name="uk.co.spudsoft" level="DEBUG" additivity="false">
+  <logger name="uk.co.spudsoft.query" level="TRACE" additivity="false">
     <appender-ref ref="STDOUTPUT" />
   </logger>
 

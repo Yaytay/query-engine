@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.MySQLContainer;
-import uk.co.spudsoft.queryengine.RowSetHelper;
+import uk.co.spudsoft.query.main.testhelpers.RowSetHelper;
 
 import static uk.co.spudsoft.query.main.testcontainers.ServerProviderBase.ROOT_PASSWORD;
 
@@ -32,7 +32,7 @@ import static uk.co.spudsoft.query.main.testcontainers.ServerProviderBase.ROOT_P
  *
  * @author jtalbut
  */
-public class ServerProviderMySQL extends ServerProviderBase implements ServerProviderInstance {
+public class ServerProviderMySQL extends ServerProviderBase implements ServerProvider {
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ServerProviderMySQL.class);
@@ -79,6 +79,16 @@ public class ServerProviderMySQL extends ServerProviderBase implements ServerPro
   @Override
   public String getUrl() {
     return "mysql://localhost:" + port + "/test";
+  }
+
+  @Override
+  public String getUser() {
+    return "user";
+  }
+
+  @Override
+  public String getPassword() {
+    return ServerProviderBase.ROOT_PASSWORD;
   }
 
   @Override
