@@ -71,6 +71,7 @@ public class PassthroughStream<T> {
   private final Write write;
   private final Read read;
   
+  private Promise<Void> inflight;
   private Handler<Throwable> exceptionHandler;    
   private Handler<Void> drainHandler;
   private Handler<Void> endHandler;
@@ -102,9 +103,11 @@ public class PassthroughStream<T> {
   
   private void processCurrent(Promise<Void> promise, T data) {
     context.runOnContext(v -> {
-      try {
+      try {        
+        logger.debug("Calling {} with {}", processor, data);
         processor.handle(data, d -> read.handle(d))
                 .onComplete(ar -> {
+                  logger.debug("Calling {} with {} returned {}", processor, data, ar);
                   completeCurrent(promise, ar);
                 })
                 ;
@@ -143,11 +146,11 @@ public class PassthroughStream<T> {
       synchronized(lock) {
         current = data;
       }
-      Promise<Void> promise = Promise.promise();
+      inflight = Promise.promise();
       if (!paused.get()) {
-        processCurrent(promise, data);
+        processCurrent(inflight, data);
       }
-      return promise.future();
+      return inflight.future();
     }
 
     @Override
@@ -241,11 +244,18 @@ public class PassthroughStream<T> {
       if (amount < 0L) {
         throw new IllegalArgumentException();
       }
+      T curr = null;
+      Promise<Void> promise;
       synchronized (lock) {
         demand += amount;
         if (demand < 0L) {
           demand = Long.MAX_VALUE;
         }
+        curr = current;
+        promise = inflight;
+      }
+      if (current != null) {
+        processCurrent(promise, curr);
       }
       return this;
     }

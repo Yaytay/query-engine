@@ -27,8 +27,6 @@ public class SourceSql extends Source {
   private final String endpoint;
   private final String query;
   private final PoolOptions poolOptions;
-  private final boolean blockingProcessor;
-  private final int rowsQueuedBeforeDiscard;
   private final int streamingFetchSize;
 
   public String getEndpoint() {
@@ -43,14 +41,6 @@ public class SourceSql extends Source {
     return poolOptions;
   }
 
-  public boolean isBlockingProcessor() {
-    return blockingProcessor;
-  }
-
-  public int getRowsQueuedBeforeDiscard() {
-    return rowsQueuedBeforeDiscard;
-  }    
-
   public int getStreamingFetchSize() {
     return streamingFetchSize;
   }    
@@ -62,8 +52,6 @@ public class SourceSql extends Source {
     private String endpoint;
     private String query;
     private PoolOptions poolOptions;
-    private boolean blockingProcessor = false;
-    private int rowsQueuedBeforeDiscard = 1000;
     private int streamingFetchSize = 1000;
 
     private Builder() {
@@ -89,23 +77,13 @@ public class SourceSql extends Source {
       return this;
     }
 
-    public Builder blockingProcessor(final boolean value) {
-      this.blockingProcessor = value;
-      return this;
-    }
-
-    public Builder rowsQueuedBeforeDiscard(final int value) {
-      this.rowsQueuedBeforeDiscard = value;
-      return this;
-    }
-
     public Builder streamingFetchSize(final int value) {
       this.streamingFetchSize = value;
       return this;
     }
 
     public SourceSql build() {
-      return new SourceSql(type, endpoint, query, poolOptions, blockingProcessor, rowsQueuedBeforeDiscard, streamingFetchSize);
+      return new SourceSql(type, endpoint, query, poolOptions, streamingFetchSize);
     }
   }
 
@@ -117,16 +95,12 @@ public class SourceSql extends Source {
           , final String endpoint
           , final String query
           , final PoolOptions poolOptions
-          , final boolean blockingProcessor
-          , final int rowsQueuedBeforeDiscard
           , final int streamingFetchSize
   ) {
     super(type);
     this.endpoint = endpoint;
     this.query = query;
     this.poolOptions = poolOptions;
-    this.blockingProcessor = blockingProcessor;
-    this.rowsQueuedBeforeDiscard = rowsQueuedBeforeDiscard;
     this.streamingFetchSize = streamingFetchSize;
   }
 

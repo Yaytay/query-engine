@@ -21,6 +21,7 @@ import uk.co.spudsoft.query.main.exec.ProcessorInstance;
   property = "type")
 @JsonSubTypes({ 
   @JsonSubTypes.Type(value = ProcessorLimit.class, name = "LIMIT") 
+  , @JsonSubTypes.Type(value = ProcessorGroupConcat.class, name = "GROUP_CONCAT") 
 })
 public abstract class Processor {
   

@@ -30,7 +30,6 @@ public class SourceSqlStreamingInstanceTest {
   public void testInitializeWithBadEndpoint(Vertx vertx) {
     SourceSql definition = SourceSql.builder()
             .endpoint("none")
-            .rowsQueuedBeforeDiscard(1)
             .build();
     SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, vertx.getOrCreateContext(), definition);
     Future<Void> future = instance.initialize(ImmutableMap.<String, Endpoint>builder().build());

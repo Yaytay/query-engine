@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package uk.co.spudsoft.query.main.exec.procs.limit;
+package uk.co.spudsoft.query.main.exec.procs.query;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -14,7 +14,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.main.defn.Endpoint;
-import uk.co.spudsoft.query.main.defn.ProcessorLimit;
+import uk.co.spudsoft.query.main.defn.ProcessorGroupConcat;
 import uk.co.spudsoft.query.main.exec.ProcessorInstance;
 import uk.co.spudsoft.query.main.exec.procs.PassthroughStream;
 
@@ -22,29 +22,23 @@ import uk.co.spudsoft.query.main.exec.procs.PassthroughStream;
  *
  * @author jtalbut
  */
-public class ProcessorLimitInstance implements ProcessorInstance<ProcessorLimit> {
-  
-  @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(ProcessorLimitInstance.class);
-  
-  private final ProcessorLimit definition;
-  private final PassthroughStream<JsonObject> stream;
-  
-  private int count;
+public class ProcessorGroupConcatInstance implements ProcessorInstance<ProcessorGroupConcat> {
 
-  public ProcessorLimitInstance(Vertx vertx, Context context, ProcessorLimit definition) {
+  @SuppressWarnings("constantname")
+  private static final Logger logger = LoggerFactory.getLogger(ProcessorGroupConcatInstance.class);
+  
+  private final ProcessorGroupConcat definition;
+  private final PassthroughStream<JsonObject> stream;
+
+  public ProcessorGroupConcatInstance(Vertx vertx, Context context, ProcessorGroupConcat definition) {
     this.definition = definition;
     this.stream = new PassthroughStream<>(this::passthroughStreamProcessor, context);
-  }  
+  }
   
   private Future<Void> passthroughStreamProcessor(JsonObject data, PassthroughStream.AsyncProcessor<JsonObject> chain) {
     try {
       logger.info("process {}", data);
-      if (++count <= definition.getLimit()) {
-        return chain.handle(data);
-      } else {
-        return Future.succeededFuture();
-      }
+      return chain.handle(data);
     } catch(Throwable ex) {
       logger.error("Failed to process {}: ", data, ex);
       return Future.failedFuture(ex);

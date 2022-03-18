@@ -11,5 +11,6 @@ package uk.co.spudsoft.query.main.defn;
 public enum ProcessorType {
   
   LIMIT
+  , GROUP_CONCAT
           
 }
