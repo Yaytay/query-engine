@@ -19,13 +19,11 @@ import uk.co.spudsoft.query.main.exec.SourceInstance;
  */
 public class TestSource implements SourceInstance<SourceTest> {
 
-  private final Context context;
   private final int rowCount;
   private final BlockingReadStream<JsonObject> stream;
 
 
   public TestSource(Context context, SourceTest definition) {
-    this.context = context;
     this.rowCount = definition.getRowCount();
     this.stream = new BlockingReadStream<>(context, rowCount);
   }    

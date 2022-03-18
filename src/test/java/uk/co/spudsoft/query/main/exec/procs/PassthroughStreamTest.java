@@ -8,6 +8,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.streams.ReadStream;
 import io.vertx.core.streams.WriteStream;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -22,6 +23,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.lessThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  *
@@ -34,6 +37,25 @@ public class PassthroughStreamTest {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(PassthroughStreamTest.class);
 
+  @Test
+  public void basicCoverageChecks() {
+    PassthroughStream<JsonObject> instance = new PassthroughStream<>((d,c) -> Future.succeededFuture(), null);
+    try {
+      instance.writeStream().setWriteQueueMaxSize(0);
+      fail("Expected UnsupportedOperationException");
+    } catch(UnsupportedOperationException ex) {      
+    }
+    instance.readStream().pause().resume().resume();
+    
+    instance.readStream().pause();
+    instance.writeStream().write(new JsonObject());
+    
+    instance.readStream().endHandler(null);
+    instance.writeStream().end();
+    
+    assertTrue(instance.writeStream().writeQueueFull());
+  }
+  
   private Future<Void> writeData(Vertx vertx, WriteStream<JsonObject> instance, int value, boolean queueEnd) {
     if (value < 0) {
       if (!queueEnd) {
@@ -107,7 +129,6 @@ public class PassthroughStreamTest {
     });
   }
 
-
   @Test
   public void testSlowReader(Vertx vertx, VertxTestContext testContext) {    
     logger.info("testSlowReader");
@@ -131,6 +152,45 @@ public class PassthroughStreamTest {
           Thread.sleep(250);
         } catch(Throwable ex) {          
         }
+      }).endHandler(v2 -> {
+        logger.info("Ended");
+        testContext.completeNow();
+        testContext.verify(() -> {
+          assertThat(System.currentTimeMillis() - start, greaterThan(1000L));
+        });
+        testContext.completeNow();
+      });
+      
+      writeData(vertx, instance.writeStream(), 10, true)
+              .onSuccess(v2 -> {
+                logger.info("All data written");
+              })
+              .onFailure(ex -> {
+                testContext.failNow(ex);
+              })
+              ;
+    });
+  }
+
+  @Test
+  public void testBadReader(Vertx vertx, VertxTestContext testContext) {    
+    logger.info("testSlowReader");
+    vertx.getOrCreateContext().runOnContext(v -> {
+      long start = System.currentTimeMillis();
+      PassthroughStream<JsonObject> instance = new PassthroughStream<>(
+              (row, chain) -> {
+                return chain.handle(row);
+              }
+              , vertx.getOrCreateContext()
+      );
+      instance.writeStream().drainHandler(v2 -> {
+        logger.info("Drained");
+      }).exceptionHandler(ex -> {
+        logger.warn("Failure: ", ex);
+      });
+      instance.readStream().handler(jo -> {
+        logger.info("Received: {}", jo);
+        throw new IllegalStateException("Bad reader");
       }).endHandler(v2 -> {
         logger.info("Ended");
         testContext.completeNow();
@@ -324,6 +384,26 @@ public class PassthroughStreamTest {
               })
               ;
     });
+  }
+
+  @org.junit.Test
+  public void testWriteStream() {
+    System.out.println("writeStream");
+    PassthroughStream instance = null;
+    WriteStream expResult = null;
+    WriteStream result = instance.writeStream();
+    assertEquals(expResult, result);
+    fail("The test case is a prototype.");
+  }
+
+  @org.junit.Test
+  public void testReadStream() {
+    System.out.println("readStream");
+    PassthroughStream instance = null;
+    ReadStream expResult = null;
+    ReadStream result = instance.readStream();
+    assertEquals(expResult, result);
+    fail("The test case is a prototype.");
   }
 
 }

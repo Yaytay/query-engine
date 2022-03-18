@@ -77,8 +77,11 @@ public class PassthroughStream<T> {
   private Handler<T> readHandler;
 
   private T current;
-  private Promise<Void> inFlight;
   private long demand;
+  
+  /*
+  This is the endhandler that will be called when the current in-flight item has been processed.
+  */
   private Handler<Void> end;
 
   public PassthroughStream(PassthroughProcessor<T> processor, Context context) {
@@ -116,7 +119,6 @@ public class PassthroughStream<T> {
   }
 
   private void completeCurrent(Promise<Void> promise, AsyncResult<Void> ar) {
-    inFlight = null;
     promise.handle(ar);
     Handler<Void> handler = drainHandler;
     if (handler != null) {
@@ -142,7 +144,6 @@ public class PassthroughStream<T> {
         current = data;
       }
       Promise<Void> promise = Promise.promise();
-      inFlight = promise;
       if (!paused.get()) {
         processCurrent(promise, data);
       }
@@ -156,21 +157,12 @@ public class PassthroughStream<T> {
 
     @Override
     public void end(Handler<AsyncResult<Void>> handler) {      
-      if (inFlight != null) {
-        logger.debug("end whilst in flight");
+      end = v -> {
         Handler<Void> eh = endHandler;
         if (eh != null) {
           eh.handle(null);
         }
-      } else {
-        logger.debug("end");
-        end = v -> {
-          Handler<Void> eh = endHandler;
-          if (eh != null) {
-            eh.handle(null);
-          }
-        };
-      }
+      };
     }
 
     @Override
@@ -211,7 +203,7 @@ public class PassthroughStream<T> {
         result = Future.failedFuture(ex);
       }
       synchronized (lock) {
-        if (demand !=Long.MAX_VALUE) {
+        if (demand != Long.MAX_VALUE) {
           if (--demand == 0) {
             this.pause();
           }

@@ -22,7 +22,6 @@ public class RowStreamWrapper implements ReadStream<JsonObject> {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(RowStreamWrapper.class);
   
-  private boolean ended;
   private final RowStream<Row> rowStream;
   private final Transaction transaction;
   private Handler<Throwable> exceptionHandler;
@@ -48,9 +47,6 @@ public class RowStreamWrapper implements ReadStream<JsonObject> {
       rowStream.handler(null);
     } else {
       rowStream.handler(row -> {
-        if (ended) {
-          logger.error("WTF");
-        }
         try {
           JsonObject json = row.toJson();
           logger.trace("SQL {} got: {}", this, json);
@@ -85,38 +81,17 @@ public class RowStreamWrapper implements ReadStream<JsonObject> {
 
   @Override
   public ReadStream<JsonObject> endHandler(Handler<Void> endHandler) {    
-    if (ended) {
-      endHandler.handle(null);
-    } else if (endHandler == null) {
-      rowStream.endHandler(v -> {
-        logger.debug("SQL: ending with no handler");
-        if (!ended) {
-          transaction.commit().onComplete(ar -> {
-            if (ar.succeeded()) {
-              logger.debug("Transaction completed");
-            } else {
-              logger.warn("Transaction failed: ", ar.cause());
-            }
-          });
-          ended = true;
+    rowStream.endHandler(v -> {
+      logger.debug("SQL: ending");
+      transaction.commit().onComplete(ar -> {
+        if (ar.succeeded()) {
+          logger.debug("Transaction completed");
+        } else {
+          logger.warn("Transaction failed: ", ar.cause());
         }
       });
-    } else {
-      rowStream.endHandler(v -> {
-        logger.debug("SQL: ending");
-        if (!ended) {
-          transaction.commit().onComplete(ar -> {
-            if (ar.succeeded()) {
-              logger.debug("Transaction completed");
-            } else {
-              logger.warn("Transaction failed: ", ar.cause());
-            }
-          });
-          ended = true;
-        }
-        endHandler.handle(v);
-      });
-    }
+      endHandler.handle(v);
+    });
     return this;
   }
   
