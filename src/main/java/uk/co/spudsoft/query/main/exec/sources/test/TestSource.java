@@ -12,7 +12,6 @@ import java.util.Map;
 import uk.co.spudsoft.query.main.defn.Endpoint;
 import uk.co.spudsoft.query.main.defn.SourceTest;
 import uk.co.spudsoft.query.main.exec.SourceInstance;
-import uk.co.spudsoft.query.main.exec.sources.sql.BlockingReadStream;
 
 /**
  *

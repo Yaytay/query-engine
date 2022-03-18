@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.main.defn.Endpoint;
 import uk.co.spudsoft.query.main.defn.ProcessorLimit;
 import uk.co.spudsoft.query.main.exec.ProcessorInstance;
-import uk.co.spudsoft.query.main.exec.procs.PassthroughStream2;
+import uk.co.spudsoft.query.main.exec.procs.PassthroughStream;
 
 /**
  *
@@ -28,16 +28,16 @@ public class ProcessorLimitInstance implements ProcessorInstance<ProcessorLimit>
   private static final Logger logger = LoggerFactory.getLogger(ProcessorLimitInstance.class);
   
   private final ProcessorLimit definition;
-  private final PassthroughStream2<JsonObject> stream;
+  private final PassthroughStream<JsonObject> stream;
   
   private int count;
 
   public ProcessorLimitInstance(Vertx vertx, Context context, ProcessorLimit definition) {
     this.definition = definition;
-    this.stream = new PassthroughStream2<>(this::process, context);
+    this.stream = new PassthroughStream<>(this::process, context);
   }  
   
-  private Future<Void> process(JsonObject data, PassthroughStream2.AsyncProcessor<JsonObject> chain) {
+  private Future<Void> process(JsonObject data, PassthroughStream.AsyncProcessor<JsonObject> chain) {
     try {
       logger.info("process {}", data);
       //if (++count <= definition.getLimit()) {

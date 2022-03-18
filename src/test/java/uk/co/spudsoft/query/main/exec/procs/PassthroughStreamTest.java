@@ -11,6 +11,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.WriteStream;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.lessThan;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  *
@@ -48,8 +50,15 @@ public class PassthroughStreamTest {
         });
         if (value == 0 && queueEnd) {
           instance.end();
-        }
-        return promise.future().compose(v -> writeData(vertx, instance, value - 1, queueEnd));
+        }        
+        Promise<Void> success = Promise.promise();        
+        promise.future().
+                onComplete(ar -> {
+                  writeData(vertx, instance, value - 1, queueEnd);
+                  success.complete();
+                })
+                ;
+        return  success.future();
       } else {
         instance.write(data);
         if (value == 0 && queueEnd) {
@@ -66,18 +75,17 @@ public class PassthroughStreamTest {
     vertx.getOrCreateContext().runOnContext(v -> {
       long start = System.currentTimeMillis();
       PassthroughStream<JsonObject> instance = new PassthroughStream<>(
-              row -> {
-                return Future.succeededFuture(row);
+              (row, chain) -> {
+                return chain.handle(row);
               }
               , vertx.getOrCreateContext()
-              , 3
       );
-      instance.drainHandler(v2 -> {
+      instance.writeStream().drainHandler(v2 -> {
         logger.info("Drained");
       }).exceptionHandler(ex -> {
         logger.warn("Failure: ", ex);
       });
-      instance.getReadStream().handler(jo -> {
+      instance.readStream().handler(jo -> {
         logger.info("Received: {}", jo);
       }).endHandler(v2 -> {
         logger.info("Ended");
@@ -88,7 +96,7 @@ public class PassthroughStreamTest {
         testContext.completeNow();
       });
       
-      writeData(vertx, instance, 7, true)
+      writeData(vertx, instance.writeStream(), 7, true)
               .onSuccess(v2 -> {
                 logger.info("All data written");
               })
@@ -106,18 +114,17 @@ public class PassthroughStreamTest {
     vertx.getOrCreateContext().runOnContext(v -> {
       long start = System.currentTimeMillis();
       PassthroughStream<JsonObject> instance = new PassthroughStream<>(
-              row -> {
-                return Future.succeededFuture(row);
+              (row, chain) -> {
+                return chain.handle(row);
               }
               , vertx.getOrCreateContext()
-              , 3
       );
-      instance.drainHandler(v2 -> {
+      instance.writeStream().drainHandler(v2 -> {
         logger.info("Drained");
       }).exceptionHandler(ex -> {
         logger.warn("Failure: ", ex);
       });
-      instance.getReadStream().handler(jo -> {
+      instance.readStream().handler(jo -> {
         logger.info("Received: {}", jo);
         try {
           // This is clearly bad as this will run on a vertx thread (make enough repetitions and the blocked thread detector will trigger - it's not really blocked, but it does have the same stack trace)
@@ -133,7 +140,7 @@ public class PassthroughStreamTest {
         testContext.completeNow();
       });
       
-      writeData(vertx, instance, 10, true)
+      writeData(vertx, instance.writeStream(), 10, true)
               .onSuccess(v2 -> {
                 logger.info("All data written");
               })
@@ -150,22 +157,22 @@ public class PassthroughStreamTest {
     vertx.getOrCreateContext().runOnContext(v -> {
       long start = System.currentTimeMillis();
       PassthroughStream<JsonObject> instance = new PassthroughStream<>(
-              row -> {
-                Promise<JsonObject> promise = Promise.promise();
+              (row, chain) -> {
+                Promise<Void> promise = Promise.promise();
                 vertx.setTimer(250, l -> {
-                  promise.complete(row);
+                  chain.handle(row)
+                          .onComplete(promise);
                 });
                 return promise.future();
               }
               , vertx.getOrCreateContext()
-              , 3
       );
-      instance.drainHandler(v2 -> {
+      instance.writeStream().drainHandler(v2 -> {
         logger.info("Drained");
       }).exceptionHandler(ex -> {
         logger.warn("Failure: ", ex);
       });
-      instance.getReadStream().handler(jo -> {
+      instance.readStream().handler(jo -> {
         logger.info("Received: {}", jo);
       }).endHandler(v2 -> {
         logger.info("Ended");
@@ -176,7 +183,7 @@ public class PassthroughStreamTest {
         testContext.completeNow();
       });
       
-      writeData(vertx, instance, 7, false)
+      writeData(vertx, instance.writeStream(), 7, false)
               .onSuccess(v2 -> {
                 logger.info("All data written");
               })
@@ -186,27 +193,65 @@ public class PassthroughStreamTest {
               ;
     });
   }
-  
-  
+    
+  @Test
+  public void testNoChainProcessor(Vertx vertx, VertxTestContext testContext) {
+    logger.info("testSlowProcessor");
+    vertx.getOrCreateContext().runOnContext(v -> {
+      long start = System.currentTimeMillis();
+      PassthroughStream<JsonObject> instance = new PassthroughStream<>(
+              (row, chain) -> {
+                return Future.succeededFuture();
+              }
+              , vertx.getOrCreateContext()
+      );
+      instance.writeStream().drainHandler(v2 -> {
+        logger.info("Drained");
+      }).exceptionHandler(ex -> {
+        logger.warn("Failure: ", ex);
+      });
+      instance.readStream().handler(jo -> {
+        logger.info("Received: {}", jo);
+      }).endHandler(v2 -> {
+        logger.info("Ended");
+        testContext.completeNow();
+        testContext.verify(() -> {
+          assertThat(System.currentTimeMillis() - start, greaterThan(1000L));
+        });
+        testContext.completeNow();
+      });
+      
+      writeData(vertx, instance.writeStream(), 7, false)
+              .onSuccess(v2 -> {
+                logger.info("All data written");
+              })
+              .onFailure(ex -> {
+                testContext.failNow(ex);
+              })
+              ;
+    });
+  }
+    
   @Test
   public void testBadProcessor(Vertx vertx, VertxTestContext testContext) {    
     logger.info("testBadProcessor");
     vertx.getOrCreateContext().runOnContext(v -> {
       long start = System.currentTimeMillis();
       PassthroughStream<JsonObject> instance = new PassthroughStream<>(
-              row -> {
+              (row, chain) -> {
                 return Future.failedFuture("It didn't work");
               }
               , vertx.getOrCreateContext()
-              , 3
-      );
-      instance.drainHandler(v2 -> {
+      );      
+      instance.writeStream().drainHandler(v2 -> {
         logger.info("Drained");
       }).exceptionHandler(ex -> {
         logger.warn("Failure: ", ex);
       });
-      instance.getReadStream().handler(jo -> {
+      AtomicLong received = new AtomicLong();
+      instance.readStream().handler(jo -> {
         logger.info("Received: {}", jo);
+        received.incrementAndGet();
       }).endHandler(v2 -> {
         logger.info("Ended");
         testContext.completeNow();
@@ -215,10 +260,64 @@ public class PassthroughStreamTest {
         });
         testContext.completeNow();
       });
+      instance.readStream().resume();
+      try {
+        instance.readStream().fetch(-1);
+        testContext.failNow("Should have thrown IllegalArgumentException");
+      } catch(IllegalArgumentException ex) {
+      }
       
-      writeData(vertx, instance, 7, false)
+      
+      writeData(vertx, instance.writeStream(), 7, false)
               .onSuccess(v2 -> {
-                logger.info("All data written");
+                testContext.verify(() -> {
+                  assertEquals(0, received.get());
+                });
+                testContext.completeNow();
+              })
+              .onFailure(ex -> {
+                testContext.failNow(ex);
+              })
+              ;
+    });
+  }
+
+  @Test
+  public void testVeryBadProcessor(Vertx vertx, VertxTestContext testContext) {    
+    logger.info("testBadProcessor");
+    vertx.getOrCreateContext().runOnContext(v -> {
+      long start = System.currentTimeMillis();
+      PassthroughStream<JsonObject> instance = new PassthroughStream<>(
+              (row, chain) -> {
+                throw new IllegalStateException("Very bad");
+              }
+              , vertx.getOrCreateContext()
+      );      
+      instance.writeStream().drainHandler(v2 -> {
+        logger.info("Drained");
+      }).exceptionHandler(ex -> {
+        logger.warn("Failure: ", ex);
+      });
+      AtomicLong received = new AtomicLong();
+      instance.readStream().handler(jo -> {
+        logger.info("Received: {}", jo);
+        received.incrementAndGet();
+      }).endHandler(v2 -> {
+        logger.info("Ended");
+        testContext.completeNow();
+        testContext.verify(() -> {
+          assertThat(System.currentTimeMillis() - start, lessThan(1000L));
+        });
+        testContext.completeNow();
+      });
+      instance.readStream().resume();
+      
+      writeData(vertx, instance.writeStream(), 7, false)
+              .onSuccess(v2 -> {
+                testContext.verify(() -> {
+                  assertEquals(0, received.get());
+                });
+                testContext.completeNow();
               })
               .onFailure(ex -> {
                 testContext.failNow(ex);

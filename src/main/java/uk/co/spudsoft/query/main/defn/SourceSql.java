@@ -10,7 +10,6 @@ import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.sqlclient.PoolOptions;
 import uk.co.spudsoft.query.main.exec.SourceInstance;
-import uk.co.spudsoft.query.main.exec.sources.sql.SourceSqlBlockingInstance;
 import uk.co.spudsoft.query.main.exec.sources.sql.SourceSqlStreamingInstance;
 
 /**
@@ -22,11 +21,7 @@ public class SourceSql extends Source {
 
   @Override
   public SourceInstance<? extends Source> createInstance(Vertx vertx, Context context) {
-    if (blockingProcessor) {
-      return new SourceSqlBlockingInstance(vertx, context, this);
-    } else {
-      return new SourceSqlStreamingInstance(vertx, context, this);
-    }
+    return new SourceSqlStreamingInstance(vertx, context, this);
   }
 
   private final String endpoint;
