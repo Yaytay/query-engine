@@ -32,7 +32,7 @@
   "source": {    
     "type": "SQL",
     "endpoint": "$<key>",
-    "streamingFetchSize": 5,
+    "streamingFetchSize": 7,
     "query": "select d.id, d.instant, l.value as ref, d.value from testData d join testRefData l on d.lookup = l.id where d.id < 20 order by d.id"
   }
   ,
@@ -43,14 +43,17 @@
       "parentId":"id",
       "innerJoin":false,
       "idColumn":"dataid",      
+      "columnName":"children",      
+      "childColumnName":"value",      
       "source": {    
         "type": "SQL",
         "endpoint": "$<key>",
         "streamingFetchSize": 10,
-        "query": "select dataId, value from testManyData m join testRefData r on r.id = m.refId where dataId < 20 order by dataId"
+        "query": "select dataId, value from testManyData m join testRefData r on r.id = m.refId where dataId < 20 order by dataId, sort"
       }
     }
-    , {
+    , 
+    {
       "type":"LIMIT",
       "limit":13
     }

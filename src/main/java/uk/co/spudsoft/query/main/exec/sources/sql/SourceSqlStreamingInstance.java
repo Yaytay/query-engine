@@ -68,7 +68,7 @@ public class SourceSqlStreamingInstance implements SourceInstance<SourceSql> {
     if (!Strings.isNullOrEmpty(endpoint.getPassword())) {
       connectOptions.setPassword(endpoint.getPassword());
     }
-    Pool pool = Pool.pool(vertx, connectOptions, definition.getPoolOptions() == null ? new PoolOptions() : definition.getPoolOptions());
+    Pool pool = Pool.pool(vertx, connectOptions, definition.getPoolOptions() == null ? new PoolOptions().setMaxSize(1) : definition.getPoolOptions());
     return pool.getConnection()
             .compose(conn -> {
               connection = conn;
@@ -78,7 +78,7 @@ public class SourceSqlStreamingInstance implements SourceInstance<SourceSql> {
               return connection.begin();
             }).compose(tran -> {
               transaction = tran;
-              logger.debug("Creating SQL stream");
+              logger.debug("Creating SQL stream on {}", connection);
               RowStream<Row> stream = preparedStatement.createStream(definition.getStreamingFetchSize());
               rowStreamWrapper = new RowStreamWrapper(transaction, stream);
               return Future.succeededFuture();

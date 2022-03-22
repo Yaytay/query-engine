@@ -122,12 +122,18 @@ public class PassthroughStream<T> {
   }
 
   private void completeCurrent(Promise<Void> promise, AsyncResult<Void> ar) {
-    promise.handle(ar);
-    Handler<Void> handler = drainHandler;
-    if (handler != null) {
-      handler.handle(null);
+    Handler<Void> dh;
+    Handler<Void> eh;
+    synchronized(lock) {
+      dh = drainHandler;
+      eh = end;
+      current = null;
+      inflight = null;
     }
-    Handler<Void> eh = end;
+    promise.handle(ar);
+    if (dh != null) {
+      dh.handle(null);
+    }
     if (eh != null) {
       eh.handle(null);
     }
@@ -143,14 +149,18 @@ public class PassthroughStream<T> {
 
     @Override
     public Future<Void> write(T data) {
+      Promise<Void> promise;
+      boolean isPaused;
       synchronized(lock) {
         current = data;
+        promise = Promise.promise();
+        inflight = promise;
+        isPaused = paused.get();
+      }        
+      if (!isPaused) {
+        processCurrent(promise, data);
       }
-      inflight = Promise.promise();
-      if (!paused.get()) {
-        processCurrent(inflight, data);
-      }
-      return inflight.future();
+      return promise.future();
     }
 
     @Override
@@ -159,13 +169,24 @@ public class PassthroughStream<T> {
     }
 
     @Override
-    public void end(Handler<AsyncResult<Void>> handler) {      
-      end = v -> {
-        Handler<Void> eh = endHandler;
-        if (eh != null) {
-          eh.handle(null);
-        }
-      };
+    public void end(Handler<AsyncResult<Void>> handler) {
+      boolean endNow;
+      synchronized(lock) {
+        end = v -> {
+          Handler<Void> eh;
+          synchronized(lock) {
+            eh = endHandler;
+          }
+          if (eh != null) {
+            eh.handle(null);
+          }
+          handler.handle(Future.succeededFuture());
+        };
+        endNow = inflight == null;
+      }
+      if (endNow) {
+        end.handle(null);
+      }
     }
 
     @Override
@@ -183,7 +204,16 @@ public class PassthroughStream<T> {
 
     @Override
     public WriteStream<T> drainHandler(Handler<Void> handler) {
-      drainHandler = handler;
+      boolean callNow = false;
+      synchronized(lock) {
+        drainHandler = handler;
+        if (inflight == null || inflight.future().isComplete()) {
+          callNow = true;
+        }
+      }
+      if (callNow) {
+        handler.handle(null);
+      }
       return this;
     }
     
@@ -235,6 +265,8 @@ public class PassthroughStream<T> {
 
     @Override
     public ReadStream<T> resume() {
+      logger.debug("Resume");
+      paused.set(false);
       fetch(Long.MAX_VALUE);
       return this;
     }
@@ -254,7 +286,7 @@ public class PassthroughStream<T> {
         curr = current;
         promise = inflight;
       }
-      if (current != null) {
+      if (curr != null) {
         processCurrent(promise, curr);
       }
       return this;

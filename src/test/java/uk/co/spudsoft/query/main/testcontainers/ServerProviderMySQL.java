@@ -217,8 +217,8 @@ public class ServerProviderMySQL extends ServerProviderBase implements ServerPro
               return doManyInserts(
                       pool.preparedQuery(
                               """
-                               insert into testManyData (dataId, refId) 
-                               select d.id, ? 
+                               insert into testManyData (dataId, sort, refId) 
+                               select d.id, ?, ? 
                                from testData d left join testManyData m on d.id = m.dataId and m.refId = ? 
                                where id % ? >= ? and m.dataId is null 
                                order by id  

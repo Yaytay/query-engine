@@ -22,6 +22,8 @@ public class ProcessorGroupConcat extends Processor {
   private final String parentId;
   private final boolean innerJoin;
   private final String idColumn;
+  private final String columnName;
+  private final String childColumnName;
   private final Source source;
   
   @Override
@@ -48,13 +50,25 @@ public class ProcessorGroupConcat extends Processor {
   public Source getSource() {
     return source;
   }
+  
+  public String getColumnName() {
+    return columnName;
+  }
+
+  public String getChildColumnName() {
+    return childColumnName;
+  }
+
+  
 
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
     private ProcessorType type = ProcessorType.GROUP_CONCAT;
     private String delimiter;
+    private String columnName;
     private String parentId;
+    private String childColumnName;
     private boolean innerJoin;
     private String idColumn;
     private Source source;
@@ -92,8 +106,18 @@ public class ProcessorGroupConcat extends Processor {
       return this;
     }
 
+    public Builder columnName(final String value) {
+      this.columnName = value;
+      return this;
+    }
+
+    public Builder childColumnName(final String value) {
+      this.childColumnName = value;
+      return this;
+    }
+
     public ProcessorGroupConcat build() {
-      return new uk.co.spudsoft.query.main.defn.ProcessorGroupConcat(type, delimiter, parentId, innerJoin, idColumn, source);
+      return new uk.co.spudsoft.query.main.defn.ProcessorGroupConcat(type, delimiter, parentId, innerJoin, idColumn, source, columnName, childColumnName);
     }
   }
 
@@ -101,13 +125,19 @@ public class ProcessorGroupConcat extends Processor {
     return new ProcessorGroupConcat.Builder();
   }
 
-  private ProcessorGroupConcat(final ProcessorType type, final String delimiter, final String parentId, final boolean innerJoin, final String idColumn, final Source source) {
+  private ProcessorGroupConcat(final ProcessorType type, final String delimiter, final String parentId, final boolean innerJoin, final String idColumn
+          , final Source source
+          , final String columnName
+          , final String childColumnName
+  ) {
     super(type);
     this.delimiter = delimiter;
     this.parentId = parentId;
     this.innerJoin = innerJoin;
     this.idColumn = idColumn;
     this.source = source;
+    this.columnName = columnName;
+    this.childColumnName = childColumnName;
   }
     
   

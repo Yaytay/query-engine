@@ -201,10 +201,11 @@ public class ServerProviderPostgreSQL extends ServerProviderBase implements Serv
               return doManyInserts(
                       pool.preparedQuery(
                               """
-                               insert into testManyData (dataid, refid) 
-                               select d.id, $1 
-                               from testData d left join testManyData m on d.id = m.dataId and m.refid = $2  
-                               where id % $3 >= $4 and m.dataId is null 
+                               insert into testManyData (dataid, sort, refid) 
+                               select d.id, $1, $2
+                               from testData d left
+                                 join testManyData m on d.id = m.dataId and m.refid = $3
+                               where id % $4 >= $5 and m.dataId is null 
                                order by id  
                               """
                       )

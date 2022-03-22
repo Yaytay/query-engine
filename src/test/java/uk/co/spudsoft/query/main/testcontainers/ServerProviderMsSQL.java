@@ -232,10 +232,10 @@ public class ServerProviderMsSQL extends ServerProviderBase implements ServerPro
               return doManyInserts(
                       pool.preparedQuery(
                               """
-                               insert into testManyData (dataId, refId) 
-                               select d.id, @p1
-                               from testData d left join testManyData m on d.id = m.dataId and m.refId = @p2
-                               where id % @p3 >= @p4 and m.dataId is null 
+                               insert into testManyData (dataId, sort, refId) 
+                               select d.id, @p1, @p2
+                               from testData d left join testManyData m on d.id = m.dataId and m.refId = @p3
+                               where id % @p4 >= @p5 and m.dataId is null 
                                order by id 
                               """
                       )

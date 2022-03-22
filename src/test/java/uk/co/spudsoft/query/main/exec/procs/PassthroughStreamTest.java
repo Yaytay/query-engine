@@ -8,7 +8,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.streams.ReadStream;
 import io.vertx.core.streams.WriteStream;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -37,30 +36,9 @@ public class PassthroughStreamTest {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(PassthroughStreamTest.class);
 
-  @Test
-  public void basicCoverageChecks() {
-    PassthroughStream<JsonObject> instance = new PassthroughStream<>((d,c) -> Future.succeededFuture(), null);
-    try {
-      instance.writeStream().setWriteQueueMaxSize(0);
-      fail("Expected UnsupportedOperationException");
-    } catch(UnsupportedOperationException ex) {      
-    }
-    instance.readStream().pause().resume().resume();
-    
-    instance.readStream().pause();
-    instance.writeStream().write(new JsonObject());
-    
-    instance.readStream().endHandler(null);
-    instance.writeStream().end();
-    
-    assertTrue(instance.writeStream().writeQueueFull());
-  }
-  
-  private Future<Void> writeData(Vertx vertx, WriteStream<JsonObject> instance, int value, boolean queueEnd) {
+  private Future<Void> writeData(Vertx vertx, WriteStream<JsonObject> instance, int value) {
     if (value < 0) {
-      if (!queueEnd) {
-        instance.end();
-      }
+      instance.end();
       return Future.succeededFuture();
     } else {
       JsonObject data = new JsonObject().put("value", value);
@@ -70,23 +48,23 @@ public class PassthroughStreamTest {
           instance.write(data, promise);
           instance.drainHandler(null);
         });
-        if (value == 0 && queueEnd) {
+        if (value == 0) {
           instance.end();
         }        
         Promise<Void> success = Promise.promise();        
         promise.future().
                 onComplete(ar -> {
-                  writeData(vertx, instance, value - 1, queueEnd);
+                  writeData(vertx, instance, value - 1);
                   success.complete();
                 })
                 ;
         return  success.future();
       } else {
         instance.write(data);
-        if (value == 0 && queueEnd) {
+        if (value == 0) {
           instance.end();
         }
-        return writeData(vertx, instance, value - 1, queueEnd);
+        return writeData(vertx, instance, value - 1);
       }
     }
   }
@@ -118,7 +96,7 @@ public class PassthroughStreamTest {
         testContext.completeNow();
       });
       
-      writeData(vertx, instance.writeStream(), 7, true)
+      writeData(vertx, instance.writeStream(), 7)
               .onSuccess(v2 -> {
                 logger.info("All data written");
               })
@@ -161,7 +139,7 @@ public class PassthroughStreamTest {
         testContext.completeNow();
       });
       
-      writeData(vertx, instance.writeStream(), 10, true)
+      writeData(vertx, instance.writeStream(), 10)
               .onSuccess(v2 -> {
                 logger.info("All data written");
               })
@@ -200,7 +178,7 @@ public class PassthroughStreamTest {
         testContext.completeNow();
       });
       
-      writeData(vertx, instance.writeStream(), 10, true)
+      writeData(vertx, instance.writeStream(), 10)
               .onSuccess(v2 -> {
                 logger.info("All data written");
               })
@@ -243,7 +221,7 @@ public class PassthroughStreamTest {
         testContext.completeNow();
       });
       
-      writeData(vertx, instance.writeStream(), 7, false)
+      writeData(vertx, instance.writeStream(), 7)
               .onSuccess(v2 -> {
                 logger.info("All data written");
               })
@@ -281,7 +259,7 @@ public class PassthroughStreamTest {
         testContext.completeNow();
       });
       
-      writeData(vertx, instance.writeStream(), 7, false)
+      writeData(vertx, instance.writeStream(), 7)
               .onSuccess(v2 -> {
                 logger.info("All data written");
               })
@@ -328,7 +306,7 @@ public class PassthroughStreamTest {
       }
       
       
-      writeData(vertx, instance.writeStream(), 7, false)
+      writeData(vertx, instance.writeStream(), 7)
               .onSuccess(v2 -> {
                 testContext.verify(() -> {
                   assertEquals(0, received.get());
@@ -372,7 +350,7 @@ public class PassthroughStreamTest {
       });
       instance.readStream().resume();
       
-      writeData(vertx, instance.writeStream(), 7, false)
+      writeData(vertx, instance.writeStream(), 7)
               .onSuccess(v2 -> {
                 testContext.verify(() -> {
                   assertEquals(0, received.get());
@@ -386,24 +364,24 @@ public class PassthroughStreamTest {
     });
   }
 
-  @org.junit.Test
-  public void testWriteStream() {
-    System.out.println("writeStream");
-    PassthroughStream instance = null;
-    WriteStream expResult = null;
-    WriteStream result = instance.writeStream();
-    assertEquals(expResult, result);
-    fail("The test case is a prototype.");
+  @Test
+  public void basicCoverageChecks() {
+    PassthroughStream<JsonObject> instance = new PassthroughStream<>((d,c) -> Future.succeededFuture(), null);
+    try {
+      instance.writeStream().setWriteQueueMaxSize(0);
+      fail("Expected UnsupportedOperationException");
+    } catch(UnsupportedOperationException ex) {      
+    }
+    instance.readStream().pause().resume().resume();
+    
+    instance.readStream().pause();
+    instance.writeStream().write(new JsonObject());
+    
+    instance.readStream().endHandler(null);
+    instance.writeStream().end();
+    
+    assertTrue(instance.writeStream().writeQueueFull());
   }
-
-  @org.junit.Test
-  public void testReadStream() {
-    System.out.println("readStream");
-    PassthroughStream instance = null;
-    ReadStream expResult = null;
-    ReadStream result = instance.readStream();
-    assertEquals(expResult, result);
-    fail("The test case is a prototype.");
-  }
+  
 
 }

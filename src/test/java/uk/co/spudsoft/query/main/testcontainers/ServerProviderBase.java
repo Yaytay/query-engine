@@ -97,6 +97,7 @@ public abstract class ServerProviderBase {
           = """
           create table testManyData (
             dataId int not null
+            , sort int not null
             , refId GUID not null
             , constraint PK_TestManyData primary key (dataId, refId)
           )
@@ -156,8 +157,15 @@ public abstract class ServerProviderBase {
       return Future.succeededFuture();
     } else {
       logger.debug("{}: Running many data insert batch iteration {}", getName(), currentIteration);
-      return stmt.execute(Tuple.of(convertUuid(REF_DATA_KEYS.get(currentIteration)), convertUuid(REF_DATA_KEYS.get(currentIteration)), MANY_DATA_MAX_ROWS, currentIteration))
-              .compose(v -> doManyInserts(stmt, currentIteration + 1));
+      return stmt.execute(
+              Tuple.of(
+                        currentIteration
+                      , convertUuid(REF_DATA_KEYS.get(currentIteration))
+                      , convertUuid(REF_DATA_KEYS.get(currentIteration))
+                      , MANY_DATA_MAX_ROWS
+                      , currentIteration
+              )
+        ).compose(v -> doManyInserts(stmt, currentIteration + 1));
     }    
   }
   
