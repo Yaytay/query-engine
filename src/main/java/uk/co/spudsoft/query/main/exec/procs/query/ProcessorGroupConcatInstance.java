@@ -25,9 +25,9 @@ import uk.co.spudsoft.query.main.exec.procs.PassthroughWriteStream;
  * A QueryEngine Processor that acts similarly to the MySQL <a href="https://dev.mysql.com/doc/refman/8.0/en/aggregate-functions.html#function_group-concat">GROUP_CONCAT</A> aggregate function.
  * 
  * A sub query is run and merged with the primary query.
- * The join is always a merge join, so the primary query must be sorted by the {@link uk.co.spudsoft.query.main.defn.ProcessorGroupConcat#parentId} column and the sub query 
- * must be sorted by the {@link uk.co.spudsoft.query.main.defn.ProcessorGroupConcat#idColumn} column.
- * The values from the {@link uk.co.spudsoft.query.main.defn.ProcessorGroupConcat#columnName} column are joined to form a single string, using
+ * The join is always a merge join, so the primary query must be sorted by the {@link uk.co.spudsoft.query.main.defn.ProcessorGroupConcat#parentIdColumn} column and the sub query 
+ * must be sorted by the {@link uk.co.spudsoft.query.main.defn.ProcessorGroupConcat#childIdColumn} column.
+ * The values from the {@link uk.co.spudsoft.query.main.defn.ProcessorGroupConcat#childValueColumn} column are joined to form a single string, using
  * {@link uk.co.spudsoft.query.main.defn.ProcessorGroupConcat#delimiter} as a delimiter.
  * 
  * 

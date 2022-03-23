@@ -4,9 +4,12 @@
  */
 package uk.co.spudsoft.query.main.exec;
 
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.WriteStream;
+import java.util.Map;
 import uk.co.spudsoft.query.main.defn.Destination;
+import uk.co.spudsoft.query.main.defn.Endpoint;
 
 /**
  *
@@ -17,6 +20,8 @@ import uk.co.spudsoft.query.main.defn.Destination;
  */
 public interface DestinationInstance<T extends Destination> {
   
+  Future<Void> initialize(Map<String, Endpoint> endpoints);
+
   /**
    * Return the write stream that the data will be passed to.
    * @return the write stream that the data will be passed to.

@@ -44,7 +44,7 @@ public class ProcessorGroupConcatInstanceTest {
     ProcessorGroupConcatInstance instance = new ProcessorGroupConcatInstance(vertx, vertx.getOrCreateContext(), definition);
     
     // instance.initialize();
-    
+    testContext.completeNow();
   }
   
 }
