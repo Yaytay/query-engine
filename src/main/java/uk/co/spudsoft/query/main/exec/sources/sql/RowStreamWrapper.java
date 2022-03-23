@@ -52,10 +52,6 @@ public class RowStreamWrapper implements ReadStream<JsonObject> {
       rowStream.handler(row -> {
         try {
           JsonObject json = row.toJson();
-          logger.trace("SQL {} got: {}", this.hashCode(), json);
-          if (json != null && "seventh".equals(json.getString("ref"))) {
-            logger.debug("Debugging");
-          }
           handler.handle(json);
         } catch(Throwable ex) {
           if (exceptionHandler != null) {
@@ -88,15 +84,12 @@ public class RowStreamWrapper implements ReadStream<JsonObject> {
   @Override
   public ReadStream<JsonObject> endHandler(Handler<Void> endHandler) {    
     rowStream.endHandler(ehv -> {
-      logger.debug("SQL: ending");
       rowStream.close()
               .compose(v -> {
                 return transaction.commit();
               })
               .onComplete(ar -> {
-                if (ar.succeeded()) {
-                  logger.debug("Transaction completed");
-                } else {
+                if (!ar.succeeded()) {
                   logger.warn("Transaction failed: ", ar.cause());
                 }
                 endHandler.handle(null);                

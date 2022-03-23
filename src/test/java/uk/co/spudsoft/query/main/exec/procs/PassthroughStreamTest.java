@@ -36,7 +36,7 @@ public class PassthroughStreamTest {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(PassthroughStreamTest.class);
 
-  private Future<Void> writeData(Vertx vertx, WriteStream<JsonObject> instance, int value) {
+  static Future<Void> writeData(Vertx vertx, WriteStream<JsonObject> instance, int value) {
     if (value < 0) {
       instance.end();
       return Future.succeededFuture();

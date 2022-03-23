@@ -18,60 +18,52 @@ import uk.co.spudsoft.query.main.exec.procs.query.ProcessorGroupConcatInstance;
 @JsonDeserialize(builder = ProcessorGroupConcat.Builder.class)
 public class ProcessorGroupConcat extends Processor {
 
-  private final String delimiter;
-  private final String parentId;
-  private final boolean innerJoin;
-  private final String idColumn;
-  private final String columnName;
-  private final String childColumnName;
   private final Source source;
+  private final boolean innerJoin;
+  private final String parentIdColumn;
+  private final String childIdColumn;
+  private final String childValueColumn;
+  private final String delimiter;
   
   @Override
   public ProcessorInstance<? extends Processor> createInstance(Vertx vertx, Context context) {
     return new ProcessorGroupConcatInstance(vertx, context, this);
   }
 
-  public String getDelimiter() {
-    return delimiter;
-  }
-
-  public String getParentId() {
-    return parentId;
+  public Source getSource() {
+    return source;
   }
 
   public boolean isInnerJoin() {
     return innerJoin;
   }
 
-  public String getIdColumn() {
-    return idColumn;
+  public String getParentIdColumn() {
+    return parentIdColumn;
   }
 
-  public Source getSource() {
-    return source;
-  }
-  
-  public String getColumnName() {
-    return columnName;
+  public String getChildIdColumn() {
+    return childIdColumn;
   }
 
-  public String getChildColumnName() {
-    return childColumnName;
+  public String getChildValueColumn() {
+    return childValueColumn;
   }
 
-  
+  public String getDelimiter() {
+    return delimiter;
+  }
 
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
     private ProcessorType type = ProcessorType.GROUP_CONCAT;
-    private String delimiter;
-    private String columnName;
-    private String parentId;
-    private String childColumnName;
-    private boolean innerJoin;
-    private String idColumn;
     private Source source;
+    private boolean innerJoin;
+    private String parentIdColumn;
+    private String childIdColumn;
+    private String childValueColumn;
+    private String delimiter;
 
     private Builder() {
     }
@@ -81,13 +73,8 @@ public class ProcessorGroupConcat extends Processor {
       return this;
     }
 
-    public Builder delimiter(final String value) {
-      this.delimiter = value;
-      return this;
-    }
-
-    public Builder parentId(final String value) {
-      this.parentId = value;
+    public Builder source(final Source value) {
+      this.source = value;
       return this;
     }
 
@@ -96,28 +83,28 @@ public class ProcessorGroupConcat extends Processor {
       return this;
     }
 
-    public Builder idColumn(final String value) {
-      this.idColumn = value;
+    public Builder parentIdColumn(final String value) {
+      this.parentIdColumn = value;
       return this;
     }
 
-    public Builder source(final Source value) {
-      this.source = value;
+    public Builder childIdColumn(final String value) {
+      this.childIdColumn = value;
       return this;
     }
 
-    public Builder columnName(final String value) {
-      this.columnName = value;
+    public Builder childValueColumn(final String value) {
+      this.childValueColumn = value;
       return this;
     }
 
-    public Builder childColumnName(final String value) {
-      this.childColumnName = value;
+    public Builder delimiter(final String value) {
+      this.delimiter = value;
       return this;
     }
 
     public ProcessorGroupConcat build() {
-      return new uk.co.spudsoft.query.main.defn.ProcessorGroupConcat(type, delimiter, parentId, innerJoin, idColumn, source, columnName, childColumnName);
+      return new ProcessorGroupConcat(type, source, innerJoin, parentIdColumn, childIdColumn, childValueColumn, delimiter);
     }
   }
 
@@ -125,21 +112,24 @@ public class ProcessorGroupConcat extends Processor {
     return new ProcessorGroupConcat.Builder();
   }
 
-  private ProcessorGroupConcat(final ProcessorType type, final String delimiter, final String parentId, final boolean innerJoin, final String idColumn
-          , final Source source
-          , final String columnName
-          , final String childColumnName
+  private ProcessorGroupConcat(ProcessorType type
+          , Source source
+          , boolean innerJoin
+          , String parentIdColumn
+          , String childIdColumn
+          , String childValueColumn
+          , String delimiter
   ) {
     super(type);
-    this.delimiter = delimiter;
-    this.parentId = parentId;
-    this.innerJoin = innerJoin;
-    this.idColumn = idColumn;
     this.source = source;
-    this.columnName = columnName;
-    this.childColumnName = childColumnName;
+    this.innerJoin = innerJoin;
+    this.parentIdColumn = parentIdColumn;
+    this.childIdColumn = childIdColumn;
+    this.childValueColumn = childValueColumn;
+    this.delimiter = delimiter;
   }
     
+  
   
   
 }

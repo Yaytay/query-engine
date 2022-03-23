@@ -13,7 +13,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- *
+ * The Pipeline is the fundamental unit of processing in QueryEngine.
+ * A single Pipeline takes data from a single {@link Source}, passes it through any number of {@link Processor}s and finally delivers it to a {@link Destination}.
+ * The {@link Processor}s themselves may pull in data from other {@link Source}s.
  * @author jtalbut
  */
 @JsonDeserialize(builder = Pipeline.Builder.class)
@@ -97,7 +99,7 @@ public class Pipeline {
     return new Pipeline.Builder();
   }
 
-  public Pipeline(Map<String, Argument> arguments, Map<String, Endpoint> sourceEndpoints, Source source, List<Processor> processors, Destination destination) {
+  private Pipeline(Map<String, Argument> arguments, Map<String, Endpoint> sourceEndpoints, Source source, List<Processor> processors, Destination destination) {
     this.arguments = arguments == null ? ImmutableMap.of() : ImmutableMap.copyOf(arguments);
     this.sourceEndpoints = sourceEndpoints == null ? ImmutableMap.of() : ImmutableMap.copyOf(sourceEndpoints);
     this.source = source;

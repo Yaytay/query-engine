@@ -17,9 +17,7 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * An abstract implementation of WriteStream with a queue size of 1.
- * 
- * The write method must always be called on the same thread and the writeHandler.
+ * PassthroughWriteStream makes available a WriteStream that calls an {@link AsyncHandler} for each data item written to it.
  * 
  * @param <T> The class of object being streamed.
  * @author jtalbut
@@ -28,43 +26,47 @@ public class PassthroughWriteStream<T> {
   
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(PassthroughWriteStream.class);
-
-  public interface AsyncProcessor<T> {
-
-    /**
-     * Handle this data and complete the Future when done.
-     * 
-     * @param data The data to process.
-     * @return A Future that will be completed (possibly with modified data) when the work is done.
-     */
-    Future<Void> handle(T data);
-  }
     
-  private final AtomicBoolean paused = new AtomicBoolean();
+  private final AtomicBoolean writeStreamDataBeingProcessed = new AtomicBoolean();
 
   private final Object lock = new Object();
-  private final AsyncProcessor<T> processor;
+  private final AsyncHandler<T> processor;
   private final Context context;
   private final Write write;
   
   private Promise<Void> inflight;
   private Handler<Throwable> exceptionHandler;    
   private Handler<Void> drainHandler;
+  
+  /**
+   * This is the endHandler set to be called after the {@link io.vertx.core.streams.WriteStream<T>#end(io.vertx.core.Handler)} 
+   * has been called and any inflight data items have been processed.
+   */
   private Handler<Void> endHandler;
 
   private T current;
   
-  /*
-  This is the endhandler that will be called when the current in-flight item has been processed.
-  */
+  /**
+   * This is the endhandler that will be called when the current in-flight item has been processed (if not null).
+   */
   private Handler<Void> end;
 
-  public PassthroughWriteStream(AsyncProcessor<T> processor, Context context) {
-    this.processor = processor;
+  /**
+   * Constructor.
+   * @param handler Handler that will be called for each data item the WriteStream receives.
+   * @param context The Vertx context of any processing that is carried out.
+   */
+  public PassthroughWriteStream(AsyncHandler<T> handler, Context context) {
+    this.processor = handler;
     this.context = context;
     this.write = new Write();
   }
   
+  /**
+   * Get the WriteStream interface for this PassthroughWriteStream.
+   * There is only ever a single instance of the WriteStream, this method does not create a new instance.
+   * @return the WriteStream interface for this PassthroughWriteStream.
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Exposure of the stream is required")
   public WriteStream<T> writeStream() {
     return write;
@@ -73,10 +75,8 @@ public class PassthroughWriteStream<T> {
   private void processCurrent(Promise<Void> promise, T data) {
     context.runOnContext(v -> {
       try {        
-        logger.debug("Calling {} with {}", processor, data);
         processor.handle(data)
                 .onComplete(ar -> {
-                  logger.debug("Calling {} with {} returned {}", processor, data, ar);
                   completeCurrent(promise, ar);
                 })
                 ;
@@ -91,17 +91,30 @@ public class PassthroughWriteStream<T> {
   }
 
   private void completeCurrent(Promise<Void> promise, AsyncResult<Void> ar) {
-    promise.handle(ar);
-    Handler<Void> handler = drainHandler;
-    if (handler != null) {
-      handler.handle(null);
+    Handler<Void> dh;
+    Handler<Void> eh;
+    synchronized(lock) {
+      dh = drainHandler;
+      eh = end;
+      current = null;
+      inflight = null;
     }
-    Handler<Void> eh = end;
+    promise.handle(ar);
+    if (dh != null) {
+      dh.handle(null);
+    }
     if (eh != null) {
       eh.handle(null);
     }
   }
   
+  /**
+   * Set an end handler. 
+   * Once the stream has ended, and there is no more data to be read, this handler will be called.
+   *
+   * @param handler the handler to be called when the stream has ended, and there is no more data to be read.
+   * @return a reference to this, so the API can be used fluently
+   */
   public PassthroughWriteStream<T> endHandler(Handler<Void> handler) {
     synchronized(lock) {
       this.endHandler = handler;
@@ -123,7 +136,7 @@ public class PassthroughWriteStream<T> {
         current = data;
       }
       inflight = Promise.promise();
-      if (!paused.get()) {
+      if (!writeStreamDataBeingProcessed.get()) {
         processCurrent(inflight, data);
       }
       return inflight.future();
@@ -140,7 +153,6 @@ public class PassthroughWriteStream<T> {
       Handler<Void> handlerToCallNow = null;
       synchronized(lock) {
         end = v -> {
-          logger.debug("end lambda");
           Handler<Void> eh;
           synchronized(lock) {
             eh = endHandler;
@@ -170,7 +182,7 @@ public class PassthroughWriteStream<T> {
     @Override
     public boolean writeQueueFull() {
       synchronized(lock) {
-        return paused.get() || (current != null);
+        return writeStreamDataBeingProcessed.get() || (current != null);
       }
     }
 

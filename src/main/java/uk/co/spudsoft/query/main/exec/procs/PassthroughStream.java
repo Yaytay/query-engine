@@ -18,9 +18,7 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * An abstract implementation of WriteStream with a queue size of 1.
- * 
- * The write method must always be called on the same thread and the writeHandler.
+ * PassthroughStream makes available a WriteStream that calls an {@link AsyncHandler} for each data item written to it and optionally passes the data on to a ReadStream.
  * 
  * @param <T> The class of object being streamed.
  * @author jtalbut
@@ -29,44 +27,11 @@ public class PassthroughStream<T> {
   
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(PassthroughStream.class);
-
-  public interface AsyncProcessor<T> {
-
-    /**
-     * Handle this data and complete the Future when done.
-     * 
-     * @param data The data to process.
-     * @return A Future that will be completed (possibly with modified data) when the work is done.
-     */
-    Future<Void> handle(T data);
-  }
   
-  public interface PassthroughProcessor<T> {
-
-    /**
-     * Handle this data and complete the Future when done.
-     * 
-     * The implementation should either return a newly complected future (if the data is not to be passed on the pipeline) 
-     * or it should return the future returned by {@link AsyncProcessor#handle(java.lang.Object)} to pass the data on.
-     * Typically this means that the implementations has a structure like: 
-     * <pre>
-     * Future&lt;Void> handle(T data, AsyncProcessor&lt;T> chain) {
-     *   return methodThatDoesStuffAsynchronousely(data)
-     *     .compose(data -> chain.handle(data));
-     * }
-     * </pre>
-     * 
-     * @param data The data to process.
-     * @param chain The processor that should be called to pass on the data.
-     * @return A Future that will be completed (possibly with modified data) when the work is done.
-     */
-    Future<Void> handle(T data, AsyncProcessor<T> chain);
-  }
-  
-  private final AtomicBoolean paused = new AtomicBoolean();
+  private final AtomicBoolean writeStreamDataBeingProcessed = new AtomicBoolean();
 
   private final Object lock = new Object();
-  private final PassthroughProcessor<T> processor;
+  private final ChainedAsyncHandler<T> processor;
   private final Context context;
   private final Write write;
   private final Read read;
@@ -85,29 +50,43 @@ public class PassthroughStream<T> {
   */
   private Handler<Void> end;
 
-  public PassthroughStream(PassthroughProcessor<T> processor, Context context) {
-    this.processor = processor;
+  /**
+   * Constructor.
+   * 
+   * @param handler The handler that will be called with each data item to be processed.
+   * @param context The Vertx context of any processing that is carried out.
+   */
+  public PassthroughStream(ChainedAsyncHandler<T> handler, Context context) {
+    this.processor = handler;
     this.context = context;
     this.write = new Write();
     this.read = new Read();
   }
   
+  /**
+   * Get the WriteStream interface for this PassthroughStream.
+   * There is only ever a single instance of the WriteStream, this method does not create a new instance.
+   * @return the WriteStream interface for this PassthroughStream.
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Exposure of the stream is required")
   public WriteStream<T> writeStream() {
     return write;
   }
   
+  /**
+   * Get the ReadStream interface for this PassthroughStream.
+   * There is only ever a single instance of the ReadStream, this method does not create a new instance.
+   * @return the ReadStream interface for this PassthroughStream.
+   */
   public ReadStream<T> readStream() {
     return read;
   }
   
   private void processCurrent(Promise<Void> promise, T data) {
     context.runOnContext(v -> {
-      try {        
-        logger.debug("Calling {} with {}", processor, data);
+      try {
         processor.handle(data, d -> read.handle(d))
                 .onComplete(ar -> {
-                  logger.debug("Calling {} with {} returned {}", processor, data, ar);
                   completeCurrent(promise, ar);
                 })
                 ;
@@ -155,7 +134,7 @@ public class PassthroughStream<T> {
         current = data;
         promise = Promise.promise();
         inflight = promise;
-        isPaused = paused.get();
+        isPaused = writeStreamDataBeingProcessed.get();
       }        
       if (!isPaused) {
         processCurrent(promise, data);
@@ -198,7 +177,7 @@ public class PassthroughStream<T> {
     @Override
     public boolean writeQueueFull() {
       synchronized(lock) {
-        return paused.get() || (current != null);
+        return writeStreamDataBeingProcessed.get() || (current != null);
       }
     }
 
@@ -259,14 +238,14 @@ public class PassthroughStream<T> {
 
     @Override
     public ReadStream<T> pause() {
-      paused.set(true);
+      writeStreamDataBeingProcessed.set(true);
       return this;
     }
 
     @Override
     public ReadStream<T> resume() {
       logger.debug("Resume");
-      paused.set(false);
+      writeStreamDataBeingProcessed.set(false);
       fetch(Long.MAX_VALUE);
       return this;
     }

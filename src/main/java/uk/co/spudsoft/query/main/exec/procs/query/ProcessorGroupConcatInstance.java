@@ -17,11 +17,20 @@ import uk.co.spudsoft.query.main.defn.Endpoint;
 import uk.co.spudsoft.query.main.defn.ProcessorGroupConcat;
 import uk.co.spudsoft.query.main.exec.ProcessorInstance;
 import uk.co.spudsoft.query.main.exec.SourceInstance;
+import uk.co.spudsoft.query.main.exec.procs.AsyncHandler;
 import uk.co.spudsoft.query.main.exec.procs.PassthroughStream;
 import uk.co.spudsoft.query.main.exec.procs.PassthroughWriteStream;
 
 /**
- *
+ * A QueryEngine Processor that acts similarly to the MySQL <a href="https://dev.mysql.com/doc/refman/8.0/en/aggregate-functions.html#function_group-concat">GROUP_CONCAT</A> aggregate function.
+ * 
+ * A sub query is run and merged with the primary query.
+ * The join is always a merge join, so the primary query must be sorted by the {@link uk.co.spudsoft.query.main.defn.ProcessorGroupConcat#parentId} column and the sub query 
+ * must be sorted by the {@link uk.co.spudsoft.query.main.defn.ProcessorGroupConcat#idColumn} column.
+ * The values from the {@link uk.co.spudsoft.query.main.defn.ProcessorGroupConcat#columnName} column are joined to form a single string, using
+ * {@link uk.co.spudsoft.query.main.defn.ProcessorGroupConcat#delimiter} as a delimiter.
+ * 
+ * 
  * @author jtalbut
  */
 public class ProcessorGroupConcatInstance implements ProcessorInstance<ProcessorGroupConcat> {
@@ -36,8 +45,7 @@ public class ProcessorGroupConcatInstance implements ProcessorInstance<Processor
   private final PassthroughWriteStream<JsonObject> childStream;
   private final List<JsonObject> currentChildRows;
   
-  private PassthroughStream.AsyncProcessor<JsonObject> currentParentChain;
-  private boolean parentEnded = false;
+  private AsyncHandler<JsonObject> currentParentChain;
   private boolean childEnded = false;
   private JsonObject currentParentRow;
   private JsonObject currentChildRow;
@@ -49,30 +57,23 @@ public class ProcessorGroupConcatInstance implements ProcessorInstance<Processor
     this.context = context;
     this.definition = definition;
     this.parentStream = new PassthroughStream<>(this::parentStreamProcess, context);
-    parentStream.readStream().endHandler(v -> {
-      synchronized(this) {
-        parentEnded = true;
-      }
-      processCurrent();
-    });
     this.childStream = new PassthroughWriteStream<>(this::childStreamProcess, context);
     childStream.endHandler(v -> {
       synchronized(this) {
         childEnded = true;
       }
       processCurrent();
+    }).writeStream().exceptionHandler(ex -> {
+      logger.error("Processing failed: ", ex);
     });
     this.currentChildRows = new ArrayList<>();
   }
   
-  private Future<Void> parentStreamProcess(JsonObject data, PassthroughStream.AsyncProcessor<JsonObject> chain) {
+  private Future<Void> parentStreamProcess(JsonObject data, AsyncHandler<JsonObject> chain) {
     try {
       logger.info("process {}", data);
       Promise<Void> result = Promise.promise();
       synchronized(this) {
-        if (currentParentRow != null) {
-          logger.warn("WTF: {}, {}, {}", currentParentRow, currentParentPromise, currentParentChain);
-        }
         currentParentPromise = result;
         currentParentRow = data;
         currentParentChain = chain;
@@ -102,7 +103,7 @@ public class ProcessorGroupConcatInstance implements ProcessorInstance<Processor
   }
   
   @SuppressWarnings("unchecked")
-  private Comparable<Object> getId(JsonObject row, String idField) {
+  static Comparable<Object> getId(JsonObject row, String idField) {
     if (row == null) {
       return null;
     }
@@ -117,11 +118,13 @@ public class ProcessorGroupConcatInstance implements ProcessorInstance<Processor
     Comparable<Object> parentId;
     Comparable<Object> childId;
     synchronized(this) {
-      logger.debug("processCurrent({}, {}, {})", currentParentRow, currentChildRow, currentChildRows);
+      logger.trace("processCurrent({}, {}, {})", currentParentRow, currentChildRow, currentChildRows);
       if (currentParentRow == null) {
+        // We have a child row that hasn't been added to the list yet
         if (currentChildRow != null) {
           if (!currentChildRows.isEmpty()) {
-            if (getId(currentChildRows.get(0), definition.getIdColumn()).equals(getId(currentChildRow, definition.getIdColumn()))) {
+            // If this child row is for a different parent row then we have to wait until we get a parent in
+            if (getId(currentChildRows.get(0), definition.getChildIdColumn()).equals(getId(currentChildRow, definition.getChildIdColumn()))) {
               currentChildRows.add(currentChildRow);
               currentChildRow = null;
               Promise<Void> promise = currentChildPromise;
@@ -130,33 +133,26 @@ public class ProcessorGroupConcatInstance implements ProcessorInstance<Processor
             }
           }
         }
-        if (parentEnded) {
-          logger.debug("Parent ended");
-        } else {
-          // Not received first parent row yet, just wait for it.
-          logger.debug("Parent not ended");
-          return ;
-        }
+        // Not received parent row yet, just wait for it.
+        return ;
       }
-      parentId = getId(currentParentRow, definition.getParentId());
+      parentId = getId(currentParentRow, definition.getParentIdColumn());
       if (currentChildRow == null) {
         if (childEnded) {
-          logger.debug("Child ended");
-          if (!currentChildRows.isEmpty() && currentParentRow != null) {
+          if (!currentChildRows.isEmpty()) {
             processCurrentChildren(parentId);
             return ;
           }
         } else {
           // Not received latest child row yet
-          logger.debug("Child not ended");
           return ;
         }
       }
-      childId = getId(currentChildRow, definition.getIdColumn());
+      childId = getId(currentChildRow, definition.getChildIdColumn());
     }
     int compareResult = childId.compareTo(parentId);
     if (compareResult < 0) {
-      // Parent row is ahead of this child
+      // Parent row is ahead of this child - implies that some parent rows are missing so skip the child rows
       synchronized(this) {
         currentChildRow = null;
         currentChildPromise.complete();
@@ -177,16 +173,16 @@ public class ProcessorGroupConcatInstance implements ProcessorInstance<Processor
   }
 
   private void processCurrentChildren(Comparable<Object> parentId) {
-    PassthroughStream.AsyncProcessor<JsonObject> chain;
+    AsyncHandler<JsonObject> chain;
     JsonObject row;
     synchronized(this) {
       logger.debug("Got child rows: {}", currentChildRows);
       String result = currentChildRows.stream()
-              .map(r -> r.getValue(definition.getChildColumnName()))
+              .map(r -> r.getValue(definition.getChildValueColumn()))
               .filter(o -> o != null)
               .map(o -> o.toString())
               .collect(Collectors.joining(definition.getDelimiter()));
-      currentParentRow.put(definition.getColumnName(), result);
+      currentParentRow.put(definition.getChildValueColumn(), result);
       chain = currentParentChain;
       row = currentParentRow;
     }
