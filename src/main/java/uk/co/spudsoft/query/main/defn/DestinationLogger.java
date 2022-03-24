@@ -17,13 +17,20 @@ import uk.co.spudsoft.query.main.exec.dests.logger.DestinationLoggerInstance;
  * @author jtalbut
  */
 @JsonDeserialize(builder = DestinationLogger.Builder.class)
-public class DestinationLogger extends Destination {
+public class DestinationLogger implements Destination {
+
+  private final DestinationType type;
   
   @Override
-  public DestinationInstance<? extends Destination> createInstance(Vertx vertx, Context context) {
+  public DestinationInstance createInstance(Vertx vertx, Context context) {
     return new DestinationLoggerInstance();
   }
 
+  @Override
+  public DestinationType getType() {
+    return type;
+  }
+  
   /**
    * Builder class for DestinationLogger.
    */
@@ -66,7 +73,7 @@ public class DestinationLogger extends Destination {
   }
 
   private DestinationLogger(final DestinationType type) {
-    super(type);
+    this.type = type;
   }
     
 }

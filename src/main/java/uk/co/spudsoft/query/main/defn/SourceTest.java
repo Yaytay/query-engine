@@ -14,16 +14,22 @@ import uk.co.spudsoft.query.main.exec.sources.test.TestSource;
  *
  * @author jtalbut
  */
-public class SourceTest extends Source {
+public class SourceTest implements Source {
 
+  private final SourceType type;
   private final int rowCount;
+
+  @Override
+  public SourceType getType() {
+    return type;
+  }
 
   public int getRowCount() {
     return rowCount;
   }
 
   @Override
-  public SourceInstance<? extends Source> createInstance(Vertx vertx, Context context) {
+  public SourceInstance createInstance(Vertx vertx, Context context) {
     return new TestSource(context, this);
   }
   
@@ -56,7 +62,7 @@ public class SourceTest extends Source {
   }
 
   private SourceTest(final SourceType type, final int rowCount) {
-    super(type);
+    this.type = type;
     this.rowCount = rowCount;
   }
     

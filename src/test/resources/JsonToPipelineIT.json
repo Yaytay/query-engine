@@ -40,16 +40,18 @@
     {
       "type":"GROUP_CONCAT",
       "delimiter":",",
-      "parentId":"id",
+      "parentIdColumn":"id",
       "innerJoin":false,
-      "idColumn":"dataid",      
-      "columnName":"children",      
-      "childColumnName":"value",      
-      "source": {    
-        "type": "SQL",
-        "endpoint": "$<key>",
-        "streamingFetchSize": 10,
-        "query": "select dataId, value from testManyData m join testRefData r on r.id = m.refId where dataId < 20 order by dataId, sort"
+      "childIdColumn":"dataid",      
+      "parentValueColumn":"children",      
+      "childValueColumn":"value",
+      "input": {
+        "source": {    
+          "type": "SQL",
+          "endpoint": "$<key>",
+          "streamingFetchSize": 10,
+          "query": "select dataId, value from testManyData m join testRefData r on r.id = m.refId where dataId < 20 order by dataId, sort"
+        }
       }
     }
     , 

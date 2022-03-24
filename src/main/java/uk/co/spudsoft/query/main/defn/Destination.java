@@ -26,14 +26,8 @@ import uk.co.spudsoft.query.main.exec.DestinationInstance;
 @JsonSubTypes({ 
   @JsonSubTypes.Type(value = DestinationLogger.class, name = "Logger"), 
 })
-public abstract class Destination {
+public interface Destination {
   
-  /**
-   * The type of Destination being configured.
-   * This will drive the class used to handle the output data.
-   */
-  private final DestinationType type;
-
   /**
    * Create a DestinationInstance.
    * Each implementation of a DestinationInstance should subclass this class and provide a concrete implementation of this method.
@@ -43,22 +37,12 @@ public abstract class Destination {
    * @return a newly created DestinationInstance object that will be used for processing the pipeline destination.
    */
   @JsonIgnore
-  public abstract DestinationInstance<? extends Destination> createInstance(Vertx vertx, Context context);
+  DestinationInstance createInstance(Vertx vertx, Context context);
   
   /**
    * Get the type of Destination being configured.
    * @return the type of Destination being configured.
    */
-  public DestinationType getType() {
-    return type;
-  }
+  DestinationType getType();
 
-  /**
-   * Set the type of Destination being configured.
-   * @param type the type of Destination being configured.
-   */
-  protected Destination(DestinationType type) {
-    this.type = type;
-  }
-  
 }

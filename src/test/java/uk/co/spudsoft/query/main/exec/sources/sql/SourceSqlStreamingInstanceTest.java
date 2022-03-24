@@ -15,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import uk.co.spudsoft.query.main.defn.Endpoint;
 import uk.co.spudsoft.query.main.defn.EndpointType;
 import uk.co.spudsoft.query.main.defn.SourceSql;
+import uk.co.spudsoft.query.main.exec.PipelineInstance;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -32,7 +33,7 @@ public class SourceSqlStreamingInstanceTest {
             .endpoint("none")
             .build();
     SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, vertx.getOrCreateContext(), definition);
-    Future<Void> future = instance.initialize(ImmutableMap.<String, Endpoint>builder().build());
+    Future<Void> future = instance.initialize(null, new PipelineInstance(null, null, null, null, null));
     assertTrue(future.failed());
   }
 
@@ -48,7 +49,7 @@ public class SourceSqlStreamingInstanceTest {
             .url("sqlserver://nonexistant:1234/test")
             .build();
     SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, vertx.getOrCreateContext(), definition);    
-    Future<Void> future = instance.initialize(ImmutableMap.<String, Endpoint>builder().put("e", endpoint).build());
+    Future<Void> future = instance.initialize(null, new PipelineInstance(null, ImmutableMap.<String, Endpoint>builder().put("e", endpoint).build(), null, null, null));
     // This is still going to fail because the pool cannot be created
     future.onComplete(testContext.failingThenComplete());
   }

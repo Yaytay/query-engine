@@ -4,22 +4,11 @@
  */
 package uk.co.spudsoft.query.main.exec;
 
-import io.vertx.core.Future;
-import io.vertx.core.json.JsonObject;
-import io.vertx.core.streams.ReadStream;
-import java.util.Map;
-import uk.co.spudsoft.query.main.defn.Endpoint;
-import uk.co.spudsoft.query.main.defn.Source;
-
 /**
  * A SourceInstance is simply a stream of JsonObjects (rows).
  * 
  * @author jtalbut
- * @param <T> The type of source configuration used to create this SourceInstance.
  */
-public interface SourceInstance<T extends Source> {
-  
-  Future<Void> initialize(Map<String, Endpoint> endpoints);
-  ReadStream<JsonObject> getReadStream();
+public interface SourceInstance extends Initializable, Readable {
   
 }

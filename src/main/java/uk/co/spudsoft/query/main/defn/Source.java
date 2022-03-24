@@ -24,19 +24,11 @@ import uk.co.spudsoft.query.main.exec.SourceInstance;
   @Type(value = SourceSql.class, name = "SQL"), 
   @Type(value = SourceTest.class, name = "Test") 
 })
-public abstract class Source {
+public interface Source {
   
-  private final SourceType type;
-
   @JsonIgnore
-  public abstract SourceInstance<? extends Source> createInstance(Vertx vertx, Context context);
+  SourceInstance createInstance(Vertx vertx, Context context);
   
-  public SourceType getType() {
-    return type;
-  }
-
-  protected Source(final SourceType type) {
-    this.type = type;
-  }
+  SourceType getType();
   
 }

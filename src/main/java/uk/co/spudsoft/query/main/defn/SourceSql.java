@@ -17,17 +17,22 @@ import uk.co.spudsoft.query.main.exec.sources.sql.SourceSqlStreamingInstance;
  * @author jtalbut
  */
 @JsonDeserialize(builder = SourceSql.Builder.class)
-public class SourceSql extends Source {
+public class SourceSql implements Source {
 
   @Override
-  public SourceInstance<? extends Source> createInstance(Vertx vertx, Context context) {
+  public SourceInstance createInstance(Vertx vertx, Context context) {
     return new SourceSqlStreamingInstance(vertx, context, this);
   }
 
+  private final SourceType type;
   private final String endpoint;
   private final String query;
   private final PoolOptions poolOptions;
   private final int streamingFetchSize;
+
+  public SourceType getType() {
+    return type;
+  }
 
   public String getEndpoint() {
     return endpoint;
@@ -97,7 +102,7 @@ public class SourceSql extends Source {
           , final PoolOptions poolOptions
           , final int streamingFetchSize
   ) {
-    super(type);
+    this.type = type;
     this.endpoint = endpoint;
     this.query = query;
     this.poolOptions = poolOptions;

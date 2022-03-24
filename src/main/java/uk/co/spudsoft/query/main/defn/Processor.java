@@ -23,20 +23,11 @@ import uk.co.spudsoft.query.main.exec.ProcessorInstance;
   @JsonSubTypes.Type(value = ProcessorLimit.class, name = "LIMIT") 
   , @JsonSubTypes.Type(value = ProcessorGroupConcat.class, name = "GROUP_CONCAT") 
 })
-public abstract class Processor {
+public interface Processor {
   
-  private final ProcessorType type;
-
   @JsonIgnore
-  public abstract ProcessorInstance<? extends Processor> createInstance(Vertx vertx, Context context);
+  ProcessorInstance createInstance(Vertx vertx, Context context);
   
-  public ProcessorType getType() {
-    return type;
-  }
-
-  protected Processor(final ProcessorType type) {
-    this.type = type;
-  }
-  
+  ProcessorType getType();
   
 }

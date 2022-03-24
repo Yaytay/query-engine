@@ -22,12 +22,14 @@ public class BasicPipelineTest {
   
   @Test
   public void testBasicPipeline(Vertx vertx, VertxTestContext testContext) {
-    PipelineInstance pipeline = PipelineInstance.builder()
-            .source(new TestSource(vertx.getOrCreateContext(), SourceTest.builder().rowCount(100).build()))
-            .sink(new DestinationLoggerInstance())
-            .build();
-    PipelineExecutor executor = new PipelineExecutor();
-    executor.executePipeline(pipeline)
+    PipelineInstance pipeline = new PipelineInstance(null
+            , null
+            , new TestSource(vertx.getOrCreateContext(), SourceTest.builder().rowCount(100).build())
+            , null
+            , new DestinationLoggerInstance()
+    );
+    PipelineExecutorImpl executor = new PipelineExecutorImpl();
+    executor.initializePipeline(pipeline)
             .onSuccess(v -> {
               testContext.completeNow();
             })

@@ -9,17 +9,17 @@ import io.vertx.core.streams.ReadStream;
 import io.vertx.core.streams.WriteStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.main.defn.Endpoint;
 import uk.co.spudsoft.query.main.defn.ProcessorGroupConcat;
+import uk.co.spudsoft.query.main.exec.PipelineExecutor;
+import uk.co.spudsoft.query.main.exec.PipelineInstance;
 import uk.co.spudsoft.query.main.exec.ProcessorInstance;
-import uk.co.spudsoft.query.main.exec.SourceInstance;
 import uk.co.spudsoft.query.main.exec.procs.AsyncHandler;
 import uk.co.spudsoft.query.main.exec.procs.PassthroughStream;
 import uk.co.spudsoft.query.main.exec.procs.PassthroughWriteStream;
+import uk.co.spudsoft.query.main.exec.procs.ProcessorDestination;
 
 /**
  * A QueryEngine Processor that acts similarly to the MySQL <a href="https://dev.mysql.com/doc/refman/8.0/en/aggregate-functions.html#function_group-concat">GROUP_CONCAT</A> aggregate function.
@@ -33,7 +33,7 @@ import uk.co.spudsoft.query.main.exec.procs.PassthroughWriteStream;
  * 
  * @author jtalbut
  */
-public class ProcessorGroupConcatInstance implements ProcessorInstance<ProcessorGroupConcat> {
+ public class ProcessorGroupConcatInstance implements ProcessorInstance {
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ProcessorGroupConcatInstance.class);
@@ -182,7 +182,7 @@ public class ProcessorGroupConcatInstance implements ProcessorInstance<Processor
               .filter(o -> o != null)
               .map(o -> o.toString())
               .collect(Collectors.joining(definition.getDelimiter()));
-      currentParentRow.put(definition.getChildValueColumn(), result);
+      currentParentRow.put(definition.getParentValueColumn(), result);
       chain = currentParentChain;
       row = currentParentRow;
     }
@@ -215,13 +215,15 @@ public class ProcessorGroupConcatInstance implements ProcessorInstance<Processor
   }
   
   @Override
-  public Future<Void> initialize(Map<String, Endpoint> endpoints) {
-    SourceInstance<?> source = definition.getSource().createInstance(vertx, context);
-    return source.initialize(endpoints)
-            .compose(v -> {
-              source.getReadStream().pipeTo(childStream.writeStream());
-              return Future.succeededFuture();
-            });
+  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
+    PipelineInstance childPipeline = new PipelineInstance(
+            pipeline.getArguments()
+            , pipeline.getSourceEndpoints()
+            , definition.getInput().getSource().createInstance(vertx, context)
+            , executor.createProcessors(vertx, context, definition.getInput())
+            , new ProcessorDestination(this)
+    );
+    return executor.initializePipeline(childPipeline);
   }
 
   @Override

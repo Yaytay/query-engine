@@ -10,11 +10,11 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.ReadStream;
 import io.vertx.core.streams.WriteStream;
-import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.main.defn.Endpoint;
 import uk.co.spudsoft.query.main.defn.ProcessorLimit;
+import uk.co.spudsoft.query.main.exec.PipelineExecutor;
+import uk.co.spudsoft.query.main.exec.PipelineInstance;
 import uk.co.spudsoft.query.main.exec.ProcessorInstance;
 import uk.co.spudsoft.query.main.exec.procs.AsyncHandler;
 import uk.co.spudsoft.query.main.exec.procs.PassthroughStream;
@@ -23,7 +23,7 @@ import uk.co.spudsoft.query.main.exec.procs.PassthroughStream;
  *
  * @author jtalbut
  */
-public class ProcessorLimitInstance implements ProcessorInstance<ProcessorLimit> {
+public class ProcessorLimitInstance implements ProcessorInstance {
   
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ProcessorLimitInstance.class);
@@ -53,7 +53,7 @@ public class ProcessorLimitInstance implements ProcessorInstance<ProcessorLimit>
   }
   
   @Override
-  public Future<Void> initialize(Map<String, Endpoint> endpoints) {
+  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
     return Future.succeededFuture();
   }
 

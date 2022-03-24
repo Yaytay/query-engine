@@ -6,6 +6,7 @@ package uk.co.spudsoft.query.main.exec;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
+import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
@@ -15,6 +16,7 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
@@ -80,11 +82,11 @@ public class JsonToPipelineIT {
       logger.debug("Pipeline: {}", Json.encode(pipeline));
       assertNotNull(pipeline);
 
-      PipelineExecutor executor = new PipelineExecutor();      
+      PipelineExecutorImpl executor = new PipelineExecutorImpl();      
       PipelineInstance instance = buildPipelineInstance(executor, vertx, pipeline, testContext);
       assertNotNull(instance);
 
-      executor.executePipeline(instance)
+      executor.initializePipeline(instance)
               .onComplete(ar -> {
                 logger.debug("Pipeline complete");
                 testContext.completeNow();
@@ -114,7 +116,7 @@ public class JsonToPipelineIT {
 //      logger.debug("Pipeline: {}", Json.encode(pipeline));
 //      assertNotNull(pipeline);
 //
-//      PipelineExecutor executor = new PipelineExecutor();      
+//      PipelineExecutorImpl executor = new PipelineExecutorImpl();      
 //      PipelineInstance instance = buildPipelineInstance(executor, vertx, pipeline, testContext);
 //      assertNotNull(instance);
 //      
@@ -137,7 +139,13 @@ public class JsonToPipelineIT {
   protected PipelineInstance buildPipelineInstance(PipelineExecutor executor, Vertx vertx, Pipeline pipeline, VertxTestContext testContext) {
     PipelineInstance instance = null;
     try {
-      instance = executor.buildPipelineFromDefinition(vertx, vertx.getOrCreateContext(), pipeline);
+      Context context = vertx.getOrCreateContext();
+      instance = new PipelineInstance(executor.prepareArguments(pipeline.getArguments(), new HashMap<>())
+              , null
+              , pipeline.getSource().createInstance(vertx, context)
+              , executor.createProcessors(vertx, context, pipeline)
+              , pipeline.getDestination().createInstance(vertx, context)
+      );
     } catch(Throwable ex) {
       testContext.failNow(ex);
     }

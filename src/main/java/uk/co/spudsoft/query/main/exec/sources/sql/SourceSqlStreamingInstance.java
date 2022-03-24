@@ -19,18 +19,19 @@ import io.vertx.sqlclient.RowStream;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Transaction;
-import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.main.defn.Endpoint;
 import uk.co.spudsoft.query.main.defn.SourceSql;
+import uk.co.spudsoft.query.main.exec.PipelineExecutor;
+import uk.co.spudsoft.query.main.exec.PipelineInstance;
 import uk.co.spudsoft.query.main.exec.SourceInstance;
 
 /**
  *
  * @author jtalbut
  */
-public class SourceSqlStreamingInstance implements SourceInstance<SourceSql> {
+public class SourceSqlStreamingInstance implements SourceInstance {
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(SourceSqlStreamingInstance.class);
@@ -54,9 +55,9 @@ public class SourceSqlStreamingInstance implements SourceInstance<SourceSql> {
   }
   
   @Override
-  public Future<Void> initialize(Map<String, Endpoint> endpoints) {
+  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
     
-    Endpoint endpoint = endpoints.get(definition.getEndpoint());
+    Endpoint endpoint = pipeline.getSourceEndpoints().get(definition.getEndpoint());
     if (endpoint == null) {
       return Future.failedFuture("Endpoint not found");
     }

@@ -4,16 +4,18 @@
  */
 package uk.co.spudsoft.query.main.exec.dests.logger;
 
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.WriteStream;
-import uk.co.spudsoft.query.main.defn.DestinationLogger;
 import uk.co.spudsoft.query.main.exec.DestinationInstance;
+import uk.co.spudsoft.query.main.exec.PipelineExecutor;
+import uk.co.spudsoft.query.main.exec.PipelineInstance;
 
 /**
  *
  * @author jtalbut
  */
-public class DestinationLoggerInstance implements DestinationInstance<DestinationLogger> {
+public class DestinationLoggerInstance implements DestinationInstance {
  
   /**
    * Constructor.
@@ -21,6 +23,11 @@ public class DestinationLoggerInstance implements DestinationInstance<Destinatio
   public DestinationLoggerInstance() {
   }
 
+  @Override
+  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
+    return Future.succeededFuture();
+  }
+  
   @Override
   public WriteStream<JsonObject> getWriteStream() {
     return new LoggingWriteStream<>();

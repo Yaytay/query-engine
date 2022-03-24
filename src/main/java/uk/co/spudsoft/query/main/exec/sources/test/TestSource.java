@@ -8,16 +8,16 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.ReadStream;
-import java.util.Map;
-import uk.co.spudsoft.query.main.defn.Endpoint;
 import uk.co.spudsoft.query.main.defn.SourceTest;
+import uk.co.spudsoft.query.main.exec.PipelineExecutor;
+import uk.co.spudsoft.query.main.exec.PipelineInstance;
 import uk.co.spudsoft.query.main.exec.SourceInstance;
 
 /**
  *
  * @author jtalbut
  */
-public class TestSource implements SourceInstance<SourceTest> {
+public class TestSource implements SourceInstance {
 
   private final int rowCount;
   private final BlockingReadStream<JsonObject> stream;
@@ -29,7 +29,7 @@ public class TestSource implements SourceInstance<SourceTest> {
   }    
 
   @Override
-  public Future<Void> initialize(Map<String, Endpoint> endpoints) {
+  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
     stream.pause();
     try {
       for (int i = 0; i < rowCount; ++i) {

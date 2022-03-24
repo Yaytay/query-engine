@@ -16,13 +16,19 @@ import uk.co.spudsoft.query.main.exec.procs.limit.ProcessorLimitInstance;
  * @author jtalbut
  */
 @JsonDeserialize(builder = ProcessorLimit.Builder.class)
-public class ProcessorLimit extends Processor {
+public class ProcessorLimit implements Processor {
   
+  private final ProcessorType type;
   private final int limit;
 
   @Override
-  public ProcessorInstance<? extends Processor> createInstance(Vertx vertx, Context context) {
+  public ProcessorInstance createInstance(Vertx vertx, Context context) {
     return new ProcessorLimitInstance(vertx, context, this);
+  }
+
+  @Override
+  public ProcessorType getType() {
+    return type;
   }
 
   public int getLimit() {
@@ -58,7 +64,7 @@ public class ProcessorLimit extends Processor {
   }
 
   private ProcessorLimit(final ProcessorType type, final int limit) {
-    super(type);
+    this.type = type;
     this.limit = limit;
   }
   

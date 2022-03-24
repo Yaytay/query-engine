@@ -6,7 +6,6 @@ package uk.co.spudsoft.query.main.defn;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
@@ -19,47 +18,35 @@ import java.util.Map;
  * @author jtalbut
  */
 @JsonDeserialize(builder = Pipeline.Builder.class)
-public class Pipeline {
+public class Pipeline extends SourcePipeline {
   
   private final ImmutableMap<String, Argument> arguments;
   private final ImmutableMap<String, Endpoint> sourceEndpoints;
   
-  // private List<SourceGenerator> sourceGenerators;  
-  private final Source source;
-  private final ImmutableList<Processor> processors;
   private final Destination destination;  
 
+  @Override
   public void validate() {    
   }
 
-  public ImmutableMap<String, Argument> getArguments() {
+  public Map<String, Argument> getArguments() {
     return arguments;
   }
-  
+
   public Map<String, Endpoint> getSourceEndpoints() {
     return sourceEndpoints;
   }
-
-  public Source getSource() {
-    return source;
-  }
-
-  public List<Processor> getProcessors() {
-    return processors;
-  }
-
+  
   public Destination getDestination() {
     return destination;
   }
 
   @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "Builder class should result in all instances being immutable when object is built")
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
-  public static class Builder {
+  public static class Builder extends SourcePipeline.Builder<Pipeline.Builder> {
 
-    private Map<String, Argument> arguments;
-    private Map<String, Endpoint> sourceEndpoints;
-    private Source source;
-    private List<Processor> processors;
+    protected Map<String, Argument> arguments;
+    protected Map<String, Endpoint> sourceEndpoints;
     private Destination destination;
 
     private Builder() {
@@ -67,22 +54,12 @@ public class Pipeline {
 
     public Builder arguments(final Map<String, Argument> value) {
       this.arguments = value;
-      return this;
+      return self();
     }
 
     public Builder sourceEndpoints(final Map<String, Endpoint> value) {
       this.sourceEndpoints = value;
-      return this;
-    }
-
-    public Builder source(final Source value) {
-      this.source = value;
-      return this;
-    }
-
-    public Builder processors(final List<Processor> value) {
-      this.processors = value;
-      return this;
+      return self();
     }
 
     public Builder destination(final Destination value) {
@@ -90,6 +67,7 @@ public class Pipeline {
       return this;
     }
 
+    @Override
     public Pipeline build() {
       return new Pipeline(arguments, sourceEndpoints, source, processors, destination);
     }
@@ -100,10 +78,9 @@ public class Pipeline {
   }
 
   private Pipeline(Map<String, Argument> arguments, Map<String, Endpoint> sourceEndpoints, Source source, List<Processor> processors, Destination destination) {
+    super(source, processors);
     this.arguments = arguments == null ? ImmutableMap.of() : ImmutableMap.copyOf(arguments);
     this.sourceEndpoints = sourceEndpoints == null ? ImmutableMap.of() : ImmutableMap.copyOf(sourceEndpoints);
-    this.source = source;
-    this.processors = processors == null ? ImmutableList.of() : ImmutableList.copyOf(processors);
     this.destination = destination;
   }  
   
