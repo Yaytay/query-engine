@@ -6,6 +6,7 @@ package uk.co.spudsoft.query.main.exec;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import io.vertx.core.Promise;
 import java.util.List;
 import java.util.Map;
 import uk.co.spudsoft.query.main.defn.Endpoint;
@@ -24,6 +25,7 @@ public class PipelineInstance {
   private final SourceInstance source;
   private final ImmutableList<ProcessorInstance> processors;
   private final DestinationInstance sink;
+  private final Promise<Void> finalPromise;
 
   public PipelineInstance(
           final Map<String, ArgumentInstance> arguments
@@ -37,6 +39,7 @@ public class PipelineInstance {
     this.source = source;
     this.processors = processors == null ? ImmutableList.of() : ImmutableList.copyOf(processors);
     this.sink = sink;
+    this.finalPromise = Promise.promise();
   }
   
   public ImmutableMap<String, ArgumentInstance> getArguments() {
@@ -59,4 +62,8 @@ public class PipelineInstance {
     return sink;
   }
 
+  public Promise<Void> getFinalPromise() {
+    return finalPromise;
+  }
+  
 }

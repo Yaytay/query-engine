@@ -4,13 +4,13 @@
  */
 package uk.co.spudsoft.query.main.exec.procs;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.WriteStream;
 import uk.co.spudsoft.query.main.exec.DestinationInstance;
 import uk.co.spudsoft.query.main.exec.PipelineExecutor;
 import uk.co.spudsoft.query.main.exec.PipelineInstance;
-import uk.co.spudsoft.query.main.exec.ProcessorInstance;
 
 /**
  * A simple wrapper class so that a Processor may be used as a Destination in a child pipeline.
@@ -19,10 +19,11 @@ import uk.co.spudsoft.query.main.exec.ProcessorInstance;
  */
 public class ProcessorDestination implements DestinationInstance {
 
-  private final ProcessorInstance processor;
+  private final WriteStream<JsonObject> writeStream;
 
-  public ProcessorDestination(ProcessorInstance processor) {
-    this.processor = processor;
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "ProcessorDestination exists to pass around the WriteStream")
+  public ProcessorDestination(WriteStream<JsonObject> writeStream) {
+    this.writeStream = writeStream;
   }
   
   /**
@@ -36,9 +37,10 @@ public class ProcessorDestination implements DestinationInstance {
     return Future.succeededFuture();
   }
 
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "ProcessorDestination exists to pass around the WriteStream")
   @Override
   public WriteStream<JsonObject> getWriteStream() {
-    return processor.getWriteStream();
+    return writeStream;
   }
   
 }

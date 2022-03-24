@@ -6,6 +6,7 @@ package uk.co.spudsoft.query.main.exec;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.ReadStream;
@@ -62,13 +63,13 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     }
   }
   
-  private Future<Void> buildPipes(ReadStream<JsonObject> previousReadStream, Iterator<ProcessorInstance> iter, WriteStream<JsonObject> finalWriteStream) {
+  private void buildPipes(Promise<Void> finalPromise, ReadStream<JsonObject> previousReadStream, Iterator<ProcessorInstance> iter, WriteStream<JsonObject> finalWriteStream) {
     if (iter.hasNext()) {
       ProcessorInstance processor = iter.next();
       previousReadStream.pipeTo(processor.getWriteStream());
-      return buildPipes(processor.getReadStream(), iter, finalWriteStream);
+      buildPipes(finalPromise, processor.getReadStream(), iter, finalWriteStream);
     } else {
-      return previousReadStream.pipeTo(finalWriteStream);
+      previousReadStream.pipeTo(finalWriteStream, finalPromise);
     }
   }
   
@@ -77,7 +78,14 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     return pipeline.getSource().initialize(this, pipeline)
             .compose(v -> initializeProcessors(pipeline, pipeline.getProcessors().iterator()))
             .compose(v -> pipeline.getSink().initialize(this, pipeline))
-            .compose(v -> buildPipes(pipeline.getSource().getReadStream(), pipeline.getProcessors().iterator(), pipeline.getSink().getWriteStream()))
+            .compose(v -> {
+              try {
+                buildPipes(pipeline.getFinalPromise(), pipeline.getSource().getReadStream(), pipeline.getProcessors().iterator(), pipeline.getSink().getWriteStream());
+                return Future.succeededFuture();
+              } catch(Throwable ex) {
+                return Future.failedFuture(ex);
+              }
+            })
             ;
   }
   

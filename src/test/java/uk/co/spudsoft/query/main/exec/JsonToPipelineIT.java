@@ -6,7 +6,6 @@ package uk.co.spudsoft.query.main.exec;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
@@ -16,7 +15,6 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
@@ -62,7 +60,7 @@ public class JsonToPipelineIT {
   }
   
   @Test
-  @Timeout(value = 15, timeUnit = TimeUnit.SECONDS)
+  @Timeout(value = 15000, timeUnit = TimeUnit.SECONDS)
   public void testParsingJsonToPipelineStreaming(Vertx vertx, VertxTestContext testContext) throws Throwable {
     String jsonString;
     try (InputStream stream = this.getClass().getResourceAsStream("/JsonToPipelineIT.json")) {
@@ -83,13 +81,27 @@ public class JsonToPipelineIT {
       assertNotNull(pipeline);
 
       PipelineExecutorImpl executor = new PipelineExecutorImpl();      
-      PipelineInstance instance = buildPipelineInstance(executor, vertx, pipeline, testContext);
+      PipelineInstance instance = new PipelineInstance(
+              executor.prepareArguments(pipeline.getArguments(), args)
+              , pipeline.getSourceEndpoints()
+              , pipeline.getSource().createInstance(vertx, Vertx.currentContext())
+              , executor.createProcessors(vertx, Vertx.currentContext(), pipeline)
+              , pipeline.getDestination().createInstance(vertx, Vertx.currentContext())
+      );
+      
       assertNotNull(instance);
 
       executor.initializePipeline(instance)
               .onComplete(ar -> {
                 logger.debug("Pipeline complete");
-                testContext.completeNow();
+                if (ar.succeeded()) {
+                  vertx.setTimer(2000, l -> {
+                    logger.debug("Ending test");
+                    testContext.completeNow();
+                  });
+                } else {
+                  testContext.failNow(ar.cause());
+                }
               });
     });
   }
@@ -134,21 +146,5 @@ public class JsonToPipelineIT {
       testContext.failNow(ex);
     }
     return pipeline;
-  }
-
-  protected PipelineInstance buildPipelineInstance(PipelineExecutor executor, Vertx vertx, Pipeline pipeline, VertxTestContext testContext) {
-    PipelineInstance instance = null;
-    try {
-      Context context = vertx.getOrCreateContext();
-      instance = new PipelineInstance(executor.prepareArguments(pipeline.getArguments(), new HashMap<>())
-              , null
-              , pipeline.getSource().createInstance(vertx, context)
-              , executor.createProcessors(vertx, context, pipeline)
-              , pipeline.getDestination().createInstance(vertx, context)
-      );
-    } catch(Throwable ex) {
-      testContext.failNow(ex);
-    }
-    return instance;
   }
 }

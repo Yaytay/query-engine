@@ -43,7 +43,7 @@ public class RowStreamWrapper implements ReadStream<JsonObject> {
   
   @Override
   public ReadStream<JsonObject> handler(Handler<JsonObject> handler) {
-    logger.debug("handler({})", handler);
+    logger.trace("handler({})", handler);
     if (handler == null) {
       // When rowStream.handler is called with a non-null handler it will always handle the currently in-memory rows
       // So must not pass in a 'debug' handler here.
@@ -52,6 +52,7 @@ public class RowStreamWrapper implements ReadStream<JsonObject> {
       rowStream.handler(row -> {
         try {
           JsonObject json = row.toJson();
+          logger.trace("{} Received row: {}", this, json);
           handler.handle(json);
         } catch(Throwable ex) {
           if (exceptionHandler != null) {
@@ -65,12 +66,14 @@ public class RowStreamWrapper implements ReadStream<JsonObject> {
   
   @Override
   public ReadStream<JsonObject> pause() {
+    logger.trace("{} paused", this);
     rowStream.pause();
     return this;
   }
 
   @Override
   public ReadStream<JsonObject> resume() {
+    logger.trace("{} resumed", this);
     rowStream.resume();
     return this;
   }

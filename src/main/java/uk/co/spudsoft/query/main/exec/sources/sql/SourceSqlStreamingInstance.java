@@ -59,7 +59,7 @@ public class SourceSqlStreamingInstance implements SourceInstance {
     
     Endpoint endpoint = pipeline.getSourceEndpoints().get(definition.getEndpoint());
     if (endpoint == null) {
-      return Future.failedFuture("Endpoint not found");
+      return Future.failedFuture("Endpoint \"" + definition.getEndpoint() + "\" not found");
     }
     
     SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(endpoint.getUrl());
@@ -79,7 +79,7 @@ public class SourceSqlStreamingInstance implements SourceInstance {
               return connection.begin();
             }).compose(tran -> {
               transaction = tran;
-              logger.debug("Creating SQL stream on {}", connection);
+              logger.trace("Creating SQL stream on {}", connection);
               RowStream<Row> stream = preparedStatement.createStream(definition.getStreamingFetchSize());
               rowStreamWrapper = new RowStreamWrapper(transaction, stream);
               return Future.succeededFuture();

@@ -122,15 +122,13 @@ import uk.co.spudsoft.query.main.exec.procs.ProcessorDestination;
       if (currentParentRow == null) {
         // We have a child row that hasn't been added to the list yet
         if (currentChildRow != null) {
-          if (!currentChildRows.isEmpty()) {
-            // If this child row is for a different parent row then we have to wait until we get a parent in
-            if (getId(currentChildRows.get(0), definition.getChildIdColumn()).equals(getId(currentChildRow, definition.getChildIdColumn()))) {
-              currentChildRows.add(currentChildRow);
-              currentChildRow = null;
-              Promise<Void> promise = currentChildPromise;
-              currentChildPromise = null;
-              promise.complete();
-            }
+          // If this child row is for a different parent row then we have to wait until we get a parent in
+          if (currentChildRows.isEmpty() || getId(currentChildRows.get(0), definition.getChildIdColumn()).equals(getId(currentChildRow, definition.getChildIdColumn()))) {
+            currentChildRows.add(currentChildRow);
+            currentChildRow = null;
+            Promise<Void> promise = currentChildPromise;
+            currentChildPromise = null;
+            promise.complete();
           }
         }
         // Not received parent row yet, just wait for it.
@@ -221,19 +219,19 @@ import uk.co.spudsoft.query.main.exec.procs.ProcessorDestination;
             , pipeline.getSourceEndpoints()
             , definition.getInput().getSource().createInstance(vertx, context)
             , executor.createProcessors(vertx, context, definition.getInput())
-            , new ProcessorDestination(this)
+            , new ProcessorDestination(childStream.writeStream())
     );
     return executor.initializePipeline(childPipeline);
-  }
-
-  @Override
-  public ReadStream<JsonObject> getReadStream() {
-    return parentStream.readStream();
   }
 
   @Override
   public WriteStream<JsonObject> getWriteStream() {
     return parentStream.writeStream();
   }  
+
+  @Override
+  public ReadStream<JsonObject> getReadStream() {
+    return parentStream.readStream();
+  }
   
 }
