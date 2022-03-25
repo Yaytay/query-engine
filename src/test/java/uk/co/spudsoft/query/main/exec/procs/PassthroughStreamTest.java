@@ -36,7 +36,21 @@ public class PassthroughStreamTest {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(PassthroughStreamTest.class);
 
-  static Future<Void> writeData(Vertx vertx, WriteStream<JsonObject> instance, int value) {
+  /**
+   * Write simple JsonObjects to a WriteStream.
+   * 
+   * A total of value+1 items will be written to the stream.
+   * Each item will have the structure: {"value":value}
+   * The value will be decremented until value is zero (the zeroth value will be added to the stream) and this function will be called recursively.
+   * 
+   * Writing data to a stream is non-trivial as the writer should wait until the queue is not full before writing more data and should not call end until all data has been added.
+   * 
+   * @param vertx Vertx instance.
+   * @param instance Stream that the data is to be written to.
+   * @param value The current value to add to the stream.
+   * @return A Future that will be completed when all data has been written.
+   */
+  public static Future<Void> writeData(Vertx vertx, WriteStream<JsonObject> instance, int value) {
     if (value < 0) {
       instance.end();
       return Future.succeededFuture();
@@ -152,7 +166,49 @@ public class PassthroughStreamTest {
 
   @Test
   public void testBadReader(Vertx vertx, VertxTestContext testContext) {    
-    logger.info("testSlowReader");
+    logger.info("testBadReader");
+    vertx.getOrCreateContext().runOnContext(v -> {
+      long start = System.currentTimeMillis();
+      PassthroughStream<JsonObject> instance = new PassthroughStream<>(
+              (row, chain) -> {
+                return chain.handle(row);
+              }
+              , vertx.getOrCreateContext()
+      );
+      instance.writeStream().drainHandler(v2 -> {
+        logger.info("Drained");
+      }).exceptionHandler(ex -> {
+        logger.warn("Failure: ", ex);
+      });
+      instance.readStream().handler(jo -> {
+        logger.info("Received: {}", jo);
+        throw new IllegalStateException("Bad reader");
+      }).endHandler(v2 -> {
+        logger.info("Ended");
+        testContext.completeNow();
+        testContext.verify(() -> {
+          assertThat(System.currentTimeMillis() - start, greaterThan(1000L));
+        });
+        testContext.completeNow();
+      }).exceptionHandler(ex -> {
+        logger.warn("Exception: ", ex);
+      });
+      
+      writeData(vertx, instance.writeStream(), 10)
+              .onSuccess(v2 -> {
+                logger.info("All data written");
+              })
+              .onFailure(ex -> {
+                testContext.failNow(ex);
+              })
+              ;
+    });
+  }
+
+
+  @Test
+  public void testBadReaderWithoutExceptionHandler(Vertx vertx, VertxTestContext testContext) {    
+    logger.info("testBadReaderWithoutExceptionHandler");
     vertx.getOrCreateContext().runOnContext(v -> {
       long start = System.currentTimeMillis();
       PassthroughStream<JsonObject> instance = new PassthroughStream<>(
@@ -347,8 +403,10 @@ public class PassthroughStreamTest {
           assertThat(System.currentTimeMillis() - start, lessThan(1000L));
         });
         testContext.completeNow();
+      }).exceptionHandler(ex -> {
+        logger.warn("Exception: ", ex);
       });
-      instance.readStream().resume();
+      instance.readStream().pause().fetch(12);
       
       writeData(vertx, instance.writeStream(), 7)
               .onSuccess(v2 -> {

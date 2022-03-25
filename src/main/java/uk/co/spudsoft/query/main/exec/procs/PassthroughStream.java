@@ -245,7 +245,6 @@ public class PassthroughStream<T> {
     @Override
     public ReadStream<T> resume() {
       logger.debug("Resume");
-      writeStreamDataBeingProcessed.set(false);
       fetch(Long.MAX_VALUE);
       return this;
     }
@@ -255,6 +254,7 @@ public class PassthroughStream<T> {
       if (amount < 0L) {
         throw new IllegalArgumentException();
       }
+      writeStreamDataBeingProcessed.set(false);
       T curr = null;
       Promise<Void> promise;
       synchronized (lock) {
