@@ -9,6 +9,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.streams.WriteStream;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +23,7 @@ public class LoggingWriteStream<T> implements WriteStream<T> {
   private static final Logger logger = LoggerFactory.getLogger(LoggingWriteStream.class);
 
   private Handler<Throwable> exceptionHandler;
+  private AtomicInteger count = new AtomicInteger();
   
   @Override
   public WriteStream<T> exceptionHandler(Handler<Throwable> handler) {
@@ -39,9 +41,14 @@ public class LoggingWriteStream<T> implements WriteStream<T> {
   @Override
   public void write(T data, Handler<AsyncResult<Void>> handler) {
     logger.debug("Received: {}", data);
+    count.incrementAndGet();
     handler.handle(Future.succeededFuture());
   }
 
+  public int getCount() {
+    return count.get();
+  }
+  
   @Override
   public void end(Handler<AsyncResult<Void>> handler) {
     handler.handle(Future.succeededFuture());

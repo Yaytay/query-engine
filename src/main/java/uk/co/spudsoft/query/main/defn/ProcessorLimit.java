@@ -64,6 +64,7 @@ public class ProcessorLimit implements Processor {
   }
 
   private ProcessorLimit(final ProcessorType type, final int limit) {
+    validateType(ProcessorType.LIMIT, type);
     this.type = type;
     this.limit = limit;
   }

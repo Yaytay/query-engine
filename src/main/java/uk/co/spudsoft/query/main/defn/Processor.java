@@ -30,4 +30,10 @@ public interface Processor {
   
   ProcessorType getType();
   
+  default void validateType(ProcessorType required, ProcessorType actual) {
+    if (required != actual) {
+      throw new IllegalArgumentException("Processor of type " + required + " configured with type " + actual);
+    }
+  }
+  
 }

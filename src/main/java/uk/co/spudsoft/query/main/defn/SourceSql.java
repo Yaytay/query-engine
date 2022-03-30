@@ -30,6 +30,7 @@ public class SourceSql implements Source {
   private final PoolOptions poolOptions;
   private final int streamingFetchSize;
 
+  @Override
   public SourceType getType() {
     return type;
   }
@@ -102,6 +103,7 @@ public class SourceSql implements Source {
           , final PoolOptions poolOptions
           , final int streamingFetchSize
   ) {
+    validateType(SourceType.SQL, type);
     this.type = type;
     this.endpoint = endpoint;
     this.query = query;

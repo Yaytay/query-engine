@@ -18,7 +18,6 @@ import uk.co.spudsoft.query.main.exec.PipelineInstance;
 import uk.co.spudsoft.query.main.exec.ProcessorInstance;
 import uk.co.spudsoft.query.main.exec.procs.AsyncHandler;
 import uk.co.spudsoft.query.main.exec.procs.PassthroughStream;
-import uk.co.spudsoft.query.main.exec.procs.PassthroughWriteStream;
 import uk.co.spudsoft.query.main.exec.procs.ProcessorDestination;
 
 /**
@@ -42,7 +41,7 @@ import uk.co.spudsoft.query.main.exec.procs.ProcessorDestination;
   private final Context context;
   private final ProcessorGroupConcat definition;
   private final PassthroughStream<JsonObject> parentStream;
-  private final PassthroughWriteStream<JsonObject> childStream;
+  private final PassthroughStream<JsonObject> childStream;
   private final List<JsonObject> currentChildRows;
   
   private AsyncHandler<JsonObject> currentParentChain;
@@ -57,13 +56,14 @@ import uk.co.spudsoft.query.main.exec.procs.ProcessorDestination;
     this.context = context;
     this.definition = definition;
     this.parentStream = new PassthroughStream<>(this::parentStreamProcess, context);
-    this.childStream = new PassthroughWriteStream<>(this::childStreamProcess, context);
-    childStream.endHandler(v -> {
+    this.childStream = new PassthroughStream<>(this::childStreamProcess, context);
+    childStream.readStream().endHandler(v -> {
       synchronized(this) {
         childEnded = true;
       }
       processCurrent();
-    }).writeStream().exceptionHandler(ex -> {
+    });
+    childStream.writeStream().exceptionHandler(ex -> {
       logger.error("Processing failed: ", ex);
     });
     this.currentChildRows = new ArrayList<>();
@@ -86,7 +86,7 @@ import uk.co.spudsoft.query.main.exec.procs.ProcessorDestination;
     }
   }
   
-  private Future<Void> childStreamProcess(JsonObject data) {
+  private Future<Void> childStreamProcess(JsonObject data, AsyncHandler<JsonObject> chain) {
     try {
       logger.info("child process {}", data);
       Promise<Void> result = Promise.promise();
@@ -148,7 +148,7 @@ import uk.co.spudsoft.query.main.exec.procs.ProcessorDestination;
       }
       childId = getId(currentChildRow, definition.getChildIdColumn());
     }
-    int compareResult = childId.compareTo(parentId);
+    int compareResult = childId == null ? 1 : childId.compareTo(parentId);
     if (compareResult < 0) {
       // Parent row is ahead of this child - implies that some parent rows are missing so skip the child rows
       synchronized(this) {
@@ -203,7 +203,7 @@ import uk.co.spudsoft.query.main.exec.procs.ProcessorDestination;
                   currentChildRow = null;
                 }
                 if (childPromise != null) {
-                  childPromise.complete();
+                  childPromise.tryComplete();
                 }
                 if (parentPromise != null) {
                   parentPromise.complete();

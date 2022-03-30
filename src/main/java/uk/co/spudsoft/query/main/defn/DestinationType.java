@@ -12,10 +12,10 @@ public enum DestinationType {
   /**
    * Logs all messages received and then doesn't do anything else with them.
    */
-  Logger
+  LOGGER
   , 
   /**
    * Just so there is more than one, delete later.
    */
-  Nothing
+  NOTHING
 }

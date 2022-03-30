@@ -12,5 +12,6 @@ public enum ProcessorType {
   
   LIMIT
   , GROUP_CONCAT
-          
+  , SCRIPT
+  
 }

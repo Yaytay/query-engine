@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import uk.co.spudsoft.query.main.defn.SourceTest;
 import uk.co.spudsoft.query.main.exec.dests.logger.DestinationLoggerInstance;
-import uk.co.spudsoft.query.main.exec.sources.test.TestSource;
+import uk.co.spudsoft.query.main.exec.sources.test.SourceTestInstance;
 
 /**
  *
@@ -24,7 +24,7 @@ public class BasicPipelineTest {
   public void testBasicPipeline(Vertx vertx, VertxTestContext testContext) {
     PipelineInstance pipeline = new PipelineInstance(null
             , null
-            , new TestSource(vertx.getOrCreateContext(), SourceTest.builder().rowCount(100).build())
+            , new SourceTestInstance(vertx.getOrCreateContext(), SourceTest.builder().rowCount(100).build())
             , null
             , new DestinationLoggerInstance()
     );

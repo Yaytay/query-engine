@@ -44,13 +44,19 @@ public class SourceSqlStreamingInstance implements SourceInstance {
   private PreparedStatement preparedStatement;
   private Transaction transaction;
 
+  private PoolCreator poolCreator = new PoolCreator();
+  
   public SourceSqlStreamingInstance(Vertx vertx, Context context, SourceSql definition) {
     this.vertx = vertx;
     this.definition = definition;
   }
+
+  void setPoolCreator(PoolCreator poolCreator) {
+    this.poolCreator = poolCreator;
+  }
   
   @SuppressFBWarnings(value = "SQL_INJECTION_VERTX", justification = "The query from the configuration is definitely a SQL injection vector, but it is not built from end-user input")
-  private Future<PreparedStatement> prepareSqlStatement(SqlConnection conn) {
+  Future<PreparedStatement> prepareSqlStatement(SqlConnection conn) {
     return conn.prepare(definition.getQuery());
   }
   
@@ -69,7 +75,7 @@ public class SourceSqlStreamingInstance implements SourceInstance {
     if (!Strings.isNullOrEmpty(endpoint.getPassword())) {
       connectOptions.setPassword(endpoint.getPassword());
     }
-    Pool pool = Pool.pool(vertx, connectOptions, definition.getPoolOptions() == null ? new PoolOptions().setMaxSize(1) : definition.getPoolOptions());
+    Pool pool = poolCreator.pool(vertx, connectOptions, definition.getPoolOptions() == null ? new PoolOptions().setMaxSize(1) : definition.getPoolOptions());
     return pool.getConnection()
             .compose(conn -> {
               connection = conn;

@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import uk.co.spudsoft.query.main.exec.SourceInstance;
-import uk.co.spudsoft.query.main.exec.sources.test.TestSource;
+import uk.co.spudsoft.query.main.exec.sources.test.SourceTestInstance;
 
 /**
  *
@@ -18,6 +18,7 @@ public class SourceTest implements Source {
 
   private final SourceType type;
   private final int rowCount;
+  private final String name;
 
   @Override
   public SourceType getType() {
@@ -28,9 +29,13 @@ public class SourceTest implements Source {
     return rowCount;
   }
 
+  public String getName() {
+    return name;
+  }  
+
   @Override
   public SourceInstance createInstance(Vertx vertx, Context context) {
-    return new TestSource(context, this);
+    return new SourceTestInstance(context, this);
   }
   
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
@@ -38,8 +43,13 @@ public class SourceTest implements Source {
 
     private SourceType type = SourceType.TEST;
     private int rowCount;
+    private String name;
 
     private Builder() {
+    }
+
+    public SourceTest build() {
+      return new SourceTest(type, rowCount, name);
     }
 
     public Builder type(final SourceType value) {
@@ -52,8 +62,9 @@ public class SourceTest implements Source {
       return this;
     }
 
-    public SourceTest build() {
-      return new SourceTest(type, rowCount);
+    public Builder name(final String value) {
+      this.name = value;
+      return this;
     }
   }
 
@@ -61,9 +72,11 @@ public class SourceTest implements Source {
     return new Builder();
   }
 
-  private SourceTest(final SourceType type, final int rowCount) {
+  private SourceTest(final SourceType type, final int rowCount, final String name) {
+    validateType(SourceType.TEST, type);
     this.type = type;
     this.rowCount = rowCount;
+    this.name = name;
   }
     
 }

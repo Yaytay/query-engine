@@ -167,6 +167,7 @@ public class ProcessorGroupConcat implements Processor {
           , String parentValueColumn
           , String delimiter
   ) {
+    validateType(ProcessorType.GROUP_CONCAT, type);
     this.type = type;
     this.input = input;
     this.innerJoin = innerJoin;
@@ -174,7 +175,7 @@ public class ProcessorGroupConcat implements Processor {
     this.childIdColumn = childIdColumn;
     this.childValueColumn = childValueColumn;
     this.parentValueColumn = parentValueColumn;
-    this.delimiter = delimiter;
+    this.delimiter = delimiter == null ? ", " : delimiter;
   }
     
   

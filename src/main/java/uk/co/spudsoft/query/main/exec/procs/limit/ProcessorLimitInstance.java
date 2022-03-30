@@ -37,6 +37,14 @@ public class ProcessorLimitInstance implements ProcessorInstance {
     this.definition = definition;
     this.stream = new PassthroughStream<>(this::passthroughStreamProcessor, context);
   }  
+
+  /**
+   * Purely for test purposes.
+   * @return The configured limit for this processor instance.
+   */
+  public int getLimit() {
+    return definition.getLimit();
+  }
   
   private Future<Void> passthroughStreamProcessor(JsonObject data, AsyncHandler<JsonObject> chain) {
     try {

@@ -45,4 +45,10 @@ public interface Destination {
    */
   DestinationType getType();
 
+  default void validateType(DestinationType required, DestinationType actual) {
+    if (required != actual) {
+      throw new IllegalArgumentException("Processor of type " + required + " configured with type " + actual);
+    }
+  }
+  
 }

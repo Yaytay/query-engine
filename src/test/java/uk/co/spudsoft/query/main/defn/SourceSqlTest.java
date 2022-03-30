@@ -8,6 +8,7 @@ import io.vertx.sqlclient.PoolOptions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  *
@@ -19,6 +20,17 @@ public class SourceSqlTest {
   public void testGetType() {
     SourceSql instance = SourceSql.builder().build();
     assertEquals(SourceType.SQL, instance.getType());
+  }
+
+  @Test
+  public void testSetType() {
+    SourceSql instance = SourceSql.builder().type(SourceType.SQL).build();
+    assertEquals(SourceType.SQL, instance.getType());
+    try {
+      SourceSql.builder().type(SourceType.HTTP).build();
+      fail("Expected IllegalArgumentException");
+    } catch(IllegalArgumentException ex) {
+    }
   }
 
   @Test

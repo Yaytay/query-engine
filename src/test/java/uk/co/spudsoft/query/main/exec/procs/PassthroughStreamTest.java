@@ -219,8 +219,6 @@ public class PassthroughStreamTest {
       );
       instance.writeStream().drainHandler(v2 -> {
         logger.info("Drained");
-      }).exceptionHandler(ex -> {
-        logger.warn("Failure: ", ex);
       });
       instance.readStream().handler(jo -> {
         logger.info("Received: {}", jo);
@@ -422,6 +420,49 @@ public class PassthroughStreamTest {
     });
   }
 
+
+  @Test
+  public void testVeryBadProcessorWithoutExceptionHandler(Vertx vertx, VertxTestContext testContext) {    
+    logger.info("testBadProcessor");
+    vertx.getOrCreateContext().runOnContext(v -> {
+      long start = System.currentTimeMillis();
+      PassthroughStream<JsonObject> instance = new PassthroughStream<>(
+              (row, chain) -> {
+                throw new IllegalStateException("Very bad");
+              }
+              , vertx.getOrCreateContext()
+      );      
+      instance.writeStream().drainHandler(v2 -> {
+        logger.info("Drained");
+      });
+      AtomicLong received = new AtomicLong();
+      instance.readStream().handler(jo -> {
+        logger.info("Received: {}", jo);
+        received.incrementAndGet();
+      }).endHandler(v2 -> {
+        logger.info("Ended");
+        testContext.completeNow();
+        testContext.verify(() -> {
+          assertThat(System.currentTimeMillis() - start, lessThan(1000L));
+        });
+        testContext.completeNow();
+      });
+      instance.readStream().pause().fetch(12);
+      
+      writeData(vertx, instance.writeStream(), 7)
+              .onSuccess(v2 -> {
+                testContext.verify(() -> {
+                  assertEquals(0, received.get());
+                });
+                testContext.completeNow();
+              })
+              .onFailure(ex -> {
+                testContext.failNow(ex);
+              })
+              ;
+    });
+  }
+
   @Test
   public void basicCoverageChecks() {
     PassthroughStream<JsonObject> instance = new PassthroughStream<>((d,c) -> Future.succeededFuture(), null);
@@ -439,6 +480,12 @@ public class PassthroughStreamTest {
     instance.writeStream().end();
     
     assertTrue(instance.writeStream().writeQueueFull());
+    
+    try {
+      instance.writeStream().write(new JsonObject());
+      fail("Expected IllegalStateException");
+    } catch(IllegalStateException ex) {
+    }
   }
   
 

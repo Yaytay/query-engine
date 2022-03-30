@@ -17,6 +17,8 @@ import uk.co.spudsoft.query.main.exec.PipelineInstance;
  */
 public class DestinationLoggerInstance implements DestinationInstance {
  
+  private final LoggingWriteStream<JsonObject> stream = new LoggingWriteStream<>();
+  
   /**
    * Constructor.
    */
@@ -30,7 +32,7 @@ public class DestinationLoggerInstance implements DestinationInstance {
   
   @Override
   public WriteStream<JsonObject> getWriteStream() {
-    return new LoggingWriteStream<>();
+    return stream;
   }
   
 }

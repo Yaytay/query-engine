@@ -28,7 +28,7 @@ public class PassthroughStream<T> {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(PassthroughStream.class);
   
-  private final AtomicBoolean writeStreamDataBeingProcessed = new AtomicBoolean();
+  private final AtomicBoolean readStreamPaused = new AtomicBoolean();
 
   private final Object lock = new Object();
   private final ChainedAsyncHandler<T> processor;
@@ -36,14 +36,25 @@ public class PassthroughStream<T> {
   private final Write write;
   private final Read read;
   
-  private Promise<Void> inflight;
   private Handler<Throwable> exceptionHandler;    
   private Handler<Void> drainHandler;
   private Handler<Void> endHandler;
   private Handler<T> readHandler;
 
-  private T current;
   private long demand;
+
+  private static class DataAndPromise<T> {
+    final Promise<Void> promise;
+    final T data;
+
+    DataAndPromise(Promise<Void> promise, T data) {
+      this.promise = promise;
+      this.data = data;
+    }        
+  }
+  
+  private DataAndPromise<T> pending;
+  private DataAndPromise<T> inflight;
   
   /*
   This is the endhandler that will be called when the current in-flight item has been processed.
@@ -82,12 +93,14 @@ public class PassthroughStream<T> {
     return read;
   }
   
-  private void processCurrent(Promise<Void> promise, T data) {
+  private void processCurrent() {
+    logger.debug("{}@{}: processCurrent({})", getClass().getSimpleName(), hashCode(), inflight.data);
     context.runOnContext(v -> {
       try {
-        processor.handle(data, d -> read.handle(d))
+        logger.debug("{}@{}: processCurrent on context({})", getClass().getSimpleName(), hashCode(), inflight.data);
+        processor.handle(inflight.data, d -> read.handle(d))
                 .onComplete(ar -> {
-                  completeCurrent(promise, ar);
+                  completeCurrent(ar);
                 })
                 ;
       } catch(Throwable ex) {
@@ -95,26 +108,38 @@ public class PassthroughStream<T> {
         if (handler != null) {
           handler.handle(ex);
         }
-        completeCurrent(promise, Future.failedFuture(ex));
+        completeCurrent(Future.failedFuture(ex));
       }
     });
   }
 
-  private void completeCurrent(Promise<Void> promise, AsyncResult<Void> ar) {
+  private void completeCurrent(AsyncResult<Void> ar) {
     Handler<Void> dh;
     Handler<Void> eh;
+    Promise<Void> promise;
+    boolean reprocess = false;
     synchronized(lock) {
+      logger.debug("completeCurrent({}) with {}", ar, inflight.data);
       dh = drainHandler;
       eh = end;
-      current = null;
+      promise = inflight.promise;
       inflight = null;
-    }
+      if (pending != null) {
+        inflight = pending;
+        pending = null;
+        reprocess = true;
+      }
+    }    
     promise.handle(ar);
-    if (dh != null) {
-      dh.handle(null);
-    }
-    if (eh != null) {
-      eh.handle(null);
+    if (reprocess) {
+      processCurrent();
+    } else {
+      if (dh != null) {
+        dh.handle(null);
+      }
+      if (eh != null) {
+        eh.handle(null);
+      }
     }
   }
   
@@ -128,16 +153,25 @@ public class PassthroughStream<T> {
 
     @Override
     public Future<Void> write(T data) {
-      Promise<Void> promise;
+      logger.debug("{}@{}: write({})", getClass().getSimpleName(), hashCode(), data);        
       boolean isPaused;
+      Promise<Void> promise = Promise.promise();
+      boolean processNow = false;
       synchronized(lock) {
-        current = data;
-        promise = Promise.promise();
-        inflight = promise;
-        isPaused = writeStreamDataBeingProcessed.get();
+        if (pending != null) {
+          throw new IllegalStateException("write(" + data + ") called whilst pending is " + pending);
+        }
+        pending = new DataAndPromise<>(promise, data);
+        isPaused = readStreamPaused.get();
+        if (!isPaused) {
+          inflight = pending;
+          pending = null;
+          processNow = true;
+        }
       }        
-      if (!isPaused) {
-        processCurrent(promise, data);
+      if (processNow) {
+        logger.debug("{}@{}: write processNow({})", getClass().getSimpleName(), hashCode(), data);        
+        processCurrent();
       }
       return promise.future();
     }
@@ -177,7 +211,8 @@ public class PassthroughStream<T> {
     @Override
     public boolean writeQueueFull() {
       synchronized(lock) {
-        return writeStreamDataBeingProcessed.get() || (current != null);
+        logger.debug("{}@{}: writeQueueFull() {}, {}, {}", getClass().getSimpleName(), hashCode(), readStreamPaused.get(), (inflight != null), (pending != null));        
+        return readStreamPaused.get() || (inflight != null) || (pending != null);
       }
     }
 
@@ -186,7 +221,7 @@ public class PassthroughStream<T> {
       boolean callNow = false;
       synchronized(lock) {
         drainHandler = handler;
-        if (inflight == null || inflight.future().isComplete()) {
+        if (inflight == null && pending == null) {
           callNow = true;
         }
       }
@@ -238,13 +273,13 @@ public class PassthroughStream<T> {
 
     @Override
     public ReadStream<T> pause() {
-      writeStreamDataBeingProcessed.set(true);
+      readStreamPaused.set(true);
       return this;
     }
 
     @Override
     public ReadStream<T> resume() {
-      logger.debug("Resume");
+      logger.debug("{}:{} Resume", this.getClass().getSimpleName(), this.hashCode());
       fetch(Long.MAX_VALUE);
       return this;
     }
@@ -254,19 +289,22 @@ public class PassthroughStream<T> {
       if (amount < 0L) {
         throw new IllegalArgumentException();
       }
-      writeStreamDataBeingProcessed.set(false);
-      T curr = null;
-      Promise<Void> promise;
+      readStreamPaused.set(false);
+      boolean processNow = false;
       synchronized (lock) {
         demand += amount;
         if (demand < 0L) {
           demand = Long.MAX_VALUE;
         }
-        curr = current;
-        promise = inflight;
+        if (pending != null && inflight == null) {
+          inflight = pending;
+          pending = null;
+          processNow = true;
+        }
       }
-      if (curr != null) {
-        processCurrent(promise, curr);
+      if (processNow) {
+        logger.debug("{}@{}: fetch({}) with {}", getClass().getSimpleName(), hashCode(), amount, inflight.data);
+        processCurrent();
       }
       return this;
     }

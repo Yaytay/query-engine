@@ -13,23 +13,18 @@ import static org.junit.jupiter.api.Assertions.fail;
  *
  * @author jtalbut
  */
-public class DestinationLoggerTest {
-
-  @Test
-  public void testGetType() {
-    DestinationLogger instance = DestinationLogger.builder().build();
-    assertEquals(DestinationType.LOGGER, instance.getType());
-  }
-
+public class ProcessorScriptTest {
+  
   @Test
   public void testSetType() {
-    DestinationLogger instance = DestinationLogger.builder().type(DestinationType.LOGGER).build();
-    assertEquals(DestinationType.LOGGER, instance.getType());
+    ProcessorScript instance = ProcessorScript.builder().type(ProcessorType.SCRIPT).build();
+    assertEquals(ProcessorType.SCRIPT, instance.getType());
     try {
-      DestinationLogger.builder().type(DestinationType.NOTHING).build();
+      ProcessorScript.builder().type(ProcessorType.GROUP_CONCAT).build();
       fail("Expected IllegalArgumentException");
     } catch(IllegalArgumentException ex) {
     }
   }
+
   
 }

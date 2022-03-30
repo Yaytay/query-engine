@@ -7,6 +7,7 @@ package uk.co.spudsoft.query.main.defn;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  *
@@ -18,6 +19,17 @@ public class ProcessorGroupConcatTest {
   public void testGetType() {
     ProcessorGroupConcat instance = ProcessorGroupConcat.builder().build();
     assertEquals(ProcessorType.GROUP_CONCAT, instance.getType());
+  }
+
+  @Test
+  public void testSetType() {
+    ProcessorGroupConcat instance = ProcessorGroupConcat.builder().type(ProcessorType.GROUP_CONCAT).build();
+    assertEquals(ProcessorType.GROUP_CONCAT, instance.getType());
+    try {
+      ProcessorGroupConcat.builder().type(ProcessorType.LIMIT).build();
+      fail("Expected IllegalArgumentException");
+    } catch(IllegalArgumentException ex) {
+    }
   }
 
   @Test

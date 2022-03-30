@@ -62,7 +62,7 @@ public class JsonToPipelineIT {
   }
   
   @Test
-  @Timeout(value = 15000, timeUnit = TimeUnit.SECONDS)
+  @Timeout(value = 15, timeUnit = TimeUnit.SECONDS)
   public void testParsingJsonToPipelineStreaming(Vertx vertx, VertxTestContext testContext) throws Throwable {
     String jsonString;
     try (InputStream stream = this.getClass().getResourceAsStream("/JsonToPipelineIT.json")) {

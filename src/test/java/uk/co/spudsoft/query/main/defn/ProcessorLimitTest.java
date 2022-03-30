@@ -13,23 +13,30 @@ import static org.junit.jupiter.api.Assertions.fail;
  *
  * @author jtalbut
  */
-public class DestinationLoggerTest {
-
+public class ProcessorLimitTest {
+  
   @Test
   public void testGetType() {
-    DestinationLogger instance = DestinationLogger.builder().build();
-    assertEquals(DestinationType.LOGGER, instance.getType());
+    ProcessorLimit instance = ProcessorLimit.builder().build();
+    assertEquals(ProcessorType.LIMIT, instance.getType());
   }
 
   @Test
   public void testSetType() {
-    DestinationLogger instance = DestinationLogger.builder().type(DestinationType.LOGGER).build();
-    assertEquals(DestinationType.LOGGER, instance.getType());
+    ProcessorLimit instance = ProcessorLimit.builder().type(ProcessorType.LIMIT).build();
+    assertEquals(ProcessorType.LIMIT, instance.getType());
     try {
-      DestinationLogger.builder().type(DestinationType.NOTHING).build();
+      ProcessorLimit.builder().type(ProcessorType.SCRIPT).build();
       fail("Expected IllegalArgumentException");
     } catch(IllegalArgumentException ex) {
     }
   }
+
+  @Test
+  public void testGetLimit() {
+    ProcessorLimit instance = ProcessorLimit.builder().limit(17).build();
+    assertEquals(17, instance.getLimit());
+  }
+
   
 }

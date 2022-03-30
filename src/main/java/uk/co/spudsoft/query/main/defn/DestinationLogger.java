@@ -37,20 +37,17 @@ public class DestinationLogger implements Destination {
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
-    private DestinationType type = DestinationType.Logger;
+    private DestinationType type = DestinationType.LOGGER;
 
     private Builder() {
     }
 
     /**
      * Set the type of the Destination.
-     * @param value must be DestinationType.Logger.
+     * @param value must be DestinationType.LOGGER.
      * @return this, so that the builder may be used fluently.
      */
     public Builder type(final DestinationType value) {
-      if (value != DestinationType.Logger) {
-        throw new IllegalArgumentException("Can only be DestinationType.Logger");
-      }
       this.type = value;
       return this;
     }
@@ -73,6 +70,7 @@ public class DestinationLogger implements Destination {
   }
 
   private DestinationLogger(final DestinationType type) {
+    validateType(DestinationType.LOGGER, type);
     this.type = type;
   }
     

@@ -31,4 +31,10 @@ public interface Source {
   
   SourceType getType();
   
+  default void validateType(SourceType required, SourceType actual) {
+    if (required != actual) {
+      throw new IllegalArgumentException("Source of type " + required + " configured with type " + actual);
+    }
+  }
+  
 }
