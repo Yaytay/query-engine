@@ -6,9 +6,10 @@ package uk.co.spudsoft.query.main.json;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.Source;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,16 +39,19 @@ public class TemplatePerformanceTest {
     }
     return results;
   }
-        
   
-  @BeforeAll
-  public static void dumnpJdkDetails() {
-    logger.debug("Java vendor version: {}", System.getProperty("java.vendor.version"));
+  private static String findTidyName() {
+    StackWalker walker = StackWalker.getInstance();
+    Optional<String> methodName = walker.walk(frames -> frames
+      .skip(1)
+      .findFirst()
+      .map(StackWalker.StackFrame::getMethodName));
+    return methodName.get().substring(4);
   }
-  
   
   @Test
   public void testStringTemplate() {
+    
     List<String> results = new ArrayList<>(Math.max(WARMUPS, TIMED));
     for (int i = 0; i < WARMUPS; ++i) {
       ST hello = new ST("Hello, <name>!");
@@ -64,12 +68,12 @@ public class TemplatePerformanceTest {
       results.add(result);
     }
     long duration = System.currentTimeMillis() - start;
-    logger.debug("StringTemplate: {} took {}s, {}/s", TIMED, duration / 1000.0, TIMED / (duration / 1000.0));
+    logger.debug("{}\t{}\t{}\t{}\t{}", findTidyName(), System.getProperty("java.vendor.version"), TIMED, duration / 1000.0, TIMED / (duration / 1000.0));
     assertEquals(EXPECTED_RESULTS, results);
   }
   
   @Test
-  public void testGraalVm() {
+  public void testPolyglot() {
     List<String> results = new ArrayList<>(Math.max(WARMUPS, TIMED));
     for (int i = 0; i < WARMUPS; ++i) {
       try (Context context = Context.newBuilder("js").option("engine.WarnInterpreterOnly", "false").build()) {
@@ -88,16 +92,22 @@ public class TemplatePerformanceTest {
       }
     }
     long duration = System.currentTimeMillis() - start;
-    logger.debug("GraalVM Javascript: {} took {}s, {}/s", TIMED, duration / 1000.0, TIMED / (duration / 1000.0));
+    logger.debug("{}\t{}\t{}\t{}\t{}", findTidyName(), System.getProperty("java.vendor.version"), TIMED, duration / 1000.0, TIMED / (duration / 1000.0));
     assertEquals(EXPECTED_RESULTS, results);
-  }
-  
+  }  
+    
   @Test
-  public void testGraalVmPrecompiled() {
+  public void testPolyglotLatencyModeEngine() {
     List<String> results = new ArrayList<>(Math.max(WARMUPS, TIMED));
+    Engine engine = null;
+    try {
+      engine = Engine.newBuilder().option("engine.WarnInterpreterOnly", "false").option("engine.Mode", "latency").build();
+    } catch(Throwable ex) {
+      return ;
+    }
     Source source = Source.create("js", "'Hello, ' + name + '!'");
     for (int i = 0; i < WARMUPS; ++i) {
-      try (Context context = Context.newBuilder("js").option("engine.WarnInterpreterOnly", "false").build()) {
+      try (Context context = Context.newBuilder("js").engine(engine).build()) {
         context.getBindings("js").putMember("name", i);
         String result = context.eval(source).as(String.class);
         results.add(result);
@@ -106,14 +116,103 @@ public class TemplatePerformanceTest {
     results.clear();
     long start = System.currentTimeMillis();
     for (int i = 0; i < TIMED; ++i) {
-      try (Context context = Context.newBuilder("js").option("engine.WarnInterpreterOnly", "false").build()) {
+      try (Context context = Context.newBuilder("js").engine(engine).build()) {
         context.getBindings("js").putMember("name", i);
         String result = context.eval(source).as(String.class);
         results.add(result);
       }
     }
     long duration = System.currentTimeMillis() - start;
-    logger.debug("GraalVM Javascript source: {} took {}s, {}/s", TIMED, duration / 1000.0, TIMED / (duration / 1000.0));
+    logger.debug("{}\t{}\t{}\t{}\t{}", findTidyName(), System.getProperty("java.vendor.version"), TIMED, duration / 1000.0, TIMED / (duration / 1000.0));
+    assertEquals(EXPECTED_RESULTS, results);
+  }
+  
+  @Test
+  public void testPolyglotThroughputModeEngine() {
+    List<String> results = new ArrayList<>(Math.max(WARMUPS, TIMED));
+    Engine engine = null;
+    try {
+      engine = Engine.newBuilder().option("engine.WarnInterpreterOnly", "false").option("engine.Mode", "throughput").build();
+    } catch(Throwable ex) {
+      return ;
+    }
+    Source source = Source.create("js", "'Hello, ' + name + '!'");
+    for (int i = 0; i < WARMUPS; ++i) {
+      try (Context context = Context.newBuilder("js").engine(engine).build()) {
+        context.getBindings("js").putMember("name", i);
+        String result = context.eval(source).as(String.class);
+        results.add(result);
+      }
+    }
+    results.clear();
+    long start = System.currentTimeMillis();
+    for (int i = 0; i < TIMED; ++i) {
+      try (Context context = Context.newBuilder("js").engine(engine).build()) {
+        context.getBindings("js").putMember("name", i);
+        String result = context.eval(source).as(String.class);
+        results.add(result);
+      }
+    }
+    long duration = System.currentTimeMillis() - start;
+    logger.debug("{}\t{}\t{}\t{}\t{}", findTidyName(), System.getProperty("java.vendor.version"), TIMED, duration / 1000.0, TIMED / (duration / 1000.0));
+    assertEquals(EXPECTED_RESULTS, results);
+  }
+  
+  @Test
+  public void testPolyglotThroughputModeEngineSourceCache() {
+    List<String> results = new ArrayList<>(Math.max(WARMUPS, TIMED));
+    Engine engine = null;
+    try {
+      engine = Engine.newBuilder().option("engine.WarnInterpreterOnly", "false").option("engine.Mode", "throughput").build();
+    } catch(Throwable ex) {
+      return ;
+    }
+    Source source = Source.newBuilder("js", "'Hello, ' + name + '!'", "test").cached(true).buildLiteral();
+    for (int i = 0; i < WARMUPS; ++i) {
+      try (Context context = Context.newBuilder("js").engine(engine).build()) {
+        context.getBindings("js").putMember("name", i);
+        String result = context.eval(source).as(String.class);
+        results.add(result);
+      }
+    }
+    results.clear();
+    long start = System.currentTimeMillis();
+    for (int i = 0; i < TIMED; ++i) {
+      try (Context context = Context.newBuilder("js").engine(engine).build()) {
+        context.getBindings("js").putMember("name", i);
+        String result = context.eval(source).as(String.class);
+        results.add(result);
+      }
+    }
+    long duration = System.currentTimeMillis() - start;
+    logger.debug("{}\t{}\t{}\t{}\t{}", findTidyName(), System.getProperty("java.vendor.version"), TIMED, duration / 1000.0, TIMED / (duration / 1000.0));
+    assertEquals(EXPECTED_RESULTS, results);
+  }
+  
+  
+  @Test
+  public void testPolyglotEngineSourceCache() {
+    List<String> results = new ArrayList<>(Math.max(WARMUPS, TIMED));
+    Engine engine = Engine.newBuilder().option("engine.WarnInterpreterOnly", "false").build();
+    Source source = Source.newBuilder("js", "'Hello, ' + name + '!'", "test").cached(true).buildLiteral();
+    for (int i = 0; i < WARMUPS; ++i) {
+      try (Context context = Context.newBuilder("js").engine(engine).build()) {
+        context.getBindings("js").putMember("name", i);
+        String result = context.eval(source).as(String.class);
+        results.add(result);
+      }
+    }
+    results.clear();
+    long start = System.currentTimeMillis();
+    for (int i = 0; i < TIMED; ++i) {
+      try (Context context = Context.newBuilder("js").engine(engine).build()) {
+        context.getBindings("js").putMember("name", i);
+        String result = context.eval(source).as(String.class);
+        results.add(result);
+      }
+    }
+    long duration = System.currentTimeMillis() - start;
+    logger.debug("{}\t{}\t{}\t{}\t{}", findTidyName(), System.getProperty("java.vendor.version"), TIMED, duration / 1000.0, TIMED / (duration / 1000.0));
     assertEquals(EXPECTED_RESULTS, results);
   }
   

@@ -38,7 +38,7 @@ public class PassthroughStream<T> {
   
   private Handler<Throwable> exceptionHandler;    
   private Handler<Void> drainHandler;
-  private Handler<Void> endHandler;
+  private Handler<Void> passthroughEndHandler;
   private Handler<T> readHandler;
 
   private long demand;
@@ -82,6 +82,17 @@ public class PassthroughStream<T> {
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Exposure of the stream is required")
   public WriteStream<T> writeStream() {
     return write;
+  }
+  
+  /**
+   * Set the end handler that will be called when the write stream ends.
+   * This end handler is independent of the Read.endHandler, and will be called immediately prior to it.
+   * @param handler The end handler.
+   * @return this.
+   */
+  public PassthroughStream<T> endHandler(Handler<Void> handler) {
+    passthroughEndHandler = handler;
+    return this;
   }
   
   /**
@@ -186,12 +197,17 @@ public class PassthroughStream<T> {
       boolean endNow;
       synchronized(lock) {
         end = v -> {
-          Handler<Void> eh;
+          Handler<Void> eh1;
+          Handler<Void> eh2;
           synchronized(lock) {
-            eh = endHandler;
+            eh1 = passthroughEndHandler;
+            eh2 = read.readStreamEndHandler;
           }
-          if (eh != null) {
-            eh.handle(null);
+          if (eh1 != null) {
+            eh1.handle(null);
+          }
+          if (eh2 != null) {
+            eh2.handle(null);
           }
           handler.handle(Future.succeededFuture());
         };
@@ -235,6 +251,7 @@ public class PassthroughStream<T> {
   
   private class Read implements ReadStream<T> {
 
+    private Handler<Void> readStreamEndHandler;
     private Handler<Throwable> exceptionHandler;
     
     Future<Void> handle(T data) {
@@ -311,7 +328,7 @@ public class PassthroughStream<T> {
 
     @Override
     public ReadStream<T> endHandler(Handler<Void> handler) {
-      endHandler = handler;
+      readStreamEndHandler = handler;
       return this;
     }
     

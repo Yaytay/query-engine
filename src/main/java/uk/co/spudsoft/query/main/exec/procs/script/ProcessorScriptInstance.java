@@ -13,6 +13,7 @@ import io.vertx.core.streams.ReadStream;
 import io.vertx.core.streams.WriteStream;
 import java.time.ZoneId;
 import java.util.function.BiFunction;
+import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.proxy.ProxyObject;
@@ -40,12 +41,19 @@ public class ProcessorScriptInstance implements ProcessorInstance {
   private final ProcessorScript definition;
   private final PassthroughStream<JsonObject> stream;
   
+  private Engine engine;
+  
   private Source predicateSource;
   private Source processSource;
   
   public ProcessorScriptInstance(Vertx vertx, Context context, ProcessorScript definition) {
     this.definition = definition;
-    this.stream = new PassthroughStream<>(this::passthroughStreamProcessor, context);
+    this.stream = new PassthroughStream<>(this::passthroughStreamProcessor, context);    
+    stream.endHandler(v -> {
+      if (engine != null) {
+        engine.close();
+      }
+    });
   }  
 
   private Future<Void> passthroughStreamProcessor(JsonObject data, AsyncHandler<JsonObject> chain) {
@@ -66,13 +74,13 @@ public class ProcessorScriptInstance implements ProcessorInstance {
   }
   
   private boolean runPredicate(JsonObject data) {
-    return runSource("predicate", definition.getLanguage(), predicateSource, data, (v, jo) -> {
+    return runSource(engine, "predicate", definition.getLanguage(), predicateSource, data, (v, jo) -> {
       return v.asBoolean();
     });
   }
 
   private void runProcess(JsonObject data) {
-    runSource("process", definition.getLanguage(), processSource, data, (v, jo) -> {
+    runSource(engine, "process", definition.getLanguage(), processSource, data, (v, jo) -> {
       jo.forEach(e -> {
         if (e.getValue() instanceof Value) {
           e.setValue(mapToNativeObject((Value) e.getValue()));
@@ -82,8 +90,8 @@ public class ProcessorScriptInstance implements ProcessorInstance {
     });
   }
   
-  static <T> T runSource(String name, String language, Source source, JsonObject data, BiFunction<Value, JsonObject, T> postProcess) {
-    try (org.graalvm.polyglot.Context context = org.graalvm.polyglot.Context.newBuilder(language).option("engine.WarnInterpreterOnly", "false").build()) {
+  static <T> T runSource(Engine engine, String name, String language, Source source, JsonObject data, BiFunction<Value, JsonObject, T> postProcess) {
+    try (org.graalvm.polyglot.Context context = org.graalvm.polyglot.Context.newBuilder(language).engine(engine).build()) {
       Value bindings = context.getBindings(language);
       bindings.putMember("data", ProxyObject.fromMap(data.getMap()));
       Value outputValue = context.eval(source);    
@@ -143,11 +151,23 @@ public class ProcessorScriptInstance implements ProcessorInstance {
   
   @Override
   public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
+    try {
+      engine = Engine.newBuilder()
+              .option("engine.WarnInterpreterOnly", "false")
+              .option("engine.Mode", "throughput")
+              .build();
+    } catch(Throwable ex) {
+      engine = Engine.newBuilder()
+              .option("engine.WarnInterpreterOnly", "false")
+              .option("engine.Mode", "throughput")
+              .build();
+    }
+    
     if (!Strings.isNullOrEmpty(definition.getPredicate())) {
-      predicateSource = Source.create(definition.getLanguage(), definition.getPredicate());
+      predicateSource = Source.newBuilder(definition.getLanguage(), definition.getPredicate(), Integer.toString(hashCode()) + ":predicate").cached(true).buildLiteral();
     }
     if (!Strings.isNullOrEmpty(definition.getProcess())) {
-      processSource = Source.create(definition.getLanguage(), definition.getProcess());
+      processSource = Source.newBuilder(definition.getLanguage(), definition.getProcess(), Integer.toString(hashCode()) + ":process").cached(true).buildLiteral();
     }    
     return Future.succeededFuture();
   }

@@ -288,7 +288,7 @@ public class PassthroughStreamTest {
     
   @Test
   public void testNoChainProcessor(Vertx vertx, VertxTestContext testContext) {
-    logger.info("testSlowProcessor");
+    logger.info("testNoChainProcessor");
     vertx.getOrCreateContext().runOnContext(v -> {
       long start = System.currentTimeMillis();
       PassthroughStream<JsonObject> instance = new PassthroughStream<>(
@@ -308,7 +308,7 @@ public class PassthroughStreamTest {
         logger.info("Ended");
         testContext.completeNow();
         testContext.verify(() -> {
-          assertThat(System.currentTimeMillis() - start, greaterThan(1000L));
+          assertThat(System.currentTimeMillis() - start, lessThan(1000L));
         });
         testContext.completeNow();
       });
@@ -376,7 +376,7 @@ public class PassthroughStreamTest {
 
   @Test
   public void testVeryBadProcessor(Vertx vertx, VertxTestContext testContext) {    
-    logger.info("testBadProcessor");
+    logger.info("testVeryBadProcessor");
     vertx.getOrCreateContext().runOnContext(v -> {
       long start = System.currentTimeMillis();
       PassthroughStream<JsonObject> instance = new PassthroughStream<>(
@@ -423,7 +423,7 @@ public class PassthroughStreamTest {
 
   @Test
   public void testVeryBadProcessorWithoutExceptionHandler(Vertx vertx, VertxTestContext testContext) {    
-    logger.info("testBadProcessor");
+    logger.info("testVeryBadProcessorWithoutExceptionHandler");
     vertx.getOrCreateContext().runOnContext(v -> {
       long start = System.currentTimeMillis();
       PassthroughStream<JsonObject> instance = new PassthroughStream<>(

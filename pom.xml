@@ -19,7 +19,8 @@
     <graalvm.version>22.0.0.2</graalvm.version>
     <rows.in.testdb>1000</rows.in.testdb>
     <fork.count>4</fork.count>
-    <compiler.dir>${project.build.directory}/compiler</compiler.dir>
+    <compiler.dir>target/compiler</compiler.dir>
+    <argLine></argLine>
   </properties>
 
   <dependencies>
@@ -388,6 +389,7 @@
         <configuration>
           <forkCount>${fork.count}</forkCount>
           <reuseForks>true</reuseForks>
+          <argLine>@{argLine} -Dfile.encoding=UTF-8 -XX:+UnlockExperimentalVMOptions -XX:+UseJVMCICompiler --module-path=${compiler.dir} --upgrade-module-path=${compiler.dir}/compiler.jar;${compiler.dir}/compiler-management.jar</argLine>
           <systemProperties>
             <rows.in.testdb>${rows.in.testdb}</rows.in.testdb>
           </systemProperties>
