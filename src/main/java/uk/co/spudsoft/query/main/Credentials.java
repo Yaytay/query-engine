@@ -4,30 +4,29 @@
  */
 package uk.co.spudsoft.query.main;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Strings;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import uk.co.spudsoft.params4j.SecretsSerializer;
+import uk.co.spudsoft.query.main.Credentials.Builder;
 
 /**
  *
  * @author jtalbut
  */
+@JsonDeserialize(builder = Builder.class)
 public class Credentials {
   
   /**
    * The username.
    */
-  protected String username;
+  private final String username;
   /**
    * The password.
    */
-  protected String password;
-
-  /**
-   * Constructor.
-   */
-  public Credentials() {
-  }
+  private final String password;
 
   /**
    * Constructor.
@@ -59,14 +58,6 @@ public class Credentials {
   }
 
   /**
-   * The username.
-   * @param username the username.
-   */
-  public void setUsername(String username) {
-    this.username = username;
-  }
-
-  /**
    * The password.
    * @return the password.
    */
@@ -76,17 +67,10 @@ public class Credentials {
   }
 
   /**
-   * The password.
-   * @param password the password.
-   */
-  @JsonSerialize(using = SecretsSerializer.class)
-  public void setPassword(String password) {
-    this.password = password;
-  }
-
-  /**
    * Builder.
    */
+  @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "Builder class should result in all instances being immutable when object is built")
+  @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
     private String username;

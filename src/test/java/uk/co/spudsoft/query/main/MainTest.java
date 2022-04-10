@@ -16,7 +16,7 @@ public class MainTest {
   public void testMainExitOnRun() {
     Main main = new Main();
     main.testMain(new String[]{
-      "query-engine.exitOnRun"
+      "exitOnRun"
     });
   }
   
