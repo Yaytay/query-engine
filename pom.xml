@@ -104,7 +104,7 @@
     <dependency>
       <groupId>io.rest-assured</groupId>
       <artifactId>rest-assured</artifactId>
-      <version>5.0.0</version>
+      <version>5.0.1</version>
       <exclusions>
         <exclusion>
           <groupId>commons-logging</groupId>
@@ -606,7 +606,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
-        <version>3.2.2</version>
+        <version>3.2.1</version>
         <executions>
           <execution>
             <id>attach-sources</id>
@@ -626,7 +626,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-project-info-reports-plugin</artifactId>
-        <version>3.2.1</version>
+        <version>3.2.2</version>
       </plugin>
 
       <plugin>
