@@ -21,7 +21,12 @@ jobs:
       uses: actions/setup-java@v2
       with:
         java-version: '17'
-        distribution: 'temurin'
+        distribution: 'zulu'
         cache: maven
+    - name: Generate settings.xml for Maven Builds
+      uses: whelk-io/maven-settings-xml-action@v20
+      with:
+        servers: '[{ "id": "github", "username": "yaytay", "password": "${{ secrets.GITHUB_TOKEN }}" },{ "id": "github-params4j", "username": "yaytay", "password": "${{ secrets.GITHUB_TOKEN }}" }]'      
+        repositories: '[{"id":"central", "url":"https://repo1.maven.org/maven2"}, {"id":"github-params4j", "url":"https://maven.pkg.github.com/Yaytay/params4j", "snapshots":{"enabled":true}}]'
     - name: Build with Maven
       run: mvn -B package clean install --file pom.xml

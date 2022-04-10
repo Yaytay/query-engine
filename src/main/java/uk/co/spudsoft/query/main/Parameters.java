@@ -6,20 +6,23 @@ package uk.co.spudsoft.query.main;
 
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
+import uk.co.spudsoft.params4j.JavadocCapture;
 
 /**
  *
  * @author jtalbut
  */
+@JavadocCapture
 public class Parameters {
 
   private VertxOptions vertxOptions;
   private HttpServerOptions httpServerOptions;
   private boolean exitOnRun;
   private String baseConfigPath;
+  private DataSource auditDataSource;
 
   /**
-   * Get the VertxOptions that will be used when creating the Vertx instance.
+   * The VertxOptions that will be used when creating the Vertx instance.
    * @return the VertxOptions that will be used when creating the Vertx instance.
    */
   public VertxOptions getVertxOptions() {
@@ -27,7 +30,7 @@ public class Parameters {
   }
 
   /**
-   * Set the VertxOptions that will be used when creating the Vertx instance.
+   * The VertxOptions that will be used when creating the Vertx instance.
    * @param vertxOptions the VertxOptions that will be used when creating the Vertx instance.
    */
   public void setVertxOptions(VertxOptions vertxOptions) {
@@ -35,7 +38,7 @@ public class Parameters {
   }
 
   /**
-   * Get the HttpServerOptions that will be used when creating the HTTP server.
+   * The HttpServerOptions that will be used when creating the HTTP server.
    * The {@link io.vertx.core.http.HttpServerOptions#setMaxHeaderSize(int)} method should be particularly useful when running behind a proxy that passes large JSON headers.
    * @return the HttpServerOptions that will be used when creating the HTTP server.
    */
@@ -44,7 +47,7 @@ public class Parameters {
   }
 
   /**
-   * Set the HttpServerOptions that will be used when creating the HTTP server.
+   * The HttpServerOptions that will be used when creating the HTTP server.
    * @param httpServerOptions the HttpServerOptions that will be used when creating the HTTP server.
    */
   public void setHttpServerOptions(HttpServerOptions httpServerOptions) {
@@ -52,8 +55,7 @@ public class Parameters {
   }  
   
   /**
-   * Get the exitOnRun value.
-   * When the exitOnRun value is set to true the process will end rather than waiting for requests.
+   * if true the process will end rather than waiting for requests
    * This is expected to be useful for things such as JIT compilers or CDS preparation.
    * @return the exitOnRun value.
    */
@@ -62,8 +64,7 @@ public class Parameters {
   }
 
   /**
-   * Set the exitOnRun value.
-   * When the exitOnRun value is set to true the process will end rather than waiting for requests.
+   * if true the process will end rather than waiting for requests
    * This is expected to be useful for things such as JIT compilers or CDS preparation.
    * @param exitOnRun the exitOnRun value.
    */
@@ -72,7 +73,7 @@ public class Parameters {
   }
 
   /**
-   * Get the path to the root of the configuration files.
+   * The path to the root of the configuration files.
    * @return the path to the root of the configuration files.
    */
   public String getBaseConfigPath() {
@@ -80,13 +81,27 @@ public class Parameters {
   }
 
   /**
-   * Set the path to the root of the configuration files.
+   * The path to the root of the configuration files.
    * @param baseConfigPath the path to the root of the configuration files.
    */
   public void setBaseConfigPath(String baseConfigPath) {
     this.baseConfigPath = baseConfigPath;
   }
-  
-  
+
+  /**
+   * The datasource used for recording activity.
+   * @return The datasource used for recording activity.
+   */
+  public DataSource getAuditDataSource() {
+    return auditDataSource;
+  }
+
+  /**
+   * The datasource used for recording activity.
+   * @param auditDataSource The datasource used for recording activity.
+   */
+  public void setAuditDataSource(DataSource auditDataSource) {
+    this.auditDataSource = auditDataSource;
+  }
   
 }

@@ -55,7 +55,7 @@ public class Main {
             .withSecretsGatherer(new File("/etc/" + NAME + "/conf.d").toPath(), 0, 0, 0, StandardCharsets.UTF_8)
             .withEnvironmentVariablesGatherer(NAME, false)
             .withSystemPropertiesGatherer(NAME)
-            .withCommandLineArgumentsGatherer(args, NAME)
+            .withCommandLineArgumentsGatherer(args, null)
             .create();
 
     Parameters params = p4j.gatherParameters();
