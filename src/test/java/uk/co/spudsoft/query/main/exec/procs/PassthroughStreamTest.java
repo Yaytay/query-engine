@@ -226,9 +226,6 @@ public class PassthroughStreamTest {
       }).endHandler(v2 -> {
         logger.info("Ended");
         testContext.completeNow();
-        testContext.verify(() -> {
-          assertThat(System.currentTimeMillis() - start, greaterThan(1000L));
-        });
         testContext.completeNow();
       });
       

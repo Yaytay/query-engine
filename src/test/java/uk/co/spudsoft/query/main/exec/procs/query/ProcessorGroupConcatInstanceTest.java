@@ -153,7 +153,7 @@ public class ProcessorGroupConcatInstanceTest {
   }
    
   @Test
-  @Timeout(value = 5, timeUnit = TimeUnit.SECONDS)
+  @Timeout(value = 30, timeUnit = TimeUnit.SECONDS)
   public void testChildSuppliesEveryOther(Vertx vertx, VertxTestContext testContext) {
     
     Pipeline pipeline = Pipeline.builder()
