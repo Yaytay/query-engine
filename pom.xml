@@ -666,22 +666,6 @@
   <reporting>
     <plugins>
       <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.7</version>
-        <reportSets>
-          <reportSet>
-            <reports>
-              <report>report</report>
-            </reports>
-          </reportSet>
-        </reportSets>
-        <configuration>
-          <dataFile>${basedir}/target/coverage-reports/jacoco-unit.exec</dataFile>
-        </configuration>
-      </plugin>
-      
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-project-info-reports-plugin</artifactId>
       </plugin> 
@@ -717,6 +701,12 @@
           </reportSet>
         </reportSets>
       </plugin>  
+          
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.7</version>
+      </plugin>
           
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
