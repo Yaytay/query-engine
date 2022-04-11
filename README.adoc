@@ -1,7 +1,7 @@
 = Query-engine
 
 image:https://img.shields.io/badge/vert.x-4.2.6-purple.svg[link="https://vertx.io"]
-![Java CI with Maven](https://github.com/Yaytay/query-engine/actions/workflows/maven.yml/badge.svg)
+image:https://github.com/Yaytay/query-engine/actions/workflows/maven.yml/badge.svg[link="https://github.com/Yaytay/query-engine/actions/workflows/maven.yml"]
 
 This application was generated using http://start.vertx.io
 
