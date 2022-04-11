@@ -32,7 +32,7 @@ jobs:
         repositories: '[{"id":"central", "url":"https://repo1.maven.org/maven2"}, {"id":"github-params4j", "url":"https://maven.pkg.github.com/Yaytay/params4j", "snapshots":{"enabled":true}}]'
     
     - name: Build with Maven
-      run: mvn -B package clean install --file pom.xml
+      run: mvn -B package clean install site --file pom.xml
 
     - name: Upload target on failure
       uses: actions/upload-artifact@v3
@@ -40,3 +40,10 @@ jobs:
       with:
         name: target
         path: target/
+
+    - name: Upload site reports on success
+      uses: actions/upload-artifact@v3
+      if: success()
+      with:
+        name: reports
+        path: target/site
