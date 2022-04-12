@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -22,7 +23,6 @@ public class ParametersTest {
   @Test
   public void testGetVertxOptions() {
     Parameters instance = new Parameters();
-    assertNull(instance.getVertxOptions());
     instance.setVertxOptions(null);
     assertNull(instance.getVertxOptions());
     VertxOptions vo = new VertxOptions()
@@ -36,7 +36,6 @@ public class ParametersTest {
   @Test
   public void testGetHttpServerOptions() {
     Parameters instance = new Parameters();
-    assertNull(instance.getHttpServerOptions());
     instance.setHttpServerOptions(null);
     assertNull(instance.getHttpServerOptions());
     HttpServerOptions hso = new HttpServerOptions()
@@ -48,6 +47,20 @@ public class ParametersTest {
   }
 
   @Test
+  public void testGetAudit() {
+    Parameters instance = new Parameters();
+    assertNotNull(instance.getAudit());
+    instance.setAudit(null);
+    assertNull(instance.getAudit());
+    Audit audit = Audit.builder()
+            .retryBaseMs(17)
+            .build()
+            ;
+    instance.setAudit(audit);
+    assertEquals(17, instance.getAudit().getRetryBaseMs());
+  }
+  
+  @Test
   public void testIsExitOnRun() {
     Parameters instance = new Parameters();
     assertFalse(instance.isExitOnRun());
@@ -58,7 +71,7 @@ public class ParametersTest {
   @Test
   public void testGetBaseConfigPath() {
     Parameters instance = new Parameters();
-    assertNull(instance.getBaseConfigPath());
+    assertEquals("/var/query-engine", instance.getBaseConfigPath());
     instance.setBaseConfigPath("baseConfigPath");
     assertEquals("baseConfigPath", instance.getBaseConfigPath());
   }

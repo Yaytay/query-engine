@@ -1,0 +1,17 @@
+databaseChangeLog:
+- changeSet:
+    id: 1645774409578-2
+    author: jtalbut (generated)
+    changes:
+    - createTable:
+        tableName: request
+        columns:
+        - {column: {name: id, type: int, constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_request}}}
+        - {column: {name: timestamp, type: timestamp, constraints: {nullable: false}}}
+        
+    - createTable:
+        tableName: response
+        columns:
+        - {column: {name: id, type: int, constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_response}}}
+        - {column: {name: timestamp, type: timestamp, constraints: {nullable: false}}}
+        

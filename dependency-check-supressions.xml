@@ -80,4 +80,9 @@
     <gav regex="false">io.vertx:vertx-pg-client:4.2.6</gav>
     <cve>CVE-2021-23214</cve>
   </suppress>
+  <suppress>
+    <notes><![CDATA[False positive the issue is with Liquibase prior to v4.8.0, liquibase-slf4j is independent]]></notes>
+    <gav regex="false">com.mattbertolini:liquibase-slf4j:4.1.0</gav>
+    <cve>CVE-2022-0839</cve>
+  </suppress>
 </suppressions>

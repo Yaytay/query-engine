@@ -4,6 +4,7 @@
  */
 package uk.co.spudsoft.query.main;
 
+import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -16,19 +17,12 @@ public class MainTest {
   public void testMainExitOnRun() {
     Main main = new Main();
     main.testMain(new String[]{
-      "exitOnRun"
+            "exitOnRun"
     });
   }
   
   @Test
-  public void testMainDaemon() {
-    Main main = new Main();
-    main.testMain(new String[]{
-    });
-  }
-  
-  @Test
-  public void testMain() {
+  public void testMain() throws IOException {
     Main.main(new String[]{
     });
   }

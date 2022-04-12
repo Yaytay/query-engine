@@ -77,7 +77,7 @@ public class DataSource {
   public int getMaxPoolSize() {
     return maxPoolSize;
   }
-
+  
   @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "Builder class should result in all instances being immutable when object is built")
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {

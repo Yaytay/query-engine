@@ -15,11 +15,11 @@ import uk.co.spudsoft.params4j.JavadocCapture;
 @JavadocCapture
 public class Parameters {
 
-  private VertxOptions vertxOptions;
-  private HttpServerOptions httpServerOptions;
-  private boolean exitOnRun;
-  private String baseConfigPath;
-  private DataSource auditDataSource;
+  private VertxOptions vertxOptions = new VertxOptions();
+  private HttpServerOptions httpServerOptions = new HttpServerOptions();
+  private boolean exitOnRun = false;
+  private String baseConfigPath = "/var/query-engine";
+  private Audit audit = Audit.builder().build();
 
   /**
    * The VertxOptions that will be used when creating the Vertx instance.
@@ -89,19 +89,19 @@ public class Parameters {
   }
 
   /**
-   * The datasource used for recording activity.
-   * @return The datasource used for recording activity.
+   * Configuration of the audit of requests.
+   * @return configuration of the audit of requests.
    */
-  public DataSource getAuditDataSource() {
-    return auditDataSource;
+  public Audit getAudit() {
+    return audit;
   }
 
   /**
-   * The datasource used for recording activity.
-   * @param auditDataSource The datasource used for recording activity.
+   * Set configuration of the audit of requests.
+   * @param audit Configuration of the audit of requests.
    */
-  public void setAuditDataSource(DataSource auditDataSource) {
-    this.auditDataSource = auditDataSource;
+  public void setAudit(Audit audit) {
+    this.audit = audit;
   }
   
 }
