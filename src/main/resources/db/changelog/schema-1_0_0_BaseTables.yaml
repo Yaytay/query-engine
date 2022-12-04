@@ -1,0 +1,35 @@
+databaseChangeLog:
+- changeSet:
+    id: 1645774409578-2
+    author: jtalbut (generated)
+    changes:
+    - createTable:
+        tableName: request
+        columns:
+        - {column: {name: id, type: varchar(100), constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_request}}}
+        - {column: {name: timestamp, type: timestamp, constraints: {nullable: false}}}
+        - {column: {name: url, type: varchar(1000), constraints: {nullable: true}}}
+        - {column: {name: clientIp, type: varchar(40), constraints: {nullable: true}}}
+        - {column: {name: host, type: varchar(100), constraints: {nullable: true}}}
+        - {column: {name: arguments, type: clob, constraints: {nullable: true}}}
+        - {column: {name: headers, type: clob, constraints: {nullable: true}}}
+        - {column: {name: issuer, type: varchar(1000), constraints: {nullable: true}}}
+        - {column: {name: subject, type: varchar(1000), constraints: {nullable: true}}}
+        - {column: {name: nameFromJwt, type: varchar(1000), constraints: {nullable: true}}}
+        - {column: {name: groups, type: clob, constraints: {nullable: true}}}
+        - {column: {name: filePath, type: varchar(1000), constraints: {nullable: true}}}
+        - {column: {name: fileSize, type: bigint, constraints: {nullable: true}}}
+        - {column: {name: fileModified, type: timestamp, constraints: {nullable: true}}}
+        - {column: {name: exceptionTime, type: timestamp, constraints: {nullable: true}}}
+        - {column: {name: exceptionClass, type: varchar(1000), constraints: {nullable: true}}}
+        - {column: {name: exceptionMessage, type: varchar(1000), constraints: {nullable: true}}}
+        - {column: {name: exceptionStackTrace, type: clob, constraints: {nullable: true}}}
+        - {column: {name: responseTime, type: timestamp, constraints: {nullable: true}}}
+        - {column: {name: responseStreamStartMillis, type: bigint, constraints: {nullable: true}}}
+        - {column: {name: responseDurationMillis, type: bigint, constraints: {nullable: true}}}
+        - {column: {name: responseCode, type: smallint, constraints: {nullable: true}}}
+        - {column: {name: responseRows, type: bigint, constraints: {nullable: true}}}
+        - {column: {name: responseSize, type: bigint, constraints: {nullable: true}}}
+        - {column: {name: responseHeaders, type: clob, constraints: {nullable: true}}}
+        
+

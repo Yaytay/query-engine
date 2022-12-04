@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+  <Match>
+    <Class name="~.*Main" />
+    <Bug pattern="DM_EXIT"/>
+  </Match>
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP"/>
+    <Method name="getReadStream" params="" />
+  </Match>
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP2"/>
+    <Field name="context" />
+  </Match>  
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP2"/>
+    <Field name="vertx" />
+  </Match>  
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP"/>
+    <Field name="stream" />
+  </Match>  
+</FindBugsFilter>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+  <suppress>
+    <notes><![CDATA[False positive that should be corrected in dependency-check-maven plugin]]></notes>
+    <gav regex="false">io.vertx:vertx-pg-client:4.3.2</gav>
+    <cve>CVE-2019-20445</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[False positive that should be corrected in dependency-check-maven plugin]]></notes>
+    <gav regex="false">io.vertx:vertx-pg-client:4.3.2</gav>
+    <cve>CVE-2019-20444</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[PostgreSQL Windows installer vulnerability]]></notes>
+    <gav regex="false">io.vertx:vertx-pg-client:4.3.2</gav>
+    <cve>CVE-2019-10211</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[Vulnerability in PostgreSQL server versions prior to v9.4.2]]></notes>
+    <gav regex="false">io.vertx:vertx-pg-client:4.3.2</gav>
+    <cve>CVE-2015-3166</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[Vulnerability in PostgreSQL server versions prior to v9.5.5]]></notes>
+    <gav regex="false">io.vertx:vertx-pg-client:4.3.2</gav>
+    <cve>CVE-2016-7048</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[Vulnerability in PostgreSQL server versions prior to v10.4]]></notes>
+    <gav regex="false">io.vertx:vertx-pg-client:4.3.2</gav>
+    <cve>CVE-2018-1115</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[Vulnerability in PostgreSQL server versions prior to v9.4.1]]></notes>
+    <gav regex="false">io.vertx:vertx-pg-client:4.3.2</gav>
+    <cve>CVE-2015-0243</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[Vulnerability in PostgreSQL server versions prior to v9.4.1]]></notes>
+    <gav regex="false">io.vertx:vertx-pg-client:4.3.2</gav>
+    <cve>CVE-2015-0244</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[Vulnerability in PostgreSQL server versions prior to v9.4.1]]></notes>
+    <gav regex="false">io.vertx:vertx-pg-client:4.3.2</gav>
+    <cve>CVE-2015-0241</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[Vulnerability in PostgreSQL server versions prior to v9.4.1]]></notes>
+    <gav regex="false">io.vertx:vertx-pg-client:4.3.2</gav>
+    <cve>CVE-2015-0242</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[Vulnerability in PostgreSQL server Windows installer in versions prior to v11.3]]></notes>
+    <gav regex="false">io.vertx:vertx-pg-client:4.3.2</gav>
+    <cve>CVE-2019-10127</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[Vulnerability in PostgreSQL server versions prior to v13.1]]></notes>
+    <gav regex="false">io.vertx:vertx-pg-client:4.3.2</gav>
+    <cve>CVE-2020-25694</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[Vulnerability in PostgreSQL server versions prior to v9.5.4]]></notes>
+    <gav regex="false">io.vertx:vertx-pg-client:4.3.2</gav>
+    <cve>CVE-2016-5423</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[Vulnerability in PostgreSQL server versions prior to v9.5.1]]></notes>
+    <gav regex="false">io.vertx:vertx-pg-client:4.3.2</gav>
+    <cve>CVE-2016-0766</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[Vulnerability in PostgreSQL server versions prior to v13.1]]></notes>
+    <gav regex="false">io.vertx:vertx-pg-client:4.3.2</gav>
+    <cve>CVE-2020-25695</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[Vulnerability in PostgreSQL server versions prior to v13.1]]></notes>
+    <gav regex="false">io.vertx:vertx-pg-client:4.3.2</gav>
+    <cve>CVE-2021-23214</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[False positive the issue is with Liquibase prior to v4.8.0, liquibase-slf4j is independent]]></notes>
+    <gav regex="false">com.mattbertolini:liquibase-slf4j:4.1.0</gav>
+    <cve>CVE-2022-0839</cve>
+  </suppress>
+    <suppress>
+        <notes><![CDATA[
+        CVE relates to pki-core, it's just picking up zipkin as a false positive.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/io.zipkin..*/.*$</packageUrl>
+        <vulnerabilityName>CVE-2022-2393</vulnerabilityName>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        The CVE relates to SnakeYamls construction of Java objects, our use of Snakeyaml is always through Jackson, which only uses it for parsing the yaml.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org.yaml/snakeyaml.*$</packageUrl>
+        <vulnerabilityName>CVE-2022-1471</vulnerabilityName>
+    </suppress>
+</suppressions>

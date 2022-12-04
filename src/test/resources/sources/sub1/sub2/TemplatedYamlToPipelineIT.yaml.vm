@@ -1,0 +1,59 @@
+arguments:
+  - name: key
+    type: String
+    possibleValues: 
+    - MS SQL Server
+    - MySQL
+    - PostgreSQL
+  - name: port
+    type: Integer
+sourceEndpoints:
+  MS SQL Server:
+    type: SQL
+    url: "sqlserver://localhost:${params.port}/test"
+    username: sa
+    password: T0p-secret
+  MySQL:
+    type: SQL
+    url: "mysql://localhost:${params.port}/test"
+    username: user
+    password: T0p-secret
+  PostgreSQL:
+    type: SQL
+    url: "postgresql://localhost:$params.port/test"
+    username: postgres
+    password: T0p-secret
+source:
+  type: SQL
+  endpoint: $params.key
+  streamingFetchSize: 7
+  query: select d.id, d.instant, l.value as ref, d.value from testData d join testRefData l on d.lookup = l.id where d.id < 20 order by d.id
+processors:
+- type: GROUP_CONCAT
+  delimiter: ","
+  parentIdColumn: id
+  innerJoin: false
+  childIdColumn: dataid
+  parentValueColumn: children
+  childValueColumn: value
+  input:
+    source:
+      type: SQL
+      endpoint: "${params.key}"
+      streamingFetchSize: 10
+      query: select dataId, value from testManyData m join testRefData r on r.id = m.refId where dataId < 20 order by dataId, sort
+- type: LIMIT
+  limit: 13
+formats:
+- type: XLSX
+- type: Delimited
+  name: tab
+  delimiter: "\t"
+  newline: "\n"
+  extension: tsv
+  headerRow: true
+  mediaType: text/tsv
+- type: Delimited
+  headerRow: false
+- type: HTML
+  name: table
