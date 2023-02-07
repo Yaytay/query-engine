@@ -108,7 +108,7 @@ public class Main extends Application {
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
   
 private static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-private static final String MAVEN_PROJECT_VERSION = "0.0.0-176-main-SNAPSHOT";
+private static final String MAVEN_PROJECT_VERSION = "0.0.0-boss-SNAPSHOT";
 
 private static final String NAME = "query-engine";
   
@@ -261,7 +261,8 @@ private static final String NAME = "query-engine";
     Router router = Router.router(vertx);
     
     if (!Strings.isNullOrEmpty(params.getCorsAllowedOriginRegex())) {
-      CorsHandler corsHandler = CorsHandler.create(params.getCorsAllowedOriginRegex());
+      CorsHandler corsHandler = CorsHandler.create()
+              .addRelativeOrigin(params.getCorsAllowedOriginRegex());
       corsHandler.allowedMethods(
               ImmutableSet
                       .<HttpMethod>builder()
