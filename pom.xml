@@ -31,7 +31,7 @@
 
   <properties>
     <jdk.version>17</jdk.version>
-    <vertx.version>4.3.7</vertx.version>
+    <vertx.version>4.3.8</vertx.version>
     <slf4j.version>2.0.6</slf4j.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <junit-jupiter.version>5.9.2</junit-jupiter.version>
@@ -71,17 +71,17 @@
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>dir-cache</artifactId>
-      <version>0.0.12</version>
+      <version>0.0.13</version>
     </dependency>
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>vertx-management-endpoints</artifactId>
-      <version>0.0.6</version>
+      <version>0.0.7</version>
     </dependency>
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>vertx-resteasy-helpers</artifactId>
-      <version>0.0.11</version>
+      <version>0.0.12</version>
     </dependency>
     
     <dependency>
@@ -557,7 +557,7 @@
           <dependency>
             <groupId>com.puppycrawl.tools</groupId>
             <artifactId>checkstyle</artifactId>
-            <version>10.5.0</version>
+            <version>10.7.0</version>
           </dependency>
         </dependencies>
       </plugin>
@@ -965,5 +965,87 @@
     </plugins>
     
   </reporting>
+  
+  <profiles>
+    <profile>
+      <id>ui</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>3.1.0</version>
+            <executions>
+              <execution>
+                <id>github-ui-clone</id>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <phase>generate-resources</phase>
+                <configuration>
+                  <executable>git</executable>
+                  <arguments>
+                    <argument>clone</argument>
+                    <argument>-b</argument>
+                    <argument>main</argument>
+                    <argument>git@github.com:Yaytay/query-engine-ui.git</argument>
+                    <argument>target/ui</argument>
+                  </arguments>
+                </configuration>
+              </execution>
+            </executions>            
+          </plugin>    
+
+          <plugin>
+            <groupId>com.github.eirslett</groupId>
+            <artifactId>frontend-maven-plugin</artifactId>
+            <version>1.12.1</version>
+            <executions>
+              <execution>
+                <!-- optional: you don't really need execution ids, but it looks nice in your build log. -->
+                <id>install node and npm</id>
+                <goals>
+                  <goal>install-node-and-npm</goal>
+                </goals>
+                <!-- optional: default phase is "generate-resources" -->
+                <phase>generate-resources</phase>
+              </execution>
+
+              <execution>
+                <id>npm install</id>
+                <goals>
+                  <goal>npm</goal>
+                </goals>
+
+                <phase>generate-resources</phase>
+
+                <configuration>
+                  <arguments>install</arguments>
+                </configuration>
+              </execution>            
+
+              <execution>
+                <id>npm build</id>
+                <goals>
+                  <goal>npm</goal>
+                </goals>
+
+                <phase>generate-resources</phase>
+
+                <configuration>
+                  <arguments>run build</arguments>
+                </configuration>
+              </execution>            
+            </executions>
+            <configuration>
+              <nodeVersion>v18.14.0</nodeVersion>
+              <workingDirectory>target/ui</workingDirectory>
+            </configuration>
+          </plugin>                    
+                      
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
 </project>

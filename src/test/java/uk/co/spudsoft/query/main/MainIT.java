@@ -60,7 +60,7 @@ public class MainIT {
       , "vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "acceptableIssuerRegexes[0]=.*"
       , "pipelineCache.maxDurationMs=0"
-      , "pipelineCache.purgePeriod=10"
+      , "pipelineCache.purgePeriodMs=10"
       , "logging.level.uk_co_spudsoft_query_main=TRACE" 
     });
     
