@@ -59,13 +59,6 @@ jobs:
         docker tag ${PARTS[2]} ghcr.io/yaytay/${PARTS[0]}:${PARTS[1]} && \
         docker push ghcr.io/yaytay/${PARTS[0]}:${PARTS[1]}
 
-    - name: Upload target on failure
-      uses: actions/upload-artifact@v3
-      if: failure()
-      with:
-        name: target
-        path: target/
-
     - name: Upload site reports on success
       uses: actions/upload-artifact@v3
       if: success()

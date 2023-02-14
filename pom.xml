@@ -972,30 +972,26 @@
       <build>
         <plugins>
           <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>exec-maven-plugin</artifactId>
-            <version>3.1.0</version>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-scm-plugin</artifactId>
+            <version>2.0.0-M3</version>
             <executions>
               <execution>
-                <id>github-ui-clone</id>
                 <goals>
-                  <goal>exec</goal>
+                  <goal>checkout</goal>
                 </goals>
                 <phase>generate-resources</phase>
-                <configuration>
-                  <executable>git</executable>
-                  <arguments>
-                    <argument>clone</argument>
-                    <argument>-b</argument>
-                    <argument>main</argument>
-                    <argument>https://github.com/Yaytay/query-engine-ui.git</argument>
-                    <argument>target/ui</argument>
-                  </arguments>
-                </configuration>
+                <id>checkout ui</id>
               </execution>
-            </executions>            
-          </plugin>    
-
+            </executions>
+            <configuration>
+              <connectionUrl>scm:git:https://github.com/Yaytay/query-engine-ui.git</connectionUrl>  
+              <scmVersion>main</scmVersion>
+              <scmVersionType>branch</scmVersionType>
+              <checkoutDirectory>target/ui</checkoutDirectory>  
+            </configuration>
+          </plugin>
+          
           <plugin>
             <groupId>com.github.eirslett</groupId>
             <artifactId>frontend-maven-plugin</artifactId>
