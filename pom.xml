@@ -158,7 +158,7 @@
     <dependency>
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-registry-prometheus</artifactId>
-      <version>1.10.3</version>
+      <version>1.10.4</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -988,7 +988,7 @@
                     <argument>clone</argument>
                     <argument>-b</argument>
                     <argument>main</argument>
-                    <argument>git@github.com:Yaytay/query-engine-ui.git</argument>
+                    <argument>https://github.com/Yaytay/query-engine-ui.git</argument>
                     <argument>target/ui</argument>
                   </arguments>
                 </configuration>
@@ -1002,12 +1002,10 @@
             <version>1.12.1</version>
             <executions>
               <execution>
-                <!-- optional: you don't really need execution ids, but it looks nice in your build log. -->
                 <id>install node and npm</id>
                 <goals>
                   <goal>install-node-and-npm</goal>
                 </goals>
-                <!-- optional: default phase is "generate-resources" -->
                 <phase>generate-resources</phase>
               </execution>
 
@@ -1016,22 +1014,18 @@
                 <goals>
                   <goal>npm</goal>
                 </goals>
-
                 <phase>generate-resources</phase>
-
                 <configuration>
                   <arguments>install</arguments>
                 </configuration>
               </execution>            
 
               <execution>
-                <id>npm build</id>
+                <id>npm run build</id>
                 <goals>
                   <goal>npm</goal>
                 </goals>
-
                 <phase>generate-resources</phase>
-
                 <configuration>
                   <arguments>run build</arguments>
                 </configuration>
@@ -1043,6 +1037,29 @@
             </configuration>
           </plugin>                    
                       
+          <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <version>3.3.0</version>
+            <executions>
+              <execution>
+                <id>copy-ui</id>
+                <!-- here the phase you need -->
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${basedir}/target/classes/www</outputDirectory>
+                  <includeEmptyDirs>true</includeEmptyDirs>
+                  <resources>          
+                    <resource>
+                      <directory>${basedir}/target/ui/build</directory>
+                    </resource>
+                  </resources>              
+                </configuration>            
+              </execution>
+            </executions>
+          </plugin>
         </plugins>
       </build>
     </profile>

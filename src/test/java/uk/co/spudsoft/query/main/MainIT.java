@@ -29,6 +29,8 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
 import static io.restassured.RestAssured.given;
+import static io.restassured.config.RedirectConfig.redirectConfig;
+import io.restassured.config.RestAssuredConfig;
 
 
 /**
@@ -131,6 +133,32 @@ public class MainIT {
             .then()
             .statusCode(200)
             .log().all()
+            ;
+    
+     given()
+            .log().all()
+            .get("/ui/index.html")
+            .then()
+            .statusCode(200)
+            .log().all()
+            ;
+    
+     given()
+            .log().all()
+            .get("/ui")
+            .then()
+            .statusCode(200)
+            .log().all()
+            ;
+    
+     given()
+            .config(RestAssuredConfig.config().redirect(redirectConfig().followRedirects(false)))
+            .log().all()
+            .get("/")
+            .then()
+            .log().all()
+            .statusCode(302)
+            .header("Location", "/ui")
             ;
     
     main.shutdown();
