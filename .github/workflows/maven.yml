@@ -44,7 +44,7 @@ jobs:
       env:
         JAVA_OPTS: -Djava.security.manager=allow
         MAVEN_OPTS: -Djava.security.manager=allow
-      run: mvn -p ui -B clean install site
+      run: mvn -P ui -B clean install site
 
     - name: Login to GitHub Container Registry
       uses: docker/login-action@v2
