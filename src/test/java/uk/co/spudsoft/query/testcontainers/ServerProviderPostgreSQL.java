@@ -225,12 +225,12 @@ public class ServerProviderPostgreSQL extends AbstractServerProvider implements 
               return doManyInserts(
                       pool.preparedQuery(
                               """
-                               insert into testManyData (dataid, sort, refid) 
+                               insert into testManyData (dataid, sort, refid)
                                select d.id, $1, $2
                                from testData d left
                                  join testManyData m on d.id = m.dataId and m.refid = $3
-                               where id % $4 >= $5 and m.dataId is null 
-                               order by id  
+                               where id % $4 >= $5 and m.dataId is null
+                               order by id
                               """
                       )
                       , 0
@@ -293,7 +293,7 @@ public class ServerProviderPostgreSQL extends AbstractServerProvider implements 
               logger.info("Inserting testFieldValues");
               return pool.preparedQuery(
                         """
-                          insert into testFieldValues 
+                          insert into testFieldValues
                             (parentId, fieldId, dateValue, timeValue, dateTimeValue, longValue, doubleValue, boolValue, textValue)
                           select
                             p.id

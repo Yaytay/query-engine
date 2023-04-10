@@ -298,7 +298,7 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
                                when matched then
                                  update set tf.name = s.name, tf.type = s.type, tf.valueField = s.valueField
                                when not matched then
-                                 insert (fieldId, name, type, valueField) 
+                                 insert (fieldId, name, type, valueField)
                                  values(s.fieldId, s.name, s.type, s.valueField)
                                ;
                               """
@@ -330,7 +330,7 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
               logger.info("Inserting testFieldValues");
               return pool.preparedQuery(
                       """
-                        insert into testFieldValues 
+                        insert into testFieldValues
                           (parentId, fieldId, dateValue, timeValue, dateTimeValue, longValue, doubleValue, boolValue, textValue)
                         select
                           p.id

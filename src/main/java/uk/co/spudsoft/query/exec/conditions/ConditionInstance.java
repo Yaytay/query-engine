@@ -21,6 +21,7 @@ import org.apache.commons.jexl3.JexlContext;
 import org.apache.commons.jexl3.JexlEngine;
 import org.apache.commons.jexl3.JexlExpression;
 import org.apache.commons.jexl3.MapContext;
+import org.apache.commons.jexl3.introspection.JexlPermissions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Condition;
@@ -34,7 +35,15 @@ public class ConditionInstance {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ConditionInstance.class);
   
-  private static final JexlEngine JEXL = new JexlBuilder().create();
+  private static final JexlEngine JEXL = new JexlBuilder()
+          .permissions(
+                  JexlPermissions.RESTRICTED
+                  .compose(
+                          "uk.co.spudsoft.jwtvalidatorvertx.*"
+                          , "uk.co.spudsoft.query.exec.conditions.*"
+                  )
+          )
+          .create();
   
   private final JexlExpression expression;
 

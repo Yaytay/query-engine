@@ -230,11 +230,11 @@ public class ServerProviderMySQL extends AbstractServerProvider implements Serve
               return doManyInserts(
                       pool.preparedQuery(
                               """
-                               insert into testManyData (dataId, sort, refId) 
-                               select d.id, ?, ? 
-                               from testData d left join testManyData m on d.id = m.dataId and m.refId = ? 
-                               where id % ? >= ? and m.dataId is null 
-                               order by id  
+                               insert into testManyData (dataId, sort, refId)
+                               select d.id, ?, ?
+                               from testData d left join testManyData m on d.id = m.dataId and m.refId = ?
+                               where id % ? >= ? and m.dataId is null
+                               order by id
                               """
                       )
                       , 0
@@ -291,7 +291,7 @@ public class ServerProviderMySQL extends AbstractServerProvider implements Serve
               logger.info("Inserting testFieldValues");
               return pool.preparedQuery(
                       """
-                        insert into testFieldValues 
+                        insert into testFieldValues
                           (parentId, fieldId, dateValue, timeValue, dateTimeValue, longValue, doubleValue, boolValue, textValue)
                         select
                           p.id

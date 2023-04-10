@@ -38,7 +38,7 @@ import uk.co.spudsoft.query.exec.FormatInstance;
                       <P>The definition of an HTML output format.</P>
                       <P>
                       The HTML output format produces an HTML snippet containing a table.
-                      The output itself has no formatting, but a number of CSS classes are applied to the elements enabling the UI to format them as they wish.                      
+                      The output itself has no formatting, but a number of CSS classes are applied to the elements enabling the UI to format them as they wish.
                       </P>
                       <P>
                       The CSS classes are:
