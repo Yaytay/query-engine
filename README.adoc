@@ -6,7 +6,7 @@ image:https://img.shields.io/github/v/release/yaytay/query-engine.svg[Latest Rel
 image:https://img.shields.io/github/license/yaytay/query-engine.svg[License,link=https://github.com/yaytay/query-engine/blob/master/LICENCE.md]
 image:https://img.shields.io/github/issues/yaytay/query-engine.svg[Issues,link=https://github.com/yaytay/query-engine/issues]
 image:https://github.com/yaytay/query-engine/actions/workflows/buildtest.yml/badge.svg[Build Status,link=https://github.com/Yaytay/query-engine/actions/workflows/buildtest.yml]
-image:https://codecov.io/gh/Yaytay/query-engine/branch/main/graph/badge.svg?token=ACHVK20T9Q[CodeCov ,link=https://codecov.io/gh/Yaytay/query-engine]
+image:https://codecov.io/gh/Yaytay/query-engine/branch/main/graph/badge.svg?token=7F87GWIU09[CodeCov ,link=https://codecov.io/gh/Yaytay/query-engine]
 
 The Query Engine has a simple concept - it presents a web endpoint that is able to return data from a datastore.
 
@@ -15,12 +15,16 @@ What makes the Query Engine worth its existence is that it sits in a sweet spot 
 
 Features of the Query Engine include:
 
-* Queries for the Query Engine can be written, and deployed, independently of the application.
+* Queries for the Query Engine can be written, and deployed, independently of your application.
 * The Query Engine is designed to support multi-tenant (SAAS) applications - dynamically selecting a datasource is built in.
 * Data is streamed, it is not (usually) necessary for all of the data to be held by the Query Engine process.
 * Dynamic fields are supported directly by Query Engine, each run of a query can produce a different structure.
-* Data can be output in various formats, including Excel (XLSX) workbooks (streamed).        
-
+* Data can be output in various formats, including CSV, Json, XML, Excel (XLSX) workbooks (all streamed).
+* Authorization is governed by validated https://jwt.io/[JWT]s.
+* Query Engine is intended to be used via "path-hijacking", providing seamless integration with your application, but can also be accessed directly.
+* Full support for OpenAPI documentation.
+* User interface plugin and API for running queries.
+* User interface for designing queries.
 
 === Naming
 
@@ -28,3 +32,22 @@ This is a clean-room re-implementation of the first version of Query Engine, hen
 However, the first version was closed source so no-one outside of my employer will ever see it (nor would you want to, QE2 is better).
 
 In these documents the term Query Engine II will be used in headings and titles, in the body the term will be just Query Engine.
+
+= Deployment
+
+The Query Engine is provided as a container image and it is expected that it be deployed via docker compose (including swarm) or kubernetes.
+
+== Query Deployment
+
+The queries run by the Query Engine are specified in files (one file per query).
+Any directory hierarchy use in the storage of the files will be reflected in the paths for running the queries.
+
+The Query Engine itself does not attempt to control how files are managed or made available to it, but it is expected that the files will all exist in a git repository that
+has some kind of CI pipeline (or other auto-update mechanism) to update files as they are changed.
+
+= Query Development
+
+By default the Query Engine cannot modify queries - for it to be able to do so would be a major security breach.
+
+
+The Query Engine can be deployed in "Development Mode" which 
