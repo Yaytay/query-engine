@@ -159,7 +159,7 @@
     <dependency>
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-registry-prometheus</artifactId>
-      <version>1.10.5</version>
+      <version>1.10.6</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -509,15 +509,16 @@
         <artifactId>spotbugs-maven-plugin</artifactId>
         <version>4.7.3.4</version>
         <configuration>
-          <fork>false</fork>
+          <fork>true</fork>
           <effort>Max</effort>
           <xmlOutput>true</xmlOutput>
           <excludeFilterFile>${basedir}/findbugsFilterFile.xml</excludeFilterFile>
+          <jvmArgs>-Djava.security.manager=allow</jvmArgs>
           <plugins>
             <plugin>
               <groupId>com.h3xstream.findsecbugs</groupId>
               <artifactId>findsecbugs-plugin</artifactId>
-              <version>1.11.0</version>
+              <version>1.12.0</version>
             </plugin>
           </plugins>
         </configuration>
@@ -529,14 +530,6 @@
             </goals>
           </execution>
         </executions>
-        <dependencies>
-          <!-- overwrite dependency on spotbugs if you want to specify the version of spotbugs -->
-          <dependency>
-            <groupId>com.github.spotbugs</groupId>
-            <artifactId>spotbugs</artifactId>
-            <version>4.7.3</version>
-          </dependency>
-        </dependencies>
       </plugin>
 
       <plugin>

@@ -1,9 +1,8 @@
-FROM azul/zulu-openjdk-alpine:18.0.2.1
+FROM azul/zulu-openjdk-alpine:19.0.2
 
 RUN jlink --output /qe-java --add-modules java.base,java.management,jdk.management,jdk.unsupported,java.sql.rowset,java.desktop,jdk.naming.dns
 
-
-FROM alpine:3.16.2
+FROM alpine:3.17.3
 
 COPY --from=0 /qe-java /qe-java
 RUN ln -s /qe-java/bin/java /usr/bin/java
