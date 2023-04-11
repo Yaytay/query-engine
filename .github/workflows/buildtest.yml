@@ -1,54 +1,70 @@
-
 # This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
 # For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
 
-name: Java CI with Maven
+name: Build and Test
 
 on:
   push:
     branches: [ '*' ]
   pull_request:
     branches: [ main ]
-
+    
 jobs:
   build:
 
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+    - name: Set git to use LF
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+        
+    - name: Checkout completely
+      uses: actions/checkout@v3
       with:
-        # we don't know what commit the last tag was
         fetch-depth: 0
-
-    - name: Force fetch of tags
-      run: git fetch --tags --force origin 
-
-    - name: Set up JDK 18
-      uses: actions/setup-java@v2
+        
+    - name: Cache Maven packages
+      uses: actions/cache@v3
       with:
-        java-version: '18'
+        path: ~/.m2
+        key: ${{ runner.os }}-m2
+        restore-keys: ${{ runner.os }}-m2
+        
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
         distribution: 'zulu'
         cache: maven
-    
-    - name: Generate settings.xml for Maven Builds
-      uses: whelk-io/maven-settings-xml-action@v20
-      with:
-#        servers: '[{ "id": "github", "username": "yaytay", "password": "${{ secrets.GITHUB_TOKEN }}" },{ "id": "github-params4j", "username": "yaytay", "password": "${{ secrets.READPACKAGESPAT }}" }]'      
-#        repositories: '[{"id":"central", "url":"https://repo1.maven.org/maven2"}, {"id":"github-params4j", "url":"https://maven.pkg.github.com/Yaytay/params4j", "snapshots":{"enabled":true}}]'
-        servers: '[{ "id": "github", "username": "yaytay", "password": "${{ secrets.GITHUB_TOKEN }}" }]'
-        repositories: '[{"id":"central", "url":"https://repo1.maven.org/maven2"}]'
-    
-    - name: Build with Maven
-      env:
-        JAVA_OPTS: -Djava.security.manager=allow
-        MAVEN_OPTS: -Djava.security.manager=allow
-      run: mvn -P ui -B clean install site
 
+    - name: Build with Maven
+      run: mvn -B clean install site --file pom.xml
+
+    - uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }} 
+        files: target/site/jacoco/jacoco.xml 
+        flags: unittests 
+        fail_ci_if_error: true 
+        verbose: true 
+
+    - name: Tidy up old package versions
+      uses: actions/delete-package-versions@v3
+      with: 
+        package-name: 'uk.co.spudsoft.xlsx'
+        min-versions-to-keep: 10
+        delete-only-pre-release-versions: "true" 
+                
     - name: Upload site reports on success
       uses: actions/upload-artifact@v3
       if: success()
       with:
         name: reports
         path: target/site
+
+    - name: Clean up settings.xml
+      run: |
+        rm "${HOME}/.m2/settings.xml"        
+        
