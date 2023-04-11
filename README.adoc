@@ -14,6 +14,7 @@ This sounds so simple as to make it redundant, surely any system can present its
 What makes the Query Engine worth its existence is that it sits in a sweet spot between a fully graphical reporting solution, and having to manually code all feeds from an application.
 
 Features of the Query Engine include:
+
 * Queries for the Query Engine can be written, and deployed, independently of the application.
 * The Query Engine is designed to support multi-tenant (SAAS) applications - dynamically selecting a datasource is built in.
 * Data is streamed, it is not (usually) necessary for all of the data to be held by the Query Engine process.
