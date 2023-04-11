@@ -8,32 +8,22 @@ image:https://img.shields.io/github/issues/yaytay/query-engine.svg[Issues,link=h
 image:https://github.com/yaytay/query-engine/actions/workflows/buildtest.yml/badge.svg[Build Status,link=https://github.com/Yaytay/query-engine/actions/workflows/buildtest.yml]
 image:https://codecov.io/gh/Yaytay/query-engine/branch/main/graph/badge.svg?token=ACHVK20T9Q[CodeCov ,link=https://codecov.io/gh/Yaytay/query-engine]
 
+The Query Engine has a simple concept - it presents a web endpoint that is able to return data from a datastore.
+
+This sounds so simple as to make it redundant, surely any system can present its own data?
+What makes the Query Engine worth its existence is that it sits in a sweet spot between a fully graphical reporting solution, and having to manually code all feeds from an application.
+
+Features of the Query Engine include:
+* Queries for the Query Engine can be written, and deployed, independently of the application.
+* The Query Engine is designed to support multi-tenant (SAAS) applications - dynamically selecting a datasource is built in.
+* Data is streamed, it is not (usually) necessary for all of the data to be held by the Query Engine process.
+* Dynamic fields are supported directly by Query Engine, each run of a query can produce a different structure.
+* Data can be output in various formats, including Excel (XLSX) workbooks (streamed).        
 
 
-This application was generated using http://start.vertx.io
+=== Naming
 
-== Building
+This is a clean-room re-implementation of the first version of Query Engine, hence this is Query Engine 2.
+However, the first version was closed source so no-one outside of my employer will ever see it (nor would you want to, QE2 is better).
 
-To launch your tests:
-```
-./mvnw clean test
-```
-
-To package your application:
-```
-./mvnw clean package
-```
-
-To run your application:
-```
-./mvnw clean compile exec:java
-```
-
-== Help
-
-* https://vertx.io/docs/[Vert.x Documentation]
-* https://stackoverflow.com/questions/tagged/vert.x?sort=newest&pageSize=15[Vert.x Stack Overflow]
-* https://groups.google.com/forum/?fromgroups#!forum/vertx[Vert.x User Group]
-* https://gitter.im/eclipse-vertx/vertx-users[Vert.x Gitter]
-
-
+In these documents the term Query Engine II will be used in headings and titles, in the body the term will be just Query Engine.
