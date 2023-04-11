@@ -509,15 +509,16 @@
         <artifactId>spotbugs-maven-plugin</artifactId>
         <version>4.7.3.4</version>
         <configuration>
-          <fork>false</fork>
+          <fork>true</fork>
           <effort>Max</effort>
           <xmlOutput>true</xmlOutput>
           <excludeFilterFile>${basedir}/findbugsFilterFile.xml</excludeFilterFile>
+          <jvmArgs>-Djava.security.manager=allow</jvmArgs>
           <plugins>
             <plugin>
               <groupId>com.h3xstream.findsecbugs</groupId>
               <artifactId>findsecbugs-plugin</artifactId>
-              <version>1.11.0</version>
+              <version>1.12.0</version>
             </plugin>
           </plugins>
         </configuration>
