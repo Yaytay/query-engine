@@ -1,0 +1,54 @@
+description: Test pipeline written as YAML
+arguments:
+  - name: key
+    title: DataSource Key
+    prompt: key
+    description: The DataSource to use.
+    type: String
+    possibleValues: 
+    - value: MS SQL Server
+    - value: MySQL
+    - value: PostgreSQL
+  - name: port
+    type: Integer
+  - name: maxId
+    type: Integer
+sourceEndpoints:
+  MS SQL Server:
+    type: SQL
+    urlTemplate: "sqlserver://localhost:<port>/test"
+    username: sa
+    password: T0p-secret
+  MySQL:
+    type: SQL
+    urlTemplate: "mysql://localhost:<port>/test"
+    username: user
+    password: T0p-secret
+  PostgreSQL:
+    type: SQL
+    urlTemplate: "postgresql://localhost:<port>/test"
+    username: postgres
+    password: T0p-secret
+source:
+  type: SQL
+  endpointTemplate: "<key>"
+  streamingFetchSize: 7
+  query: select d.id, d.instant, l.value as ref, d.value from testData d join testRefData l on d.lookup = l.id where d.id < :maxId order by d.id
+processors:
+- type: GROUP_CONCAT
+  delimiter: ","
+  parentIdColumn: id
+  innerJoin: false
+  childIdColumn: dataid
+  parentValueColumn: children
+  childValueColumn: value
+  input:
+    source:
+      type: SQL
+      endpointTemplate: "<key>"
+      streamingFetchSize: 10
+      query: select dataId, value from testManyData m join testRefData r on r.id = m.refId where dataId < 20 order by dataId, sort
+- type: LIMIT
+  limit: 13
+formats:
+- type: JSON

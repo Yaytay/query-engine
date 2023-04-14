@@ -1,0 +1,106 @@
+title: Feature Rich Example
+description: |
+  A complex pipeline that tries to demonstrate as many features as I can cram into a single pipeline.
+arguments:
+  - name: minDate
+    type: Date
+    title: Start Date
+    prompt: start date
+    description: The earliest date that the row must have.
+    optional: true
+    defaultValue: 1971-05-06
+  - name: maxLong
+    type: Long
+    title: Maximum Long Value
+    prompt: max long
+    description: The largest value for the longValue.
+  - name: textLike
+    type: String
+    title: Text value
+    prompt: text
+    description: Match for the textValue, may use SQL patterns.
+  - name: refValue
+    type: String
+    title: Required Reference
+    description: Reference value that must be had by the row.
+    possibleValuesUrl: http://localhost:8000/query/demo/LookupValues
+sourceEndpoints:
+  MySQL:
+    type: SQL
+    urlTemplate: "mysql://localhost:2001/test"
+    username: user
+    password: T0p-secret
+source:
+  type: SQL
+  endpoint: MySQL
+  streamingFetchSize: 7
+  connectionTimeout: PT10S
+  query: |
+    select distinct
+        d.id
+        , d.instant
+        , l.value as ref
+        , d.value 
+    from 
+        testData d 
+        join testRefData l on d.lookup = l.id 
+        /* BIND join testFieldValues fv1 on fv1.parentId = d.id and fv1.fieldId = 1 and fv1.dateValue >= :minDate */
+        /* BIND join testFieldValues fv2 on fv2.parentId = d.id and fv2.fieldId = 4 and fv2.longValue <= :maxLong */
+        /* BIND join testFieldValues fv3 on fv3.parentId = d.id and fv3.fieldId = 7 and fv3.textValue like :textLike */
+        /* BIND join testFieldValues fv4 on fv4.parentId = d.id and fv4.fieldId = 7 and fv4.textValue like :textLike */
+        /* BIND join testManyData m on d.id = m.dataId join testRefData r on r.id = m.refId and r.value = :refValue */
+    order by 
+        d.id    
+processors:
+#- type: GROUP_CONCAT
+#  delimiter: ","
+#  parentIdColumn: id
+#  innerJoin: false
+#  childIdColumn: dataId
+#  parentValueColumn: children
+#  childValueColumn: value
+#  input:
+#    source:
+#      endpoint: MySQL
+#      streamingFetchSize: 10
+#      query: select dataId, value from testManyData m join testRefData r on r.id = m.refId where dataId < 20 order by dataId, sort
+- type: DYNAMIC_FIELD
+  innerJoin: false
+  parentIdColumn: id
+  fieldColumnColumn: valuefield
+  valuesParentIdColumn: parentid
+  valuesFieldIdColumn: fieldid
+  fieldDefns: 
+    source:
+      type: SQL
+      endpoint: MySQL
+      streamingFetchSize: 10
+      query: select fieldId as id, name, type, valueField as valuefield from testFields order by fieldId
+  fieldValues: 
+    source:    
+      type: SQL
+      endpoint: MySQL
+      streamingFetchSize: 10
+      query:  select parentId as parentid, fieldId as fieldid, dateValue, timeValue, dateTimeValue, longValue, doubleValue, boolValue, textValue from testFieldValues order by parentId
+- type: LIMIT
+  limit: 13
+formats:
+- type: JSON
+- type: XLSX
+  headerColours:
+    fgColour: "800000"
+    bgColour: "3E1379"
+  oddColours:
+    bgColour: "D9EAD3"
+- type: Delimited
+  name: tab
+  delimiter: "\t"
+  newline: "\n"
+  extension: tsv
+  headerRow: true
+  mediaType: text/tsv
+- type: Delimited
+  headerRow: false
+- type: HTML
+  name: table
+

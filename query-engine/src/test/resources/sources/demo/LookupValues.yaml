@@ -1,0 +1,19 @@
+title: Lookup Values
+description: Extract values to use for the demo/FeatureRichExample.
+sourceEndpoints:
+  MySQL:
+    type: SQL
+    urlTemplate: "mysql://localhost:2001/test"
+    username: user
+    password: T0p-secret
+source:
+  type: SQL
+  endpointTemplate: MySQL
+  query: |
+    select distinct 
+      value 
+    from 
+      testManyData m 
+      join testRefData r on r.id = m.refId
+formats:
+- type: JSON
