@@ -26,9 +26,17 @@
     <developer>
       <id>yaytay</id>
       <name>Jim Talbut</name>
-      <email>jim-vertx-resteasy-helpers @ spudsoft.co.uk</email>
+      <email>jim-query-engine @ spudsoft.co.uk</email>
     </developer>
   </developers>
+
+  <properties>
+    <jdk.version>17</jdk.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <argLine></argLine>
+    <vertx.version>4.4.1</vertx.version>
+  </properties>
 
   <scm>
     <connection>scm:git@github.com:Yaytay/query-engine.git</connection>
@@ -46,6 +54,7 @@
           <configuration>
             <source>${jdk.version}</source>
             <target>${jdk.version}</target>
+            <encoding>${project.build.sourceEncoding}</encoding>
             <compilerArgs>
               <arg>-Xlint:all</arg>
             </compilerArgs>
@@ -575,6 +584,19 @@
         </plugin>
       </plugins>
     </pluginManagement>
+    
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-site-plugin</artifactId>
+        <version>3.12.1</version>
+        <configuration>
+          <skip>true</skip>
+          <skipDeploy>true</skipDeploy>
+        </configuration>
+      </plugin>
+    </plugins>
+      
   </build>
 
   <reporting>

@@ -108,7 +108,7 @@ public class Main extends Application {
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
   
 private static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-private static final String MAVEN_PROJECT_VERSION = "0.0.1-1-design-SNAPSHOT";
+private static final String MAVEN_PROJECT_VERSION = "0.0.1-2-design-SNAPSHOT";
 
 private static final String NAME = "query-engine";
   
