@@ -1,0 +1,99 @@
+{
+  "arguments": [
+    {
+      "type": "String"
+      , "name": "key"
+    }
+    , {
+      "type": "Integer"
+      , "name": "port"
+    }
+  ],
+  "sourceEndpoints": {
+    "MS SQL Server": {
+      "type": "SQL",
+      "url": "sqlserver://localhost:$params.port/test",
+      "username": "sa",
+      "password": "T0p-secret"
+    },
+    "MySQL": {
+      "type": "SQL",
+#if($request.clientIp=="127.0.0.1")
+      "url": "mysql://localhost:$params.port/test",
+#else
+      "url": "mysql://host.docker.internal:$params.port/test",
+#end
+      "username": "user",
+      "password": "T0p-secret"
+    }
+    ,
+    "PostgreSQL": {
+      "type": "SQL",
+      "url": "postgresql://localhost:$params.port/test",
+      "username": "postgres",
+      "password": "T0p-secret"
+    }
+  }
+  ,
+  "source": {    
+    "type": "SQL",
+    "name": "${params.key}",
+    "endpoint": "${params.key}",
+    "streamingFetchSize": 7,
+    "query": "select d.id, d.instant, l.value as ref, d.value from testData d join testRefData l on d.lookup = l.id where d.id < 20 order by d.id"
+  }
+  ,
+  "processors": [
+    {
+      "type":"GROUP_CONCAT",
+      "innerJoin":false,
+      "parentIdColumn":"id",
+      "delimiter":",",
+      "childIdColumn":"dataid",      
+      "parentValueColumn":"children",      
+      "childValueColumn":"value",
+      "input": {
+        "source": {    
+          "type": "SQL",
+          "endpoint": "${params.key}",
+          "streamingFetchSize": 10,
+          "query": "select dataId as dataid, value from testManyData m join testRefData r on r.id = m.refId where dataId < 20 order by dataId, sort"
+        }
+      }
+    }
+    , 
+    {
+      "type":"DYNAMIC_FIELD",
+      "innerJoin":false,
+      "parentIdColumn":"id",
+      "fieldColumnColumn":"valuefield",
+      "valuesParentIdColumn":"parentid",
+      "valuesFieldIdColumn":"fieldid",
+      "fieldDefns": {
+        "source": {    
+          "type": "SQL",
+          "endpoint": "${params.key}",
+          "streamingFetchSize": 10,
+          "query": "select fieldId as id, name, type, valueField as valuefield from testFields order by fieldId"
+        }
+      },
+      "fieldValues": {
+        "source": {    
+          "type": "SQL",
+          "endpoint": "${params.key}",
+          "streamingFetchSize": 10,
+          "query": "select parentId as parentid, fieldId as fieldid, dateValue, timeValue, dateTimeValue, longValue, doubleValue, boolValue, textValue from testFieldValues order by parentId"
+        }
+      }
+    }
+    , 
+    {
+      "type":"LIMIT",
+      "limit":13
+    }
+  ]
+  ,
+  "formats": [{
+    "type": "JSON"
+  }]
+}
