@@ -62,4 +62,4 @@ jobs:
       if: success()
       with:
         name: reports
-        path: target/site
+        path: ./**/target/site
