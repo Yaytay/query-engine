@@ -62,7 +62,9 @@ jobs:
       if: success()
       with:
         name: reports
-        path: ./**/target/site
+        path: |
+          query-engine/target/site
+          query-engine-design-mode/target/site
 
     - name: Clean up settings.xml
       run: |
