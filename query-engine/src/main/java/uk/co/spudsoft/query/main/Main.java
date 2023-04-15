@@ -108,7 +108,7 @@ public class Main extends Application {
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
   
 private static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-private static final String MAVEN_PROJECT_VERSION = "0.0.1-4-design-SNAPSHOT";
+private static final String MAVEN_PROJECT_VERSION = "0.0.3-main-SNAPSHOT";
 
 private static final String NAME = "query-engine";
   
@@ -252,7 +252,9 @@ private static final String NAME = "query-engine";
     
     httpServer = vertx.createHttpServer(params.getHttpServerOptions());
     try {
-      dirCache = DirCache.cache(new File(params.getBaseConfigPath()).toPath(), Duration.of(params.getFileStabilisationDelaySeconds(), ChronoUnit.SECONDS), Pattern.compile("\\..*"));
+      File baseConfigFile = new File(params.getBaseConfigPath());
+      prepareBaseConfigPath(baseConfigFile);
+      dirCache = DirCache.cache(baseConfigFile.toPath(), Duration.of(params.getFileStabilisationDelaySeconds(), ChronoUnit.SECONDS), Pattern.compile("\\..*"));
       defnLoader = new PipelineDefnLoader(meterRegistry, vertx, params.getPipelineCache(), dirCache);
     } catch (Throwable ex) {
       logger.error("Unable to config pipeline loader: ", ex);
@@ -321,6 +323,9 @@ private static final String NAME = "query-engine";
             });
     
   }  
+
+  protected void prepareBaseConfigPath(File baseConfigFile) {
+  }
 
   protected RequestContextBuilder createRequestContextBuilder(Parameters params) {    
     OpenIdDiscoveryHandler discoverer = null;

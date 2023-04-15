@@ -13,3 +13,4 @@ buildNumber.properties
 nb-configuration.xml
 node
 node_modules
+/query-engine-design-mode/nbproject/
