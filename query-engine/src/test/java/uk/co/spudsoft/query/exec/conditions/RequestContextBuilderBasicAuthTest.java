@@ -118,7 +118,7 @@ public class RequestContextBuilderBasicAuthTest {
     });
 
     router.route(HttpMethod.POST, "/auth")
-            .handler(BodyHandler.create())
+            .handler(BodyHandler.create().setUploadsDirectory("target/file-uploads"))
             .handler(ctx -> {
       logger.info("Got request to {}", ctx.request().uri());
       MultiMap form = ctx.request().formAttributes();

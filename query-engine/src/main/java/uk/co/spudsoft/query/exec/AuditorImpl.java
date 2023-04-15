@@ -137,7 +137,7 @@ public class AuditorImpl implements Auditor {
                   resourceAccessor,
                   database
           );
-          liquibase.update(new Contexts());
+          liquibase.update(new Contexts(), new WriterToSlf4j(logger, "Liquibase: "));
           logger.info("Database updated");
           break;
         } catch (Throwable ex) {

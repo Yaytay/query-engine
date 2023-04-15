@@ -21,6 +21,8 @@ package uk.co.spudsoft.query.web;
  * @author jtalbut
  */
 public class ServiceException extends Exception {
+
+  private static final long serialVersionUID = 1123543245L;
   
   private final int statusCode;
 
