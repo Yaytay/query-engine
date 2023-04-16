@@ -40,7 +40,7 @@ jobs:
         cache: maven
 
     - name: Build with Maven
-      run: mvn -B clean install site --file pom.xml
+      run: mvn -P ui -B clean install site --file pom.xml
 
     - uses: codecov/codecov-action@v3
       with:
