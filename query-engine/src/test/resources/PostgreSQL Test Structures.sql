@@ -314,7 +314,7 @@ $fn$ LANGUAGE plpgsql IMMUTABLE LEAKPROOF;
 
 -- NumberToOrdinal Function
 -- This function exists solely to give our ref data something interesting to say.
-CREATE FUNCTION "NumberToOrdinal" (Num INT) 
+CREATE OR REPLACE FUNCTION "NumberToOrdinal" (Num INT) 
 RETURNS VARCHAR(1024) AS $fn$
 BEGIN
   RETURN RTRIM(

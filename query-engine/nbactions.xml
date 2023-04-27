@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+        <action>
+            <actionName>integration-test.single</actionName>
+            <packagings>
+                <packaging>*</packaging>
+            </packagings>
+            <goals>
+                <goal>pre-integration-test</goal>
+                <goal>failsafe:integration-test</goal>
+            </goals>
+            <properties>
+                <test>DummyToSkipUnitTests</test>
+                <failIfNoTests>false</failIfNoTests>
+                <it.test>${packageClassName}</it.test>
+                <surefire.failIfNoSpecifiedTests>false</surefire.failIfNoSpecifiedTests>
+            </properties>
+        </action>
+    </actions>
