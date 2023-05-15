@@ -13,7 +13,7 @@ source:
     select distinct 
       value 
     from 
-      testManyData m 
-      join testRefData r on r.id = m.refId
+      ManyData m 
+      join RefData r on r.id = m.refId
 formats:
 - type: JSON

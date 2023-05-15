@@ -40,7 +40,7 @@
     "name": "${params.key}",
     "endpoint": "${params.key}",
     "streamingFetchSize": 7,
-    "query": "select d.id, d.instant, l.value as ref, d.value from testData d join testRefData l on d.lookup = l.id where d.id < 20 order by d.id"
+    "query": "select d.id, d.instant, l.value as ref, d.value from testData d join RefData l on d.lookup = l.id where d.id < 20 order by d.id"
   }
   ,
   "processors": [
@@ -57,7 +57,7 @@
           "type": "SQL",
           "endpoint": "${params.key}",
           "streamingFetchSize": 10,
-          "query": "select dataId as dataid, value from testManyData m join testRefData r on r.id = m.refId where dataId < 20 order by dataId, sort"
+          "query": "select dataId as dataid, value from ManyData m join RefData r on r.id = m.refId where dataId < 20 order by dataId, sort"
         }
       }
     }
@@ -74,7 +74,7 @@
           "type": "SQL",
           "endpoint": "${params.key}",
           "streamingFetchSize": 10,
-          "query": "select fieldId as id, name, type, valueField as valuefield from testFields order by fieldId"
+          "query": "select fieldId as id, name, type, valueField as valuefield from Fields order by fieldId"
         }
       },
       "fieldValues": {
@@ -82,7 +82,7 @@
           "type": "SQL",
           "endpoint": "${params.key}",
           "streamingFetchSize": 10,
-          "query": "select parentId as parentid, fieldId as fieldid, dateValue, timeValue, dateTimeValue, longValue, doubleValue, boolValue, textValue from testFieldValues order by parentId"
+          "query": "select parentId as parentid, fieldId as fieldid, dateValue, timeValue, dateTimeValue, longValue, doubleValue, boolValue, textValue from FieldValues order by parentId"
         }
       }
     }

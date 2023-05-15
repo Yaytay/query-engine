@@ -43,12 +43,12 @@ source:
         , d.value 
     from 
         testData d 
-        join testRefData l on d.lookup = l.id 
-        /* BIND join testFieldValues fv1 on fv1.parentId = d.id and fv1.fieldId = 1 and fv1.dateValue >= :minDate */
-        /* BIND join testFieldValues fv2 on fv2.parentId = d.id and fv2.fieldId = 4 and fv2.longValue <= :maxLong */
-        /* BIND join testFieldValues fv3 on fv3.parentId = d.id and fv3.fieldId = 7 and fv3.textValue like :textLike */
-        /* BIND join testFieldValues fv4 on fv4.parentId = d.id and fv4.fieldId = 7 and fv4.textValue like :textLike */
-        /* BIND join testManyData m on d.id = m.dataId join testRefData r on r.id = m.refId and r.value = :refValue */
+        join RefData l on d.lookup = l.id 
+        /* BIND join FieldValues fv1 on fv1.parentId = d.id and fv1.fieldId = 1 and fv1.dateValue >= :minDate */
+        /* BIND join FieldValues fv2 on fv2.parentId = d.id and fv2.fieldId = 4 and fv2.longValue <= :maxLong */
+        /* BIND join FieldValues fv3 on fv3.parentId = d.id and fv3.fieldId = 7 and fv3.textValue like :textLike */
+        /* BIND join FieldValues fv4 on fv4.parentId = d.id and fv4.fieldId = 7 and fv4.textValue like :textLike */
+        /* BIND join ManyData m on d.id = m.dataId join RefData r on r.id = m.refId and r.value = :refValue */
     order by 
         d.id    
 processors:
@@ -63,7 +63,7 @@ processors:
 #    source:
 #      endpoint: MySQL
 #      streamingFetchSize: 10
-#      query: select dataId, value from testManyData m join testRefData r on r.id = m.refId where dataId < 20 order by dataId, sort
+#      query: select dataId, value from ManyData m join RefData r on r.id = m.refId where dataId < 20 order by dataId, sort
 - type: DYNAMIC_FIELD
   innerJoin: false
   parentIdColumn: id
@@ -75,13 +75,13 @@ processors:
       type: SQL
       endpoint: MySQL
       streamingFetchSize: 10
-      query: select fieldId as id, name, type, valueField as valuefield from testFields order by fieldId
+      query: select fieldId as id, name, type, valueField as valuefield from Fields order by fieldId
   fieldValues: 
     source:    
       type: SQL
       endpoint: MySQL
       streamingFetchSize: 10
-      query:  select parentId as parentid, fieldId as fieldid, dateValue, timeValue, dateTimeValue, longValue, doubleValue, boolValue, textValue from testFieldValues order by parentId
+      query:  select parentId as parentid, fieldId as fieldid, dateValue, timeValue, dateTimeValue, longValue, doubleValue, boolValue, textValue from FieldValues order by parentId
 - type: LIMIT
   limit: 13
 formats:

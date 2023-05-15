@@ -35,7 +35,7 @@ dynamicEndpoints:
 source:
   type: SQL
   endpoint: pg
-  query: select d.id, d.instant, l.value as ref, d.value from testData d join testRefData l on d.lookup = l.id where d.id < :maxId order by d.id
+  query: select d.id, d.instant, l.value as ref, d.value from testData d join RefData l on d.lookup = l.id where d.id < :maxId order by d.id
 processors:
 - type: GROUP_CONCAT
   delimiter: ","
@@ -49,7 +49,7 @@ processors:
       type: SQL
       endpoint: pg
       streamingFetchSize: 10
-      query: select dataId, value from testManyData m join testRefData r on r.id = m.refId where dataId < 20 order by dataId, sort
+      query: select dataId, value from ManyData m join RefData r on r.id = m.refId where dataId < 20 order by dataId, sort
 - type: LIMIT
   limit: 13
 formats:

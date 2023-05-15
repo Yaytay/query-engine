@@ -33,7 +33,7 @@
     "type": "SQL",
     "endpointTemplate": "<key>",
     "streamingFetchSize": 7,
-    "query": "select d.id, d.instant, l.value as ref, d.value from testData d join testRefData l on d.lookup = l.id where d.id < 20 order by d.id"
+    "query": "select d.id, d.instant, l.value as ref, d.value from testData d join RefData l on d.lookup = l.id where d.id < 20 order by d.id"
   }
   ,
   "processors": [
@@ -50,7 +50,7 @@
           "type": "SQL",
           "endpointTemplate": "<key>",
           "streamingFetchSize": 10,
-          "query": "select dataId, value from testManyData m join testRefData r on r.id = m.refId where dataId < 20 order by dataId, sort"
+          "query": "select dataId, value from ManyData m join RefData r on r.id = m.refId where dataId < 20 order by dataId, sort"
         }
       }
     }

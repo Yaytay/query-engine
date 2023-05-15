@@ -83,7 +83,7 @@ public class StartContainersIT {
                           String sql = """
                                        select d.id, d.instant, l.value as ref, d.value
                                        from testData d
-                                       join testRefData l on d.lookup = l.id
+                                       join RefData l on d.lookup = l.id
                                        order by d.id
                                        """
                                        ;

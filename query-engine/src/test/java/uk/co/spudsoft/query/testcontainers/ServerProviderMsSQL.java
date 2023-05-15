@@ -189,7 +189,7 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
     }
     
     return createTestDatabase(vertx)
-            .compose(rs -> pool.preparedQuery(sql).execute())
+            .compose(rs -> pool.query(sql).execute())
             .onSuccess(rs -> {
               if (rs != null) {
                 logger.info("Script run");

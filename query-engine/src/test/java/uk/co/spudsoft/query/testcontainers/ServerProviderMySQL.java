@@ -17,29 +17,20 @@
 package uk.co.spudsoft.query.testcontainers;
 
 import com.github.dockerjava.api.model.Container;
-import com.google.common.collect.Iterators;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.mysqlclient.MySQLConnectOptions;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.SqlConnectOptions;
-import io.vertx.sqlclient.Tuple;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.MySQLContainer;
 import static uk.co.spudsoft.query.testcontainers.AbstractServerProvider.ROOT_PASSWORD;
-import uk.co.spudsoft.query.testhelpers.RowSetHelper;
 
 
 /**
@@ -160,7 +151,7 @@ public class ServerProviderMySQL extends AbstractServerProvider implements Serve
     }
     
     return Future.succeededFuture()
-            .compose(rs -> pool.preparedQuery(sql).execute())
+            .compose(rs -> pool.query(sql).execute())
             .onSuccess(rs -> {
               if (rs != null) {
                 logger.info("Script run");
