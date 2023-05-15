@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.testcontainers;
 
 import com.github.dockerjava.api.model.Container;
+import com.google.common.base.Strings;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.mysqlclient.MySQLConnectOptions;
@@ -25,7 +26,12 @@ import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.SqlConnectOptions;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -143,26 +149,51 @@ public class ServerProviderMySQL extends AbstractServerProvider implements Serve
     connectOptions.setPassword(ROOT_PASSWORD);
     Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(3));
     
-    String sql;
+    String contents;
     try (InputStream strm = getClass().getResourceAsStream(getScript())) {
-      sql = new String(strm.readAllBytes(), StandardCharsets.UTF_8);
+      contents = new String(strm.readAllBytes(), StandardCharsets.UTF_8);
     } catch(Throwable ex) {
       return Future.failedFuture(ex);
     }
     
-    return Future.succeededFuture()
-            .compose(rs -> pool.query(sql).execute())
+    List<String> sqlList = new ArrayList<>();
+    String delimiter = ";";
+    int start = 0;
+    Pattern delimPat = Pattern.compile("DELIMITER (\\S+)");
+    Matcher matcher = delimPat.matcher(contents);
+    while(matcher.find()) {
+      logger.info("Matches from {} to {} with delim '{}'", matcher.start(), matcher.end(), matcher.group(1));
+      sqlList.addAll(Arrays.asList(contents.substring(start, matcher.start()).split(delimiter)));
+      delimiter = matcher.group(1);
+      start = matcher.end() + 1;
+    }    
+    sqlList.addAll(Arrays.asList(contents.substring(start).split(delimiter)));
+        
+    return executeSql(pool, sqlList.iterator())
             .onSuccess(rs -> {
               if (rs != null) {
                 logger.info("Script run");
               }
             })
-
             .onFailure(ex -> {
               logger.error("Failed: ", ex);
             })
             .mapEmpty()
             ;
 
+  }
+  
+  private Future<Void> executeSql(Pool pool, Iterator<String> iter) {
+    if (iter.hasNext()) {
+      String stmt = iter.next().trim();
+      if (Strings.isNullOrEmpty(stmt)) {
+        return executeSql(pool, iter);
+      } else {
+        logger.info("Executing {}", stmt);
+        return pool.query(stmt).execute().compose(rs -> executeSql(pool, iter));
+      }
+    } else {
+      return Future.succeededFuture();
+    }
   }
 }
