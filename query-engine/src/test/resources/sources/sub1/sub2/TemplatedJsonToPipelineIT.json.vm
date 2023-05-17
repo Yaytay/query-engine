@@ -40,14 +40,15 @@
     "name": "${params.key}",
     "endpoint": "${params.key}",
     "streamingFetchSize": 7,
-    "query": "select d.id, d.instant, l.value as ref, d.value from testData d join RefData l on d.lookup = l.id where d.id < 20 order by d.id"
+    "replaceDoubleQuotes": true,
+    "query": "select d.\"dataId\", d.instant, c.name as ref, d.value from \"Data\" d join \"Colours\" c on d.\"colourId\" = c.\"colourId\" where d.\"dataId\" < 20 order by d.\"dataId\""
   }
   ,
   "processors": [
     {
       "type":"GROUP_CONCAT",
       "innerJoin":false,
-      "parentIdColumn":"id",
+      "parentIdColumn":"dataId",
       "delimiter":",",
       "childIdColumn":"dataid",      
       "parentValueColumn":"children",      
@@ -57,7 +58,8 @@
           "type": "SQL",
           "endpoint": "${params.key}",
           "streamingFetchSize": 10,
-          "query": "select dataId as dataid, value from ManyData m join RefData r on r.id = m.refId where dataId < 20 order by dataId, sort"
+          "replaceDoubleQuotes": true,
+          "query": "select \"dataId\", value from \"ManyData\" m join \"RefData\" r on r.\"refId\" = m.\"refId\" where \"dataId\" < 20 order by \"dataId\", sort"
         }
       }
     }
@@ -65,16 +67,16 @@
     {
       "type":"DYNAMIC_FIELD",
       "innerJoin":false,
-      "parentIdColumn":"id",
+      "parentIdColumn":"dataId",
       "fieldColumnColumn":"valuefield",
-      "valuesParentIdColumn":"parentid",
+      "valuesParentIdColumn":"dataId",
       "valuesFieldIdColumn":"fieldid",
       "fieldDefns": {
         "source": {    
           "type": "SQL",
           "endpoint": "${params.key}",
           "streamingFetchSize": 10,
-          "query": "select fieldId as id, name, type, valueField as valuefield from Fields order by fieldId"
+          "query": "select \"fieldId\" as id, name, type, \"valueField\" as valuefield from \"Fields\" order by \"fieldId\""
         }
       },
       "fieldValues": {
@@ -82,7 +84,7 @@
           "type": "SQL",
           "endpoint": "${params.key}",
           "streamingFetchSize": 10,
-          "query": "select parentId as parentid, fieldId as fieldid, dateValue, timeValue, dateTimeValue, longValue, doubleValue, boolValue, textValue from FieldValues order by parentId"
+          "query": "select \"dataId\", \"fieldId\", \"dateValue\", \"timeValue\", \"dateTimeValue\", \"longValue\", \"doubleValue\", \"boolValue\", \"textValue\" from \"FieldValues\" order by \"dataId\""
         }
       }
     }

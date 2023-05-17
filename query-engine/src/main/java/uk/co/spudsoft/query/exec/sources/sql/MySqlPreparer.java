@@ -31,5 +31,10 @@ public class MySqlPreparer extends AbstractSqlPreparer {
   boolean hasNumberedParameters() {
     return false;
   }
+
+  @Override
+  protected String getQuoteCharacter() {
+    return "`";
+  }
   
 }

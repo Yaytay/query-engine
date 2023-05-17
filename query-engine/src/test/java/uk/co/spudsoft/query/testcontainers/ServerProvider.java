@@ -28,6 +28,8 @@ public interface ServerProvider {
   
   String getName();
   
+  String getIndentifierQuote();
+  
   SqlConnectOptions getConnectOptions();
   
   Future<Void> prepareContainer(Vertx vertx);

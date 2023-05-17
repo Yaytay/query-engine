@@ -81,18 +81,18 @@ public class StartContainersIT {
                         })
                         .compose(conn -> {
                           String sql = """
-                                       select d.id, d.instant, l.value as ref, d.value
-                                       from testData d
-                                       join RefData l on d.lookup = l.id
-                                       order by d.id
+                                       select d."dataId", d."instant", c."name" as colour, d."value"
+                                       from "Data" d
+                                       join "Colours" c on d."colourId" = c."colourId"
+                                       order by d."dataId"
                                        """
+                                  .replace("\"", instance.getIndentifierQuote())
                                        ;
                           return conn.prepare(sql)
                                   .compose(ps -> {
                                     Cursor cursor = ps.cursor();
                                     return cursor.read(10)
                                             .onSuccess(rs -> {
-                                              int count = rs.size();
                                               logger.debug("{}: Rows: {} vs {}", instance.getName(), rs.rowCount(), rs.size());
                                               logger.debug("{} - {}s: Results: {}"
                                                       , instance.getName()

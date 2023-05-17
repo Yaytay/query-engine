@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -90,6 +91,8 @@ public class ServerProviderMySQL extends AbstractServerProvider implements Serve
             .setUser("user")
             .setDatabase("test")
             .setPassword(AbstractServerProvider.ROOT_PASSWORD)
+            .setIdleTimeout(5)
+            .setIdleTimeoutUnit(TimeUnit.MINUTES)         
             ;
   }
 
@@ -113,6 +116,11 @@ public class ServerProviderMySQL extends AbstractServerProvider implements Serve
     return port;
   }
 
+  @Override
+  public String getIndentifierQuote() {
+    return "`";
+  }
+    
   public MySQLContainer<?> getContainer() {
     synchronized (lock) {
       long start = System.currentTimeMillis();
@@ -189,8 +197,8 @@ public class ServerProviderMySQL extends AbstractServerProvider implements Serve
       if (Strings.isNullOrEmpty(stmt)) {
         return executeSql(pool, iter);
       } else {
-        logger.info("Executing {}", stmt);
-        return pool.query(stmt).execute().compose(rs -> executeSql(pool, iter));
+        return pool.query(stmt).execute()
+                .compose(rs -> executeSql(pool, iter));
       }
     } else {
       return Future.succeededFuture();

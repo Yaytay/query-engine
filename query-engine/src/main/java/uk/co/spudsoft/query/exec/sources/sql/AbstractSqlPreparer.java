@@ -74,9 +74,22 @@ public abstract class AbstractSqlPreparer {
     return true;
   }
   
+  /**
+   * Get the string used to quote identifier characters in SQL statements.
+   * @return the string used to quote identifier characters in SQL statements.
+   */
+  protected String getQuoteCharacter() {
+    return "\"";
+  }
+  
   abstract void generateParameterNumber(StringBuilder builder, int number);
   
-  public QueryAndArgs prepareSqlStatement(String definitionSql, ImmutableMap<String, ArgumentInstance> argSrc) {
+  public QueryAndArgs prepareSqlStatement(String definitionSql, Boolean replaceDoubleQuotes, ImmutableMap<String, ArgumentInstance> argSrc) {
+    
+    if (replaceDoubleQuotes != null && replaceDoubleQuotes && !"\"".equals(getQuoteCharacter()) && definitionSql.contains("\"")) {
+      definitionSql = definitionSql.replaceAll("\"", getQuoteCharacter());
+    }
+    
     List<Object> args = new ArrayList<>();
     if (Strings.isNullOrEmpty(definitionSql)) {
       return new QueryAndArgs(definitionSql, args);

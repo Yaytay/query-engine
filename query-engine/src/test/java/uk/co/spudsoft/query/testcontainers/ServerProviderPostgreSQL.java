@@ -17,7 +17,6 @@
 package uk.co.spudsoft.query.testcontainers;
 
 import com.github.dockerjava.api.model.Container;
-import com.google.common.collect.Iterators;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.pgclient.PgConnectOptions;
@@ -27,15 +26,11 @@ import io.vertx.sqlclient.SqlConnectOptions;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
 import static uk.co.spudsoft.query.testcontainers.AbstractServerProvider.ROOT_PASSWORD;
-import uk.co.spudsoft.query.testhelpers.RowSetHelper;
 
 
 /**
@@ -67,7 +62,12 @@ public class ServerProviderPostgreSQL extends AbstractServerProvider implements 
     getContainer();
     return this;
   }
-
+  
+  @Override
+  public String getIndentifierQuote() {
+    return "\"";
+  }
+  
   @Override
   public Future<Void> prepareContainer(Vertx vertx) {
     return vertx.executeBlocking(p -> {

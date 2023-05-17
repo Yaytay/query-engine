@@ -140,7 +140,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     logger.trace("Outer context: {}", outerContext);
     
     AbstractSqlPreparer preparer = getPreparer(url);
-    AbstractSqlPreparer.QueryAndArgs queryAndArgs = preparer.prepareSqlStatement(definition.getQuery(), pipeline.getArguments());
+    AbstractSqlPreparer.QueryAndArgs queryAndArgs = preparer.prepareSqlStatement(definition.getQuery(), definition.getReplaceDoubleQuotes(), pipeline.getArguments());
     String sql = queryAndArgs.query;
     Tuple args = Tuple.from(queryAndArgs.args);
     

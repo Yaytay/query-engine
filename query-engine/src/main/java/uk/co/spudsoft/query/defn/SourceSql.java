@@ -52,6 +52,7 @@ public class SourceSql implements Source {
   private final Integer maxPoolWaitQueueSize;
   private final Duration idleTimeout;
   private final Duration connectionTimeout;
+  private final Boolean replaceDoubleQuotes;
   
   @Override
   public void validate() {
@@ -172,6 +173,24 @@ public class SourceSql implements Source {
     return maxPoolWaitQueueSize;
   }
 
+  @Schema(description = """
+                        <P>If set to true all double quotes in the query will be replaced with the identifier quoting character for the target.</P>
+                        <P>
+                        If the native quoting character is already a double quote no replacement will take place.
+                        </P>
+                        <P>
+                        This enables queries for all database platforms to be defined using double quotes for identifiers, but it is a straight replacement
+                        so if the query needs to contain a double quote that is not quoting an identifier then this must be set to false.
+                        </P>
+                        <P>
+                        This is only useful when it is not known what flavour of database is being queried, which should be rare.
+                        </P>
+                        """
+  )
+  public Boolean getReplaceDoubleQuotes() {
+    return replaceDoubleQuotes;
+  }
+
   @Schema(
           description = """
                         <P>The idle timeout for the connection pool that will be created.</P>
@@ -246,6 +265,7 @@ public class SourceSql implements Source {
     private Integer maxPoolWaitQueueSize;
     private Duration idleTimeout;
     private Duration connectionTimeout;
+    private Boolean replaceDoubleQuotes;
 
     private Builder() {
     }
@@ -300,10 +320,16 @@ public class SourceSql implements Source {
       return this;
     }
 
+    public Builder replaceDoubleQuotes(final Boolean value) {
+      this.replaceDoubleQuotes = value;
+      return this;
+    }
+
     public SourceSql build() {
       return new SourceSql(type, name, endpoint, endpointTemplate, query
           , streamingFetchSize
           , maxPoolSize, maxPoolWaitQueueSize, idleTimeout, connectionTimeout
+          , replaceDoubleQuotes
       );
     }
   }
@@ -322,6 +348,7 @@ public class SourceSql implements Source {
           , final Integer maxPoolWaitQueueSize
           , final Duration idleTimeout
           , final Duration connectionTimeout
+          , final Boolean replaceDoubleQuotes
   ) {
     validateType(SourceType.SQL, type);
     this.type = type;
@@ -334,6 +361,7 @@ public class SourceSql implements Source {
     this.maxPoolWaitQueueSize = maxPoolWaitQueueSize;
     this.idleTimeout = idleTimeout;
     this.connectionTimeout = connectionTimeout;
+    this.replaceDoubleQuotes = replaceDoubleQuotes;
   }
 
   

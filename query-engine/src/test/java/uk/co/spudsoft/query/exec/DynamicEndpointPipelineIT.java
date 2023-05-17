@@ -98,10 +98,10 @@ public class DynamicEndpointPipelineIT {
               connectOptions.setUser(serverProviderMy.getUser());
               connectOptions.setPassword(serverProviderMy.getPassword());
               Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(1));
-              return pool.preparedQuery("delete from testDynamicEndpoint")
+              return pool.preparedQuery("delete from DynamicEndpoint")
                       .execute()
                       .compose(rs -> {
-                        return pool.preparedQuery("insert into testDynamicEndpoint (endpointKey, type, url, username, password, useCondition) values (?, ?, ?, ?, ?, ?)")
+                        return pool.preparedQuery("insert into DynamicEndpoint (endpointKey, type, url, username, password, useCondition) values (?, ?, ?, ?, ?, ?)")
                             .executeBatch(
                                     Arrays.asList(
                                             Tuple.of("my", "SQL", serverProviderMy.getUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
@@ -187,10 +187,10 @@ public class DynamicEndpointPipelineIT {
               connectOptions.setUser(serverProviderMy.getUser());
               connectOptions.setPassword(serverProviderMy.getPassword());
               Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(1));
-              return pool.preparedQuery("delete from testDynamicEndpoint")
+              return pool.preparedQuery("delete from DynamicEndpoint")
                       .execute()
                       .compose(rs -> {
-                        return pool.preparedQuery("insert into testDynamicEndpoint (endpointKey, type, url, username, password, useCondition) values (?, ?, ?, ?, ?, ?)")
+                        return pool.preparedQuery("insert into DynamicEndpoint (endpointKey, type, url, username, password, useCondition) values (?, ?, ?, ?, ?, ?)")
                             .executeBatch(
                                     Arrays.asList(
                                             Tuple.of("my", "SQL", serverProviderMy.getUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
@@ -282,10 +282,10 @@ public class DynamicEndpointPipelineIT {
               connectOptions.setUser(serverProviderMy.getUser());
               connectOptions.setPassword(serverProviderMy.getPassword());
               Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(1));
-              return pool.preparedQuery("delete from testDynamicEndpoint")
+              return pool.preparedQuery("delete from DynamicEndpoint")
                       .execute()
                       .compose(rs -> {
-                        return pool.preparedQuery("insert into testDynamicEndpoint (endpointKey, type, url, username, password, useCondition) values (?, ?, ?, ?, ?, ?)")
+                        return pool.preparedQuery("insert into DynamicEndpoint (endpointKey, type, url, username, password, useCondition) values (?, ?, ?, ?, ?, ?)")
                             .executeBatch(
                                     Arrays.asList(
                                             Tuple.of("my", "SQL", serverProviderMy.getUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)

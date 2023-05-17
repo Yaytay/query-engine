@@ -41,7 +41,7 @@
     <junit-platform.version>1.9.3</junit-platform.version>
     <testcontainers.version>1.18.1</testcontainers.version>
     <graalvm.version>22.3.2</graalvm.version>
-    <jackson.version>2.15.0</jackson.version>
+    <jackson.version>2.15.1</jackson.version>
   </properties>
 
   <scm>

@@ -62,7 +62,12 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
     getContainer();
     return this;
   }
-    
+
+  @Override
+  public String getIndentifierQuote() {
+    return "\"";
+  }
+  
   @Override
   public Future<Void> prepareContainer(Vertx vertx) {
     return vertx.executeBlocking(p -> {
