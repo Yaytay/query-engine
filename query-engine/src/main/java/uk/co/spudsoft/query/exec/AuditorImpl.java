@@ -40,12 +40,18 @@ import java.sql.Types;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
-import liquibase.Contexts;
-import liquibase.Liquibase;
+import liquibase.Scope;
+import liquibase.command.CommandScope;
+import liquibase.command.core.UpdateCommandStep;
+import liquibase.command.core.helpers.ChangeExecListenerCommandStep;
+import liquibase.command.core.helpers.DatabaseChangelogCommandStep;
+import liquibase.command.core.helpers.DbUrlConnectionCommandStep;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
@@ -95,9 +101,8 @@ public class AuditorImpl implements Auditor {
    *
    */
   @Override
-  public void prepare() throws IOException, SQLException, LiquibaseException {
+  public void prepare() throws Exception {
     DataSourceConfig dataSourceConfig = configuration.getDataSource();
-    ResourceAccessor resourceAccessor = getBestResourceAccessor();
     SQLException lastSQLException = null;
     LiquibaseException lastLiquibaseException = null;
 
@@ -127,17 +132,24 @@ public class AuditorImpl implements Auditor {
           recordException = recordException.replaceAll("#", quote);
           recordResponse = recordResponse.replaceAll("#", quote);
           
-          Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(jdbcConnection));
-          if (!Strings.isNullOrEmpty(dataSourceConfig.getSchema())) {
-            logger.trace("Setting default schema to {}", dataSourceConfig.getSchema());
-            database.setDefaultSchemaName(dataSourceConfig.getSchema());
-          }
-          Liquibase liquibase = new Liquibase(
-                  CHANGESET_RESOURCE_PATH,
-                  resourceAccessor,
-                  database
-          );
-          liquibase.update(new Contexts(), new WriterToSlf4j(logger, "Liquibase: "));
+          Map<String, Object> liquibaseConfig = new HashMap<>();
+          Scope.child(liquibaseConfig, () -> {
+            Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(jdbcConnection));
+            if (!Strings.isNullOrEmpty(dataSourceConfig.getSchema())) {
+              logger.trace("Setting default schema to {}", dataSourceConfig.getSchema());
+              database.setDefaultSchemaName(dataSourceConfig.getSchema());
+            }
+            
+            CommandScope updateCommand = new CommandScope(UpdateCommandStep.COMMAND_NAME);
+            updateCommand.addArgumentValue(DbUrlConnectionCommandStep.DATABASE_ARG, database);
+            updateCommand.addArgumentValue(UpdateCommandStep.CHANGELOG_FILE_ARG, CHANGESET_RESOURCE_PATH);
+            updateCommand.addArgumentValue(UpdateCommandStep.CONTEXTS_ARG, null);
+            updateCommand.addArgumentValue(UpdateCommandStep.LABEL_FILTER_ARG, null);
+            updateCommand.addArgumentValue(ChangeExecListenerCommandStep.CHANGE_EXEC_LISTENER_ARG, null);
+            updateCommand.addArgumentValue(DatabaseChangelogCommandStep.CHANGELOG_PARAMETERS, null);
+            updateCommand.execute();
+          });
+          
           logger.info("Database updated");
           break;
         } catch (Throwable ex) {

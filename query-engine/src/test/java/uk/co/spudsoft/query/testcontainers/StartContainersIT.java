@@ -46,6 +46,7 @@ public class StartContainersIT {
   
   @Test
   @Timeout(value = 10, timeUnit = TimeUnit.MINUTES)
+  @SuppressWarnings({"rawtypes"})
   public void startAllContainers(Vertx vertx, VertxTestContext testContext) {
        
     List<ServerProvider> instances = Arrays.asList(

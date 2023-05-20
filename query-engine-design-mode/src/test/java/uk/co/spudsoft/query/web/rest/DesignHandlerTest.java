@@ -44,13 +44,13 @@ public class DesignHandlerTest {
   @Test
   public void testDetermineAbsolutePath(Vertx vertx) throws IOException, ServiceException {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
-    DirCache dirCache = DirCache.cache(new java.io.File("target/test-classes/sources").toPath(), Duration.of(1, ChronoUnit.SECONDS), Pattern.compile("\\..*"));
+    DirCache dirCache = DirCache.cache(new java.io.File("target/classes/samples").toPath(), Duration.of(1, ChronoUnit.SECONDS), Pattern.compile("\\..*"));
     PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, new CacheConfig(), dirCache);
     DesignHandler dh = new DesignHandler(vertx, loader, dirCache);
     
-    assertEquals("target" + java.io.File.separator + "test-classes" + java.io.File.separator + "sources" + java.io.File.separator + "bob", dh.resolveToAbsolutePath(dh.normalizePath("Test", "item", "bob")));
+    assertEquals("target" + java.io.File.separator + "classes" + java.io.File.separator + "samples" + java.io.File.separator + "bob", dh.resolveToAbsolutePath(dh.normalizePath("Test", "item", "bob")));
     assertThrows(ServiceException.class, () -> dh.resolveToAbsolutePath(dh.normalizePath("Test", "item", "bob" + java.io.File.separator + ".." + java.io.File.separator + "fred")));
-    assertEquals("target" + java.io.File.separator + "test-classes" + java.io.File.separator + "sources" + java.io.File.separator + "schön", dh.resolveToAbsolutePath(dh.normalizePath("Test", "item", "scho\u0308n")));
+    assertEquals("target" + java.io.File.separator + "classes" + java.io.File.separator + "samples" + java.io.File.separator + "schön", dh.resolveToAbsolutePath(dh.normalizePath("Test", "item", "scho\u0308n")));
   }
   
 }

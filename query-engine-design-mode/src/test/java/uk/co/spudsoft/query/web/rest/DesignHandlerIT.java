@@ -65,11 +65,11 @@ public class DesignHandlerIT {
     File paramsDir = new File("target/query-engine");
     paramsDir.mkdirs();
 
-    File sourceDir = new File("target/test-classes/sources/sub1/newfolder");
+    File sourceDir = new File("target/classes/samples/sub1/newfolder");
     if (sourceDir.exists()) {
       deleteFolder(sourceDir);
     }
-    sourceDir = new File("target/test-classes/sources/sub1/newdir");
+    sourceDir = new File("target/classes/samples/sub1/newdir");
     if (sourceDir.exists()) {
       deleteFolder(sourceDir);
     }
@@ -85,7 +85,7 @@ public class DesignHandlerIT {
       "audit.datasource.adminUser.username=" + postgres.getUser(),
       "audit.datasource.adminUser.password=" + postgres.getPassword(),
       "audit.datasource.schema=public",
-      "baseConfigPath=target/test-classes/sources",
+      "baseConfigPath=target/classes/samples",
       "vertxOptions.tracingOptions.serviceName=Query-Engine",
       "acceptableIssuerRegexes[0]=.*",
       "logging.jsonFormat=true",

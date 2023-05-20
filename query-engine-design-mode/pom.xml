@@ -36,11 +36,6 @@
   </scm>  
 
   <properties>
-    <junit-jupiter.version>5.9.2</junit-jupiter.version>
-    <junit-platform.version>1.9.2</junit-platform.version>
-    <testcontainers.version>1.18.0</testcontainers.version>
-    <rows.in.testdb>1000</rows.in.testdb>
-    <fork.count>4</fork.count>
     <compiler.dir>target/compiler</compiler.dir>
     <mainClass>uk.co.spudsoft.query.main.DesignMain</mainClass>
   </properties>
@@ -58,7 +53,12 @@
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
-
+    <dependency>
+      <groupId>org.eclipse.angus</groupId>
+      <artifactId>angus-activation</artifactId>
+      <version>2.0.1</version>
+    </dependency>
+    
     <!-- Testing -->
     <dependency>
       <groupId>io.rest-assured</groupId>
@@ -95,13 +95,13 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>5.3.0</version>
+      <version>5.3.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-junit-jupiter</artifactId>
-      <version>5.3.0</version>
+      <version>5.3.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>

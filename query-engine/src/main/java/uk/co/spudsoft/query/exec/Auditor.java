@@ -37,7 +37,7 @@ public interface Auditor {
    * @throws LiquibaseException if Liquibase is unable to prepare the database (for a non-driver error).
    *
    */
-  void prepare() throws IOException, SQLException, LiquibaseException;
+  void prepare() throws Exception;
 
   void recordException(RequestContext context, Throwable ex);
 

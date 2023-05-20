@@ -114,7 +114,7 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
     return executor.initializePipeline(childPipeline);
   }
   
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "rawtypes"})
   Comparable<Object> getId(DataRow row, String idField) {
     if (row == null) {
       return null;

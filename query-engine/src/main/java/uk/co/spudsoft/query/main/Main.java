@@ -108,7 +108,7 @@ public class Main extends Application {
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
   
 private static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-private static final String MAVEN_PROJECT_VERSION = "0.0.3-6-main-SNAPSHOT";
+private static final String MAVEN_PROJECT_VERSION = "0.0.3-7-main-SNAPSHOT";
 
 private static final String NAME = "query-engine";
   
@@ -245,6 +245,7 @@ private static final String NAME = "query-engine";
     auditor = new AuditorImpl(vertx, meterRegistry, params.getAudit());
     try {
       auditor.prepare();
+      logger.info("Audit database prepared");
     } catch (Throwable ex) {
       logger.error("Failed to prepare audit database: ", ex);
       return Future.succeededFuture(-2);

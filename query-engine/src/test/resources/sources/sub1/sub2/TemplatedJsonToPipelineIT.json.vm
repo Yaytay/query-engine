@@ -50,7 +50,7 @@
       "innerJoin":false,
       "parentIdColumn":"dataId",
       "delimiter":",",
-      "childIdColumn":"dataid",      
+      "childIdColumn":"dataId",      
       "parentValueColumn":"children",      
       "childValueColumn":"value",
       "input": {
@@ -70,12 +70,13 @@
       "parentIdColumn":"dataId",
       "fieldColumnColumn":"valuefield",
       "valuesParentIdColumn":"dataId",
-      "valuesFieldIdColumn":"fieldid",
+      "valuesFieldIdColumn":"fieldId",
       "fieldDefns": {
         "source": {    
           "type": "SQL",
           "endpoint": "${params.key}",
           "streamingFetchSize": 10,
+          "replaceDoubleQuotes": true,
           "query": "select \"fieldId\" as id, name, type, \"valueField\" as valuefield from \"Fields\" order by \"fieldId\""
         }
       },
@@ -84,6 +85,7 @@
           "type": "SQL",
           "endpoint": "${params.key}",
           "streamingFetchSize": 10,
+          "replaceDoubleQuotes": true,
           "query": "select \"dataId\", \"fieldId\", \"dateValue\", \"timeValue\", \"dateTimeValue\", \"longValue\", \"doubleValue\", \"boolValue\", \"textValue\" from \"FieldValues\" order by \"dataId\""
         }
       }

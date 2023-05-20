@@ -56,7 +56,7 @@ public class MainQueryIT {
             .compose(v -> mysql.prepareTestDatabase(vertx))
             .onComplete(testContext.succeedingThenComplete())
             ;
-    new File("target/test-classes/sources/sub1/sub3").mkdirs();
+    new File("target/classes/samples/sub1/sub3").mkdirs();
   }
   
   @Test
@@ -68,7 +68,7 @@ public class MainQueryIT {
       , "audit.datasource.adminUser.password=" + postgres.getPassword()
       , "audit.datasource.user.username=" + postgres.getUser()
       , "audit.datasource.user.password=" + postgres.getPassword()
-      , "baseConfigPath=target/test-classes/sources"
+      , "baseConfigPath=target/classes/samples"
       , "vertxOptions.eventLoopPoolSize=5"
       , "vertxOptions.workerPoolSize=5"
       , "vertxOptions.tracingOptions.serviceName=Query-Engine"
@@ -110,7 +110,6 @@ public class MainQueryIT {
             .log().all()
             .extract().body().asString();
     
-    // assertThat(body, equalTo("{\"name\":\"\",\"children\":[{\"name\":\"demo\",\"children\":[{\"name\":\"FeatureRichExample\",\"path\":\"demo/FeatureRichExample\",\"title\":\"Feature Rich Example\",\"description\":\"A complex pipeline that tries to demonstrate as many features as I can cram into a single pipeline.\\n\",\"arguments\":{\"key\":{\"type\":\"String\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[{\"id\":\"MS SQL Server\"},{\"id\":\"MySQL\"},{\"id\":\"PostgreSQL\"}]},\"port\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]},\"maxId\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]}},\"destinations\":[{\"type\":\"Logger\",\"type\":\"LOGGER\",\"format\":\"log\"}],\"leaf\":true},{\"name\":\"LookupValues\",\"path\":\"demo/LookupValues\",\"title\":\"Lookup Values\",\"description\":\"Extract values to use for the demo/FeatureRichExample.\",\"arguments\":{\"key\":{\"type\":\"String\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[{\"id\":\"MS SQL Server\"},{\"id\":\"MySQL\"},{\"id\":\"PostgreSQL\"}]},\"port\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]},\"maxId\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]}},\"destinations\":[{\"type\":\"JSON\",\"type\":\"JSON\",\"format\":\"json\",\"extension\":\"json\",\"mediaType\":{}}],\"leaf\":true}],\"path\":\"demo\",\"leaf\":false},{\"name\":\"sub1\",\"children\":[{\"name\":\"sub2\",\"children\":[{\"name\":\"JsonToPipelineIT\",\"path\":\"sub1/sub2/JsonToPipelineIT\",\"title\":\"Test Pipeline in JSON\",\"arguments\":{\"key\":{\"type\":\"String\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]},\"port\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]}},\"destinations\":[{\"type\":\"Logger\",\"type\":\"LOGGER\",\"format\":\"log\"}],\"leaf\":true},{\"name\":\"TemplatedJsonToPipelineIT\",\"path\":\"sub1/sub2/TemplatedJsonToPipelineIT\",\"arguments\":{\"key\":{\"type\":\"String\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]},\"port\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]}},\"destinations\":[{\"type\":\"JSON\",\"type\":\"JSON\",\"format\":\"json\",\"extension\":\"json\",\"mediaType\":{}}],\"leaf\":true},{\"name\":\"TemplatedYamlToPipelineIT\",\"path\":\"sub1/sub2/TemplatedYamlToPipelineIT\",\"arguments\":{\"key\":{\"type\":\"String\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[{\"id\":\"MS SQL Server\"},{\"id\":\"MySQL\"},{\"id\":\"PostgreSQL\"}]},\"port\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]}},\"destinations\":[{\"type\":\"Logger\",\"type\":\"LOGGER\",\"format\":\"log\"},{\"type\":\"XLSX\",\"type\":\"XLSX\",\"format\":\"xlsx\",\"extension\":\"xlsx\",\"mediaType\":{}},{\"type\":\"Delimited\",\"type\":\"CSV\",\"format\":\"tab\",\"extension\":\"tsv\",\"mediaType\":{},\"delimiter\":\"\\t\",\"openQuote\":\"\\\"\",\"closeQuote\":\"\\\"\",\"newline\":\"\\n\"},{\"type\":\"Delimited\",\"type\":\"CSV\",\"format\":\"csv\",\"extension\":\"csv\",\"mediaType\":{},\"delimiter\":\",\",\"openQuote\":\"\\\"\",\"closeQuote\":\"\\\"\",\"newline\":\"\\r\\n\"},{\"type\":\"HTML\",\"type\":\"HTML\",\"format\":\"table\",\"extension\":\"html\",\"mediaType\":{}}],\"leaf\":true},{\"name\":\"YamlToPipelineIT\",\"path\":\"sub1/sub2/YamlToPipelineIT\",\"description\":\"Test pipeline written as YAML\",\"arguments\":{\"key\":{\"type\":\"String\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[{\"id\":\"MS SQL Server\"},{\"id\":\"MySQL\"},{\"id\":\"PostgreSQL\"}]},\"port\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]},\"maxId\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]}},\"destinations\":[{\"type\":\"Logger\",\"type\":\"LOGGER\",\"format\":\"log\"}],\"leaf\":true}],\"path\":\"sub1/sub2\",\"leaf\":false}],\"path\":\"sub1\",\"leaf\":false}],\"path\":\"\",\"leaf\":false}"));
     assertThat(body, startsWith("{\"name\":\"\",\"children\":[{\"name\":\"demo\",\"children\":[{\"name\":\"FeatureRichExample\",\"path\":"));
     
     body = given()
@@ -124,7 +123,7 @@ public class MainQueryIT {
             .log().all()
             .extract().body().asString();
     
-    assertThat(body, startsWith("[{\"id\":0,\"instant\":\"1971-05-06T00:00\",\"ref\":\"zeroth\",\"value\":\"0\",\"children\":\"zeroth\",\"DateField\":null,\"TimeField\":null,\"DateTimeField\":\"1971-05-01T16:00\",\"LongField\":null,\"DoubleField\":null,\"BoolField\":false,\"TextField\":null},"));
+    assertThat(body, startsWith("[{\"dataId\":1,\"instant\":\"1971-05-07T03:00\",\"ref\":\"antiquewhite\",\"value\":\"first\",\"children\":\"one\",\"DateField\":\"2023-05-05\",\"TimeField\":null,\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null}"));
     
     body = given()
             .queryParam("key", mysql.getName())
@@ -137,7 +136,7 @@ public class MainQueryIT {
             .extract().body().asString();
     
     // Note that MySQL doesn't do booleans
-    assertThat(body, startsWith("[{\"id\":0,\"instant\":\"1971-05-06T00:00\",\"ref\":\"zeroth\",\"value\":\"0\",\"children\":\"zeroth\",\"DateField\":null,\"TimeField\":null,\"DateTimeField\":\"1971-05-01T16:00\",\"LongField\":null,\"DoubleField\":null,\"BoolField\":0,\"TextField\":null},"));
+    assertThat(body, startsWith("[{\"dataId\":1,\"instant\":\"1971-05-07T03:00\",\"ref\":\"antiquewhite\",\"value\":\"first\",\"children\":\"one\",\"DateField\":\"2023-05-05\",\"TimeField\":null,\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null},"));
     
     byte[] bodyBytes = given()
             .queryParam("key", postgres.getName())
@@ -162,7 +161,7 @@ public class MainQueryIT {
             .log().all()
             .extract().body().asString();
     
-    assertThat(body, startsWith("0,\"1971-05-06T00:00\",\"zeroth\",\"0\",\"zeroth\"\r\n1,\"1971-05-06T00:00:01\",\"first\",\"1\",\"zeroth,first\""));
+    assertThat(body, startsWith("1,\"1971-05-07T03:00\",\"antiquewhite\",\"first\",\""));
     
     body = given()
             .queryParam("key", postgres.getName())
@@ -174,7 +173,7 @@ public class MainQueryIT {
             .log().all()
             .extract().body().asString();
     
-    assertThat(body, startsWith("\"id\"\t\"instant\"\t\"ref\"\t\"value\"\t\"children\"\n0\t\"1971-05-06T00:00\"\t\"zeroth\"\t\"0\"\t\"zeroth\"\n1\t\"1971-05-06T00:00:01\"\t\"first\"\t\"1\"\t\"zeroth,first\""));
+    assertThat(body, startsWith("\"dataId\"\t\"instant\"\t\"ref\"\t\"value\"\t\"children\"\n1\t\"1971-05-07T03:00\"\t\"antiquewhite\"\t\"first\"\t\"\""));
     
     body = given()
             .queryParam("key", postgres.getName())
@@ -186,7 +185,7 @@ public class MainQueryIT {
             .log().all()
             .extract().body().asString();
     
-    assertThat(body, startsWith("<table class=\"qetable\"><thead>\n<tr class=\"header\"><th class=\"header evenCol\" >id</th><th class=\"header oddCol\" >instant</th><th class=\"header evenCol\" >ref</th><th class=\"header oddCol\" >value</th><th class=\"header evenCol\" >children</th></tr>\n</thead><tbody>\n<tr class=\"dataRow evenRow\" ><td class=\"evenRow evenCol\">0</td><td class=\"evenRow oddCol\">1971-05-06T00:00</td><td class=\"evenRow evenCol\">zeroth</td><td class=\"evenRow oddCol\">0</td><td class=\"evenRow evenCol\">zeroth</td></tr>"));
+    assertThat(body, startsWith("<table class=\"qetable\"><thead>\n<tr class=\"header\"><th class=\"header evenCol\" >dataId</th><th class=\"header oddCol\" >instant</th><th class=\"header evenCol\" >ref</th><th class=\"header oddCol\" >value</th><th class=\"header evenCol\" >children</th></tr>\n</thead><tbody>\n<tr class=\"dataRow evenRow\" ><td class=\"evenRow evenCol\">1</td><td class=\"evenRow oddCol\">1971-05-07T03:00</td><td class=\"evenRow evenCol\">antiquewhite</td><td class=\"evenRow oddCol\">first</td><td class=\"evenRow evenCol\"></td></tr>"));
     
     main.shutdown();
   }

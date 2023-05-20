@@ -27,7 +27,8 @@ source:
   type: SQL
   endpoint: $params.key
   streamingFetchSize: 7
-  query: select d.id, d.instant, l.value as ref, d.value from testData d join RefData l on d.lookup = l.id where d.id < 20 order by d.id
+  replaceDoubleQuotes: true  
+  query: select d."dataId", d.instant, c.name as ref, d.value from "Data" d join "Colours" c on d."colourId" = c."colourId" where d."dataId" < 20 order by d."dataId"
 processors:
 - type: GROUP_CONCAT
   delimiter: ","
@@ -41,7 +42,8 @@ processors:
       type: SQL
       endpoint: "${params.key}"
       streamingFetchSize: 10
-      query: select dataId, value from ManyData m join RefData r on r.id = m.refId where dataId < 20 order by dataId, sort
+      replaceDoubleQuotes: true  
+      query: select "dataId", value from "ManyData" m join "RefData" r on r."refId" = m."refId" where "dataId" < 20 order by "dataId", sort
 - type: LIMIT
   limit: 13
 formats:

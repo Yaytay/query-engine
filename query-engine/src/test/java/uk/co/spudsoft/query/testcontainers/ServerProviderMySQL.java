@@ -170,7 +170,6 @@ public class ServerProviderMySQL extends AbstractServerProvider implements Serve
     Pattern delimPat = Pattern.compile("DELIMITER (\\S+)");
     Matcher matcher = delimPat.matcher(contents);
     while(matcher.find()) {
-      logger.info("Matches from {} to {} with delim '{}'", matcher.start(), matcher.end(), matcher.group(1));
       sqlList.addAll(Arrays.asList(contents.substring(start, matcher.start()).split(delimiter)));
       delimiter = matcher.group(1);
       start = matcher.end() + 1;

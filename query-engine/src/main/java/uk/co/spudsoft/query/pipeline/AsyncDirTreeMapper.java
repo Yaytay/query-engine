@@ -47,6 +47,7 @@ public class AsyncDirTreeMapper {
      * @param fileMapper Method for mapping a File to a mapped File.
      * @return The result of called dirMapper on this Directory with all of its children mapped.
      */
+    @SuppressWarnings({"rawtypes"})
     public static <N extends AbstractTree.AbstractNode<N>, D extends N, F extends N> Future<D> map(
             DirCacheTree.Directory dir
             , Function<DirCacheTree.Directory, Future<Boolean>> dirValidator

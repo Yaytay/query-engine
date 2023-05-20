@@ -19,11 +19,12 @@ services:
     environment:
       ACCEPT_EULA: Y
       SA_PASSWORD: T0p-secret
-  
+
   postgresql:
     image: postgres:14.1-alpine
     ports:
     - 2003:5432
+    command: postgres -c log_min_duration_statement=0
     environment:
       POSTGRES_PASSWORD: T0p-secret
       POSTGRES_USER: postgres
