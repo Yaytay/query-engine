@@ -174,8 +174,8 @@ public class MainQueryIT {
             .statusCode(200)
             .log().all()
             .extract().body().asString();
-    
-    assertThat(body, startsWith("\"dataId\"\t\"instant\"\t\"ref\"\t\"value\"\t\"children\"\n1\t\"1971-05-07T03:00\"\t\"antiquewhite\"\t\"first\"\t\"\""));
+        
+    assertThat(body, startsWith("\"dataId\"\t\"instant\"\t\"ref\"\t\"value\"\t\"children\"\n1\t\"1971-05-07T03:00\"\t\"antiquewhite\"\t\"first\"\t\"one\""));
     
     body = given()
             .queryParam("key", postgres.getName())
