@@ -32,9 +32,9 @@ source:
 processors:
 - type: GROUP_CONCAT
   delimiter: ","
-  parentIdColumn: id
+  parentIdColumn: dataId
   innerJoin: false
-  childIdColumn: dataid
+  childIdColumn: dataId
   parentValueColumn: children
   childValueColumn: value
   input:
