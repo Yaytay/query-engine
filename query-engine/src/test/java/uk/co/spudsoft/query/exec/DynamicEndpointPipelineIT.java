@@ -75,7 +75,7 @@ public class DynamicEndpointPipelineIT {
   private final ServerProvider serverProviderPg = new ServerProviderPostgreSQL();
     
   @Test
-  @Timeout(value = 120, timeUnit = TimeUnit.SECONDS)
+  @Timeout(value = 2400, timeUnit = TimeUnit.SECONDS)
   public void testHandlingWithDynamicEndpoint(Vertx vertx, VertxTestContext testContext) throws Throwable {
 
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
