@@ -31,7 +31,8 @@
   </developers>
 
   <properties>
-    <jdk.version>19</jdk.version>
+    <!-- For production usage JDK must be compatible with GraalVM and must be receiving security updates, effectively meaning the most recent LTS -->
+    <jdk.version>17</jdk.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <argLine></argLine>
@@ -723,7 +724,7 @@
               </execution>            
             </executions>
             <configuration>
-              <nodeVersion>v18.14.0</nodeVersion>
+              <nodeVersion>v18.16.0</nodeVersion>
               <workingDirectory>target/ui</workingDirectory>
             </configuration>
           </plugin>                    

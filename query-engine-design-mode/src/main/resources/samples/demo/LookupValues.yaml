@@ -8,12 +8,13 @@ sourceEndpoints:
     password: T0p-secret
 source:
   type: SQL
-  endpointTemplate: MySQL
+  endpoint: MySQL
+  replaceDoubleQuotes: true
   query: |
     select distinct 
       value 
     from 
-      ManyData m 
-      join RefData r on r.id = m.refId
+      "ManyData" m 
+      join "RefData" r on r."refId" = m."refId"
 formats:
 - type: JSON

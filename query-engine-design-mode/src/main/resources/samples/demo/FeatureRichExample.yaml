@@ -9,20 +9,30 @@ arguments:
     description: The earliest date that the row must have.
     optional: true
     defaultValue: 1971-05-06
+  - name: maxId
+    type: Long
+    title: Maximum dataId
+    optional: true
+    prompt: max id
+    description: Maximum values for the dataId.
+    defaultValue: 20
   - name: maxLong
     type: Long
     title: Maximum Long Value
+    optional: true
     prompt: max long
     description: The largest value for the longValue.
   - name: textLike
     type: String
     title: Text value
     prompt: text
+    optional: true
     description: Match for the textValue, may use SQL patterns.
   - name: refValue
     type: String
     title: Required Reference
     description: Reference value that must be had by the row.
+    optional: true
     possibleValuesUrl: http://localhost:8000/query/demo/LookupValues
 sourceEndpoints:
   MySQL:
@@ -35,53 +45,54 @@ source:
   endpoint: MySQL
   streamingFetchSize: 7
   connectionTimeout: PT10S
+  replaceDoubleQuotes: true  
   query: |
     select distinct
-        d.id
-        , d.instant
-        , l.value as ref
+        d."dataId"
+        , d."instant"
+        , c.name as colour
         , d.value 
     from 
-        testData d 
-        join RefData l on d.lookup = l.id 
-        /* BIND join FieldValues fv1 on fv1.parentId = d.id and fv1.fieldId = 1 and fv1.dateValue >= :minDate */
-        /* BIND join FieldValues fv2 on fv2.parentId = d.id and fv2.fieldId = 4 and fv2.longValue <= :maxLong */
-        /* BIND join FieldValues fv3 on fv3.parentId = d.id and fv3.fieldId = 7 and fv3.textValue like :textLike */
-        /* BIND join FieldValues fv4 on fv4.parentId = d.id and fv4.fieldId = 7 and fv4.textValue like :textLike */
-        /* BIND join ManyData m on d.id = m.dataId join RefData r on r.id = m.refId and r.value = :refValue */
+        "Data" d 
+        join "Colours" c on c.colourId = d.colourId 
+        /* BIND join FieldValues fv1 on fv1.dataId = d.dataIdand fv1.fieldId = 1 and fv1.dateValue >= :minDate */
+        /* BIND join FieldValues fv2 on fv2.dataId = d.dataIdand fv2.fieldId = 4 and fv2.longValue <= :maxLong */
+        /* BIND join FieldValues fv3 on fv3.dataId = d.dataId and fv3.fieldId = 7 and fv3.textValue like :textLike */
+        /* BIND join ManyData m on d.dataId = m.dataId join RefData r on r.refId = m.refId and r.value = :refValue */
     order by 
         d.id    
 processors:
-#- type: GROUP_CONCAT
-#  delimiter: ","
-#  parentIdColumn: id
-#  innerJoin: false
-#  childIdColumn: dataId
-#  parentValueColumn: children
-#  childValueColumn: value
-#  input:
-#    source:
-#      endpoint: MySQL
-#      streamingFetchSize: 10
-#      query: select dataId, value from ManyData m join RefData r on r.id = m.refId where dataId < 20 order by dataId, sort
+- type: GROUP_CONCAT
+  delimiter: ","
+  parentIdColumn: dataId
+  innerJoin: false
+  childIdColumn: dataId
+  parentValueColumn: children
+  childValueColumn: value
+  input:
+    source:
+      endpoint: MySQL
+      streamingFetchSize: 10
+      replaceDoubleQuotes: true  
+      query: select "dataId", value from "ManyData" m join "RefData" r on r."refId" = m."refId" where "dataId" < :maxId order by dataId, sort
 - type: DYNAMIC_FIELD
   innerJoin: false
   parentIdColumn: id
   fieldColumnColumn: valuefield
-  valuesParentIdColumn: parentid
-  valuesFieldIdColumn: fieldid
+  valuesParentIdColumn: dataId
+  valuesFieldIdColumn: fieldId
   fieldDefns: 
     source:
       type: SQL
       endpoint: MySQL
       streamingFetchSize: 10
-      query: select fieldId as id, name, type, valueField as valuefield from Fields order by fieldId
+      query: select "fieldId" as id, name, type, "valueField" from "Fields" order by "fieldId"
   fieldValues: 
     source:    
       type: SQL
       endpoint: MySQL
       streamingFetchSize: 10
-      query:  select parentId as parentid, fieldId as fieldid, dateValue, timeValue, dateTimeValue, longValue, doubleValue, boolValue, textValue from FieldValues order by parentId
+      query:  select dataId, "fieldId", "dateValue", "timeValue", "dateTimeValue", "longValue", "doubleValue", "boolValue", "textValue" from "FieldValues" order by "dataId", "fieldId"
 - type: LIMIT
   limit: 13
 formats:

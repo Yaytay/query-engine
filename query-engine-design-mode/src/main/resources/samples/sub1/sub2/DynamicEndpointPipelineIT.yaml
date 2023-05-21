@@ -25,12 +25,12 @@ dynamicEndpoints:
       replaceDoubleQuotes: true
       query: |
         select 
-          case when :maxId = 7 then null else endpointKey end as endpointKey  # Test trigger that results in key from DynamicEndpoint being used (which is null, so it fails)
-          , case endpointKey when 'ms' then null else type end as type        # This is just to improve coverage, null type defaults to SQL
+          case when :maxId = 7 then null else "endpointKey" end           # Test trigger that results in key from DynamicEndpoint being used (which is null, so it fails)
+          , case "endpointKey" when 'ms' then null else type end as type  # This is just to improve coverage, null type defaults to SQL
           , url
           , username
           , password 
-          , case endpointKey when 'pg' then null else 1 end as cond
+          , case "endpointKey" when 'pg' then null else 1 end as cond
         from 
           "DynamicEndpoint"
 source:
@@ -41,9 +41,9 @@ source:
 processors:
 - type: GROUP_CONCAT
   delimiter: ","
-  parentIdColumn: id
+  parentIdColumn: dataId
   innerJoin: false
-  childIdColumn: dataid
+  childIdColumn: dataId
   parentValueColumn: children
   childValueColumn: value
   input:
