@@ -74,13 +74,13 @@ public class SourceSql implements Source {
       }
     }
     if (idleTimeout != null) {
-      if (!idleTimeout.isPositive()) {
+      if (idleTimeout.getSeconds() < 0) {
         throw new IllegalArgumentException("IdleTimeout must be positive");
       }
     }
     if (connectionTimeout != null) {
-      if (!connectionTimeout.isPositive()) {
-        throw new IllegalArgumentException("IdleTimeout must be positive");
+      if (connectionTimeout.getSeconds() < 0) {
+        throw new IllegalArgumentException("ConnectionTimeout must be positive");
       }
     }
   }
