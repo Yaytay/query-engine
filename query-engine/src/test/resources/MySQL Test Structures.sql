@@ -442,45 +442,49 @@ BEGIN
 END; //
 CREATE PROCEDURE IF NOT EXISTS LoadData()
 BEGIN
-
-  SET @i = -1;
-  WHILE @i < 1000 DO
-    SET @i = @i + 1;
-    SET @val = NumberToWords(@i);
-    INSERT IGNORE INTO `RefData` (`refId`, `value`) VALUES (CAST(SHA(CAST(@i AS BINARY(16))) AS BINARY(16)), @val);
-  END WHILE;
+  START TRANSACTION;
   
-  SET @i = 0;
-  WHILE @i < 10000 DO
-    SET @i = @i + 1;
-    INSERT IGNORE INTO `Data` (`dataId`, `colourId`, `instant`, `value`) VALUES (@i, 1 + (@i % 147), DATE_ADD('1971-05-06', interval @i * 27 hour ), NumberToOrdinal(@i));
-      
-    SET @j = 0;
-    WHILE @j < @i % 7 DO
-      SET @j = @j + 1;
-      SET @guid = CAST(SHA(CAST((@i * @j) % 1000 AS BINARY(16))) AS BINARY(16));
-      INSERT IGNORE INTO `ManyData` (`refId`, `dataId`, `sort`) VALUES (@guid, @i, @j);
+    SET @i = -1;
+    WHILE @i < 1000 DO
+      SET @i = @i + 1;
+      SET @val = NumberToWords(@i);
+      SET @guid = CAST(SHA(CAST(@i AS BINARY(16))) AS BINARY(16));
+      INSERT IGNORE INTO `RefData` (`refId`, `value`) VALUES (@guid, @val);
     END WHILE;
-    
-    SET @j = 0;
-    WHILE @j < 7 DO
-      SET @j = @j + 1;
-      IF (@i % @j) = 0 THEN
-        INSERT IGNORE INTO `FieldValues` (`dataId`, `fieldId`, `dateValue`, `timeValue`, `dateTimeValue`, `longValue`, `doubleValue`, `boolValue`, `textValue`)
-            VALUES(
-              @i
-              , @j
-              , CASE WHEN @j = 1 THEN DATE_ADD('2023-05-06', INTERVAL 0 - @i DAY) END
-              , CASE WHEN @j = 2 THEN DATE_ADD('2023-05-06', INTERVAL 0 - @i MINUTE) END 
-              , CASE WHEN @j = 3 THEN DATE_ADD('2023-05-06', INTERVAL 0 - @i MINUTE) END 
-              , CASE WHEN @j = 4 THEN (@i * @j) END 
-              , CASE WHEN @j = 5 THEN (1.0 / @i) END 
-              , CASE WHEN @j = 6 THEN ((@i / @j) % 2) END 
-              , CASE WHEN @j = 7 THEN NumberToWords(@i) END 
-            );
-      END IF;
+  
+    SET @i = 0;
+    WHILE @i < 10000 DO
+  
+      SET @i = @i + 1;
+      INSERT IGNORE INTO `Data` (`dataId`, `colourId`, `instant`, `value`) VALUES (@i, 1 + (@i % 147), DATE_ADD('1971-05-06', interval @i * 27 hour ), NumberToOrdinal(@i));
+          
+      SET @j = 0;
+      WHILE @j < @i % 7 DO
+        SET @j = @j + 1;
+        SET @guid = CAST(SHA(CAST((@i * @j) % 1000 AS BINARY(16))) AS BINARY(16));
+        INSERT IGNORE INTO `ManyData` (`refId`, `dataId`, `sort`) VALUES (@guid, @i, @j);
+      END WHILE;
+        
+      SET @j = 0;
+      WHILE @j < 7 DO
+        SET @j = @j + 1;
+        IF (@i % @j) = 0 THEN
+          INSERT IGNORE INTO `FieldValues` (`dataId`, `fieldId`, `dateValue`, `timeValue`, `dateTimeValue`, `longValue`, `doubleValue`, `boolValue`, `textValue`)
+              VALUES(
+                @i
+                , @j
+                , CASE WHEN @j = 1 THEN DATE_ADD('2023-05-06', INTERVAL 0 - @i DAY) END
+                , CASE WHEN @j = 2 THEN DATE_ADD('2023-05-06', INTERVAL 0 - @i MINUTE) END 
+                , CASE WHEN @j = 3 THEN DATE_ADD('2023-05-06', INTERVAL 0 - @i MINUTE) END 
+                , CASE WHEN @j = 4 THEN (@i * @j) END 
+                , CASE WHEN @j = 5 THEN (1.0 / @i) END 
+                , CASE WHEN @j = 6 THEN ((@i / @j) % 2) END 
+                , CASE WHEN @j = 7 THEN NumberToWords(@i) END 
+              );
+        END IF;
+      END WHILE;
     END WHILE;
-  END WHILE;
+  COMMIT;
 END; //
 
 CALL LoadData();
