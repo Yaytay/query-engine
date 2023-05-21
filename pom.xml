@@ -668,66 +668,25 @@
       <build>
         <plugins>
           <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-scm-plugin</artifactId>
-            <version>2.0.0</version>
+            <groupId>com.googlecode.maven-download-plugin</groupId>
+            <artifactId>download-maven-plugin</artifactId>
+            <version>1.7.0</version>
             <executions>
               <execution>
+                <id>download-ui</id>
+                <phase>pre-integration-test</phase>
                 <goals>
-                  <goal>checkout</goal>
+                  <goal>wget</goal>
                 </goals>
-                <phase>generate-resources</phase>
-                <id>checkout ui</id>
               </execution>
             </executions>
             <configuration>
-              <connectionUrl>scm:git:https://github.com/Yaytay/query-engine-ui.git</connectionUrl>  
-              <scmVersion>main</scmVersion>
-              <scmVersionType>branch</scmVersionType>
-              <checkoutDirectory>target/ui</checkoutDirectory>  
+              <url>https://github.com/Yaytay/query-engine-ui/releases/latest/download/build.tar.gz</url>
+              <unpack>true</unpack>
+              <followRedirects>true</followRedirects>
+              <outputDirectory>target/ui-build</outputDirectory>
             </configuration>
           </plugin>
-          
-          <plugin>
-            <groupId>com.github.eirslett</groupId>
-            <artifactId>frontend-maven-plugin</artifactId>
-            <version>1.12.1</version>
-            <executions>
-              <execution>
-                <id>install node and npm</id>
-                <goals>
-                  <goal>install-node-and-npm</goal>
-                </goals>
-                <phase>generate-resources</phase>
-              </execution>
-
-              <execution>
-                <id>npm install</id>
-                <goals>
-                  <goal>npm</goal>
-                </goals>
-                <phase>generate-resources</phase>
-                <configuration>
-                  <arguments>install</arguments>
-                </configuration>
-              </execution>            
-
-              <execution>
-                <id>npm run build</id>
-                <goals>
-                  <goal>npm</goal>
-                </goals>
-                <phase>generate-resources</phase>
-                <configuration>
-                  <arguments>run build</arguments>
-                </configuration>
-              </execution>            
-            </executions>
-            <configuration>
-              <nodeVersion>v18.16.0</nodeVersion>
-              <workingDirectory>target/ui</workingDirectory>
-            </configuration>
-          </plugin>                    
                       
           <plugin>
             <artifactId>maven-resources-plugin</artifactId>
@@ -736,7 +695,7 @@
               <execution>
                 <id>copy-ui</id>
                 <!-- here the phase you need -->
-                <phase>generate-resources</phase>
+                <phase>pre-integration-test</phase>
                 <goals>
                   <goal>copy-resources</goal>
                 </goals>
@@ -745,7 +704,7 @@
                   <includeEmptyDirs>true</includeEmptyDirs>
                   <resources>          
                     <resource>
-                      <directory>${basedir}/target/ui/build</directory>
+                      <directory>${basedir}/target/ui-build/build</directory>
                     </resource>
                   </resources>              
                 </configuration>            
