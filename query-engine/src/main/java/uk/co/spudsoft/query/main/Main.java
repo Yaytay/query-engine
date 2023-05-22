@@ -57,7 +57,9 @@ import io.vertx.micrometer.impl.PrometheusScrapingHandlerImpl;
 import io.vertx.tracing.zipkin.ZipkinTracingOptions;
 import jakarta.ws.rs.core.Application;
 import java.io.File;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -114,7 +116,7 @@ public class Main extends Application {
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
   
 private static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-private static final String MAVEN_PROJECT_VERSION = "0.0.3-22-main-SNAPSHOT";
+private static final String MAVEN_PROJECT_VERSION = "0.0.3-23-main-SNAPSHOT";
 
 private static final String NAME = "query-engine";
   
@@ -374,8 +376,46 @@ private static final String NAME = "query-engine";
     }
   }
 
-  protected void prepareBaseConfigPath(File baseConfigFile) {
+  @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_BAD_PRACTICE")
+  public static void prepareBaseConfigPath(File baseConfigFile) {
+    if (!baseConfigFile.exists()) {
+      baseConfigFile.mkdirs();
+    }
+    String[] children = baseConfigFile.list();
+    if (children != null && children.length == 0) {
+      logger.info("Creating sample configs");
+      extractSampleFile(baseConfigFile, "samples/demo/FeatureRichExample.yaml");
+      extractSampleFile(baseConfigFile, "samples/demo/LookupValues.yaml");
+      extractSampleFile(baseConfigFile, "samples/sub1/sub2/DynamicEndpointPipelineIT.yaml");
+      extractSampleFile(baseConfigFile, "samples/sub1/sub2/JsonToPipelineIT.json");
+      extractSampleFile(baseConfigFile, "samples/sub1/sub2/TemplatedJsonToPipelineIT.json.vm");
+      extractSampleFile(baseConfigFile, "samples/sub1/sub2/TemplatedYamlToPipelineIT.yaml.vm");
+      extractSampleFile(baseConfigFile, "samples/sub1/sub2/YamlToPipelineIT.yaml");
+      extractSampleFile(baseConfigFile, "samples/sub1/sub2/permissions.jexl");
+      extractSampleFile(baseConfigFile, "samples/sub1/permissions.jexl");
+      extractSampleFile(baseConfigFile, "samples/permissions.jexl");
+    }
   }
+  
+  @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_BAD_PRACTICE")
+  private static void extractSampleFile(File baseConfigDir, String path) {
+    try {
+      File destFile = new File(baseConfigDir, path);
+      File destParent = destFile.getParentFile();
+      
+      if (!destParent.exists()) {
+        destParent.mkdirs();
+      }
+      
+      try (InputStream is = Main.class.getResourceAsStream("/" + path)) {
+        Files.copy(is, destFile.toPath());
+      }
+      
+    } catch (Throwable ex) {
+      logger.warn("Failed to copy sample {}: ", ex);
+    }
+  }
+  
 
   protected RequestContextBuilder createRequestContextBuilder(Parameters params) {    
     OpenIdDiscoveryHandler discoverer = null;

@@ -19,9 +19,15 @@ package uk.co.spudsoft.query.main;
 import brave.http.HttpTracing;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
+import java.util.Comparator;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -77,4 +83,46 @@ public class MainTest {
     assertNotNull(tracing);
   }
   
+  /**
+   * Test of prepareBaseConfigPath method, of class DesignMain.
+   */
+  @Test
+  public void testPrepareBaseConfigPath() throws Exception {
+    File testDir = new File("target/test-base-config-path");
+    if (testDir.exists()) {
+      deleteDir(testDir);
+    }
+    assertFalse(testDir.exists());
+    
+    Main.prepareBaseConfigPath(testDir);
+    assertTrue(testDir.exists());
+    assertEquals(10, countFilesInDir(testDir));
+    FileTime lastMod1 = Files.getLastModifiedTime(testDir.toPath());
+    Thread.sleep(1000);
+    
+    Main.prepareBaseConfigPath(testDir);
+    assertTrue(testDir.exists());
+    assertEquals(10, countFilesInDir(testDir));
+    FileTime lastMod2 = Files.getLastModifiedTime(testDir.toPath());
+    assertEquals(lastMod1, lastMod2);
+  }
+
+  private void deleteDir(File testDir) throws IOException {
+    try (var dirStream = Files.walk(testDir.toPath())) {
+      dirStream
+              .map(Path::toFile)
+              .sorted(Comparator.reverseOrder())
+              .forEach(File::delete);
+    }
+  }
+
+  private long countFilesInDir(File testDir) throws IOException {
+    try (var dirStream = Files.walk(testDir.toPath())) {
+      return dirStream
+              .map(Path::toFile)
+              .filter(f -> f.isFile())
+              .count();
+    }
+  }
+    
 }

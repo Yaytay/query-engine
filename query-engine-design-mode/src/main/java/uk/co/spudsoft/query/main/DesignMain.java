@@ -17,12 +17,8 @@
 
 package uk.co.spudsoft.query.main;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.vertx.core.AsyncResult;
-import java.io.File;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,46 +66,4 @@ public class DesignMain extends Main {
   protected void addExtraControllers(Parameters params, List<Object> controllers) {
     controllers.add(new DesignHandler(getVertx(), getDefnLoader(), getDirCache()));
   }
-
-  @Override
-  @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_BAD_PRACTICE")
-  protected void prepareBaseConfigPath(File baseConfigFile) {
-    if (!baseConfigFile.exists()) {
-      baseConfigFile.mkdirs();
-    }
-    String[] children = baseConfigFile.list();
-    if (children != null && children.length == 0) {
-      logger.info("Creating sample configs");
-      extractSampleFile(baseConfigFile, "samples/demo/FeatureRichExample.yaml");
-      extractSampleFile(baseConfigFile, "samples/demo/LookupValues.yaml");
-      extractSampleFile(baseConfigFile, "samples/sub1/sub2/DynamicEndpointPipelineIT.yaml");
-      extractSampleFile(baseConfigFile, "samples/sub1/sub2/JsonToPipelineIT.json");
-      extractSampleFile(baseConfigFile, "samples/sub1/sub2/TemplatedJsonToPipelineIT.json.vm");
-      extractSampleFile(baseConfigFile, "samples/sub1/sub2/TemplatedYamlToPipelineIT.yaml.vm");
-      extractSampleFile(baseConfigFile, "samples/sub1/sub2/YamlToPipelineIT.yaml");
-      extractSampleFile(baseConfigFile, "samples/sub1/sub2/permissions.jexl");
-      extractSampleFile(baseConfigFile, "samples/sub1/permissions.jexl");
-      extractSampleFile(baseConfigFile, "samples/permissions.jexl");
-    }
-  }
-  
-  @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_BAD_PRACTICE")
-  private void extractSampleFile(File baseConfigDir, String path) {
-    try {
-      File destFile = new File(baseConfigDir, path);
-      File destParent = destFile.getParentFile();
-      
-      if (!destParent.exists()) {
-        destParent.mkdirs();
-      }
-      
-      try (InputStream is = getClass().getResourceAsStream("/" + path)) {
-        Files.copy(is, destFile.toPath());
-      }
-      
-    } catch (Throwable ex) {
-      logger.warn("Failed to copy sample {}: ", ex);
-    }
-  }
-  
 }

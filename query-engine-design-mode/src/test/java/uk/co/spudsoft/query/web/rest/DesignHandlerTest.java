@@ -33,6 +33,7 @@ import uk.co.spudsoft.query.web.ServiceException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import uk.co.spudsoft.query.main.Main;
 
 /**
  *
@@ -44,13 +45,15 @@ public class DesignHandlerTest {
   @Test
   public void testDetermineAbsolutePath(Vertx vertx) throws IOException, ServiceException {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
-    DirCache dirCache = DirCache.cache(new java.io.File("target/classes/samples").toPath(), Duration.of(1, ChronoUnit.SECONDS), Pattern.compile("\\..*"));
+    java.io.File rootDir = new java.io.File("target/query-engine/samples");
+    Main.prepareBaseConfigPath(rootDir);
+    DirCache dirCache = DirCache.cache(rootDir.toPath(), Duration.of(1, ChronoUnit.SECONDS), Pattern.compile("\\..*"));
     PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, new CacheConfig(), dirCache);
     DesignHandler dh = new DesignHandler(vertx, loader, dirCache);
     
-    assertEquals("target" + java.io.File.separator + "classes" + java.io.File.separator + "samples" + java.io.File.separator + "bob", dh.resolveToAbsolutePath(dh.normalizePath("Test", "item", "bob")));
+    assertEquals("target" + java.io.File.separator + "query-engine" + java.io.File.separator + "samples" + java.io.File.separator + "bob", dh.resolveToAbsolutePath(dh.normalizePath("Test", "item", "bob")));
     assertThrows(ServiceException.class, () -> dh.resolveToAbsolutePath(dh.normalizePath("Test", "item", "bob" + java.io.File.separator + ".." + java.io.File.separator + "fred")));
-    assertEquals("target" + java.io.File.separator + "classes" + java.io.File.separator + "samples" + java.io.File.separator + "schön", dh.resolveToAbsolutePath(dh.normalizePath("Test", "item", "scho\u0308n")));
+    assertEquals("target" + java.io.File.separator + "query-engine" + java.io.File.separator + "samples" + java.io.File.separator + "schön", dh.resolveToAbsolutePath(dh.normalizePath("Test", "item", "scho\u0308n")));
   }
   
 }
