@@ -71,7 +71,7 @@ public class MainQueryIT {
       , "audit.datasource.adminUser.password=" + postgres.getPassword()
       , "audit.datasource.user.username=" + postgres.getUser()
       , "audit.datasource.user.password=" + postgres.getPassword()
-      , "baseConfigPath=target/classes/samples"
+      , "baseConfigPath=target/query-engine/samples"
       , "vertxOptions.eventLoopPoolSize=5"
       , "vertxOptions.workerPoolSize=5"
       , "vertxOptions.tracingOptions.serviceName=Query-Engine"
