@@ -40,9 +40,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Ensure query-engine-design-mode not using specific dependency on qe
-      run: sed -iE 's/<qe-version>([^<]+)/<!--qe-version>\1<\/qe-version-->/' query-engine-design-mode/pom.xml
-
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2

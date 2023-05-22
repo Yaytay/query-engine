@@ -25,9 +25,6 @@ jobs:
       with:
         fetch-depth: 0
         
-    - name: Ensure query-engine-design-mode not using specific dependency on qe
-      run: "sed -iE 's/<qe-version>([^<]+)/<!--qe-version>\\1<\\/qe-version-->/' query-engine-design-mode/pom.xml"
-
     - name: Cache Maven packages
       uses: actions/cache@v3
       with:
