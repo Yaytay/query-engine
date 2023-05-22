@@ -382,6 +382,9 @@ private static final String NAME = "query-engine";
       logger.info("Creating base config dir at {}", baseConfigFile);
       baseConfigFile.mkdirs();
     }
+    if (!baseConfigFile.isDirectory()) {
+      logger.warn("Base config dir ({}) is not a directory", baseConfigFile);
+    }
     String[] children = baseConfigFile.list();
     if (children != null && children.length == 0) {
       logger.info("Creating sample configs");
@@ -396,7 +399,7 @@ private static final String NAME = "query-engine";
       extractSampleFile(baseConfigFile, "samples/sub1/permissions.jexl");
       extractSampleFile(baseConfigFile, "samples/permissions.jexl");
     } else {
-      logger.info("Not creating sample configs because {} already contains {} files", baseConfigFile, children.length);
+      logger.info("Not creating sample configs because {} already contains {} files", baseConfigFile, children == null ? null : children.length);
     }
   }
   
