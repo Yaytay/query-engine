@@ -66,7 +66,7 @@ public class TemplatedYamlToPipelineIT {
 
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     CacheConfig cacheConfig = new CacheConfig().setMaxItems(1).setMaxDurationMs(0).setPurgePeriodMs(0);
-    PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/test-classes/sources").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*")));
+    PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*")));
     PipelineExecutorImpl executor = new PipelineExecutorImpl(null);
 
     MultiMap args = MultiMap.caseInsensitiveMultiMap();

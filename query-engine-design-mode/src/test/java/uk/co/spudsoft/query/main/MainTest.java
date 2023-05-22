@@ -46,7 +46,7 @@ public class MainTest {
     Main main = new DesignMain();
     main.testMain(new String[]{
             "exitOnRun"
-            , "baseConfigPath=target/query-engine"
+            , "baseConfigPath=target/query-engine/samples"
             , "acceptableIssuerRegexes[0]=.*"
             , "logging.level.uk_co_spudsoft_query_main=TRACE" 
             , "vertxOptions.tracingOptions.serviceName=Query-Engine"

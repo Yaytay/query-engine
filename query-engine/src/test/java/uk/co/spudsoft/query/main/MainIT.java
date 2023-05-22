@@ -56,7 +56,7 @@ public class MainIT {
     Main main = new Main();
     main.testMain(new String[]{
       "audit.datasource.url=wibble"
-      , "baseConfigPath=target/test-classes/sources"
+      , "baseConfigPath=target/classes/samples"
       , "vertxOptions.tracingOptions.type=io.vertx.tracing.zipkin.ZipkinTracingOptions"
       , "vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "acceptableIssuerRegexes[0]=.*"
@@ -76,7 +76,7 @@ public class MainIT {
       , "audit.datasource.adminUser.username=" + postgres.getUser()
       , "audit.datasource.adminUser.password=" + postgres.getPassword()
       , "audit.datasource.schema=public" 
-      , "baseConfigPath=target/test-classes/sources"
+      , "baseConfigPath=target/classes/samples"
       , "vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "acceptableIssuerRegexes[0]=.*"
       , "logging.jsonFormat=true"

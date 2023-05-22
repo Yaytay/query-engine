@@ -133,7 +133,7 @@ public class ParametersTest {
   public void testProps() {
     String[] args = new String[]{
       "audit.datasource.url=jdbc:bob"
-      , "baseConfigPath=target/test-classes/sources"
+      , "baseConfigPath=target/classes/samples"
       , "vertxOptions.eventLoopPoolSize=5"
       , "vertxOptions.workerPoolSize=5"
       , "vertxOptions.tracingOptions.serviceName=Query-Engine"
@@ -148,7 +148,7 @@ public class ParametersTest {
 
     Parameters p = p4j.gatherParameters();
     assertEquals("jdbc:bob", p.getAudit().getDataSource().getUrl());
-    assertEquals("target/test-classes/sources", p.getBaseConfigPath());
+    assertEquals("target/classes/samples", p.getBaseConfigPath());
     assertEquals(5, p.getVertxOptions().getEventLoopPoolSize());
     assertEquals(5, p.getVertxOptions().getWorkerPoolSize());
     assertEquals("Query-Engine", ((ZipkinTracingOptions) p.getVertxOptions().getTracingOptions()).getServiceName());
@@ -174,7 +174,7 @@ public class ParametersTest {
                   	, "httpServerOptions": {
                           "tracingPolicy": "ALWAYS"
                       }
-                  	, "baseConfigPath": "target/test-classes/sources"
+                  	, "baseConfigPath": "target/classes/samples"
                   	, "audit": {
                           "dataSource": {
                               "url": "jdbc:bob"
@@ -194,7 +194,7 @@ public class ParametersTest {
 
     Parameters p = p4j.gatherParameters();
     assertEquals("jdbc:bob", p.getAudit().getDataSource().getUrl());
-    assertEquals("target/test-classes/sources", p.getBaseConfigPath());
+    assertEquals("target/classes/samples", p.getBaseConfigPath());
     assertEquals(5, p.getVertxOptions().getEventLoopPoolSize());
     assertEquals(8, p.getVertxOptions().getWorkerPoolSize());
     assertEquals("Query-Engine", ((ZipkinTracingOptions) p.getVertxOptions().getTracingOptions()).getServiceName());

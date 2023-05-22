@@ -54,12 +54,14 @@ public class MainQueryIT {
   public static void createDirs(Vertx vertx) {
     File paramsDir = new File("target/query-engine");
     paramsDir.mkdirs();
-    new File("target/test-classes/sources/sub1/sub3").mkdirs();
+    new File("target/classes/samples/sub1/sub3").mkdirs();
   }
   
   @Test
   public void testQuery() throws Exception {
     Main main = new Main();
+    File baseConfigDir = new File("target/query-engine/samples");
+    Main.prepareBaseConfigPath(baseConfigDir);
     main.testMain(new String[]{
       "audit.datasource.url=jdbc:" + postgres.getUrl()
       , "audit.datasource.schema=public"
@@ -67,7 +69,7 @@ public class MainQueryIT {
       , "audit.datasource.adminUser.password=" + postgres.getPassword()
       , "audit.datasource.user.username=" + postgres.getUser()
       , "audit.datasource.user.password=" + postgres.getPassword()
-      , "baseConfigPath=target/test-classes/sources"
+      , "baseConfigPath=" + baseConfigDir
       , "vertxOptions.eventLoopPoolSize=5"
       , "vertxOptions.workerPoolSize=5"
       , "vertxOptions.tracingOptions.serviceName=Query-Engine"
