@@ -38,20 +38,21 @@
   <properties>
     <compiler.dir>target/compiler</compiler.dir>
     <mainClass>uk.co.spudsoft.query.main.DesignMain</mainClass>
+
+    <!-- Usually this should be commented out and the value (which is ${project.version}) from the parent will be used -->
+    <qe-version>0.0.3-14-main-SNAPSHOT</qe-version>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>query-engine</artifactId>
-      <!--version>0.0.3-10-main-SNAPSHOT</version-->
-      <version>${project.version}</version>
+      <version>${qe-version}</version>
     </dependency>
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>query-engine</artifactId>
-      <!--version>0.0.3-10-main-SNAPSHOT</version-->
-      <version>${project.version}</version>
+      <version>${qe-version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>

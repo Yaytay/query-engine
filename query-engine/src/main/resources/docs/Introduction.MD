@@ -1,12 +1,4 @@
-= Query Engine II
-
-image:https://img.shields.io/badge/vert.x-4.4.1-purple.svg[link="https://vertx.io"]
-image:https://github.com/Yaytay/query-engine/actions/workflows/maven.yml/badge.svg[link="https://github.com/Yaytay/query-engine/actions/workflows/maven.yml"]
-image:https://img.shields.io/github/v/release/yaytay/query-engine.svg[Latest Release,link=https://github.com/yaytay/query-engine/latest]
-image:https://img.shields.io/github/license/yaytay/query-engine.svg[License,link=https://github.com/yaytay/query-engine/blob/master/LICENCE.md]
-image:https://img.shields.io/github/issues/yaytay/query-engine.svg[Issues,link=https://github.com/yaytay/query-engine/issues]
-image:https://github.com/yaytay/query-engine/actions/workflows/buildtest.yml/badge.svg[Build Status,link=https://github.com/Yaytay/query-engine/actions/workflows/buildtest.yml]
-image:https://codecov.io/gh/Yaytay/query-engine/branch/main/graph/badge.svg?token=7F87GWIU09[CodeCov ,link=https://codecov.io/gh/Yaytay/query-engine]
+# Query Engine II
 
 The Query Engine has a simple concept - it presents a web endpoint that is able to return data from a datastore.
 
@@ -27,18 +19,20 @@ Features of the Query Engine include:
 * User interface plugin and API for running queries.
 * User interface for designing queries.
 
-=== Naming
+In our experience, as a SAAS provider, most clients these days have their own reporting solution and are looking for easy access to the data, but publishing our internal data dictionary would create unacceptable coupling.
+
+### Naming
 
 This is a clean-room re-implementation of the first version of Query Engine, hence this is Query Engine 2.
 However, the first version was closed source so no-one outside of my employer will ever see it (nor would you want to, QE2 is better).
 
 In these documents the term Query Engine II will be used in headings and titles, in the body the term will be just Query Engine.
 
-= Deployment
+## Deployment
 
 The Query Engine is provided as a container image and it is expected that it be deployed via docker compose (including swarm) or kubernetes.
 
-== Query Deployment
+### Query Deployment
 
 The queries run by the Query Engine are specified in files (one file per query).
 Any directory hierarchy use in the storage of the files will be reflected in the paths for running the queries.
@@ -46,10 +40,11 @@ Any directory hierarchy use in the storage of the files will be reflected in the
 The Query Engine itself does not attempt to control how files are managed or made available to it, but it is expected that the files will all exist in a git repository that
 has some kind of CI pipeline (or other auto-update mechanism) to update files as they are changed.
 
-= Query Development
+## Query Development
 
 By default the Query Engine cannot modify queries - for it to be able to do so would be a major security breach.
 
 The Query Engine can be deployed in "Design Mode" which breaks that rule and allows the UI to save designed queries.
 In order to prevent accidental deployment of Design Mode it is an entirely separate image.
+
 
