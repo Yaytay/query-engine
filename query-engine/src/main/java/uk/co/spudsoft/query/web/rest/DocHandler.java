@@ -155,7 +155,7 @@ public class DocHandler {
                 } else {
                   return Future.failedFuture(new FileNotFoundException(path));
                 }
-              } catch(Throwable ex) {
+              } catch (Throwable ex) {
                 return Future.failedFuture(ex);
               }
             })

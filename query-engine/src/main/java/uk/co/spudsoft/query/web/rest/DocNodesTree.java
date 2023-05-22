@@ -79,6 +79,7 @@ public class DocNodesTree extends AbstractTree {
     @JsonCreator
     public Doc(String path, String title) {
       super(path);
+      this.title = title;
     }
 
     public String getTitle() {
