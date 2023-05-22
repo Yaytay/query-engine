@@ -53,7 +53,7 @@ public class MainQueryIT {
   @BeforeAll
   public static void createDirs(Vertx vertx, VertxTestContext testContext) {
     File paramsDir = new File("target/query-engine");
-    paramsDir.mkdirs();
+    Main.prepareBaseConfigPath(paramsDir);
     postgres.prepareTestDatabase(vertx)
             .compose(v -> mysql.prepareTestDatabase(vertx))
             .onComplete(testContext.succeedingThenComplete())

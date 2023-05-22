@@ -48,7 +48,7 @@ public class MainIT {
   @BeforeAll
   public static void createDirs(Vertx vertx, VertxTestContext testContext) {
     File paramsDir = new File("target/query-engine");
-    paramsDir.mkdirs();
+    Main.prepareBaseConfigPath(paramsDir);
     postgres.prepareTestDatabase(vertx).onComplete(testContext.succeedingThenComplete());
   }
     
