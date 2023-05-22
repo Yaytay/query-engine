@@ -379,6 +379,7 @@ private static final String NAME = "query-engine";
   @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_BAD_PRACTICE")
   public static void prepareBaseConfigPath(File baseConfigFile) {
     if (!baseConfigFile.exists()) {
+      logger.info("Creating base config dir at {}", baseConfigFile);
       baseConfigFile.mkdirs();
     }
     String[] children = baseConfigFile.list();
@@ -394,6 +395,8 @@ private static final String NAME = "query-engine";
       extractSampleFile(baseConfigFile, "samples/sub1/sub2/permissions.jexl");
       extractSampleFile(baseConfigFile, "samples/sub1/permissions.jexl");
       extractSampleFile(baseConfigFile, "samples/permissions.jexl");
+    } else {
+      logger.info("Not creating sample configs because {} already contains {} files", baseConfigFile, children.length);
     }
   }
   
