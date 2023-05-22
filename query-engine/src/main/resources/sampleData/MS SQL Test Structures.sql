@@ -397,6 +397,8 @@ BEGIN
   EXEC sp_executesql @sql
 END
 
+BEGIN TRANSACTION;
+
 DECLARE @i int
 DECLARE @j int
 DECLARE @guid uniqueidentifier
@@ -450,4 +452,4 @@ BEGIN
     END  
   END
 END 
-
+COMMIT;

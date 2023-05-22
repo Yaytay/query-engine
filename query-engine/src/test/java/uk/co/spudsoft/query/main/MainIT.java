@@ -46,10 +46,9 @@ public class MainIT {
   private static final Logger logger = LoggerFactory.getLogger(MainIT.class);
   
   @BeforeAll
-  public static void createDirs(Vertx vertx, VertxTestContext testContext) {
+  public static void createDirs(Vertx vertx) {
     File paramsDir = new File("target/query-engine");
     paramsDir.mkdirs();
-    postgres.prepareTestDatabase(vertx).onComplete(testContext.succeedingThenComplete());
   }
     
   @Test
@@ -81,7 +80,7 @@ public class MainIT {
       , "vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "acceptableIssuerRegexes[0]=.*"
       , "logging.jsonFormat=true"
-      , "designMode=true"
+      , "loadSampleData=true"
     });
     
     RestAssured.port = main.getPort();

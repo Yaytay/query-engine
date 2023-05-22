@@ -86,14 +86,6 @@ public class SampleDataLoaderMySQL implements SampleDataLoader {
     sqlList.addAll(Arrays.asList(contents.substring(start).split(delimiter)));
         
     return executeSql(pool, sqlList.iterator())
-            .onSuccess(rs -> {
-              if (rs != null) {
-                logger.info("Script run");
-              }
-            })
-            .onFailure(ex -> {
-              logger.error("Failed: ", ex);
-            })
             .mapEmpty()
             ;
 

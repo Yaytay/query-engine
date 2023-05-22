@@ -19,7 +19,6 @@ package uk.co.spudsoft.query.main;
 import io.restassured.RestAssured;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
-import io.vertx.junit5.VertxTestContext;
 import java.io.File;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -36,7 +35,10 @@ import static org.hamcrest.Matchers.startsWith;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
 
 /**
- *
+ * Note that this set of tests requires the sample data to be loaded, but relies on the "loadSampleData" flag to make it happen.
+ * When running with the full set of tests this won't actually stress that flag because others tests may have already
+ * loaded the sample data.
+ * 
  * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
@@ -49,13 +51,9 @@ public class MainQueryIT {
   private static final Logger logger = LoggerFactory.getLogger(MainQueryIT.class);
   
   @BeforeAll
-  public static void createDirs(Vertx vertx, VertxTestContext testContext) {
+  public static void createDirs(Vertx vertx) {
     File paramsDir = new File("target/query-engine");
     paramsDir.mkdirs();
-    postgres.prepareTestDatabase(vertx)
-            .compose(v -> mysql.prepareTestDatabase(vertx))
-            .onComplete(testContext.succeedingThenComplete())
-            ;
     new File("target/test-classes/sources/sub1/sub3").mkdirs();
   }
   
@@ -77,6 +75,16 @@ public class MainQueryIT {
       , "pipelineCache.maxDurationMs=60000"
       , "logging.jsonFormat=false"
       , "zipkin.baseUrl=http://localhost/wontwork"
+      , "sampleDataLoads[0].url=" + postgres.getUrl()
+      , "sampleDataLoads[0].adminUser.username=" + postgres.getUser()
+      , "sampleDataLoads[0].adminUser.password=" + postgres.getPassword()
+      , "sampleDataLoads[1].url=" + mysql.getUrl()
+      , "sampleDataLoads[1].user.username=" + mysql.getUser()
+      , "sampleDataLoads[1].user.password=" + mysql.getPassword()
+      , "sampleDataLoads[2].url=sqlserver://localhost:1234/test"
+      , "sampleDataLoads[2].adminUser.username=sa"
+      , "sampleDataLoads[2].adminUser.password=unknown"
+      , "sampleDataLoads[3].url=wibble"
     });
     
     RestAssured.port = main.getPort();

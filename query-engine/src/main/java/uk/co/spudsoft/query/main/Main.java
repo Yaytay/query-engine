@@ -38,7 +38,6 @@ import io.swagger.v3.oas.integration.SwaggerConfiguration;
 import io.swagger.v3.oas.integration.api.OpenAPIConfiguration;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
@@ -63,6 +62,7 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -114,7 +114,7 @@ public class Main extends Application {
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
   
 private static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-private static final String MAVEN_PROJECT_VERSION = "0.0.3-21-main-SNAPSHOT";
+private static final String MAVEN_PROJECT_VERSION = "0.0.3-22-main-SNAPSHOT";
 
 private static final String NAME = "query-engine";
   
@@ -323,21 +323,8 @@ private static final String NAME = "query-engine";
             .listen()            
             .compose(svr -> {
               port = svr.actualPort();
-              if (params.isLoadSampleData()) {
-                SampleDataLoader my = new SampleDataLoaderMySQL();
-                SampleDataLoader ms = new SampleDataLoaderMsSQL();
-                SampleDataLoader pg = new SampleDataLoaderPostgreSQL();
-                
-                return CompositeFuture.all(
-                          my.prepareTestDatabase(vertx, "mysql://localhost:2001/test", "root", "T0p-secret")
-                          , ms.prepareTestDatabase(vertx, "sqlserver://localhost:2002/test", "sa", "T0p-secret")
-                          , pg.prepareTestDatabase(vertx, "postgresql://localhost:2003/test", "postgres", "T0p-secret")
-                        )
-                        .mapEmpty()
-                        .recover(ex -> {
-                          logger.warn("Failed to prepare sample data: ", ex);
-                          return Future.succeededFuture();
-                        });
+              if (params.getSampleDataLoads() != null && !params.getSampleDataLoads().isEmpty()) {
+                return performSampleDataLoads(params.getSampleDataLoads().iterator());
               } else {
                 return Future.succeededFuture();
               }
@@ -352,6 +339,40 @@ private static final String NAME = "query-engine";
             ;
     
   }  
+  
+  private Future<Void> performSampleDataLoads(Iterator<DataSourceConfig> iter) {
+    if (iter.hasNext()) {
+      DataSourceConfig source = iter.next();
+      String url = source.getUrl();
+      SampleDataLoader loader;
+      if (url.startsWith("mysql")) {
+        loader = new SampleDataLoaderMySQL();
+      } else if (url.startsWith("sqlserver")) {
+        loader = new SampleDataLoaderMsSQL();
+      } else if (url.startsWith("postgresql")) {
+        loader = new SampleDataLoaderPostgreSQL();        
+      } else {
+        logger.warn("No sample data loader found for {}", url);
+        return performSampleDataLoads(iter);
+      }
+      logger.info("Using sample data loader {} to load to {}", loader.getName(), url);
+      Credentials user = source.getAdminUser();
+      if (user == null || (Strings.isNullOrEmpty(user.getUsername()) && Strings.isNullOrEmpty(user.getPassword()))) {
+        user = source.getUser();
+      }
+      return loader.prepareTestDatabase(vertx, url, user.getUsername(), user.getPassword())
+              .onSuccess(v -> {
+                logger.info("Completed sample data load {}", loader.getName());
+              })
+              .recover(ex -> {
+                logger.warn("Failed to prepare {} sample data: ", loader.getName(), ex);
+                return Future.succeededFuture();
+              })
+              .compose(v -> performSampleDataLoads(iter));
+    } else {
+      return Future.succeededFuture();
+    }
+  }
 
   protected void prepareBaseConfigPath(File baseConfigFile) {
   }

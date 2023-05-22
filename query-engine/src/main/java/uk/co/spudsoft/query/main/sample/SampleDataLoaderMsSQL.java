@@ -88,15 +88,6 @@ public class SampleDataLoaderMsSQL implements SampleDataLoader {
     
     return createTestDatabase(vertx, url, username, password)
             .compose(rs -> executeSql(pool, sql))
-            .onSuccess(rs -> {
-              if (rs != null) {
-                logger.info("Script run");
-              }
-            })
-
-            .onFailure(ex -> {
-              logger.error("Failed: ", ex);
-            })
             .mapEmpty()
             ;
 

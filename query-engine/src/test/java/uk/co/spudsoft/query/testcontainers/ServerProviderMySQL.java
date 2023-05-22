@@ -93,7 +93,7 @@ public class ServerProviderMySQL extends AbstractServerProvider implements Serve
 
   @Override
   public String getUser() {
-    return "user";
+    return "root";
   }
 
   @Override
@@ -143,6 +143,6 @@ public class ServerProviderMySQL extends AbstractServerProvider implements Serve
   @Override
   public Future<Void> prepareTestDatabase(Vertx vertx) {
     SampleDataLoader loader = new SampleDataLoaderMySQL();
-    return loader.prepareTestDatabase(vertx, getUrl(), "root", ROOT_PASSWORD);
+    return loader.prepareTestDatabase(vertx, getUrl(), getUser(), getPassword());
   }
 }

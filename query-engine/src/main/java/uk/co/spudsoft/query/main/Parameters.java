@@ -131,11 +131,21 @@ public class Parameters {
    * The query engine is provided with some example queries that will be deployed to the baseConfigPath one startup if the directory is empty.
    * These sample queries depend upon the target databases being accessible at known locations with known credentials,
    * it is recommended that the provided query-engine-compose.yml file be used set up the database servers within Docker.
+   * An attempt will be made to load each data source configured here with the sample data.
    * If loadSampleData is true, and the targets databases can be accessed, then will be loaded with the sample data on startup.
+   * 
    * The sample data is loaded using three SQL scripts (one per database engine) and it is perfectly acceptable to run those queries manually 
    * instead of using loadSampleData.
+   * 
+   * Note that the URLs here must be vertx sql URLs, not JDBC URLs, for example:
+   * <ul>
+   * <li>mysql://localhost:2001/test
+   * <li>sqlserver://localhost:2002/test
+   * <li>postgresql://localhost:2003/test
+   * </ul>
+   * The leading component of the URL (the scheme) will be used to determine which script to run.
    */
-  private boolean loadSampleData;
+  private List<DataSourceConfig> sampleDataLoads;
   
   /**
    * Get the options for configuring logback.
@@ -406,21 +416,61 @@ public class Parameters {
   }
 
   /**
-   * Get the loadSampleData parameter to govern whether the Query Engine will automatically try to create sample data on startup.
+   * Get data sources to use attempt to initialize with the sample data.
+   * The query engine is provided with some example queries that will be deployed to the baseConfigPath one startup if the directory is empty.
+   * These sample queries depend upon the target databases being accessible at known locations with known credentials,
+   * it is recommended that the provided query-engine-compose.yml file be used set up the database servers within Docker.
+   * An attempt will be made to load each data source configured here with the sample data.
+   * If loadSampleData is true, and the targets databases can be accessed, then will be loaded with the sample data on startup.
+   * 
+   * The sample data is loaded using three SQL scripts (one per database engine) and it is perfectly acceptable to run those queries manually 
+   * instead of using loadSampleData.
+   * 
+   * Note that the URLs here must be vertx sql URLs, not JDBC URLs, for example:
+   * <ul>
+   * <li>mysql://localhost:2001/test
+   * <li>sqlserver://localhost:2002/test
+   * <li>postgresql://localhost:2003/test
+   * </ul>
+   * The leading component of the URL (the scheme) will be used to determine which script to run.
+   * 
+   * Only the URL and adminUser values from the DataSourceConfig are used.
+   *
    * This is unlikely to be useful unless the example compose file is used to start the Query Engine and the different database engines.
-   * @return the loadSampleData parameter to govern whether the Query Engine will automatically try to create sample data on startup.
+   * 
+   * @return data sources to use attempt to initialize with the sample data.
    */
-  public boolean isLoadSampleData() {
-    return loadSampleData;
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
+  public List<DataSourceConfig> getSampleDataLoads() {
+    return sampleDataLoads;
   }
 
   /**
-   * Set the loadSampleData parameter to govern whether the Query Engine will automatically try to create sample data on startup.
+   * Set data sources to use attempt to initialize with the sample data.
+   * The query engine is provided with some example queries that will be deployed to the baseConfigPath one startup if the directory is empty.
+   * These sample queries depend upon the target databases being accessible at known locations with known credentials,
+   * it is recommended that the provided query-engine-compose.yml file be used set up the database servers within Docker.
+   * An attempt will be made to load each data source configured here with the sample data.
+   * If loadSampleData is true, and the targets databases can be accessed, then will be loaded with the sample data on startup.
+   * 
+   * The sample data is loaded using three SQL scripts (one per database engine) and it is perfectly acceptable to run those queries manually 
+   * instead of using loadSampleData.
+   * 
+   * Note that the URLs here must be vertx sql URLs, not JDBC URLs, for example:
+   * <ul>
+   * <li>mysql://localhost:2001/test
+   * <li>sqlserver://localhost:2002/test
+   * <li>postgresql://localhost:2003/test
+   * </ul>
+   * The leading component of the URL (the scheme) will be used to determine which script to run.
+   *
    * This is unlikely to be useful unless the example compose file is used to start the Query Engine and the different database engines.
-   * @param loadSampleData parameter to govern whether the Query Engine will automatically try to create sample data on startup.
+   * 
+   * @param sampleDataLoads data sources to use attempt to initialize with the sample data.
    */
-  public void setLoadSampleData(boolean loadSampleData) {
-    this.loadSampleData = loadSampleData;
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
+  public void setSampleDataLoads(List<DataSourceConfig> sampleDataLoads) {
+    this.sampleDataLoads = sampleDataLoads;
   }
   
 }

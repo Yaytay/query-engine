@@ -162,6 +162,6 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
   @Override
   public Future<Void> prepareTestDatabase(Vertx vertx) {
     SampleDataLoader loader = new SampleDataLoaderMsSQL();
-    return loader.prepareTestDatabase(vertx, getUrl(), "sa", ROOT_PASSWORD);
+    return loader.prepareTestDatabase(vertx, getUrl(), getUser(), getPassword());
   }
 }

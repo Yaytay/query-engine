@@ -70,15 +70,6 @@ public class SampleDataLoaderPostgreSQL implements SampleDataLoader {
     
     return Future.succeededFuture()
             .compose(rs -> executeSql(pool, sql))
-            .onSuccess(rs -> {
-              if (rs != null) {
-                logger.info("Script run");
-              }
-            })
-
-            .onFailure(ex -> {
-              logger.error("Failed: ", ex);
-            })
             .mapEmpty()
             ;
 

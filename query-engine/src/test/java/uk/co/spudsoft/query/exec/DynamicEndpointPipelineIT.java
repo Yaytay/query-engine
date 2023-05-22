@@ -90,10 +90,20 @@ public class DynamicEndpointPipelineIT {
             .prepareContainer(vertx)
             .compose(v -> serverProviderMs.prepareContainer(vertx))
             .compose(v -> serverProviderPg.prepareContainer(vertx))
-            .compose(v -> serverProviderMs.prepareTestDatabase(vertx))
-            .compose(v -> serverProviderMy.prepareTestDatabase(vertx))
-            .compose(v -> serverProviderPg.prepareTestDatabase(vertx))
             .compose(v -> {
+              logger.info("Loading {} sample data", serverProviderMs.getName());
+              return serverProviderMs.prepareTestDatabase(vertx);
+            })
+            .compose(v -> {
+              logger.info("Loading {} sample data", serverProviderMy.getName());
+              return serverProviderMy.prepareTestDatabase(vertx);
+            })
+            .compose(v -> {
+              logger.info("Loading {} sample data", serverProviderPg.getName());
+              return serverProviderPg.prepareTestDatabase(vertx);
+            })
+            .compose(v -> {
+              logger.info("Preparing dynamic endpoints");
               SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getUrl());
               connectOptions.setUser(serverProviderMy.getUser());
               connectOptions.setPassword(serverProviderMy.getPassword());
