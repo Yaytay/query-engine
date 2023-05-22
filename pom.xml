@@ -251,12 +251,9 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>3.0.0</version>
           <configuration>
-            <forkCount>${fork.count}</forkCount>
+            <forkCount>1</forkCount>
             <reuseForks>true</reuseForks>
             <argLine>@{argLine} -Dfile.encoding=UTF-8 -XX:+UnlockExperimentalVMOptions -XX:+UseJVMCICompiler --module-path=${compiler.dir} --upgrade-module-path=${compiler.dir}</argLine>
-            <systemProperties>
-              <rows.in.testdb>${rows.in.testdb}</rows.in.testdb>
-            </systemProperties>
             <trimStackTrace>false</trimStackTrace>
             <excludes>
               <exclude>**/sandbox/**</exclude>
@@ -287,9 +284,6 @@
             <useModulePath>false</useModulePath>
             <reuseForks>true</reuseForks>
             <argLine>@{argLine} -Dfile.encoding=UTF-8 -XX:+UnlockExperimentalVMOptions -XX:+UseJVMCICompiler --module-path=${compiler.dir} --upgrade-module-path=${compiler.dir}</argLine>
-            <systemProperties>
-              <rows.in.testdb>${rows.in.testdb}</rows.in.testdb>
-            </systemProperties>
             <excludes>
               <exclude>**/sandbox/**</exclude>
             </excludes>

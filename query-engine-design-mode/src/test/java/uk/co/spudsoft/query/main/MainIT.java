@@ -80,8 +80,6 @@ public class MainIT {
       , "baseConfigPath=target/query-engine/samples"
       , "vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "acceptableIssuerRegexes[0]=.*"
-      , "logging.jsonFormat=true"
-      , "designMode=true"
     });
     
     RestAssured.port = main.getPort();
