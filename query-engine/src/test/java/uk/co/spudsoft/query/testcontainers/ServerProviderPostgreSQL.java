@@ -20,16 +20,13 @@ import com.github.dockerjava.api.model.Container;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.pgclient.PgConnectOptions;
-import io.vertx.sqlclient.Pool;
-import io.vertx.sqlclient.PoolOptions;
-import io.vertx.sqlclient.SqlConnectOptions;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
+import uk.co.spudsoft.query.main.sample.SampleDataLoader;
+import uk.co.spudsoft.query.main.sample.SampleDataLoaderMsSQL;
 import static uk.co.spudsoft.query.testcontainers.AbstractServerProvider.ROOT_PASSWORD;
 
 
@@ -39,7 +36,6 @@ import static uk.co.spudsoft.query.testcontainers.AbstractServerProvider.ROOT_PA
  */
 public class ServerProviderPostgreSQL extends AbstractServerProvider implements ServerProvider {
 
-  @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ServerProviderPostgreSQL.class);
   
   public static final String PGSQL_IMAGE_NAME = "postgres:14.1-alpine";
@@ -64,7 +60,7 @@ public class ServerProviderPostgreSQL extends AbstractServerProvider implements 
   }
   
   @Override
-  public String getIndentifierQuote() {
+  public String getIdentifierQuote() {
     return "\"";
   }
   
@@ -141,34 +137,11 @@ public class ServerProviderPostgreSQL extends AbstractServerProvider implements 
             ;
   }
 
+
   @Override
   public Future<Void> prepareTestDatabase(Vertx vertx) {
-    SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(getUrl());
-    connectOptions.setUser("postgres");
-    connectOptions.setPassword(ROOT_PASSWORD);
-    Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(3));
-    
-    String sql;
-    try (InputStream strm = getClass().getResourceAsStream(getScript())) {
-      sql = new String(strm.readAllBytes(), StandardCharsets.UTF_8);
-    } catch(Throwable ex) {
-      return Future.failedFuture(ex);
-    }
-    
-    return Future.succeededFuture()
-            .compose(rs -> pool.query(sql).execute())
-            .onSuccess(rs -> {
-              if (rs != null) {
-                logger.info("Script run");
-              }
-            })
-
-            .onFailure(ex -> {
-              logger.error("Failed: ", ex);
-            })
-            .mapEmpty()
-            ;
-
+    SampleDataLoader loader = new SampleDataLoaderMsSQL();
+    return loader.prepareTestDatabase(vertx, getUrl(), "postgres", ROOT_PASSWORD);
   }
 
 }

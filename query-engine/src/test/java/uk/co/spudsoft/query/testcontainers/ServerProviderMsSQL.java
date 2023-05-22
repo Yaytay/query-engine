@@ -24,14 +24,14 @@ import io.vertx.mssqlclient.MSSQLConnectOptions;
 import io.vertx.mssqlclient.MSSQLPool;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
-import io.vertx.sqlclient.SqlConnectOptions;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.MSSQLServerContainer;
+import uk.co.spudsoft.query.main.sample.SampleDataLoader;
+import uk.co.spudsoft.query.main.sample.SampleDataLoaderMsSQL;
+import static uk.co.spudsoft.query.testcontainers.AbstractServerProvider.ROOT_PASSWORD;
 
 /**
  *
@@ -39,7 +39,6 @@ import org.testcontainers.containers.MSSQLServerContainer;
  */
 public class ServerProviderMsSQL extends AbstractServerProvider implements ServerProvider {
 
-  @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ServerProviderMsSQL.class);
   
   public static final String MSSQL_IMAGE_NAME = "mcr.microsoft.com/mssql/server:2019-latest";
@@ -64,7 +63,7 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
   }
 
   @Override
-  public String getIndentifierQuote() {
+  public String getIdentifierQuote() {
     return "\"";
   }
   
@@ -160,53 +159,9 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
     return mssqlserver;
   }
 
-  private Future<Void> createTestDatabase(Vertx vertx) {
-    String fullUrl = getUrl();
-    String shortUrl = fullUrl.substring(0, fullUrl.lastIndexOf("/"));
-    SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(shortUrl);
-    connectOptions.setUser("sa");
-    connectOptions.setPassword(ROOT_PASSWORD);
-    Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(3));
-    
-    return Future.succeededFuture()            
-            .compose(rs -> pool.preparedQuery("""
-                    IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'test')
-                    BEGIN
-                      CREATE DATABASE test;
-                    END;
-                  """).execute())
-            .mapEmpty()
-            ;
-  }
-  
   @Override
   public Future<Void> prepareTestDatabase(Vertx vertx) {
-    SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(getUrl());
-    connectOptions.setUser("sa");
-    connectOptions.setPassword(ROOT_PASSWORD);
-    Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(3));
-    
-    String sql;
-    try (InputStream strm = getClass().getResourceAsStream(getScript())) {
-      sql = new String(strm.readAllBytes(), StandardCharsets.UTF_8);
-    } catch(Throwable ex) {
-      return Future.failedFuture(ex);
-    }
-    
-    return createTestDatabase(vertx)
-            .compose(rs -> pool.query(sql).execute())
-            .onSuccess(rs -> {
-              if (rs != null) {
-                logger.info("Script run");
-              }
-            })
-
-            .onFailure(ex -> {
-              logger.error("Failed: ", ex);
-            })
-            .mapEmpty()
-            ;
-
+    SampleDataLoader loader = new SampleDataLoaderMsSQL();
+    return loader.prepareTestDatabase(vertx, getUrl(), "sa", ROOT_PASSWORD);
   }
-
 }

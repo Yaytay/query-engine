@@ -99,8 +99,16 @@ public class Parameters {
   /**
    * The list of regular expressions that are used to define acceptable token issuers.
    * This is a core security control and must be set as tightly as possible.
+   * An issuer is considered acceptable if it matches one of these regular expressions, OR it matches an entry in the acceptableIssuersFile.
    */
   private List<String> acceptableIssuerRegexes;
+  
+  /**
+   * Path to a file that may contain more acceptable issuers to validate token issuers.
+   * This is a core security control and must be set as tightly as possible.
+   * An issuer is considered acceptable if it matches an entry in this file OR an acceptableIssuerRegex.
+   */
+  private String acceptableIssuersFile;
 
   /**
    * The default period to cache JWKS data for.
@@ -119,6 +127,16 @@ public class Parameters {
    */
   private String audience = "query-engine";
 
+  /**
+   * The query engine is provided with some example queries that will be deployed to the baseConfigPath one startup if the directory is empty.
+   * These sample queries depend upon the target databases being accessible at known locations with known credentials,
+   * it is recommended that the provided query-engine-compose.yml file be used set up the database servers within Docker.
+   * If loadSampleData is true, and the targets databases can be accessed, then will be loaded with the sample data on startup.
+   * The sample data is loaded using three SQL scripts (one per database engine) and it is perfectly acceptable to run those queries manually 
+   * instead of using loadSampleData.
+   */
+  private boolean loadSampleData;
+  
   /**
    * Get the options for configuring logback.
    * @return the options for configuring logback.
@@ -320,6 +338,15 @@ public class Parameters {
     return this;
   }
 
+  public String getAcceptableIssuersFile() {
+    return acceptableIssuersFile;
+  }
+
+  public void setAcceptableIssuersFile(String acceptableIssuersFile) {
+    this.acceptableIssuersFile = acceptableIssuersFile;
+  }
+    
+
   /**
    * Get the default period to cache JWKS data for.
    * This is expected to be overridden by cache-control/max-age headers on the JWKS response, so the default value is usually reasonable.
@@ -377,8 +404,24 @@ public class Parameters {
     this.audience = audience;
     return this;
   }
-  
-  
+
+  /**
+   * Get the loadSampleData parameter to govern whether the Query Engine will automatically try to create sample data on startup.
+   * This is unlikely to be useful unless the example compose file is used to start the Query Engine and the different database engines.
+   * @return the loadSampleData parameter to govern whether the Query Engine will automatically try to create sample data on startup.
+   */
+  public boolean isLoadSampleData() {
+    return loadSampleData;
+  }
+
+  /**
+   * Set the loadSampleData parameter to govern whether the Query Engine will automatically try to create sample data on startup.
+   * This is unlikely to be useful unless the example compose file is used to start the Query Engine and the different database engines.
+   * @param loadSampleData parameter to govern whether the Query Engine will automatically try to create sample data on startup.
+   */
+  public void setLoadSampleData(boolean loadSampleData) {
+    this.loadSampleData = loadSampleData;
+  }
   
 }
 

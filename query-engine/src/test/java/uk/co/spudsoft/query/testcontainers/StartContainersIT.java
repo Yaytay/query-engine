@@ -87,7 +87,7 @@ public class StartContainersIT {
                                        join "Colours" c on d."colourId" = c."colourId"
                                        order by d."dataId"
                                        """
-                                  .replace("\"", instance.getIndentifierQuote())
+                                  .replace("\"", instance.getIdentifierQuote())
                                        ;
                           return conn.prepare(sql)
                                   .compose(ps -> {

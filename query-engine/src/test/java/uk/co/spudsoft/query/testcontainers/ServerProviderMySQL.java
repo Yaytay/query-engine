@@ -17,26 +17,17 @@
 package uk.co.spudsoft.query.testcontainers;
 
 import com.github.dockerjava.api.model.Container;
-import com.google.common.base.Strings;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.mysqlclient.MySQLConnectOptions;
-import io.vertx.sqlclient.Pool;
-import io.vertx.sqlclient.PoolOptions;
-import io.vertx.sqlclient.SqlConnectOptions;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.MySQLContainer;
+import uk.co.spudsoft.query.main.sample.SampleDataLoader;
+import uk.co.spudsoft.query.main.sample.SampleDataLoaderMySQL;
 import static uk.co.spudsoft.query.testcontainers.AbstractServerProvider.ROOT_PASSWORD;
 
 
@@ -46,7 +37,6 @@ import static uk.co.spudsoft.query.testcontainers.AbstractServerProvider.ROOT_PA
  */
 public class ServerProviderMySQL extends AbstractServerProvider implements ServerProvider {
 
-  @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ServerProviderMySQL.class);
   
   public static final String MYSQL_IMAGE_NAME = "mysql:8.0";
@@ -117,7 +107,7 @@ public class ServerProviderMySQL extends AbstractServerProvider implements Serve
   }
 
   @Override
-  public String getIndentifierQuote() {
+  public String getIdentifierQuote() {
     return "`";
   }
     
@@ -152,55 +142,7 @@ public class ServerProviderMySQL extends AbstractServerProvider implements Serve
 
   @Override
   public Future<Void> prepareTestDatabase(Vertx vertx) {
-    SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(getUrl());
-    connectOptions.setUser("root");
-    connectOptions.setPassword(ROOT_PASSWORD);
-    Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(3));
-    
-    String contents;
-    try (InputStream strm = getClass().getResourceAsStream(getScript())) {
-      contents = new String(strm.readAllBytes(), StandardCharsets.UTF_8);
-    } catch(Throwable ex) {
-      return Future.failedFuture(ex);
-    }
-    
-    List<String> sqlList = new ArrayList<>();
-    String delimiter = ";";
-    int start = 0;
-    Pattern delimPat = Pattern.compile("DELIMITER (\\S+)");
-    Matcher matcher = delimPat.matcher(contents);
-    while(matcher.find()) {
-      sqlList.addAll(Arrays.asList(contents.substring(start, matcher.start()).split(delimiter)));
-      delimiter = matcher.group(1);
-      start = matcher.end() + 1;
-    }    
-    sqlList.addAll(Arrays.asList(contents.substring(start).split(delimiter)));
-        
-    return executeSql(pool, sqlList.iterator())
-            .onSuccess(rs -> {
-              if (rs != null) {
-                logger.info("Script run");
-              }
-            })
-            .onFailure(ex -> {
-              logger.error("Failed: ", ex);
-            })
-            .mapEmpty()
-            ;
-
-  }
-  
-  private Future<Void> executeSql(Pool pool, Iterator<String> iter) {
-    if (iter.hasNext()) {
-      String stmt = iter.next().trim();
-      if (Strings.isNullOrEmpty(stmt)) {
-        return executeSql(pool, iter);
-      } else {
-        return pool.query(stmt).execute()
-                .compose(rs -> executeSql(pool, iter));
-      }
-    } else {
-      return Future.succeededFuture();
-    }
+    SampleDataLoader loader = new SampleDataLoaderMySQL();
+    return loader.prepareTestDatabase(vertx, getUrl(), "root", ROOT_PASSWORD);
   }
 }

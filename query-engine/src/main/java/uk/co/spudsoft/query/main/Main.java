@@ -38,6 +38,7 @@ import io.swagger.v3.oas.integration.SwaggerConfiguration;
 import io.swagger.v3.oas.integration.api.OpenAPIConfiguration;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
@@ -88,6 +89,10 @@ import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineExecutorImpl;
 import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 import uk.co.spudsoft.query.json.TracingOptionsMixin;
+import uk.co.spudsoft.query.main.sample.SampleDataLoader;
+import uk.co.spudsoft.query.main.sample.SampleDataLoaderMsSQL;
+import uk.co.spudsoft.query.main.sample.SampleDataLoaderMySQL;
+import uk.co.spudsoft.query.main.sample.SampleDataLoaderPostgreSQL;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 import uk.co.spudsoft.query.web.QueryRouter;
 import uk.co.spudsoft.query.web.rest.DocHandler;
@@ -109,7 +114,7 @@ public class Main extends Application {
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
   
 private static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-private static final String MAVEN_PROJECT_VERSION = "0.0.3-20-main-SNAPSHOT";
+private static final String MAVEN_PROJECT_VERSION = "0.0.3-21-main-SNAPSHOT";
 
 private static final String NAME = "query-engine";
   
@@ -315,15 +320,36 @@ private static final String NAME = "query-engine";
 
     return httpServer
             .requestHandler(router)
-            .listen()
+            .listen()            
             .compose(svr -> {
               port = svr.actualPort();
+              if (params.isLoadSampleData()) {
+                SampleDataLoader my = new SampleDataLoaderMySQL();
+                SampleDataLoader ms = new SampleDataLoaderMsSQL();
+                SampleDataLoader pg = new SampleDataLoaderPostgreSQL();
+                
+                return CompositeFuture.all(
+                          my.prepareTestDatabase(vertx, "mysql://localhost:2001/test", "root", "T0p-secret")
+                          , ms.prepareTestDatabase(vertx, "sqlserver://localhost:2002/test", "sa", "T0p-secret")
+                          , pg.prepareTestDatabase(vertx, "postgresql://localhost:2003/test", "postgres", "T0p-secret")
+                        )
+                        .mapEmpty()
+                        .recover(ex -> {
+                          logger.warn("Failed to prepare sample data: ", ex);
+                          return Future.succeededFuture();
+                        });
+              } else {
+                return Future.succeededFuture();
+              }
+            })
+            .compose(v -> {
               logger.info("Started on port {}", port);
               if (params.isExitOnRun()) {
                 return Future.succeededFuture(1);
               }
               return Future.succeededFuture(0);
-            });
+            })
+            ;
     
   }  
 

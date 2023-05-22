@@ -14,34 +14,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package uk.co.spudsoft.query.testcontainers;
+package uk.co.spudsoft.query.main.sample;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.sqlclient.SqlConnectOptions;
 
 /**
  *
  * @author jtalbut
  */
-public interface ServerProvider {
+public interface SampleDataLoader {
   
   String getName();
   
   String getIdentifierQuote();
   
-  SqlConnectOptions getConnectOptions();
-  
-  Future<Void> prepareContainer(Vertx vertx);
-
-  Future<Void> prepareTestDatabase(Vertx vertx);
-  
-  String getUrl();
-  
-  String getUser();
-  
-  String getPassword();
-  
-  int getPort();
+  Future<Void> prepareTestDatabase(Vertx vertx, String url, String username, String password);
   
 }
