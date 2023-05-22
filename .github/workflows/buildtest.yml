@@ -25,6 +25,9 @@ jobs:
       with:
         fetch-depth: 0
         
+    - name: Check design-mode dependency version
+      run: ! egrep '<qe-version>([^<]+)<\/qe-version>' query-engine-design-mode/pom.xml
+        
     - name: Cache Maven packages
       uses: actions/cache@v3
       with:
