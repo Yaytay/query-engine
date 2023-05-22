@@ -25,6 +25,9 @@ jobs:
       with:
         fetch-depth: 0
         
+    - name: Ensure query-engine-design-mode not using specific dependency on qe
+      run: sed -iE 's/<qe-version>([^<]+)/<!--qe-version>\1<\/qe-version-->/' query-engine-design-mode/pom.xml
+
     - name: Cache Maven packages
       uses: actions/cache@v3
       with:
@@ -41,7 +44,7 @@ jobs:
 
     - name: Build with Maven
       run: mvn -P ui -B clean install site --file pom.xml
-
+      
     - uses: codecov/codecov-action@v3
       with:
         token: ${{ secrets.CODECOV_TOKEN }} 
