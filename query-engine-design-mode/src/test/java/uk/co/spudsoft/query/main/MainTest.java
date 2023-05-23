@@ -17,11 +17,9 @@
 package uk.co.spudsoft.query.main;
 
 import brave.http.HttpTracing;
-import java.io.File;
 import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,12 +32,6 @@ public class MainTest {
   
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(MainTest.class);
-  
-  @BeforeAll
-  public static void createDirs() {
-    File paramsDir = new File("target/query-engine");
-    paramsDir.mkdirs();
-  }
   
   @Test
   public void testMainExitOnRun() throws Exception {
@@ -56,7 +48,7 @@ public class MainTest {
   @Test
   public void testMain() throws IOException {
     Main.main(new String[]{
-            "baseConfigPath=target/query-engine"
+            "baseConfigPath=target/query-engine/samples"
             , "acceptableIssuerRegexes[0]=.*"
     });
   }

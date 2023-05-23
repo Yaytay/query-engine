@@ -62,14 +62,11 @@ public class DesignHandlerIT {
 
   @BeforeAll
   public static void createDirs(Vertx vertx, VertxTestContext testContext) {
-    File paramsDir = new File("target/query-engine");
-    paramsDir.mkdirs();
-
-    File sourceDir = new File("target/query-engine/samples/sub1/newfolder");
+    File sourceDir = new File("target/query-engine/samples-designit/sub1/newfolder");
     if (sourceDir.exists()) {
       deleteFolder(sourceDir);
     }
-    sourceDir = new File("target/query-engine/samples/sub1/newdir");
+    sourceDir = new File("target/query-engine/samples-designit/sub1/newdir");
     if (sourceDir.exists()) {
       deleteFolder(sourceDir);
     }
@@ -85,7 +82,7 @@ public class DesignHandlerIT {
       "audit.datasource.adminUser.username=" + postgres.getUser(),
       "audit.datasource.adminUser.password=" + postgres.getPassword(),
       "audit.datasource.schema=public",
-      "baseConfigPath=target/query-engine/samples",
+      "baseConfigPath=target/query-engine/samples-designit",
       "vertxOptions.tracingOptions.serviceName=Query-Engine",
       "acceptableIssuerRegexes[0]=.*",
       "logging.jsonFormat=true",
@@ -220,7 +217,7 @@ public class DesignHandlerIT {
     // Cannot put file without extension
     given().log().all()
             .contentType("application/yaml")
-            .body(this.getClass().getResourceAsStream("/sources/demo/LookupValues.yaml"))
+            .body(Main.class.getResourceAsStream("/samples/demo/LookupValues.yaml"))
             .put("/api/design/file/sub1/newfolder/newyaml")
             .then().log().all()
             .statusCode(400)
@@ -230,7 +227,7 @@ public class DesignHandlerIT {
     // Cannot put file with wrong extension
     given().log().all()
             .contentType("application/yaml")
-            .body(this.getClass().getResourceAsStream("/sources/demo/LookupValues.yaml"))
+            .body(this.getClass().getResourceAsStream("/samples/demo/LookupValues.yaml"))
             .put("/api/design/file/sub1/newfolder/new.json")
             .then().log().all()
             .statusCode(400)
@@ -240,7 +237,7 @@ public class DesignHandlerIT {
     // Can put correct file
     given().log().all()
             .contentType("application/yaml")
-            .body(this.getClass().getResourceAsStream("/sources/demo/LookupValues.yaml"))
+            .body(this.getClass().getResourceAsStream("/samples/demo/LookupValues.yaml"))
             .put("/api/design/file/sub1/newfolder/new.yaml")
             .then().log().all()
             .statusCode(200)
@@ -250,7 +247,7 @@ public class DesignHandlerIT {
     // Can put another correct file
     given().log().all()
             .contentType("application/yaml")
-            .body(this.getClass().getResourceAsStream("/sources/demo/LookupValues.yaml"))
+            .body(this.getClass().getResourceAsStream("/samples/demo/LookupValues.yaml"))
             .put("/api/design/file/sub1/newfolder/new2.yaml")
             .then().log().all()
             .statusCode(200)
