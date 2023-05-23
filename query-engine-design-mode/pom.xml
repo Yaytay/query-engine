@@ -40,7 +40,7 @@
     <mainClass>uk.co.spudsoft.query.main.DesignMain</mainClass>
 
     <!-- Usually this should be commented out and the value (which is ${project.version}) from the parent will be used -->
-    <qe-version>0.0.3-36-main-SNAPSHOT</qe-version>
+    <!--qe-version>0.0.3-36-main-SNAPSHOT</qe-version-->
   </properties>
 
   <dependencies>
