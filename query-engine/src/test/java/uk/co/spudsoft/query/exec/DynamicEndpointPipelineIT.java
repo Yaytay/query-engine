@@ -75,7 +75,7 @@ public class DynamicEndpointPipelineIT {
   private final ServerProvider serverProviderPg = new ServerProviderPostgreSQL();
     
   @Test
-  @Timeout(value = 2400, timeUnit = TimeUnit.SECONDS)
+  @Timeout(value = 240, timeUnit = TimeUnit.SECONDS)
   public void testHandlingWithDynamicEndpoint(Vertx vertx, VertxTestContext testContext) throws Throwable {
     logger.info("testHandlingWithDynamicEndpoint");
 
@@ -269,7 +269,6 @@ public class DynamicEndpointPipelineIT {
             });
   }
 
-
   @Test
   @Timeout(value = 120, timeUnit = TimeUnit.SECONDS)
   public void testHandlingDynamicEndpointFailureNoKey(Vertx vertx, VertxTestContext testContext) throws Throwable {
@@ -353,6 +352,110 @@ public class DynamicEndpointPipelineIT {
                 vertx.setTimer(2000, l -> {
                   logger.debug("Ending test");
                   testContext.failNow("Expected to fail due to lack of key on the endpoint (triggered by maxId = 7)");
+                });
+              } else {
+                testContext.verify(() -> {
+                  assertThat(ar.cause(), instanceOf(ServiceException.class));
+                  logger.debug("Cause: {}", ar.cause().getMessage());
+                });
+                testContext.completeNow();
+              }
+            });
+  }
+
+  @Test
+  @Timeout(value = 240, timeUnit = TimeUnit.SECONDS)
+  public void testHandlingWithDynamicEndpointMissingSecret(Vertx vertx, VertxTestContext testContext) throws Throwable {
+    logger.info("testHandlingWithDynamicEndpoint");
+
+    MeterRegistry meterRegistry = new SimpleMeterRegistry();
+    CacheConfig cacheConfig = new CacheConfig().setMaxItems(1).setMaxDurationMs(0).setPurgePeriodMs(0);
+    PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*")));
+    PipelineExecutorImpl executor = new PipelineExecutorImpl(null);
+
+    MultiMap args = MultiMap.caseInsensitiveMultiMap();
+    args.set("maxId", "14");
+    
+    serverProviderMy
+            .prepareContainer(vertx)
+            .compose(v -> serverProviderMs.prepareContainer(vertx))
+            .compose(v -> serverProviderPg.prepareContainer(vertx))
+            .compose(v -> {
+              logger.info("Loading {} sample data @{}", serverProviderMs.getName(), serverProviderMs.getPort());
+              return serverProviderMs.prepareTestDatabase(vertx);
+            })
+            .compose(v -> {
+              logger.info("Loading {} sample data @{}", serverProviderMy.getName(), serverProviderMy.getPort());
+              return serverProviderMy.prepareTestDatabase(vertx);
+            })
+            .compose(v -> {
+              logger.info("Loading {} sample data @{}", serverProviderPg.getName(), serverProviderPg.getPort());
+              return serverProviderPg.prepareTestDatabase(vertx);
+            })
+            .compose(v -> {
+              logger.info("Preparing dynamic endpoints");
+              SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getUrl());
+              connectOptions.setUser(serverProviderMy.getUser());
+              connectOptions.setPassword(serverProviderMy.getPassword());
+              Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(1));
+              return pool.preparedQuery("delete from DynamicEndpoint")
+                      .execute()
+                      .compose(rs -> {
+                        return pool.preparedQuery("insert into DynamicEndpoint (endpointKey, type, url, username, password, useCondition) values (?, ?, ?, ?, ?, ?)")
+                            .executeBatch(
+                                    Arrays.asList(
+                                            Tuple.of("my", "SQL", serverProviderMy.getUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
+                                            , Tuple.of("ms", "SQL", serverProviderMs.getUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
+                                            , Tuple.of("pg", "SQL", serverProviderPg.getUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
+                                    )
+                            );
+                      });
+            })
+            .onComplete(ar -> {
+              logger.debug("Data prepped");
+              args.set("port", Integer.toString(serverProviderMy.getPort()));
+            })
+            .compose(v -> {
+              try {
+                RequestContext req = new RequestContext(
+                        null
+                        , null
+                        , "localhost"
+                        , null
+                        , new HeadersMultiMap().add("Host", "localhost:123")
+                        , null
+                        , new IPAddressString("127.0.0.1")
+                        , null
+                );
+                return loader.loadPipeline("sub1/sub2/DynamicEndpointPipelineIT", req, null);
+              } catch (Throwable ex) {
+                return Future.failedFuture(ex);
+              }
+            })
+            .compose(pipeline -> executor.validatePipeline(pipeline))
+            .compose(pipeline -> {
+              Format chosenFormat = executor.getFormat(pipeline.getFormats(), null);
+              FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), null);
+              SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), executor, "source");
+              PipelineInstance instance = new PipelineInstance(
+                      executor.prepareArguments(pipeline.getArguments(), args)
+                      , pipeline.getSourceEndpoints()
+                      , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
+                      , sourceInstance
+                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline)
+                      , formatInstance
+              );
+      
+              assertNotNull(instance);
+
+              return executor.initializePipeline(instance);
+            })
+            .onComplete(ar -> {
+              logger.debug("Pipeline complete");
+              if (ar.succeeded()) {
+                vertx.setTimer(2000, l -> {
+                  logger.debug("Ending test");
+                  testContext.failNow("Expected to fail due to lack of secret needed for accessing DynamicEndpoint");
                 });
               } else {
                 testContext.verify(() -> {

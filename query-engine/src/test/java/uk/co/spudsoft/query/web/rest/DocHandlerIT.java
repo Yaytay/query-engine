@@ -47,8 +47,8 @@ public class DocHandlerIT {
   @Test
   public void testDocs() throws Exception {
     Main main = new Main();
-    File baseConfigDir = new File("target/query-engine/samples");
-    Main.prepareBaseConfigPath(baseConfigDir);
+    String baseConfigDir = "target/query-engine/samples";
+    Main.prepareBaseConfigPath(new File(baseConfigDir));
     main.testMain(new String[]{
         "baseConfigPath=" + baseConfigDir
       , "vertxOptions.tracingOptions.serviceName=Query-Engine"

@@ -60,8 +60,8 @@ public class MainQueryIT {
   @Test
   public void testQuery() throws Exception {
     Main main = new Main();
-    File baseConfigDir = new File("target/query-engine/samples");
-    Main.prepareBaseConfigPath(baseConfigDir);
+    String baseConfigDir = "target/query-engine/samples";
+    Main.prepareBaseConfigPath(new File(baseConfigDir));
     main.testMain(new String[]{
       "audit.datasource.url=jdbc:" + postgres.getUrl()
       , "audit.datasource.schema=public"
