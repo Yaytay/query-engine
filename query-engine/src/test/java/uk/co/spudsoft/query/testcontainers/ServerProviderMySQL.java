@@ -134,8 +134,8 @@ public class ServerProviderMySQL extends AbstractServerProvider implements Serve
                 mysqlserver.getExposedPorts().stream().map(p -> Integer.toString(p) + ":" + Integer.toString(mysqlserver.getMappedPort(p))).collect(Collectors.toList()),
                 (System.currentTimeMillis() - start) / 1000.0
         );
-        port = mysqlserver.getMappedPort(3306);
       }
+      port = mysqlserver.getMappedPort(3306);
     }
     return mysqlserver;
   }

@@ -102,7 +102,11 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
       key = definition.getKey();
     }
     if (Strings.isNullOrEmpty(key)) {
-      throw new IllegalArgumentException("No key specified for dynamic endpoint");
+      if (data.containsKey(definition.getKeyField())) {
+        throw new IllegalArgumentException("No field with the name " + definition.getKeyField() + " was found in the resultset for the dynamic endpoint");
+      } else {
+        throw new IllegalArgumentException("No key specified for dynamic endpoint");
+      }
     }
     String url = getField(data, definition.getUrlField());
     String urlTemplate = getField(data, definition.getUrlTemplateField());

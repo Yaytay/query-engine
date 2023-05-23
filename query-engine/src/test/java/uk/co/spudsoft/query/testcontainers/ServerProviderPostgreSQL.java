@@ -18,19 +18,14 @@ package uk.co.spudsoft.query.testcontainers;
 
 import com.github.dockerjava.api.model.Container;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.pgclient.PgConnectOptions;
-import io.vertx.sqlclient.Pool;
-import io.vertx.sqlclient.PoolOptions;
-import io.vertx.sqlclient.SqlConnectOptions;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
 import uk.co.spudsoft.query.main.sample.SampleDataLoader;
-import uk.co.spudsoft.query.main.sample.SampleDataLoaderMsSQL;
 import uk.co.spudsoft.query.main.sample.SampleDataLoaderPostgreSQL;
 import static uk.co.spudsoft.query.testcontainers.AbstractServerProvider.ROOT_PASSWORD;
 

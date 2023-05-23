@@ -77,6 +77,7 @@ public class DynamicEndpointPipelineIT {
   @Test
   @Timeout(value = 2400, timeUnit = TimeUnit.SECONDS)
   public void testHandlingWithDynamicEndpoint(Vertx vertx, VertxTestContext testContext) throws Throwable {
+    logger.info("testHandlingWithDynamicEndpoint");
 
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     CacheConfig cacheConfig = new CacheConfig().setMaxItems(1).setMaxDurationMs(0).setPurgePeriodMs(0);
@@ -91,15 +92,15 @@ public class DynamicEndpointPipelineIT {
             .compose(v -> serverProviderMs.prepareContainer(vertx))
             .compose(v -> serverProviderPg.prepareContainer(vertx))
             .compose(v -> {
-              logger.info("Loading {} sample data", serverProviderMs.getName());
+              logger.info("Loading {} sample data @{}", serverProviderMs.getName(), serverProviderMs.getPort());
               return serverProviderMs.prepareTestDatabase(vertx);
             })
             .compose(v -> {
-              logger.info("Loading {} sample data", serverProviderMy.getName());
+              logger.info("Loading {} sample data @{}", serverProviderMy.getName(), serverProviderMy.getPort());
               return serverProviderMy.prepareTestDatabase(vertx);
             })
             .compose(v -> {
-              logger.info("Loading {} sample data", serverProviderPg.getName());
+              logger.info("Loading {} sample data @{}", serverProviderPg.getName(), serverProviderPg.getPort());
               return serverProviderPg.prepareTestDatabase(vertx);
             })
             .compose(v -> {
@@ -176,11 +177,12 @@ public class DynamicEndpointPipelineIT {
   @Test
   @Timeout(value = 120, timeUnit = TimeUnit.SECONDS)
   public void testHandlingDynamicEndpointFailureBadPort(Vertx vertx, VertxTestContext testContext) throws Throwable {
+    logger.info("testHandlingDynamicEndpointFailureBadPort");
 
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     CacheConfig cacheConfig = new CacheConfig().setMaxItems(1).setMaxDurationMs(0).setPurgePeriodMs(0);
     PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*")));
-    PipelineExecutorImpl executor = new PipelineExecutorImpl(null);
+    PipelineExecutorImpl executor = new PipelineExecutorImpl(ImmutableMap.<String, ProtectedCredentials>builder().put("cred", new ProtectedCredentials(serverProviderMy.getUser(), serverProviderMy.getPassword(), null)).build());
 
     MultiMap args = MultiMap.caseInsensitiveMultiMap();
     args.set("maxId", "14");
@@ -271,11 +273,12 @@ public class DynamicEndpointPipelineIT {
   @Test
   @Timeout(value = 120, timeUnit = TimeUnit.SECONDS)
   public void testHandlingDynamicEndpointFailureNoKey(Vertx vertx, VertxTestContext testContext) throws Throwable {
+    logger.info("testHandlingDynamicEndpointFailureNoKey");
 
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     CacheConfig cacheConfig = new CacheConfig().setMaxItems(1).setMaxDurationMs(0).setPurgePeriodMs(0);
     PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*")));
-    PipelineExecutorImpl executor = new PipelineExecutorImpl(null);
+    PipelineExecutorImpl executor = new PipelineExecutorImpl(ImmutableMap.<String, ProtectedCredentials>builder().put("cred", new ProtectedCredentials(serverProviderMy.getUser(), serverProviderMy.getPassword(), null)).build());
 
     MultiMap args = MultiMap.caseInsensitiveMultiMap();
     args.set("maxId", "7");

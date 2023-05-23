@@ -149,4 +149,8 @@ public class DataRow {
     return Collections.unmodifiableMap(data);
   }
 
+  public boolean containsKey(String key) {
+    return data.containsKey(key);
+  }
+
 }

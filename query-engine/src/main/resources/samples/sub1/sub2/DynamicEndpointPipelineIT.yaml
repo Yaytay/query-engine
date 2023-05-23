@@ -25,8 +25,8 @@ dynamicEndpoints:
       replaceDoubleQuotes: true
       query: |
         select 
-          case when :maxId = 7 then null else "endpointKey" end           # Test trigger that results in key from DynamicEndpoint being used (which is null, so it fails)
-          , case "endpointKey" when 'ms' then null else type end as type  # This is just to improve coverage, null type defaults to SQL
+          case when :maxId = 7 then null else "endpointKey" end as endpointKey  # Test trigger that results in key from DynamicEndpoint being used (which is null, so it fails)
+          , case "endpointKey" when 'ms' then null else type end as type        # This is just to improve coverage, null type defaults to SQL
           , url
           , username
           , password 
