@@ -52,7 +52,8 @@ public class DocHandlerIT {
     main.testMain(new String[]{
         "baseConfigPath=" + baseConfigDir
       , "vertxOptions.tracingOptions.serviceName=Query-Engine"
-      , "acceptableIssuerRegexes[0]=.*"
+      , "jwt.acceptableIssuerRegexes[0]=.*"
+      , "jwt.defaultJwksCacheDuration=PT1M"
       , "logging.jsonFormat=true"
       , "designMode=true"
     });

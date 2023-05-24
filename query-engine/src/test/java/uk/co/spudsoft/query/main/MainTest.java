@@ -39,7 +39,6 @@ import org.slf4j.LoggerFactory;
  */
 public class MainTest {
   
-  @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(MainTest.class);
   
   @BeforeAll
@@ -50,26 +49,34 @@ public class MainTest {
   
   @Test
   public void testMainExitOnRun() throws Exception {
+    logger.info("testMainExitOnRun");
     Main main = new Main();
     main.testMain(new String[]{
             "exitOnRun"
             , "baseConfigPath=target/query-engine"
-            , "acceptableIssuerRegexes[0]=.*"
+            , "jwt.acceptableIssuerRegexes[0]=.*"
+            , "jwt.defaultJwksCacheDuration=PT1M"
             , "logging.level.uk_co_spudsoft_query_main=TRACE" 
             , "vertxOptions.tracingOptions.serviceName=Query-Engine"
     });
+    logger.info("testMainExitOnRun - exit");
   }
   
   @Test
   public void testMain() throws IOException {
+    logger.info("testMain");
     Main.main(new String[]{
             "baseConfigPath=target/query-engine"
-            , "acceptableIssuerRegexes[0]=.*"
+            , "jwt.acceptableIssuerRegexes[0]=.*"
+            , "jwt.defaultJwksCacheDuration=PT1M"
     });
+    logger.info("testMain - exit");
   }
   
   @Test
   public void testZipkinConfig() {
+    logger.info("testZipkinConfig");
+    
     ZipkinConfig config = new ZipkinConfig();
     assertNull(Main.buildZipkinTrace(null));
     assertNull(Main.buildZipkinTrace(config));
@@ -81,6 +88,8 @@ public class MainTest {
     config.setServiceName("wibble");
     tracing = Main.buildZipkinTrace(config);
     assertNotNull(tracing);
+
+    logger.info("testZipkinConfig - exit");
   }
   
   /**
@@ -88,6 +97,7 @@ public class MainTest {
    */
   @Test
   public void testPrepareBaseConfigPath() throws Exception {
+    logger.info("testPrepareBaseConfigPath");
     File testDir = new File("target/test-base-config-path");
     if (testDir.exists()) {
       deleteDir(testDir);
@@ -105,6 +115,7 @@ public class MainTest {
     assertEquals(10, countFilesInDir(testDir));
     FileTime lastMod2 = Files.getLastModifiedTime(testDir.toPath());
     assertEquals(lastMod1, lastMod2);
+    logger.info("testPrepareBaseConfigPath - exit");
   }
 
   private void deleteDir(File testDir) throws IOException {

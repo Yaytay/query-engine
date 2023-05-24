@@ -78,6 +78,8 @@ public class MainQueryIT {
       , "httpServerOptions.tracingPolicy=ALWAYS"
       , "pipelineCache.maxDurationMs=60000"
       , "logging.jsonFormat=true"
+      , "jwt.acceptableIssuerRegexes[0]=.*"
+      , "jwt.defaultJwksCacheDuration=PT1M"
       , "zipkin.baseUrl=http://localhost/wontwork"
     });
     

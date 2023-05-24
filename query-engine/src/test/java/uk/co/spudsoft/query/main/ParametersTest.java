@@ -24,6 +24,7 @@ import io.vertx.tracing.zipkin.ZipkinTracingOptions;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 import uk.co.spudsoft.params4j.FileType;
@@ -90,6 +91,15 @@ public class ParametersTest {
   }
 
   @Test
+  public void testGetPipelineCache() {
+    Parameters instance = new Parameters();
+    assertNotNull(instance.getPipelineCache());
+    assertEquals(-1, instance.getPipelineCache().getMaxDurationMs());
+    instance.setPipelineCache(new CacheConfig().setMaxDurationMs(12));
+    assertEquals(12, instance.getPipelineCache().getMaxDurationMs());
+  }
+  
+  @Test
   public void testGetBaseConfigPath() {
     Parameters instance = new Parameters();
     assertEquals("/var/query-engine", instance.getBaseConfigPath());
@@ -100,17 +110,25 @@ public class ParametersTest {
   @Test
   public void testGetAudience() {
     Parameters instance = new Parameters();
-    assertEquals("query-engine", instance.getAudience());
-    instance = new Parameters().setBaseConfigPath("aud");
-    assertEquals("aud", instance.getBaseConfigPath());
+    assertEquals("query-engine", instance.getJwt().getRequiredAudience());
+    instance.getJwt().setRequiredAudience("aud");
+    assertEquals("aud", instance.getJwt().getRequiredAudience());
+  }
+  
+  @Test
+  public void testGetCorsAllowedOriginRegex() {
+    Parameters instance = new Parameters();
+    assertEquals("https?://((localhost):[^/]+)?/?", instance.getCorsAllowedOriginRegex());
+    instance.setCorsAllowedOriginRegex(".*");
+    assertEquals(".*", instance.getCorsAllowedOriginRegex());
   }
   
   @Test
   public void testGetDefaultJwksCacheDurationSeconds() {
     Parameters instance = new Parameters();
-    assertEquals(60, instance.getDefaultJwksCacheDurationSeconds());
-    instance = new Parameters().setDefaultJwksCacheDurationSeconds(27);
-    assertEquals(27, instance.getDefaultJwksCacheDurationSeconds());
+    assertEquals(60, instance.getJwt().getDefaultJwksCacheDuration().toSeconds());
+    instance.getJwt().setDefaultJwksCacheDuration(Duration.parse("PT27S"));
+    assertEquals(27, instance.getJwt().getDefaultJwksCacheDuration().toSeconds());
   }
   
   @Test
@@ -124,9 +142,9 @@ public class ParametersTest {
   @Test
   public void testGetAcceptableIssuerRegexes() {
     Parameters instance = new Parameters();
-    assertEquals(null, instance.getAcceptableIssuerRegexes());
-    instance = new Parameters().setAcceptableIssuerRegexes(Arrays.asList(".*"));
-    assertEquals(Arrays.asList(".*"), instance.getAcceptableIssuerRegexes());
+    assertEquals(null, instance.getJwt().getAcceptableIssuerRegexes());
+    instance.getJwt().setAcceptableIssuerRegexes(Arrays.asList(".*"));
+    assertEquals(Arrays.asList(".*"), instance.getJwt().getAcceptableIssuerRegexes());
   }
   
   @Test

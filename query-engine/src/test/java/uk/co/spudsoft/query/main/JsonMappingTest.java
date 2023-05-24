@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.jackson.DatabindCodec;
@@ -52,6 +53,7 @@ public class JsonMappingTest {
     DatabindCodec.mapper()
             .addMixIn(TracingOptions.class, TracingOptionsMixin.class)
             .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+            .registerModule(new JavaTimeModule())
             ;
     
     VertxOptions vo = new VertxOptions()

@@ -4,7 +4,6 @@
  */
 package uk.co.spudsoft.query.pipeline;
 
-import uk.co.spudsoft.query.pipeline.PipelineParsingErrorHandler;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;

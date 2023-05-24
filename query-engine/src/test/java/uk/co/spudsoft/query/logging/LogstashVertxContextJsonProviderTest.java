@@ -20,7 +20,6 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
@@ -35,6 +34,7 @@ import static org.junit.Assert.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import uk.co.spudsoft.query.main.Credentials;
+import uk.co.spudsoft.query.main.Main;
 
 /**
  *
@@ -66,6 +66,7 @@ public class LogstashVertxContextJsonProviderTest {
         cp.setContext(new LoggerContext());
 
         ObjectMapper objectMapper = new ObjectMapper();
+
         JsonFactory factory = new JsonFactory(objectMapper);
         try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
           try (JsonGenerator generator = factory.createGenerator(os)) {

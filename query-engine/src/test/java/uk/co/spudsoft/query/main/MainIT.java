@@ -19,7 +19,6 @@ package uk.co.spudsoft.query.main;
 import io.restassured.RestAssured;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
-import io.vertx.junit5.VertxTestContext;
 import java.io.File;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -59,7 +58,8 @@ public class MainIT {
       , "baseConfigPath=target/classes/samples"
       , "vertxOptions.tracingOptions.type=io.vertx.tracing.zipkin.ZipkinTracingOptions"
       , "vertxOptions.tracingOptions.serviceName=Query-Engine"
-      , "acceptableIssuerRegexes[0]=.*"
+      , "jwt.acceptableIssuerRegexes[0]=.*"
+      , "jwt.defaultJwksCacheDuration=PT1M"
       , "pipelineCache.maxDurationMs=0"
       , "pipelineCache.purgePeriodMs=10"
       , "logging.level.uk_co_spudsoft_query_main=TRACE" 
@@ -78,7 +78,8 @@ public class MainIT {
       , "audit.datasource.schema=public" 
       , "baseConfigPath=target/classes/samples"
       , "vertxOptions.tracingOptions.serviceName=Query-Engine"
-      , "acceptableIssuerRegexes[0]=.*"
+      , "jwt.acceptableIssuerRegexes[0]=.*"
+      , "jwt.defaultJwksCacheDuration=PT1M"
       , "logging.jsonFormat=true"
       , "loadSampleData=true"
     });

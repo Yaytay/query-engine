@@ -60,7 +60,8 @@ public class MainIT {
       , "baseConfigPath=target/query-engine/samples"
       , "vertxOptions.tracingOptions.type=io.vertx.tracing.zipkin.ZipkinTracingOptions"
       , "vertxOptions.tracingOptions.serviceName=Query-Engine"
-      , "acceptableIssuerRegexes[0]=.*"
+      , "jwt.acceptableIssuerRegexes[0]=.*"
+      , "jwt.defaultJwksCacheDuration=PT1M"
       , "pipelineCache.maxDurationMs=0"
       , "pipelineCache.purgePeriodMs=10"
       , "logging.level.uk_co_spudsoft_query_main=TRACE" 
@@ -79,7 +80,8 @@ public class MainIT {
       , "audit.datasource.schema=public" 
       , "baseConfigPath=target/query-engine/samples"
       , "vertxOptions.tracingOptions.serviceName=Query-Engine"
-      , "acceptableIssuerRegexes[0]=.*"
+      , "jwt.acceptableIssuerRegexes[0]=.*"
+      , "jwt.defaultJwksCacheDuration=PT1M"
     });
     
     RestAssured.port = main.getPort();

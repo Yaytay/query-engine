@@ -39,7 +39,8 @@ public class MainTest {
     main.testMain(new String[]{
             "exitOnRun"
             , "baseConfigPath=target/query-engine/samples"
-            , "acceptableIssuerRegexes[0]=.*"
+            , "jwt.acceptableIssuerRegexes[0]=.*"
+            , "jwt.defaultJwksCacheDuration=PT1M"
             , "logging.level.uk_co_spudsoft_query_main=TRACE" 
             , "vertxOptions.tracingOptions.serviceName=Query-Engine"
     });
@@ -49,7 +50,8 @@ public class MainTest {
   public void testMain() throws IOException {
     Main.main(new String[]{
             "baseConfigPath=target/query-engine/samples"
-            , "acceptableIssuerRegexes[0]=.*"
+            , "jwt.acceptableIssuerRegexes[0]=.*"
+            , "jwt.defaultJwksCacheDuration=PT1M"
     });
   }
   

@@ -78,15 +78,16 @@ public class DesignHandlerIT {
   public void testDesignHandler() throws Exception {
     Main main = new DesignMain();
     main.testMain(new String[]{
-      "audit.datasource.url=jdbc:" + postgres.getUrl(),
-      "audit.datasource.adminUser.username=" + postgres.getUser(),
-      "audit.datasource.adminUser.password=" + postgres.getPassword(),
-      "audit.datasource.schema=public",
-      "baseConfigPath=target/query-engine/samples-designit",
-      "vertxOptions.tracingOptions.serviceName=Query-Engine",
-      "acceptableIssuerRegexes[0]=.*",
-      "logging.jsonFormat=true",
-      "designMode=true"
+      "audit.datasource.url=jdbc:" + postgres.getUrl()
+      , "audit.datasource.adminUser.username=" + postgres.getUser()
+      , "audit.datasource.adminUser.password=" + postgres.getPassword()
+      , "audit.datasource.schema=public"
+      , "baseConfigPath=target/query-engine/samples-designit"
+      , "vertxOptions.tracingOptions.serviceName=Query-Engine"
+      , "jwt.acceptableIssuerRegexes[0]=.*"
+      , "jwt.defaultJwksCacheDuration=PT1M"
+      , "logging.jsonFormat=true"
+      , "designMode=true"
     });
 
     RestAssured.port = main.getPort();

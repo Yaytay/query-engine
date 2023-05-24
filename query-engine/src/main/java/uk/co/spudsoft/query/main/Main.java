@@ -22,6 +22,7 @@ import brave.http.HttpServerParser;
 import brave.http.HttpTracing;
 import brave.sampler.Sampler;
 import ch.qos.logback.classic.LoggerContext;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -43,7 +44,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.jackson.DatabindCodec;
 import io.vertx.core.tracing.TracingOptions;
 import io.vertx.ext.web.Router;
@@ -76,6 +76,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import uk.co.spudsoft.dircache.DirCache;
+import uk.co.spudsoft.jwtvalidatorvertx.IssuerAcceptabilityHandler;
 import uk.co.spudsoft.jwtvalidatorvertx.JwtValidatorVertx;
 import uk.co.spudsoft.jwtvalidatorvertx.OpenIdDiscoveryHandler;
 import uk.co.spudsoft.jwtvalidatorvertx.impl.JWKSOpenIdDiscoveryHandlerImpl;
@@ -116,7 +117,7 @@ public class Main extends Application {
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
   
 private static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-private static final String MAVEN_PROJECT_VERSION = "0.0.3-37-main-SNAPSHOT";
+private static final String MAVEN_PROJECT_VERSION = "0.0.3-39-main-SNAPSHOT";
 
 private static final String NAME = "query-engine";
   
@@ -200,6 +201,7 @@ private static final String NAME = "query-engine";
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true);
     mapper.registerModule(new JavaTimeModule());
     mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+    mapper.configure(SerializationFeature.WRITE_DURATIONS_AS_TIMESTAMPS, false);
     mapper.setDefaultMergeable(Boolean.TRUE);
     mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
     return mapper;
@@ -226,8 +228,13 @@ private static final String NAME = "query-engine";
     java.util.logging.Logger.getLogger("").setLevel(Level.FINEST);
 
     configureObjectMapper(DatabindCodec.mapper());
-    
-    logger.debug("Params: {}", Json.encode(params));
+    configureObjectMapper(DatabindCodec.prettyMapper());
+
+    try {
+      logger.debug("Params: {}", DatabindCodec.mapper().writeValueAsString(params));    
+    } catch (JsonProcessingException ex) {
+      logger.error("Failed to convert params to json: ", ex);
+    }
 
     this.port = params.getHttpServerOptions().getPort();
     
@@ -427,13 +434,15 @@ private static final String NAME = "query-engine";
     OpenIdDiscoveryHandler discoverer = null;
     JwtValidatorVertx validator = null;
 
-    List<String> acceptableIssuerRegexes = params.getAcceptableIssuerRegexes();
-    if (acceptableIssuerRegexes != null && !acceptableIssuerRegexes.isEmpty()) {
-      discoverer = new JWKSOpenIdDiscoveryHandlerImpl(WebClient.create(vertx), acceptableIssuerRegexes, params.getDefaultJwksCacheDurationSeconds());
-      validator = JwtValidatorVertx.create((JWKSOpenIdDiscoveryHandlerImpl) discoverer);   
-    }
+    JwtValidationConfig jwtConfig = params.getJwt();
+    discoverer = new JWKSOpenIdDiscoveryHandlerImpl(WebClient.create(vertx)
+            , IssuerAcceptabilityHandler.create(jwtConfig.getAcceptableIssuerRegexes()
+                    , jwtConfig.getAcceptableIssuersFile()
+                    , jwtConfig.getFilePollPeriodDuration()
+            ), jwtConfig.getDefaultJwksCacheDuration().toSeconds());
+    validator = JwtValidatorVertx.create((JWKSOpenIdDiscoveryHandlerImpl) discoverer);   
     
-    RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx), validator, discoverer, params.getOpenIdIntrospectionHeaderName(), params.getAudience());
+    RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx), validator, discoverer, params.getOpenIdIntrospectionHeaderName(), jwtConfig.getRequiredAudience());
     return rcb;
   }
   

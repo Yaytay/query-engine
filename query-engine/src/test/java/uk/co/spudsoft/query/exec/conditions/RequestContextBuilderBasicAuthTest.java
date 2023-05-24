@@ -33,6 +33,7 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.io.IOException;
 import java.security.KeyPair;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,6 +43,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.jwtvalidatorvertx.IssuerAcceptabilityHandler;
 import uk.co.spudsoft.jwtvalidatorvertx.JWK;
 import uk.co.spudsoft.jwtvalidatorvertx.JsonWebAlgorithm;
 import uk.co.spudsoft.jwtvalidatorvertx.JwtValidatorVertx;
@@ -70,7 +72,7 @@ public class RequestContextBuilderBasicAuthTest {
   public void init(Vertx vertx) throws IOException {
     tokenBuilder = new JdkTokenBuilder();
 
-    discoverer = new JWKSOpenIdDiscoveryHandlerImpl(WebClient.create(vertx), Arrays.asList(".*"), 60);
+    discoverer = new JWKSOpenIdDiscoveryHandlerImpl(WebClient.create(vertx), IssuerAcceptabilityHandler.create(Arrays.asList(".*"), null, Duration.ZERO), 60);
     validator = JwtValidatorVertx.create((JWKSOpenIdDiscoveryHandlerImpl) discoverer);   
   }
 

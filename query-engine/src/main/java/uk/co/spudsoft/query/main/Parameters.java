@@ -78,6 +78,11 @@ public class Parameters {
   private Audit audit = new Audit();
   
   /**
+   * Configuration of the JWT validator.
+   */
+  private JwtValidationConfig jwt = new JwtValidationConfig();
+  
+  /**
    * Configuration of the pipeline cache.
    */
   private CacheConfig pipelineCache = new CacheConfig();
@@ -97,36 +102,11 @@ public class Parameters {
   private ImmutableMap<String, ProtectedCredentials> secrets = ImmutableMap.<String, ProtectedCredentials>builder().build();
     
   /**
-   * The list of regular expressions that are used to define acceptable token issuers.
-   * This is a core security control and must be set as tightly as possible.
-   * An issuer is considered acceptable if it matches one of these regular expressions, OR it matches an entry in the acceptableIssuersFile.
-   */
-  private List<String> acceptableIssuerRegexes;
-  
-  /**
-   * Path to a file that may contain more acceptable issuers to validate token issuers.
-   * This is a core security control and must be set as tightly as possible.
-   * An issuer is considered acceptable if it matches an entry in this file OR an acceptableIssuerRegex.
-   */
-  private String acceptableIssuersFile;
-
-  /**
-   * The default period to cache JWKS data for.
-   * This is expected to be overridden by cache-control/max-age headers on the JWKS response, so the default value is usually reasonable.
-   */
-  private int defaultJwksCacheDurationSeconds = 60;
-
-  /**
    * The name of the header that will contain the payload from a token as Json (that may be base64 encoded or not).
    * If this is used the query engine will not attempt to validate tokens itself, the header will be trusted implicitly.
    */
   private String openIdIntrospectionHeaderName;
-  
-  /**
-   * The audience value that must be included in any token for the query engine to accept it.
-   */
-  private String audience = "query-engine";
-
+    
   /**
    * The query engine is provided with some example queries that will be deployed to the baseConfigPath one startup if the directory is empty.
    * These sample queries depend upon the target databases being accessible at known locations with known credentials,
@@ -169,7 +149,8 @@ public class Parameters {
   
   
   /**
-   * The VertxOptions that will be used when creating the Vertx instance.
+   * Get the VertxOptions that will be used when creating the Vertx instance.
+   * These values do not usually need to be altered.
    * @return the VertxOptions that will be used when creating the Vertx instance.
    */
   public VertxOptions getVertxOptions() {
@@ -177,7 +158,7 @@ public class Parameters {
   }
 
   /**
-   * The HttpServerOptions that will be used when creating the HTTP server.
+   * Get the HttpServerOptions that will be used when creating the HTTP server.
    * The {@link io.vertx.core.http.HttpServerOptions#setMaxHeaderSize(int)} method should be particularly useful when running behind a proxy that passes large JSON headers.
    * @return the HttpServerOptions that will be used when creating the HTTP server.
    */
@@ -187,7 +168,7 @@ public class Parameters {
   }
 
   /**
-   * The configuration to use for Zipkin tracing.
+   * Get the configuration to use for Zipkin tracing.
    * @return the configuration to use for Zipkin tracing.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
@@ -196,8 +177,8 @@ public class Parameters {
   }
 
   /**
-   * if true the process will end rather than waiting for requests
-   * This is expected to be useful for things such as JIT compilers or CDS preparation.
+   * Get whether the process will end rather than waiting for requests
+   * This is useful for things such as JIT compilers or CDS preparation.
    * @return the exitOnRun value.
    */
   public boolean isExitOnRun() {
@@ -205,7 +186,7 @@ public class Parameters {
   }
 
   /**
-   * Path to the root of the configuration files.
+   * Get the path to the root of the configuration files.
    * @return the path to the root of the configuration files.
    */
   public String getBaseConfigPath() {
@@ -231,7 +212,7 @@ public class Parameters {
   }
   
   /**
-   * Configuration of the audit of requests.
+   * Get the configuration of the audit of requests.
    * @return configuration of the audit of requests.
    */
   public Audit getAudit() {
@@ -239,44 +220,83 @@ public class Parameters {
   }
 
   /**
-   * Configuration of the pipeline cache.
+   * Get the configuration of the pipeline cache.
    * @return Configuration of the pipeline cache.
    */
   public CacheConfig getPipelineCache() {
     return pipelineCache;
   }
 
+  /**
+   * set the VertxOptions that will be used when creating the Vertx instance.
+   * These values do not usually need to be altered.
+   * @param vertxOptions The general Vert.x configuration.
+   * @return this, so that the method may be called in a fluent manner.
+   */
   public Parameters setVertxOptions(VertxOptions vertxOptions) {
     this.vertxOptions = vertxOptions;
     return this;
   }
 
+  /**
+   * Set the HttpServerOptions that will be used when creating the HTTP server.
+   * The {@link io.vertx.core.http.HttpServerOptions#setMaxHeaderSize(int)} method should be particularly useful when running behind a proxy that passes large JSON headers.
+   * @param httpServerOptions the HttpServerOptions that will be used when creating the HTTP server.
+   * @return this, so that the method may be called in a fluent manner.
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public Parameters setHttpServerOptions(HttpServerOptions httpServerOptions) {
     this.httpServerOptions = httpServerOptions;
     return this;
   }
 
+  /**
+   * Set the configuration to use for Zipkin tracing.
+   * @param zipkin the configuration to use for Zipkin tracing.
+   * @return this, so that the method may be called in a fluent manner.
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
-  public void setZipkin(ZipkinConfig zipkin) {
+  public Parameters setZipkin(ZipkinConfig zipkin) {
     this.zipkin = zipkin;
+    return this;
   }
   
+  /**
+   * Set whether the process will end rather than waiting for requests.
+   * This is useful for things such as JIT compilers or CDS preparation.
+   * @param exitOnRun if true process will end rather than waiting for requests.
+   * @return this, so that the method may be called in a fluent manner.
+   */
   public Parameters setExitOnRun(boolean exitOnRun) {
     this.exitOnRun = exitOnRun;
     return this;
   }
 
+  /**
+   * Set the path to the root of the configuration files.
+   * @param baseConfigPath the path to the root of the configuration files.
+   * @return this, so that the method may be called in a fluent manner.
+   */
   public Parameters setBaseConfigPath(String baseConfigPath) {
     this.baseConfigPath = baseConfigPath;
     return this;
   }
 
+  /**
+   * Set the configuration of the audit of requests.
+   * @param audit the configuration of the audit of requests.
+   * @return this, so that the method may be called in a fluent manner.
+   */
   public Parameters setAudit(Audit audit) {
     this.audit = audit;
     return this;
   }
 
+  /**
+   * Set the configuration of the pipeline cache.
+   * @param pipelineCache the configuration of the pipeline cache.
+   * @return this, so that the method may be called in a fluent manner.
+   */
   public Parameters setPipelineCache(CacheConfig pipelineCache) {
     this.pipelineCache = pipelineCache;
     return this;
@@ -293,9 +313,11 @@ public class Parameters {
   /**
    * Set the Allowed-Origin-Regex to use for CORS.
    * @param corsAllowedOriginRegex the Allowed-Origin-Regex to use for CORS.
+   * @return this, so that the method may be called in a fluent manner.
    */
-  public void setCorsAllowedOriginRegex(String corsAllowedOriginRegex) {
+  public Parameters setCorsAllowedOriginRegex(String corsAllowedOriginRegex) {
     this.corsAllowedOriginRegex = corsAllowedOriginRegex;
+    return this;
   }
 
   /**
@@ -327,57 +349,6 @@ public class Parameters {
   }
 
   /**
-   * Get the list of regular expressions that are used to define acceptable token issuers.
-   * This is a core security control and must be set as tightly as possible.
-   * @return the list of regular expressions that are used to define acceptable token issuers.
-   */
-  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
-  public List<String> getAcceptableIssuerRegexes() {
-    return acceptableIssuerRegexes;
-  }
-
-  /**
-   * Set the list of regular expressions that are used to define acceptable token issuers.
-   * This is a core security control and must be set as tightly as possible.
-   * @param acceptableIssuerRegexes the list of regular expressions that are used to define acceptable token issuers.
-   * @return this, so that the method may be called in a fluent manner.
-   */
-  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
-  public Parameters setAcceptableIssuerRegexes(List<String> acceptableIssuerRegexes) {
-    this.acceptableIssuerRegexes = acceptableIssuerRegexes;
-    return this;
-  }
-
-  public String getAcceptableIssuersFile() {
-    return acceptableIssuersFile;
-  }
-
-  public void setAcceptableIssuersFile(String acceptableIssuersFile) {
-    this.acceptableIssuersFile = acceptableIssuersFile;
-  }
-    
-
-  /**
-   * Get the default period to cache JWKS data for.
-   * This is expected to be overridden by cache-control/max-age headers on the JWKS response, so the default value is usually reasonable.
-   * @return the default period to cache JWKS data for.
-   */
-  public int getDefaultJwksCacheDurationSeconds() {
-    return defaultJwksCacheDurationSeconds;
-  }
-
-  /**
-   * Set the default period to cache JWKS data for.
-   * This is expected to be overridden by cache-control/max-age headers on the JWKS response, so the default value is usually reasonable.
-   * @param defaultJwksCacheDurationSeconds the default period to cache JWKS data for.
-   * @return this, so that the method may be called in a fluent manner.
-   */
-  public Parameters setDefaultJwksCacheDurationSeconds(int defaultJwksCacheDurationSeconds) {
-    this.defaultJwksCacheDurationSeconds = defaultJwksCacheDurationSeconds;
-    return this;
-  }
-
-  /**
    * Get the name of the header that will contain the payload from a token as Json (that may be base64 encoded or not).
    * If this is used the query engine will not attempt to validate tokens itself, the header will be trusted implicitly.
    * @return the name of the header that will contain the payload from a token as Json (that may be base64 encoded or not).
@@ -394,24 +365,6 @@ public class Parameters {
    */
   public Parameters setOpenIdIntrospectionHeaderName(String openIdIntrospectionHeaderName) {
     this.openIdIntrospectionHeaderName = openIdIntrospectionHeaderName;
-    return this;
-  }
-
-  /**
-   * Get the audience value that must be included in any token for the query engine to accept it.
-   * @return the audience value that must be included in any token for the query engine to accept it.
-   */
-  public String getAudience() {
-    return audience;
-  }
-
-  /**
-   * Set the audience value that must be included in any token for the query engine to accept it.
-   * @param audience the audience value that must be included in any token for the query engine to accept it.
-   * @return this, so that the method may be called in a fluent manner.
-   */
-  public Parameters setAudience(String audience) {
-    this.audience = audience;
     return this;
   }
 
@@ -467,11 +420,31 @@ public class Parameters {
    * This is unlikely to be useful unless the example compose file is used to start the Query Engine and the different database engines.
    * 
    * @param sampleDataLoads data sources to use attempt to initialize with the sample data.
+   * @return this, so that the method may be called in a fluent manner.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
-  public void setSampleDataLoads(List<DataSourceConfig> sampleDataLoads) {
+  public Parameters setSampleDataLoads(List<DataSourceConfig> sampleDataLoads) {
     this.sampleDataLoads = sampleDataLoads;
+    return this;
   }
-  
+
+  /**
+   * Get the configuration of the JWT validator.
+   * @return the configuration of the JWT validator.
+   */
+  public JwtValidationConfig getJwt() {
+    return jwt;
+  }
+
+  /**
+   * Set the configuration of the JWT validator.
+   * @param jwt the configuration of the JWT validator.
+   * @return this, so that the method may be called in a fluent manner.
+   */
+  public Parameters setJwt(JwtValidationConfig jwt) {
+    this.jwt = jwt;
+    return this;
+  }
+ 
 }
 
