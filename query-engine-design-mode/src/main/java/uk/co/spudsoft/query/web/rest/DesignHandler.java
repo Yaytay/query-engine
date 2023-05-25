@@ -153,6 +153,30 @@ public class DesignHandler {
   }
   
   @GET
+  @Path("/enabled")
+  @Produces(MEDIA_TYPE_JSON)
+  @Operation(description = "Return a single 'true', in order to check whether deisng mode is enabled")
+  @ApiResponse(
+          responseCode = "200"
+          , description = "Returns 'true'."
+          , content = @Content(
+                  mediaType = MEDIA_TYPE_JSON
+                  , schema = @Schema(implementation = Directory.class)
+          )
+  )
+  public void getEnabled(
+          @Suspended final AsyncResponse response
+          , @Context HttpServerRequest request
+  ) {
+    try {
+      String json = Json.encode(Boolean.TRUE);
+      response.resume(Response.ok(json, MEDIA_TYPE_JSON).build());
+    } catch (Throwable ex) {
+      reportError("Failed to return true: ", response, ex, true);
+    }
+  }
+  
+  @GET
   @Path("/all")
   @Produces(MEDIA_TYPE_JSON)
   @Operation(description = "Return a list of all files and directories known")

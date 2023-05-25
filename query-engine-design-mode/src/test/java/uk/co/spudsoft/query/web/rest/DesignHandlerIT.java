@@ -98,6 +98,12 @@ public class DesignHandlerIT {
             .statusCode(200)
             ;
 
+    given().log().all()
+            .get("/api/design/enabled")
+            .then().log().all()
+            .statusCode(200)
+            .body(equalTo("true"));
+    
     String startingFiles = given().log().all()
             .get("/api/design/all")
             .then().log().all()

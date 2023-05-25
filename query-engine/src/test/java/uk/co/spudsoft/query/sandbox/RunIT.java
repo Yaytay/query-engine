@@ -73,7 +73,6 @@ public class RunIT {
       , "logging.jsonFormat=false"
 //      , "logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.pipeline=TRACE"
 //      , "logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec\\\\.procs\\\\.query=TRACE"
-      , "designMode=true"
       , "httpServerOptions.port=8000"
     });
     

@@ -543,7 +543,7 @@
             <includeLicenseText>false</includeLicenseText>
             <outputReactorProjects>true</outputReactorProjects>
             <outputFormat>json</outputFormat>
-            <outputName>${project.artifactId}-${project.version}-cyclonedx.cdx.json</outputName>
+            <outputName>${project.artifactId}-${project.version}-cyclonedx.cdx</outputName>
           </configuration>        
         </plugin>
 
