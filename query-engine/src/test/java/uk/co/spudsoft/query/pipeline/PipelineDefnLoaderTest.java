@@ -63,7 +63,7 @@ public class PipelineDefnLoaderTest {
                 testContext.failNow(ar.cause());
               } else {
                 testContext.verify(() -> {
-                  AccessibleNodesTree.Dir root = ar.result();
+                  PipelineNodesTree.PipelineDir root = ar.result();
                   assertEquals("", root.getName());
                   assertEquals("", root.getPath());
                   assertEquals(2, root.getChildren().size());
@@ -117,7 +117,7 @@ public class PipelineDefnLoaderTest {
                 testContext.failNow(ar.cause());
               } else {
                 testContext.verify(() -> {
-                  AccessibleNodesTree.Dir root = ar.result();
+                  PipelineNodesTree.PipelineDir root = ar.result();
                   assertEquals("", root.getName());
                   assertEquals("", root.getPath());
                   assertEquals(1, root.getChildren().size());

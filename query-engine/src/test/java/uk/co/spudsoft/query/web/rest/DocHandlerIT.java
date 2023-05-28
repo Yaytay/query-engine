@@ -69,7 +69,7 @@ public class DocHandlerIT {
             .extract()
             .body().as(ObjectNode.class)
             ;
-    DocNodesTree.Dir docsDir = toDocsDir(json);
+    DocNodesTree.DocDir docsDir = toDocsDir(json);
         
     Set<String> foundDocs = new HashSet<>();
     getAllDocs(foundDocs, docsDir);
@@ -86,17 +86,17 @@ public class DocHandlerIT {
     main.shutdown();
   }
   
-  private DocNodesTree.Dir toDocsDir(ObjectNode json) {
+  private DocNodesTree.DocDir toDocsDir(ObjectNode json) {
   
-    List<DocNodesTree.Node> children = new ArrayList<>();
+    List<DocNodesTree.DocNode> children = new ArrayList<>();
     for (JsonNode child : ((ArrayNode) json.get("children"))) {
       if (child.has("children")) {
         children.add(toDocsDir((ObjectNode) child));
       } else {
-        children.add(new DocNodesTree.Doc(child.get("path").textValue(), child.get("name").textValue()));
+        children.add(new DocNodesTree.DocFile(child.get("path").textValue(), child.get("name").textValue()));
       }
     }
-    return new DocNodesTree.Dir(json.get("path").textValue(), children);
+    return new DocNodesTree.DocDir(json.get("path").textValue(), children);
     
   }
   
@@ -114,9 +114,9 @@ public class DocHandlerIT {
     return result;
   }
   
-  void getAllDocs(Set<String> foundDocs, DocNodesTree.Dir docs) {
-    for (DocNodesTree.Node node : docs.getChildren()) {
-      if (node instanceof DocNodesTree.Doc doc) {
+  void getAllDocs(Set<String> foundDocs, DocNodesTree.DocDir docs) {
+    for (DocNodesTree.DocNode node : docs.getChildren()) {
+      if (node instanceof DocNodesTree.DocFile doc) {
         foundDocs.add(doc.getPath());
         
         given()
@@ -127,7 +127,7 @@ public class DocHandlerIT {
                 .log().all()
                 ;
         
-      } else if (node instanceof DocNodesTree.Dir dir) {
+      } else if (node instanceof DocNodesTree.DocDir dir) {
         getAllDocs(foundDocs, dir);
       }
     }

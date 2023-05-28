@@ -16,7 +16,7 @@
  */
 package uk.co.spudsoft.query.web.rest;
 
-import uk.co.spudsoft.query.pipeline.AccessibleNodesTree;
+import uk.co.spudsoft.query.pipeline.PipelineNodesTree;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
@@ -73,7 +73,7 @@ public class InfoHandler {
                   mediaType = MediaType.APPLICATION_JSON
                   , array = @ArraySchema(
                           minItems = 0
-                          , schema = @Schema(implementation = AccessibleNodesTree.Node.class)
+                          , schema = @Schema(implementation = PipelineNodesTree.PipelineNode.class)
                   )
           )
   )

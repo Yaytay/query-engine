@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.web.rest;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
 import java.util.List;
 import uk.co.spudsoft.dircache.AbstractTree;
 
@@ -29,15 +30,19 @@ public class DocNodesTree extends AbstractTree {
   private DocNodesTree() {
   }
   
-  public static class Node extends AbstractNode<Node> {
+  @JsonSubTypes({
+    @JsonSubTypes.Type(value = DocNodesTree.DocDir.class),
+    @JsonSubTypes.Type(value = DocNodesTree.DocFile.class)
+  })
+  public static class DocNode extends AbstractNode<DocNode> {
     private final String path; 
 
-    public Node(String path) {
+    public DocNode(String path) {
       super(nameFromPath(path));
       this.path = path;
     }    
 
-    public Node(String path, List<Node> children) {
+    public DocNode(String path, List<DocNode> children) {
       super(nameFromPath(path), children);
       this.path = path;      
     }
@@ -65,19 +70,19 @@ public class DocNodesTree extends AbstractTree {
 
   }
   
-  public static class Dir extends Node {
+  public static class DocDir extends DocNode {
     
-    public Dir(String path,  List<Node> children) {
+    public DocDir(String path,  List<DocNode> children) {
       super(path, children);
     }
   }
   
-  public static class Doc extends Node {
+  public static class DocFile extends DocNode {
     
     private String title;
     
     @JsonCreator
-    public Doc(String path, String title) {
+    public DocFile(String path, String title) {
       super(path);
       this.title = title;
     }

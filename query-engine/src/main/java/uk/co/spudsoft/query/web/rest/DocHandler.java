@@ -58,15 +58,14 @@ public class DocHandler {
   private final boolean outputAllErrorMessages;
   
   private static final String BASE_DIR = "/docs/";
-  private final DocNodesTree.Dir docs = new DocNodesTree.Dir(
+  private final DocNodesTree.DocDir docs = new DocNodesTree.DocDir(
           "/"
-          , Arrays.asList(
-                  new DocNodesTree.Doc("Introduction.MD", "Introduction")
-                  , new DocNodesTree.Doc("Getting Started.MD", "Getting Started")
-                  , new DocNodesTree.Dir(
+          , Arrays.asList(new DocNodesTree.DocFile("Introduction.MD", "Introduction")
+                  , new DocNodesTree.DocFile("Getting Started.MD", "Getting Started")
+                  , new DocNodesTree.DocDir(
                           "Design Mode"
                           , Arrays.asList(
-                                  new DocNodesTree.Doc("Design Mode/Design Mode.MD", "Design Mode")
+                                  new DocNodesTree.DocFile("Design Mode/Design Mode.MD", "Design Mode")
                           )
                   )
                   
@@ -74,17 +73,17 @@ public class DocHandler {
   );
   private final Set<String> knownDocs = extractKnownDocs(docs);
   
-  private static Set<String> extractKnownDocs(DocNodesTree.Dir root) {
+  private static Set<String> extractKnownDocs(DocNodesTree.DocDir root) {
     Set<String> result = new HashSet<>();
     extractKnownDocs(result, root);
     return result;
   }
 
-  private static void extractKnownDocs(Set<String> result, DocNodesTree.Dir root) {
-    for (DocNodesTree.Node node : root.getChildren()) {
-      if (node instanceof DocNodesTree.Doc doc) {
+  private static void extractKnownDocs(Set<String> result, DocNodesTree.DocDir root) {
+    for (DocNodesTree.DocNode node : root.getChildren()) {
+      if (node instanceof DocNodesTree.DocFile doc) {
         result.add(doc.getPath());
-      } else if (node instanceof DocNodesTree.Dir dir) {
+      } else if (node instanceof DocNodesTree.DocDir dir) {
         extractKnownDocs(result, dir);
       }
     }
@@ -106,7 +105,7 @@ public class DocHandler {
                   mediaType = MediaType.APPLICATION_JSON
                   , array = @ArraySchema(
                           minItems = 0
-                          , schema = @Schema(implementation = DocNodesTree.Node.class)
+                          , schema = @Schema(implementation = DocNodesTree.DocNode.class)
                   )
           )
   )

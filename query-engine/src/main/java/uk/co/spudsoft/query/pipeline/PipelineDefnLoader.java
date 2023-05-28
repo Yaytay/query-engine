@@ -261,20 +261,20 @@ public class PipelineDefnLoader {
     }
   }
   
-  private Future<AccessibleNodesTree.Dir> mapDir(DirCacheTree.Directory dir, List<AccessibleNodesTree.Node> list) {
+  private Future<PipelineNodesTree.PipelineDir> mapDir(DirCacheTree.Directory dir, List<PipelineNodesTree.PipelineNode> list) {
     if (list.isEmpty()) {
       return Future.succeededFuture();
     } else {
-      return Future.succeededFuture(new AccessibleNodesTree.Dir(filePathToUrlPath(dir), list));
+      return Future.succeededFuture(new PipelineNodesTree.PipelineDir(filePathToUrlPath(dir), list));
     }
   }
   
-  private Future<AccessibleNodesTree.Pipeline> loadPipeline(DirCacheTree.File file, RequestContext req) {
+  private Future<PipelineNodesTree.PipelineFile> loadPipeline(DirCacheTree.File file, RequestContext req) {
     if (PERMISSIONS_FILENAME.equals(file.getName())) {
       return Future.succeededFuture();
     } else {
       return readPipelineFromFile(file, req)
-              .map(pipeline -> new AccessibleNodesTree.Pipeline(
+              .map(pipeline -> new PipelineNodesTree.PipelineFile(
                       filePathToUrlPath(file)
                       , pipeline.getTitle()
                       , pipeline.getDescription()
@@ -285,9 +285,9 @@ public class PipelineDefnLoader {
     }
   }
   
-  public Future<AccessibleNodesTree.Dir> getAccessible(RequestContext req) {
+  public Future<PipelineNodesTree.PipelineDir> getAccessible(RequestContext req) {
     
-    return AsyncDirTreeMapper.<AccessibleNodesTree.Node, AccessibleNodesTree.Dir, AccessibleNodesTree.Pipeline>map(
+    return AsyncDirTreeMapper.<PipelineNodesTree.PipelineNode, PipelineNodesTree.PipelineDir, PipelineNodesTree.PipelineFile>map(
             dirCache.getRoot()
             , dir -> dirValidator(req, dir)
             , (dir, list) -> mapDir(dir, list)
