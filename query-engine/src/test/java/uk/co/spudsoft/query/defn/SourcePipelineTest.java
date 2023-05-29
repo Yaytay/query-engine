@@ -16,7 +16,6 @@
  */
 package uk.co.spudsoft.query.defn;
 
-import io.vertx.core.json.Json;
 import java.util.ArrayList;
 import org.junit.jupiter.api.Test;
 

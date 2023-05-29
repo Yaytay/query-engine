@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package uk.co.spudsoft.query.pipeline;
+package uk.co.spudsoft.query.trees;
 
 import io.vertx.core.Future;
 import io.vertx.core.impl.future.CompositeFutureImpl;
@@ -48,7 +48,7 @@ public class AsyncDirTreeMapper {
      * @return The result of called dirMapper on this Directory with all of its children mapped.
      */
     @SuppressWarnings({"rawtypes"})
-    public static <N extends AbstractTree.AbstractNode<N>, D extends N, F extends N> Future<D> map(
+    public static <N, D extends N, F extends N> Future<D> map(
             DirCacheTree.Directory dir
             , Function<DirCacheTree.Directory, Future<Boolean>> dirValidator
             , BiFunction<DirCacheTree.Directory, List<N>, Future<D>> dirMapper

@@ -18,6 +18,8 @@ package uk.co.spudsoft.query.pipeline;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.google.common.collect.ImmutableList;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import uk.co.spudsoft.dircache.AbstractTree;
 import uk.co.spudsoft.dircache.AbstractTree.AbstractNode;
@@ -40,30 +42,40 @@ public class PipelineNodesTree extends AbstractTree {
   })
   public static class PipelineNode extends AbstractNode<PipelineNode> {
 
-  private final String path;
+    private final String path;
 
-  public PipelineNode(String path) {
-    super(nameFromPath(path));
-    this.path = undot(path);
-  }
+    public PipelineNode(String path) {
+      super(nameFromPath(path));
+      this.path = undot(path);
+    }
 
-  public PipelineNode(String path, List<PipelineNode> children) {
-    super(nameFromPath(path), children);
-    this.path = undot(path);
-  }
+    public PipelineNode(String path, List<PipelineNode> children) {
+      super(nameFromPath(path), children);
+      this.path = undot(path);
+    }
 
-  public String getPath() {
-    return path;
-  }
+    @NotNull
+    public String getPath() {
+      return path;
+    }
 
-  static String nameFromPath(String path) {
-    if (path == null) {
-      return null;
-    } else {
-      int slashPos = path.lastIndexOf("/");
-      if (slashPos > 0) {
-        path = path.substring(slashPos + 1);
+    static String nameFromPath(String path) {
+      if (path == null) {
+        return null;
+      } else {
+        int slashPos = path.lastIndexOf("/");
+        if (slashPos > 0) {
+          path = path.substring(slashPos + 1);
+        }
+        int dotPos = path.indexOf(".");
+        if (dotPos > 0) {
+          path = path.substring(0, dotPos);
+        }
+        return path;
       }
+    }
+
+    static String undot(String path) {
       int dotPos = path.indexOf(".");
       if (dotPos > 0) {
         path = path.substring(0, dotPos);
@@ -72,53 +84,52 @@ public class PipelineNodesTree extends AbstractTree {
     }
   }
 
-  static String undot(String path) {
-    int dotPos = path.indexOf(".");
-    if (dotPos > 0) {
-      path = path.substring(0, dotPos);
+  public static class PipelineDir extends PipelineNode {
+
+    public PipelineDir(String path, List<PipelineNode> children) {
+      super(path, children);
     }
-    return path;
-  }
-}
 
-public static class PipelineDir extends PipelineNode {
+    @Override
+    @NotNull
+    @Schema(nullable = false)
+    public List<PipelineNode> getChildren() {
+      return super.getChildren(); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
+    }
 
-  public PipelineDir(String path, List<PipelineNode> children) {
-    super(path, children);
-  }
-}
-
-public static class PipelineFile extends PipelineNode {
-
-  private String title;
-  private String description;
-  private ImmutableList<Argument> arguments;
-  private ImmutableList<Format> destinations;
-
-  public PipelineFile(String path, String title, String description, List<Argument> arguments, List<Format> destinations) {
-    super(path);
-    this.title = title;
-    this.description = description;
-    this.arguments = ImmutableCollectionTools.copy(arguments);
-    this.destinations = ImmutableCollectionTools.copy(destinations);
   }
 
-  public String getTitle() {
-    return title;
-  }
+  public static class PipelineFile extends PipelineNode {
 
-  public String getDescription() {
-    return description;
-  }
+    private final String title;
+    private final String description;
+    private final ImmutableList<Argument> arguments;
+    private final ImmutableList<Format> destinations;
 
-  public ImmutableList<Argument> getArguments() {
-    return arguments;
-  }
+    public PipelineFile(String path, String title, String description, List<Argument> arguments, List<Format> destinations) {
+      super(path);
+      this.title = title;
+      this.description = description;
+      this.arguments = ImmutableCollectionTools.copy(arguments);
+      this.destinations = ImmutableCollectionTools.copy(destinations);
+    }
 
-  public ImmutableList<Format> getDestinations() {
-    return destinations;
-  }
+    public String getTitle() {
+      return title;
+    }
 
-}
+    public String getDescription() {
+      return description;
+    }
+
+    public ImmutableList<Argument> getArguments() {
+      return arguments;
+    }
+
+    public ImmutableList<Format> getDestinations() {
+      return destinations;
+    }
+
+  }
 
 }

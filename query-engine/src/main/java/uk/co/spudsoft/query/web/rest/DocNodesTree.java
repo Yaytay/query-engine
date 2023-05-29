@@ -18,8 +18,12 @@ package uk.co.spudsoft.query.web.rest;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Objects;
 import uk.co.spudsoft.dircache.AbstractTree;
+import uk.co.spudsoft.dircache.AbstractTree.AbstractNode;
 
 /**
  *
@@ -35,6 +39,7 @@ public class DocNodesTree extends AbstractTree {
     @JsonSubTypes.Type(value = DocNodesTree.DocFile.class)
   })
   public static class DocNode extends AbstractNode<DocNode> {
+    
     private final String path; 
 
     public DocNode(String path) {
@@ -47,7 +52,7 @@ public class DocNodesTree extends AbstractTree {
       this.path = path;      
     }
 
-    
+    @NotNull
     public String getPath() {
       return path;
     }
@@ -75,18 +80,27 @@ public class DocNodesTree extends AbstractTree {
     public DocDir(String path,  List<DocNode> children) {
       super(path, children);
     }
+
+    @Override
+    @NotNull
+    @Schema(nullable = false)
+    public List<DocNode> getChildren() {
+      return super.getChildren(); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
+    }
+    
   }
   
   public static class DocFile extends DocNode {
     
-    private String title;
+    private final String title;
     
     @JsonCreator
     public DocFile(String path, String title) {
       super(path);
-      this.title = title;
+      this.title = Objects.requireNonNull(title);
     }
 
+    @NotNull
     public String getTitle() {
       return title;
     }

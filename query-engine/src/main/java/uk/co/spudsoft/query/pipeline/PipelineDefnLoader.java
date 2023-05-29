@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.pipeline;
 
+import uk.co.spudsoft.query.trees.AsyncDirTreeMapper;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.DeserializationFeature;
