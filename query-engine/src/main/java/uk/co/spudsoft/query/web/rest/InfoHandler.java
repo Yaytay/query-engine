@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.vertx.core.file.FileSystemException;
 import io.vertx.core.http.HttpServerRequest;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -34,6 +35,7 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.io.FileNotFoundException;
+import java.nio.file.NoSuchFileException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
@@ -110,7 +112,13 @@ public class InfoHandler {
     } else if (ex instanceof IllegalArgumentException) {
       statusCode = 400;
       message = ex.getMessage();
+    } else if (ex instanceof FileSystemException vfse) {
+      if (ex.getCause() instanceof NoSuchFileException nsfe) {
+        statusCode = 404;
+        message = "File not found";
+      }
     }
+
 
     if (outputAllErrorMessages) {
       message = ExceptionToString.convert(ex, "\n\t");

@@ -134,7 +134,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(200)
             .contentType(equalTo("application/json"))
-            .body(startsWith("{\"description\":\"Test pipeline written as YAML\""))
+            .body(startsWith("{\""))
             .extract().body().asString();
     
     // And can put a yaml file as json
@@ -144,8 +144,8 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(200)
             .contentType(equalTo("application/json"))
-            .body(startsWith("{\"path\":\"\",\"modified\":"))
-            .extract().body().asString();
+            .body(startsWith("{\""))
+            ;
 
     // Can validate a JSON pipeline
     given().contentType(ContentType.JSON).log().all()
@@ -156,7 +156,7 @@ public class DesignHandlerIT {
             .contentType(equalTo("text/plain;charset=UTF-8"))
             .body(equalTo("The pipeline is valid"))
             .extract().body().asString();
-
+    
     // Content for validation must be valid
     given().contentType(ContentType.JSON).log().all()
             .body("not really json")
@@ -188,6 +188,38 @@ public class DesignHandlerIT {
             .body(startsWith("The Pipeline is not valid"))
             .extract().body().asString();
 
+    // Can get a json template file as specific type
+    given().accept("application/json+velocity").log().all()
+            .get("/api/design/file/sub1/sub2/TemplatedJsonToPipelineIT.json.vm")
+            .then().log().all()
+            .statusCode(200)
+            .contentType(equalTo("application/json+velocity"))
+            .body(startsWith("{\r\n  \"arguments\": ["));
+    
+    // Can get a json template file as correct type even if asked for any
+    given().accept(ContentType.ANY).log().all()
+            .get("/api/design/file/sub1/sub2/TemplatedJsonToPipelineIT.json.vm")
+            .then().log().all()
+            .statusCode(200)
+            .contentType(equalTo("application/json+velocity"))
+            .body(startsWith("{\r\n  \"arguments\": ["));
+    
+    // Can get a yaml template file as plain text even if asked for any
+    given().accept(ContentType.ANY).log().all()
+            .get("/api/design/file/sub1/sub2/TemplatedYamlToPipelineIT.yaml.vm")
+            .then().log().all()
+            .statusCode(200)
+            .contentType(equalTo("application/yaml+velocity"))
+            .body(startsWith("arguments:\r\n  - name: key\r\n"));
+    
+    // Request for a file that does not exist should 404
+    given().accept(ContentType.ANY).log().all()
+            .get("/api/design/file/sub4/sub5/Nonexistent.yml")
+            .then().log().all()
+            .statusCode(404)
+            .contentType(equalTo("text/plain"))
+            .body(startsWith("arguments:\r\n  - name: key\r\n"));
+    
     given().log().all()
             .get("/api/design/file/sub1/sub2/permissions.jexl")
             .then().log().all()

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 njt
+ * Copyright (C) 2023 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.web.rest;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -37,7 +38,7 @@ public class DesignNodesTree extends AbstractTree {
     @JsonSubTypes.Type(value = DesignNodesTree.DesignDir.class),
     @JsonSubTypes.Type(value = DesignNodesTree.DesignFile.class)
   })
-  public static abstract class DesignNode extends AbstractNode<DesignNode> {
+  public abstract static class DesignNode extends AbstractNode<DesignNode> {
 
     private final String path;
     private final LocalDateTime modified;
@@ -122,6 +123,7 @@ public class DesignNodesTree extends AbstractTree {
      * @param name The name of the directory in the parent directory.
      * @param children The children of the Directory - in the order returned by FileWalker (which will be dirs first, then probably sorted by name).
      */
+    @JsonCreator
     public DesignDir(String path, LocalDateTime modified, String name, List<DesignNode> children) {
       super(path, modified, name, List.copyOf(children));
     }

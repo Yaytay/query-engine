@@ -30,10 +30,9 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.FileSystem;
+import io.vertx.core.file.FileSystemException;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.Json;
-import jakarta.activation.FileTypeMap;
-import jakarta.activation.MimetypesFileTypeMap;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -53,8 +52,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.NoSuchFileException;
 import java.text.Normalizer;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -110,7 +109,7 @@ public class DesignHandler {
           .put("json", MEDIA_TYPE_JSON_TYPE)
           .put("yaml", MEDIA_TYPE_YAML_TYPE)
           .put("yml", MEDIA_TYPE_YAML_TYPE)
-          .put("json.jm", MEDIA_TYPE_VELOCITY_JSON_TYPE)
+          .put("json.vm", MEDIA_TYPE_VELOCITY_JSON_TYPE)
           .put("yaml.vm", MEDIA_TYPE_VELOCITY_YAML_TYPE)
           .put("yml.vm", MEDIA_TYPE_VELOCITY_YAML_TYPE)
           .put("jexl", MEDIA_TYPE_JEXL_TYPE)
@@ -131,7 +130,6 @@ public class DesignHandler {
   private final PipelineDefnLoader loader;
   private final DirCache dirCache;
   private final java.nio.file.Path root;
-  private final FileTypeMap fileTypeMap;
 
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The PipelineDefnLoader is mutable because it changes the filesystem")
   public DesignHandler(Vertx vertx, PipelineDefnLoader loader, DirCache dirCache) {
@@ -140,16 +138,22 @@ public class DesignHandler {
     this.loader = loader;
     this.dirCache = dirCache;
     this.root = dirCache.getRoot().getPath();
-    this.fileTypeMap = getMimetypesFileTypeMap();
   }
 
-  private static FileTypeMap getMimetypesFileTypeMap() {
-    try {
-      return new MimetypesFileTypeMap();
-    } catch (Throwable ex) {
-      logger.error("Failed to load required mime.types map: ", ex);
-      return MimetypesFileTypeMap.getDefaultFileTypeMap();
+  private static MediaType getFileTypeFromName(String name) {
+    int idx = name.lastIndexOf(".");
+    if (idx > 0) {
+      String extension = name.substring(idx + 1);
+      if ("vm".equals(extension)) {
+        idx = name.lastIndexOf(".", idx - 1);
+        extension = name.substring(idx + 1);
+      }
+      MediaType type = EXTN_TO_TYPE.get(extension);
+      if (type != null) {
+        return type;
+      }
     }
+    throw new IllegalArgumentException("Files of that type cannot be processed");
   }
   
   @GET
@@ -251,28 +255,28 @@ public class DesignHandler {
       path = normalizePath("Get", "file", path);
       String fullPath = resolveToAbsolutePath(path);
       
-      String type = fileTypeMap.getContentType(fullPath);
+      MediaType type = getFileTypeFromName(fullPath);
       
       fs.readFile(fullPath)
               .onSuccess(buffer -> {
                 byte[] bytes = buffer.getBytes();
-                if (MEDIA_TYPE_JSON.equals(type) && prefers(accept, MEDIA_TYPE_YAML_GOOGLE_TYPE, MEDIA_TYPE_JSON_GOOGLE_TYPE)) {
+                if (MEDIA_TYPE_JSON_TYPE.equals(type) && prefers(accept, MEDIA_TYPE_YAML_GOOGLE_TYPE, MEDIA_TYPE_JSON_GOOGLE_TYPE)) {
                   try {
                     JsonNode node = PipelineDefnLoader.JSON_OBJECT_MAPPER.readTree(bytes);
                     byte[] yamlBytes = PipelineDefnLoader.YAML_OBJECT_MAPPER.writeValueAsBytes(node);
                     response.resume(Response.ok(yamlBytes, MEDIA_TYPE_YAML_TYPE).build());
                     return ;
                   } catch (Throwable ex) {
-                    logger.warn("Attempted to conver file contents from json to yaml failed: ", ex);
+                    logger.warn("Attempted to convert file contents from json to yaml failed: ", ex);
                   }
-                } else if (MEDIA_TYPE_YAML.equals(type) && prefers(accept, MEDIA_TYPE_JSON_GOOGLE_TYPE, MEDIA_TYPE_YAML_GOOGLE_TYPE)) {
+                } else if (MEDIA_TYPE_YAML_TYPE.equals(type) && prefers(accept, MEDIA_TYPE_JSON_GOOGLE_TYPE, MEDIA_TYPE_YAML_GOOGLE_TYPE)) {
                   try {
                     JsonNode node = PipelineDefnLoader.YAML_OBJECT_MAPPER.readTree(bytes);
                     byte[] jsonBytes = PipelineDefnLoader.JSON_OBJECT_MAPPER.writeValueAsBytes(node);
                     response.resume(Response.ok(jsonBytes, MEDIA_TYPE_JSON_TYPE).build());
                     return ;
                   } catch (Throwable ex) {
-                    logger.warn("Attempted to conver file contents from json to yaml failed: ", ex);
+                    logger.warn("Attempted to convert file contents from json to yaml failed: ", ex);
                   }
                 } 
                 response.resume(Response.ok(buffer.getBytes(), type).build());
@@ -382,7 +386,7 @@ public class DesignHandler {
   @Consumes(ALL_TYPES)
   @ApiResponse(
           responseCode = "200"
-          , description = "The list of all and directories files."
+          , description = "The list of all directories and files."
           , content = @Content(
                   mediaType = MEDIA_TYPE_JSON
                   , schema = @Schema(implementation = DesignNodesTree.DesignDir.class)
@@ -488,7 +492,7 @@ public class DesignHandler {
   @Operation(description = "Delete a file or folder.")
   @ApiResponse(
           responseCode = "200"
-          , description = "The list of all and directories files."
+          , description = "The list of all directories and files."
           , content = @Content(
                   mediaType = MEDIA_TYPE_JSON
                   , schema = @Schema(implementation = DesignNodesTree.DesignDir.class)
@@ -527,7 +531,7 @@ public class DesignHandler {
   @Operation(description = "Rename a file or folder.")
   @ApiResponse(
           responseCode = "200"
-          , description = "The list of all and directories files."
+          , description = "The list of all directories and files."
           , content = @Content(
                   mediaType = MEDIA_TYPE_JSON
                   , schema = @Schema(implementation = DesignNodesTree.DesignDir.class)
