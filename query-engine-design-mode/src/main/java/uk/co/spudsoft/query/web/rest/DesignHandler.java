@@ -161,7 +161,7 @@ public class DesignHandler {
           , description = "Returns 'true'."
           , content = @Content(
                   mediaType = MEDIA_TYPE_JSON
-                  , schema = @Schema(implementation = Directory.class)
+                  , schema = @Schema(implementation = Boolean.class)
           )
   )
   public void getEnabled(
@@ -185,7 +185,7 @@ public class DesignHandler {
           , description = "The list of all and directories files."
           , content = @Content(
                   mediaType = MEDIA_TYPE_JSON
-                  , schema = @Schema(implementation = Directory.class)
+                  , schema = @Schema(implementation = DesignNodesTree.DesignDir.class)
           )
   )
   public void getAll(
@@ -193,7 +193,7 @@ public class DesignHandler {
           , @Context HttpServerRequest request
   ) {
     try {
-      uk.co.spudsoft.query.web.rest.Directory relativeDir = dirToDir(dirCache.getRoot(), "");
+      DesignNodesTree.DesignDir relativeDir = new DesignNodesTree.DesignDir(root, dirCache.getRoot(), "");
       String json = Json.encode(relativeDir);
       response.resume(Response.ok(json, MEDIA_TYPE_JSON).build());
     } catch (Throwable ex) {
@@ -297,7 +297,7 @@ public class DesignHandler {
                   promise.complete();
                 })
               .onSuccess(buffer -> {
-                uk.co.spudsoft.query.web.rest.Directory relativeDir = dirToDir(dirCache.getRoot(), "");
+                DesignNodesTree.DesignDir relativeDir = new DesignNodesTree.DesignDir(root, dirCache.getRoot(), "");
                 String json = Json.encode(relativeDir);
                 response.resume(Response.ok(json, MEDIA_TYPE_JSON).build());
               })
@@ -328,7 +328,7 @@ public class DesignHandler {
   @Consumes(PIPELINE_TYPES)
   @ApiResponse(
           responseCode = "200"
-          , description = "Test response stating validation state."
+          , description = "Text response stating validation state."
           , content = @Content(
                   mediaType = "text/plain"
           )
@@ -385,6 +385,7 @@ public class DesignHandler {
           , description = "The list of all and directories files."
           , content = @Content(
                   mediaType = MEDIA_TYPE_JSON
+                  , schema = @Schema(implementation = DesignNodesTree.DesignDir.class)
           )
   )
   public void putFile(
@@ -490,6 +491,7 @@ public class DesignHandler {
           , description = "The list of all and directories files."
           , content = @Content(
                   mediaType = MEDIA_TYPE_JSON
+                  , schema = @Schema(implementation = DesignNodesTree.DesignDir.class)
           )
   )
   public void deleteFile(
@@ -512,7 +514,7 @@ public class DesignHandler {
         }
       }
       fs.delete(fullPath)
-              .andThen(ar -> handleFileChange(ar, response, "create folder"));
+              .andThen(ar -> handleFileChange(ar, response, "delete file"));
       
     } catch (Throwable ex) {
       reportError("Failed to delete file: ", response, ex, true);
@@ -528,7 +530,7 @@ public class DesignHandler {
           , description = "The list of all and directories files."
           , content = @Content(
                   mediaType = MEDIA_TYPE_JSON
-                  , schema = @Schema(implementation = Pipeline.class)
+                  , schema = @Schema(implementation = DesignNodesTree.DesignDir.class)
           )
   )
   public void renameFile(
@@ -586,7 +588,7 @@ public class DesignHandler {
       
       renameFuture
               .onSuccess(buffer -> {
-                uk.co.spudsoft.query.web.rest.Directory relativeDir = dirToDir(dirCache.getRoot(), "");
+                DesignNodesTree.DesignDir relativeDir = new DesignNodesTree.DesignDir(root, dirCache.getRoot(), "");
                 String json = Json.encode(relativeDir);
                 response.resume(Response.ok(json, MEDIA_TYPE_JSON).build());
               })
@@ -694,34 +696,7 @@ public class DesignHandler {
       reportError("Failed to get pipeline: ", response, ex, true);
     }    
   }
-  
-  private String relativize(DirCacheTree.Node node) {
-    String relativePath = root.relativize(node.getPath()).toString();
-    if (File.separatorChar != '/') {
-      relativePath = relativePath.replaceAll(Pattern.quote(File.separator), "/");
-    }
-    return relativePath;    
-  }
-  
-  private uk.co.spudsoft.query.web.rest.File fileToFile(DirCacheTree.File src) {
-    return new uk.co.spudsoft.query.web.rest.File(relativize(src), src.getModified(), src.getName(), src.getSize());
-  }
-  
-  
-  private uk.co.spudsoft.query.web.rest.Directory dirToDir(DirCacheTree.Directory src, String name) {
-    List<uk.co.spudsoft.query.web.rest.Node> children = new ArrayList<>();
     
-    for (DirCacheTree.Node child : src.getChildren()) {
-      if (child instanceof DirCacheTree.Directory d) {
-        children.add(dirToDir(d, d.getName()));
-      } else if (child instanceof DirCacheTree.File f) {
-        children.add(fileToFile(f));
-      }
-    }
-    
-    return new uk.co.spudsoft.query.web.rest.Directory(relativize(src), src.getModified(), name, children);
-  }
-  
   private DirCacheTree.Node nodeFromPath(DirCacheTree.Directory root, String[] pathParts, int index) {
     DirCacheTree.Node node = root.get(pathParts[index]);
     if (index == pathParts.length - 1) {
