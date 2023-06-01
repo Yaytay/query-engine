@@ -112,8 +112,8 @@ public class InfoHandler {
     } else if (ex instanceof IllegalArgumentException) {
       statusCode = 400;
       message = ex.getMessage();
-    } else if (ex instanceof FileSystemException vfse) {
-      if (ex.getCause() instanceof NoSuchFileException nsfe) {
+    } else if (ex instanceof FileSystemException) {
+      if (ex.getCause() instanceof NoSuchFileException) {
         statusCode = 404;
         message = "File not found";
       }
