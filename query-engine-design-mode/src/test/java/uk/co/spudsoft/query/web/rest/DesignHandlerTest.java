@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.web.rest;
 
+import com.google.common.net.MediaType;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.vertx.core.Vertx;
@@ -32,6 +33,7 @@ import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 import uk.co.spudsoft.query.web.ServiceException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import uk.co.spudsoft.query.main.Main;
 
@@ -54,6 +56,20 @@ public class DesignHandlerTest {
     assertEquals("target" + java.io.File.separator + "query-engine" + java.io.File.separator + "samples" + java.io.File.separator + "bob", dh.resolveToAbsolutePath(dh.normalizePath("Test", "item", "bob")));
     assertThrows(ServiceException.class, () -> dh.resolveToAbsolutePath(dh.normalizePath("Test", "item", "bob" + java.io.File.separator + ".." + java.io.File.separator + "fred")));
     assertEquals("target" + java.io.File.separator + "query-engine" + java.io.File.separator + "samples" + java.io.File.separator + "schön", dh.resolveToAbsolutePath(dh.normalizePath("Test", "item", "scho\u0308n")));
+  }
+  
+  @Test
+  public void testGetFileTypeFromName() {
+    assertEquals(DesignHandler.MEDIA_TYPE_JSON_TYPE, DesignHandler.getFileTypeFromName("bob.json"));
+    assertEquals(DesignHandler.MEDIA_TYPE_VELOCITY_JSON_TYPE, DesignHandler.getFileTypeFromName("bob.json.vm"));
+    assertThrows(IllegalArgumentException.class, () -> {DesignHandler.getFileTypeFromName("bob.fred.vm");});
+    assertThrows(IllegalArgumentException.class, () -> {DesignHandler.getFileTypeFromName("bob.fred");});
+    assertThrows(IllegalArgumentException.class, () -> {DesignHandler.getFileTypeFromName("bob");});
+  }
+  
+  @Test
+  public void testPrefers() {
+    assertFalse(DesignHandler.prefers("", MediaType.PDF, MediaType.JPEG));
   }
   
 }

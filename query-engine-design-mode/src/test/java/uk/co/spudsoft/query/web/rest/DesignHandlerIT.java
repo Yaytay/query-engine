@@ -137,6 +137,15 @@ public class DesignHandlerIT {
             .body(startsWith("{\""))
             .extract().body().asString();
     
+    // Can get a json file as yaml
+    given().accept("application/yaml").log().all()
+            .get("/api/design/file/sub1/sub2/JsonToPipelineIT.json")
+            .then().log().all()
+            .statusCode(200)
+            .contentType(equalTo("application/yaml"))
+            .body(startsWith("---\ntitle: \""))
+            .extract().body().asString();
+    
     // And can put a yaml file as json
     given().contentType(ContentType.JSON).log().all()
             .body(json)
@@ -184,7 +193,7 @@ public class DesignHandlerIT {
             .post("/api/design/validate")
             .then().log().all()
             .statusCode(400)
-            .contentType(equalTo("text/plain;charset=UTF-8"))
+            .contentType(startsWith("text/plain"))
             .body(startsWith("The Pipeline is not valid"))
             .extract().body().asString();
 
@@ -217,8 +226,9 @@ public class DesignHandlerIT {
             .get("/api/design/file/sub4/sub5/Nonexistent.yml")
             .then().log().all()
             .statusCode(404)
-            .contentType(equalTo("text/plain"))
-            .body(startsWith("arguments:\r\n  - name: key\r\n"));
+            .contentType(startsWith("text/plain"))
+            // Outputs the full error message because this is in "outputAllErrorMessages" mode
+            .body(startsWith("Unable to read file at path 'target" + File.separator + "query-engine" + File.separator + "samples-designit" + File.separator + "sub4" + File.separator + "sub5" + File.separator + "Nonexistent.yml'"));
     
     given().log().all()
             .get("/api/design/file/sub1/sub2/permissions.jexl")

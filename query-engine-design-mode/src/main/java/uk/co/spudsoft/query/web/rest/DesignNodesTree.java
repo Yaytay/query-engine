@@ -33,6 +33,9 @@ import uk.co.spudsoft.dircache.DirCacheTree;
  * @author njt
  */
 public class DesignNodesTree extends AbstractTree {
+
+  private DesignNodesTree() {
+  }
   
   @JsonSubTypes({
     @JsonSubTypes.Type(value = DesignNodesTree.DesignDir.class),
@@ -129,7 +132,7 @@ public class DesignNodesTree extends AbstractTree {
     }
     
     public DesignDir(java.nio.file.Path root, DirCacheTree.Directory src, String name) {
-      super(relativize(root, src), src.getModified(), name, buildChildren(root, src));
+      super(relativize(File.separator, root, src), src.getModified(), name, buildChildren(root, src));
     }
     
     /**
@@ -146,10 +149,10 @@ public class DesignNodesTree extends AbstractTree {
 
   }
   
-  private static String relativize(java.nio.file.Path root, DirCacheTree.Node node) {
+  static String relativize(String separator, java.nio.file.Path root, DirCacheTree.Node node) {
     String relativePath = root.relativize(node.getPath()).toString();
-    if (File.separatorChar != '/') {
-      relativePath = relativePath.replaceAll(Pattern.quote(File.separator), "/");
+    if (!"/".equals(separator)) {
+      relativePath = relativePath.replaceAll(Pattern.quote(separator), "/");
     }
     return relativePath;    
   }
@@ -171,7 +174,7 @@ public class DesignNodesTree extends AbstractTree {
     }
     
     public DesignFile(java.nio.file.Path root, DirCacheTree.File src) {
-      super(relativize(root, src), src.getModified(), src.getName());
+      super(relativize(File.separator, root, src), src.getModified(), src.getName());
       this.size = src.getSize();
     }
 

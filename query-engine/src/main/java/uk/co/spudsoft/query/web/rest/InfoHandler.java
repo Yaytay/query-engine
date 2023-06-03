@@ -119,7 +119,6 @@ public class InfoHandler {
       }
     }
 
-
     if (outputAllErrorMessages) {
       message = ExceptionToString.convert(ex, "\n\t");
     }

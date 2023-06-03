@@ -30,7 +30,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.FileSystem;
-import io.vertx.core.file.FileSystemException;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.Json;
 import jakarta.ws.rs.Consumes;
@@ -52,7 +51,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.NoSuchFileException;
 import java.text.Normalizer;
 import java.util.Arrays;
 import java.util.List;
@@ -91,12 +89,12 @@ public class DesignHandler {
   private static final String MEDIA_TYPE_VELOCITY_JSON = "application/json+velocity";
   private static final String MEDIA_TYPE_JEXL = "application/jexl";
 
-  private static final MediaType MEDIA_TYPE_FOLDER_TYPE = MediaType.valueOf(MEDIA_TYPE_FOLDER);
-  private static final MediaType MEDIA_TYPE_JSON_TYPE = MediaType.valueOf(MEDIA_TYPE_JSON);
-  private static final MediaType MEDIA_TYPE_YAML_TYPE = MediaType.valueOf(MEDIA_TYPE_YAML);
-  private static final MediaType MEDIA_TYPE_VELOCITY_YAML_TYPE = MediaType.valueOf(MEDIA_TYPE_VELOCITY_YAML);
-  private static final MediaType MEDIA_TYPE_VELOCITY_JSON_TYPE = MediaType.valueOf(MEDIA_TYPE_VELOCITY_JSON);
-  private static final MediaType MEDIA_TYPE_JEXL_TYPE = MediaType.valueOf(MEDIA_TYPE_JEXL);
+  static final MediaType MEDIA_TYPE_FOLDER_TYPE = MediaType.valueOf(MEDIA_TYPE_FOLDER);
+  static final MediaType MEDIA_TYPE_JSON_TYPE = MediaType.valueOf(MEDIA_TYPE_JSON);
+  static final MediaType MEDIA_TYPE_YAML_TYPE = MediaType.valueOf(MEDIA_TYPE_YAML);
+  static final MediaType MEDIA_TYPE_VELOCITY_YAML_TYPE = MediaType.valueOf(MEDIA_TYPE_VELOCITY_YAML);
+  static final MediaType MEDIA_TYPE_VELOCITY_JSON_TYPE = MediaType.valueOf(MEDIA_TYPE_VELOCITY_JSON);
+  static final MediaType MEDIA_TYPE_JEXL_TYPE = MediaType.valueOf(MEDIA_TYPE_JEXL);
   
   private static final com.google.common.net.MediaType MEDIA_TYPE_JSON_GOOGLE_TYPE = com.google.common.net.MediaType.parse(MEDIA_TYPE_JSON);
   private static final com.google.common.net.MediaType MEDIA_TYPE_YAML_GOOGLE_TYPE = com.google.common.net.MediaType.parse(MEDIA_TYPE_YAML);
@@ -140,7 +138,7 @@ public class DesignHandler {
     this.root = dirCache.getRoot().getPath();
   }
 
-  private static MediaType getFileTypeFromName(String name) {
+  static MediaType getFileTypeFromName(String name) {
     int idx = name.lastIndexOf(".");
     if (idx > 0) {
       String extension = name.substring(idx + 1);

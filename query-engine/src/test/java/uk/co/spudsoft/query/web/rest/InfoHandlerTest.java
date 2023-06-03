@@ -16,8 +16,10 @@
  */
 package uk.co.spudsoft.query.web.rest;
 
+import io.vertx.core.file.FileSystemException;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.core.Response;
+import java.nio.file.NoSuchFileException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -41,7 +43,7 @@ public class InfoHandlerTest {
     InfoHandler.reportError(log, response, ex, true);
     verify(response).resume(responseCaptor.capture());
     assertEquals(456, responseCaptor.getValue().getStatus());
-    assertEquals("It went wrong (from ServiceException@uk.co.spudsoft.query.web.rest.InfoHandlerTest:40)", responseCaptor.getValue().getEntity());
+    assertEquals("It went wrong (from ServiceException@uk.co.spudsoft.query.web.rest.InfoHandlerTest:42)", responseCaptor.getValue().getEntity());
   }
   
   @Test
@@ -64,6 +66,32 @@ public class InfoHandlerTest {
     ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
     AsyncResponse response = mock(AsyncResponse.class);
     Throwable ex = new NullPointerException("It went wrong");
+    InfoHandler.reportError(log, response, ex, false);
+    verify(response).resume(responseCaptor.capture());
+    assertEquals(500, responseCaptor.getValue().getStatus());
+    assertEquals("Unknown error", responseCaptor.getValue().getEntity());
+  }
+  
+  @Test
+  public void testReportErrorWithVertxFileNotFoundException() {
+    String log = "Test: ";
+    
+    ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
+    AsyncResponse response = mock(AsyncResponse.class);
+    Throwable ex = new FileSystemException("It went wrong", new NoSuchFileException("Not found"));
+    InfoHandler.reportError(log, response, ex, false);
+    verify(response).resume(responseCaptor.capture());
+    assertEquals(404, responseCaptor.getValue().getStatus());
+    assertEquals("File not found", responseCaptor.getValue().getEntity());
+  }
+  
+  @Test
+  public void testReportErrorWithVertxOtherFileException() {
+    String log = "Test: ";
+    
+    ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
+    AsyncResponse response = mock(AsyncResponse.class);
+    Throwable ex = new FileSystemException("It went wrong", new IllegalArgumentException("Bad argument"));
     InfoHandler.reportError(log, response, ex, false);
     verify(response).resume(responseCaptor.capture());
     assertEquals(500, responseCaptor.getValue().getStatus());
