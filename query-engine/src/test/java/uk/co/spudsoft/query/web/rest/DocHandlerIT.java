@@ -75,7 +75,7 @@ public class DocHandlerIT {
     getAllDocs(foundDocs, docsDir);
     logger.debug("Found docs: {}", foundDocs);
     
-    List<String> allDocs = findAllDocs();
+    List<String> allDocs = DocHandlerTest.findAllDocs();
     logger.debug("All docs: {}", allDocs);
     for (String realDoc : allDocs) {
       if (!foundDocs.contains(realDoc)) {
@@ -98,20 +98,6 @@ public class DocHandlerIT {
     }
     return new DocNodesTree.DocDir(json.get("path").textValue(), children);
     
-  }
-  
-  private List<String> findAllDocs() throws IOException {
-    Path root = new File("target/classes/docs").toPath();
-    List<String> result = new ArrayList<>();
-    try (Stream<Path> strm = Files.find(root, 10, (path, attr) -> attr.isRegularFile())) {
-      strm.forEach(p -> {
-        String docPath = root.relativize(p).toString();
-        // Just to make Windows happy
-        docPath = docPath.replace("\\", "/");
-        result.add(docPath);
-      });
-    }
-    return result;
   }
   
   void getAllDocs(Set<String> foundDocs, DocNodesTree.DocDir docs) {

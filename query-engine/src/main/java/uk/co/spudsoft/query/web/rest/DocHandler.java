@@ -58,7 +58,7 @@ public class DocHandler {
   private final boolean outputAllErrorMessages;
   
   private static final String BASE_DIR = "/docs/";
-  private final DocNodesTree.DocDir docs = new DocNodesTree.DocDir(
+  static final DocNodesTree.DocDir DOCS = new DocNodesTree.DocDir(
           "/"
           , Arrays.asList(new DocNodesTree.DocFile("Introduction.MD", "Introduction")
                   , new DocNodesTree.DocFile("Getting Started.MD", "Getting Started")
@@ -69,10 +69,17 @@ public class DocHandler {
                                   new DocNodesTree.DocFile("Design Mode/Design Mode.MD", "Design Mode")
                           )
                   )
+                  , new DocNodesTree.DocDir(
+                          "Samples"
+                          , Arrays.asList(
+                                  new DocNodesTree.DocFile("Samples/Samples Data.MD", "Sample Data")
+                                  , new DocNodesTree.DocFile("Samples/Test Database ERD.svg", "")
+                          )
+                  )
                   
           )
   );
-  private final Set<String> knownDocs = extractKnownDocs(docs);
+  private final Set<String> knownDocs = extractKnownDocs(DOCS);
   
   private static Set<String> extractKnownDocs(DocNodesTree.DocDir root) {
     Set<String> result = new HashSet<>();
@@ -117,7 +124,7 @@ public class DocHandler {
     requestContextBuilder.buildRequestContext(request)
             .compose(context -> {
               logger.trace("Document Request: {}", context);
-              return Future.succeededFuture(docs);
+              return Future.succeededFuture(DOCS);
             })
             .onSuccess(ap -> {
               response.resume(Response.ok(ap, MediaType.APPLICATION_JSON).build());

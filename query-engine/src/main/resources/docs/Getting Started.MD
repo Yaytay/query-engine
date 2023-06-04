@@ -1,1 +1,25 @@
+# Getting Started
+
+The quickest way to get a feel for the Query Engine is to use the [compose file](query-engine-compose.yml).
+
+This compose file needs to be run on a single container host (i.e. not Swarm or Kubernetes) with localhost ports 2000-2003 free.
+It spawns four containers: MySQL, Microsoft SQL Server, PostgreSQL and Query Engine in [Design Mode](Design Mode/Design Mode.MD).
+
+The configuration of the Query Engine container uses the sampleDataLoads configuration to set up a database on each of these DBMS 
+platforms with a [very similar structure and data](Samples/Sample Data.MD).
+This data is all set up in transient storage - when the containers are deleted the sample data will go with them (though the containers
+can be restarted without losing it).
+
+Whenever the Query Engine starts it tries to access (and monitor) its baseConfigPath 
+(by default this is "/var/query-engine", but it can be changed if necessary, though you should prefer using volume mounts to point this location
+to your files rather than reconfiguring it).
+In production use the baseConfigPath is where you will store the query files that the Query Engine uses.
+Whenever the Query Engine boots, if the baseConfigPath does not exist it will attempt to create a directory (and parent directories) there.
+If the baseConfigPath does exist and isn't a directory the Query Engine will fail to start.
+If the baseConfigPath is an empty directory the Query Engine will copy the sample queries to that location - the only way to disable this behaviour is to create 
+a file in the directory before starting the Query Engine.
+
+Putting this behaviour together means that when the Query Engine starts using the provided compose file it is a demonstrable system that can be
+experienced with minimal additional work.
+
 
