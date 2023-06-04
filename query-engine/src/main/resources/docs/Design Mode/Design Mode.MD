@@ -1,12 +1,9 @@
 # Design Mode
 
-{% note %}
-**WARNING**
-
-  DO NOT EVER USE DESIGN MODE IN PRODUCTION
-  Design Mode allows any user with access to the API to read/write your queries.
-
-{% endnote %}
+> **Warning**
+> DO NOT USE DESIGN MODE FOR PRODUCTION
+> Containers running with the design-mode image are insecure and must not be accessible to external users as 
+> it allows any user with access to the API to read/write your queries.
 
 Design Mode extends the API and UI of Query Engine to provide a supported environment for designing queries.
 
@@ -26,11 +23,6 @@ Given the above, your query developers should then:
 * When all changes have been made and tested the query developers should push their changes to the repository.
   At which point the CI pipeline will make them live.
 
-
-{% tip %}
-**Templates**
-
-  Design Mode will only permit the editing of Velocity templates as plain text files (and there are much better text editors than it).
-  As a general rule you should stop using Design Mode when you start using Velocity templates.
-
-{% endtip %}
+> **Note**
+> Design Mode will only permit the editing of Velocity templates as plain text files (and there are much better text editors than it).
+> As a general rule you should stop using Design Mode when you start using Velocity templates.
