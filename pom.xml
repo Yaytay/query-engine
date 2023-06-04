@@ -671,7 +671,7 @@
             <executions>
               <execution>
                 <id>download-ui</id>
-                <phase>pre-integration-test</phase>
+                <phase>generate-resources</phase>
                 <goals>
                   <goal>wget</goal>
                 </goals>
@@ -692,7 +692,7 @@
               <execution>
                 <id>copy-ui</id>
                 <!-- here the phase you need -->
-                <phase>pre-integration-test</phase>
+                <phase>generate-resources</phase>
                 <goals>
                   <goal>copy-resources</goal>
                 </goals>
@@ -701,7 +701,7 @@
                   <includeEmptyDirs>true</includeEmptyDirs>
                   <resources>          
                     <resource>
-                      <directory>${basedir}/target/ui-build/build</directory>
+                      <directory>${basedir}/target/ui-build/dist</directory>
                     </resource>
                   </resources>              
                 </configuration>            
