@@ -1,6 +1,6 @@
 = Query Engine II
 
-image:https://img.shields.io/badge/vert.x-4.4.1-purple.svg[link="https://vertx.io"]
+image:https://img.shields.io/badge/vert.x-4.4.2-purple.svg[link="https://vertx.io"]
 image:https://github.com/Yaytay/query-engine/actions/workflows/maven.yml/badge.svg[link="https://github.com/Yaytay/query-engine/actions/workflows/maven.yml"]
 image:https://img.shields.io/github/v/release/yaytay/query-engine.svg[Latest Release,link=https://github.com/yaytay/query-engine/latest]
 image:https://img.shields.io/github/license/yaytay/query-engine.svg[License,link=https://github.com/yaytay/query-engine/blob/master/LICENCE.md]
@@ -53,3 +53,7 @@ By default the Query Engine cannot modify queries - for it to be able to do so w
 The Query Engine can be deployed in "Design Mode" which breaks that rule and allows the UI to save designed queries.
 In order to prevent accidental deployment of Design Mode it is an entirely separate image.
 
+- Documentation
+
+Full documentation for Query Engine (apart from this file) can be accessed from a running instance via the user interface.
+To access the documentation via GitHub start here: https://github.com/Yaytay/query-engine/blob/main/query-engine/src/main/resources/docs/Introduction.MD
