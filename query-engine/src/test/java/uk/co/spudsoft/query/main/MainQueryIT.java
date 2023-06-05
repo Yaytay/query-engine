@@ -64,12 +64,13 @@ public class MainQueryIT {
     String baseConfigDir = "target/query-engine/samples";
     Main.prepareBaseConfigPath(new File(baseConfigDir));
     main.testMain(new String[]{
-      "audit.datasource.url=jdbc:" + postgres.getUrl()
-      , "audit.datasource.schema=public"
-      , "audit.datasource.adminUser.username=" + postgres.getUser()
-      , "audit.datasource.adminUser.password=" + postgres.getPassword()
-      , "audit.datasource.user.username=" + postgres.getUser()
-      , "audit.datasource.user.password=" + postgres.getPassword()
+      "audit.datasource.url=jdbc:" + mysql.getUrl()
+      , "audit.datasource.adminUser.username=" + mysql.getUser()
+      , "audit.datasource.adminUser.password=" + mysql.getPassword()
+      , "audit.datasource.user.username=" + mysql.getUser()
+      , "audit.datasource.user.password=" + mysql.getPassword()
+      , "audit.retryLimit=100"
+      , "audit.retryIncrementMs=500"
       , "baseConfigPath=" + baseConfigDir
       , "vertxOptions.eventLoopPoolSize=5"
       , "vertxOptions.workerPoolSize=5"

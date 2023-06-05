@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.main;
 
 import io.restassured.RestAssured;
+import static io.restassured.RestAssured.given;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -28,11 +29,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
-import static io.restassured.RestAssured.given;
 import io.vertx.junit5.Timeout;
 import java.util.concurrent.TimeUnit;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
@@ -66,11 +67,13 @@ public class MainQueryIT {
   public void testQuery() throws Exception {
     Main main = new DesignMain();
     main.testMain(new String[]{
-      "audit.datasource.url=jdbc:" + postgres.getUrl()
-      , "audit.datasource.adminUser.username=" + postgres.getUser()
-      , "audit.datasource.adminUser.password=" + postgres.getPassword()
-      , "audit.datasource.user.username=" + postgres.getUser()
-      , "audit.datasource.user.password=" + postgres.getPassword()
+      "audit.datasource.url=jdbc:" + mysql.getUrl()
+      , "audit.datasource.adminUser.username=" + mysql.getUser()
+      , "audit.datasource.adminUser.password=" + mysql.getPassword()
+      , "audit.datasource.user.username=" + mysql.getUser()
+      , "audit.datasource.user.password=" + mysql.getPassword()
+      , "audit.retryLimit=100"
+      , "audit.retryIncrementMs=500"
       , "baseConfigPath=target/query-engine/samples"
       , "vertxOptions.eventLoopPoolSize=5"
       , "vertxOptions.workerPoolSize=5"
@@ -116,7 +119,46 @@ public class MainQueryIT {
             .extract().body().asString();
     
     assertThat(body, startsWith("{\"name\":\"\",\"children\":[{\"name\":\"demo\",\"children\":[{\"name\":\"FeatureRichExample\",\"path\":"));
+
+    body = given()
+            .queryParam("minDate", "1971-05-06")
+            .queryParam("_fmt", "tab")
+            .accept("text/html")
+            .log().all()
+            .get("/query/demo/FeatureRichExample")
+            .then()
+            .log().ifError()
+            .statusCode(200)
+            .extract().body().asString();
     
+    assertThat(body, startsWith("\"dataId\"\t\"instant\""));
+    
+    body = given()
+            .queryParam("minDate", "2971-05-06")
+            .queryParam("_fmt", "json")
+            .accept("text/html")
+            .log().all()
+            .get("/query/demo/FeatureRichExample")
+            .then()
+            .log().ifError()
+            .statusCode(200)
+            .extract().body().asString();
+    
+    assertThat(body, equalTo("[]"));
+    
+    body = given()
+            .queryParam("minDate", "1971-05-06")
+            .queryParam("_fmt", "xlsx")
+            .accept("text/html")
+            .log().all()
+            .get("/query/demo/FeatureRichExample")
+            .then()
+            .log().ifError()
+            .statusCode(200)
+            .extract().body().asString();
+    
+    assertThat(body, startsWith("PK"));
+        
     body = given()
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
@@ -194,5 +236,5 @@ public class MainQueryIT {
     
     main.shutdown();
   }
-  
+
 }
