@@ -105,16 +105,21 @@ public class FormatHtmlInstance implements FormatInstance {
   }
 
   private String rowFromRow(DataRow row) {
-    StringBuilder header = new StringBuilder();
+    StringBuilder tr = new StringBuilder();
     String evenRow = ((rowNum++ % 2 == 0) ? "evenRow" : "oddRow");
-    header.append("<tr class=\"dataRow ").append(evenRow).append("\" >");
+    tr.append("<tr class=\"dataRow ").append(evenRow).append("\" >");
     int colNum = 0;
     for (Entry<String, Object> field : row.getMap().entrySet()) {
       String evenCol = ((colNum++ % 2 == 0) ? "evenCol" : "oddCol");
-      header.append("<td class=\"").append(evenRow).append(" ").append(evenCol).append("\">").append(field.getValue()).append("</td>");
+      Object value = field.getValue();
+      tr.append("<td class=\"").append(evenRow).append(" ").append(evenCol).append("\">");
+      if (value != null) {
+        tr.append(value);
+      }
+      tr.append("</td>");
     }
-    header.append("</tr>\n");
-    return header.toString();
+    tr.append("</tr>\n");
+    return tr.toString();
   }
 
   @Override
