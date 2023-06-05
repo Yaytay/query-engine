@@ -98,8 +98,8 @@ public class MainQueryIT {
             .log().all()
             .get("/openapi.yaml")
             .then()
+            .log().ifError()
             .statusCode(200)
-            .log().all()
             .extract().body().asString();
     
     assertThat(body, startsWith("openapi: 3.1.0"));
@@ -109,8 +109,8 @@ public class MainQueryIT {
             .log().all()
             .get("/openapi.json")
             .then()
+            .log().ifError()
             .statusCode(200)
-            .log().all()
             .extract().body().asString();
     
     assertThat(body, containsString("\"openapi\" : \"3.1.0\","));
@@ -120,8 +120,8 @@ public class MainQueryIT {
             .log().all()
             .get("/api/info/available")
             .then()
+            .log().ifError()
             .statusCode(200)
-            .log().all()
             .extract().body().asString();
     
     // assertThat(body, equalTo("{\"name\":\"\",\"children\":[{\"name\":\"demo\",\"children\":[{\"name\":\"FeatureRichExample\",\"path\":\"demo/FeatureRichExample\",\"title\":\"Feature Rich Example\",\"description\":\"A complex pipeline that tries to demonstrate as many features as I can cram into a single pipeline.\\n\",\"arguments\":{\"key\":{\"type\":\"String\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[{\"id\":\"MS SQL Server\"},{\"id\":\"MySQL\"},{\"id\":\"PostgreSQL\"}]},\"port\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]},\"maxId\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]}},\"destinations\":[{\"type\":\"Logger\",\"type\":\"LOGGER\",\"format\":\"log\"}],\"leaf\":true},{\"name\":\"LookupValues\",\"path\":\"demo/LookupValues\",\"title\":\"Lookup Values\",\"description\":\"Extract values to use for the demo/FeatureRichExample.\",\"arguments\":{\"key\":{\"type\":\"String\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[{\"id\":\"MS SQL Server\"},{\"id\":\"MySQL\"},{\"id\":\"PostgreSQL\"}]},\"port\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]},\"maxId\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]}},\"destinations\":[{\"type\":\"JSON\",\"type\":\"JSON\",\"format\":\"json\",\"extension\":\"json\",\"mediaType\":{}}],\"leaf\":true}],\"path\":\"demo\",\"leaf\":false},{\"name\":\"sub1\",\"children\":[{\"name\":\"sub2\",\"children\":[{\"name\":\"JsonToPipelineIT\",\"path\":\"sub1/sub2/JsonToPipelineIT\",\"title\":\"Test Pipeline in JSON\",\"arguments\":{\"key\":{\"type\":\"String\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]},\"port\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]}},\"destinations\":[{\"type\":\"Logger\",\"type\":\"LOGGER\",\"format\":\"log\"}],\"leaf\":true},{\"name\":\"TemplatedJsonToPipelineIT\",\"path\":\"sub1/sub2/TemplatedJsonToPipelineIT\",\"arguments\":{\"key\":{\"type\":\"String\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]},\"port\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]}},\"destinations\":[{\"type\":\"JSON\",\"type\":\"JSON\",\"format\":\"json\",\"extension\":\"json\",\"mediaType\":{}}],\"leaf\":true},{\"name\":\"TemplatedYamlToPipelineIT\",\"path\":\"sub1/sub2/TemplatedYamlToPipelineIT\",\"arguments\":{\"key\":{\"type\":\"String\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[{\"id\":\"MS SQL Server\"},{\"id\":\"MySQL\"},{\"id\":\"PostgreSQL\"}]},\"port\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]}},\"destinations\":[{\"type\":\"Logger\",\"type\":\"LOGGER\",\"format\":\"log\"},{\"type\":\"XLSX\",\"type\":\"XLSX\",\"format\":\"xlsx\",\"extension\":\"xlsx\",\"mediaType\":{}},{\"type\":\"Delimited\",\"type\":\"CSV\",\"format\":\"tab\",\"extension\":\"tsv\",\"mediaType\":{},\"delimiter\":\"\\t\",\"openQuote\":\"\\\"\",\"closeQuote\":\"\\\"\",\"newline\":\"\\n\"},{\"type\":\"Delimited\",\"type\":\"CSV\",\"format\":\"csv\",\"extension\":\"csv\",\"mediaType\":{},\"delimiter\":\",\",\"openQuote\":\"\\\"\",\"closeQuote\":\"\\\"\",\"newline\":\"\\r\\n\"},{\"type\":\"HTML\",\"type\":\"HTML\",\"format\":\"table\",\"extension\":\"html\",\"mediaType\":{}}],\"leaf\":true},{\"name\":\"YamlToPipelineIT\",\"path\":\"sub1/sub2/YamlToPipelineIT\",\"description\":\"Test pipeline written as YAML\",\"arguments\":{\"key\":{\"type\":\"String\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[{\"id\":\"MS SQL Server\"},{\"id\":\"MySQL\"},{\"id\":\"PostgreSQL\"}]},\"port\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]},\"maxId\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]}},\"destinations\":[{\"type\":\"Logger\",\"type\":\"LOGGER\",\"format\":\"log\"}],\"leaf\":true}],\"path\":\"sub1/sub2\",\"leaf\":false}],\"path\":\"sub1\",\"leaf\":false}],\"path\":\"\",\"leaf\":false}"));
@@ -134,8 +134,8 @@ public class MainQueryIT {
             .log().all()
             .get("/query/demo/FeatureRichExample")
             .then()
+            .log().ifError()
             .statusCode(200)
-            .log().all()
             .extract().body().asString();
     
     assertThat(body, startsWith("\"dataId\"\t\"instant\""));
@@ -147,8 +147,8 @@ public class MainQueryIT {
             .log().all()
             .get("/query/demo/FeatureRichExample")
             .then()
+            .log().ifError()
             .statusCode(200)
-            .log().all()
             .extract().body().asString();
     
     assertThat(body, equalTo("[]"));
@@ -160,8 +160,8 @@ public class MainQueryIT {
             .log().all()
             .get("/query/demo/FeatureRichExample")
             .then()
+            .log().ifError()
             .statusCode(200)
-            .log().all()
             .extract().body().asString();
     
     assertThat(body, startsWith("PK"));
@@ -173,8 +173,8 @@ public class MainQueryIT {
             .log().all()
             .get("/query/sub1/sub2/TemplatedJsonToPipelineIT")
             .then()
+            .log().ifError()
             .statusCode(200)
-            .log().all()
             .extract().body().asString();
     
     assertThat(body, startsWith("[{\"dataId\":1,\"instant\":\"1971-05-07T03:00\",\"ref\":\"antiquewhite\",\"value\":\"first\",\"children\":\"one\",\"DateField\":\"2023-05-05\",\"TimeField\":null,\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null}"));
@@ -185,8 +185,8 @@ public class MainQueryIT {
             .log().all()
             .get("/query/sub1/sub2/TemplatedJsonToPipelineIT")
             .then()
+            .log().ifError()
             .statusCode(200)
-            .log().all()
             .extract().body().asString();
     
     // Note that MySQL doesn't do booleans
@@ -199,8 +199,8 @@ public class MainQueryIT {
             .log().all()
             .get("/query/sub1/sub2/TemplatedYamlToPipelineIT")
             .then()
+            .log().ifError()
             .statusCode(200)
-            .log().all()
             .extract().body().asByteArray();
     
     assertThat(bodyBytes, notNullValue());
@@ -211,8 +211,8 @@ public class MainQueryIT {
             .log().all()
             .get("/query/sub1/sub2/TemplatedYamlToPipelineIT?_fmt=csv")
             .then()
+            .log().ifError()
             .statusCode(200)
-            .log().all()
             .extract().body().asString();
     
     assertThat(body, startsWith("1,\"1971-05-07T03:00\",\"antiquewhite\",\"first\",\""));
@@ -223,8 +223,8 @@ public class MainQueryIT {
             .log().all()
             .get("/query/sub1/sub2/TemplatedYamlToPipelineIT.tsv")
             .then()
+            .log().ifError()
             .statusCode(200)
-            .log().all()
             .extract().body().asString();
         
     assertThat(body, startsWith("\"dataId\"\t\"instant\"\t\"ref\"\t\"value\"\t\"children\"\n1\t\"1971-05-07T03:00\"\t\"antiquewhite\"\t\"first\"\t\"one\""));
@@ -235,8 +235,8 @@ public class MainQueryIT {
             .log().all()
             .get("/query/sub1/sub2/TemplatedYamlToPipelineIT.html")
             .then()
+            .log().ifError()
             .statusCode(200)
-            .log().all()
             .extract().body().asString();
     
     assertThat(body, startsWith("<table class=\"qetable\"><thead>\n<tr class=\"header\"><th class=\"header evenCol\" >dataId</th><th class=\"header oddCol\" >instant</th><th class=\"header evenCol\" >ref</th><th class=\"header oddCol\" >value</th><th class=\"header evenCol\" >children</th></tr>\n</thead><tbody>\n<tr class=\"dataRow evenRow\" ><td class=\"evenRow evenCol\">1</td><td class=\"evenRow oddCol\">1971-05-07T03:00</td><td class=\"evenRow evenCol\">antiquewhite</td><td class=\"evenRow oddCol\">first</td><td class=\"evenRow evenCol\">one</td></tr>"));

@@ -89,8 +89,8 @@ public class MainQueryIT {
             .log().all()
             .get("/openapi.yaml")
             .then()
+            .log().ifError()
             .statusCode(200)
-            .log().all()
             .extract().body().asString();
     
     assertThat(body, startsWith("openapi: 3.1.0"));
@@ -100,8 +100,8 @@ public class MainQueryIT {
             .log().all()
             .get("/openapi.json")
             .then()
+            .log().ifError()
             .statusCode(200)
-            .log().all()
             .extract().body().asString();
     
     assertThat(body, containsString("\"openapi\" : \"3.1.0\","));
@@ -111,8 +111,8 @@ public class MainQueryIT {
             .log().all()
             .get("/api/info/available")
             .then()
+            .log().ifError()
             .statusCode(200)
-            .log().all()
             .extract().body().asString();
     
     assertThat(body, startsWith("{\"name\":\"\",\"children\":[{\"name\":\"demo\",\"children\":[{\"name\":\"FeatureRichExample\",\"path\":"));
@@ -124,8 +124,8 @@ public class MainQueryIT {
             .log().all()
             .get("/query/sub1/sub2/TemplatedJsonToPipelineIT")
             .then()
+            .log().ifError()
             .statusCode(200)
-            .log().all()
             .extract().body().asString();
     
     assertThat(body, startsWith("[{\"dataId\":1,\"instant\":\"1971-05-07T03:00\",\"ref\":\"antiquewhite\",\"value\":\"first\",\"children\":\"one\",\"DateField\":\"2023-05-05\",\"TimeField\":null,\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null}"));
@@ -136,8 +136,8 @@ public class MainQueryIT {
             .log().all()
             .get("/query/sub1/sub2/TemplatedJsonToPipelineIT")
             .then()
+            .log().ifError()
             .statusCode(200)
-            .log().all()
             .extract().body().asString();
     
     // Note that MySQL doesn't do booleans
@@ -150,8 +150,8 @@ public class MainQueryIT {
             .log().all()
             .get("/query/sub1/sub2/TemplatedYamlToPipelineIT")
             .then()
+            .log().ifError()
             .statusCode(200)
-            .log().all()
             .extract().body().asByteArray();
     
     assertThat(bodyBytes, notNullValue());
@@ -162,8 +162,8 @@ public class MainQueryIT {
             .log().all()
             .get("/query/sub1/sub2/TemplatedYamlToPipelineIT?_fmt=csv")
             .then()
+            .log().ifError()
             .statusCode(200)
-            .log().all()
             .extract().body().asString();
     
     assertThat(body, startsWith("1,\"1971-05-07T03:00\",\"antiquewhite\",\"first\",\""));
@@ -174,8 +174,8 @@ public class MainQueryIT {
             .log().all()
             .get("/query/sub1/sub2/TemplatedYamlToPipelineIT.tsv")
             .then()
+            .log().ifError()
             .statusCode(200)
-            .log().all()
             .extract().body().asString();
         
     assertThat(body, startsWith("\"dataId\"\t\"instant\"\t\"ref\"\t\"value\"\t\"children\"\n1\t\"1971-05-07T03:00\"\t\"antiquewhite\"\t\"first\"\t\"one\""));
@@ -186,8 +186,8 @@ public class MainQueryIT {
             .log().all()
             .get("/query/sub1/sub2/TemplatedYamlToPipelineIT.html")
             .then()
+            .log().ifError()
             .statusCode(200)
-            .log().all()
             .extract().body().asString();
     
     assertThat(body, startsWith("<table class=\"qetable\"><thead>\n<tr class=\"header\"><th class=\"header evenCol\" >dataId</th><th class=\"header oddCol\" >instant</th><th class=\"header evenCol\" >ref</th><th class=\"header oddCol\" >value</th><th class=\"header evenCol\" >children</th></tr>\n</thead><tbody>\n<tr class=\"dataRow evenRow\" ><td class=\"evenRow evenCol\">1</td><td class=\"evenRow oddCol\">1971-05-07T03:00</td><td class=\"evenRow evenCol\">antiquewhite</td><td class=\"evenRow oddCol\">first</td><td class=\"evenRow evenCol\">one</td></tr>"));
