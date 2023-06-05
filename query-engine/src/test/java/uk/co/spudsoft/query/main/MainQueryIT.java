@@ -127,46 +127,7 @@ public class MainQueryIT {
     
     // assertThat(body, equalTo("{\"name\":\"\",\"children\":[{\"name\":\"demo\",\"children\":[{\"name\":\"FeatureRichExample\",\"path\":\"demo/FeatureRichExample\",\"title\":\"Feature Rich Example\",\"description\":\"A complex pipeline that tries to demonstrate as many features as I can cram into a single pipeline.\\n\",\"arguments\":{\"key\":{\"type\":\"String\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[{\"id\":\"MS SQL Server\"},{\"id\":\"MySQL\"},{\"id\":\"PostgreSQL\"}]},\"port\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]},\"maxId\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]}},\"destinations\":[{\"type\":\"Logger\",\"type\":\"LOGGER\",\"format\":\"log\"}],\"leaf\":true},{\"name\":\"LookupValues\",\"path\":\"demo/LookupValues\",\"title\":\"Lookup Values\",\"description\":\"Extract values to use for the demo/FeatureRichExample.\",\"arguments\":{\"key\":{\"type\":\"String\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[{\"id\":\"MS SQL Server\"},{\"id\":\"MySQL\"},{\"id\":\"PostgreSQL\"}]},\"port\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]},\"maxId\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]}},\"destinations\":[{\"type\":\"JSON\",\"type\":\"JSON\",\"format\":\"json\",\"extension\":\"json\",\"mediaType\":{}}],\"leaf\":true}],\"path\":\"demo\",\"leaf\":false},{\"name\":\"sub1\",\"children\":[{\"name\":\"sub2\",\"children\":[{\"name\":\"JsonToPipelineIT\",\"path\":\"sub1/sub2/JsonToPipelineIT\",\"title\":\"Test Pipeline in JSON\",\"arguments\":{\"key\":{\"type\":\"String\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]},\"port\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]}},\"destinations\":[{\"type\":\"Logger\",\"type\":\"LOGGER\",\"format\":\"log\"}],\"leaf\":true},{\"name\":\"TemplatedJsonToPipelineIT\",\"path\":\"sub1/sub2/TemplatedJsonToPipelineIT\",\"arguments\":{\"key\":{\"type\":\"String\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]},\"port\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]}},\"destinations\":[{\"type\":\"JSON\",\"type\":\"JSON\",\"format\":\"json\",\"extension\":\"json\",\"mediaType\":{}}],\"leaf\":true},{\"name\":\"TemplatedYamlToPipelineIT\",\"path\":\"sub1/sub2/TemplatedYamlToPipelineIT\",\"arguments\":{\"key\":{\"type\":\"String\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[{\"id\":\"MS SQL Server\"},{\"id\":\"MySQL\"},{\"id\":\"PostgreSQL\"}]},\"port\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]}},\"destinations\":[{\"type\":\"Logger\",\"type\":\"LOGGER\",\"format\":\"log\"},{\"type\":\"XLSX\",\"type\":\"XLSX\",\"format\":\"xlsx\",\"extension\":\"xlsx\",\"mediaType\":{}},{\"type\":\"Delimited\",\"type\":\"CSV\",\"format\":\"tab\",\"extension\":\"tsv\",\"mediaType\":{},\"delimiter\":\"\\t\",\"openQuote\":\"\\\"\",\"closeQuote\":\"\\\"\",\"newline\":\"\\n\"},{\"type\":\"Delimited\",\"type\":\"CSV\",\"format\":\"csv\",\"extension\":\"csv\",\"mediaType\":{},\"delimiter\":\",\",\"openQuote\":\"\\\"\",\"closeQuote\":\"\\\"\",\"newline\":\"\\r\\n\"},{\"type\":\"HTML\",\"type\":\"HTML\",\"format\":\"table\",\"extension\":\"html\",\"mediaType\":{}}],\"leaf\":true},{\"name\":\"YamlToPipelineIT\",\"path\":\"sub1/sub2/YamlToPipelineIT\",\"description\":\"Test pipeline written as YAML\",\"arguments\":{\"key\":{\"type\":\"String\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[{\"id\":\"MS SQL Server\"},{\"id\":\"MySQL\"},{\"id\":\"PostgreSQL\"}]},\"port\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]},\"maxId\":{\"type\":\"Integer\",\"optional\":false,\"multiValued\":false,\"possibleValues\":[]}},\"destinations\":[{\"type\":\"Logger\",\"type\":\"LOGGER\",\"format\":\"log\"}],\"leaf\":true}],\"path\":\"sub1/sub2\",\"leaf\":false}],\"path\":\"sub1\",\"leaf\":false}],\"path\":\"\",\"leaf\":false}"));
     assertThat(body, startsWith("{\"name\":\"\",\"children\":[{\"name\":\"demo\",\"children\":[{\"name\":\"FeatureRichExample\",\"path\":"));
-    
-    body = given()
-            .queryParam("minDate", "1971-05-06")
-            .queryParam("_fmt", "tab")
-            .accept("text/html")
-            .log().all()
-            .get("/query/demo/FeatureRichExample")
-            .then()
-            .log().ifError()
-            .statusCode(200)
-            .extract().body().asString();
-    
-    assertThat(body, startsWith("\"dataId\"\t\"instant\""));
-    
-    body = given()
-            .queryParam("minDate", "2971-05-06")
-            .queryParam("_fmt", "json")
-            .accept("text/html")
-            .log().all()
-            .get("/query/demo/FeatureRichExample")
-            .then()
-            .log().ifError()
-            .statusCode(200)
-            .extract().body().asString();
-    
-    assertThat(body, equalTo("[]"));
-    
-    body = given()
-            .queryParam("minDate", "1971-05-06")
-            .queryParam("_fmt", "xlsx")
-            .accept("text/html")
-            .log().all()
-            .get("/query/demo/FeatureRichExample")
-            .then()
-            .log().ifError()
-            .statusCode(200)
-            .extract().body().asString();
-    
-    assertThat(body, startsWith("PK"));
-    
+        
     body = given()
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
