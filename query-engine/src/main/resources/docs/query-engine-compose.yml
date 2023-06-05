@@ -42,4 +42,6 @@ services:
     - query-engine.audit.dataSource.user.password=T0p-secret
     - query-engine.audit.dataSource.adminUser.username=user
     - query-engine.audit.dataSource.adminUser.password=T0p-secret
+    - query-engine.audit.retryLimit=100
+    - query-engine.audit.retryIncrementMs=500
     - query-engine.jwt.acceptableIssuerRegexes[0]=.*

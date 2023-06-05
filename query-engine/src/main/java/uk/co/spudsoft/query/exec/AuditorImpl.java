@@ -151,6 +151,8 @@ public class AuditorImpl implements Auditor {
           });
           
           logger.info("Database updated");
+          lastSQLException = null;
+          lastLiquibaseException = null;
           break;
         } catch (Throwable ex) {
           lastLiquibaseException = null;
