@@ -59,6 +59,8 @@ source:
         /* BIND join "FieldValues" fv2 on fv2."dataId" = d."dataId" and fv2."fieldId" = 4 and fv2."longValue" <= :maxLong */
         /* BIND join "FieldValues" fv3 on fv3."dataId" = d."dataId" and fv3."fieldId" = 7 and fv3."textValue" like :textLike */
         /* BIND join "ManyData" m on d."dataId" = m."dataId" join "RefData" r on r."refId" = m."refId" and r.value = :refValue */
+    where 
+        d."dataId" < :maxId
     order by 
         d."dataId"
 processors:
@@ -77,7 +79,7 @@ processors:
       query: select "dataId", value from "ManyData" m join "RefData" r on r."refId" = m."refId" where "dataId" < :maxId order by "dataId", sort
 - type: DYNAMIC_FIELD
   innerJoin: false
-  parentIdColumn: id
+  parentIdColumn: dataId
   fieldColumnColumn: valuefield
   valuesParentIdColumn: dataId
   valuesFieldIdColumn: fieldId
@@ -86,12 +88,14 @@ processors:
       type: SQL
       endpoint: MySQL
       streamingFetchSize: 10
+      replaceDoubleQuotes: true  
       query: select "fieldId" as id, name, type, "valueField" from "Fields" order by "fieldId"
   fieldValues: 
     source:    
       type: SQL
       endpoint: MySQL
       streamingFetchSize: 10
+      replaceDoubleQuotes: true  
       query:  select dataId, "fieldId", "dateValue", "timeValue", "dateTimeValue", "longValue", "doubleValue", "boolValue", "textValue" from "FieldValues" order by "dataId", "fieldId"
 - type: LIMIT
   limit: 13

@@ -526,5 +526,90 @@
     </plugins>
   </build>
 
+  <profiles>
+    <profile>
+      <id>ui</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.googlecode.maven-download-plugin</groupId>
+            <artifactId>download-maven-plugin</artifactId>
+            <version>1.7.0</version>
+            <executions>
+              <execution>
+                <id>download-ui</id>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>wget</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <url>https://github.com/Yaytay/query-engine-ui/releases/latest/download/build.tar.gz</url>
+              <unpack>true</unpack>
+              <followRedirects>true</followRedirects>
+              <outputDirectory>target/ui-build</outputDirectory>
+            </configuration>
+          </plugin>
+                      
+          <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <version>3.3.1</version>
+            <executions>
+              <execution>
+                <id>copy-ui</id>
+                <!-- here the phase you need -->
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${basedir}/target/classes/www</outputDirectory>
+                  <includeEmptyDirs>true</includeEmptyDirs>
+                  <resources>          
+                    <resource>
+                      <directory>${basedir}/target/ui-build/dist</directory>
+                    </resource>
+                  </resources>              
+                </configuration>            
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    
+    <profile>
+      <id>dev-ui</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <version>3.3.1</version>
+            <executions>
+              <execution>
+                <id>copy-ui</id>
+                <!-- here the phase you need -->
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${basedir}/target/classes/www</outputDirectory>
+                  <includeEmptyDirs>true</includeEmptyDirs>
+                  <resources>          
+                    <resource>
+                      <directory>${basedir}/../../query-engine-ui/dist</directory>
+                    </resource>
+                  </resources>              
+                </configuration>            
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
 </project>
 

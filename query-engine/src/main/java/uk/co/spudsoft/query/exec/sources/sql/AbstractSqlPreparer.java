@@ -168,7 +168,7 @@ public abstract class AbstractSqlPreparer {
 
   protected void processBind(ImmutableMap<String, ArgumentInstance> argSrc, Matcher matcher, Map<String, Integer> baseNumberedArgs, String varName, List<Object> args, StringBuilder builder) {
     ArgumentInstance argInstance = argSrc.get(varName);
-    if (argInstance == null) {
+    if (argInstance == null || argInstance.getValues().isEmpty()) {
       matcher.appendReplacement(builder, "");
     } else {
       StringBuilder boundClause = new StringBuilder();

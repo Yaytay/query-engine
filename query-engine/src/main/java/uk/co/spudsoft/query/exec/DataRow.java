@@ -41,6 +41,8 @@ public class DataRow {
   private final LinkedHashMap<String, DataType> types;
   private final LinkedHashMap<String, Object> data = new LinkedHashMap<>();
 
+  public static final DataRow EMPTY_ROW = new DataRow(new LinkedHashMap<>());
+  
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "It is expected that the types map change between instances of the DataRow")
   public DataRow(LinkedHashMap<String, DataType> types) {
     this.types = types;

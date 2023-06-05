@@ -76,7 +76,11 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
 
   @Override
   public void end(Handler<AsyncResult<Void>> handler) {
-    terminate.handle(rowCount).onComplete(handler);
+    if (initialized) {
+      terminate.handle(rowCount).onComplete(handler);      
+    } else {
+      initialize.handle(null).compose(v -> terminate.handle(rowCount)).onComplete(handler);
+    }
   }
 
   @Override

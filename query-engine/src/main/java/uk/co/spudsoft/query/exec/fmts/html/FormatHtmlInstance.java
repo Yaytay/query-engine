@@ -76,9 +76,18 @@ public class FormatHtmlInstance implements FormatInstance {
                   requestContext.setRowsWritten(rows);
                 }
               }
-              return outputStream.write(CLOSE)
-                      .compose(v2 -> outputStream.end())
-                      ;
+              if (!started.get()) {
+                started.set(true);
+                return outputStream.write(Buffer.buffer(headerFromRow(DataRow.EMPTY_ROW)))
+                        .compose(v -> outputStream.write(ENDHEAD))
+                        .compose(v -> outputStream.write(CLOSE))
+                        .compose(v2 -> outputStream.end())
+                        ;
+              } else {
+                return outputStream.write(CLOSE)
+                        .compose(v2 -> outputStream.end())
+                        ;
+              }
             }
     );
   }

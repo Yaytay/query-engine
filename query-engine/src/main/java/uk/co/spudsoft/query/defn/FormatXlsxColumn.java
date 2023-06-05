@@ -90,6 +90,9 @@ public class FormatXlsxColumn {
   }
     
   static String defaultFormatFor(DataType type) {
+    if (type == null) {
+      return null;
+    }
     return switch (type) {
       case Boolean -> null;
       case Date -> "yyyy-mm-dd";
@@ -121,18 +124,21 @@ public class FormatXlsxColumn {
   static Double defaultWidthFor(DataType type, String header, String format) {
     int headerLength = header.length();
     int formatLength = formatLength(format);
-    int typeLength = switch (type) {      
-      case Boolean -> 7;
-      case Date -> 11;
-      case DateTime -> 20;
-      case Double -> 11;
-      case Float -> 11;
-      case Integer -> 11;
-      case Long -> 11;
-      case String -> 17;
-      case Time -> 9;
-      default -> 0;
-    };
+    int typeLength = 11;
+    if (type != null) {
+      typeLength = switch (type) {      
+        case Boolean -> 7;
+        case Date -> 11;
+        case DateTime -> 20;
+        case Double -> 11;
+        case Float -> 11;
+        case Integer -> 11;
+        case Long -> 11;
+        case String -> 17;
+        case Time -> 9;
+        default -> 0;
+      };
+    }
     int result = headerLength;
     if (formatLength > result) {
       result = formatLength;

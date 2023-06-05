@@ -98,6 +98,16 @@ public class FormatXlsxInstance implements FormatInstance {
                   requestContext.setRowsWritten(rows);
                 }
               }
+              if (!started.get()) {
+                started.set(true);
+                TableDefinition tableDefintion = tableDefinitionFromRow(DataRow.EMPTY_ROW);
+                writer = new XlsxWriter(tableDefintion);
+                try {
+                  writer.startFile(streamWrapper);
+                } catch (IOException ex) {
+                  return Future.failedFuture(ex);
+                }
+              }
               try {
                 writer.close();
                 streamWrapper.close();
