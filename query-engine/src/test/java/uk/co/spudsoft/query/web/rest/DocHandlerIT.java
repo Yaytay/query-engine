@@ -64,8 +64,8 @@ public class DocHandlerIT {
             .log().all()
             .get("/api/docs")
             .then()
+            .log().ifError()
             .statusCode(200)
-            .log().all()
             .extract()
             .body().as(ObjectNode.class)
             ;
@@ -109,8 +109,8 @@ public class DocHandlerIT {
                 .log().all()
                 .get("/api/docs/" + doc.getPath())
                 .then()
+                .log().ifError()
                 .statusCode(200)
-                .log().all()
                 ;
         
       } else if (node instanceof DocNodesTree.DocDir dir) {
