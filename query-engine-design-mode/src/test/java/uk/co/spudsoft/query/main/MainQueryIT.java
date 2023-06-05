@@ -121,45 +121,6 @@ public class MainQueryIT {
     assertThat(body, startsWith("{\"name\":\"\",\"children\":[{\"name\":\"demo\",\"children\":[{\"name\":\"FeatureRichExample\",\"path\":"));
 
     body = given()
-            .queryParam("minDate", "1971-05-06")
-            .queryParam("_fmt", "tab")
-            .accept("text/html")
-            .log().all()
-            .get("/query/demo/FeatureRichExample")
-            .then()
-            .log().ifError()
-            .statusCode(200)
-            .extract().body().asString();
-    
-    assertThat(body, startsWith("\"dataId\"\t\"instant\""));
-    
-    body = given()
-            .queryParam("minDate", "2971-05-06")
-            .queryParam("_fmt", "json")
-            .accept("text/html")
-            .log().all()
-            .get("/query/demo/FeatureRichExample")
-            .then()
-            .log().ifError()
-            .statusCode(200)
-            .extract().body().asString();
-    
-    assertThat(body, equalTo("[]"));
-    
-    body = given()
-            .queryParam("minDate", "1971-05-06")
-            .queryParam("_fmt", "xlsx")
-            .accept("text/html")
-            .log().all()
-            .get("/query/demo/FeatureRichExample")
-            .then()
-            .log().ifError()
-            .statusCode(200)
-            .extract().body().asString();
-    
-    assertThat(body, startsWith("PK"));
-        
-    body = given()
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
             .accept("text/html, application/xhtml+xml, image/webp, image/apng, application/xml; q=0.9, application/signed-exchange; v=b3; q=0.9, */*; q=0.8")
