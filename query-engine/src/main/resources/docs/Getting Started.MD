@@ -3,10 +3,10 @@
 The quickest way to get a feel for the Query Engine is to use the [compose file](query-engine-compose.yml).
 
 This compose file needs to be run on a single container host (i.e. not Swarm or Kubernetes) with localhost ports 2000-2003 free.
-It spawns four containers: MySQL, Microsoft SQL Server, PostgreSQL and Query Engine in [Design Mode](Design Mode/Design Mode.MD).
+It spawns four containers: MySQL, Microsoft SQL Server, PostgreSQL and Query Engine in [Design Mode](<Design Mode/Design Mode.MD>).
 
 The configuration of the Query Engine container uses the sampleDataLoads configuration to set up a database on each of these DBMS 
-platforms with a [very similar structure and data](Samples/Sample Data.MD).
+platforms with a [very similar structure and data](<Samples/Sample Data.MD>).
 This data is all set up in transient storage - when the containers are deleted the sample data will go with them (though the containers
 can be restarted without losing it).
 

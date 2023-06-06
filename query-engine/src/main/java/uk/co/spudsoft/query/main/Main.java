@@ -49,7 +49,6 @@ import io.vertx.core.tracing.TracingOptions;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.handler.CorsHandler;
-import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
@@ -98,6 +97,7 @@ import uk.co.spudsoft.query.main.sample.SampleDataLoaderMySQL;
 import uk.co.spudsoft.query.main.sample.SampleDataLoaderPostgreSQL;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 import uk.co.spudsoft.query.web.QueryRouter;
+import uk.co.spudsoft.query.web.UiRouter;
 import uk.co.spudsoft.query.web.rest.DocHandler;
 import uk.co.spudsoft.query.web.rest.InfoHandler;
 import uk.co.spudspoft.vertx.rest.JaxRsHandler;
@@ -117,7 +117,7 @@ public class Main extends Application {
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
   
 private static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-private static final String MAVEN_PROJECT_VERSION = "0.0.8-main";
+private static final String MAVEN_PROJECT_VERSION = "0.0.8-1-main";
 
 private static final String NAME = "query-engine";
   
@@ -320,7 +320,7 @@ private static final String NAME = "query-engine";
       rc.response().setStatusCode(301).putHeader("Location", "/openapi").end();
     });
     router.route("/api/*").handler(new JaxRsHandler(vertx, meterRegistry, "/api", controllers, providers));
-    router.route("/ui/*").handler(StaticHandler.create("www"));
+    router.route("/ui/*").handler(UiRouter.create(vertx, "/www", "/www/index.html"));
     router.getWithRegex("/openapi\\..*").blockingHandler(openApiHandler);
     router.get("/openapi").handler(openApiHandler.getUiHandler());
     router.route("/").handler(ctx -> {

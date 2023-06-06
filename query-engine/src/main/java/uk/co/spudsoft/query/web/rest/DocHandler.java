@@ -105,7 +105,7 @@ public class DocHandler {
   @GET
   @Path("/")
   @Produces(MediaType.APPLICATION_JSON)
-  @Operation(description = "Return a list of available  documents")
+  @Operation(description = "Return a tree of available  documentation")
   @ApiResponse(
           responseCode = "200"
           , description = "The list of available documents."

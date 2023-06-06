@@ -12,7 +12,7 @@ Features of the Query Engine include:
 * Data is streamed, it is not (usually) necessary for all of the data to be held by the Query Engine process (sorting the stream is an obvious exception, sort in the datastore whenever possible).
 * Dynamic fields are supported directly by Query Engine, separate runs of a query can produce a different structure (depending on the data).
 * Data can be output in various formats, including CSV, Json, XML, HTML, Excel (XLSX) workbooks (all streamed).
-* Authorization is governed by validated https://jwt.io/[JWT]s.
+* Authorization is governed by validated [JWT](https://jwt.io/s).
 * Query Engine is intended to be used via "path-hijacking", providing seamless integration with your application, but can also be accessed directly.
 * Query Engine can be easily embedded within a host application.
 * Full support for OpenAPI documentation.

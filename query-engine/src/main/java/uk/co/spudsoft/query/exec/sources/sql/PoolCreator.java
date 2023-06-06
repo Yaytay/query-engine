@@ -40,6 +40,7 @@ public class PoolCreator {
           .recordStats()
           .expireAfterAccess(1, TimeUnit.MINUTES)
           .maximumSize(100)
+          .recordStats()
           .removalListener(notification -> {
             logger.debug("Removing pool entry from cache");
             ((Pool) notification.getValue()).close();
