@@ -29,7 +29,8 @@ import uk.co.spudsoft.query.exec.fmts.json.FormatJsonInstance;
 import uk.co.spudsoft.query.exec.FormatInstance;
 
 /**
- *
+ * Output the data stream in JSON.
+ * This format has no specific configuration options.
  * @author jtalbut
  */
 @JsonDeserialize(builder = FormatJson.Builder.class)

@@ -17,7 +17,8 @@
 package uk.co.spudsoft.query.defn;
 
 /**
- *
+ * The generic format of the output.
+ * 
  * @author jtalbut
  */
 public enum FormatType {

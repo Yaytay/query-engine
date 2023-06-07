@@ -24,6 +24,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import uk.co.spudsoft.xlsx.FontDefinition;
 
 /**
+ * Specification of the font in XLSX output.
+ * 
+ * The name of the font is optional, if not provided 'Calibri' will be used.
  *
  * @author njt
  */
@@ -45,6 +48,7 @@ public class FormatXlsxFont {
 
   /**
    * Get the name of the font.
+   * The name of the font is optional, if not provided 'Calibri' will be used.
    * @return the name of the font.
    */
   @Schema(description = """

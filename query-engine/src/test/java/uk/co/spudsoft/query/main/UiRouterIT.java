@@ -73,6 +73,15 @@ public class UiRouterIT {
             .header("Location", equalTo("/ui"))
             ;
         
+    given()
+            .redirects().follow(false)
+            .log().all()
+            .post("/ui/index.html")
+            .then()
+            .log().all()
+            .statusCode(404)
+            ;
+        
     String index = given()
             .log().all()
             .get("/ui")
@@ -84,9 +93,9 @@ public class UiRouterIT {
             .extract().body().asString()
             ;
         
-    String nonexistent = given()
+    String index2 = given()
             .log().all()
-            .get("/ui/nonexistent")
+            .get("/ui/index.html")
             .then()
             .log().ifError()
             .statusCode(200)
@@ -94,7 +103,19 @@ public class UiRouterIT {
             .extract().body().asString()
             ;
         
-    assertEquals(index, nonexistent);
+    assertEquals(index, index2);
+        
+    String endDot = given()
+            .log().all()
+            .get("/ui/help.")
+            .then()
+            .log().ifError()
+            .statusCode(200)
+            .contentType(ContentType.HTML)
+            .extract().body().asString()
+            ;
+    
+    assertEquals(index, endDot);
         
     String help = given()
             .log().all()
@@ -110,6 +131,7 @@ public class UiRouterIT {
         
     given().log().all().get("/ui/assets").then().log().all();
     
+    // Note that the following tests will all fail if the UI files have not been added
     when().get("/ui/android-chrome-192x192.png").then().header("Content-Type", equalTo("image/png"));
     when().get("/ui/browserconfig.xml").then().header("Content-Type", equalTo("application/xml"));
     when().get("/ui/favicon.ico").then().header("Content-Type", equalTo("image/x-icon"));

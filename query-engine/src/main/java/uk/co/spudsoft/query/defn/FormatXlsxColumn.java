@@ -25,7 +25,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import uk.co.spudsoft.xlsx.ColumnDefinition;
 
 /**
- *
+ * Specification of the formatting of a column in XLSX output.
+ * 
  * @author njt
  */
 @JsonDeserialize(builder = FormatXlsxColumn.Builder.class)

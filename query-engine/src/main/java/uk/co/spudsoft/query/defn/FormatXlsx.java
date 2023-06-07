@@ -34,7 +34,10 @@ import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
- *
+ * Output the data stream as a single XLSX workbook.
+ * 
+ * This format has a lot of additional configuration options.
+ * 
  * @author jtalbut
  */
 @JsonDeserialize(builder = FormatXlsx.Builder.class)

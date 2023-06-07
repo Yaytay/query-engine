@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 njt
+ * Copyright (C) 2023 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,6 @@ import io.vertx.core.http.impl.MimeMapping;
 import io.vertx.core.net.impl.URIDecoder;
 import io.vertx.ext.web.RoutingContext;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -148,16 +147,21 @@ public class UiRouter implements Handler<RoutingContext> {
             .end(context.request().method() == HttpMethod.HEAD ? Buffer.buffer() : Buffer.buffer(body));
   }
 
-  private byte[] getDefaultFileBody() throws IOException {
+  private byte[] getDefaultFileBody() {
     byte[] defaultFileBody = cache.getIfPresent(defaultFilePath);
     if (defaultFileBody == null) {
       logger.debug("Loading default file {}", defaultFilePath);
-      try (InputStream is = this.getClass().getResourceAsStream(defaultFilePath)) {
-        if (is == null) {
-          return new byte[0];
-        }
+      InputStream is = this.getClass().getResourceAsStream(defaultFilePath);
+      if (is == null) {
+        logger.warn("Failed to load default UI resource ({})", defaultFilePath);
+        return new byte[0];
+      }
+      try (is) {
         defaultFileBody = is.readAllBytes();
         cache.put(defaultFilePath, defaultFileBody);
+      } catch (Throwable ex) {
+        logger.warn("Failed to load default UI resource ({}): ", defaultFilePath, ex);
+        return new byte[0];
       }
     }
     return defaultFileBody;
@@ -171,15 +175,17 @@ public class UiRouter implements Handler<RoutingContext> {
    */
   private void loadFile(Promise<byte[]> promise, String path) {
     logger.debug("Loading file {}", path);
-    try (InputStream is = this.getClass().getResourceAsStream(path)) {
-      if (is == null) {
-        promise.complete(getDefaultFileBody());
-        return ;
-      }
+    InputStream is = this.getClass().getResourceAsStream(path);
+    if (is == null) {
+      promise.complete(getDefaultFileBody());
+      return ;
+    }
+    try (is) {
       byte[] body = is.readAllBytes();
       cache.put(path, body);
       promise.complete(body);
-    } catch(Throwable ex) {
+    } catch (Throwable ex) {
+      logger.warn("Failed to load UI resource ({}): ", path, ex);
       promise.fail(ex);
     }
   }
