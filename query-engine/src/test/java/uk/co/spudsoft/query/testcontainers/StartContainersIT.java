@@ -55,12 +55,12 @@ public class StartContainersIT {
             , postgres
     );
     
-    
-    List<Future> futures = new ArrayList<>();
+    List<Future<Void>> futures = new ArrayList<>();
     
     for (ServerProvider instance : instances) {
       long startTime = System.currentTimeMillis();
-      Future<?> future = instance.prepareContainer(vertx)
+      Future<Void> future = 
+              instance.prepareContainer(vertx)
               .compose(container -> {
                 logger.debug("{} - {}s: Container started", instance.getName(), (System.currentTimeMillis() - startTime) / 1000.0);
                 try {
@@ -106,11 +106,12 @@ public class StartContainersIT {
                         })
                         ;
               })
+              .mapEmpty()
               ;
       futures.add(future);
     }
     
-    CompositeFuture.all(futures)
+    Future.all(futures)
             .onFailure(ex -> testContext.failNow(ex))
             .onSuccess(cf -> testContext.completeNow())
             ;

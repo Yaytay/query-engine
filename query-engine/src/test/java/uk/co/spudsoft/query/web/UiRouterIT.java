@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package uk.co.spudsoft.query.main;
+package uk.co.spudsoft.query.web;
 
 import io.restassured.RestAssured;
 import io.vertx.core.Vertx;
@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import io.restassured.http.ContentType;
+import uk.co.spudsoft.query.main.Main;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -73,6 +74,7 @@ public class UiRouterIT {
             .header("Location", equalTo("/ui"))
             ;
         
+    // POST, returns a 404
     given()
             .redirects().follow(false)
             .log().all()
@@ -82,7 +84,7 @@ public class UiRouterIT {
             .statusCode(404)
             ;
         
-    String index = given()
+    String root = given()
             .log().all()
             .get("/ui")
             .then()
@@ -103,7 +105,7 @@ public class UiRouterIT {
             .extract().body().asString()
             ;
         
-    assertEquals(index, index2);
+    assertEquals(root, index2);
         
     String endDot = given()
             .log().all()
@@ -115,7 +117,7 @@ public class UiRouterIT {
             .extract().body().asString()
             ;
     
-    assertEquals(index, endDot);
+    assertEquals(root, endDot);
         
     String help = given()
             .log().all()
@@ -127,11 +129,18 @@ public class UiRouterIT {
             .extract().body().asString()
             ;
     
-    assertEquals(index, help);
+    assertEquals(root, help);
         
-    given().log().all().get("/ui/assets").then().log().all();
+    String assets = given().log().all().get("/ui/assets").then().statusCode(200).contentType(ContentType.HTML).log().all().extract().body().asString();
+
+    assertEquals("", assets);
+    
+    String nonexistent = given().log().all().get("/ui/nonexistent.png").then().statusCode(200).contentType(ContentType.HTML).log().all().extract().body().asString();
+
+    assertEquals(root, nonexistent);
     
     // Note that the following tests will all fail if the UI files have not been added
+    // The UI files are added automatically in a clean build if the "ui" profile is enabled.
     when().get("/ui/android-chrome-192x192.png").then().header("Content-Type", equalTo("image/png"));
     when().get("/ui/browserconfig.xml").then().header("Content-Type", equalTo("application/xml"));
     when().get("/ui/favicon.ico").then().header("Content-Type", equalTo("image/x-icon"));
@@ -140,8 +149,6 @@ public class UiRouterIT {
     when().get("/ui/manifest.json").then().header("Content-Type", equalTo("application/json"));
     when().get("/ui/robots.txt").then().header("Content-Type", equalTo("text/plain;charset=utf-8"));
     when().get("/ui/site.webmanifest").then().header("Content-Type", equalTo("application/json"));
-    when().get("/ui/assets/index-501da79e.css").then().header("Content-Type", equalTo("text/css;charset=utf-8"));
-    when().get("/ui/assets/index-d6805c40.js").then().header("Content-Type", equalTo("text/javascript;charset=utf-8"));
     when().get("/ui/assets/roboto-cyrillic-300-normal-47aa3bfa.woff2").then().header("Content-Type", equalTo("font/woff2"));
     when().get("/ui/assets/roboto-cyrillic-300-normal-c07952fe.woff").then().header("Content-Type", equalTo("application/x-font-woff"));
     

@@ -117,7 +117,7 @@ public class Main extends Application {
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
   
 private static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-private static final String MAVEN_PROJECT_VERSION = "0.0.8-2-main";
+private static final String MAVEN_PROJECT_VERSION = "0.0.8-3-main";
 
 private static final String NAME = "query-engine";
   
@@ -320,7 +320,7 @@ private static final String NAME = "query-engine";
       rc.response().setStatusCode(301).putHeader("Location", "/openapi").end();
     });
     router.route("/api/*").handler(new JaxRsHandler(vertx, meterRegistry, "/api", controllers, providers));
-    router.route("/ui/*").handler(UiRouter.create(vertx, "/www", "/www/index.html"));
+    router.route("/ui/*").handler(UiRouter.create(vertx, "/ui", "/www", "/www/index.html"));
     router.getWithRegex("/openapi\\..*").blockingHandler(openApiHandler);
     router.get("/openapi").handler(openApiHandler.getUiHandler());
     router.route("/").handler(ctx -> {

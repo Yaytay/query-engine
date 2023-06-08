@@ -20,6 +20,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableMap;
 import io.vertx.core.Handler;
+import io.vertx.core.MultiMap;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -31,6 +32,7 @@ import io.vertx.core.http.impl.HttpUtils;
 import io.vertx.core.http.impl.MimeMapping;
 import io.vertx.core.net.impl.URIDecoder;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.impl.Utils;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Map;
@@ -47,20 +49,26 @@ public class UiRouter implements Handler<RoutingContext> {
   private static final Logger logger = LoggerFactory.getLogger(UiRouter.class);
 
   private final Vertx vertx;
+  private final String stripPath;
   private final String baseResourcePath;
   private final String defaultFilePath;
   private final Cache<String, byte[]> cache;
+  
+  private final long bootTime = System.currentTimeMillis();
   
   private final Map<String, String> additionalMimeExtensions = ImmutableMap.<String, String>builder()
           .put("webmanifest", "application/json")
           .build();
   
-  public static UiRouter create(Vertx vertx, String baseResourcePath, String defaultFilePath) {
-    return new UiRouter(vertx, baseResourcePath, defaultFilePath);
+  public static UiRouter create(Vertx vertx, String stripPath, String baseResourcePath, String defaultFilePath) {
+    return new UiRouter(vertx, stripPath, baseResourcePath, defaultFilePath);
   }
 
-  private UiRouter(Vertx vertx, String baseResourcePath, String defaultFilePath) {
+  private static record LoadedFile (String path, byte[] contents) {}
+  
+  private UiRouter(Vertx vertx, String stripPath, String baseResourcePath, String defaultFilePath) {
     this.vertx = vertx;
+    this.stripPath = stripPath;
     this.baseResourcePath = baseResourcePath;
     this.defaultFilePath = defaultFilePath;
     this.cache = CacheBuilder.newBuilder()
@@ -90,14 +98,20 @@ public class UiRouter implements Handler<RoutingContext> {
         return;
       }
       // will normalize and handle all paths as UNIX paths
-      String path = baseResourcePath + HttpUtils.removeDots(uriDecodedPath.replace('\\', '/'));
-      
+      String normalizedPath = HttpUtils.removeDots(uriDecodedPath.replace('\\', '/'));
+      String strippedPath = normalizedPath.startsWith(stripPath) ? normalizedPath.substring(stripPath.length()) : normalizedPath;
+      if (strippedPath.length() == 0) {
+        strippedPath = "/index.html";
+      }
+      String path = baseResourcePath + strippedPath;
+              
       byte[] fileBody = cache.getIfPresent(path);
       if (fileBody != null) {
-        sendFile(context, path, fileBody);
+        sendFile(context, new LoadedFile(path, fileBody));
       } else {
-        vertx.<byte[]>executeBlocking(promise -> loadFile(promise, path))
+        vertx.<LoadedFile>executeBlocking(promise -> loadFile(promise, path))
                 .onFailure(ex -> {
+                  logger.warn("Unexpected failure in request for {}: ", path, ex);
                   if (ex instanceof FileNotFoundException) {
                     context.response()
                             .setStatusCode(404)
@@ -108,8 +122,8 @@ public class UiRouter implements Handler<RoutingContext> {
                             .end("Internal server error");
                   }
                 })
-                .onSuccess(loadedFileBody -> {
-                  sendFile(context, path, loadedFileBody);
+                .onSuccess(loadedFile -> {
+                  sendFile(context, loadedFile);
                 })
                 ;
       }
@@ -125,46 +139,59 @@ public class UiRouter implements Handler<RoutingContext> {
     }
   }
   
-  private void sendFile(RoutingContext context, String path, byte[] body) {
+  private void sendFile(RoutingContext context, LoadedFile loadedFile) {
 
     HttpServerResponse response = context.response();
-    String extension = getFileExtension(path);
+    String extension = getFileExtension(loadedFile.path);
     String contentType = extension == null ? "text/html" : MimeMapping.getMimeTypeForExtension(extension);
     if (contentType == null) {
       contentType = additionalMimeExtensions.get(extension);
     }
     
+    MultiMap headers = response.headers();
+    
     if (contentType != null) {
       if (contentType.startsWith("text")) {
-        response.putHeader(HttpHeaders.CONTENT_TYPE, contentType + ";charset=utf-8");
+        headers.add(HttpHeaders.CONTENT_TYPE, contentType + ";charset=utf-8");
       } else {
-        response.putHeader(HttpHeaders.CONTENT_TYPE, contentType);
+        headers.add(HttpHeaders.CONTENT_TYPE, contentType);
       }
     }
     
+    
+    long maxAgeSeconds = 86400;
+    if (loadedFile.path.endsWith("index.html")) {
+      // Only cache index.html for 10 minutes
+      maxAgeSeconds = 600;
+    }
+    Utils.addToMapIfAbsent(headers, HttpHeaders.CACHE_CONTROL, "public, immutable, max-age=" + maxAgeSeconds);
+    Utils.addToMapIfAbsent(headers, HttpHeaders.LAST_MODIFIED, Utils.formatRFC1123DateTime(bootTime));
+    // date header is mandatory
+    headers.set("date", Utils.formatRFC1123DateTime(System.currentTimeMillis()));
+    
     response
             .setStatusCode(200)
-            .end(context.request().method() == HttpMethod.HEAD ? Buffer.buffer() : Buffer.buffer(body));
+            .end(context.request().method() == HttpMethod.HEAD ? Buffer.buffer() : Buffer.buffer(loadedFile.contents));
   }
 
-  private byte[] getDefaultFileBody() {
+  private LoadedFile getDefaultFileBody() {
     byte[] defaultFileBody = cache.getIfPresent(defaultFilePath);
     if (defaultFileBody == null) {
       logger.debug("Loading default file {}", defaultFilePath);
       InputStream is = this.getClass().getResourceAsStream(defaultFilePath);
       if (is == null) {
         logger.warn("Failed to load default UI resource ({})", defaultFilePath);
-        return new byte[0];
+        return new LoadedFile(defaultFilePath, new byte[0]);
       }
       try (is) {
         defaultFileBody = is.readAllBytes();
         cache.put(defaultFilePath, defaultFileBody);
       } catch (Throwable ex) {
         logger.warn("Failed to load default UI resource ({}): ", defaultFilePath, ex);
-        return new byte[0];
+        return new LoadedFile(defaultFilePath, new byte[0]);
       }
     }
-    return defaultFileBody;
+    return new LoadedFile(defaultFilePath, defaultFileBody);
   }
   
   /**
@@ -173,7 +200,7 @@ public class UiRouter implements Handler<RoutingContext> {
    * @param promise Promise to be completed when the method finishes.
    * @param path Path to the resource to be loaded.
    */
-  private void loadFile(Promise<byte[]> promise, String path) {
+  private void loadFile(Promise<LoadedFile> promise, String path) {
     logger.debug("Loading file {}", path);
     InputStream is = this.getClass().getResourceAsStream(path);
     if (is == null) {
@@ -183,7 +210,7 @@ public class UiRouter implements Handler<RoutingContext> {
     try (is) {
       byte[] body = is.readAllBytes();
       cache.put(path, body);
-      promise.complete(body);
+      promise.complete(new LoadedFile(path, body));
     } catch (Throwable ex) {
       logger.warn("Failed to load UI resource ({}): ", path, ex);
       promise.fail(ex);
