@@ -64,7 +64,7 @@ public class UiRouter implements Handler<RoutingContext> {
     return new UiRouter(vertx, stripPath, baseResourcePath, defaultFilePath);
   }
 
-  private static record LoadedFile (String path, byte[] contents) {}
+  private record LoadedFile(String path, byte[] contents) {}
   
   private UiRouter(Vertx vertx, String stripPath, String baseResourcePath, String defaultFilePath) {
     this.vertx = vertx;
@@ -86,9 +86,6 @@ public class UiRouter implements Handler<RoutingContext> {
       logger.debug("{} request for {} ignored", request.method(), request.path());
       context.next();
     } else {
-      if (!request.isEnded()) {
-        request.pause();
-      }
       // decode URL path
       String uriDecodedPath = URIDecoder.decodeURIComponent(context.normalizedPath(), false);
       // if the normalized path is null it cannot be resolved
@@ -179,10 +176,6 @@ public class UiRouter implements Handler<RoutingContext> {
     if (defaultFileBody == null) {
       logger.debug("Loading default file {}", defaultFilePath);
       InputStream is = this.getClass().getResourceAsStream(defaultFilePath);
-      if (is == null) {
-        logger.warn("Failed to load default UI resource ({})", defaultFilePath);
-        return new LoadedFile(defaultFilePath, new byte[0]);
-      }
       try (is) {
         defaultFileBody = is.readAllBytes();
         cache.put(defaultFilePath, defaultFileBody);

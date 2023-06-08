@@ -107,6 +107,18 @@ public class UiRouterIT {
         
     assertEquals(root, index2);
         
+    String head = given()
+            .log().all()
+            .head("/ui/index.html")
+            .then()
+            .log().ifError()
+            .statusCode(200)
+            .contentType(ContentType.HTML)
+            .extract().body().asString()
+            ;
+        
+    assertEquals("", head);
+        
     String endDot = given()
             .log().all()
             .get("/ui/help.")
