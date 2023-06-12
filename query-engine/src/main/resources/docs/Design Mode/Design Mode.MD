@@ -1,7 +1,8 @@
 # Design Mode
 
-> **Warning**
+> :warning: Warning: 
 > DO NOT USE DESIGN MODE FOR PRODUCTION
+>
 > Containers running with the design-mode image are insecure and must not be accessible to external users as 
 > it allows any user with access to the API to read/write your queries.
 
@@ -23,6 +24,7 @@ Given the above, your query developers should then:
 * When all changes have been made and tested the query developers should push their changes to the repository.
   At which point the CI pipeline will make them live.
 
-> **Note**
-> Design Mode will only permit the editing of Velocity templates as plain text files (and there are much better text editors than it).
+> :information_source: Note: Design Mode will only permit the editing of Velocity templates as plain text files.
+>
+> There are much better text editors than Design Mode for editing Velocity templates.
 > As a general rule you should stop using Design Mode when you start using Velocity templates.
