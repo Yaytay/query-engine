@@ -33,8 +33,6 @@ jobs:
     - name: Generate settings.xml for Maven Builds
       uses: whelk-io/maven-settings-xml-action@v21
       with:
-#        servers: '[{ "id": "github", "username": "yaytay", "password": "${{ secrets.GITHUB_TOKEN }}" },{ "id": "github-params4j", "username": "yaytay", "password": "${{ secrets.READPACKAGESPAT }}" }]'      
-#        repositories: '[{"id":"central", "url":"https://repo1.maven.org/maven2"}, {"id":"github-params4j", "url":"https://maven.pkg.github.com/Yaytay/params4j", "snapshots":{"enabled":true}}]'
         servers: '[{ "id": "github", "username": "yaytay", "password": "${{ secrets.GITHUB_TOKEN }}" }]'
         repositories: '[{"id":"central", "url":"https://repo1.maven.org/maven2"}]'
     
@@ -60,7 +58,6 @@ jobs:
         docker tag ${PARTS[2]} ghcr.io/yaytay/${PARTS[0]}:${PARTS[1]} && \
         docker push ghcr.io/yaytay/${PARTS[0]}:${PARTS[1]}
         
-
     - name: Upload site reports on success
       uses: actions/upload-artifact@v3
       if: success()

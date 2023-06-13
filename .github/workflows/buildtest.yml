@@ -54,12 +54,34 @@ jobs:
         fail_ci_if_error: true 
         verbose: true 
 
-    - name: Tidy up old package versions
+    - name: Tidy up old query-engine package versions
       uses: actions/delete-package-versions@v3
       with: 
-        package-name: 'uk.co.spudsoft'
-        min-versions-to-keep: 10
+        package-name: 'query-engine'
+        package-type: container
+        min-versions-to-keep: 4
         delete-only-pre-release-versions: "true" 
+                
+    - name: Tidy up old query-engine-design-mode package versions
+      uses: actions/delete-package-versions@v3
+      with: 
+        package-name: 'query-engine-design-mode'
+        package-type: container
+        min-versions-to-keep: 4
+        delete-only-pre-release-versions: "true" 
+                
+    - name: Deploy container image
+      run: |
+        docker image ls
+
+    - name: Deploy container image
+      run: |
+        IFS=' ' read -ra PARTS <<< `docker image ls | grep query-engine | grep -v design-mode | grep -v ghcr` && \
+        docker tag ${PARTS[2]} ghcr.io/yaytay/${PARTS[0]}:${PARTS[1]} && \
+        docker push ghcr.io/yaytay/${PARTS[0]}:${PARTS[1]}
+        IFS=' ' read -ra PARTS <<< `docker image ls | grep query-engine-design-mode | grep -v ghcr` && \
+        docker tag ${PARTS[2]} ghcr.io/yaytay/${PARTS[0]}:${PARTS[1]} && \
+        docker push ghcr.io/yaytay/${PARTS[0]}:${PARTS[1]}                        
                 
     - name: Upload site reports on success
       uses: actions/upload-artifact@v3
