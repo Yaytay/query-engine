@@ -62,6 +62,7 @@ public class DocHandler {
           "/"
           , Arrays.asList(new DocNodesTree.DocFile("Introduction.MD", "Introduction")
                   , new DocNodesTree.DocFile("Getting Started.MD", "Getting Started")
+                  , new DocNodesTree.DocFile("Parameters.MD", "Parameters")
                   , new DocNodesTree.DocFile("query-engine-compose.yml", "")
                   , new DocNodesTree.DocDir(
                           "Design Mode"

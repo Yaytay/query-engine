@@ -84,6 +84,7 @@ import uk.co.spudsoft.mgmt.InFlightRoute;
 import uk.co.spudsoft.mgmt.LogbackMgmtRoute;
 import uk.co.spudsoft.mgmt.ManagementRoute;
 import uk.co.spudsoft.mgmt.ThreadDumpRoute;
+import uk.co.spudsoft.params4j.ConfigurationProperty;
 import uk.co.spudsoft.params4j.FileType;
 import uk.co.spudsoft.params4j.Params4J;
 import uk.co.spudsoft.query.exec.AuditorImpl;
@@ -117,7 +118,7 @@ public class Main extends Application {
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
   
 private static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-private static final String MAVEN_PROJECT_VERSION = "0.0.9-main";
+private static final String MAVEN_PROJECT_VERSION = "0.0.10-2-main";
 
 private static final String NAME = "query-engine";
   
@@ -208,7 +209,7 @@ private static final String NAME = "query-engine";
   }
   
   @SuppressFBWarnings(value = "PATH_TRAVERSAL_IN", justification = "False positive, the dirs at this stage cannot be specified by the user")
-  protected Future<Integer> innerMain(String[] args) {   
+  protected Future<Integer> innerMain(String[] args) {
     
     Params4J<Parameters> p4j = Params4J.<Parameters>factory()
             .withConstructor(() -> new Parameters())
@@ -219,7 +220,18 @@ private static final String NAME = "query-engine";
             .withCommandLineArgumentsGatherer(args, null)
             .withMixIn(TracingOptions.class, TracingOptionsMixin.class)
             .create();
-    
+
+    for (String arg : args) {
+      if ("-?".equals(arg) || "--help".equals(arg)) {
+        StringBuilder usage = new StringBuilder();
+        for (ConfigurationProperty prop : p4j.getDocumentation(new Parameters(), "--", null, Arrays.asList(Pattern.compile(".*VertxOptions.*"), Pattern.compile(".*HttpServerOptions.*")))) {
+          prop.appendUsage(usage, port);
+        }
+        System.out.println(usage.toString());
+        return Future.succeededFuture(1);
+      }
+    }
+        
     Parameters params = p4j.gatherParameters();
     LoggingConfiguration.configureLogback((LoggerContext) LoggerFactory.getILoggerFactory(), params.getLogging());
 
