@@ -56,6 +56,7 @@ jobs:
 
     - name: Tidy up old query-engine package versions
       uses: actions/delete-package-versions@v4
+      continue-on-error: true
       with: 
         package-name: 'query-engine'
         package-type: container
@@ -64,6 +65,7 @@ jobs:
                 
     - name: Tidy up old query-engine-design-mode package versions
       uses: actions/delete-package-versions@v4
+      continue-on-error: true
       with: 
         package-name: 'query-engine-design-mode'
         package-type: container

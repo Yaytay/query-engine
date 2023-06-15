@@ -118,7 +118,7 @@ public class Main extends Application {
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
   
 private static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-private static final String MAVEN_PROJECT_VERSION = "0.0.10-2-main";
+private static final String MAVEN_PROJECT_VERSION = "0.0.10-3-main";
 
 private static final String NAME = "query-engine";
   
@@ -221,11 +221,38 @@ private static final String NAME = "query-engine";
             .withMixIn(TracingOptions.class, TracingOptionsMixin.class)
             .create();
 
+    
+    
     for (String arg : args) {
       if ("-?".equals(arg) || "--help".equals(arg)) {
         StringBuilder usage = new StringBuilder();
-        for (ConfigurationProperty prop : p4j.getDocumentation(new Parameters(), "--", null, Arrays.asList(Pattern.compile(".*VertxOptions.*"), Pattern.compile(".*HttpServerOptions.*")))) {
-          prop.appendUsage(usage, port);
+        List<ConfigurationProperty> propDocs = p4j.getDocumentation(new Parameters(), "--", null, Arrays.asList(Pattern.compile(".*VertxOptions.*"), Pattern.compile(".*HttpServerOptions.*")));
+        int maxNameLen = propDocs.stream().map(p -> p.name.length()).max(Integer::compare).get();
+        
+        usage.append("Usage: query-engine [PROPERTIES]\n")
+                .append("The query-engine is intended to be used within a container, running outside of a container is only useful to output this usage\n")
+                .append("Properties may be:\n")
+                .append("    simple values\n")
+                .append("    maps (in which case '<xxx>' should be replaced with the key value\n")
+                .append("    arrays (in which case '<n>' should be replaced with an integer (and they should start at zero and be contiguous!)\n")
+                .append("    undocumented arrays (in which case '<***>' should be replaced with the path to a property in the appropriate class\n")
+                .append("\n")
+                .append("    --help").append(" ".repeat(maxNameLen + 1 - 6)).append("display this help text\n")
+                .append("    --helpenv").append(" ".repeat(maxNameLen + 1 - 9)).append("display this environment variable form of this help\n")
+                ;
+        
+        for (ConfigurationProperty prop : propDocs) {
+          prop.appendUsage(usage, maxNameLen);
+        }
+        System.out.println(usage.toString());
+        return Future.succeededFuture(1);
+      }
+      if ("--helpenv".equals(arg)) {
+        StringBuilder usage = new StringBuilder();
+        List<ConfigurationProperty> propDocs = p4j.getDocumentation(new Parameters(), "--", null, Arrays.asList(Pattern.compile(".*VertxOptions.*"), Pattern.compile(".*HttpServerOptions.*")));
+        int maxNameLen = propDocs.stream().map(p -> p.name.length()).max(Integer::compare).get();
+        for (ConfigurationProperty prop : propDocs) {
+          prop.appendEnv(usage, maxNameLen, "--", NAME);
         }
         System.out.println(usage.toString());
         return Future.succeededFuture(1);
