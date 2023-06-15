@@ -57,6 +57,7 @@ import io.vertx.tracing.zipkin.ZipkinTracingOptions;
 import jakarta.ws.rs.core.Application;
 import java.io.File;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.Duration;
@@ -118,7 +119,7 @@ public class Main extends Application {
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
   
 private static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-private static final String MAVEN_PROJECT_VERSION = "0.0.10-3-main";
+private static final String MAVEN_PROJECT_VERSION = "0.0.10-4-main";
 
 private static final String NAME = "query-engine";
   
@@ -139,7 +140,7 @@ private static final String NAME = "query-engine";
    */
   public static void main(String[] args) {
     Main main = new Main();
-    main.innerMain(args)
+    main.innerMain(args, System.out)
             .onSuccess(statusCode -> {
               if (statusCode > 0) {
                 main.shutdown(statusCode);
@@ -166,13 +167,14 @@ private static final String NAME = "query-engine";
   /**
    * Method to allow test code to call main with no risk of System.exit being called.
    * @param args Command line arguments.
+   * @param stdout PrintStream that would be System.out for a non-test call.
    * @return The status code that would have been returned if this was a real command line execution.
    * @throws ExecutionException If the main function throws an exception.
    * @throws InterruptedException If the thread is interrupted whilst waiting for the main function to complete.
    */
-  public int testMain(String[] args) throws ExecutionException, InterruptedException {    
+  public int testMain(String[] args, PrintStream stdout) throws ExecutionException, InterruptedException {    
     CompletableFuture<Integer> future = new CompletableFuture<>();
-    innerMain(args)
+    innerMain(args, stdout)
             .onSuccess(i -> {
               future.complete(i);
             })
@@ -209,7 +211,7 @@ private static final String NAME = "query-engine";
   }
   
   @SuppressFBWarnings(value = "PATH_TRAVERSAL_IN", justification = "False positive, the dirs at this stage cannot be specified by the user")
-  protected Future<Integer> innerMain(String[] args) {
+  protected Future<Integer> innerMain(String[] args, PrintStream stdout) {
     
     Params4J<Parameters> p4j = Params4J.<Parameters>factory()
             .withConstructor(() -> new Parameters())
@@ -231,11 +233,18 @@ private static final String NAME = "query-engine";
         
         usage.append("Usage: query-engine [PROPERTIES]\n")
                 .append("The query-engine is intended to be used within a container, running outside of a container is only useful to output this usage\n")
+                .append("Configuration may be set by (in priority order):\n")
+                .append("  any yaml files in ").append(getBaseConfigDir()).append("\n")
+                .append("  a file per property in a dir hierarchy matching the property structure starting at at ").append(getBaseConfigDir()).append("/conf.d\n")
+                .append("  environment variables (call with --helpenv to see a list of the main environment variables)\n")
+                .append("  system properties (-D").append(NAME).append(".baseConfigPath is equivalent to --baseConfigPath\n")
+                .append("  command line arguments as listed below\n")
                 .append("Properties may be:\n")
-                .append("    simple values\n")
-                .append("    maps (in which case '<xxx>' should be replaced with the key value\n")
-                .append("    arrays (in which case '<n>' should be replaced with an integer (and they should start at zero and be contiguous!)\n")
-                .append("    undocumented arrays (in which case '<***>' should be replaced with the path to a property in the appropriate class\n")
+                .append("  simple values\n")
+                .append("  maps (in which case '<xxx>' should be replaced with the key value\n")
+                .append("  arrays (in which case '<n>' should be replaced with an integer (and they should start at zero and be contiguous!)\n")
+                .append("  undocumented arrays (in which case '<***>' should be replaced with the path to a property in the appropriate class\n")
+                .append("The full set of parameters is logged at INFO level on startup and can be used to determine the loaded configuration\n")
                 .append("\n")
                 .append("    --help").append(" ".repeat(maxNameLen + 1 - 6)).append("display this help text\n")
                 .append("    --helpenv").append(" ".repeat(maxNameLen + 1 - 9)).append("display this environment variable form of this help\n")
@@ -244,17 +253,22 @@ private static final String NAME = "query-engine";
         for (ConfigurationProperty prop : propDocs) {
           prop.appendUsage(usage, maxNameLen);
         }
-        System.out.println(usage.toString());
+        stdout.println(usage.toString());
         return Future.succeededFuture(1);
       }
       if ("--helpenv".equals(arg)) {
         StringBuilder usage = new StringBuilder();
         List<ConfigurationProperty> propDocs = p4j.getDocumentation(new Parameters(), "--", null, Arrays.asList(Pattern.compile(".*VertxOptions.*"), Pattern.compile(".*HttpServerOptions.*")));
         int maxNameLen = propDocs.stream().map(p -> p.name.length()).max(Integer::compare).get();
+
+        usage.append("This is a list of environment variables understood by the query-engine.\n")
+                .append("Call with --help for moire details of configuration\n")
+                ;
+
         for (ConfigurationProperty prop : propDocs) {
           prop.appendEnv(usage, maxNameLen, "--", NAME);
         }
-        System.out.println(usage.toString());
+        stdout.println(usage.toString());
         return Future.succeededFuture(1);
       }
     }
@@ -270,7 +284,7 @@ private static final String NAME = "query-engine";
     configureObjectMapper(DatabindCodec.prettyMapper());
 
     try {
-      logger.debug("Params: {}", DatabindCodec.mapper().writeValueAsString(params));    
+      logger.info("Params: {}", DatabindCodec.mapper().writeValueAsString(params));    
     } catch (JsonProcessingException ex) {
       logger.error("Failed to convert params to json: ", ex);
     }

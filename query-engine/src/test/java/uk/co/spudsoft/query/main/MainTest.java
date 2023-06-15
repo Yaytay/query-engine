@@ -17,8 +17,10 @@
 package uk.co.spudsoft.query.main;
 
 import brave.http.HttpTracing;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
@@ -51,6 +53,8 @@ public class MainTest {
   public void testMainExitOnRun() throws Exception {
     logger.info("testMainExitOnRun");
     Main main = new Main();
+    ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
+    PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
             "exitOnRun"
             , "baseConfigPath=target/query-engine"
@@ -58,7 +62,7 @@ public class MainTest {
             , "jwt.defaultJwksCacheDuration=PT1M"
             , "logging.level.uk_co_spudsoft_query_main=TRACE" 
             , "vertxOptions.tracingOptions.serviceName=Query-Engine"
-    });
+    }, stdout);
     logger.info("testMainExitOnRun - exit");
   }
   

@@ -29,6 +29,8 @@ import org.slf4j.LoggerFactory;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import io.restassured.http.ContentType;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import uk.co.spudsoft.query.main.Main;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -53,6 +55,8 @@ public class UiRouterIT {
   @Test
   public void testMainDaemon() throws Exception {
     Main main = new Main();
+    ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
+    PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
         "baseConfigPath=target/classes/samples"
       , "vertxOptions.tracingOptions.serviceName=Query-Engine"
@@ -60,7 +64,7 @@ public class UiRouterIT {
       , "jwt.defaultJwksCacheDuration=PT1M"
       , "logging.jsonFormat=false"
       , "loadSampleData=true"
-    });
+    }, stdout);
     
     RestAssured.port = main.getPort();
     

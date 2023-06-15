@@ -21,8 +21,10 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -49,6 +51,8 @@ public class DocHandlerIT {
     Main main = new Main();
     String baseConfigDir = "target/query-engine/samples";
     Main.prepareBaseConfigPath(new File(baseConfigDir));
+    ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
+    PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
         "baseConfigPath=" + baseConfigDir
       , "vertxOptions.tracingOptions.serviceName=Query-Engine"
@@ -56,7 +60,7 @@ public class DocHandlerIT {
       , "jwt.defaultJwksCacheDuration=PT1M"
       , "logging.jsonFormat=true"
       , "designMode=true"
-    });
+    }, stdout);
 
     RestAssured.port = main.getPort();
     

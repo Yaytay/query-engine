@@ -20,7 +20,9 @@ import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.PrintStream;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -68,6 +70,8 @@ public class FeatureRichQueryIT {
     Main main = new Main();
     String baseConfigDir = "target/query-engine/samples";
     Main.prepareBaseConfigPath(new File(baseConfigDir));
+    ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
+    PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
       "audit.datasource.url=jdbc:" + mysql.getUrl()
       , "audit.datasource.adminUser.username=" + mysql.getUser()
@@ -96,7 +100,7 @@ public class FeatureRichQueryIT {
       , "sampleDataLoads[2].adminUser.username=sa"
       , "sampleDataLoads[2].adminUser.password=unknown"
       , "sampleDataLoads[3].url=wibble"
-    });
+    }, stdout);
     
     RestAssured.port = main.getPort();
     

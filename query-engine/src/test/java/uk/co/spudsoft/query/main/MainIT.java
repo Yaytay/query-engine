@@ -30,6 +30,9 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 import static io.restassured.RestAssured.given;
 import static io.restassured.config.RedirectConfig.redirectConfig;
 import io.restassured.config.RestAssuredConfig;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 /**
@@ -51,8 +54,36 @@ public class MainIT {
   }
     
   @Test
+  public void testHelp() throws Exception {
+    Main main = new Main();
+    ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
+    PrintStream stdout = new PrintStream(stdoutStream);
+    main.testMain(new String[]{
+      "--help"
+    }, stdout);
+    logger.debug("Help:\n{}", stdout);
+    
+    main.shutdown();
+  }
+    
+  @Test
+  public void testHelpEnv() throws Exception {
+    Main main = new Main();
+    ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
+    PrintStream stdout = new PrintStream(stdoutStream);
+    main.testMain(new String[]{
+      "--helpenv"
+    }, stdout);
+    logger.debug("HelpEnv:\n{}", stdout);
+    
+    main.shutdown();
+  }
+  
+  @Test
   public void testBadAudit() throws Exception {
     Main main = new Main();
+    ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
+    PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
       "audit.datasource.url=wibble"
       , "baseConfigPath=target/classes/samples"
@@ -63,7 +94,8 @@ public class MainIT {
       , "pipelineCache.maxDurationMs=0"
       , "pipelineCache.purgePeriodMs=10"
       , "logging.level.uk_co_spudsoft_query_main=TRACE" 
-    });
+    }, stdout);
+    assertEquals(0, stdoutStream.size());
     
     main.shutdown();
   }
@@ -71,6 +103,8 @@ public class MainIT {
   @Test
   public void testMainDaemon() throws Exception {
     Main main = new Main();
+    ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
+    PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
       "audit.datasource.url=jdbc:" + postgres.getUrl()
       , "audit.datasource.adminUser.username=" + postgres.getUser()
@@ -82,7 +116,8 @@ public class MainIT {
       , "jwt.defaultJwksCacheDuration=PT1M"
       , "logging.jsonFormat=true"
       , "loadSampleData=true"
-    });
+    }, stdout);
+    assertEquals(0, stdoutStream.size());
     
     RestAssured.port = main.getPort();
     
