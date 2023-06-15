@@ -72,6 +72,13 @@ jobs:
         min-versions-to-keep: 4
         delete-only-pre-release-versions: "true" 
                 
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+                          
     - name: Deploy container image
       run: |
         docker image ls

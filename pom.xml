@@ -184,7 +184,7 @@
                 <mainClass>${mainClass}</mainClass>
               </manifest>
               <manifestEntries>
-                <Image>${project.artifactId}-${parsedVersion.majorVersion}-${parsedVersion.minorVersion}:${project.version}</Image>
+                <Image>${project.artifactId}:${project.version}</Image>
               </manifestEntries>
             </archive>
           </configuration>
@@ -566,7 +566,7 @@
             <images>
               <image>
                 <alias>${project.artifactId}</alias>
-                <name>${project.artifactId}-${parsedVersion.majorVersion}-${parsedVersion.minorVersion}:${project.version}</name>
+                <name>${project.artifactId}:${project.version}</name>
                 <build>
                   <tags>
                     <tag>${project.version}</tag>
