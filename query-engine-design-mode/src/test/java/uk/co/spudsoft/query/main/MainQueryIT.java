@@ -30,6 +30,8 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
 import io.vertx.junit5.Timeout;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.concurrent.TimeUnit;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -65,6 +67,8 @@ public class MainQueryIT {
   @Timeout(value = 2400, timeUnit = TimeUnit.SECONDS)
   public void testQuery() throws Exception {
     Main main = new DesignMain();
+    ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
+    PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
       "audit.datasource.url=jdbc:" + mysql.getUrl()
       , "audit.datasource.adminUser.username=" + mysql.getUser()
@@ -83,7 +87,7 @@ public class MainQueryIT {
       , "jwt.acceptableIssuerRegexes[0]=.*"
       , "jwt.defaultJwksCacheDuration=PT1M"
       , "zipkin.baseUrl=http://localhost/wontwork"
-    });
+    }, stdout);
     
     RestAssured.port = main.getPort();
     

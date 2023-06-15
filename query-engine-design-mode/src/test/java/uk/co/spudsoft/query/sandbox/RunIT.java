@@ -20,7 +20,9 @@ import uk.co.spudsoft.query.main.*;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.PrintStream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -61,6 +63,8 @@ public class RunIT {
   @Test
   public void testMainDaemon() throws Exception {
     Main main = new DesignMain();
+    ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
+    PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
       "audit.datasource.url=jdbc:" + postgres.getUrl()
       , "audit.datasource.adminUser.username=" + postgres.getUser()
@@ -73,7 +77,7 @@ public class RunIT {
       , "logging.level.uk\\\\.co\\\\.spudsoft\\\\.vertx\\\\.rest=TRACE"
 //      , "logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec\\\\.procs\\\\.query=TRACE"
       , "httpServerOptions.port=8000"
-    });
+    }, stdout);
     
     for (int i = 0; i < 14400; ++i) {
       try {

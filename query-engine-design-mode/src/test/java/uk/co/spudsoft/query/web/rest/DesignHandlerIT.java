@@ -31,6 +31,8 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
 import static io.restassured.RestAssured.given;
 import io.restassured.http.ContentType;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
@@ -77,6 +79,8 @@ public class DesignHandlerIT {
   @Test
   public void testDesignHandler() throws Exception {
     Main main = new DesignMain();
+    ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
+    PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
       "audit.datasource.url=jdbc:" + postgres.getUrl()
       , "audit.datasource.adminUser.username=" + postgres.getUser()
@@ -88,7 +92,7 @@ public class DesignHandlerIT {
       , "jwt.defaultJwksCacheDuration=PT1M"
       , "logging.jsonFormat=true"
       , "designMode=true"
-    });
+    }, stdout);
 
     RestAssured.port = main.getPort();
 
