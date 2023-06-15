@@ -54,7 +54,7 @@ public class DesignMain extends Main {
   @ExcludeFromJacocoGenerated
   public static void main(String[] args) {
     DesignMain main = new DesignMain();
-    main.innerMain(args).onComplete(main::mainCompletion);
+    main.innerMain(args, System.out).onComplete(main::mainCompletion);
   }
   
   @Override
