@@ -39,6 +39,7 @@ import io.swagger.v3.oas.integration.SwaggerConfiguration;
 import io.swagger.v3.oas.integration.api.OpenAPIConfiguration;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
@@ -119,7 +120,7 @@ public class Main extends Application {
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
   
 private static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-private static final String MAVEN_PROJECT_VERSION = "0.0.10-7-main";
+private static final String MAVEN_PROJECT_VERSION = "0.0.10-8-main";
 
 private static final String NAME = "query-engine";
   
@@ -133,6 +134,20 @@ private static final String NAME = "query-engine";
   
   private int port;
   
+  @ExcludeFromJacocoGenerated
+  protected void mainCompletion(AsyncResult<Integer> result) {
+    if (result.succeeded()) {
+      int statusCode = result.result();
+      if (statusCode > 0) {
+        shutdown(statusCode);
+      }
+    } else {
+      logger.error("Failed: ", result.cause());
+      shutdown(-1);
+    }
+  }
+  
+  
   /**
    * Main method.
    * @param args Command line arguments that should have the same form as properties with the query-engine prefix, no dashes are required.
@@ -140,16 +155,7 @@ private static final String NAME = "query-engine";
    */
   public static void main(String[] args) {
     Main main = new Main();
-    main.innerMain(args, System.out)
-            .onSuccess(statusCode -> {
-              if (statusCode > 0) {
-                main.shutdown(statusCode);
-              }
-            })
-            .onFailure(ex -> {
-              logger.error("Failed: ", ex);
-              main.shutdown(-1);
-            });
+    main.innerMain(args, System.out).onComplete(ar -> main.mainCompletion(ar));
   }
   
   protected void shutdown(int statusCode) {
@@ -219,11 +225,11 @@ private static final String NAME = "query-engine";
             .withSecretsGatherer(new File(getBaseConfigDir() + "/conf.d").toPath(), 0, 0, 0, StandardCharsets.UTF_8)
             .withEnvironmentVariablesGatherer(NAME, false)
             .withSystemPropertiesGatherer(NAME)
-            .withCommandLineArgumentsGatherer(args, null)
+            .withCommandLineArgumentsGatherer(args, "--")
             .withMixIn(TracingOptions.class, TracingOptionsMixin.class)
             .create();
-
     
+    logger.info("Args: {}", (Object) args);
     
     for (String arg : args) {
       if ("-?".equals(arg) || "--help".equals(arg)) {
@@ -251,7 +257,7 @@ private static final String NAME = "query-engine";
                 ;
         
         for (ConfigurationProperty prop : propDocs) {
-          prop.appendUsage(usage, maxNameLen);
+          prop.appendUsage(usage, maxNameLen, "\n");
         }
         stdout.println(usage.toString());
         return Future.succeededFuture(1);
@@ -266,7 +272,7 @@ private static final String NAME = "query-engine";
                 ;
 
         for (ConfigurationProperty prop : propDocs) {
-          prop.appendEnv(usage, maxNameLen, "--", NAME);
+          prop.appendEnv(usage, maxNameLen, "--", NAME, "\n");
         }
         stdout.println(usage.toString());
         return Future.succeededFuture(1);
@@ -346,7 +352,13 @@ private static final String NAME = "query-engine";
       router.route("/*").handler(corsHandler); 
     }
     
-    RequestContextBuilder rcb = createRequestContextBuilder(params);
+    RequestContextBuilder rcb;
+    try {
+      rcb = createRequestContextBuilder(params);
+    } catch (Throwable ex) {
+      logger.error("Failed to create request context builder: ", ex);
+      return Future.succeededFuture(-2);
+    }
     
     List<Object> controllers = new ArrayList<>();
     controllers.add(new InfoHandler(rcb, defnLoader, outputAllErrorMessages()));

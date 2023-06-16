@@ -1,13 +1,12 @@
-FROM azul/zulu-openjdk-alpine:19.0.2
+FROM azul/zulu-openjdk-alpine:20.0.1-20.30.11
 
-RUN jlink --output /qe-java --add-modules java.base,java.management,jdk.management,jdk.unsupported,java.sql.rowset,java.desktop,jdk.naming.dns
+RUN jlink --output /qe-java --add-modules java.base,java.compiler,java.management,jdk.management,jdk.unsupported,java.sql.rowset,java.desktop,jdk.naming.dns
 
-FROM alpine:3.17.3
+FROM alpine:3.18.2
+
+ARG DEPS
 
 COPY --from=0 /qe-java /qe-java
-RUN ln -s /qe-java/bin/java /usr/bin/java
-
-ENV JAVA_HOME /qe-java/bin
 
 LABEL version=${project.version} \
       major-version=${parsedVersion.majorVersion} \
@@ -16,8 +15,18 @@ LABEL version=${project.version} \
 
 EXPOSE 8080
 
-COPY target/dependencies /${project.artifactId}
-COPY target/${project.artifactId}-${project.version}.jar /${project.artifactId}
+COPY target/dependencies /dependencies
+COPY target/${project.artifactId}-${project.version}* /
 
-ENTRYPOINT exec java -cp "/${project.artifactId}/*" ${mainClass}
+ENV JAVA_HOME=/qe-java/bin
+ENV CLASSPATH=${DEPS}
+ENV JDK_JAVA_OPTIONS="-server -XX:-OmitStackTraceInFastThrow"
 
+# Create the shared archive using the calculated classpath. This will only 
+# contain application classes because it builds on top of the default Java-class
+# archive that the JDK contains since version 12.
+#
+# See https://blog.codefx.org/java/application-class-data-sharing/#Working-With-A-JDK-Class-Data-Archive
+RUN mkdir /cds && /qe-java/bin/java -XX:ArchiveClassesAtExit=/cds/shared.jsa ${mainClass} '--jwt.acceptableIssuerRegexes[0]=.*' --ExitOnRun || true
+
+ENTRYPOINT ["/qe-java/bin/java", "-XX:SharedArchiveFile=/cds/shared.jsa", "${mainClass}"]

@@ -60,15 +60,15 @@ public class MainIT {
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-      "audit.datasource.url=wibble"
-      , "baseConfigPath=target/query-engine/samples"
-      , "vertxOptions.tracingOptions.type=io.vertx.tracing.zipkin.ZipkinTracingOptions"
-      , "vertxOptions.tracingOptions.serviceName=Query-Engine"
-      , "jwt.acceptableIssuerRegexes[0]=.*"
-      , "jwt.defaultJwksCacheDuration=PT1M"
-      , "pipelineCache.maxDurationMs=0"
-      , "pipelineCache.purgePeriodMs=10"
-      , "logging.level.uk_co_spudsoft_query_main=TRACE" 
+        "--audit.datasource.url=wibble"
+      , "--baseConfigPath=target/query-engine/samples"
+      , "--vertxOptions.tracingOptions.type=io.vertx.tracing.zipkin.ZipkinTracingOptions"
+      , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
+      , "--jwt.acceptableIssuerRegexes[0]=.*"
+      , "--jwt.defaultJwksCacheDuration=PT1M"
+      , "--pipelineCache.maxDurationMs=0"
+      , "--pipelineCache.purgePeriodMs=10"
+      , "--logging.level.uk_co_spudsoft_query_main=TRACE" 
     }, stdout);
     
     main.shutdown();
@@ -80,14 +80,14 @@ public class MainIT {
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-      "audit.datasource.url=jdbc:" + postgres.getUrl()
-      , "audit.datasource.adminUser.username=" + postgres.getUser()
-      , "audit.datasource.adminUser.password=" + postgres.getPassword()
-      , "audit.datasource.schema=public" 
-      , "baseConfigPath=target/query-engine/samples"
-      , "vertxOptions.tracingOptions.serviceName=Query-Engine"
-      , "jwt.acceptableIssuerRegexes[0]=.*"
-      , "jwt.defaultJwksCacheDuration=PT1M"
+        "--audit.datasource.url=jdbc:" + postgres.getUrl()
+      , "--audit.datasource.adminUser.username=" + postgres.getUser()
+      , "--audit.datasource.adminUser.password=" + postgres.getPassword()
+      , "--audit.datasource.schema=public" 
+      , "--baseConfigPath=target/query-engine/samples"
+      , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
+      , "--jwt.acceptableIssuerRegexes[0]=.*"
+      , "--jwt.defaultJwksCacheDuration=PT1M"
     }, stdout);
     
     RestAssured.port = main.getPort();

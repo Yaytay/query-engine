@@ -70,23 +70,23 @@ public class MainQueryIT {
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-      "audit.datasource.url=jdbc:" + mysql.getUrl()
-      , "audit.datasource.adminUser.username=" + mysql.getUser()
-      , "audit.datasource.adminUser.password=" + mysql.getPassword()
-      , "audit.datasource.user.username=" + mysql.getUser()
-      , "audit.datasource.user.password=" + mysql.getPassword()
-      , "audit.retryLimit=100"
-      , "audit.retryIncrementMs=500"
-      , "baseConfigPath=target/query-engine/samples"
-      , "vertxOptions.eventLoopPoolSize=5"
-      , "vertxOptions.workerPoolSize=5"
-      , "vertxOptions.tracingOptions.serviceName=Query-Engine"
-      , "httpServerOptions.tracingPolicy=ALWAYS"
-      , "pipelineCache.maxDurationMs=60000"
-      , "logging.jsonFormat=true"
-      , "jwt.acceptableIssuerRegexes[0]=.*"
-      , "jwt.defaultJwksCacheDuration=PT1M"
-      , "zipkin.baseUrl=http://localhost/wontwork"
+        "--audit.datasource.url=jdbc:" + mysql.getUrl()
+      , "--audit.datasource.adminUser.username=" + mysql.getUser()
+      , "--audit.datasource.adminUser.password=" + mysql.getPassword()
+      , "--audit.datasource.user.username=" + mysql.getUser()
+      , "--audit.datasource.user.password=" + mysql.getPassword()
+      , "--audit.retryLimit=100"
+      , "--audit.retryIncrementMs=500"
+      , "--baseConfigPath=target/query-engine/samples"
+      , "--vertxOptions.eventLoopPoolSize=5"
+      , "--vertxOptions.workerPoolSize=5"
+      , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
+      , "--httpServerOptions.tracingPolicy=ALWAYS"
+      , "--pipelineCache.maxDurationMs=60000"
+      , "--logging.jsonFormat=true"
+      , "--jwt.acceptableIssuerRegexes[0]=.*"
+      , "--jwt.defaultJwksCacheDuration=PT1M"
+      , "--zipkin.baseUrl=http://localhost/wontwork"
     }, stdout);
     
     RestAssured.port = main.getPort();

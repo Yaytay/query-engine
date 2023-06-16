@@ -66,17 +66,17 @@ public class RunIT {
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-      "audit.datasource.url=jdbc:" + postgres.getUrl()
-      , "audit.datasource.adminUser.username=" + postgres.getUser()
-      , "audit.datasource.adminUser.password=" + postgres.getPassword()
-      , "audit.datasource.schema=public" 
-      , "baseConfigPath=target/test-classes/sources"
-      , "vertxOptions.tracingOptions.serviceName=Query-Engine"
-      , "jwt.acceptableIssuerRegexes[0]=.*"
-      , "logging.jsonFormat=false"
-      , "logging.level.uk\\\\.co\\\\.spudsoft\\\\.vertx\\\\.rest=TRACE"
-//      , "logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec\\\\.procs\\\\.query=TRACE"
-      , "httpServerOptions.port=8000"
+        "--audit.datasource.url=jdbc:" + postgres.getUrl()
+      , "--audit.datasource.adminUser.username=" + postgres.getUser()
+      , "--audit.datasource.adminUser.password=" + postgres.getPassword()
+      , "--audit.datasource.schema=public" 
+      , "--baseConfigPath=target/test-classes/sources"
+      , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
+      , "--jwt.acceptableIssuerRegexes[0]=.*"
+      , "--logging.jsonFormat=false"
+      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.vertx\\\\.rest=TRACE"
+//      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec\\\\.procs\\\\.query=TRACE"
+      , "--httpServerOptions.port=8000"
     }, stdout);
     
     for (int i = 0; i < 14400; ++i) {

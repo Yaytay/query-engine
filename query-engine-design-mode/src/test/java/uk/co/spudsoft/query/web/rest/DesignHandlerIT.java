@@ -82,16 +82,15 @@ public class DesignHandlerIT {
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-      "audit.datasource.url=jdbc:" + postgres.getUrl()
-      , "audit.datasource.adminUser.username=" + postgres.getUser()
-      , "audit.datasource.adminUser.password=" + postgres.getPassword()
-      , "audit.datasource.schema=public"
-      , "baseConfigPath=target/query-engine/samples-designit"
-      , "vertxOptions.tracingOptions.serviceName=Query-Engine"
-      , "jwt.acceptableIssuerRegexes[0]=.*"
-      , "jwt.defaultJwksCacheDuration=PT1M"
-      , "logging.jsonFormat=true"
-      , "designMode=true"
+      "--audit.datasource.url=jdbc:" + postgres.getUrl()
+      , "--audit.datasource.adminUser.username=" + postgres.getUser()
+      , "--audit.datasource.adminUser.password=" + postgres.getPassword()
+      , "--audit.datasource.schema=public"
+      , "--baseConfigPath=target/query-engine/samples-designit"
+      , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
+      , "--jwt.acceptableIssuerRegexes[0]=.*"
+      , "--jwt.defaultJwksCacheDuration=PT1M"
+      , "--logging.jsonFormat=true"
     }, stdout);
 
     RestAssured.port = main.getPort();

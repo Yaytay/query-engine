@@ -85,15 +85,15 @@ public class MainIT {
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-      "audit.datasource.url=wibble"
-      , "baseConfigPath=target/classes/samples"
-      , "vertxOptions.tracingOptions.type=io.vertx.tracing.zipkin.ZipkinTracingOptions"
-      , "vertxOptions.tracingOptions.serviceName=Query-Engine"
-      , "jwt.acceptableIssuerRegexes[0]=.*"
-      , "jwt.defaultJwksCacheDuration=PT1M"
-      , "pipelineCache.maxDurationMs=0"
-      , "pipelineCache.purgePeriodMs=10"
-      , "logging.level.uk_co_spudsoft_query_main=TRACE" 
+      "--audit.datasource.url=wibble"
+      , "--baseConfigPath=target/classes/samples"
+      , "--vertxOptions.tracingOptions.type=io.vertx.tracing.zipkin.ZipkinTracingOptions"
+      , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
+      , "--jwt.acceptableIssuerRegexes[0]=.*"
+      , "--jwt.defaultJwksCacheDuration=PT1M"
+      , "--pipelineCache.maxDurationMs=0"
+      , "--pipelineCache.purgePeriodMs=10"
+      , "--logging.level.uk_co_spudsoft_query_main=TRACE" 
     }, stdout);
     assertEquals(0, stdoutStream.size());
     
@@ -106,16 +106,16 @@ public class MainIT {
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-      "audit.datasource.url=jdbc:" + postgres.getUrl()
-      , "audit.datasource.adminUser.username=" + postgres.getUser()
-      , "audit.datasource.adminUser.password=" + postgres.getPassword()
-      , "audit.datasource.schema=public" 
-      , "baseConfigPath=target/classes/samples"
-      , "vertxOptions.tracingOptions.serviceName=Query-Engine"
-      , "jwt.acceptableIssuerRegexes[0]=.*"
-      , "jwt.defaultJwksCacheDuration=PT1M"
-      , "logging.jsonFormat=true"
-      , "loadSampleData=true"
+      "--audit.datasource.url=jdbc:" + postgres.getUrl()
+      , "--audit.datasource.adminUser.username=" + postgres.getUser()
+      , "--audit.datasource.adminUser.password=" + postgres.getPassword()
+      , "--audit.datasource.schema=public" 
+      , "--baseConfigPath=target/classes/samples"
+      , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
+      , "--jwt.acceptableIssuerRegexes[0]=.*"
+      , "--jwt.defaultJwksCacheDuration=PT1M"
+      , "--logging.jsonFormat=true"
+      , "--loadSampleData=true"
     }, stdout);
     assertEquals(0, stdoutStream.size());
     

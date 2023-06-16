@@ -18,7 +18,6 @@
 package uk.co.spudsoft.query.main;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
-import io.vertx.core.AsyncResult;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,19 +32,6 @@ public class DesignMain extends Main {
   
   private static final Logger logger = LoggerFactory.getLogger(DesignMain.class);
   
-  @ExcludeFromJacocoGenerated
-  private void mainCompletion(AsyncResult<Integer> result) {
-    if (result.succeeded()) {
-      int statusCode = result.result();
-      if (statusCode > 0) {
-        shutdown(statusCode);
-      }
-    } else {
-      logger.error("Failed: ", result.cause());
-      shutdown(-1);
-    }
-  }
-  
   /**
    * Main method.
    * @param args Command line arguments that should have the same form as properties with the query-engine prefix, no dashes are required.
@@ -53,8 +39,8 @@ public class DesignMain extends Main {
    */
   @ExcludeFromJacocoGenerated
   public static void main(String[] args) {
-    DesignMain main = new DesignMain();
-    main.innerMain(args, System.out).onComplete(main::mainCompletion);
+    Main main = new Main();
+    main.innerMain(args, System.out).onComplete(ar -> main.mainCompletion(ar));
   }
   
   @Override

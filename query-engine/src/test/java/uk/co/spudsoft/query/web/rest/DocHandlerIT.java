@@ -23,15 +23,11 @@ import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -54,12 +50,12 @@ public class DocHandlerIT {
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-        "baseConfigPath=" + baseConfigDir
-      , "vertxOptions.tracingOptions.serviceName=Query-Engine"
-      , "jwt.acceptableIssuerRegexes[0]=.*"
-      , "jwt.defaultJwksCacheDuration=PT1M"
-      , "logging.jsonFormat=true"
-      , "designMode=true"
+        "--baseConfigPath=" + baseConfigDir
+      , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
+      , "--jwt.acceptableIssuerRegexes[0]=.*"
+      , "--jwt.defaultJwksCacheDuration=PT1M"
+      , "--logging.jsonFormat=true"
+      , "--designMode=true"
     }, stdout);
 
     RestAssured.port = main.getPort();

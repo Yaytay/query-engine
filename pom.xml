@@ -416,6 +416,21 @@
               </configuration>
             </execution>
             <execution>
+              <id>build-classpath</id>
+              <phase>generate-sources</phase>
+              <goals>
+                <goal>build-classpath</goal>
+              </goals>
+              <configuration>
+                <includeScope>compile</includeScope>
+                <fileSeparator>/</fileSeparator>
+                <pathSeparator>:</pathSeparator>
+                <prefix>dependencies</prefix>
+                <outputFile>target/classpath</outputFile>
+                <outputProperty>dependencies-class-path</outputProperty>
+              </configuration>
+            </execution>
+            <execution>
               <id>copy-compiler</id>
               <phase>process-test-classes</phase>
               <goals>
@@ -546,7 +561,7 @@
             <outputName>${project.artifactId}-${project.version}-cyclonedx.cdx</outputName>
           </configuration>        
         </plugin>
-
+              
         <plugin>
           <groupId>io.fabric8</groupId>
           <artifactId>docker-maven-plugin</artifactId>
@@ -574,13 +589,16 @@
                   <nocache/>
                   <dockerFile>${project.basedir}/src/main/docker/Dockerfile</dockerFile>
                   <contextDir>${project.basedir}/</contextDir>
+                  <args>
+                    <DEPS>${dependencies-class-path}:${project.build.finalName}.jar</DEPS>
+                  </args>
                 </build>
               </image>
             </images>
             <dockerHost>${env.DOCKER_HOST}</dockerHost>
           </configuration>
         </plugin>
-
+        
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-deploy-plugin</artifactId>

@@ -56,12 +56,12 @@ public class MainTest {
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-            "exitOnRun"
-            , "baseConfigPath=target/query-engine"
-            , "jwt.acceptableIssuerRegexes[0]=.*"
-            , "jwt.defaultJwksCacheDuration=PT1M"
-            , "logging.level.uk_co_spudsoft_query_main=TRACE" 
-            , "vertxOptions.tracingOptions.serviceName=Query-Engine"
+            "--exitOnRun"
+            , "--baseConfigPath=target/query-engine"
+            , "--jwt.acceptableIssuerRegexes[0]=.*"
+            , "--jwt.defaultJwksCacheDuration=PT1M"
+            , "--logging.level.uk_co_spudsoft_query_main=TRACE" 
+            , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
     }, stdout);
     logger.info("testMainExitOnRun - exit");
   }
@@ -70,9 +70,9 @@ public class MainTest {
   public void testMain() throws IOException {
     logger.info("testMain");
     Main.main(new String[]{
-            "baseConfigPath=target/query-engine"
-            , "jwt.acceptableIssuerRegexes[0]=.*"
-            , "jwt.defaultJwksCacheDuration=PT1M"
+            "--baseConfigPath=target/query-engine"
+            , "--jwt.acceptableIssuerRegexes[0]=.*"
+            , "--jwt.defaultJwksCacheDuration=PT1M"
     });
     logger.info("testMain - exit");
   }
