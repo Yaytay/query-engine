@@ -20,7 +20,6 @@ COPY target/${project.artifactId}-${project.version}* /
 
 ENV JAVA_HOME=/qe-java/bin
 ENV CLASSPATH=${DEPS}
-ENV JDK_JAVA_OPTIONS="-server -XX:-OmitStackTraceInFastThrow"
 
 # Create the shared archive using the calculated classpath. This will only 
 # contain application classes because it builds on top of the default Java-class
@@ -29,4 +28,4 @@ ENV JDK_JAVA_OPTIONS="-server -XX:-OmitStackTraceInFastThrow"
 # See https://blog.codefx.org/java/application-class-data-sharing/#Working-With-A-JDK-Class-Data-Archive
 RUN mkdir /cds && /qe-java/bin/java -XX:ArchiveClassesAtExit=/cds/shared.jsa ${mainClass} '--jwt.acceptableIssuerRegexes[0]=.*' --ExitOnRun || true
 
-ENTRYPOINT ["/qe-java/bin/java", "-XX:SharedArchiveFile=/cds/shared.jsa", "${mainClass}"]
+ENTRYPOINT ["/qe-java/bin/java", "-XX:SharedArchiveFile=/cds/shared.jsa", "-XX:-OmitStackTraceInFastThrow", "${mainClass}"]
