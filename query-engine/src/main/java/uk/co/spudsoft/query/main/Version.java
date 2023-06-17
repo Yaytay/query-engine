@@ -1,5 +1,3 @@
-package uk.co.spudsoft.query.main;
-
 /*
  * Copyright (C) 2023 jtalbut
  *
@@ -17,13 +15,19 @@ package uk.co.spudsoft.query.main;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+package uk.co.spudsoft.query.main;
+
 /**
- *
+ * Set the version from the pom.
+ * 
  * @author njt
  */
-public class Version {
+public final class Version {
 
   public static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-  public static final String MAVEN_PROJECT_VERSION = "0.0.10-10-main";
+  public static final String MAVEN_PROJECT_VERSION = "0.0.10-12-main";
 
+  private Version() {
+  }
+  
 }

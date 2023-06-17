@@ -45,7 +45,7 @@ public class LogbackOptions {
   }
 
   /**
-   * Set the location of a standard logback configuration file.
+   * The location of a standard logback configuration file.
    * This value should only be set if the built-in configuration options are inadequate for your purposes.
    * @param configFile the location of a standard logback configuration file.
    * @return this, so that the method may be called in a fluent manner.
@@ -65,7 +65,7 @@ public class LogbackOptions {
   }
 
   /**
-   * Set to true for the logs output to stdout to be in JSON format.
+   * When true for the logs output to stdout to be in JSON format.
    * This value is ignored if the config file is specified.
    * @param jsonFormat true for the logs output to stdout to be in JSON format.
    * @return this, so that the method may be called in a fluent manner.
