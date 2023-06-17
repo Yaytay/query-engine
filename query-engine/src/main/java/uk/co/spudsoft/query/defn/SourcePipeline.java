@@ -26,7 +26,10 @@ import java.util.List;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
- *
+ * A SourcePipeline is the core part of a Pipeline, without the globally defined elements.
+ * 
+ * A SourcePipeline cannot be directly referenced externally, but is used within a Pipeline to declare the source and processing of the data.
+ * 
  * @author jtalbut
  */
 @JsonDeserialize(builder = SourcePipeline.Builder.class)

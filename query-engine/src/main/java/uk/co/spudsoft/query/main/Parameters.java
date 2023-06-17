@@ -137,7 +137,7 @@ public class Parameters {
   }
 
   /**
-   * Set the options for configuring logback.
+   * The options for configuring logback.
    * @param logging the options for configuring logback.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -202,7 +202,7 @@ public class Parameters {
   }
 
   /**
-   * Set the seconds to wait after being notified or a file change to allow all file writes to complete.
+   * The seconds to wait after being notified or a file change to allow all file writes to complete.
    * @param fileStabilisationDelaySeconds the seconds to wait after being notified or a file change to allow all file writes to complete.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -239,7 +239,7 @@ public class Parameters {
   }
 
   /**
-   * Set the HttpServerOptions that will be used when creating the HTTP server.
+   * The HttpServerOptions that will be used when creating the HTTP server.
    * The {@link io.vertx.core.http.HttpServerOptions#setMaxHeaderSize(int)} method should be particularly useful when running behind a proxy that passes large JSON headers.
    * @param httpServerOptions the HttpServerOptions that will be used when creating the HTTP server.
    * @return this, so that the method may be called in a fluent manner.
@@ -251,7 +251,7 @@ public class Parameters {
   }
 
   /**
-   * Set the configuration to use for Zipkin tracing.
+   * The configuration to use for Zipkin tracing.
    * @param zipkin the configuration to use for Zipkin tracing.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -262,7 +262,7 @@ public class Parameters {
   }
   
   /**
-   * Set whether the process will end rather than waiting for requests.
+   * Whether the process will end rather than waiting for requests.
    * This is useful for things such as JIT compilers or CDS preparation.
    * @param exitOnRun if true process will end rather than waiting for requests.
    * @return this, so that the method may be called in a fluent manner.
@@ -273,7 +273,7 @@ public class Parameters {
   }
 
   /**
-   * Set the path to the root of the configuration files.
+   * The path to the root of the configuration files.
    * @param baseConfigPath the path to the root of the configuration files.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -283,7 +283,7 @@ public class Parameters {
   }
 
   /**
-   * Set the configuration of the audit of requests.
+   * The configuration of the audit of requests.
    * @param audit the configuration of the audit of requests.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -293,7 +293,7 @@ public class Parameters {
   }
 
   /**
-   * Set the configuration of the pipeline cache.
+   * The configuration of the pipeline cache.
    * @param pipelineCache the configuration of the pipeline cache.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -311,7 +311,7 @@ public class Parameters {
   }
 
   /**
-   * Set the Allowed-Origin-Regex to use for CORS.
+   * The Allowed-Origin-Regex to use for CORS.
    * @param corsAllowedOriginRegex the Allowed-Origin-Regex to use for CORS.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -334,7 +334,7 @@ public class Parameters {
   }
 
   /**
-   * Set the externalized credentials map.
+   * The externalized credentials map.
    * 
    * Credentials that can be used in Source definitions.
    * Externalising credentials is much more secure - the credentials do not need to be committed to the query definition repository
@@ -358,7 +358,7 @@ public class Parameters {
   }
 
   /**
-   * Set the name of the header that will contain the payload from a token as Json (that may be base64 encoded or not).
+   * The name of the header that will contain the payload from a token as Json (that may be base64 encoded or not).
    * If this is used the query engine will not attempt to validate tokens itself, the header will be trusted implicitly.
    * @param openIdIntrospectionHeaderName the name of the header that will contain the payload from a token as Json (that may be base64 encoded or not).
    * @return this, so that the method may be called in a fluent manner.
@@ -399,7 +399,7 @@ public class Parameters {
   }
 
   /**
-   * Set data sources to use attempt to initialize with the sample data.
+   * The data sources to use attempt to initialize with the sample data.
    * The query engine is provided with some example queries that will be deployed to the baseConfigPath one startup if the directory is empty.
    * These sample queries depend upon the target databases being accessible at known locations with known credentials,
    * it is recommended that the provided query-engine-compose.yml file be used set up the database servers within Docker.
@@ -437,7 +437,7 @@ public class Parameters {
   }
 
   /**
-   * Set the configuration of the JWT validator.
+   * The configuration of the JWT validator.
    * @param jwt the configuration of the JWT validator.
    * @return this, so that the method may be called in a fluent manner.
    */

@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.defn;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
@@ -25,10 +26,61 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.procs.query.ProcessorDynamicFieldInstance;
 
 /**
- *
+ * Processor that takes in multiple streams and uses them to dynamically add fields to the primary stream.
+ * 
+ * This is aimed at converting tables of key/value pairs into fields.
+ * 
+ * Two child pipelines must be defined:
+ * <ul>
+ * <li>The definition  pipeline, that is queried in its entirety at the beginning and that defines the columns that will be found.
+ * <li>The values pipeline, that is queried in parallel with the main stream and the supplies the data for the dynamic columns.
+ * </ul>
+ * 
+ * The definition pipeline must provide four fields:
+ * <ul>
+ * <li>The ID for the dynamic column to be added - this value must correspond to the ID from the values pipeline.
+ * <li>The name for the dynamic column - this will be the name of the newly created field.
+ * <li>The type for the dynamic column - one of the{@link uk.co.spudsoft.query.defn.DataType} values.
+ * <li>The name of the column in the values stream that will contain the actual value.
+ * </ul>
+ * The names of these four fields can be controlled using the field*Column properties on this processor (though they have sensible defaults).
+ * 
+ * The values pipeline must provide at least three fields:
+ * <ul>
+ * <li>The parent ID, that matches the ID of the data row in the main pipeline.
+ * <li>The field ID, that matches one of the rows returned from the definition pipeline.
+ * <li>The value field, whose name must match that defined for the selected field.
+ * </ul>
+ * 
+ * As a streaming processor this processor requires the main pipeline and the values pipeline to be sorted by the same ID (the parent ID from the point of view of this processor).
+ * 
+ * The processor works by:
+ * <ol>
+ * <li>If the parent ID is greater than the values ID, skip through values until it isn't.
+ * <li>If the values ID is greater than the parent ID, skip through parent rows until it isn't.
+ * <li>While the two IDs match:
+ * <ol>
+ * <li>Find the definition for the current value.
+ * <li>Get the name of the value field from the field definition.
+ * <li>Add a new field to the parent data row with the name from the field definition and the value from the value field of the value row.
+ * </ol>
+ * </ol>
+ * 
+ * 
  * @author jtalbut
  */
 @JsonDeserialize(builder = ProcessorDynamicField.Builder.class)
+@Schema(description = 
+        """
+        Processor that takes in multiple streams and uses them to dynamically add fields to the primary stream.
+
+        Two child pipelines must be defined:
+        <ul>
+        <li>The definition  pipeline, that is queried in its entirety at the beginning and that defines the columns that will be found.
+        <li>The values pipeline, that is queried in parallel with the main stream and the supplies the data for the dynamic columns.
+        </il>
+        """
+)
 public class ProcessorDynamicField implements Processor {
 
   private final ProcessorType type;

@@ -146,9 +146,10 @@
             </execution>
           </executions>
           <configuration>
-            <basedir>${project.basedir}/src/main/java</basedir>
+            <basedir>${project.basedir}/src/main</basedir>
             <includes>
-              <include>uk/co/spudsoft/query/main/Main.java</include>
+              <include>java/uk/co/spudsoft/query/main/Version.java</include>
+              <include>resources/docs/query-engine-compose.yml</include>
             </includes>
             <preserveDir>true</preserveDir>
             <replacements>
@@ -159,6 +160,10 @@
               <replacement>
                 <token>MAVEN_PROJECT_VERSION = ".*"</token>
                 <value>MAVEN_PROJECT_VERSION = "${project.version}"</value>
+              </replacement>
+              <replacement>
+                <token>image: ghcr.io/yaytay/query-engine-design-mode:.*</token>
+                <value>image: ghcr.io/yaytay/query-engine-design-mode:${project.version}</value>
               </replacement>
             </replacements>
           </configuration>

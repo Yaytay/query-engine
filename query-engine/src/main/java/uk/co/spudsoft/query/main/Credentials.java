@@ -35,11 +35,21 @@ public class Credentials {
    */
   private String password;
 
+  /**
+   * The username.
+   * @param username the username.
+   * @return username.
+   */
   public Credentials setUsername(String username) {
     this.username = username;
     return this;
   }
 
+  /**
+   * The password.
+   * @param password The password.
+   * @return The password.
+   */
   public Credentials setPassword(String password) {
     this.password = password;
     return this;

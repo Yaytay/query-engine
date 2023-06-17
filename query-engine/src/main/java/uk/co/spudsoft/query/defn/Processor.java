@@ -28,6 +28,10 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
 
 /**
  *
+ * Base class for all Processors.
+ * 
+ * Processors modify the data stream in flight.
+ * 
  * @author jtalbut
  */
 @JsonTypeInfo(
@@ -46,8 +50,11 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
           @DiscriminatorMapping(schema = ProcessorLimit.class, value = "LIMIT")
           , @DiscriminatorMapping(schema = ProcessorGroupConcat.class, value = "GROUP_CONCAT")
           , @DiscriminatorMapping(schema = ProcessorDynamicField.class, value = "DYNAMIC_FIELD")
-          , @DiscriminatorMapping(schema = ProcessorScript.class, value = "SCRIPT")
+          , @DiscriminatorMapping(schema = ProcessorScript.class, value = "SCRIPT")      
         }
+        , description = """
+                      Processors modify the data stream in flight.
+                      """
 )
 public interface Processor {
   

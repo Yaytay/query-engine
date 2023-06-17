@@ -119,10 +119,7 @@ public class Main extends Application {
   
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
   
-private static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-private static final String MAVEN_PROJECT_VERSION = "0.0.10-8-main";
-
-private static final String NAME = "query-engine";
+  private static final String NAME = "query-engine";
   
   private MeterRegistry meterRegistry;
   private Vertx vertx;
@@ -229,12 +226,22 @@ private static final String NAME = "query-engine";
             .withMixIn(TracingOptions.class, TracingOptionsMixin.class)
             .create();
     
-    logger.info("Args: {}", (Object) args);
+    logger.trace("Args: {}", (Object) args);
     
     for (String arg : args) {
       if ("-?".equals(arg) || "--help".equals(arg)) {
         StringBuilder usage = new StringBuilder();
-        List<ConfigurationProperty> propDocs = p4j.getDocumentation(new Parameters(), "--", null, Arrays.asList(Pattern.compile(".*VertxOptions.*"), Pattern.compile(".*HttpServerOptions.*")));
+        List<ConfigurationProperty> propDocs = p4j.getDocumentation(
+                new Parameters()
+                , "--"
+                , Arrays.asList(
+                        Pattern.compile(".*Condition.*")
+                )
+                , Arrays.asList(
+                        Pattern.compile(".*VertxOptions.*")
+                        , Pattern.compile(".*HttpServerOptions.*")
+                )
+        );
         int maxNameLen = propDocs.stream().map(p -> p.name.length()).max(Integer::compare).get();
         
         usage.append("Usage: query-engine [PROPERTIES]\n")
@@ -521,8 +528,8 @@ private static final String NAME = "query-engine";
                     new OpenAPI()
                             .info(
                                     new Info()
-                                            .title(MAVEN_PROJECT_NAME)
-                                            .version(MAVEN_PROJECT_VERSION)
+                                            .title(Version.MAVEN_PROJECT_NAME)
+                                            .version(Version.MAVEN_PROJECT_VERSION)
                             )
             );
   }

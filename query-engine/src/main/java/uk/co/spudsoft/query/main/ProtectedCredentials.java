@@ -41,6 +41,10 @@ public class ProtectedCredentials extends Credentials {
     return condition;
   }
 
+  /**
+   * An optional condition upon the credentials - unless this condition is met the credentials will not be usable by the current pipeline.
+   * @param condition optional condition upon the credentials 
+   */
   public void setCondition(Condition condition) {
     this.condition = condition;
   }
