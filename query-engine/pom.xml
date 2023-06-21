@@ -244,7 +244,7 @@
     <dependency>
       <groupId>net.logstash.logback</groupId>
       <artifactId>logstash-logback-encoder</artifactId>
-      <version>7.3</version>
+      <version>7.4</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -335,7 +335,7 @@
     <dependency>
       <groupId>io.rest-assured</groupId>
       <artifactId>rest-assured</artifactId>
-      <version>5.3.0</version>
+      <version>5.3.1</version>
       <exclusions>
         <exclusion>
           <groupId>commons-logging</groupId>
@@ -371,13 +371,13 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>5.3.1</version>
+      <version>5.4.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-junit-jupiter</artifactId>
-      <version>5.3.1</version>
+      <version>5.4.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -420,6 +420,26 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.asciidoctor</groupId>
+        <artifactId>asciidoctor-maven-plugin</artifactId>
+        <version>2.2.4</version>
+        <executions>
+          <execution>
+            <id>output-html</id>              
+            <phase>generate-resources</phase> 
+            <goals>
+              <goal>process-asciidoc</goal> 
+            </goals>
+            <configuration>
+              <sourceDirectory>${basedir}/docs</sourceDirectory>
+              <outputDirectory>${basedir}/target/classes/docs</outputDirectory>
+              <preserveDirectories>true</preserveDirectories>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
       </plugin>

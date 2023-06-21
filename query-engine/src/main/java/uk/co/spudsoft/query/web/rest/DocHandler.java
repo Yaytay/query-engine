@@ -60,21 +60,21 @@ public class DocHandler {
   private static final String BASE_DIR = "/docs/";
   static final DocNodesTree.DocDir DOCS = new DocNodesTree.DocDir(
           "/"
-          , Arrays.asList(new DocNodesTree.DocFile("Introduction.MD", "Introduction")
-                  , new DocNodesTree.DocFile("Getting Started.MD", "Getting Started")
-                  , new DocNodesTree.DocFile("Configuration.MD", "Configuration")
-                  , new DocNodesTree.DocFile("Parameters.MD", "Parameters")
+          , Arrays.asList(new DocNodesTree.DocFile("Introduction.html", "Introduction")
+                  , new DocNodesTree.DocFile("Getting Started.html", "Getting Started")
+                  , new DocNodesTree.DocFile("Configuration.html", "Configuration")
+                  , new DocNodesTree.DocFile("Parameters.html", "Parameters")
                   , new DocNodesTree.DocFile("query-engine-compose.yml", "")
                   , new DocNodesTree.DocDir(
                           "Design Mode"
                           , Arrays.asList(
-                                  new DocNodesTree.DocFile("Design Mode/Design Mode.MD", "Design Mode")
+                                  new DocNodesTree.DocFile("Design Mode/Design Mode.html", "Design Mode")
                           )
                   )
                   , new DocNodesTree.DocDir(
                           "Samples"
                           , Arrays.asList(
-                                  new DocNodesTree.DocFile("Samples/Samples Data.MD", "Sample Data")
+                                  new DocNodesTree.DocFile("Samples/Samples Data.html", "Sample Data")
                                   , new DocNodesTree.DocFile("Samples/Test Database ERD.svg", "")
                           )
                   )

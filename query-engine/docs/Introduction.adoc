@@ -1,4 +1,4 @@
-# Query Engine II
+= Query Engine II
 
 The Query Engine has a simple concept - it presents a web endpoint that is able to return data from a datastore.
 
@@ -12,7 +12,7 @@ Features of the Query Engine include:
 * Data is streamed, it is not (usually) necessary for all of the data to be held by the Query Engine process (sorting the stream is an obvious exception, sort in the datastore whenever possible).
 * Dynamic fields are supported directly by Query Engine, separate runs of a query can produce a different structure (depending on the data).
 * Data can be output in various formats, including CSV, Json, XML, HTML, Excel (XLSX) workbooks (all streamed).
-* Authorization is governed by validated [JWT](https://jwt.io/s).
+* Authorization is governed by validated link:https://jwt.io/s[JWT]s.
 * Query Engine is intended to be used via "path-hijacking", providing seamless integration with your application, but can also be accessed directly.
 * Query Engine can be easily embedded within a host application.
 * Full support for OpenAPI documentation.
@@ -21,18 +21,18 @@ Features of the Query Engine include:
 
 In our experience, as a SAAS provider, most clients these days have their own reporting solution and are looking for easy access to the data, but publishing our internal data dictionary would create unacceptable coupling.
 
-### Naming
+=== Naming
 
 This is a clean-room re-implementation of the first version of Query Engine, hence this is Query Engine 2.
 However, the first version was closed source so no-one outside of my employer will ever see it (nor would you want to, QE2 is better).
 
 In these documents the term Query Engine II will be used in headings and titles, in the body the term will be just Query Engine.
 
-## Deployment
+== Deployment
 
 The Query Engine is provided as a container image and it is expected that it be deployed via docker compose (including swarm) or kubernetes.
 
-### Query Deployment
+=== Query Deployment
 
 The queries run by the Query Engine are specified in files (one file per query).
 Any directory hierarchy use in the storage of the files will be reflected in the paths for running the queries.
@@ -40,7 +40,7 @@ Any directory hierarchy use in the storage of the files will be reflected in the
 The Query Engine itself does not attempt to control how files are managed or made available to it, but it is expected that the files will all exist in a git repository that
 has some kind of CI pipeline (or other auto-update mechanism) to update files as they are changed.
 
-## Query Development
+== Query Development
 
 By default the Query Engine cannot modify queries - for it to be able to do so would be a major security breach.
 
