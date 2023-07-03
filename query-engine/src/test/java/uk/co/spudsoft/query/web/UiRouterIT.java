@@ -147,6 +147,18 @@ public class UiRouterIT {
     
     assertEquals(root, help);
         
+    String notfound = given()
+            .log().all()
+            .get("/ui/nonexistent")
+            .then()
+            .log().ifError()
+            .statusCode(200)
+            .contentType(ContentType.HTML)
+            .extract().body().asString()
+            ;
+    
+    assertEquals(root, notfound);
+        
     String assets = given().log().all().get("/ui/assets").then().statusCode(200).contentType(ContentType.HTML).log().all().extract().body().asString();
 
     assertEquals("", assets);

@@ -3,10 +3,10 @@
 The quickest way to get a feel for the Query Engine is to use the link:query-engine-compose.yml[compose file].
 
 This compose file needs to be run on a single container host (i.e. not Swarm or Kubernetes) with localhost ports 2000-2003 free.
-It spawns four containers: MySQL, Microsoft SQL Server, PostgreSQL and Query Engine in link:pass:[Design Mode/Design Mode.MD][Design Mode].
+It spawns four containers: MySQL, Microsoft SQL Server, PostgreSQL and Query Engine in link:pass:[Design Mode/Design Mode.html][Design Mode].
 
 The configuration of the Query Engine container uses the sampleDataLoads configuration to set up a database on each of these DBMS 
-platforms with a link:Samples/Sample%20Data.MD[very similar structure and data].
+platforms with a link:Samples/Sample%20Data.html[very similar structure and data].
 This data is all set up in transient storage - when the containers are deleted the sample data will go with them (though the containers can be restarted without losing it).
 
 Whenever the Query Engine starts it tries to access (and monitor) its baseConfigPath 

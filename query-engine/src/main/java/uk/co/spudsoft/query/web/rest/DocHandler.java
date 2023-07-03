@@ -35,6 +35,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.net.FileNameMap;
+import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -42,6 +44,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
+import uk.co.spudsoft.query.web.MimeTypes;
 import static uk.co.spudsoft.query.web.rest.InfoHandler.reportError;
 
 /**
@@ -56,6 +59,8 @@ public class DocHandler {
   
   private final RequestContextBuilder requestContextBuilder;
   private final boolean outputAllErrorMessages;
+  
+  private static final FileNameMap FILENAME_MAP = URLConnection.getFileNameMap();
   
   private static final String BASE_DIR = "/docs/";
   static final DocNodesTree.DocDir DOCS = new DocNodesTree.DocDir(
@@ -139,7 +144,6 @@ public class DocHandler {
   
   @GET
   @Path("/{path:.*}")
-  @Produces("text/markdown")
   @Operation(description = "Return some documentation")
   @ApiResponse(
           responseCode = "200"
@@ -169,7 +173,7 @@ public class DocHandler {
               }
             })
             .onSuccess(contents -> {
-              response.resume(Response.ok(contents, "text/markdown").build());
+              response.resume(Response.ok(contents, MimeTypes.getMimeTypeForFilename(path)).build());
             })
             .onFailure(ex -> {
               reportError("Failed to get requested documentation: ", response, ex, outputAllErrorMessages);

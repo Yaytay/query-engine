@@ -14,20 +14,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package uk.co.spudsoft.query.web;
 
-package uk.co.spudsoft.query.main;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import org.junit.jupiter.api.Test;
 
 /**
- * Set the version from the pom.
- * 
+ *
  * @author njt
  */
-public final class Version {
+public class MimeTypesTest {
 
-  public static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-  public static final String MAVEN_PROJECT_VERSION = "0.0.10-15-main";
+  @Test
+  public void testGetMimeTypeForExtension() {
+    assertEquals("application/yaml", MimeTypes.getMimeTypeForExtension("yml"));
+    assertNull(MimeTypes.getMimeTypeForExtension("*****"));
+  }
 
-  private Version() {
+  @Test
+  public void testGetMimeTypeForFilename() {
+    assertEquals("application/yaml", MimeTypes.getMimeTypeForFilename("bob.yml"));
+    assertNull(MimeTypes.getMimeTypeForFilename("bob"));
   }
   
 }

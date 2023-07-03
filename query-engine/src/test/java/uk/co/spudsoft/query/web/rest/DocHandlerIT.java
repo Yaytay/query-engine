@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
+import io.restassured.http.ContentType;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
@@ -82,6 +83,33 @@ public class DocHandlerIT {
         fail("Document " + realDoc + " not configured");
       }
     }
+    
+    given()
+            .log().all()
+            .get("/api/docs/Introduction.html")
+            .then()
+            .log().ifError()
+            .statusCode(200)
+            .contentType(ContentType.HTML)
+            ;
+    
+    given()
+            .log().all()
+            .get("/api/docs/query-engine-compose.yml")
+            .then()
+            .log().ifError()
+            .statusCode(200)
+            .contentType("application/yaml")
+            ;
+    
+    given()
+            .log().all()
+            .get("/api/docs/Samples/Test Database ERD.svg")
+            .then()
+            .log().ifError()
+            .statusCode(200)
+            .contentType("image/svg+xml")
+            ;    
     
     main.shutdown();
   }

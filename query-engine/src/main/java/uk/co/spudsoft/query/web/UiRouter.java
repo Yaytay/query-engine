@@ -18,7 +18,6 @@ package uk.co.spudsoft.query.web;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.collect.ImmutableMap;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Promise;
@@ -29,13 +28,10 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.http.impl.HttpUtils;
-import io.vertx.core.http.impl.MimeMapping;
 import io.vertx.core.net.impl.URIDecoder;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.impl.Utils;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,11 +51,7 @@ public class UiRouter implements Handler<RoutingContext> {
   private final Cache<String, byte[]> cache;
   
   private final long bootTime = System.currentTimeMillis();
-  
-  private final Map<String, String> additionalMimeExtensions = ImmutableMap.<String, String>builder()
-          .put("webmanifest", "application/json")
-          .build();
-  
+
   public static UiRouter create(Vertx vertx, String stripPath, String baseResourcePath, String defaultFilePath) {
     return new UiRouter(vertx, stripPath, baseResourcePath, defaultFilePath);
   }
@@ -109,15 +101,9 @@ public class UiRouter implements Handler<RoutingContext> {
         vertx.<LoadedFile>executeBlocking(promise -> loadFile(promise, path))
                 .onFailure(ex -> {
                   logger.warn("Unexpected failure in request for {}: ", path, ex);
-                  if (ex instanceof FileNotFoundException) {
-                    context.response()
-                            .setStatusCode(404)
-                            .end("Page not found");
-                  } else {
-                    context.response()
-                            .setStatusCode(500)
-                            .end("Internal server error");
-                  }
+                  context.response()
+                          .setStatusCode(500)
+                          .end("Internal server error");
                 })
                 .onSuccess(loadedFile -> {
                   sendFile(context, loadedFile);
@@ -140,10 +126,7 @@ public class UiRouter implements Handler<RoutingContext> {
 
     HttpServerResponse response = context.response();
     String extension = getFileExtension(loadedFile.path);
-    String contentType = extension == null ? "text/html" : MimeMapping.getMimeTypeForExtension(extension);
-    if (contentType == null) {
-      contentType = additionalMimeExtensions.get(extension);
-    }
+    String contentType = extension == null ? "text/html" : MimeTypes.getMimeTypeForExtension(extension);
     
     MultiMap headers = response.headers();
     
