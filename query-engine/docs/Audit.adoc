@@ -1,0 +1,5 @@
+= Audit
+
+The Query Engine has an optional audit subsystem that records the details of every request and statistics about its result in a single table.
+
+

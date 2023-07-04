@@ -69,6 +69,7 @@ public class DocHandler {
                   , new DocNodesTree.DocFile("Getting Started.html", "Getting Started")
                   , new DocNodesTree.DocFile("Configuration.html", "Configuration")
                   , new DocNodesTree.DocFile("Parameters.html", "Parameters")
+                  , new DocNodesTree.DocFile("Audit.html", "Audit")
                   , new DocNodesTree.DocFile("query-engine-compose.yml", "")
                   , new DocNodesTree.DocDir(
                           "Design Mode"

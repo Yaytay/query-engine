@@ -4,6 +4,11 @@ The sample database is completely meaningless and only exists to demonstrate som
 
 image:Test%20Database%20ERD.svg[Test Database ERD]
 
+In addition to the tables, the load scripts also create a number of functions and/or procedures.
+These are only used in the generation of the data for the sample tables.
+
+Depending on configuration the sample database may also contain the link:../Audit.hhtml[audit table].
+
 The tables of the same database are:
 
 == Colours
@@ -79,3 +84,36 @@ The source of the values for the dynamic fields.
 |longValue | BigInt | The value to use if the dynamic field is a Long
 |textValue | String| The value to use if the dynamic field is a String
 |===
+
+== ManyData
+
+A many-to-many join table between Data and RefData.
+
+[cols="1,1,3",stripes=even]
+|===
+|Name | Datatype | Description
+
+|dataId | Integer | ID for row in the Data table to which this data belongs
+|sort | Integer | Numerical value for sorting the data within each Data row
+|refId | UUID | ID for the data in the RefData table
+|===
+
+== DynamicEndpoint
+
+The DynamicEndpoint table is orthogonal to the rest of the sample data
+ - it contains data necessary for performing dynamic lookup of of databases.
+
+[cols="1,1,3",stripes=even]
+|===
+|Name | Datatype | Description
+
+|endpointKey | String | The name of the endpoint (primary key for the table)
+|type | String | The type of endpoint represented (always 'SQL' in the sample data)
+|url | String | The Vertx URL to the database
+|urlTemplate | String | Always null in the sample data
+|secret | String | Pre-configured secret containing credentials for accessing the endpoint, (always null in the sample data)
+|username | String | Username to use for accessing the sample database
+|password | String | Password to use for accessing the sample database
+|useCondition | String | Condition that must be met for the endpoint to be used
+|===
+
