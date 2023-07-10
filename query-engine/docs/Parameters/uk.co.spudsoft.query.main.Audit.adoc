@@ -1,0 +1,24 @@
+= Audit
+
+
+
+[cols="1,1a,4a",table-stripes=even]
+|===
+| Name
+| Type
+| Details
+
+
+| dataSource
+| xref:uk.co.spudsoft.query.main.DataSourceConfig.adoc[DataSourceConfig]
+| 
+| retryBaseMs
+| int
+| 
+| retryIncrementMs
+| int
+| 
+| retryLimit
+| int
+| 
+|===

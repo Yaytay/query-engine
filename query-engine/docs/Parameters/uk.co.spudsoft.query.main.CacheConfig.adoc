@@ -1,0 +1,21 @@
+= CacheConfig
+
+
+
+[cols="1,1a,4a",table-stripes=even]
+|===
+| Name
+| Type
+| Details
+
+
+| maxItems
+| int
+| 
+| maxDurationMs
+| int
+| 
+| purgePeriodMs
+| int
+| 
+|===

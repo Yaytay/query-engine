@@ -1,0 +1,30 @@
+= DataSourceConfig
+
+
+
+[cols="1,1a,4a",table-stripes=even]
+|===
+| Name
+| Type
+| Details
+
+
+| url
+| link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/String.html[String]
+| 
+| schema
+| link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/String.html[String]
+| 
+| user
+| xref:uk.co.spudsoft.query.main.Credentials.adoc[Credentials]
+| 
+| adminUser
+| xref:uk.co.spudsoft.query.main.Credentials.adoc[Credentials]
+| 
+| maxPoolSize
+| int
+| 
+| minPoolSize
+| int
+| 
+|===

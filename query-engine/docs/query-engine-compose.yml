@@ -31,7 +31,7 @@ services:
       POSTGRES_DB: test
       
   query-engine:
-    image: ghcr.io/yaytay/query-engine-design-mode:0.0.10-13-main
+    image: ghcr.io/yaytay/query-engine-design-mode:0.0.10-17-main
     ports:
     - 2000:8080
     environment:

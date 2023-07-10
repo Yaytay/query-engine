@@ -60,15 +60,26 @@ public class DocHandler {
   private final RequestContextBuilder requestContextBuilder;
   private final boolean outputAllErrorMessages;
   
-  private static final FileNameMap FILENAME_MAP = URLConnection.getFileNameMap();
-  
   private static final String BASE_DIR = "/docs/";
   static final DocNodesTree.DocDir DOCS = new DocNodesTree.DocDir(
           "/"
           , Arrays.asList(new DocNodesTree.DocFile("Introduction.html", "Introduction")
                   , new DocNodesTree.DocFile("Getting Started.html", "Getting Started")
                   , new DocNodesTree.DocFile("Configuration.html", "Configuration")
-                  , new DocNodesTree.DocFile("Parameters.html", "Parameters")
+                  , new DocNodesTree.DocDir(
+                          "Parameters"
+                          , Arrays.asList(                                  
+                                  new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.main.Audit.html", "Audit")
+                                  , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.main.CacheConfig.html", "CacheConfig")
+                                  , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.main.Credentials.html", "Credentials")
+                                  , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.main.DataSourceConfig.html", "DataSourceConfig")
+                                  , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.main.JwtValidationConfig.html", "JwtValidationConfig")
+                                  , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.main.Parameters.html", "Parameters")
+                                  , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.main.ProtectedCredentials.html", "ProtectedCredentials")
+                                  , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.main.ZipkinConfig.html", "ZipkinConfig")
+                                  , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.logging.LogbackOptions.html", "LogbackOptions")
+                          )
+                  )
                   , new DocNodesTree.DocFile("Audit.html", "Audit")
                   , new DocNodesTree.DocFile("query-engine-compose.yml", "")
                   , new DocNodesTree.DocDir(

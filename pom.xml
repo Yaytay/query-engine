@@ -146,10 +146,10 @@
             </execution>
           </executions>
           <configuration>
-            <basedir>${project.basedir}/src/main</basedir>
+            <basedir>${project.basedir}</basedir>
             <includes>
-              <include>java/uk/co/spudsoft/query/main/Version.java</include>
-              <include>resources/docs/query-engine-compose.yml</include>
+              <include>src/main/java/uk/co/spudsoft/query/main/Version.java</include>
+              <include>docs/query-engine-compose.yml</include>
             </includes>
             <preserveDir>true</preserveDir>
             <replacements>
