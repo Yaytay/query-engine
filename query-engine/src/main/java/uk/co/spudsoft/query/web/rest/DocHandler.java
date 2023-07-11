@@ -35,8 +35,6 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.net.FileNameMap;
-import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -68,7 +66,7 @@ public class DocHandler {
                   , new DocNodesTree.DocFile("Configuration.html", "Configuration")
                   , new DocNodesTree.DocDir(
                           "Parameters"
-                          , Arrays.asList(                                  
+                          , Arrays.asList(
                                   new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.main.Audit.html", "Audit")
                                   , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.main.CacheConfig.html", "CacheConfig")
                                   , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.main.Credentials.html", "Credentials")
