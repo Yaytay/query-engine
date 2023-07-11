@@ -39,7 +39,7 @@ public class DesignMain extends Main {
    */
   @ExcludeFromJacocoGenerated
   public static void main(String[] args) {
-    Main main = new Main();
+    Main main = new DesignMain();
     main.innerMain(args, System.out).onComplete(ar -> main.mainCompletion(ar));
   }
   
@@ -50,6 +50,7 @@ public class DesignMain extends Main {
   
   @Override
   protected void addExtraControllers(Parameters params, List<Object> controllers) {
+    logger.info("Running in Design Mode");
     controllers.add(new DesignHandler(getVertx(), getDefnLoader(), getDirCache()));
   }
 }
