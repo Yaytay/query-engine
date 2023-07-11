@@ -28,16 +28,21 @@ public class JwtValidationConfig {
   
   /**
    * Path to a file that may contain acceptable issuers to validate token issuers.
+   * <p>
    * This is a core security control and must be set as tightly as possible.
+   * <p>
    * The file itself may be updated in a running system, but the path to the file is immutable.
+   * <p>
    * An issuer is considered acceptable if it matches an entry in this file OR an acceptableIssuerRegex.
    */
   private String acceptableIssuersFile;
 
   /**
    * Time between checks of the file, and also the time that the file must stabilise before it is re-read.
+   * <p>
    * Thus the delay between a change to the file being made and being picked up will be 
    * between filePollPeriodMs and 2 * filePollPeriodMs.
+   * <p>
    * Checks of the file are based entirely on the last-modified timestamp - if the file is on a filesystem that
    * does not support the last-modified timestamp changes will never be picked up.
    */
@@ -45,7 +50,9 @@ public class JwtValidationConfig {
   
   /**
    * The list of regular expressions that are used to define acceptable token issuers.
+   * <p>
    * This is a core security control and must be set as tightly as possible.
+   * <p>
    * An issuer is considered acceptable if it matches one of these regular expressions, OR it matches an entry in the acceptableIssuersFile.
    */
   private List<String> acceptableIssuerRegexes;
@@ -57,6 +64,7 @@ public class JwtValidationConfig {
   
   /**
    * The default period to cache JWKS data for.
+   * <p>
    * This is expected to be overridden by cache-control/max-age headers on the JWKS response, so the default value is usually reasonable.
    */
   private Duration defaultJwksCacheDuration = Duration.ofMinutes(1);
@@ -71,6 +79,7 @@ public class JwtValidationConfig {
 
   /**
    * Set the audience value that must be included in any token for the query engine to accept it.
+   * <p>
    * @param requiredAudience the audience value that must be included in any token for the query engine to accept it.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -82,8 +91,11 @@ public class JwtValidationConfig {
   
   /**
    * Get that path to the acceptable issuers file.
+   * <p>
    * This is a core security control and must be set as tightly as possible.
+   * <p>
    * The file itself may be updated in a running system, but the path to the file is immutable.
+   * <p>
    * An issuer is considered acceptable if it matches an entry in this file OR an acceptableIssuerRegex.
    * @return the path to the acceptable issuers file.
    */
@@ -93,8 +105,11 @@ public class JwtValidationConfig {
 
   /**
    * Set the path to the acceptable issuers file.
+   * <p>
    * This is a core security control and must be set as tightly as possible.
+   * <p>
    * The file itself may be updated in a running system, but the path to the file is immutable.
+   * <p>
    * An issuer is considered acceptable if it matches an entry in this file OR an acceptableIssuerRegex.
    * @param acceptableIssuersFile the path to the acceptable issuers file.
    * @return this, so that the method may be called in a fluent manner.
@@ -106,8 +121,10 @@ public class JwtValidationConfig {
 
   /**
    * Get the time between checks of the file (also the time that the file must stabilise before it is re-read).
+   * <p>
    * Thus the delay between a change to the file being made and being picked up will be 
    * between filePollPeriodMs and 2 * filePollPeriodMs.
+   * <p>
    * Checks of the file are based entirely on the last-modified timestamp - if the file is on a filesystem that
    * does not support the last-modified timestamp changes will never be picked up.
    * @return the time between checks of the file (also the time that the file must stabilise before it is re-read).
@@ -118,8 +135,10 @@ public class JwtValidationConfig {
 
   /**
    * Get the time between checks of the file (also the time that the file must stabilise before it is re-read).
+   * <p>
    * Thus the delay between a change to the file being made and being picked up will be 
    * between filePollPeriodMs and 2 * filePollPeriodMs.
+   * <p>
    * Checks of the file are based entirely on the last-modified timestamp - if the file is on a filesystem that
    * does not support the last-modified timestamp changes will never be picked up.
    * @param filePollPeriodDuration the time between checks of the file (also the time that the file must stabilise before it is re-read).
@@ -132,7 +151,9 @@ public class JwtValidationConfig {
 
   /**
    * Get the list of regular expressions that are used to define acceptable token issuers.
+   * <p>
    * This is a core security control and must be set as tightly as possible.
+   * <p>
    * An issuer is considered acceptable if it matches one of these regular expressions, OR it matches an entry in the acceptableIssuersFile.
    * 
    * @return the list of regular expressions that are used to define acceptable token issuers.
@@ -144,7 +165,9 @@ public class JwtValidationConfig {
 
   /**
    * Set the list of regular expressions that are used to define acceptable token issuers.
+   * <p>
    * This is a core security control and must be set as tightly as possible.
+   * <p>
    * An issuer is considered acceptable if it matches one of these regular expressions, OR it matches an entry in the acceptableIssuersFile.
    * 
    * @param acceptableIssuerRegexes the list of regular expressions that are used to define acceptable token issuers.
@@ -158,6 +181,7 @@ public class JwtValidationConfig {
   
   /**
    * Get the default period to cache JWKS data for.
+   * <p>
    * This is expected to be overridden by cache-control/max-age headers on the JWKS response, so the default value is usually reasonable.
    * @return the default period to cache JWKS data for.
    */
@@ -167,6 +191,7 @@ public class JwtValidationConfig {
 
   /**
    * Set the default period to cache JWKS data for.
+   * <p>
    * This is expected to be overridden by cache-control/max-age headers on the JWKS response, so the default value is usually reasonable.
    * @param defaultJwksCacheDuration the default period to cache JWKS data for.
    * @return this, so that the method may be called in a fluent manner.

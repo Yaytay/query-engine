@@ -396,7 +396,7 @@ public class Main extends Application {
     router.getWithRegex("/openapi\\..*").blockingHandler(openApiHandler);
     router.get("/openapi").handler(openApiHandler.getUiHandler());
     router.route("/").handler(ctx -> {
-      ctx.redirect("/ui");
+      ctx.redirect("/ui/");
     });
 
     return httpServer
