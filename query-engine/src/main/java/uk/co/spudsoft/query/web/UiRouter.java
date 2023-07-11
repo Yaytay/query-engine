@@ -185,8 +185,12 @@ public class UiRouter implements Handler<RoutingContext> {
     }
     try (is) {
       byte[] body = is.readAllBytes();
-      cache.put(path, body);
-      promise.complete(new LoadedFile(path, body));
+      if (body.length == 0) {
+        promise.complete(getDefaultFileBody());
+      } else {
+        cache.put(path, body);
+        promise.complete(new LoadedFile(path, body));
+      }
     } catch (Throwable ex) {
       logger.warn("Failed to load UI resource ({}): ", path, ex);
       promise.fail(ex);

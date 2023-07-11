@@ -178,7 +178,7 @@
     <dependency>
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-registry-prometheus</artifactId>
-      <version>1.11.1</version>
+      <version>1.11.2</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -660,36 +660,6 @@
       </build>
     </profile>
     
-    <profile>
-      <id>dev-ui</id>
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-resources-plugin</artifactId>
-            <version>3.3.1</version>
-            <executions>
-              <execution>
-                <id>copy-ui</id>
-                <!-- here the phase you need -->
-                <phase>generate-resources</phase>
-                <goals>
-                  <goal>copy-resources</goal>
-                </goals>
-                <configuration>
-                  <outputDirectory>${basedir}/target/classes/www</outputDirectory>
-                  <includeEmptyDirs>true</includeEmptyDirs>
-                  <resources>          
-                    <resource>
-                      <directory>${basedir}/../../query-engine-ui/dist</directory>
-                    </resource>
-                  </resources>              
-                </configuration>            
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
   </profiles>
 
 </project>

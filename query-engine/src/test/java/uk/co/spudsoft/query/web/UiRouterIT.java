@@ -31,10 +31,8 @@ import static io.restassured.RestAssured.when;
 import io.restassured.http.ContentType;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import static org.hamcrest.MatcherAssert.assertThat;
 import uk.co.spudsoft.query.main.Main;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
@@ -164,7 +162,7 @@ public class UiRouterIT {
     String assets = given().log().all().get("/ui/assets").then().statusCode(200).contentType(ContentType.HTML).log().all().extract().body().asString();
 
     // Attempt to download assets dir results in default doc being returned.
-    assertThat(assets, startsWith("<html>"));
+    assertEquals(root, assets);
     
     String nonexistent = given().log().all().get("/ui/nonexistent.png").then().statusCode(200).contentType(ContentType.HTML).log().all().extract().body().asString();
 
