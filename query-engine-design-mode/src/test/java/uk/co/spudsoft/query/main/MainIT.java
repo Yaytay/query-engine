@@ -156,7 +156,7 @@ public class MainIT {
             .then()
             .log().all()
             .statusCode(302)
-            .header("Location", "/ui")
+            .header("Location", "/ui/")
             ;
     
     main.shutdown();

@@ -25,7 +25,7 @@ package uk.co.spudsoft.query.main;
 public final class Version {
 
   public static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-  public static final String MAVEN_PROJECT_VERSION = "0.0.12-1-main";
+  public static final String MAVEN_PROJECT_VERSION = "0.0.12-2-main";
 
   private Version() {
   }
