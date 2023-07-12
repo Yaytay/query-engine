@@ -75,7 +75,7 @@ public class UiRouterIT {
             .then()
             .log().all()
             .statusCode(302)
-            .header("Location", equalTo("/ui"))
+            .header("Location", equalTo("/ui/"))
             ;
         
     // POST, returns a 404
@@ -90,7 +90,7 @@ public class UiRouterIT {
         
     String root = given()
             .log().all()
-            .get("/ui")
+            .get("/ui/")
             .then()
             .log().ifError()
             .log().all()
