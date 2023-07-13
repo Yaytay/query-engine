@@ -23,6 +23,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.web.ServiceException;
 
 /**
@@ -31,6 +33,8 @@ import uk.co.spudsoft.query.web.ServiceException;
  */
 public class InfoHandlerTest {
   
+  private static final Logger logger = LoggerFactory.getLogger(InfoHandlerTest.class);
+  
   @Test
   public void testReportErrorWithServiceException() {
     String log = "Test: ";
@@ -38,7 +42,7 @@ public class InfoHandlerTest {
     ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
     AsyncResponse response = mock(AsyncResponse.class);
     Throwable ex = new ServiceException(456, "It went wrong");
-    InfoHandler.reportError(log, response, ex, true);
+    InfoHandler.reportError(logger, log, response, ex, true);
     verify(response).resume(responseCaptor.capture());
     assertEquals(456, responseCaptor.getValue().getStatus());
     assertEquals("It went wrong (from ServiceException@uk.co.spudsoft.query.web.rest.InfoHandlerTest:40)", responseCaptor.getValue().getEntity());
@@ -51,7 +55,7 @@ public class InfoHandlerTest {
     ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
     AsyncResponse response = mock(AsyncResponse.class);
     Throwable ex = new IllegalArgumentException("It went wrong");
-    InfoHandler.reportError(log, response, ex, false);
+    InfoHandler.reportError(logger, log, response, ex, false);
     verify(response).resume(responseCaptor.capture());
     assertEquals(400, responseCaptor.getValue().getStatus());
     assertEquals("It went wrong", responseCaptor.getValue().getEntity());
@@ -64,7 +68,7 @@ public class InfoHandlerTest {
     ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
     AsyncResponse response = mock(AsyncResponse.class);
     Throwable ex = new NullPointerException("It went wrong");
-    InfoHandler.reportError(log, response, ex, false);
+    InfoHandler.reportError(logger, log, response, ex, false);
     verify(response).resume(responseCaptor.capture());
     assertEquals(500, responseCaptor.getValue().getStatus());
     assertEquals("Unknown error", responseCaptor.getValue().getEntity());

@@ -686,9 +686,5 @@
     <profile>
       <id>ui</id>
     </profile>
-    
-    <profile>
-      <id>dev-ui</id>
-    </profile>
   </profiles>
 </project>

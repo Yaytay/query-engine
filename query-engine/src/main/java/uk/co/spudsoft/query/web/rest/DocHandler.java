@@ -69,6 +69,7 @@ public class DocHandler {
                           , Arrays.asList(
                                   new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.main.Audit.html", "Audit")
                                   , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.main.CacheConfig.html", "CacheConfig")
+                                  , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.defn.Condition.html", "Condition")
                                   , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.main.Credentials.html", "Credentials")
                                   , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.main.DataSourceConfig.html", "DataSourceConfig")
                                   , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.main.JwtValidationConfig.html", "JwtValidationConfig")
@@ -147,7 +148,7 @@ public class DocHandler {
               response.resume(Response.ok(ap, MediaType.APPLICATION_JSON).build());
             })
             .onFailure(ex -> {
-              reportError("Failed to generate list of available documentation: ", response, ex, outputAllErrorMessages);
+              reportError(logger, "Failed to generate list of available documentation: ", response, ex, outputAllErrorMessages);
             });
 
   }
@@ -186,7 +187,7 @@ public class DocHandler {
               response.resume(Response.ok(contents, MimeTypes.getMimeTypeForFilename(path)).build());
             })
             .onFailure(ex -> {
-              reportError("Failed to get requested documentation: ", response, ex, outputAllErrorMessages);
+              reportError(logger, "Failed to get requested documentation: ", response, ex, outputAllErrorMessages);
             });
 
   }

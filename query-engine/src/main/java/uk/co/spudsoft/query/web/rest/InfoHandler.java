@@ -92,12 +92,12 @@ public class InfoHandler {
               response.resume(Response.ok(ap, MediaType.APPLICATION_JSON).build());
             })
             .onFailure(ex -> {
-              reportError("Failed to generate list of available pipelines: ", response, ex, outputAllErrorMessages);
+              reportError(logger, "Failed to generate list of available pipelines: ", response, ex, outputAllErrorMessages);
             });
 
   }
   
-  static void reportError(String log, AsyncResponse response, Throwable ex, boolean outputAllErrorMessages) {
+  static void reportError(Logger logger, String log, AsyncResponse response, Throwable ex, boolean outputAllErrorMessages) {
     logger.error(log, ex);
     
     int statusCode = 500;

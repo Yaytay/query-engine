@@ -174,7 +174,7 @@ public class DesignHandler {
       String json = Json.encode(Boolean.TRUE);
       response.resume(Response.ok(json, MEDIA_TYPE_JSON).build());
     } catch (Throwable ex) {
-      reportError("Failed to return true: ", response, ex, true);
+      reportError(logger, "Failed to return true: ", response, ex, true);
     }
   }
   
@@ -199,7 +199,7 @@ public class DesignHandler {
       String json = Json.encode(relativeDir);
       response.resume(Response.ok(json, MEDIA_TYPE_JSON).build());
     } catch (Throwable ex) {
-      reportError("Failed to generate list of pipelines: ", response, ex, true);
+      reportError(logger, "Failed to generate list of pipelines: ", response, ex, true);
     }
   }
   
@@ -280,11 +280,11 @@ public class DesignHandler {
                 response.resume(Response.ok(buffer.getBytes(), type).build());
               })
               .onFailure(ex -> {
-                reportError("Failed to get file: ", response, ex, true);
+                reportError(logger, "Failed to get file: ", response, ex, true);
               });
       
     } catch (Throwable ex) {
-      reportError("Failed to get file: ", response, ex, true);
+      reportError(logger, "Failed to get file: ", response, ex, true);
     }
   }
 
@@ -304,10 +304,10 @@ public class DesignHandler {
                 response.resume(Response.ok(json, MEDIA_TYPE_JSON).build());
               })
               .onFailure(ex -> {
-                reportError("Failed to " + action + ": ", response, ex, true);
+                reportError(logger, "Failed to " + action + ": ", response, ex, true);
               });
     } else {
-      reportError("Failed to " + action + ": ", response, ar.cause(), true);
+      reportError(logger, "Failed to " + action + ": ", response, ar.cause(), true);
     }
   }
   
@@ -350,14 +350,14 @@ public class DesignHandler {
           forValidation = PipelineDefnLoader.YAML_OBJECT_MAPPER.readValue(body, Pipeline.class);
         } catch (Throwable ex) {
           logger.warn("The YAML body cannot be parsed as a Pipeline: {}", ex);
-          reportError("The YAML body cannot be parsed as a Pipeline: " + ex.getMessage(), response, new ServiceException(400, "The YAML body cannot be parsed as a Pipeline: " + ex.getMessage()), true);
+          reportError(logger, "The YAML body cannot be parsed as a Pipeline: " + ex.getMessage(), response, new ServiceException(400, "The YAML body cannot be parsed as a Pipeline: " + ex.getMessage()), true);
         }
       } else if (MEDIA_TYPE_JSON_TYPE.isCompatible(contentType)) {
         try {
           forValidation = PipelineDefnLoader.JSON_OBJECT_MAPPER.readValue(body, Pipeline.class);          
         } catch (Throwable ex) {
           logger.warn("The JSON body cannot be parsed as a Pipeline: {}", ex);
-          reportError("The JSON body cannot be parsed as a Pipeline: " + ex.getMessage(), response, new ServiceException(400, "The JSON body cannot be parsed as a Pipeline: " + ex.getMessage()), true);
+          reportError(logger, "The JSON body cannot be parsed as a Pipeline: " + ex.getMessage(), response, new ServiceException(400, "The JSON body cannot be parsed as a Pipeline: " + ex.getMessage()), true);
         }
       }
       if (forValidation != null) {
@@ -365,7 +365,7 @@ public class DesignHandler {
           forValidation.validate();
         } catch (Throwable ex) {
           logger.warn("The Pipeline is not valid: {}", ex);
-          reportError("The Pipeline is not valid: " + ex.getMessage(), response, new ServiceException(400, "The Pipeline is not valid: " + ex.getMessage()), true);
+          reportError(logger, "The Pipeline is not valid: " + ex.getMessage(), response, new ServiceException(400, "The Pipeline is not valid: " + ex.getMessage()), true);
         }
       }
       logger.debug("The pipeline is valid");
@@ -373,7 +373,7 @@ public class DesignHandler {
       
     } catch (Throwable ex) {
       logger.warn("Failed to validate file: ", ex);
-      reportError("Failed to validate file: ", response, ex, true);
+      reportError(logger, "Failed to validate file: ", response, ex, true);
     }
   }
   
@@ -406,7 +406,7 @@ public class DesignHandler {
         String fullPath = resolveToAbsolutePath(path);
 
         if (!GOOD_FOLDER_PATH.matcher(fullPath).matches()) {
-          reportError("Folder name does not match " + GOOD_FOLDER, response, new ServiceException(400, "Illegal folder name"), true);
+          reportError(logger, "Folder path (" + fullPath + ") does not match " + GOOD_FOLDER_PATH, response, new ServiceException(400, "Illegal folder name"), true);
           return ;
         }
         
@@ -418,7 +418,7 @@ public class DesignHandler {
         String fullPath = resolveToAbsolutePath(path);
 
         if (!GOOD_FILE_PATH.matcher(fullPath).matches()) {
-          reportError("Filename does not match " + GOOD_FILE, response, new ServiceException(400, "Illegal file name"), true);
+          reportError(logger, "File path (" + fullPath + ") does not match " + GOOD_FILE_PATH, response, new ServiceException(400, "Illegal file name"), true);
           return ;
         }
         
@@ -430,7 +430,7 @@ public class DesignHandler {
         }
         MediaType typeForExtn = EXTN_TO_TYPE.get(extn);
         if (typeForExtn == null) {
-          reportError("Unrecognised extension (" + extn + ") on file", response, new ServiceException(400, "Illegal file name; unrecognised extension"), true);
+          reportError(logger, "Unrecognised extension (" + extn + ") on file", response, new ServiceException(400, "Illegal file name; unrecognised extension"), true);
           return ;
         }
         
@@ -442,7 +442,7 @@ public class DesignHandler {
             body = Arrays.copyOfRange(body, YAML_DOC_DELIMITER.length, body.length);
           }
         } else if (!typeForExtn.isCompatible(contentType)) {
-          reportError("Incorrect extension (" + extn + ") for file of type " + contentType, response, new ServiceException(400, "Illegal file name; extension does not match content-type"), true);
+          reportError(logger, "Incorrect extension (" + extn + ") for file of type " + contentType, response, new ServiceException(400, "Illegal file name; extension does not match content-type"), true);
           return ;
         }
         
@@ -480,7 +480,7 @@ public class DesignHandler {
             .andThen(ar -> handleFileChange(ar, response,  action));
       
     } catch (Throwable ex) {
-      reportError("Failed to put file: ", response, ex, true);
+      reportError(logger, "Failed to put file: ", response, ex, true);
     }
   }
   
@@ -508,18 +508,18 @@ public class DesignHandler {
       DirCacheTree.Node target = nodeFromPath(dirCache.getRoot(), path.split("/"), 0);
 
       if (target == null) {
-        reportError("File not found: ", response, new FileNotFoundException("File not found"), true);
+        reportError(logger, "File not found: ", response, new FileNotFoundException("File not found"), true);
         return ;        
       } else if (target instanceof DirCacheTree.Directory dir) {
         if (!dir.getChildren().isEmpty()) {
-          reportError("Directory not empty: ", response, new IllegalArgumentException("Directory not empty"), true);
+          reportError(logger, "Directory not empty: ", response, new IllegalArgumentException("Directory not empty"), true);
         }
       }
       fs.delete(fullPath)
               .andThen(ar -> handleFileChange(ar, response, "delete file"));
       
     } catch (Throwable ex) {
-      reportError("Failed to delete file: ", response, ex, true);
+      reportError(logger, "Failed to delete file: ", response, ex, true);
     }
   }
 
@@ -551,14 +551,14 @@ public class DesignHandler {
       
       DirCacheTree.Node source = nodeFromPath(dirCache.getRoot(), path.split("/"), 0);      
       if (source == null) {
-        reportError("File not found", response, new ServiceException(404, "File not found"), true);
+        reportError(logger, "File not found", response, new ServiceException(404, "File not found"), true);
         return ;
       } 
 
       Future<?> renameFuture;
       if (source instanceof DirCacheTree.Directory) {
         if (!GOOD_FOLDER.matcher(newName).matches()) {
-          reportError("Folder name does not match " + GOOD_FOLDER, response, new ServiceException(400, "Illegal folder name"), true);
+          reportError(logger, "Folder name does not match " + GOOD_FOLDER, response, new ServiceException(400, "Illegal folder name"), true);
           return ;
         }
         
@@ -566,7 +566,7 @@ public class DesignHandler {
         
       } else if (source instanceof DirCacheTree.File) {
         if (!GOOD_FILE.matcher(newName).matches()) {
-          reportError("Filename does not match " + GOOD_FILE, response, new ServiceException(400, "Illegal file name"), true);
+          reportError(logger, "Filename does not match " + GOOD_FILE, response, new ServiceException(400, "Illegal file name"), true);
           return ;
         }
         int dotPos = path.indexOf(".");
@@ -576,7 +576,7 @@ public class DesignHandler {
           int newDotPos = newName.indexOf(".");
           String newExtension = newName.substring(newDotPos);
           if (!newExtension.equals(originalExtension)) {
-            reportError("New filename extension (" + newExtension + ") does not match original extension (" + originalExtension + ")", response, new ServiceException(400, "Illegal file name (extension has been changed)"), true);
+            reportError(logger, "New filename extension (" + newExtension + ") does not match original extension (" + originalExtension + ")", response, new ServiceException(400, "Illegal file name (extension has been changed)"), true);
             return ;
           }
         }
@@ -584,7 +584,7 @@ public class DesignHandler {
         renameFuture = renameFile(newFullPath, response, fullPath);
         
       } else {
-        reportError("Attempt to rename unknown file type (" + source.getClass().getName() + ")", response, new ServiceException(500, "Unrecognized file type"), true);
+        reportError(logger, "Attempt to rename unknown file type (" + source.getClass().getName() + ")", response, new ServiceException(500, "Unrecognized file type"), true);
         return ;
       }
       
@@ -595,11 +595,11 @@ public class DesignHandler {
                 response.resume(Response.ok(json, MEDIA_TYPE_JSON).build());
               })
               .onFailure(ex -> {
-                reportError("Failed to rename: ", response, ex, true);
+                reportError(logger, "Failed to rename: ", response, ex, true);
               });
       
     } catch (Throwable ex) {
-      reportError("Failed to get file: ", response, ex, true);
+      reportError(logger, "Failed to get file: ", response, ex, true);
     }
   }
 
@@ -608,7 +608,7 @@ public class DesignHandler {
     renameFuture = fs.exists(newFullPath)
             .compose(exists -> {
               if (exists) {
-                reportError("Destination file (" + newFullPath + ") already exists", response, new ServiceException(400, "Destination file already exists"), true);
+                reportError(logger, "Destination file (" + newFullPath + ") already exists", response, new ServiceException(400, "Destination file already exists"), true);
                 return Future.succeededFuture();
               } else {
                 return fs.move(fullPath, newFullPath)
@@ -628,7 +628,7 @@ public class DesignHandler {
     renameFuture = fs.exists(newFullPath)
             .compose(exists -> {
               if (exists) {
-                reportError("Destination folder (" + newFullPath + ") already exists", response, new ServiceException(400, "Destination folder already exists"), true);
+                reportError(logger, "Destination folder (" + newFullPath + ") already exists", response, new ServiceException(400, "Destination folder already exists"), true);
                 return Future.succeededFuture();
               } else {
                 return vertx.executeBlocking(p -> {
@@ -679,7 +679,7 @@ public class DesignHandler {
                   response.resume(Response.ok(pipeline, MEDIA_TYPE_JSON).build());
                 })
                 .onFailure(ex -> {
-                  reportError("Failed to read json pipeline: ", response, ex, true);
+                  reportError(logger, "Failed to read json pipeline: ", response, ex, true);
                 })
                 ;
       } else if (fullPath.endsWith(".yaml")) {
@@ -688,14 +688,14 @@ public class DesignHandler {
                   response.resume(Response.ok(pipeline, MEDIA_TYPE_JSON).build());
                 })
                 .onFailure(ex -> {
-                  reportError("Failed to read yaml pipeline: ", response, ex, true);
+                  reportError(logger, "Failed to read yaml pipeline: ", response, ex, true);
                 })
                 ;        
       } else {
         throw new ServiceException(400, "Only plain json or yaml pipelines may be requested");
       }      
     } catch (Throwable ex) {
-      reportError("Failed to get pipeline: ", response, ex, true);
+      reportError(logger, "Failed to get pipeline: ", response, ex, true);
     }    
   }
     

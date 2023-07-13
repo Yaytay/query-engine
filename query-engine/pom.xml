@@ -470,8 +470,10 @@
                 <additionalOption>uk.co.spudsoft.query.main.ZipkinConfig</additionalOption>
                 <additionalOption>--include-classes</additionalOption>
                 <additionalOption>uk.co.spudsoft.query.logging.LogbackOptions</additionalOption>
-                <additionalOption>--include-classes</additionalOption>
+                <additionalOption>--include-classes</additionalOption>                	
                 <additionalOption>uk.co.spudsoft.query.main.Audit</additionalOption>
+                <additionalOption>--include-classes</additionalOption>                	
+                <additionalOption>uk.co.spudsoft.query.defn.Condition</additionalOption>
               </additionalOptions>
               <docletArtifacts>
                 <docletArtifact>

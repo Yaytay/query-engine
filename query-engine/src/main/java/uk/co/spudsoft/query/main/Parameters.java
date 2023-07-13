@@ -89,6 +89,7 @@ public class Parameters {
   
   /**
    * The Query Engine maintains an internal model of the files under the baseConfigPath.
+   * <p>
    * When files under the baseConfigPath change this model gets updated.
    * A delay has to be put in to avoid reading the changes whilst they are still be written.
    */
@@ -96,6 +97,7 @@ public class Parameters {
 
   /**
    * Credentials that can be used in Source definitions.
+   * <p>
    * Externalising credentials is much more secure - the credentials do not need to be committed to the query definition repository
    * and developers do not need access to live credentials.
    */
@@ -103,20 +105,22 @@ public class Parameters {
     
   /**
    * The name of the header that will contain the payload from a token as Json (that may be base64 encoded or not).
+   * <p>
    * If this is used the query engine will not attempt to validate tokens itself, the header will be trusted implicitly.
    */
   private String openIdIntrospectionHeaderName;
     
   /**
    * The query engine is provided with some example queries that will be deployed to the baseConfigPath one startup if the directory is empty.
+   * <p>
    * These sample queries depend upon the target databases being accessible at known locations with known credentials,
    * it is recommended that the provided query-engine-compose.yml file be used set up the database servers within Docker.
    * An attempt will be made to load each data source configured here with the sample data.
    * If loadSampleData is true, and the targets databases can be accessed, then will be loaded with the sample data on startup.
-   * 
+   * <p>
    * The sample data is loaded using three SQL scripts (one per database engine) and it is perfectly acceptable to run those queries manually 
    * instead of using loadSampleData.
-   * 
+   * <p>
    * Note that the URLs here must be vertx sql URLs, not JDBC URLs, for example:
    * <ul>
    * <li>mysql://localhost:2001/test
@@ -129,6 +133,7 @@ public class Parameters {
   
   /**
    * Get the options for configuring logback.
+   * <p>
    * @return the options for configuring logback.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
@@ -138,6 +143,7 @@ public class Parameters {
 
   /**
    * The options for configuring logback.
+   * <p>
    * @param logging the options for configuring logback.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -150,6 +156,7 @@ public class Parameters {
   
   /**
    * Get the VertxOptions that will be used when creating the Vertx instance.
+   * <p>
    * These values do not usually need to be altered.
    * @return the VertxOptions that will be used when creating the Vertx instance.
    */
@@ -159,6 +166,7 @@ public class Parameters {
 
   /**
    * Get the HttpServerOptions that will be used when creating the HTTP server.
+   * <p>
    * The {@link io.vertx.core.http.HttpServerOptions#setMaxHeaderSize(int)} method should be particularly useful when running behind a proxy that passes large JSON headers.
    * @return the HttpServerOptions that will be used when creating the HTTP server.
    */
@@ -169,6 +177,7 @@ public class Parameters {
 
   /**
    * Get the configuration to use for Zipkin tracing.
+   * <p>
    * @return the configuration to use for Zipkin tracing.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
@@ -178,6 +187,7 @@ public class Parameters {
 
   /**
    * Get whether the process will end rather than waiting for requests
+   * <p>
    * This is useful for things such as JIT compilers or CDS preparation.
    * @return the exitOnRun value.
    */
@@ -187,6 +197,7 @@ public class Parameters {
 
   /**
    * Get the path to the root of the configuration files.
+   * <p>
    * @return the path to the root of the configuration files.
    */
   public String getBaseConfigPath() {
@@ -195,6 +206,7 @@ public class Parameters {
 
   /**
    * Get the seconds to wait after being notified or a file change to allow all file writes to complete.
+   * <p>
    * @return the seconds to wait after being notified or a file change to allow all file writes to complete.
    */
   public int getFileStabilisationDelaySeconds() {
@@ -203,6 +215,7 @@ public class Parameters {
 
   /**
    * The seconds to wait after being notified or a file change to allow all file writes to complete.
+   * <p>
    * @param fileStabilisationDelaySeconds the seconds to wait after being notified or a file change to allow all file writes to complete.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -228,7 +241,8 @@ public class Parameters {
   }
 
   /**
-   * set the VertxOptions that will be used when creating the Vertx instance.
+   * The VertxOptions that will be used when creating the Vertx instance.
+   * <p>
    * These values do not usually need to be altered.
    * @param vertxOptions The general Vert.x configuration.
    * @return this, so that the method may be called in a fluent manner.
@@ -240,6 +254,7 @@ public class Parameters {
 
   /**
    * The HttpServerOptions that will be used when creating the HTTP server.
+   * <p>
    * The {@link io.vertx.core.http.HttpServerOptions#setMaxHeaderSize(int)} method should be particularly useful when running behind a proxy that passes large JSON headers.
    * @param httpServerOptions the HttpServerOptions that will be used when creating the HTTP server.
    * @return this, so that the method may be called in a fluent manner.
@@ -252,6 +267,7 @@ public class Parameters {
 
   /**
    * The configuration to use for Zipkin tracing.
+   * <p>
    * @param zipkin the configuration to use for Zipkin tracing.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -263,6 +279,7 @@ public class Parameters {
   
   /**
    * Whether the process will end rather than waiting for requests.
+   * <p>
    * This is useful for things such as JIT compilers or CDS preparation.
    * @param exitOnRun if true process will end rather than waiting for requests.
    * @return this, so that the method may be called in a fluent manner.
@@ -274,6 +291,7 @@ public class Parameters {
 
   /**
    * The path to the root of the configuration files.
+   * <p>
    * @param baseConfigPath the path to the root of the configuration files.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -284,6 +302,7 @@ public class Parameters {
 
   /**
    * The configuration of the audit of requests.
+   * <p>
    * @param audit the configuration of the audit of requests.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -294,6 +313,7 @@ public class Parameters {
 
   /**
    * The configuration of the pipeline cache.
+   * <p>
    * @param pipelineCache the configuration of the pipeline cache.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -304,6 +324,7 @@ public class Parameters {
 
   /**
    * Get the Allowed-Origin-Regex to use for CORS.
+   * <p>
    * @return the Allowed-Origin-Regex to use for CORS.
    */
   public String getCorsAllowedOriginRegex() {
@@ -312,6 +333,7 @@ public class Parameters {
 
   /**
    * The Allowed-Origin-Regex to use for CORS.
+   * <p>
    * @param corsAllowedOriginRegex the Allowed-Origin-Regex to use for CORS.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -322,7 +344,7 @@ public class Parameters {
 
   /**
    * Get the externalized credentials map.
-   * 
+   * <p>
    * Credentials that can be used in Source definitions.
    * Externalising credentials is much more secure - the credentials do not need to be committed to the query definition repository
    * and developers do not need access to live credentials.
@@ -335,10 +357,12 @@ public class Parameters {
 
   /**
    * The externalized credentials map.
-   * 
+   * <p>
    * Credentials that can be used in Source definitions.
    * Externalising credentials is much more secure - the credentials do not need to be committed to the query definition repository
    * and developers do not need access to live credentials.
+   * <p>
+   * Kubernetes secrets can be mounted as volumes directly into the externalized credentials map, keeping them out of all configuration.
    * 
    * @param secrets the externalized credentials map.
    * @return this, so that the method may be called in a fluent manner.
@@ -350,6 +374,7 @@ public class Parameters {
 
   /**
    * Get the name of the header that will contain the payload from a token as Json (that may be base64 encoded or not).
+   * <p>
    * If this is used the query engine will not attempt to validate tokens itself, the header will be trusted implicitly.
    * @return the name of the header that will contain the payload from a token as Json (that may be base64 encoded or not).
    */
@@ -359,7 +384,9 @@ public class Parameters {
 
   /**
    * The name of the header that will contain the payload from a token as Json (that may be base64 encoded or not).
+   * <p>
    * If this is used the query engine will not attempt to validate tokens itself, the header will be trusted implicitly.
+   * This clearly has security implications and should only be used in a secure environment.
    * @param openIdIntrospectionHeaderName the name of the header that will contain the payload from a token as Json (that may be base64 encoded or not).
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -370,12 +397,13 @@ public class Parameters {
 
   /**
    * Get data sources to use attempt to initialize with the sample data.
+   * <p>
    * The query engine is provided with some example queries that will be deployed to the baseConfigPath one startup if the directory is empty.
    * These sample queries depend upon the target databases being accessible at known locations with known credentials,
    * it is recommended that the provided query-engine-compose.yml file be used set up the database servers within Docker.
    * An attempt will be made to load each data source configured here with the sample data.
    * If loadSampleData is true, and the targets databases can be accessed, then will be loaded with the sample data on startup.
-   * 
+   * <p>
    * The sample data is loaded using three SQL scripts (one per database engine) and it is perfectly acceptable to run those queries manually 
    * instead of using loadSampleData.
    * 
@@ -400,15 +428,16 @@ public class Parameters {
 
   /**
    * The data sources to use attempt to initialize with the sample data.
-   * The query engine is provided with some example queries that will be deployed to the baseConfigPath one startup if the directory is empty.
+   * <p>
+   * The query engine is provided with some example queries that will be deployed to the baseConfigPath on startup if the directory is empty.
    * These sample queries depend upon the target databases being accessible at known locations with known credentials,
    * it is recommended that the provided query-engine-compose.yml file be used set up the database servers within Docker.
    * An attempt will be made to load each data source configured here with the sample data.
    * If loadSampleData is true, and the targets databases can be accessed, then will be loaded with the sample data on startup.
-   * 
+   * <p>
    * The sample data is loaded using three SQL scripts (one per database engine) and it is perfectly acceptable to run those queries manually 
    * instead of using loadSampleData.
-   * 
+   * <p>
    * Note that the URLs here must be vertx sql URLs, not JDBC URLs, for example:
    * <ul>
    * <li>mysql://localhost:2001/test
@@ -416,7 +445,7 @@ public class Parameters {
    * <li>postgresql://localhost:2003/test
    * </ul>
    * The leading component of the URL (the scheme) will be used to determine which script to run.
-   *
+   * <p>
    * This is unlikely to be useful unless the example compose file is used to start the Query Engine and the different database engines.
    * 
    * @param sampleDataLoads data sources to use attempt to initialize with the sample data.

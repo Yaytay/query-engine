@@ -13,18 +13,26 @@
 | xref:uk.co.spudsoft.query.logging.LogbackOptions.adoc[LogbackOptions]
 | The options for configuring logback.
 
+
+
 | fileStabilisationDelaySeconds
 | int
 | The seconds to wait after being notified or a file change to allow all file writes to complete.
 
+
+
 | vertxOptions
 | link:https://vertx.io/docs/apidocs/io/vertx/core/VertxOptions.html[VertxOptions]
-| set the VertxOptions that will be used when creating the Vertx instance.
+| The VertxOptions that will be used when creating the Vertx instance.
+
+
 These values do not usually need to be altered.
 
 | httpServerOptions
 | link:https://vertx.io/docs/apidocs/io/vertx/core/http/HttpServerOptions.html[HttpServerOptions]
 | The HttpServerOptions that will be used when creating the HTTP server.
+
+
 The
 link:https://vertx.io/docs/apidocs/io/vertx/core/http/HttpServerOptions.html#setMaxHeaderSize(int)[HttpServerOptions#setMaxHeaderSize(int)] method should be particularly useful when running behind a proxy that passes large JSON headers.
 
@@ -32,48 +40,77 @@ link:https://vertx.io/docs/apidocs/io/vertx/core/http/HttpServerOptions.html#set
 | xref:uk.co.spudsoft.query.main.ZipkinConfig.adoc[ZipkinConfig]
 | The configuration to use for Zipkin tracing.
 
+
+
 | exitOnRun
 | boolean
 | Whether the process will end rather than waiting for requests.
+
+
 This is useful for things such as JIT compilers or CDS preparation.
 
 | baseConfigPath
 | link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/String.html[String]
 | The path to the root of the configuration files.
 
+
+
 | audit
 | xref:uk.co.spudsoft.query.main.Audit.adoc[Audit]
 | The configuration of the audit of requests.
+
+
 
 | pipelineCache
 | xref:uk.co.spudsoft.query.main.CacheConfig.adoc[CacheConfig]
 | The configuration of the pipeline cache.
 
+
+
 | corsAllowedOriginRegex
 | link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/String.html[String]
 | The Allowed-Origin-Regex to use for CORS.
 
+
+
 | secrets
 | link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/util/Map.html[Map]<link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/String.html[String], xref:uk.co.spudsoft.query.main.ProtectedCredentials.adoc[ProtectedCredentials]>
 | The externalized credentials map.
+
+
 Credentials that can be used in Source definitions. Externalising credentials is much more secure - the credentials do not need to be committed to the query definition repository and developers do not need access to live credentials.
+
+
+Kubernetes secrets can be mounted as volumes directly into the externalized credentials map, keeping them out of all configuration.
 
 | openIdIntrospectionHeaderName
 | link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/String.html[String]
 | The name of the header that will contain the payload from a token as Json (that may be base64 encoded or not).
-If this is used the query engine will not attempt to validate tokens itself, the header will be trusted implicitly.
+
+
+If this is used the query engine will not attempt to validate tokens itself, the header will be trusted implicitly. This clearly has security implications and should only be used in a secure environment.
 
 | sampleDataLoads
 | link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/util/List.html[List]<xref:uk.co.spudsoft.query.main.DataSourceConfig.adoc[DataSourceConfig]>
 | The data sources to use attempt to initialize with the sample data.
-The query engine is provided with some example queries that will be deployed to the baseConfigPath one startup if the directory is empty. These sample queries depend upon the target databases being accessible at known locations with known credentials, it is recommended that the provided query-engine-compose.yml file be used set up the database servers within Docker. An attempt will be made to load each data source configured here with the sample data. If loadSampleData is true, and the targets databases can be accessed, then will be loaded with the sample data on startup.  The sample data is loaded using three SQL scripts (one per database engine) and it is perfectly acceptable to run those queries manually  instead of using loadSampleData.  Note that the URLs here must be vertx sql URLs, not JDBC URLs, for example:
+
+
+The query engine is provided with some example queries that will be deployed to the baseConfigPath on startup if the directory is empty. These sample queries depend upon the target databases being accessible at known locations with known credentials, it is recommended that the provided query-engine-compose.yml file be used set up the database servers within Docker. An attempt will be made to load each data source configured here with the sample data. If loadSampleData is true, and the targets databases can be accessed, then will be loaded with the sample data on startup.
+
+
+The sample data is loaded using three SQL scripts (one per database engine) and it is perfectly acceptable to run those queries manually  instead of using loadSampleData.
+
+
+Note that the URLs here must be vertx sql URLs, not JDBC URLs, for example:
 
 * mysql://localhost:2001/test
 * sqlserver://localhost:2002/test
 * postgresql://localhost:2003/test
 
 The leading component of the URL (the scheme) will be used to determine which script to run.
- This is unlikely to be useful unless the example compose file is used to start the Query Engine and the different database engines.
+
+
+This is unlikely to be useful unless the example compose file is used to start the Query Engine and the different database engines.
 
 | jwt
 | xref:uk.co.spudsoft.query.main.JwtValidationConfig.adoc[JwtValidationConfig]
