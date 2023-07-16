@@ -2,7 +2,7 @@
 
 
 
-[cols="1,1a,4a",table-stripes=even]
+[cols="1,1a,4a",stripes=even]
 |===
 | Name
 | Type

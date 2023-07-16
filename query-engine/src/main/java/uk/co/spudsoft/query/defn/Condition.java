@@ -55,12 +55,16 @@ import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
  * <LI>host
  * The host extracted from the URL.
  * <LI>arguments
+ * <p>
  * A {@link io.vertx.core.MultiMap} of query string arguments.
  * <LI>headers
+ * <p>
  * A {@link io.vertx.core.MultiMap} of request headers.
  * <LI>cookies
+ * <p>
  * A {@link java.util.Map} map of request cookies.
  * <LI>clientIp
+ * <p>
  * The IP address of client making the request, taken from the first of:
  * <UL>
  * <LI>The X-Cluster-Client-IP header.
