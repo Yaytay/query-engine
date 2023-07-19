@@ -46,8 +46,7 @@ public class DocHandlerIT {
   @Test
   public void testDocs() throws Exception {
     Main main = new Main();
-    String baseConfigDir = "target/query-engine/samples";
-    Main.prepareBaseConfigPath(new File(baseConfigDir));
+    String baseConfigDir = "target/query-engine/samples-dochandlerit";
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{

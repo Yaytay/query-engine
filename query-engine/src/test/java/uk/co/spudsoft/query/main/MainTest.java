@@ -45,7 +45,7 @@ public class MainTest {
   
   @BeforeAll
   public static void createDirs() {
-    File paramsDir = new File("target/query-engine");
+    File paramsDir = new File("target/query-engine/samples-maintest");
     paramsDir.mkdirs();
   }
   
@@ -57,7 +57,7 @@ public class MainTest {
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
             "--exitOnRun"
-            , "--baseConfigPath=target/query-engine"
+            , "--baseConfigPath=target/query-engine/samples-maintest"
             , "--jwt.acceptableIssuerRegexes[0]=.*"
             , "--jwt.defaultJwksCacheDuration=PT1M"
             , "--logging.level.uk_co_spudsoft_query_main=TRACE" 
@@ -70,7 +70,7 @@ public class MainTest {
   public void testMain() throws IOException {
     logger.info("testMain");
     Main.main(new String[]{
-            "--baseConfigPath=target/query-engine"
+            "--baseConfigPath=target/query-engine/samples-maintest"
             , "--jwt.acceptableIssuerRegexes[0]=.*"
             , "--jwt.defaultJwksCacheDuration=PT1M"
     });
@@ -108,13 +108,13 @@ public class MainTest {
     }
     assertFalse(testDir.exists());
     
-    Main.prepareBaseConfigPath(testDir);
+    Main.prepareBaseConfigPath(testDir, null);
     assertTrue(testDir.exists());
     assertEquals(10, countFilesInDir(testDir));
     FileTime lastMod1 = Files.getLastModifiedTime(testDir.toPath());
     Thread.sleep(1000);
     
-    Main.prepareBaseConfigPath(testDir);
+    Main.prepareBaseConfigPath(testDir, null);
     assertTrue(testDir.exists());
     assertEquals(10, countFilesInDir(testDir));
     FileTime lastMod2 = Files.getLastModifiedTime(testDir.toPath());

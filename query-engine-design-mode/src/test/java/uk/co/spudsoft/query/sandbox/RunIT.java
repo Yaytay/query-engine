@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
 import uk.co.spudsoft.query.testcontainers.ServerProviderMsSQL;
@@ -36,7 +37,17 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
 
 /**
  * An Integration Test that serves purely to bring up the Query Engine and keep it up until explicitly killed.
+ * <p>
  * Provides a simple way to do demos, manual testing or UI development.
+ * <p>
+ * If you try to run this from DesignMode you may run into issues with the version numbers of DesignMode and the base project not mathing.
+ * To work around this you will need to either:
+ * <ul>
+ * <li>Have done a build of the base project since the last git commit.
+ * <li>Have fudged the dependency in the DesignNode pom.
+ * </ul>
+ * The former is much nicer.
+ * 
  * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
@@ -50,14 +61,13 @@ public class RunIT {
   private static final Logger logger = LoggerFactory.getLogger(RunIT.class);
   
   @BeforeAll
-  public static void createDirs(Vertx vertx, VertxTestContext testContext) {
-    File paramsDir = new File("target/query-engine/samples");
+  public static void createDirs() {
+    File paramsDir = new File("target/query-engine/samples-runit");
+    try {
+      FileUtils.deleteDirectory(paramsDir);
+    } catch (Exception ex) {
+    }
     paramsDir.mkdirs();
-    postgres.prepareTestDatabase(vertx)
-            .compose(v -> mysql.prepareTestDatabase(vertx))
-            .compose(v -> mssql.prepareTestDatabase(vertx))
-            .onComplete(testContext.succeedingThenComplete())
-            ;
 }
     
   @Test
@@ -70,12 +80,21 @@ public class RunIT {
       , "--audit.datasource.adminUser.username=" + postgres.getUser()
       , "--audit.datasource.adminUser.password=" + postgres.getPassword()
       , "--audit.datasource.schema=public" 
-      , "--baseConfigPath=target/test-classes/sources"
+      , "--baseConfigPath=target/query-engine/samples-runit"
       , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--logging.jsonFormat=false"
       , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.vertx\\\\.rest=TRACE"
 //      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec\\\\.procs\\\\.query=TRACE"
+      , "--sampleDataLoads[0].url=" + postgres.getUrl()
+      , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()
+      , "--sampleDataLoads[0].adminUser.password=" + postgres.getPassword()
+      , "--sampleDataLoads[1].url=" + mysql.getUrl()
+      , "--sampleDataLoads[1].user.username=" + mysql.getUser()
+      , "--sampleDataLoads[1].user.password=" + mysql.getPassword()
+      , "--sampleDataLoads[2].url=sqlserver://localhost:1234/test"
+      , "--sampleDataLoads[2].adminUser.username=sa"
+      , "--sampleDataLoads[2].adminUser.password=unknown"
       , "--httpServerOptions.port=8000"
     }, stdout);
     

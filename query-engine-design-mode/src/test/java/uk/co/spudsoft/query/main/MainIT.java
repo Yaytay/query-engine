@@ -49,8 +49,8 @@ public class MainIT {
   
   @BeforeAll
   public static void createDirs(Vertx vertx, VertxTestContext testContext) {
-    File paramsDir = new File("target/query-engine/samples");
-    Main.prepareBaseConfigPath(paramsDir);
+    File paramsDir = new File("target/query-engine/samples-mainit");
+    Main.prepareBaseConfigPath(paramsDir, null);
     postgres.prepareTestDatabase(vertx).onComplete(testContext.succeedingThenComplete());
   }
     
@@ -61,7 +61,7 @@ public class MainIT {
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
         "--audit.datasource.url=wibble"
-      , "--baseConfigPath=target/query-engine/samples"
+      , "--baseConfigPath=target/query-engine/samples-mainit"
       , "--vertxOptions.tracingOptions.type=io.vertx.tracing.zipkin.ZipkinTracingOptions"
       , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
@@ -84,7 +84,7 @@ public class MainIT {
       , "--audit.datasource.adminUser.username=" + postgres.getUser()
       , "--audit.datasource.adminUser.password=" + postgres.getPassword()
       , "--audit.datasource.schema=public" 
-      , "--baseConfigPath=target/query-engine/samples"
+      , "--baseConfigPath=target/query-engine/samples-mainit"
       , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"

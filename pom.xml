@@ -41,7 +41,7 @@
     <junit-jupiter.version>5.9.3</junit-jupiter.version>
     <junit-platform.version>1.9.3</junit-platform.version>
     <testcontainers.version>1.18.3</testcontainers.version>
-    <graalvm.version>23.0.0</graalvm.version>
+    <graalvm.version>23.0.1</graalvm.version>
     <jackson.version>2.15.2</jackson.version>
     
     <!-- The qe-version property exists so that the design mode project can override it to run with a specific version -->

@@ -23,6 +23,7 @@ import io.vertx.junit5.VertxExtension;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
+import java.nio.file.Files;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -32,9 +33,9 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
+import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
 
 /**
@@ -55,16 +56,18 @@ public class MainQueryIT {
   
   @BeforeAll
   public static void createDirs(Vertx vertx) {
-    File paramsDir = new File("target/query-engine");
+    File paramsDir = new File("target/query-engine/samples-mainqueryit");
+    try {
+      FileUtils.deleteDirectory(paramsDir);
+    } catch (Throwable ex) {
+    }
     paramsDir.mkdirs();
-    new File("target/classes/samples/sub1/sub3").mkdirs();
   }
   
   @Test
   public void testQuery() throws Exception {
     Main main = new Main();
-    String baseConfigDir = "target/query-engine/samples";
-    Main.prepareBaseConfigPath(new File(baseConfigDir));
+    String baseConfigDir = "target/query-engine/samples-mainqueryit";
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{

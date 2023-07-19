@@ -57,10 +57,11 @@ import io.vertx.micrometer.impl.PrometheusScrapingHandlerImpl;
 import io.vertx.tracing.zipkin.ZipkinTracingOptions;
 import jakarta.ws.rs.core.Application;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -335,7 +336,7 @@ public class Main extends Application {
     httpServer = vertx.createHttpServer(params.getHttpServerOptions());
     try {
       File baseConfigFile = new File(params.getBaseConfigPath());
-      prepareBaseConfigPath(baseConfigFile);
+      prepareBaseConfigPath(baseConfigFile, params.getSampleDataLoads());
       dirCache = DirCache.cache(baseConfigFile.toPath(), Duration.of(params.getFileStabilisationDelaySeconds(), ChronoUnit.SECONDS), Pattern.compile("\\..*"));
       defnLoader = new PipelineDefnLoader(meterRegistry, vertx, params.getPipelineCache(), dirCache);
     } catch (Throwable ex) {
@@ -456,7 +457,7 @@ public class Main extends Application {
   }
 
   @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_BAD_PRACTICE")
-  public static void prepareBaseConfigPath(File baseConfigFile) {
+  public static void prepareBaseConfigPath(File baseConfigFile, List<DataSourceConfig> sampleDataLoads) {
     if (!baseConfigFile.exists()) {
       logger.info("Creating base config dir at {}", baseConfigFile);
       baseConfigFile.mkdirs();
@@ -467,23 +468,23 @@ public class Main extends Application {
     String[] children = baseConfigFile.list();
     if (children != null && children.length == 0) {
       logger.info("Creating sample configs");
-      extractSampleFile(baseConfigFile, "samples/demo/FeatureRichExample.yaml");
-      extractSampleFile(baseConfigFile, "samples/demo/LookupValues.yaml");
-      extractSampleFile(baseConfigFile, "samples/sub1/sub2/DynamicEndpointPipelineIT.yaml");
-      extractSampleFile(baseConfigFile, "samples/sub1/sub2/JsonToPipelineIT.json");
-      extractSampleFile(baseConfigFile, "samples/sub1/sub2/TemplatedJsonToPipelineIT.json.vm");
-      extractSampleFile(baseConfigFile, "samples/sub1/sub2/TemplatedYamlToPipelineIT.yaml.vm");
-      extractSampleFile(baseConfigFile, "samples/sub1/sub2/YamlToPipelineIT.yaml");
-      extractSampleFile(baseConfigFile, "samples/sub1/sub2/permissions.jexl");
-      extractSampleFile(baseConfigFile, "samples/sub1/permissions.jexl");
-      extractSampleFile(baseConfigFile, "samples/permissions.jexl");
+      extractSampleFile(baseConfigFile, "samples/demo/FeatureRichExample.yaml", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/demo/LookupValues.yaml", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/sub1/sub2/DynamicEndpointPipelineIT.yaml", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/sub1/sub2/JsonToPipelineIT.json", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/sub1/sub2/TemplatedJsonToPipelineIT.json.vm", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/sub1/sub2/TemplatedYamlToPipelineIT.yaml.vm", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/sub1/sub2/YamlToPipelineIT.yaml", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/sub1/sub2/permissions.jexl", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/sub1/permissions.jexl", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/permissions.jexl", sampleDataLoads);
     } else {
       logger.info("Not creating sample configs because {} already contains {} files", baseConfigFile, children == null ? null : children.length);
     }
   }
   
   @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_BAD_PRACTICE")
-  private static void extractSampleFile(File baseConfigDir, String path) {
+  private static void extractSampleFile(File baseConfigDir, String path, List<DataSourceConfig> sampleDataLoads) {
     try {
       File destFile = new File(baseConfigDir, path.substring(8));
       File destParent = destFile.getParentFile();
@@ -492,8 +493,26 @@ public class Main extends Application {
         destParent.mkdirs();
       }
       
+      String fileContents;
       try (InputStream is = Main.class.getResourceAsStream("/" + path)) {
-        Files.copy(is, destFile.toPath());
+        fileContents = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+      }
+            
+      if (sampleDataLoads != null) {
+        for (DataSourceConfig sampleDataLoad : sampleDataLoads) {
+          String destUrl = sampleDataLoad.getUrl();
+          if (!Strings.isNullOrEmpty(destUrl)) {
+            int idx = destUrl.indexOf(":");
+            if (idx > 0) {
+              String scheme = destUrl.substring(0, idx);
+              fileContents = fileContents.replaceAll(scheme + "://localhost:\\d+/test", destUrl);
+            }
+          }
+        }
+      }
+      
+      try (OutputStream os = new FileOutputStream(destFile)) {
+        os.write(fileContents.getBytes(StandardCharsets.UTF_8));
       }
       
     } catch (Throwable ex) {

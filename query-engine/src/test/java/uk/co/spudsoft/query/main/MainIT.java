@@ -49,7 +49,7 @@ public class MainIT {
   
   @BeforeAll
   public static void createDirs(Vertx vertx) {
-    File paramsDir = new File("target/query-engine");
+    File paramsDir = new File("target/query-engine/samples-mainit");
     paramsDir.mkdirs();
   }
     
@@ -86,7 +86,7 @@ public class MainIT {
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
       "--audit.datasource.url=wibble"
-      , "--baseConfigPath=target/classes/samples"
+      , "--baseConfigPath=target/query-engine/samples-mainit"
       , "--vertxOptions.tracingOptions.type=io.vertx.tracing.zipkin.ZipkinTracingOptions"
       , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
@@ -110,7 +110,7 @@ public class MainIT {
       , "--audit.datasource.adminUser.username=" + postgres.getUser()
       , "--audit.datasource.adminUser.password=" + postgres.getPassword()
       , "--audit.datasource.schema=public" 
-      , "--baseConfigPath=target/classes/samples"
+      , "--baseConfigPath=target/query-engine/samples-mainit"
       , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"

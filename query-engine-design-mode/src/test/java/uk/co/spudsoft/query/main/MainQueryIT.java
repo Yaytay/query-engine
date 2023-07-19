@@ -54,8 +54,8 @@ public class MainQueryIT {
   
   @BeforeAll
   public static void createDirs(Vertx vertx, VertxTestContext testContext) {
-    File paramsDir = new File("target/query-engine/samples");
-    Main.prepareBaseConfigPath(paramsDir);
+    File paramsDir = new File("target/query-engine/samples-mainqueryit");
+    Main.prepareBaseConfigPath(paramsDir, null);
     postgres.prepareTestDatabase(vertx)
             .compose(v -> mysql.prepareTestDatabase(vertx))
             .onComplete(testContext.succeedingThenComplete())
@@ -77,7 +77,7 @@ public class MainQueryIT {
       , "--audit.datasource.user.password=" + mysql.getPassword()
       , "--audit.retryLimit=100"
       , "--audit.retryIncrementMs=500"
-      , "--baseConfigPath=target/query-engine/samples"
+      , "--baseConfigPath=target/query-engine/samples-mainqueryit"
       , "--vertxOptions.eventLoopPoolSize=5"
       , "--vertxOptions.workerPoolSize=5"
       , "--vertxOptions.tracingOptions.serviceName=Query-Engine"

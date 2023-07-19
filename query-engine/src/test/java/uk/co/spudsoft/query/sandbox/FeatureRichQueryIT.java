@@ -60,7 +60,7 @@ public class FeatureRichQueryIT {
   
   @BeforeAll
   public static void createDirs(Vertx vertx) {
-    File paramsDir = new File("target/query-engine");
+    File paramsDir = new File("target/query-engine/samples-featurerichqueryit");
     paramsDir.mkdirs();
     new File("target/classes/samples/sub1/sub3").mkdirs();
   }
@@ -68,8 +68,8 @@ public class FeatureRichQueryIT {
   @Test
   public void testQuery() throws Exception {
     Main main = new Main();
-    String baseConfigDir = "target/query-engine/samples";
-    Main.prepareBaseConfigPath(new File(baseConfigDir));
+    String baseConfigDir = "target/query-engine/samples-featurerichqueryit";
+    Main.prepareBaseConfigPath(new File(baseConfigDir), null);
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{

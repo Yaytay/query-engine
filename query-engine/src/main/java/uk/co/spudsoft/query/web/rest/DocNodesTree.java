@@ -65,7 +65,7 @@ public class DocNodesTree extends AbstractTree {
         if (slashPos > 0) {
           path = path.substring(slashPos + 1);
         }
-        int dotPos = path.indexOf(".");
+        int dotPos = path.lastIndexOf(".");
         if (dotPos > 0) {
           path = path.substring(0, dotPos);
         }

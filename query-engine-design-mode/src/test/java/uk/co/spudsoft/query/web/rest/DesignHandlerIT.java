@@ -64,11 +64,11 @@ public class DesignHandlerIT {
 
   @BeforeAll
   public static void createDirs(Vertx vertx, VertxTestContext testContext) {
-    File sourceDir = new File("target/query-engine/samples-designit/sub1/newfolder");
+    File sourceDir = new File("target/query-engine/samples-designhandlerit/sub1/newfolder");
     if (sourceDir.exists()) {
       deleteFolder(sourceDir);
     }
-    sourceDir = new File("target/query-engine/samples-designit/sub1/newdir");
+    sourceDir = new File("target/query-engine/samples-designhandlerit/sub1/newdir");
     if (sourceDir.exists()) {
       deleteFolder(sourceDir);
     }
@@ -86,7 +86,7 @@ public class DesignHandlerIT {
       , "--audit.datasource.adminUser.username=" + postgres.getUser()
       , "--audit.datasource.adminUser.password=" + postgres.getPassword()
       , "--audit.datasource.schema=public"
-      , "--baseConfigPath=target/query-engine/samples-designit"
+      , "--baseConfigPath=target/query-engine/samples-designhandlerit"
       , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
@@ -231,7 +231,7 @@ public class DesignHandlerIT {
             .statusCode(404)
             .contentType(startsWith("text/plain"))
             // Outputs the full error message because this is in "outputAllErrorMessages" mode
-            .body(startsWith("Unable to read file at path 'target" + File.separator + "query-engine" + File.separator + "samples-designit" + File.separator + "sub4" + File.separator + "sub5" + File.separator + "Nonexistent.yml'"));
+            .body(startsWith("Unable to read file at path 'target" + File.separator + "query-engine" + File.separator + "samples-designhandlerit" + File.separator + "sub4" + File.separator + "sub5" + File.separator + "Nonexistent.yml'"));
     
     given().log().all()
             .get("/api/design/file/sub1/sub2/permissions.jexl")

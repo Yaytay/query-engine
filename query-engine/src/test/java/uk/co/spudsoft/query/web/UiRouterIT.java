@@ -48,7 +48,7 @@ public class UiRouterIT {
   
   @BeforeAll
   public static void createDirs(Vertx vertx) {
-    File paramsDir = new File("target/query-engine");
+    File paramsDir = new File("target/query-engine/samples-uirouterit");
     paramsDir.mkdirs();
   }
     
