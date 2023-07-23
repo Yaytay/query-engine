@@ -72,7 +72,7 @@
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>vertx-management-endpoints</artifactId>
-      <version>0.0.10</version>
+      <version>0.0.13</version>
     </dependency>
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
@@ -115,6 +115,11 @@
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-web</artifactId>
+      <version>${vertx.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-health-check</artifactId>
       <version>${vertx.version}</version>
     </dependency>
     <dependency>

@@ -29,6 +29,7 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.healthchecks.Status;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
@@ -85,6 +86,8 @@ public class AuditorImpl implements Auditor {
   private final MeterRegistry meterRegistry;
   private final Audit configuration;
   private DataSource dataSource;
+  
+  private boolean prepared;
 
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "MeterRegisty is intended to be mutable by any user")
   public AuditorImpl(Vertx vertx, MeterRegistry meterRegistry, Audit audit) {
@@ -106,7 +109,15 @@ public class AuditorImpl implements Auditor {
     SQLException lastSQLException = null;
     LiquibaseException lastLiquibaseException = null;
 
-    if (!Strings.isNullOrEmpty(dataSourceConfig == null ? null : dataSourceConfig.getUrl())) {
+    String url = null;
+    if (dataSourceConfig != null) {
+      url = dataSourceConfig.getUrl();
+    }
+    
+    if (Strings.isNullOrEmpty(url)) {
+      logger.info("No audit URL provided, audit disabled");
+      prepared = true;
+    } else {
 
       if (Strings.isNullOrEmpty(dataSourceConfig.getSchema())) {
         recordRequest = recordRequest.replaceAll("#SCHEMA#.", "");
@@ -122,7 +133,6 @@ public class AuditorImpl implements Auditor {
 
       for (int retry = 0; configuration.getRetryLimit() < 0 || retry <= configuration.getRetryLimit(); ++retry) {
         logger.debug("Running liquibase, attempt {}", retry);        
-        String url = dataSourceConfig.getUrl();
         String username = dataSourceConfig.getAdminUser() == null ? null : dataSourceConfig.getAdminUser().getUsername();
         String password = dataSourceConfig.getAdminUser() == null ? null : dataSourceConfig.getAdminUser().getPassword();
         try (Connection jdbcConnection = DriverManager.getConnection(url, username, password)) {
@@ -188,6 +198,14 @@ public class AuditorImpl implements Auditor {
         credentials = dataSourceConfig.getAdminUser();
       }
       dataSource = createDataSource(dataSourceConfig, credentials, meterRegistry);
+    }
+    prepared = true;
+  }
+  
+  public void healthCheck(Promise<Status> promise) {
+    if (!prepared) {
+      logger.debug("Failing health check because audit is not prepared");
+      promise.complete(Status.KO());
     }
   }
 

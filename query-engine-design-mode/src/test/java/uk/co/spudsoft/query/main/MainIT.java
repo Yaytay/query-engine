@@ -155,7 +155,7 @@ public class MainIT {
             .get("/")
             .then()
             .log().all()
-            .statusCode(302)
+            .statusCode(307)
             .header("Location", "/ui/")
             ;
     

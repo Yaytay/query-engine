@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.main;
 
+import com.google.common.collect.ImmutableMap;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.tracing.TracingOptions;
@@ -146,6 +147,58 @@ public class ParametersTest {
     instance.getJwt().setAcceptableIssuerRegexes(Arrays.asList(".*"));
     assertEquals(Arrays.asList(".*"), instance.getJwt().getAcceptableIssuerRegexes());
   }
+  
+  @Test
+  public void testGetSecrets() {
+    Parameters instance = new Parameters();
+    assertNotNull(instance.getSecrets());
+    assertEquals(0, instance.getSecrets().size());
+    instance.setSecrets(ImmutableMap.<String, ProtectedCredentials>builder().put("first", new ProtectedCredentials("username", "password", null)).build());
+    assertNotNull(instance.getSecrets());
+    assertEquals("password", instance.getSecrets().get("first").getPassword());
+  }
+  
+  @Test
+  public void testGetSampleDataLoads() {
+    Parameters instance = new Parameters();
+    assertNotNull(instance.getSampleDataLoads());
+    assertEquals(0, instance.getSampleDataLoads().size());
+    instance.setSampleDataLoads(
+            Arrays.asList(
+                    new DataSourceConfig()
+            )
+    );
+    assertNotNull(instance.getSampleDataLoads());
+    assertEquals(1, instance.getSampleDataLoads().size());
+  }
+  
+  @Test
+  public void testGetFileStabilisationDelaySeconds() {
+    Parameters instance = new Parameters();
+    assertEquals(2, instance.getFileStabilisationDelaySeconds());
+    instance.setFileStabilisationDelaySeconds(23);
+    assertEquals(23, instance.getFileStabilisationDelaySeconds());
+  }
+  
+  @Test
+  public void testGetManagementEndpointPort() {
+    Parameters instance = new Parameters();
+    assertNull(instance.getManagementEndpointPort());
+    instance.setManagementEndpointPort(23);
+    assertEquals(23, instance.getManagementEndpointPort());
+  }
+  
+  @Test
+  public void testGetManagementEndpoints() {
+    Parameters instance = new Parameters();
+    assertNotNull(instance.getManagementEndpoints());
+    assertEquals(0, instance.getManagementEndpoints().size());
+    instance.setManagementEndpoints(Arrays.asList("one", "two"));
+    assertEquals(2, instance.getManagementEndpoints().size());
+    assertEquals("one", instance.getManagementEndpoints().get(0));
+    assertEquals("two", instance.getManagementEndpoints().get(1));
+  }
+  
   
   @Test
   public void testProps() {

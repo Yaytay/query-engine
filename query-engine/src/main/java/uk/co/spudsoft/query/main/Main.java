@@ -45,8 +45,13 @@ import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.jackson.DatabindCodec;
 import io.vertx.core.tracing.TracingOptions;
+import io.vertx.ext.healthchecks.HealthCheckHandler;
+import io.vertx.ext.healthchecks.Status;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.handler.CorsHandler;
@@ -70,6 +75,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -82,6 +89,11 @@ import uk.co.spudsoft.jwtvalidatorvertx.IssuerAcceptabilityHandler;
 import uk.co.spudsoft.jwtvalidatorvertx.JwtValidatorVertx;
 import uk.co.spudsoft.jwtvalidatorvertx.OpenIdDiscoveryHandler;
 import uk.co.spudsoft.jwtvalidatorvertx.impl.JWKSOpenIdDiscoveryHandlerImpl;
+import uk.co.spudsoft.mgmt.AccessLogCaptureRoute;
+import uk.co.spudsoft.mgmt.AccessLogOutputRoute;
+import uk.co.spudsoft.mgmt.DumpEnvRoute;
+import uk.co.spudsoft.mgmt.DumpParametersRoute;
+import uk.co.spudsoft.mgmt.DumpSysPropsRoute;
 import uk.co.spudsoft.mgmt.HeapDumpRoute;
 import uk.co.spudsoft.mgmt.InFlightRoute;
 import uk.co.spudsoft.mgmt.LogbackMgmtRoute;
@@ -129,6 +141,10 @@ public class Main extends Application {
   private DirCache dirCache;
   private PipelineDefnLoader defnLoader;
   private AuditorImpl auditor;
+  
+  private HealthCheckHandler healthCheckHandler;
+  private HealthCheckHandler upCheckHandler;
+  private AtomicBoolean up = new AtomicBoolean();
   
   private int port;
   
@@ -343,10 +359,24 @@ public class Main extends Application {
       logger.error("Unable to config pipeline loader: ", ex);
       return Future.succeededFuture(2);
     }
+
+    healthCheckHandler = HealthCheckHandler.create(vertx);
+    healthCheckHandler.register("Up", promise -> promise.complete(this.up.get() ? Status.OK() : Status.KO()));
+    healthCheckHandler.register("Auditor", auditor::healthCheck);
+    upCheckHandler = HealthCheckHandler.create(vertx);
+    upCheckHandler.register("Up", promise -> promise.complete(this.up.get() ? Status.OK() : Status.KO()));
+    
     Router router = Router.router(vertx);
     
+    AccessLogCaptureRoute capture = null;
+    if (mgmtEndpointPermitted(params, AccessLogOutputRoute.PATH)) {
+      capture = new AccessLogCaptureRoute(30);
+      router.route("/*").handler(capture); 
+    }
+    
+    CorsHandler corsHandler = null;
     if (!Strings.isNullOrEmpty(params.getCorsAllowedOriginRegex())) {
-      CorsHandler corsHandler = CorsHandler.create()
+      corsHandler = CorsHandler.create()
               .addRelativeOrigin(params.getCorsAllowedOriginRegex());
       corsHandler.allowedMethods(
               ImmutableSet
@@ -381,14 +411,69 @@ public class Main extends Application {
     
     PipelineExecutor pipelineExecutor = new PipelineExecutorImpl(params.getSecrets());
     router.route(QueryRouter.PATH_ROOT + "/*").handler(new QueryRouter(vertx, auditor, rcb, defnLoader, pipelineExecutor, outputAllErrorMessages()));
+
     Router mgmtRouter = Router.router(vertx);
+    if (mgmtEndpointPermitted(params, "up")) {
+      mgmtRouter.get("/up").handler(upCheckHandler).setName("Up");
+    }
+    if (mgmtEndpointPermitted(params, "health")) {
+      mgmtRouter.get("/health").handler(healthCheckHandler).setName("Health");
+    }
+    if (mgmtEndpointPermitted(params, "prometheus")) {
+      mgmtRouter.get("/prometheus").handler(new PrometheusScrapingHandlerImpl()).setName("Prometheus");
+    }
+    if (mgmtEndpointPermitted(params, HeapDumpRoute.PATH)) {
+      HeapDumpRoute.createAndDeploy(mgmtRouter);
+    }
+    if (mgmtEndpointPermitted(params, InFlightRoute.PATH)) {
+      InFlightRoute.createAndDeploy(router, mgmtRouter);
+    }
+    if (mgmtEndpointPermitted(params, LogbackMgmtRoute.PATH)) {
+      LogbackMgmtRoute.createAndDeploy(mgmtRouter);    
+    }
+    if (mgmtEndpointPermitted(params, ThreadDumpRoute.PATH)) {
+      ThreadDumpRoute.createAndDeploy(mgmtRouter);
+    }
+    if (capture != null) {
+      AccessLogOutputRoute.createAndDeploy(mgmtRouter, capture.getBuffer());
+    }
+    if (mgmtEndpointPermitted(params, DumpEnvRoute.PATH)) {
+      DumpEnvRoute.createAndDeploy(mgmtRouter);
+    }
+    if (mgmtEndpointPermitted(params, DumpSysPropsRoute.PATH)) {
+      DumpSysPropsRoute.createAndDeploy(mgmtRouter);
+    }
+    if (mgmtEndpointPermitted(params, DumpParametersRoute.PATH)) {
+      DumpParametersRoute.createAndDeploy(mgmtRouter, new AtomicReference<>(params));
+    }
     
-    mgmtRouter.get("/prometheus").handler(new PrometheusScrapingHandlerImpl()).setName("Prometheus");
-    HeapDumpRoute.createAndDeploy(mgmtRouter);
-    InFlightRoute.createAndDeploy(router, mgmtRouter);
-    LogbackMgmtRoute.createAndDeploy(mgmtRouter);    
-    ThreadDumpRoute.createAndDeploy(mgmtRouter);
-    ManagementRoute.createAndDeploy(router, mgmtRouter);
+    Integer mgmtPort = params.getManagementEndpointPort();
+    if (mgmtPort != null && mgmtPort > 0) {
+      Router mgmtParentRouter = Router.router(vertx);
+      if (corsHandler != null) {
+        mgmtParentRouter.route("/*").handler(corsHandler); 
+      }
+      ManagementRoute.createAndDeploy(mgmtParentRouter, mgmtRouter);
+      HttpServerOptions options = new HttpServerOptions(params.getHttpServerOptions());
+      options.setPort(mgmtPort);
+      HttpServer mgmtHttpServer = vertx.createHttpServer(options);
+      mgmtHttpServer
+            .requestHandler(mgmtParentRouter)
+            .listen();      
+      if (!Strings.isNullOrEmpty(params.getManagementEndpointUrl())) {
+        router.get("/manage").handler(rc -> {
+          HttpServerResponse response = rc.response();
+          response.setStatusCode(200);
+          response.putHeader("Content-Type", "application/json");
+          JsonObject data = new JsonObject();
+          data.put("location", params.getManagementEndpointUrl());
+          rc.end(data.toBuffer());
+        });
+      }
+    } else {
+      ManagementRoute.createAndDeploy(router, mgmtRouter);
+    }
+
     router.get("/api").handler(rc -> {
       rc.response().setStatusCode(301).putHeader("Location", "/openapi").end();
     });
@@ -396,8 +481,9 @@ public class Main extends Application {
     router.route("/ui/*").handler(UiRouter.create(vertx, "/ui", "/www", "/www/index.html"));
     router.getWithRegex("/openapi\\..*").blockingHandler(openApiHandler);
     router.get("/openapi").handler(openApiHandler.getUiHandler());
-    router.route("/").handler(ctx -> {
-      ctx.redirect("/ui/");
+    router.route("/").handler(rc -> {
+      rc.response().setStatusCode(307);
+      rc.redirect("/ui/");
     });
 
     return httpServer
@@ -418,9 +504,18 @@ public class Main extends Application {
               }
               return Future.succeededFuture(0);
             })
+            .onSuccess(i -> up.set(true))
             ;
     
   }  
+  
+  private boolean mgmtEndpointPermitted(Parameters params, String path) {
+    if (params.getManagementEndpoints().isEmpty()) {
+      return true;
+    } else {
+      return params.getManagementEndpoints().contains(path);
+    }
+  }
   
   private Future<Void> performSampleDataLoads(Iterator<DataSourceConfig> iter) {
     if (iter.hasNext()) {

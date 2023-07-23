@@ -74,7 +74,7 @@ public class UiRouterIT {
             .get("/")
             .then()
             .log().all()
-            .statusCode(302)
+            .statusCode(307)
             .header("Location", equalTo("/ui/"))
             ;
         

@@ -75,8 +75,8 @@ public class RunIT {
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--logging.jsonFormat=false"
-//      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.pipeline=TRACE"
-//      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec\\\\.procs\\\\.query=TRACE"
+      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.pipeline=TRACE"
+      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec\\\\.procs\\\\.query=TRACE"
       , "--sampleDataLoads[0].url=" + postgres.getUrl()
       , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()
       , "--sampleDataLoads[0].adminUser.password=" + postgres.getPassword()
@@ -87,6 +87,9 @@ public class RunIT {
       , "--sampleDataLoads[2].adminUser.username=sa"
       , "--sampleDataLoads[2].adminUser.password=unknown"
       , "--httpServerOptions.port=8000"
+      , "--managementEndpointPort=8001"
+      , "--managementEndpointUrl=http://localhost:8001/manage"
+      , "--corsAllowedOrigin=.*"
     }, stdout);
     
     for (int i = 0; i < 14400; ++i) {

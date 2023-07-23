@@ -16,11 +16,13 @@
  */
 package uk.co.spudsoft.query.main;
 
+import com.google.common.collect.ImmutableList;
 import uk.co.spudsoft.query.logging.LogbackOptions;
 import com.google.common.collect.ImmutableMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import uk.co.spudsoft.params4j.JavadocCapture;
@@ -129,7 +131,66 @@ public class Parameters {
    * </ul>
    * The leading component of the URL (the scheme) will be used to determine which script to run.
    */
-  private List<DataSourceConfig> sampleDataLoads;
+  private List<DataSourceConfig> sampleDataLoads = new ArrayList<>();
+  
+  /**
+   * The management endpoints (all under /manage) that should be enabled.
+   * <p>
+   * Some of the management endpoints provide internal information and should absolutely not be accessible to end-users.
+   * This can either be achieved by configuring the ingress appropriately, or by disabling the endpoints.
+   * <p>
+   * If no endpoints are specified then all endpoints will be enabled.
+   * Whilst this does mean that it is not possible to disable all management endpoints, the "up" endpoint should always be enabled so this should not be a problem.
+   * Also, if you really want to you can set a single invalid value for the list of management endpoints, which will result in none of them being enabled (invalid values are silently ignored).
+   * <p>
+   * The complete list of management endpoints can be seen by making a request to /manage on a running query engine.
+   * The list below is a subset of some of them:
+   * <ul>
+   * <li>up
+   * A simple health endpoint that reports when the service is up (suitable for use by a Kubernetes readiness/startup probe).
+   * <li>health
+   * A more complete health endpoint.
+   * <li>prometheus
+   * System metrics in Prometheus format.
+   * <li>parameters
+   * Dumps the full set of configuration parameters.
+   * <li>envvars
+   * Dumps all environment variables.
+   * <li>sysprops
+   * Dumps all system properties.
+   * <li>accesslog
+   * Reports the past few requests to the system.
+   * <li>inflight
+   * Reports all requests made to the system that have not yet completed.
+   * <li>threads
+   * Dump stack traces from all threads.
+   * <li>heapdump
+   * Download a heap dump.
+   * </ul>
+   * <p>
+   * Unless you are sure that you have secured your /manage endpoint adequately it is strongly recommended that production systems only
+   * enable the up; health and prometheus endpoints.
+   * 
+   * @see Parameters#managementEndpointPort
+   */
+  private List<String> managementEndpoints = new ArrayList<>();
+  
+  /**
+   * The port that the should be used for the management endpoints.
+   * <p>
+   * Set to null (the default) to use the main port.
+   * Set negative to disable the management endpoints completely (not recommended, as they include health check and metrics).
+   */
+  private Integer managementEndpointPort;
+  
+  /**
+   * If set (and managementEndpointPort is positive), requests to /manage will return an HTTP temporary redirect to this URL.
+   * <p>
+   * Aimed at use cases where a different ingress is required for accessing the management endpoints.
+   * <p>
+   * If managementEndpointPort does not have a positive value any setting of managementEndpointUrl will be ignored.
+   */
+  private String managementEndpointUrl;
   
   /**
    * Get the options for configuring logback.
@@ -453,7 +514,7 @@ public class Parameters {
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public Parameters setSampleDataLoads(List<DataSourceConfig> sampleDataLoads) {
-    this.sampleDataLoads = sampleDataLoads;
+    this.sampleDataLoads = ImmutableList.copyOf(sampleDataLoads);
     return this;
   }
 
@@ -474,6 +535,102 @@ public class Parameters {
     this.jwt = jwt;
     return this;
   }
- 
+
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
+  public List<String> getManagementEndpoints() {
+    return managementEndpoints;
+  }
+
+  /**
+   * Set the management endpoints (all under /manage) that should be enabled.
+   * <p>
+   * Some of the management endpoints provide internal information and should absolutely not be accessible to end-users.
+   * This can either be achieved by configuring the ingress appropriately, or by disabling the endpoints.
+   * <p>
+   * If no endpoints are specified then all endpoints will be enabled.
+   * Whilst this does mean that it is not possible to disable all management endpoints, the "up" endpoint should always be enabled so this should not be a problem.
+   * Also, if you really want to you can set a single invalid value for the list of management endpoints, which will result in none of them being enabled (invalid values are silently ignored).
+   * <p>
+   * The complete list of management endpoints can be seen by making a request to /manage on a running query engine.
+   * The list below is a subset of some of them:
+   * <ul>
+   * <li>up
+   * A simple health endpoint that reports when the service is up (suitable for use by a Kubernetes readiness/startup probe).
+   * <li>health
+   * A more complete health endpoint.
+   * <li>prometheus
+   * System metrics in Prometheus format.
+   * <li>parameters
+   * Dumps the full set of configuration parameters.
+   * <li>envvars
+   * Dumps all environment variables.
+   * <li>sysprops
+   * Dumps all system properties.
+   * <li>accesslog
+   * Reports the past few requests to the system.
+   * <li>inflight
+   * Reports all requests made to the system that have not yet completed.
+   * <li>threads
+   * Dump stack traces from all threads.
+   * <li>heapdump
+   * Download a heap dump.
+   * </ul>
+   * <p>
+   * Unless you are sure that you have secured your /manage endpoint adequately it is strongly recommended that production systems only
+   * enable the up; health and prometheus endpoints.
+   * 
+   * @param managementEndpoints the management endpoints (all under /manage) that should be enabled.
+   * @see Parameters#setManagementEndpointPort
+   * 
+   */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
+  public void setManagementEndpoints(List<String> managementEndpoints) {
+    this.managementEndpoints = ImmutableList.copyOf(managementEndpoints);
+  }
+
+  public Integer getManagementEndpointPort() {
+    return managementEndpointPort;
+  }
+
+  /**
+   * Set the port that the /manage endpoints should listen on.
+   * <p>
+   * In order to help secure the management endpoints they can be run on a secondary port.
+   * <p>
+   * If the managementEndpointPort is set to null (the default) the management endpoints will listen on the same port as the API.
+   * This is the least secure option (but most convenient for the UI).
+   * <p>
+   * It the managementEndpointPort is negative the entire management endpoint setup will be disabled.
+   * <p>
+   * @param managementEndpointPort The port to listen on for the management endpoints.
+   * @see Parameters#setManagementEndpoints
+   */
+  public void setManagementEndpointPort(Integer managementEndpointPort) {
+    this.managementEndpointPort = managementEndpointPort;
+  }
+
+  public String getManagementEndpointUrl() {
+    return managementEndpointUrl;
+  }
+
+  /**
+   * Set the URL that clients should be using to access the management endpoints.
+   * <p>
+   * If set (and managementEndpointPort is positive), requests to /manage will return an HTTP temporary redirect to this URL.
+   * <p>
+   * Aimed at use cases where a different ingress is required for accessing the management endpoints.
+   * The replacement ingress should not be accessible to end users.
+   * <p>
+   * If managementEndpointPort does not have a positive value any setting of managementEndpointUrl will be ignored.
+   * <p>
+   * The value provided must be the full URL to the /manage path.
+   * 
+   * @param managementEndpointUrl the URL that clients should be using to access the management endpoints.
+   */
+  public void setManagementEndpointUrl(String managementEndpointUrl) {
+    this.managementEndpointUrl = managementEndpointUrl;
+  }
+
+  
 }
 

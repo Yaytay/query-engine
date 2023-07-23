@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.main;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.restassured.RestAssured;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
@@ -30,8 +31,11 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 import static io.restassured.RestAssured.given;
 import static io.restassured.config.RedirectConfig.redirectConfig;
 import io.restassured.config.RestAssuredConfig;
+import io.vertx.core.json.Json;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.net.URI;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
@@ -94,6 +98,9 @@ public class MainIT {
       , "--pipelineCache.maxDurationMs=0"
       , "--pipelineCache.purgePeriodMs=10"
       , "--logging.level.uk_co_spudsoft_query_main=TRACE" 
+      , "--managementEndpoints[0]=up"
+      , "--managementEndpoints[2]=prometheus"
+      , "--managementEndpoints[3]=threads"
     }, stdout);
     assertEquals(0, stdoutStream.size());
     
@@ -116,6 +123,11 @@ public class MainIT {
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--logging.jsonFormat=true"
       , "--loadSampleData=true"
+      , "--managementEndpoints[0]=up"
+      , "--managementEndpoints[2]=prometheus"
+      , "--managementEndpoints[3]=threads"
+      , "--managementEndpointPort=8001"
+      , "--managementEndpointUrl=http://localhost:8001/manage"
     }, stdout);
     assertEquals(0, stdoutStream.size());
     
@@ -176,9 +188,29 @@ public class MainIT {
             .get("/")
             .then()
             .log().all()
-            .statusCode(302)
+            .statusCode(307)
             .header("Location", "/ui/")
             ;
+     
+     given()
+            .log().all()
+            .get("/manage")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .body(equalTo("{\"location\":\"http://localhost:8001/manage\"}"))
+            ;
+    
+     String manageEndpointsString = given()
+            .log().all()
+            .get(URI.create("http://localhost:8001/manage"))
+            .then()
+            .statusCode(200)
+            .log().all()
+            .extract().body().asString()
+            ;
+    ArrayNode manageEndpointsJson = Json.decodeValue(manageEndpointsString, ArrayNode.class);
+    assertEquals(3, manageEndpointsJson.size());
     
     main.shutdown();
   }
