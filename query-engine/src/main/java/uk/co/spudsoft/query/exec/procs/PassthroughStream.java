@@ -22,21 +22,23 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
-import io.vertx.core.streams.ReadStream;
 import io.vertx.core.streams.WriteStream;
+import io.vertx.sqlclient.desc.ColumnDescriptor;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.DataRowStream;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 
 
 /**
  * PassthroughStream makes available a WriteStream that calls an {@link AsyncHandler} for each data item written to it and optionally passes the data on to a ReadStream.
  * 
- * @param <T> The class of object being streamed.
  * @author jtalbut
  */
-public class PassthroughStream<T> {
+public class PassthroughStream {
   
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(PassthroughStream.class);
@@ -45,7 +47,7 @@ public class PassthroughStream<T> {
 
   private final SourceNameTracker sourceNameTracker;
   private final Object lock = new Object();
-  private final ChainedAsyncHandler<T> processor;
+  private final ChainedAsyncHandler<DataRow> processor;
   private final Context context;
   private final Write write;
   private final Read read;
@@ -53,22 +55,22 @@ public class PassthroughStream<T> {
   private Handler<Throwable> exceptionHandler;    
   private Handler<Void> drainHandler;
   private Handler<Void> passthroughEndHandler;
-  private Handler<T> readHandler;
+  private Handler<DataRow> readHandler;
 
   private long demand;
 
-  private static class DataAndPromise<T> {
+  private static class DataAndPromise {
     final Promise<Void> promise;
-    final T data;
+    final DataRow data;
 
-    DataAndPromise(Promise<Void> promise, T data) {
+    DataAndPromise(Promise<Void> promise, DataRow data) {
       this.promise = promise;
       this.data = data;
     }        
   }
   
-  private DataAndPromise<T> pending;
-  private DataAndPromise<T> inflight;
+  private DataAndPromise pending;
+  private DataAndPromise inflight;
   
   /*
   This is the endhandler that will be called when the current in-flight item has been processed.
@@ -83,7 +85,7 @@ public class PassthroughStream<T> {
    * @param context The Vertx context of any processing that is carried out.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
-  public PassthroughStream(SourceNameTracker sourceNameTracker, ChainedAsyncHandler<T> handler, Context context) {
+  public PassthroughStream(SourceNameTracker sourceNameTracker, ChainedAsyncHandler<DataRow> handler, Context context) {
     this.sourceNameTracker = sourceNameTracker;
     this.processor = handler;
     this.context = context;
@@ -97,7 +99,7 @@ public class PassthroughStream<T> {
    * @return the WriteStream interface for this PassthroughStream.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Exposure of the stream is required")
-  public WriteStream<T> writeStream() {
+  public WriteStream<DataRow> writeStream() {
     return write;
   }
   
@@ -107,7 +109,7 @@ public class PassthroughStream<T> {
    * @param handler The end handler.
    * @return this.
    */
-  public PassthroughStream<T> endHandler(Handler<Void> handler) {
+  public PassthroughStream endHandler(Handler<Void> handler) {
     passthroughEndHandler = handler;
     return this;
   }
@@ -117,7 +119,7 @@ public class PassthroughStream<T> {
    * There is only ever a single instance of the ReadStream, this method does not create a new instance.
    * @return the ReadStream interface for this PassthroughStream.
    */
-  public ReadStream<T> readStream() {
+  public DataRowStream<DataRow> readStream() {
     return read;
   }
   
@@ -148,18 +150,20 @@ public class PassthroughStream<T> {
     Promise<Void> promise;
     boolean reprocess = false;
     synchronized (lock) {
-      logger.trace("completeCurrent({}) with {}", ar, inflight.data);
+      logger.trace("completeCurrent({}) with {}", ar, inflight == null ? null : inflight.data);
       dh = drainHandler;
       eh = end;
-      promise = inflight.promise;
+      promise = inflight == null ? null : inflight.promise;
       inflight = null;
       if (pending != null) {
         inflight = pending;
         pending = null;
         reprocess = true;
       }
-    }    
-    promise.handle(ar);
+    }
+    if (promise != null) {
+      promise.handle(ar);
+    }
     if (reprocess) {
       processCurrent();
     } else {
@@ -172,17 +176,17 @@ public class PassthroughStream<T> {
     }
   }
   
-  private class Write implements WriteStream<T> {
+  private class Write implements WriteStream<DataRow> {
 
     @Override
-    public WriteStream<T> exceptionHandler(Handler<Throwable> handler) {
+    public WriteStream<DataRow> exceptionHandler(Handler<Throwable> handler) {
       exceptionHandler = handler;
       return this;
     }
 
     @Override
-    public Future<Void> write(T data) {
-      logger.trace("{}@{}: write({})", getClass().getSimpleName(), hashCode(), data);        
+    public Future<Void> write(DataRow data) {
+      logger.trace("{}@{}: write({})", getClass().getSimpleName(), hashCode(), data);
       boolean isPaused;
       Promise<Void> promise = Promise.promise();
       boolean processNow = false;
@@ -190,7 +194,7 @@ public class PassthroughStream<T> {
         if (pending != null) {
           throw new IllegalStateException("write(" + data + ") called whilst pending is " + pending);
         }
-        pending = new DataAndPromise<>(promise, data);
+        pending = new DataAndPromise(promise, data);
         isPaused = readStreamPaused.get();
         if (!isPaused) {
           inflight = pending;
@@ -206,7 +210,7 @@ public class PassthroughStream<T> {
     }
 
     @Override
-    public void write(T data, Handler<AsyncResult<Void>> handler) {
+    public void write(DataRow data, Handler<AsyncResult<Void>> handler) {
       write(data).onComplete(handler);
     }
 
@@ -237,7 +241,7 @@ public class PassthroughStream<T> {
     }
 
     @Override
-    public WriteStream<T> setWriteQueueMaxSize(int maxSize) {
+    public WriteStream<DataRow> setWriteQueueMaxSize(int maxSize) {
       // This cannot do anything, there is no queue.
       throw new UnsupportedOperationException("Not supported.");
     }
@@ -251,7 +255,7 @@ public class PassthroughStream<T> {
     }
 
     @Override
-    public WriteStream<T> drainHandler(Handler<Void> handler) {
+    public WriteStream<DataRow> drainHandler(Handler<Void> handler) {
       boolean callNow = false;
       synchronized (lock) {
         drainHandler = handler;
@@ -267,12 +271,12 @@ public class PassthroughStream<T> {
     
   }
   
-  private class Read implements ReadStream<T> {
+  private class Read implements DataRowStream<DataRow> {
 
     private Handler<Void> readStreamEndHandler;
     private Handler<Throwable> exceptionHandler;
     
-    Future<Void> handle(T data) {
+    Future<Void> handle(DataRow data) {
       Future<Void> result;
       try {
         readHandler.handle(data);
@@ -295,32 +299,32 @@ public class PassthroughStream<T> {
     }
     
     @Override
-    public ReadStream<T> exceptionHandler(Handler<Throwable> handler) {
+    public DataRowStream<DataRow> exceptionHandler(Handler<Throwable> handler) {
       this.exceptionHandler = handler;
       return this;
     }
 
     @Override
-    public ReadStream<T> handler(Handler<T> handler) {
+    public DataRowStream<DataRow> handler(Handler<DataRow> handler) {
       readHandler = handler;
       return this;
     }
 
     @Override
-    public ReadStream<T> pause() {
+    public DataRowStream<DataRow> pause() {
       readStreamPaused.set(true);
       return this;
     }
 
     @Override
-    public ReadStream<T> resume() {
+    public DataRowStream<DataRow> resume() {
       logger.trace("{}:{} Resume", this.getClass().getSimpleName(), this.hashCode());
       fetch(Long.MAX_VALUE);
       return this;
     }
 
     @Override
-    public ReadStream<T> fetch(long amount) {
+    public DataRowStream<DataRow> fetch(long amount) {
       if (amount < 0L) {
         throw new IllegalArgumentException();
       }
@@ -345,10 +349,26 @@ public class PassthroughStream<T> {
     }
 
     @Override
-    public ReadStream<T> endHandler(Handler<Void> handler) {
+    public DataRowStream<DataRow> endHandler(Handler<Void> handler) {
       readStreamEndHandler = handler;
       return this;
     }
+
+    @Override
+    public List<ColumnDescriptor> getColumnDescriptors() {
+      throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    @Override
+    public Future<Void> close() {
+      throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    @Override
+    public void close(Handler<AsyncResult<Void>> completionHandler) {
+      throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+   
     
   }
   

@@ -38,7 +38,7 @@ public class DynamicEndpointPreProcessorInstanceTest {
     LinkedHashMap<String, DataType> dataTypes = new LinkedHashMap<>();
     dataTypes.put("string", DataType.String);
     dataTypes.put("int", DataType.Integer);
-    DataRow dataRow = new DataRow(dataTypes);
+    DataRow dataRow = DataRow.create(dataTypes);
     dataRow.put("string", "test");
     dataRow.put("int", 7);
     assertNull(getField(dataRow, null));

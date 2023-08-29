@@ -16,7 +16,6 @@
  */
 package uk.co.spudsoft.query.exec.sources.test;
 
-import uk.co.spudsoft.query.exec.sources.test.BlockingReadStream;
 import com.google.common.collect.ImmutableMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -29,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import uk.co.spudsoft.query.exec.Types;
 
 
 /**
@@ -43,7 +43,7 @@ public class BlockingReadStreamTest {
   @Test
   public void testNoData(Vertx vertx, VertxTestContext testContext) throws Exception {
     assertNotNull(vertx);
-    BlockingReadStream<JsonObject> impl = new BlockingReadStream<>(vertx.getOrCreateContext(), 1);    
+    BlockingReadStream<JsonObject> impl = new BlockingReadStream<>(vertx.getOrCreateContext(), 1, new Types());    
     impl.endHandler(v -> {
       // Queue isn't used in this test
       assertEquals(0, impl.size());
@@ -55,7 +55,7 @@ public class BlockingReadStreamTest {
   @Test
   public void testNoDataPaused(Vertx vertx, VertxTestContext testContext) throws Exception {
     assertNotNull(vertx);
-    BlockingReadStream<JsonObject> impl = new BlockingReadStream<>(vertx.getOrCreateContext(), 1);    
+    BlockingReadStream<JsonObject> impl = new BlockingReadStream<>(vertx.getOrCreateContext(), 1, new Types());    
     impl.endHandler(v -> {
       // Queue isn't used in this test
       assertEquals(0, impl.size());
@@ -68,7 +68,7 @@ public class BlockingReadStreamTest {
   @Test
   public void testNoHandlerThrowsAwayValues(Vertx vertx, VertxTestContext testContext) throws Exception {
     assertNotNull(vertx);
-    BlockingReadStream<JsonObject> impl = new BlockingReadStream<>(vertx.getOrCreateContext(), 1);    
+    BlockingReadStream<JsonObject> impl = new BlockingReadStream<>(vertx.getOrCreateContext(), 1, new Types());    
     impl.endHandler(v -> {
       // Queue isn't used in this test
       assertEquals(0, impl.size());
@@ -86,7 +86,7 @@ public class BlockingReadStreamTest {
   @Test
   public void testSimpleFlow(Vertx vertx, VertxTestContext testContext) throws Exception {
     assertNotNull(vertx);
-    BlockingReadStream<JsonObject> impl = new BlockingReadStream<>(vertx.getOrCreateContext(), 1);    
+    BlockingReadStream<JsonObject> impl = new BlockingReadStream<>(vertx.getOrCreateContext(), 1, new Types());    
     impl.handler(jo -> logger.debug("testSimpleFlow Received: {}", jo));
     impl.endHandler(v -> {
       // Queue isn't used in this test
@@ -108,7 +108,7 @@ public class BlockingReadStreamTest {
   @Test
   public void testSimpleFlowWithLotsOfResuming(Vertx vertx, VertxTestContext testContext) throws Exception {
     assertNotNull(vertx);
-    BlockingReadStream<JsonObject> impl = new BlockingReadStream<>(vertx.getOrCreateContext(), 1);    
+    BlockingReadStream<JsonObject> impl = new BlockingReadStream<>(vertx.getOrCreateContext(), 1, new Types());    
     impl.handler(jo -> logger.debug("testSimpleFlowWithLotsOfResuming Received: {}", jo));
     impl.endHandler(v -> {
       // Queue isn't used in this test
@@ -132,7 +132,7 @@ public class BlockingReadStreamTest {
   @Test
   public void testSimpleQueuing(Vertx vertx, VertxTestContext testContext) throws Exception {
     assertNotNull(vertx);
-    BlockingReadStream<JsonObject> impl = new BlockingReadStream<>(vertx.getOrCreateContext(), 10);    
+    BlockingReadStream<JsonObject> impl = new BlockingReadStream<>(vertx.getOrCreateContext(), 10, new Types());    
     impl.pause();
     impl.endHandler(v -> {
       // Queue is used, must be empty before end handler is called
@@ -152,7 +152,7 @@ public class BlockingReadStreamTest {
   @Test
   public void testSimpleQueuingThenFetchSome(Vertx vertx, VertxTestContext testContext) throws Exception {
     assertNotNull(vertx);
-    BlockingReadStream<JsonObject> impl = new BlockingReadStream<>(vertx.getOrCreateContext(), 10);    
+    BlockingReadStream<JsonObject> impl = new BlockingReadStream<>(vertx.getOrCreateContext(), 10, new Types());    
     impl.pause();
     impl.handler(jo -> logger.debug("testSimpleQueuingThenFetchSome Received: {}", jo));
     impl.endHandler(v -> {
@@ -180,7 +180,7 @@ public class BlockingReadStreamTest {
   @Test
   public void testPauseResume(Vertx vertx, VertxTestContext testContext) throws Exception {
     assertNotNull(vertx);
-    BlockingReadStream<JsonObject> impl = new BlockingReadStream<>(vertx.getOrCreateContext(), 10);    
+    BlockingReadStream<JsonObject> impl = new BlockingReadStream<>(vertx.getOrCreateContext(), 10, new Types());    
     impl.pause();
     impl.handler(jo -> {
       logger.debug("testPauseResume Received: {} (queue size: {})", jo, impl.size());
@@ -210,7 +210,7 @@ public class BlockingReadStreamTest {
   @Test
   public void testPauseResumeAndBlock(Vertx vertx, VertxTestContext testContext) throws Exception {
     assertNotNull(vertx);
-    BlockingReadStream<JsonObject> impl = new BlockingReadStream<>(vertx.getOrCreateContext(), 4);    
+    BlockingReadStream<JsonObject> impl = new BlockingReadStream<>(vertx.getOrCreateContext(), 4, new Types());    
     impl.pause();
     impl.handler(jo -> {
       logger.debug("testPauseResumeAndBlock Received: {} (queue size: {})", jo, impl.size());

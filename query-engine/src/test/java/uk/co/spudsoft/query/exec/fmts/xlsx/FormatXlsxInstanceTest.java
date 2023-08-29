@@ -94,7 +94,7 @@ public class FormatXlsxInstanceTest {
   }
 
   private DataRow createDataRow(LinkedHashMap<String, DataType> types, int rowNum) {
-    DataRow row = new DataRow(types);
+    DataRow row = DataRow.create(types);
     row.put("Boolean", rowNum % 9 == 0 ? null : (rowNum % 2 == 0 ? Boolean.TRUE : Boolean.FALSE));
     row.put("Date", rowNum % 9 == 1 ? null : LocalDate.of(1971, Month.MAY, 1 + rowNum));
     row.put("DateTime", rowNum % 9 == 2 ? null : LocalDateTime.of(1971, Month.MAY, 1 + rowNum, rowNum, rowNum));

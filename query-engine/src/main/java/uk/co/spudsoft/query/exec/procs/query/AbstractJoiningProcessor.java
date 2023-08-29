@@ -21,7 +21,6 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.core.streams.ReadStream;
 import io.vertx.core.streams.WriteStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +28,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.DataRowStream;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
@@ -61,8 +61,8 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
   private Promise<Void> currentParentPromise;
   private Promise<Void> currentChildPromise;
   
-  private final PassthroughStream<DataRow> parentStream;
-  private final PassthroughStream<DataRow> childStream;
+  private final PassthroughStream parentStream;
+  private final PassthroughStream childStream;
   
   private final List<DataRow> currentChildRows;
   
@@ -78,8 +78,8 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
     this.childIdColumn = childIdColumn;
     this.innerJoin = innerJoin;
     
-    this.parentStream = new PassthroughStream<>(sourceNameTracker, this::parentStreamProcess, context);
-    this.childStream = new PassthroughStream<>(sourceNameTracker, this::childStreamProcess, context);
+    this.parentStream = new PassthroughStream(sourceNameTracker, this::parentStreamProcess, context);
+    this.childStream = new PassthroughStream(sourceNameTracker, this::childStreamProcess, context);
     childStream.readStream().endHandler(v -> {
       logger.info("Child read stream ending");
       synchronized (this) {
@@ -124,7 +124,7 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
       return comparable;
     }
     Map<String, Object> rowAsMap = row.getMap();
-    if (!rowAsMap.containsKey(idField)) {
+    if (rowAsMap != null && !rowAsMap.containsKey(idField)) {
       logger.warn("The row does not contain the ID field {}, is the configuration wrong?  The known fields are {}", idField, rowAsMap.keySet());
     }
     return null;    
@@ -272,7 +272,7 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
   }  
 
   @Override
-  public ReadStream<DataRow> getReadStream() {
+  public DataRowStream<DataRow> getReadStream() {
     return parentStream.readStream();
   }
   

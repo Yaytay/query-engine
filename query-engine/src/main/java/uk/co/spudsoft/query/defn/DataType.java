@@ -17,6 +17,8 @@
 package uk.co.spudsoft.query.defn;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.vertx.sqlclient.desc.ColumnDescriptor;
+import java.sql.JDBCType;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -32,20 +34,27 @@ import java.time.LocalTime;
 )
 public enum DataType {
 
-  Integer
-  , Long
-  , Float
-  , Double
-  , String
-  , Boolean
-  , Date
-  , DateTime
-  , Time
+  Integer(JDBCType.INTEGER)
+  , Long(JDBCType.BIGINT)
+  , Float(JDBCType.FLOAT)
+  , Double(JDBCType.DOUBLE)
+  , String(JDBCType.NVARCHAR)
+  , Boolean(JDBCType.BOOLEAN)
+  , Date(JDBCType.DATE)
+  , DateTime(JDBCType.TIMESTAMP)
+  , Time(JDBCType.TIME)
+  , Null(JDBCType.NULL)
   ;
+  
+  private final JDBCType jdbcType;
+
+  DataType(JDBCType jdbcType) {
+    this.jdbcType = jdbcType;
+  }
   
   public static DataType fromObject(Object value) {
     if (value == null) {
-      return null;
+      return Null;
     } else if (value instanceof Integer) {
       return Integer;
     } else if (value instanceof Long) {
@@ -67,6 +76,97 @@ public enum DataType {
     } else {
       throw new IllegalArgumentException("Unhandled value type: " + value.getClass());
     }
+  }
+
+  public static DataType fromJdbcType(JDBCType jdbcType) {
+    switch (jdbcType) {
+      case BOOLEAN:
+        return Boolean;
+      case BIT:
+      case TINYINT:
+      case SMALLINT:
+      case INTEGER:
+        return Integer;
+      case BIGINT:
+        return Long;
+      case FLOAT:
+        return Float;
+      case REAL:
+      case DOUBLE:
+      case NUMERIC:
+      case DECIMAL:
+        return Double;
+      case CHAR:
+      case VARCHAR:
+      case LONGVARCHAR:
+      case CLOB:
+      case NCHAR:
+      case NVARCHAR:
+      case LONGNVARCHAR:
+      case NCLOB:
+        return String;
+      case DATE:
+        return Date;
+      case TIME:
+      case TIME_WITH_TIMEZONE:
+        return Time;
+      case TIMESTAMP:
+      case TIMESTAMP_WITH_TIMEZONE:
+        return DateTime;
+      case NULL:
+        return Null;
+      case BINARY:
+      case VARBINARY:
+      case LONGVARBINARY:
+      case OTHER:
+      case JAVA_OBJECT:
+      case DISTINCT:
+      case STRUCT:
+      case ARRAY:
+      case BLOB:
+      case REF:
+      case DATALINK:
+      case ROWID:
+      case SQLXML:
+      default:
+        throw new IllegalArgumentException("Cannot process fields of type " + jdbcType.getName());
+    }
+  }
+  
+  private static class DataTypeDescriptor implements ColumnDescriptor {
+    
+    private final String name;
+    private final DataType dataType;
+
+    DataTypeDescriptor(String name, DataType dataType) {
+      this.name = name;
+      this.dataType = dataType;
+    }
+
+    @Override
+    public String name() {
+      return name;
+    }
+
+    @Override
+    public boolean isArray() {
+      return false;
+    }
+
+    @Override
+    public String typeName() {
+      return dataType.name();
+    }
+
+    @Override
+    public JDBCType jdbcType() {
+      return dataType.jdbcType;
+    }
+    
+  }
+  
+  public ColumnDescriptor toColumnDescriptor(String columnName) {
+    return new DataTypeDescriptor(columnName, this);
   }
   
 }

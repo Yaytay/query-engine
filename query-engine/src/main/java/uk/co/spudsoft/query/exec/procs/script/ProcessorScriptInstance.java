@@ -21,7 +21,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.streams.ReadStream;
 import io.vertx.core.streams.WriteStream;
 import java.time.ZoneId;
 import java.util.function.BiFunction;
@@ -36,6 +35,7 @@ import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.DataRowStream;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.procs.AsyncHandler;
 import uk.co.spudsoft.query.exec.procs.PassthroughStream;
@@ -55,7 +55,7 @@ public class ProcessorScriptInstance implements ProcessorInstance {
   private final SourceNameTracker sourceNameTracker;
   private final Context context;
   private final ProcessorScript definition;
-  private final PassthroughStream<DataRow> stream;
+  private final PassthroughStream stream;
   
   private Engine engine;
   
@@ -67,7 +67,7 @@ public class ProcessorScriptInstance implements ProcessorInstance {
     this.sourceNameTracker = sourceNameTracker;
     this.context = context;
     this.definition = definition;
-    this.stream = new PassthroughStream<>(sourceNameTracker, this::passthroughStreamProcessor, context);    
+    this.stream = new PassthroughStream(sourceNameTracker, this::passthroughStreamProcessor, context);    
     stream.endHandler(v -> {
       if (engine != null) {
         engine.close();
@@ -194,7 +194,7 @@ public class ProcessorScriptInstance implements ProcessorInstance {
   }
 
   @Override
-  public ReadStream<DataRow> getReadStream() {
+  public DataRowStream<DataRow> getReadStream() {
     return stream.readStream();
   }
 

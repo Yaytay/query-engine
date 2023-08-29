@@ -16,7 +16,6 @@
  */
 package uk.co.spudsoft.query.exec;
 
-import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.defn.DataType;
 import com.google.common.collect.ImmutableMap;
 import io.vertx.core.json.JsonObject;
@@ -35,9 +34,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  */
 public class DataRowTest {
   
-  private final DataRow create() {
+  private DataRow create() {
     LinkedHashMap<String, DataType> types = new LinkedHashMap<>(10);
-    return new DataRow(types)
+    return DataRow.create(types)
             .put("nullValue", null)
             .put("intValue", 7)
             .put("longValue", 1L << 40)
@@ -120,7 +119,7 @@ public class DataRowTest {
   @Test
   public void testConvertPut() {
     LinkedHashMap<String, DataType> types = new LinkedHashMap<>(10);
-    DataRow row = new DataRow(types)
+    DataRow row = DataRow.create(types)
             .convertPut("nullValue", null)
             .convertPut("intValue", 7)
             .convertPut("longValue", 1L << 40)

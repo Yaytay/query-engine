@@ -25,7 +25,6 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.impl.headers.HeadersMultiMap;
-import io.vertx.core.streams.ReadStream;
 import io.vertx.core.streams.WriteStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -159,7 +158,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     }
   }
   
-  private void buildPipes(Promise<Void> finalPromise, ReadStream<DataRow> previousReadStream, Iterator<ProcessorInstance> iter, WriteStream<DataRow> finalWriteStream) {
+  private void buildPipes(Promise<Void> finalPromise, DataRowStream<DataRow> previousReadStream, Iterator<ProcessorInstance> iter, WriteStream<DataRow> finalWriteStream) {
     if (iter.hasNext()) {
       ProcessorInstance processor = iter.next();
       previousReadStream.pipeTo(processor.getWriteStream());

@@ -19,13 +19,13 @@ package uk.co.spudsoft.query.exec.sources.test;
 import com.google.common.base.Strings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.streams.ReadStream;
-import java.util.LinkedHashMap;
 import uk.co.spudsoft.query.defn.SourceTest;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.defn.DataType;
+import uk.co.spudsoft.query.exec.DataRowStream;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
+import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.sources.AbstractSource;
 
 /**
@@ -35,18 +35,18 @@ import uk.co.spudsoft.query.exec.sources.AbstractSource;
 public class SourceTestInstance extends AbstractSource {
 
   private final int rowCount;
-  private final LinkedHashMap<String, DataType> types;
+  private final Types types;
   private final BlockingReadStream<DataRow> stream;
 
   public SourceTestInstance(Context context, SourceTest definition, String defaultName) {
     super(Strings.isNullOrEmpty(definition.getName()) ? defaultName : definition.getName());
     this.rowCount = definition.getRowCount();
-    this.types = new LinkedHashMap<>(1);
-    this.types.put("value", DataType.Integer);
+    this.types = new Types();
+    this.types.putIfAbsent("value", DataType.Integer);
     if (!Strings.isNullOrEmpty(getName())) {
-      types.put("name", DataType.String);
+      types.putIfAbsent("name", DataType.String);
     }
-    this.stream = new BlockingReadStream<>(context, rowCount);
+    this.stream = new BlockingReadStream<>(context, rowCount, types);
   }    
  
   @Override
@@ -54,7 +54,7 @@ public class SourceTestInstance extends AbstractSource {
     stream.pause();
     try {
       for (int i = 0; i < rowCount; ++i) {
-        DataRow data = new DataRow(types);
+        DataRow data = DataRow.create(types);
         data.put("value", i);
         if (!Strings.isNullOrEmpty(getName())) {
           data.put("name", getName());
@@ -69,7 +69,7 @@ public class SourceTestInstance extends AbstractSource {
   }
 
   @Override
-  public ReadStream<DataRow> getReadStream() {
+  public DataRowStream<DataRow> getReadStream() {
     return stream;
   }
 }

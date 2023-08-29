@@ -129,7 +129,7 @@ public interface Format {
    * Note that the context passed in to this method may not be the same as that returned by vertx.getOrCreateContext.
    * @param vertx The Vertx instance that will be used for the data processing.
    * @param context The Vertx context that will be used for this format.
-   * @param writeStream 
+   * @param writeStream The write stream that will contain the result.
    * @return a newly created FormatInstance object that will be used for processing the pipeline format.
    */
   @JsonIgnore

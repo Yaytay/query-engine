@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -38,15 +39,30 @@ import java.util.function.Consumer;
  */
 public class DataRow {
   
-  private final LinkedHashMap<String, DataType> types;
-  private final LinkedHashMap<String, Object> data = new LinkedHashMap<>();
+  private final Types types;
+  private final LinkedHashMap<String, Object> data;
 
-  public static final DataRow EMPTY_ROW = new DataRow(new LinkedHashMap<>());
+  public static final DataRow EMPTY_ROW = new DataRow(new Types(), new LinkedHashMap<>());
   
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "It is expected that the types map change between instances of the DataRow")
-  public DataRow(LinkedHashMap<String, DataType> types) {
+  private DataRow(Types types, LinkedHashMap<String, Object> data) {
+    Objects.requireNonNull(types);
+    Objects.requireNonNull(data);
     this.types = types;
+    this.data = data;
   }
+  
+  public static DataRow create(Types types) {
+    return new DataRow(types, new LinkedHashMap<>());
+  }
+
+  public static DataRow create(LinkedHashMap<String, DataType> types) {
+    return new DataRow(new Types(types), new LinkedHashMap<>());
+  }
+
+//  public static DataRow createNonRow(Types types) {
+//    return new DataRow(types, null);
+//  }
 
   public JsonObject toJson() {
     JsonObject json = new JsonObject();
@@ -68,7 +84,7 @@ public class DataRow {
   }
 
   public int size() {
-    return data.size();
+    return data == null ? 0 : data.size();
   }
   
   public void forEach(BiConsumer<? super String, ? super Object> action) {

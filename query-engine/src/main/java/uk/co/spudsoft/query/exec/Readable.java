@@ -16,8 +16,6 @@
  */
 package uk.co.spudsoft.query.exec;
 
-import io.vertx.core.streams.ReadStream;
-
 /**
  *
  * @author jtalbut
@@ -26,8 +24,8 @@ public interface Readable {
   
   /**
    * Return the read stream that will output the data.
-   * @return the write stream that will output the data.
+   * @return the read stream that will output the data.
    */
-  ReadStream<DataRow> getReadStream();
+  DataRowStream<DataRow> getReadStream();
   
 }

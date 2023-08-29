@@ -16,11 +16,17 @@
  */
 package uk.co.spudsoft.query.exec.sources.test;
 
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.streams.ReadStream;
+import io.vertx.sqlclient.desc.ColumnDescriptor;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import uk.co.spudsoft.query.exec.DataRowStream;
+import uk.co.spudsoft.query.exec.Types;
 
 /**
  * The BlockingReadStream implements QueryProcessor (which is just ReadStream&lt;T>) using a BlockingQueue.This is designed specifically for SQL queries that feed data as a (non-reactive) collector.
@@ -35,8 +41,9 @@ import java.util.concurrent.BlockingQueue;
  * @author jtalbut
  * @param <T> The type of item processed by the ReadStream (usually JsonObject).
  */
-public class BlockingReadStream<T> implements ReadStream<T> {
+public class BlockingReadStream<T> implements DataRowStream<T> {
 
+  private final Types types;
   private final BlockingQueue<T> queue;
 
   /**
@@ -76,6 +83,11 @@ public class BlockingReadStream<T> implements ReadStream<T> {
    * As soon as the queue is empty after ended is set to true the endHandler will be called.
    */
   private boolean ended;
+  
+  /**
+   * When true the read stream has been closed and no further callbacks will be called.
+   */
+  private boolean closed;
 
   /**
    * Runnable for draining the queue.
@@ -87,8 +99,9 @@ public class BlockingReadStream<T> implements ReadStream<T> {
    * 
    * @param context The vertx context upon which the handler will be called when processing a backlog of items.
    * @param queueSize The maximum size of the queue of items to be processed.
+   * @param types The types of the columns in the stream.
    */
-  public BlockingReadStream(Context context, int queueSize) {
+  public BlockingReadStream(Context context, int queueSize, Types types) {
     if (queueSize <= 0) {
       throw new IllegalArgumentException("queueSize (" + queueSize + ") must be >= 1");
     }
@@ -96,6 +109,7 @@ public class BlockingReadStream<T> implements ReadStream<T> {
     this.demand = Long.MAX_VALUE;
     // Capture the context runner rather that storing the context itself to avoid EI_EXPOSE_REP2.
     this.runOnContext = h -> context.runOnContext(h);
+    this.types = types;
   }
   
   /**
@@ -119,7 +133,7 @@ public class BlockingReadStream<T> implements ReadStream<T> {
    * @return this.
    */
   @Override
-  public ReadStream<T> exceptionHandler(Handler<Throwable> handler) {
+  public DataRowStream<T> exceptionHandler(Handler<Throwable> handler) {
     synchronized (this) {
       this.exceptionHandler = handler;
     }
@@ -135,7 +149,7 @@ public class BlockingReadStream<T> implements ReadStream<T> {
    * @return this.
    */
   @Override
-  public ReadStream<T> handler(Handler<T> handler) {
+  public DataRowStream<T> handler(Handler<T> handler) {
     synchronized (this) {
       this.itemHandler = handler;
     }
@@ -149,7 +163,7 @@ public class BlockingReadStream<T> implements ReadStream<T> {
    * @return this.
    */
   @Override
-  public ReadStream<T> endHandler(Handler<Void> handler) {
+  public DataRowStream<T> endHandler(Handler<Void> handler) {
     synchronized (this) {
       this.endHandler = handler;
     }
@@ -277,7 +291,7 @@ public class BlockingReadStream<T> implements ReadStream<T> {
   }
 
   private void handleEvent(Handler<T> handler, T element) {
-    if (handler != null) {
+    if (handler != null && !closed) {
       try {
         handler.handle(element);
       } catch (Throwable ex) {
@@ -295,7 +309,7 @@ public class BlockingReadStream<T> implements ReadStream<T> {
   }  
 
   @Override
-  public ReadStream<T> pause() {
+  public DataRowStream<T> pause() {
     synchronized (this) {
       demand = 0L;
     }
@@ -303,12 +317,12 @@ public class BlockingReadStream<T> implements ReadStream<T> {
   }
 
   @Override
-  public ReadStream<T> resume() {
+  public DataRowStream<T> resume() {
     return fetch(Long.MAX_VALUE);
   }
 
   @Override
-  public ReadStream<T> fetch(long amount) {
+  public DataRowStream<T> fetch(long amount) {
     if (amount < 0L) {
       throw new IllegalArgumentException();
     }
@@ -324,9 +338,23 @@ public class BlockingReadStream<T> implements ReadStream<T> {
     }
     return this;
   }
-  
-  
-   
-    
+
+  @Override
+  public List<ColumnDescriptor> getColumnDescriptors() {
+    return types.getColumnDescriptors();
+  }
+
+  @Override
+  public Future<Void> close() {
+    synchronized (this) {
+      closed = true;
+    }
+    return Future.succeededFuture();
+  }
+
+  @Override
+  public void close(Handler<AsyncResult<Void>> completionHandler) {
+    close().andThen(completionHandler);
+  }
   
 }

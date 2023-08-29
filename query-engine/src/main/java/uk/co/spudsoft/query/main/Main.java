@@ -532,7 +532,7 @@ public class Main extends Application {
             int idx = destUrl.indexOf(":");
             if (idx > 0) {
               String scheme = destUrl.substring(0, idx);
-              fileContents = fileContents.replaceAll(scheme + "://localhost:\\d+/test", destUrl);
+              fileContents = fileContents.replaceAll(scheme + "://localhost:[0-9]+/test", destUrl);
             }
           }
         }

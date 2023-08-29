@@ -42,7 +42,7 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
   public FormattingWriteStream(
           WriteStream<Buffer> outputStream
           , AsyncHandler<Void> initialize
-          , AsyncHandler<uk.co.spudsoft.query.exec.DataRow> process
+          , AsyncHandler<DataRow> process
           , AsyncHandler<Long> terminate
   ) {
     this.outputStream = outputStream;

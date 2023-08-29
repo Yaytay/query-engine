@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package uk.co.spudsoft.query.sandbox;
+package uk.co.spudsoft.query.main;
 
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
@@ -29,12 +29,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.main.Main;
 import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
 
@@ -69,7 +68,6 @@ public class FeatureRichQueryIT {
   public void testQuery() throws Exception {
     Main main = new Main();
     String baseConfigDir = "target/query-engine/samples-featurerichqueryit";
-    Main.prepareBaseConfigPath(new File(baseConfigDir), null);
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
@@ -117,16 +115,18 @@ public class FeatureRichQueryIT {
     
     body = given()
             .queryParam("minDate", "1971-05-06")
+            .queryParam("maxId", "20")
             .queryParam("_fmt", "tab")
             .accept("text/html")
             .log().all()
             .get("/query/demo/FeatureRichExample")
             .then()
-            .log().ifError()
+            .log().all()
             .statusCode(200)
             .extract().body().asString();
     
     assertThat(body, startsWith("\"dataId\"\t\"instant\""));
+    assertThat(body, not(containsString("\t\t\t\t\t\t\t")));
     
     body = given()
             .queryParam("minDate", "2971-05-06")

@@ -75,12 +75,12 @@ public class ProcessorGroupConcatInstanceTest {
   
   @Test
   public void testNullchild(Vertx vertx) {
-    DataRow parent = new DataRow(new LinkedHashMap<>());
+    DataRow parent = DataRow.create(new LinkedHashMap<>());
     LinkedHashMap<String, DataType> childTypes = new LinkedHashMap<>();
     List<DataRow> children = Arrays.asList(
-            new DataRow(childTypes).put("value", 1)
-            , new DataRow(childTypes).put("value", null)
-            , new DataRow(childTypes).put("value", 3)
+            DataRow.create(childTypes).put("value", 1)
+            , DataRow.create(childTypes).put("value", null)
+            , DataRow.create(childTypes).put("value", 3)
     );
     ProcessorGroupConcat definition = ProcessorGroupConcat.builder()
             .childValueColumn("value")
@@ -94,9 +94,9 @@ public class ProcessorGroupConcatInstanceTest {
 
     assertNull(instance.getId(null, "id"));
     LinkedHashMap<String, DataType> types = new LinkedHashMap<>();
-    assertEquals(17L, instance.getId(new DataRow(types).put("id", 17L), "id"));
-    assertNull(instance.getId(new DataRow(types).put("id", null), "id"));
-    assertNull(instance.getId(new DataRow(types).put("id", 17L), "notId"));
+    assertEquals(17L, instance.getId(DataRow.create(types).put("id", 17L), "id"));
+    assertNull(instance.getId(DataRow.create(types).put("id", null), "id"));
+    assertNull(instance.getId(DataRow.create(types).put("id", 17L), "notId"));
   }
   
   @Test

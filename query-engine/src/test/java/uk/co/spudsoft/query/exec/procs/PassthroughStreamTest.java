@@ -72,7 +72,7 @@ public class PassthroughStreamTest {
       instance.end();
       return Future.succeededFuture();
     } else {
-      DataRow data = new DataRow(types);
+      DataRow data = DataRow.create(types);
       data.put("value", value);
       if (instance.writeQueueFull()) {
         Promise<Void> promise = Promise.promise();
@@ -106,7 +106,7 @@ public class PassthroughStreamTest {
     logger.info("testQuickProcessor");
     vertx.getOrCreateContext().runOnContext(v -> {
       long start = System.currentTimeMillis();
-      PassthroughStream<DataRow> instance = new PassthroughStream<>(ctx -> {}
+      PassthroughStream instance = new PassthroughStream(ctx -> {}
               ,
               (row, chain) -> {
                 return chain.handle(row);
@@ -145,7 +145,7 @@ public class PassthroughStreamTest {
     logger.info("testSlowReader");
     vertx.getOrCreateContext().runOnContext(v -> {
       long start = System.currentTimeMillis();
-      PassthroughStream<DataRow> instance = new PassthroughStream<>(ctx -> {}
+      PassthroughStream instance = new PassthroughStream(ctx -> {}
               ,
               (row, chain) -> {
                 return chain.handle(row);
@@ -189,7 +189,7 @@ public class PassthroughStreamTest {
     logger.info("testBadReader");
     vertx.getOrCreateContext().runOnContext(v -> {
       long start = System.currentTimeMillis();
-      PassthroughStream<DataRow> instance = new PassthroughStream<>(ctx -> {}
+      PassthroughStream instance = new PassthroughStream(ctx -> {}
               ,
               (row, chain) -> {
                 return chain.handle(row);
@@ -228,7 +228,7 @@ public class PassthroughStreamTest {
     logger.info("testBadReaderWithoutExceptionHandler");
     vertx.getOrCreateContext().runOnContext(v -> {
       long start = System.currentTimeMillis();
-      PassthroughStream<DataRow> instance = new PassthroughStream<>(ctx -> {}
+      PassthroughStream instance = new PassthroughStream(ctx -> {}
               ,
               (row, chain) -> {
                 return chain.handle(row);
@@ -263,7 +263,7 @@ public class PassthroughStreamTest {
     logger.info("testSlowProcessor");
     vertx.getOrCreateContext().runOnContext(v -> {
       long start = System.currentTimeMillis();
-      PassthroughStream<DataRow> instance = new PassthroughStream<>(ctx -> {}
+      PassthroughStream instance = new PassthroughStream(ctx -> {}
               ,
               (row, chain) -> {
                 Promise<Void> promise = Promise.promise();
@@ -307,7 +307,7 @@ public class PassthroughStreamTest {
     logger.info("testNoChainProcessor");
     vertx.getOrCreateContext().runOnContext(v -> {
       long start = System.currentTimeMillis();
-      PassthroughStream<DataRow> instance = new PassthroughStream<>(ctx -> {}
+      PassthroughStream instance = new PassthroughStream(ctx -> {}
               ,
               (row, chain) -> {
                 return Future.succeededFuture();
@@ -346,7 +346,7 @@ public class PassthroughStreamTest {
     logger.info("testBadProcessor");
     vertx.getOrCreateContext().runOnContext(v -> {
       long start = System.currentTimeMillis();
-      PassthroughStream<DataRow> instance = new PassthroughStream<>(ctx -> {}
+      PassthroughStream instance = new PassthroughStream(ctx -> {}
               ,
               (row, chain) -> {
                 return Future.failedFuture("It didn't work");
@@ -397,7 +397,7 @@ public class PassthroughStreamTest {
     logger.info("testVeryBadProcessor");
     vertx.getOrCreateContext().runOnContext(v -> {
       long start = System.currentTimeMillis();
-      PassthroughStream<DataRow> instance = new PassthroughStream<>(ctx -> {}
+      PassthroughStream instance = new PassthroughStream(ctx -> {}
               ,
               (row, chain) -> {
                 throw new IllegalStateException("Very bad");
@@ -445,7 +445,7 @@ public class PassthroughStreamTest {
     logger.info("testVeryBadProcessorWithoutExceptionHandler");
     vertx.getOrCreateContext().runOnContext(v -> {
       long start = System.currentTimeMillis();
-      PassthroughStream<DataRow> instance = new PassthroughStream<>(ctx -> {}
+      PassthroughStream instance = new PassthroughStream(ctx -> {}
               ,
               (row, chain) -> {
                 throw new IllegalStateException("Very bad");
@@ -485,7 +485,7 @@ public class PassthroughStreamTest {
 
   @Test
   public void basicCoverageChecks() {
-    PassthroughStream<DataRow> instance = new PassthroughStream<>(ctx -> {}, (d,c) -> Future.succeededFuture(), null);
+    PassthroughStream instance = new PassthroughStream(ctx -> {}, (d,c) -> Future.succeededFuture(), null);
     try {
       instance.writeStream().setWriteQueueMaxSize(0);
       fail("Expected UnsupportedOperationException");
@@ -494,7 +494,7 @@ public class PassthroughStreamTest {
     instance.readStream().pause().resume().resume();
     
     instance.readStream().pause();
-    instance.writeStream().write(new DataRow(types));
+    instance.writeStream().write(DataRow.create(types));
     
     instance.readStream().endHandler(null);
     instance.writeStream().end();
@@ -502,7 +502,7 @@ public class PassthroughStreamTest {
     assertTrue(instance.writeStream().writeQueueFull());
     
     try {
-      instance.writeStream().write(new DataRow(types));
+      instance.writeStream().write(DataRow.create(types));
       fail("Expected IllegalStateException");
     } catch (IllegalStateException ex) {
     }

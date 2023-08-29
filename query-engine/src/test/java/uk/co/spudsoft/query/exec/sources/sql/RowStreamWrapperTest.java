@@ -19,9 +19,12 @@ package uk.co.spudsoft.query.exec.sources.sql;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowStream;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Transaction;
+import io.vertx.sqlclient.desc.ColumnDescriptor;
+import java.sql.JDBCType;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -32,8 +35,10 @@ import uk.co.spudsoft.query.exec.DataRow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import uk.co.spudsoft.query.defn.DataType;
 
 /**
  *
@@ -47,8 +52,8 @@ public class RowStreamWrapperTest {
   @Test
   public void testPause() {
     @SuppressWarnings("unchecked")
-    RowStream<Row> target = mock(RowStream.class);
-    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, null, null, target);
+    MetadataRowStreamImpl target = mock(MetadataRowStreamImpl.class);
+    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, null, null, null, target);
     instance.pause();
     verify(target).pause();
   }
@@ -56,8 +61,8 @@ public class RowStreamWrapperTest {
   @Test
   public void testResume() {
     @SuppressWarnings("unchecked")
-    RowStream<Row> target = mock(RowStream.class);
-    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, null, null, target);
+    MetadataRowStreamImpl target = mock(MetadataRowStreamImpl.class);
+    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, null, null, null, target);
     instance.resume();
     verify(target).resume();
   }
@@ -65,8 +70,8 @@ public class RowStreamWrapperTest {
   @Test
   public void testFetch() {
     @SuppressWarnings("unchecked")
-    RowStream<Row> target = mock(RowStream.class);
-    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, null, null, target);
+    MetadataRowStreamImpl target = mock(MetadataRowStreamImpl.class);
+    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, null, null, null, target);
     instance.fetch(12);
     verify(target).fetch(12);
   }
@@ -74,8 +79,8 @@ public class RowStreamWrapperTest {
   @Test
   public void testHandlerWithoutExceptionHandler() {
     @SuppressWarnings("unchecked")
-    RowStream<Row> target = mock(RowStream.class);
-    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, null, null, target);
+    MetadataRowStreamImpl target = mock(MetadataRowStreamImpl.class);
+    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, null, null, null, target);
     @SuppressWarnings("unchecked")
     ArgumentCaptor<Handler<Row>> handlerCaptor = ArgumentCaptor.forClass(Handler.class);
     instance.handler((DataRow jo) -> {
@@ -89,8 +94,8 @@ public class RowStreamWrapperTest {
   @Test
   public void testHandlerWithExceptionHandler() {
     @SuppressWarnings("unchecked")
-    RowStream<Row> target = mock(RowStream.class);
-    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, null, null, target);
+    MetadataRowStreamImpl target = mock(MetadataRowStreamImpl.class);
+    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, null, null, null, target);
     @SuppressWarnings("unchecked")
     ArgumentCaptor<Handler<Row>> handlerCaptor = ArgumentCaptor.forClass(Handler.class);
     AtomicBoolean called = new AtomicBoolean();
@@ -110,11 +115,11 @@ public class RowStreamWrapperTest {
   @Test
   public void testHandlerWithEndHandler() {
     @SuppressWarnings("unchecked")
-    RowStream<Row> target = mock(RowStream.class);    
+    MetadataRowStreamImpl target = mock(MetadataRowStreamImpl.class);    
     Transaction transaction = mock(Transaction.class);
     SqlConnection connection = mock(SqlConnection.class);
     when (connection.close()).thenReturn(Future.succeededFuture());
-    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, connection, transaction, target);
+    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, connection, transaction, null, target);
     @SuppressWarnings("unchecked")
     ArgumentCaptor<Handler<Void>> handlerCaptor = ArgumentCaptor.forClass(Handler.class);
     when(target.close()).thenReturn(Future.succeededFuture());
@@ -129,11 +134,11 @@ public class RowStreamWrapperTest {
   @Test
   public void testHandlerWithEndHandlerAndBadTransaction() {
     @SuppressWarnings("unchecked")
-    RowStream<Row> target = mock(RowStream.class);    
+    MetadataRowStreamImpl target = mock(MetadataRowStreamImpl.class);    
     Transaction transaction = mock(Transaction.class);
     SqlConnection connection = mock(SqlConnection.class);
     when (connection.close()).thenReturn(Future.succeededFuture());
-    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, connection, transaction, target);
+    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, connection, transaction, null, target);
     @SuppressWarnings("unchecked")
     ArgumentCaptor<Handler<Void>> handlerCaptor = ArgumentCaptor.forClass(Handler.class);
     when(target.close()).thenReturn(Future.succeededFuture());
@@ -148,4 +153,34 @@ public class RowStreamWrapperTest {
     instance.handler(null);
   }
   
+  @Test
+  public void testClose() {
+    MetadataRowStreamImpl rowStream = mock(MetadataRowStreamImpl.class);
+    RowStreamWrapper wrapper = new RowStreamWrapper(null, null, null, null, rowStream);
+    wrapper.close();
+    verify(rowStream, times(1)).close();
+  }
+  
+  @Test
+  public void testGetColumnDescriptors() {
+    MetadataRowStreamImpl target = mock(MetadataRowStreamImpl.class);    
+    Transaction transaction = mock(Transaction.class);
+    SqlConnection connection = mock(SqlConnection.class);
+    List<ColumnDescriptor> inputs = Arrays.asList(
+            DataType.Boolean.toColumnDescriptor("one")
+            , DataType.String.toColumnDescriptor("two")
+            , DataType.Double.toColumnDescriptor("three")
+    );
+    when (target.getColumnDescriptors()).thenReturn(inputs);
+    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, connection, transaction, null, target);
+
+    List<ColumnDescriptor> columnDescriptors = instance.getColumnDescriptors();
+    assertEquals(3, columnDescriptors.size());
+    assertEquals("one", columnDescriptors.get(0).name());
+    assertEquals("two", columnDescriptors.get(1).name());
+    assertEquals("three", columnDescriptors.get(2).name());
+    assertEquals(JDBCType.BOOLEAN, columnDescriptors.get(0).jdbcType());
+    assertEquals(JDBCType.NVARCHAR, columnDescriptors.get(1).jdbcType());
+    assertEquals(JDBCType.DOUBLE, columnDescriptors.get(2).jdbcType());
+  }
 }

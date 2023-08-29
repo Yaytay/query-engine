@@ -1,0 +1,37 @@
+description: Test pipeline that returns no rows
+arguments:
+  - name: key
+    title: DataSource Key
+    prompt: key
+    description: The DataSource to use.
+    type: String
+    possibleValues: 
+    - value: MS SQL Server
+    - value: MySQL
+    - value: PostgreSQL
+  - name: port
+    type: Integer
+sourceEndpoints:
+  MS SQL Server:
+    type: SQL
+    urlTemplate: "sqlserver://localhost:<port>/test"
+    username: sa
+    password: T0p-secret
+  MySQL:
+    type: SQL
+    urlTemplate: "mysql://localhost:<port>/test"
+    username: user
+    password: T0p-secret
+  PostgreSQL:
+    type: SQL
+    urlTemplate: "postgresql://localhost:<port>/test"
+    username: postgres
+    password: T0p-secret
+source:
+  type: SQL
+  endpointTemplate: "<key>"
+  streamingFetchSize: 7
+  replaceDoubleQuotes: true
+  query: select * from "Colours" where name = 'invisible'
+formats:
+- type: HTML

@@ -16,5 +16,7 @@ source:
     from 
       "ManyData" m 
       join "RefData" r on r."refId" = m."refId"
+    order by
+      value
 formats:
 - type: JSON

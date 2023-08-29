@@ -16,10 +16,8 @@
  */
 package uk.co.spudsoft.query.exec.sources;
 
-import uk.co.spudsoft.query.exec.sources.AbstractSource;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.streams.ReadStream;
 import org.junit.jupiter.api.Test;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
@@ -29,6 +27,7 @@ import uk.co.spudsoft.query.exec.SourceInstance;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import uk.co.spudsoft.query.exec.DataRowStream;
 
 /**
  *
@@ -58,7 +57,7 @@ public class AbstractSourceTest {
     }
 
     @Override
-    public ReadStream<DataRow> getReadStream() {
+    public DataRowStream<DataRow> getReadStream() {
       throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
     

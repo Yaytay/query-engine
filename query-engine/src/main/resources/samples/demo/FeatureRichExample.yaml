@@ -80,7 +80,7 @@ processors:
 - type: DYNAMIC_FIELD
   innerJoin: false
   parentIdColumn: dataId
-  fieldColumnColumn: valuefield
+  fieldColumnColumn: valueField
   valuesParentIdColumn: dataId
   valuesFieldIdColumn: fieldId
   fieldDefns: 
@@ -98,7 +98,7 @@ processors:
       replaceDoubleQuotes: true  
       query:  select dataId, "fieldId", "dateValue", "timeValue", "dateTimeValue", "longValue", "doubleValue", "boolValue", "textValue" from "FieldValues" order by "dataId", "fieldId"
 - type: LIMIT
-  limit: 13
+  limit: 1000
 formats:
 - type: JSON
 - type: XLSX

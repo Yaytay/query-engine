@@ -17,50 +17,57 @@
 package uk.co.spudsoft.query.exec.sources.sql;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.streams.ReadStream;
+import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowStream;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Transaction;
-import java.util.LinkedHashMap;
+import io.vertx.sqlclient.desc.ColumnDescriptor;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.defn.DataType;
+import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.DataRowStream;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
+import uk.co.spudsoft.query.exec.Types;
 
 
 /**
  *
  * @author jtalbut
  */
-public class RowStreamWrapper implements ReadStream<DataRow> {
+public class RowStreamWrapper implements DataRowStream<DataRow> {
   
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(RowStreamWrapper.class);
   
   private final SourceNameTracker sourceNameTracker;
-  private final RowStream<Row> rowStream;
+  private final DataRowStream<Row> rowStream;
   private final SqlConnection connection;
   private final Transaction transaction;
-  private Handler<Throwable> exceptionHandler;
-  private final LinkedHashMap<String, DataType> types;
+  private final PreparedStatement preparedStatement;
+  private final Types types;
 
+  private Handler<Throwable> exceptionHandler;
+  private Handler<DataRow> handler;
+  
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
-  public RowStreamWrapper(SourceNameTracker sourceNameTracker, SqlConnection connection, Transaction transaction, RowStream<Row> rowStream) {
+  public RowStreamWrapper(SourceNameTracker sourceNameTracker, SqlConnection connection, Transaction transaction, PreparedStatement preparedStatement, MetadataRowStreamImpl rowStream) {
     this.sourceNameTracker = sourceNameTracker;
     this.connection = connection;
     this.transaction = transaction;
+    this.preparedStatement = preparedStatement;
     this.rowStream = rowStream;
-    this.types = new LinkedHashMap<>(1);
+    this.types = new Types();
   }
 
   @Override
-  public ReadStream<DataRow> exceptionHandler(Handler<Throwable> handler) {
+  public DataRowStream<DataRow> exceptionHandler(Handler<Throwable> handler) {
     this.exceptionHandler = handler;
     rowStream.exceptionHandler(ex -> {
       sourceNameTracker.addNameToContextLocalData(Vertx.currentContext());
@@ -71,21 +78,22 @@ public class RowStreamWrapper implements ReadStream<DataRow> {
   }
   
   @Override
-  public ReadStream<DataRow> handler(Handler<DataRow> handler) {
+  public DataRowStream<DataRow> handler(Handler<DataRow> handler) {
     sourceNameTracker.addNameToContextLocalData(Vertx.currentContext());
     logger.trace("handler({})", handler);
+    this.handler = handler;
     if (handler == null) {
       // When rowStream.handler is called with a non-null handler it will always handle the currently in-memory rows
       // So must not pass in a 'debug' handler here.
       rowStream.handler(null);
-    } else {
+    } else {      
       rowStream.handler(row -> {
         try {
           Context context = Vertx.currentContext();
           logger.trace("RowStream context: {}", context);
-          DataRow json = sqlRowToDataRow(row);
-          logger.trace("{} Received row: {}", this, json);
-          handler.handle(json);
+          DataRow dataRow = sqlRowToDataRow(row);
+          logger.trace("{} Received row: {}", this, dataRow);
+          handler.handle(dataRow);
         } catch (Throwable ex) {
           if (exceptionHandler != null) {
             exceptionHandler.handle(ex);
@@ -97,7 +105,7 @@ public class RowStreamWrapper implements ReadStream<DataRow> {
   }
   
   private DataRow sqlRowToDataRow(Row row) {
-    DataRow result = new DataRow(types);
+    DataRow result = DataRow.create(types);
     int size = row.size();
     for (int col = 0; col < size; col++) {
       String name = row.getColumnName(col);
@@ -109,7 +117,7 @@ public class RowStreamWrapper implements ReadStream<DataRow> {
   }
   
   @Override
-  public ReadStream<DataRow> pause() {
+  public DataRowStream<DataRow> pause() {
     sourceNameTracker.addNameToContextLocalData(Vertx.currentContext());
     logger.trace("{} paused", this);
     rowStream.pause();
@@ -117,7 +125,7 @@ public class RowStreamWrapper implements ReadStream<DataRow> {
   }
 
   @Override
-  public ReadStream<DataRow> resume() {
+  public DataRowStream<DataRow> resume() {
     sourceNameTracker.addNameToContextLocalData(Vertx.currentContext());
     logger.trace("{} resumed", this);
     rowStream.resume();
@@ -125,13 +133,13 @@ public class RowStreamWrapper implements ReadStream<DataRow> {
   }
 
   @Override
-  public ReadStream<DataRow> fetch(long amount) {
+  public DataRowStream<DataRow> fetch(long amount) {
     rowStream.fetch(amount);
     return this;
   }
 
   @Override
-  public ReadStream<DataRow> endHandler(Handler<Void> endHandler) {    
+  public DataRowStream<DataRow> endHandler(Handler<Void> endHandler) {    
     rowStream.endHandler(ehv -> {
       rowStream.close()
               .compose(v -> {
@@ -157,7 +165,26 @@ public class RowStreamWrapper implements ReadStream<DataRow> {
     });
     return this;
   }
-  
-  
+
+  @Override
+  public List<ColumnDescriptor> getColumnDescriptors() {
+    if (types.isEmpty()) {
+      for (ColumnDescriptor cd : rowStream.getColumnDescriptors()) {
+        types.putIfAbsent(cd.name(), DataType.fromJdbcType(cd.jdbcType()));
+      }
+    } 
+    
+    return types.getColumnDescriptors();
+  }
+
+  @Override
+  public Future<Void> close() {
+    return rowStream.close();
+  }
+
+  @Override
+  public void close(Handler<AsyncResult<Void>> completionHandler) {
+    rowStream.close(completionHandler);
+  }
   
 }

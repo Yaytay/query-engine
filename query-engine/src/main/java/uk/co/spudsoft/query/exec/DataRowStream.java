@@ -14,20 +14,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package uk.co.spudsoft.query.exec;
 
-package uk.co.spudsoft.query.main;
+import io.vertx.sqlclient.RowStream;
+import io.vertx.sqlclient.desc.ColumnDescriptor;
+import java.util.List;
 
 /**
- * Set the version from the pom.
- * 
+ *
  * @author njt
+ * @param <T> The type of RowStream.
  */
-public final class Version {
-
-  public static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-  public static final String MAVEN_PROJECT_VERSION = "0.0.14-3-main";
-
-  private Version() {
-  }
+public interface DataRowStream<T> extends RowStream<T> {
+  
+  List<ColumnDescriptor> getColumnDescriptors();
   
 }

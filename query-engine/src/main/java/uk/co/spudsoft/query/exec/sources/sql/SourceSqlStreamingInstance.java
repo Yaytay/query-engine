@@ -21,12 +21,9 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.streams.ReadStream;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.PreparedStatement;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowStream;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Transaction;
@@ -36,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Endpoint;
 import uk.co.spudsoft.query.defn.SourceSql;
 import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.DataRowStream;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.SharedMap;
@@ -136,8 +134,8 @@ public class SourceSqlStreamingInstance extends AbstractSource {
       return Future.failedFuture(ex);
     }
     Pool pool = poolCreator.pool(vertx, connectOptions, poolOptions(definition));
-    Context outerContext = vertx.getOrCreateContext();
-    logger.trace("Outer context: {}", outerContext);
+    Context context = vertx.getOrCreateContext();
+    logger.trace("Outer context: {}", context);
     
     AbstractSqlPreparer preparer = getPreparer(url);
     AbstractSqlPreparer.QueryAndArgs queryAndArgs = preparer.prepareSqlStatement(definition.getQuery(), definition.getReplaceDoubleQuotes(), pipeline.getArguments());
@@ -161,11 +159,9 @@ public class SourceSqlStreamingInstance extends AbstractSource {
             }).compose(tran -> {
               transaction = tran;
               logger.trace("Creating SQL stream on {}", connection);
-              RowStream<Row> stream = preparedStatement.createStream(definition.getStreamingFetchSize(), args);
-              rowStreamWrapper = new RowStreamWrapper(this, connection, transaction, stream);
-              Context innerContext = vertx.getOrCreateContext();
-              logger.trace("Outer context: {}", outerContext);
-              logger.trace("Inner context: {}", innerContext);
+              // RowStream<Row> stream = preparedStatement.createStream(definition.getStreamingFetchSize(), args);
+              MetadataRowStreamImpl stream = new MetadataRowStreamImpl(preparedStatement, context, definition.getStreamingFetchSize(), args);
+              rowStreamWrapper = new RowStreamWrapper(this, connection, transaction, preparedStatement, stream);
               return Future.succeededFuture();
             })
             .recover(ex -> {
@@ -225,7 +221,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
   }
 
   @Override
-  public ReadStream<DataRow> getReadStream() {
+  public DataRowStream<DataRow> getReadStream() {
     return rowStreamWrapper;
   }
   
