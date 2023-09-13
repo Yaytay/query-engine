@@ -60,7 +60,7 @@ public class LogstashVertxContextJsonProviderTest {
 
   @Test
   public void testWriteTo(Vertx vertx, VertxTestContext testContext) {
-    vertx.executeBlocking(promise -> {
+    vertx.executeBlocking(() -> {
       testContext.verify(() -> {
         LogstashVertxContextJsonProvider<ILoggingEvent> cp = new LogstashVertxContextJsonProvider<>();
         cp.setContext(new LoggerContext());
@@ -122,8 +122,8 @@ public class LogstashVertxContextJsonProviderTest {
           }
           assertEquals("{\"Pageview-Context-Id\":{\"username\":\"username\",\"password\":\"********\"}}", os.toString(StandardCharsets.UTF_8));
         }
-        promise.complete();
       });
+      return null;
     }).onComplete(testContext.succeedingThenComplete());
   }
   

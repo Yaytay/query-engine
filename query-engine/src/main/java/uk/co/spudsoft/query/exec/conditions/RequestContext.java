@@ -26,6 +26,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.Cookie;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.impl.headers.HeadersMultiMap;
+import io.vertx.core.net.HostAndPort;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Collections;
@@ -234,7 +235,10 @@ public class RequestContext {
     String host = request.getHeader("X-Forwarded-Host");
     if (host == null) {
       source = "Host";
-      host = request.host();
+      HostAndPort hap = request.authority();
+      if (hap != null) {
+        host = hap.host();
+      }
     }
     if (host == null) {
       logger.trace("No Host found in request");

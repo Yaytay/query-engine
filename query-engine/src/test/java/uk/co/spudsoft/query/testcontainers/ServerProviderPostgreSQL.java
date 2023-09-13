@@ -66,14 +66,14 @@ public class ServerProviderPostgreSQL extends AbstractServerProvider implements 
   
   @Override
   public Future<Void> prepareContainer(Vertx vertx) {
-    return vertx.executeBlocking(p -> {
+    return vertx.executeBlocking(() -> {
       try {
-        getContainer();
-        p.complete();
+        return getContainer();
       } catch (Throwable ex) {
-        p.fail(ex);
+        logger.warn("Failed to prepare container: ", ex);
+        throw ex;
       }
-    });
+    }).mapEmpty();
   }
 
   @Override

@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.exec.conditions;
 import inet.ipaddr.IPAddressString;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.net.SocketAddress;
+import io.vertx.core.net.impl.HostAndPortImpl;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
@@ -78,7 +79,7 @@ public class RequestContextTest {
     assertEquals("bob", RequestContext.extractHost(request));
 
     request = mock(HttpServerRequest.class);
-    when(request.host()).thenReturn("bob:1234");
+    when(request.authority()).thenReturn(new HostAndPortImpl("bob", 1234));
     assertEquals("bob", RequestContext.extractHost(request));    
   }
 

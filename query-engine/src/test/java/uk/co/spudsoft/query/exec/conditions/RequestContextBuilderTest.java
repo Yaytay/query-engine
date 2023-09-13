@@ -16,10 +16,9 @@
  */
 package uk.co.spudsoft.query.exec.conditions;
 
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
-import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 import inet.ipaddr.IPAddressString;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.net.impl.HostAndPortImpl;
 import io.vertx.core.net.impl.SocketAddressImpl;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -41,6 +40,26 @@ public class RequestContextBuilderTest {
     RequestContext context = builder.buildRequestContext(request).result();
     assertNotNull(context);
     assertEquals(new IPAddressString("1.2.3.4"), context.getClientIp());
+  }
+  
+  @Test
+  public void testHap() {
+    HttpServerRequest request = mock(HttpServerRequest.class);
+    when(request.authority()).thenReturn(new HostAndPortImpl("bob", 1234));
+    when(request.scheme()).thenReturn("http");
+    assertEquals("http://bob:1234", RequestContextBuilder.baseRequestUrl(request));
+
+    when(request.authority()).thenReturn(new HostAndPortImpl("bob", 80));
+    when(request.scheme()).thenReturn("http");
+    assertEquals("http://bob", RequestContextBuilder.baseRequestUrl(request));
+
+    when(request.authority()).thenReturn(new HostAndPortImpl("bob", 1234));
+    when(request.scheme()).thenReturn("https");
+    assertEquals("https://bob:1234", RequestContextBuilder.baseRequestUrl(request));
+
+    when(request.authority()).thenReturn(new HostAndPortImpl("bob", 443));
+    when(request.scheme()).thenReturn("https");
+    assertEquals("https://bob", RequestContextBuilder.baseRequestUrl(request));
   }
   
 }

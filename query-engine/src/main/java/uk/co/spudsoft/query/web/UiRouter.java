@@ -20,7 +20,6 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpHeaders;
@@ -31,6 +30,7 @@ import io.vertx.core.http.impl.HttpUtils;
 import io.vertx.core.net.impl.URIDecoder;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.impl.Utils;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
@@ -98,7 +98,7 @@ public class UiRouter implements Handler<RoutingContext> {
       if (fileBody != null) {
         sendFile(context, new LoadedFile(path, fileBody));
       } else {
-        vertx.<LoadedFile>executeBlocking(promise -> loadFile(promise, path))
+        vertx.<LoadedFile>executeBlocking(() -> loadFile(path))
                 .onFailure(ex -> {
                   logger.warn("Unexpected failure in request for {}: ", path, ex);
                   context.response()
@@ -176,24 +176,23 @@ public class UiRouter implements Handler<RoutingContext> {
    * @param promise Promise to be completed when the method finishes.
    * @param path Path to the resource to be loaded.
    */
-  private void loadFile(Promise<LoadedFile> promise, String path) {
+  private LoadedFile loadFile(String path) throws IOException {
     logger.debug("Loading file {}", path);
     InputStream is = this.getClass().getResourceAsStream(path);
     if (is == null) {
-      promise.complete(getDefaultFileBody());
-      return ;
+      return getDefaultFileBody();
     }
     try (is) {
       byte[] body = is.readAllBytes();
       if (body.length == 0) {
-        promise.complete(getDefaultFileBody());
+        return getDefaultFileBody();
       } else {
         cache.put(path, body);
-        promise.complete(new LoadedFile(path, body));
+        return new LoadedFile(path, body);
       }
     } catch (Throwable ex) {
       logger.warn("Failed to load UI resource ({}): ", path, ex);
-      promise.fail(ex);
+      throw ex;
     }
   }
   

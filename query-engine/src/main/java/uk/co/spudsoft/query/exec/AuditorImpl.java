@@ -426,11 +426,11 @@ public class AuditorImpl implements Auditor {
   }
 
   private Future<Integer> runSql(String sql, SqlConsumer<PreparedStatement> prepareStatement) {
-    return vertx.executeBlocking(promise -> runSqlSynchronously(sql, prepareStatement, promise));
+    return vertx.executeBlocking(() -> runSqlSynchronously(sql, prepareStatement));
   }
 
   @SuppressFBWarnings(value = "SQL_INJECTION_JDBC", justification = "SQL is generated from static strings")
-  private void runSqlSynchronously(String sql, SqlConsumer<PreparedStatement> prepareStatement, Promise<Integer> promise) {
+  private int runSqlSynchronously(String sql, SqlConsumer<PreparedStatement> prepareStatement) throws Exception {
     String logMessage = null;
     try {
       logMessage = "Failed to get connection: ";
@@ -442,17 +442,19 @@ public class AuditorImpl implements Auditor {
           logMessage = "Failed to prepare statement: ";
           prepareStatement.accept(statement);
           logMessage = "Failed to execute query: ";
-          int result = statement.executeUpdate();
-          promise.complete(result);
+          return statement.executeUpdate();
         } finally {
           closeStatement(statement);
         }
       } finally {
         closeConnection(conn);
       }
+    } catch (Exception ex) {
+      logger.error(logMessage, ex);
+      throw ex;
     } catch (Throwable ex) {
       logger.error(logMessage, ex);
-      promise.fail(ex);
+      throw new RuntimeException(logMessage, ex);
     }
   }
   

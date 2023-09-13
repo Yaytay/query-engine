@@ -24,6 +24,7 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.net.HostAndPort;
 import io.vertx.ext.web.client.WebClient;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -74,6 +75,24 @@ public class RequestContextBuilder {
     this.openIdIntrospectionHeaderName = openIdIntrospectionHeaderName;
     this.audList = Collections.singletonList(aud);
   }
+  
+  static String baseRequestUrl(HttpServerRequest request) {
+    StringBuilder sb = new StringBuilder();
+    String scheme = request.scheme();
+    sb.append(scheme);
+    sb.append("://");
+    HostAndPort hap = request.authority();
+    if (hap != null) {
+      sb.append(hap.host());
+      int port = hap.port();
+      if (!("https".equals(scheme) && port == 443) && !("http".equals(scheme) && port == 80)) {
+        sb.append(":");
+        sb.append(port);
+      }
+    }
+
+    return sb.toString();
+  }
 
   /**
    * Create a RequestContext from an HttpServerRequest.
@@ -104,7 +123,7 @@ public class RequestContextBuilder {
       int colon = credentials.indexOf(":");
       String clientId = credentials.substring(0, colon);
       String clientSecret = credentials.substring(colon + 1);      
-      return performClientCredentialsGrant(request.scheme() + "://" + request.host(), clientId, clientSecret)
+      return performClientCredentialsGrant(baseRequestUrl(request), clientId, clientSecret)
               .compose(token -> validator.validateToken(token, audList, true))
               .compose(jwt -> build(request, jwt));
       

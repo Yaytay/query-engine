@@ -89,8 +89,8 @@ public class RequestContextBuilderBasicAuthTest {
     router.route(HttpMethod.GET, "/.well-known/openid-configuration").handler(ctx -> {
       logger.info("Got request to {}", ctx.request().uri());
       JsonObject result = new JsonObject();
-      result.put("authorization_endpoint", ctx.request().scheme() + "://" + ctx.request().host() + "/auth");
-      result.put("jwks_uri", ctx.request().scheme() + "://" + ctx.request().host() + "/jwks");
+      result.put("authorization_endpoint", RequestContextBuilder.baseRequestUrl(ctx.request()) + "/auth");
+      result.put("jwks_uri", RequestContextBuilder.baseRequestUrl(ctx.request()) + "/jwks");
       HttpServerResponse response = ctx.response();
       response.setStatusCode(200);
       response.end(result.toBuffer());
@@ -128,7 +128,7 @@ public class RequestContextBuilderBasicAuthTest {
         JsonObject result = new JsonObject();
         long now = System.currentTimeMillis() / 1000;
         try {
-          String token = tokenBuilder.buildToken(JsonWebAlgorithm.RS256, "kid", ctx.request().scheme() + "://" + ctx.request().host(), "username", Arrays.asList("aud"), now - 1, now + 60, null);
+          String token = tokenBuilder.buildToken(JsonWebAlgorithm.RS256, "kid", ctx.request().scheme() + "://" + ctx.request().authority().toString(), "username", Arrays.asList("aud"), now - 1, now + 60, null);
           result.put("access_token", token);
         } catch (Throwable ex) {
           HttpServerResponse response = ctx.response();

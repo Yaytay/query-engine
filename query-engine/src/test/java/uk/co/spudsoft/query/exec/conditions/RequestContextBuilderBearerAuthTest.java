@@ -86,7 +86,7 @@ public class RequestContextBuilderBearerAuthTest {
     router.route(HttpMethod.GET, "/.well-known/openid-configuration").handler(ctx -> {
       logger.info("Got request to {}", ctx.request().uri());
       JsonObject result = new JsonObject();
-      result.put("jwks_uri", ctx.request().scheme() + "://" + ctx.request().host() + "/jwks");
+      result.put("jwks_uri", ctx.request().scheme() + "://" + ctx.request().authority().toString() + "/jwks");
       HttpServerResponse response = ctx.response();
       response.setStatusCode(200);
       response.end(result.toBuffer());
