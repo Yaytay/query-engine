@@ -112,5 +112,11 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
     }
     logger.trace("Resulting row: {}", parentRow);
   }
-    
+
+  @Override
+  protected void addChildMetadata(DataRow parentRow, DataRow childRow) {
+    for (FieldDefn fieldDefn : fields) {
+      parentRow.putTypeIfAbsent(fieldDefn.name, fieldDefn.type);
+    }
+  }
 }

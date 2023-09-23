@@ -55,7 +55,9 @@ public class FormatJsonInstance implements FormatInstance {
     this.formattingStream = new FormattingWriteStream(outputStream
             , v -> outputStream.write(OPEN)
             , row -> {
-              if (started.get()) {
+              if (row.isEmpty()) {
+                return Future.succeededFuture();
+              } else if (started.get()) {
                 return outputStream.write(COMMA)
                         .compose(v -> outputStream.write(row.toJson().toBuffer()))
                         ;

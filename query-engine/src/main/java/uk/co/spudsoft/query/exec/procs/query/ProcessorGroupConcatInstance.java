@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.ProcessorGroupConcat;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
@@ -70,5 +71,11 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
             .collect(Collectors.joining(definition.getDelimiter()));
     parentRow.put(definition.getParentValueColumn(), result);
   }
-    
+ 
+
+  @Override
+  protected void addChildMetadata(DataRow parentRow, DataRow childRow) {
+    parentRow.putTypeIfAbsent(definition.getParentValueColumn(), DataType.String);
+  }
+  
 }

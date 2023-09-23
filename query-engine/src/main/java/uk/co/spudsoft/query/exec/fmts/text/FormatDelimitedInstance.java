@@ -98,6 +98,9 @@ public class FormatDelimitedInstance implements FormatInstance {
   }
 
   private Future<Void> outputRow(DataRow row) {
+    if (row.isEmpty()) {
+      return Future.succeededFuture();
+    }
     StringBuilder outputRow = new StringBuilder();
 
     AtomicBoolean first = new AtomicBoolean(true);

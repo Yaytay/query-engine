@@ -57,6 +57,10 @@ public class DataRow {
     return new DataRow(types, new LinkedHashMap<>());
   }
 
+  public final void putTypeIfAbsent(String key, DataType type) throws IllegalStateException {
+    types.putIfAbsent(key, type);
+  }
+
   public static DataRow create(List<ColumnDefn> types) {
     return new DataRow(new Types(types), new LinkedHashMap<>());
   }

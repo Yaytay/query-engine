@@ -134,8 +134,8 @@ public class EmptyQueryIT {
             .statusCode(200)
             .extract().body().asString();
 
-    assertThat(body, equalTo("\"dataId\"\t\"instant"));
-    assertThat(body, not(containsString("\t\t\t\t\t\t\t")));
+    assertThat(body, equalTo("\"dataId\"\t\"instant\"\t\"colour\"\t\"value\"\t\"children\"\t\"DateField\"\t\"TimeField\"\t\"DateTimeField\"\t\"LongField\"\t\"DoubleField\"\t\"BoolField\"\t\"TextField\"\n"));
+    assertThat(body, not(containsString("\t\t")));
 
     body = given()
             .config(RestAssuredConfig.config().httpClient(HttpClientConfig.httpClientConfig().setParam("http.socket.timeout",10000)))
