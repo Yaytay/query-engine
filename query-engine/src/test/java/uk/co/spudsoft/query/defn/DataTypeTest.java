@@ -20,7 +20,6 @@ import java.sql.JDBCType;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
-import static uk.co.spudsoft.query.defn.DataType.Null;
 
 
 /**
@@ -84,15 +83,4 @@ public class DataTypeTest {
     assertThrows(IllegalArgumentException.class, () -> {DataType.fromJdbcType(JDBCType.SQLXML);});
   }
 
-  /**
-   * Test of toColumnDescriptor method, of class DataType.
-   */
-  @Test
-  public void testToColumnDescriptor() {
-    
-    assertEquals(false, DataType.Boolean.toColumnDescriptor("one").isArray());
-    assertEquals("Boolean", DataType.Boolean.toColumnDescriptor("one").typeName());
-    assertEquals(JDBCType.BOOLEAN, DataType.Boolean.toColumnDescriptor("one").jdbcType());
-  }
-  
 }

@@ -17,7 +17,6 @@
 package uk.co.spudsoft.query.defn;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.vertx.sqlclient.desc.ColumnDescriptor;
 import java.sql.JDBCType;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -78,6 +77,10 @@ public enum DataType {
     }
   }
 
+  public JDBCType jdbcType() {
+    return jdbcType;
+  }
+  
   public static DataType fromJdbcType(JDBCType jdbcType) {
     switch (jdbcType) {
       case BOOLEAN:
@@ -131,42 +134,5 @@ public enum DataType {
       default:
         throw new IllegalArgumentException("Cannot process fields of type " + jdbcType.getName());
     }
-  }
-  
-  private static class DataTypeDescriptor implements ColumnDescriptor {
-    
-    private final String name;
-    private final DataType dataType;
-
-    DataTypeDescriptor(String name, DataType dataType) {
-      this.name = name;
-      this.dataType = dataType;
-    }
-
-    @Override
-    public String name() {
-      return name;
-    }
-
-    @Override
-    public boolean isArray() {
-      return false;
-    }
-
-    @Override
-    public String typeName() {
-      return dataType.name();
-    }
-
-    @Override
-    public JDBCType jdbcType() {
-      return dataType.jdbcType;
-    }
-    
-  }
-  
-  public ColumnDescriptor toColumnDescriptor(String columnName) {
-    return new DataTypeDescriptor(columnName, this);
-  }
-  
+  }  
 }

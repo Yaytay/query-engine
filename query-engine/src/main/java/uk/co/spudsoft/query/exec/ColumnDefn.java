@@ -14,20 +14,48 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package uk.co.spudsoft.query.exec;
 
-package uk.co.spudsoft.query.main;
+import io.vertx.sqlclient.desc.ColumnDescriptor;
+import java.sql.JDBCType;
+import uk.co.spudsoft.query.defn.DataType;
 
 /**
- * Set the version from the pom.
- * 
+ *
  * @author njt
  */
-public final class Version {
+public class ColumnDefn implements ColumnDescriptor {
+  
+  private final String name;
+  private final DataType type;
 
-  public static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-  public static final String MAVEN_PROJECT_VERSION = "0.0.14-21-main";
+  public ColumnDefn(String name, DataType type) {
+    this.name = name;
+    this.type = type;
+  }
 
-  private Version() {
+  @Override
+  public String name() {
+    return name;
+  }
+
+  @Override
+  public boolean isArray() {
+    return false;
+  }
+
+  @Override
+  public String typeName() {
+    return type.name();
+  }
+
+  @Override
+  public JDBCType jdbcType() {
+    return type.jdbcType();
+  }
+
+  public DataType type() {
+    return type;
   }
   
 }

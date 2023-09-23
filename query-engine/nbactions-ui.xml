@@ -12,8 +12,8 @@
             <properties>
                 <test>DummyToSkipUnitTests</test>
                 <failIfNoTests>false</failIfNoTests>
-                <surefire.failIfNoSpecifiedTests>false</surefire.failIfNoSpecifiedTests>
                 <it.test>${packageClassName}</it.test>
+                <surefire.failIfNoSpecifiedTests>false</surefire.failIfNoSpecifiedTests>
             </properties>
         </action>
         <action>
@@ -34,13 +34,5 @@
                 <jpda.listen>true</jpda.listen>
                 <surefire.failIfNoSpecifiedTests>false</surefire.failIfNoSpecifiedTests>
             </properties>
-        </action>
-        <action>
-            <actionName>CUSTOM-Update</actionName>
-            <displayName>Update</displayName>
-            <goals>
-                <goal>clean</goal>
-                <goal>install</goal>
-            </goals>
         </action>
     </actions>

@@ -21,6 +21,7 @@ import io.vertx.core.Vertx;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -45,6 +46,7 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import uk.co.spudsoft.query.defn.FormatDelimited;
+import uk.co.spudsoft.query.exec.ColumnDefn;
 import uk.co.spudsoft.query.exec.fmts.logger.LoggingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
 
@@ -75,8 +77,8 @@ public class ProcessorGroupConcatInstanceTest {
   
   @Test
   public void testNullchild(Vertx vertx) {
-    DataRow parent = DataRow.create(new LinkedHashMap<>());
-    LinkedHashMap<String, DataType> childTypes = new LinkedHashMap<>();
+    DataRow parent = DataRow.create(new ArrayList<>());
+    List<ColumnDefn> childTypes = new ArrayList<>();
     List<DataRow> children = Arrays.asList(
             DataRow.create(childTypes).put("value", 1)
             , DataRow.create(childTypes).put("value", null)
@@ -93,7 +95,7 @@ public class ProcessorGroupConcatInstanceTest {
     assertEquals("1#3", parent.get("out"));
 
     assertNull(instance.getId(null, "id"));
-    LinkedHashMap<String, DataType> types = new LinkedHashMap<>();
+    List<ColumnDefn> types = new ArrayList<>();
     assertEquals(17L, instance.getId(DataRow.create(types).put("id", 17L), "id"));
     assertNull(instance.getId(DataRow.create(types).put("id", null), "id"));
     assertNull(instance.getId(DataRow.create(types).put("id", 17L), "notId"));

@@ -26,6 +26,7 @@ import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -56,7 +57,7 @@ public class DataRow {
     return new DataRow(types, new LinkedHashMap<>());
   }
 
-  public static DataRow create(LinkedHashMap<String, DataType> types) {
+  public static DataRow create(List<ColumnDefn> types) {
     return new DataRow(new Types(types), new LinkedHashMap<>());
   }
 
@@ -87,8 +88,10 @@ public class DataRow {
     return data == null ? 0 : data.size();
   }
   
-  public void forEach(BiConsumer<? super String, ? super Object> action) {
-    data.forEach(action);
+  public void forEach(BiConsumer<ColumnDefn, ? super Object> action) {
+    types.forEach(cd -> {
+      action.accept(cd, data.get(cd.name()));
+    });
   }
 
   public void forEach(Consumer<Entry<? super String, ? super Object>> action) {

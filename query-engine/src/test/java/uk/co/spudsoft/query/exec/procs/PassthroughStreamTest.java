@@ -16,14 +16,14 @@
  */
 package uk.co.spudsoft.query.exec.procs;
 
-import uk.co.spudsoft.query.exec.procs.PassthroughStream;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.streams.WriteStream;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -31,7 +31,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.DataRow;
-import uk.co.spudsoft.query.defn.DataType;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
@@ -39,6 +38,7 @@ import static org.hamcrest.Matchers.lessThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import uk.co.spudsoft.query.exec.ColumnDefn;
 
 /**
  *
@@ -51,7 +51,7 @@ public class PassthroughStreamTest {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(PassthroughStreamTest.class);
 
-  private static LinkedHashMap<String, DataType> types = new LinkedHashMap<>();
+  private static List<ColumnDefn> types = new ArrayList<>();
   
   /**
    * Write simple DataRows to a WriteStream.

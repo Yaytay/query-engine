@@ -148,16 +148,16 @@ public class FormatXlsxInstance implements FormatInstance {
   private TableDefinition tableDefinitionFromRow(DataRow row) {
     List<ColumnDefinition> columns = new ArrayList<>(row.size());
     FormatXlsxColumn nonFormat = FormatXlsxColumn.builder().build();
-    row.forEach((k, v) -> {
+    row.forEach((cd, v) -> {
       ColumnDefinition defn = null;
       if (definition.getColumns() != null) {
-        FormatXlsxColumn formatColumn = definition.getColumns().get(k);
+        FormatXlsxColumn formatColumn = definition.getColumns().get(cd.name());
         if (formatColumn != null) {
-          defn = formatColumn.toColumnDefinition(k, row.getType(k));
+          defn = formatColumn.toColumnDefinition(cd.name(), cd.type());
         }
       } 
       if (defn == null) {
-        defn = nonFormat.toColumnDefinition(k, row.getType(k));
+        defn = nonFormat.toColumnDefinition(cd.name(), cd.type());
       }
       columns.add(defn);
     });

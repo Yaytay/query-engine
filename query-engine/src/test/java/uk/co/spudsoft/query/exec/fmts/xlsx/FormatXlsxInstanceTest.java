@@ -20,7 +20,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.FileSystem;
-import io.vertx.core.file.FileSystemException;
 import io.vertx.core.file.OpenOptions;
 import io.vertx.core.streams.WriteStream;
 import io.vertx.junit5.VertxExtension;
@@ -29,12 +28,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.FormatXlsx;
 import uk.co.spudsoft.query.defn.FormatXlsxColours;
+import uk.co.spudsoft.query.exec.ColumnDefn;
 import uk.co.spudsoft.query.exec.DataRow;
 
 /**
@@ -45,18 +47,18 @@ import uk.co.spudsoft.query.exec.DataRow;
 public class FormatXlsxInstanceTest {
   
   
-  private LinkedHashMap<String, DataType> buildTypes() {
-    LinkedHashMap<String, DataType> types = new LinkedHashMap<>();
-    types.put("Boolean", DataType.Boolean);
-    types.put("Date", DataType.Date);
-    types.put("DateTime", DataType.DateTime);
-    types.put("Double", DataType.Double);
-    types.put("Float", DataType.Float);
-    types.put("Integer", DataType.Integer);
-    types.put("Long", DataType.Long);
-    types.put("String", DataType.String);
-    types.put("Time", DataType.Time);
-    return types;
+  private List<ColumnDefn> buildTypes() {
+    return Arrays.asList(
+            new ColumnDefn("Boolean", DataType.Boolean)
+            , new ColumnDefn("Date", DataType.Date)
+            , new ColumnDefn("DateTime", DataType.DateTime)
+            , new ColumnDefn("Double", DataType.Double)
+            , new ColumnDefn("Float", DataType.Float)
+            , new ColumnDefn("Integer", DataType.Integer)
+            , new ColumnDefn("Long", DataType.Long)
+            , new ColumnDefn("String", DataType.String)
+            , new ColumnDefn("Time", DataType.Time)
+    );
   }
   
   @Test
@@ -76,14 +78,14 @@ public class FormatXlsxInstanceTest {
     
     FormatXlsxInstance instance = (FormatXlsxInstance) defn.createInstance(vertx, null, writeStream);
     
-    LinkedHashMap<String, DataType> types = buildTypes();
+    List<ColumnDefn> types = buildTypes();
     instance.initialize(null, null)
             .compose(v -> addRow(types, 0, instance.getWriteStream()))
             .compose(v -> instance.getWriteStream().end())
             .onComplete(testContext.succeedingThenComplete());
   }
   
-  private Future<Void> addRow(LinkedHashMap<String, DataType> types, int rowNum, WriteStream<DataRow> stream) {
+  private Future<Void> addRow(List<ColumnDefn> types, int rowNum, WriteStream<DataRow> stream) {
     if (rowNum > 10) {
       return Future.succeededFuture();
     } else {
@@ -93,7 +95,7 @@ public class FormatXlsxInstanceTest {
     }
   }
 
-  private DataRow createDataRow(LinkedHashMap<String, DataType> types, int rowNum) {
+  private DataRow createDataRow(List<ColumnDefn> types, int rowNum) {
     DataRow row = DataRow.create(types);
     row.put("Boolean", rowNum % 9 == 0 ? null : (rowNum % 2 == 0 ? Boolean.TRUE : Boolean.FALSE));
     row.put("Date", rowNum % 9 == 1 ? null : LocalDate.of(1971, Month.MAY, 1 + rowNum));

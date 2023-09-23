@@ -35,8 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class DataRowTest {
   
   private DataRow create() {
-    LinkedHashMap<String, DataType> types = new LinkedHashMap<>(10);
-    return DataRow.create(types)
+    return DataRow.create(new Types())
             .put("nullValue", null)
             .put("intValue", 7)
             .put("longValue", 1L << 40)
@@ -80,7 +79,7 @@ public class DataRowTest {
   public void testForEach_BiConsumer() {
     DataRow row = create();
     StringBuilder r = new StringBuilder();
-    row.forEach((k, v) -> r.append(", ").append(k).append(":").append(v));
+    row.forEach((k, v) -> r.append(", ").append(k.name()).append(":").append(v));
     assertEquals(", nullValue:null, intValue:7, longValue:1099511627776, floatValue:3.4, doubleValue:3.1415926, stringValue:wibble, boolValue:true, timeValue:12:34, dateValue:1971-05-06, dateTimeValue:1971-05-06T12:34", r.toString());
   }
 
@@ -118,8 +117,7 @@ public class DataRowTest {
 
   @Test
   public void testConvertPut() {
-    LinkedHashMap<String, DataType> types = new LinkedHashMap<>(10);
-    DataRow row = DataRow.create(types)
+    DataRow row = DataRow.create(new Types())
             .convertPut("nullValue", null)
             .convertPut("intValue", 7)
             .convertPut("longValue", 1L << 40)

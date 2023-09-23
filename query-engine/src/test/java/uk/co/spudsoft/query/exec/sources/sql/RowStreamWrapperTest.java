@@ -39,6 +39,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import uk.co.spudsoft.query.defn.DataType;
+import uk.co.spudsoft.query.exec.ColumnDefn;
 
 /**
  *
@@ -167,9 +168,9 @@ public class RowStreamWrapperTest {
     Transaction transaction = mock(Transaction.class);
     SqlConnection connection = mock(SqlConnection.class);
     List<ColumnDescriptor> inputs = Arrays.asList(
-            DataType.Boolean.toColumnDescriptor("one")
-            , DataType.String.toColumnDescriptor("two")
-            , DataType.Double.toColumnDescriptor("three")
+            new ColumnDefn("one", DataType.Boolean)
+            , new ColumnDefn("two", DataType.String)
+            , new ColumnDefn("three", DataType.Double)
     );
     when (target.getColumnDescriptors()).thenReturn(inputs);
     RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, connection, transaction, null, target);

@@ -19,9 +19,9 @@ package uk.co.spudsoft.query.exec;
 import io.vertx.sqlclient.desc.ColumnDescriptor;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map.Entry;
+import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.DataType;
@@ -34,20 +34,22 @@ public class Types {
   
   private static final Logger logger = LoggerFactory.getLogger(Types.class);
   
-  private final List<ColumnDescriptor> columnDescriptors = new ArrayList<>();
-  private final LinkedHashMap<String, DataType> dataTypes = new LinkedHashMap<>();
+  private final List<ColumnDefn> defns = new ArrayList<>();
+  private final HashMap<String, Integer> indices = new HashMap<>();
   
   public Types() {
   }
 
-  public Types(LinkedHashMap<String, DataType> types) {
-    for (Entry<String, DataType> entry : types.entrySet()) {
-      putIfAbsent(entry.getKey(), entry.getValue());
+  public Types(List<ColumnDefn> types) {
+    int i = 0;
+    for (ColumnDefn defn : types) {
+      defns.add(defn);
+      indices.put(defn.name(), i++);
     }
   }
   
   public DataType get(String key) {
-    return dataTypes.get(key);
+    return defns.get(indices.get(key)).type();
   }
   
   /**
@@ -64,32 +66,34 @@ public class Types {
     if (type == null) {
       type = DataType.Null;
     }
-    synchronized (dataTypes) {
-      DataType current = dataTypes.get(key);
-      if (current == null) {
-        dataTypes.put(key, type);
-        columnDescriptors.add(type.toColumnDescriptor(key));
-      } else if (current == DataType.Null && type != DataType.Null) {
-        dataTypes.put(key, type);
-        for (int i = 0; i < columnDescriptors.size(); ++i) {
-          if (columnDescriptors.get(i).name().equals(key)) {
-            columnDescriptors.set(i, type.toColumnDescriptor(key));
-          }
-        }
+    synchronized (defns) {
+      Integer idx = indices.get(key);
+      if (idx == null) {
+        indices.put(key, defns.size());
+        defns.add(new ColumnDefn(key, type));
+      } else {
+        ColumnDefn current = defns.get(idx);
+        if (current.type() == DataType.Null && type != DataType.Null) {
+          defns.set(idx, new ColumnDefn(key, type));
 //      } else if (current != type && type != DataType.Null) {
 //        logger.warn("Attempt to change type of {} from {} to {}", key, current, type);
 //        throw new IllegalStateException("Cannot change type (" + key + ")");
+        }
       }
     }
     return this;
   }
 
   public List<ColumnDescriptor> getColumnDescriptors() {
-    return Collections.unmodifiableList(columnDescriptors);
+    return Collections.unmodifiableList(defns);
+  }
+
+  public void forEach(Consumer<? super ColumnDefn> action) {
+    defns.forEach(action);
   }
   
   public boolean isEmpty() {
-    return dataTypes.isEmpty();
+    return defns.isEmpty();
   }
   
 }

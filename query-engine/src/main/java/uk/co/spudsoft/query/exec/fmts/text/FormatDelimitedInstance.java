@@ -64,12 +64,12 @@ public class FormatDelimitedInstance implements FormatInstance {
                 return outputRow(row);
               }
             }
-            , rows -> {
+            , rowCount -> {
               Context vertxContext = Vertx.currentContext();
               if (vertxContext != null) {
                 RequestContext requestContext = Vertx.currentContext().getLocal("req");
                 if (requestContext != null) {
-                  requestContext.setRowsWritten(rows);
+                  requestContext.setRowsWritten(rowCount);
                 }
               }
               return outputStream.end();
@@ -82,12 +82,12 @@ public class FormatDelimitedInstance implements FormatInstance {
       StringBuilder headerRow = new StringBuilder();
       
       AtomicBoolean first = new AtomicBoolean(true);
-      row.forEach((k, v) -> {
+      row.forEach((cd, v) -> {
         if (!first.compareAndSet(true, false)) {
           headerRow.append(defn.getDelimiter());
         }
         headerRow.append(defn.getOpenQuote());
-        headerRow.append(k);
+        headerRow.append(cd.name());
         headerRow.append(defn.getCloseQuote());
       });
       headerRow.append(defn.getNewline());
@@ -101,13 +101,13 @@ public class FormatDelimitedInstance implements FormatInstance {
     StringBuilder outputRow = new StringBuilder();
 
     AtomicBoolean first = new AtomicBoolean(true);
-    row.forEach((k, v) -> {
+    row.forEach((cd, v) -> {
       if (!first.compareAndSet(true, false)) {
         outputRow.append(defn.getDelimiter());
       }
       try {
         if (v != null) {
-          switch (row.getType(k)) {
+          switch (cd.type()) {
             case Boolean:
             case Double:
             case Float:
@@ -127,7 +127,7 @@ public class FormatDelimitedInstance implements FormatInstance {
           }
         }
       } catch (Throwable ex) {
-        logger.warn("Failed to output field {} with value {}: ", k, v, ex);
+        logger.warn("Failed to output field {} with value {}: ", cd.name(), v, ex);
       }
     });
     outputRow.append(defn.getNewline());

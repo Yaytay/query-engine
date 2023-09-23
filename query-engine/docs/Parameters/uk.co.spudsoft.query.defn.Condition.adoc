@@ -86,7 +86,7 @@ Checks that the host on the request is localhost.
 
 
 | logger
-| link:https://www.slf4j.org/api/org/slf4j/Logger.html[Logger]
+| org.slf4j.Logger
 | 
 
 | expression

@@ -55,6 +55,7 @@ public class RowStreamWrapper implements DataRowStream<DataRow> {
 
   private Handler<Throwable> exceptionHandler;
   private Handler<DataRow> handler;
+  private boolean handledRows;
   
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
   public RowStreamWrapper(SourceNameTracker sourceNameTracker, SqlConnection connection, Transaction transaction, PreparedStatement preparedStatement, MetadataRowStreamImpl rowStream) {
@@ -89,6 +90,7 @@ public class RowStreamWrapper implements DataRowStream<DataRow> {
     } else {      
       rowStream.handler(row -> {
         try {
+          handledRows = true;
           Context context = Vertx.currentContext();
           logger.trace("RowStream context: {}", context);
           DataRow dataRow = sqlRowToDataRow(row);
@@ -141,6 +143,18 @@ public class RowStreamWrapper implements DataRowStream<DataRow> {
   @Override
   public DataRowStream<DataRow> endHandler(Handler<Void> endHandler) {    
     rowStream.endHandler(ehv -> {
+      if (handledRows) {
+        logger.info("Finished row stream after handling some rows");
+      } else {
+        logger.info("Finished row stream without handling any rows");
+        Handler<DataRow> localHandler = this.handler;
+        if (localHandler != null) {
+          ensureTypesReflectRowStream();
+          DataRow dataRow = DataRow.create(types);
+          logger.trace("{} Passing on empty row: {}", this, dataRow);
+          localHandler.handle(dataRow);
+        }
+      }
       rowStream.close()
               .compose(v -> {
                 return transaction.commit();
@@ -168,13 +182,17 @@ public class RowStreamWrapper implements DataRowStream<DataRow> {
 
   @Override
   public List<ColumnDescriptor> getColumnDescriptors() {
+    ensureTypesReflectRowStream();
+    
+    return types.getColumnDescriptors();
+  }
+
+  private void ensureTypesReflectRowStream() throws IllegalStateException {
     if (types.isEmpty()) {
       for (ColumnDescriptor cd : rowStream.getColumnDescriptors()) {
         types.putIfAbsent(cd.name(), DataType.fromJdbcType(cd.jdbcType()));
       }
-    } 
-    
-    return types.getColumnDescriptors();
+    }
   }
 
   @Override
