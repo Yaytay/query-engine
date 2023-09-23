@@ -60,6 +60,10 @@ public class DataRow {
   public static DataRow create(List<ColumnDefn> types) {
     return new DataRow(new Types(types), new LinkedHashMap<>());
   }
+  
+  public boolean isEmpty() {
+    return data.isEmpty();
+  }
 
 //  public static DataRow createNonRow(Types types) {
 //    return new DataRow(types, null);

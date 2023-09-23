@@ -165,6 +165,9 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
     }
   }
   
+  protected void addChildMetadata(DataRow parentRow, DataRow childRow) {
+  }
+  
   private void processCurrent() {
     Comparable<Object> parentId;
     Comparable<Object> childId;
@@ -190,17 +193,34 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
         // Not received parent row yet, just wait for it.
         return ;
       }
-      parentId = getId(currentParentRow, parentIdColumn);      
-      lastSeenParentId = parentId;
-      if (currentChildRow == null) {
-        if (childEnded) {
-          if (!currentChildRows.isEmpty()) {
-            processCurrentChildrenAndChain(parentId);
+      if (currentParentRow.isEmpty()) {
+        if (currentChildRow != null) {
+          DataRow row;
+          AsyncHandler<DataRow> chain;
+          synchronized (this) {
+            addChildMetadata(currentParentRow, currentChildRow);
+            chain = currentParentChain;
+            row = currentParentRow;
+          }
+          chain(chain, row, null);
+        } else {
+          sourceNameTracker.addNameToContextLocalData(context);
+          logger.trace("Received empty parent row, waiting for child row");
+        }
+        return ;
+      } else {
+        parentId = getId(currentParentRow, parentIdColumn);      
+        lastSeenParentId = parentId;
+        if (currentChildRow == null) {
+          if (childEnded) {
+            if (!currentChildRows.isEmpty()) {
+              processCurrentChildrenAndChain(parentId);
+              return ;
+            }
+          } else {
+            // Not received latest child row yet
             return ;
           }
-        } else {
-          // Not received latest child row yet
-          return ;
         }
       }
       childId = getId(currentChildRow, childIdColumn);
@@ -235,6 +255,10 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
       chain = currentParentChain;
       row = currentParentRow;
     }
+    chain(chain, row, parentId);
+  }
+
+  private void chain(AsyncHandler<DataRow> chain, DataRow row, Comparable<Object> parentId) {
     if (chain != null) {
       chain.handle(row)
               .onComplete(v -> {
@@ -242,7 +266,11 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
                 Promise<Void> parentPromise;
                 Promise<Void> childPromise;
                 synchronized (this) {
-                  logger.trace("Clearing data for {} now", parentId);
+                  if (parentId == null) {
+                    logger.trace("Chained empty row");
+                  } else {
+                    logger.trace("Clearing data for {} now", parentId);
+                  }
                   currentChildRows.clear();
                   parentPromise = currentParentPromise;
                   currentParentPromise = null;

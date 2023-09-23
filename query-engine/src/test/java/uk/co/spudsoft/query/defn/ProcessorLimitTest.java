@@ -16,8 +16,6 @@
  */
 package uk.co.spudsoft.query.defn;
 
-import uk.co.spudsoft.query.defn.ProcessorLimit;
-import uk.co.spudsoft.query.defn.ProcessorType;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
