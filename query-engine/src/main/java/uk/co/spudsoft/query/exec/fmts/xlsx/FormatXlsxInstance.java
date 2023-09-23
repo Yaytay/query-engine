@@ -78,7 +78,9 @@ public class FormatXlsxInstance implements FormatInstance {
                 }
               }
               try {
-                writer.outputRow(values(row));
+                if (!row.isEmpty()) {
+                  writer.outputRow(values(row));
+                }
               } catch (IOException ex) {
                 return Future.failedFuture(ex);
               }
@@ -142,7 +144,7 @@ public class FormatXlsxInstance implements FormatInstance {
   }
   
   private ColourDefinition getDefaultColours() {
-    return new ColourDefinition("FFFFFF", "000000");
+    return new ColourDefinition("000000", "FFFFFF");
   }
   
   private TableDefinition tableDefinitionFromRow(DataRow row) {

@@ -22,7 +22,9 @@ import io.restassured.config.HttpClientConfig;
 import io.restassured.config.RestAssuredConfig;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeAll;
@@ -120,6 +122,37 @@ public class EmptyQueryIT {
 
     assertThat(body, startsWith("\"colourId\"\t\"name\"\t\"hex\""));
     assertThat(body, not(containsString("\t\t\t\t\t\t\t")));
+
+    body = given()
+            .config(RestAssuredConfig.config().httpClient(HttpClientConfig.httpClientConfig().setParam("http.socket.timeout",10000)))
+            .queryParam("key", "PostgreSQL")
+            .queryParam("port", postgres.getPort())
+            .queryParam("_fmt", "html")
+            .log().all()
+            .get("/query/sub1/sub2/EmptyDataIT")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .extract().body().asString();
+
+    assertThat(body, equalTo("<table class=\"qetable\"><thead>\n<tr class=\"header\"><th class=\"header evenCol\" >colourId</th><th class=\"header oddCol\" >name</th><th class=\"header evenCol\" >hex</th></tr>\n</thead><tbody>\n</tbody></table>"));
+    assertThat(body, not(containsString("\t\t\t\t\t\t\t")));
+
+    byte[] bodyBytes = given()
+            .config(RestAssuredConfig.config().httpClient(HttpClientConfig.httpClientConfig().setParam("http.socket.timeout",10000)))
+            .queryParam("key", "PostgreSQL")
+            .queryParam("port", postgres.getPort())
+            .queryParam("_fmt", "xlsx")
+            .log().all()
+            .get("/query/sub1/sub2/EmptyDataIT")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .extract().body().asByteArray();
+
+    try (OutputStream fos = new FileOutputStream("target/temp/EmptyDataIT/EmptyDataIT.xlsx")) {
+      fos.write(bodyBytes);
+    }
 
     body = given()
             .config(RestAssuredConfig.config().httpClient(HttpClientConfig.httpClientConfig().setParam("http.socket.timeout",10000)))

@@ -77,7 +77,7 @@ public class FormatHtmlInstance implements FormatInstance {
                 }
               }
               if (!started.get()) {
-                started.set(true);
+                started.set(true);                
                 return outputStream.write(Buffer.buffer(headerFromRow(DataRow.EMPTY_ROW)))
                         .compose(v -> outputStream.write(ENDHEAD))
                         .compose(v -> outputStream.write(CLOSE))
@@ -95,16 +95,19 @@ public class FormatHtmlInstance implements FormatInstance {
   private String headerFromRow(DataRow row) {
     StringBuilder header = new StringBuilder();
     header.append("<tr class=\"header\">");
-    int colNum = 0;
-    for (String field : row.getMap().keySet()) {
-      String evenCol = ((colNum++ % 2 == 0) ? "evenCol" : "oddCol");
-      header.append("<th class=\"header ").append(evenCol).append("\" >").append(field).append("</th>");
-    }
+    int colNum[] = { 0 };
+    row.forEach((cd, v) -> {
+      String evenCol = ((colNum[0]++ % 2 == 0) ? "evenCol" : "oddCol");
+      header.append("<th class=\"header ").append(evenCol).append("\" >").append(cd.name()).append("</th>");
+    });
     header.append("</tr>\n");
     return header.toString();
   }
 
   private String rowFromRow(DataRow row) {
+    if (row.isEmpty()) {
+      return "";
+    }
     StringBuilder tr = new StringBuilder();
     String evenRow = ((rowNum++ % 2 == 0) ? "evenRow" : "oddRow");
     tr.append("<tr class=\"dataRow ").append(evenRow).append("\" >");

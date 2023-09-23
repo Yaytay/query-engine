@@ -35,6 +35,7 @@ source:
   query: select * from "Colours" where name = 'invisible'
 formats:
 - type: HTML
+- type: XLSX
 - type: Delimited
   name: tab
   delimiter: "\t"
