@@ -290,13 +290,9 @@ public class DesignHandler {
 
   private void handleFileChange(AsyncResult<Void> ar, AsyncResponse response, String action) {
     if (ar.succeeded()) {
-      vertx.executeBlocking(promise -> {
-                  try {
-                    dirCache.refresh();
-                  } catch (Throwable ex) {
-                    logger.error("Calling DirCache.refresh failed (failure ignored): ", ex);
-                  }
-                  promise.complete();
+      vertx.<Void>executeBlocking(() -> {
+                  dirCache.refresh();
+                  return null;
                 })
               .onSuccess(buffer -> {
                 DesignNodesTree.DesignDir relativeDir = new DesignNodesTree.DesignDir(root, dirCache.getRoot(), "");
@@ -603,9 +599,8 @@ public class DesignHandler {
     }
   }
 
-  private Future<?> renameFile(String newFullPath, final AsyncResponse response, String fullPath) {
-    Future<?> renameFuture;
-    renameFuture = fs.exists(newFullPath)
+  private Future<Void> renameFile(String newFullPath, final AsyncResponse response, String fullPath) {
+    return fs.exists(newFullPath)
             .compose(exists -> {
               if (exists) {
                 reportError(logger, "Destination file (" + newFullPath + ") already exists", response, new ServiceException(400, "Destination file already exists"), true);
@@ -613,42 +608,35 @@ public class DesignHandler {
               } else {
                 return fs.move(fullPath, newFullPath)
                         .compose(v -> {
-                          return vertx.executeBlocking(p -> {
+                          return vertx.<Void>executeBlocking(() -> {
                             dirCache.refresh();
-                            p.complete();
+                            return null;
                           });
                         });
               }
             });
-    return renameFuture;
   }
 
-  private Future<?> renameFolder(String newFullPath, final AsyncResponse response, String fullPath) {
-    Future<?> renameFuture;
-    renameFuture = fs.exists(newFullPath)
+  private Future<Void> renameFolder(String newFullPath, final AsyncResponse response, String fullPath) {
+    return fs.exists(newFullPath)
             .compose(exists -> {
               if (exists) {
                 reportError(logger, "Destination folder (" + newFullPath + ") already exists", response, new ServiceException(400, "Destination folder already exists"), true);
                 return Future.succeededFuture();
               } else {
-                return vertx.executeBlocking(p -> {
+                return vertx.<Void>executeBlocking(() -> {
                   dirCache.stop();
-                  p.complete();
+                  return null;
                 }).compose(v -> {
                   return fs.move(fullPath, newFullPath);
                 }).compose(v -> {
-                  return vertx.executeBlocking(p -> {
-                    try {
-                      dirCache.start();
-                      p.complete();
-                    } catch (IOException ex) {
-                      logger.error("Failed to restart Dir-Cache: ", ex);
-                    }
+                  return vertx.<Void>executeBlocking(() -> {
+                    dirCache.start();
+                    return null;
                   });
                 });
               }
             });
-    return renameFuture;
   }
   
   @GET

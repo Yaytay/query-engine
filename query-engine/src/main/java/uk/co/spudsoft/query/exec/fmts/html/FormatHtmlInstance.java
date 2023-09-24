@@ -95,7 +95,7 @@ public class FormatHtmlInstance implements FormatInstance {
   private String headerFromRow(DataRow row) {
     StringBuilder header = new StringBuilder();
     header.append("<tr class=\"header\">");
-    int colNum[] = { 0 };
+    int colNum[] = {0};
     row.forEach((cd, v) -> {
       String evenCol = ((colNum[0]++ % 2 == 0) ? "evenCol" : "oddCol");
       header.append("<th class=\"header ").append(evenCol).append("\" >").append(cd.name()).append("</th>");
