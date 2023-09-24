@@ -5,7 +5,7 @@ sourceEndpoints:
     type: SQL
     urlTemplate: "mysql://localhost:2001/test"
     username: user
-    password: T0p-secret
+    password: T0p-Secret
 source:
   type: SQL
   endpoint: MySQL

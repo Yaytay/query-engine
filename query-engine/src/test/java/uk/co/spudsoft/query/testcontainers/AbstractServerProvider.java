@@ -33,7 +33,7 @@ public abstract class AbstractServerProvider {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(AbstractServerProvider.class);
 
-  public static final String ROOT_PASSWORD = "T0p-secret"; 
+  public static final String ROOT_PASSWORD = "T0p-Secret"; 
   
   protected abstract String getScript();
   

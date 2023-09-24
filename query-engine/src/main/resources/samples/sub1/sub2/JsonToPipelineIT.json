@@ -14,18 +14,18 @@
     "MS SQL Server": {
       "urlTemplate": "sqlserver://localhost:<port>/test",
       "username": "sa",
-      "password": "T0p-secret"
+      "password": "T0p-Secret"
     },
     "MySQL": {
       "urlTemplate": "mysql://localhost:<port>/test",
       "username": "user",
-      "password": "T0p-secret"
+      "password": "T0p-Secret"
     }
     ,
     "PostgreSQL": {
       "urlTemplate": "postgresql://localhost:<port>/test",
       "username": "postgres",
-      "password": "T0p-secret"
+      "password": "T0p-Secret"
     }
   }
   ,

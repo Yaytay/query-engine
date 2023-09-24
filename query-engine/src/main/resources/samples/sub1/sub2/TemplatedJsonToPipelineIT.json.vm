@@ -14,7 +14,7 @@
       "type": "SQL",
       "url": "sqlserver://localhost:$params.port/test",
       "username": "sa",
-      "password": "T0p-secret"
+      "password": "T0p-Secret"
     },
     "MySQL": {
       "type": "SQL",
@@ -24,14 +24,14 @@
       "url": "mysql://host.docker.internal:$params.port/test",
 #end
       "username": "user",
-      "password": "T0p-secret"
+      "password": "T0p-Secret"
     }
     ,
     "PostgreSQL": {
       "type": "SQL",
       "url": "postgresql://localhost:$params.port/test",
       "username": "postgres",
-      "password": "T0p-secret"
+      "password": "T0p-Secret"
     }
   }
   ,
