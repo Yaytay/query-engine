@@ -7,9 +7,9 @@ services:
     ports:
     - 2001:3306
     environment:
-      MYSQL_ROOT_PASSWORD: T0p-secret
+      MYSQL_ROOT_PASSWORD: T0p-Secret
       MYSQL_USER: user
-      MYSQL_PASSWORD: T0p-secret
+      MYSQL_PASSWORD: T0p-Secret
       MYSQL_DATABASE: test
   
   mssql:
@@ -18,7 +18,7 @@ services:
     - 2002:1433
     environment:
       ACCEPT_EULA: Y
-      SA_PASSWORD: T0p-secret
+      SA_PASSWORD: T0p-Secret
 
   postgresql:
     image: postgres:14.1-alpine
@@ -26,12 +26,12 @@ services:
     - 2003:5432
     command: postgres -c log_min_duration_statement=0
     environment:
-      POSTGRES_PASSWORD: T0p-secret
+      POSTGRES_PASSWORD: T0p-Secret
       POSTGRES_USER: postgres
       POSTGRES_DB: test
       
   query-engine:
-    image: ghcr.io/yaytay/query-engine-design-mode:0.0.15
+    image: ghcr.io/yaytay/query-engine-design-mode:0.0.15-1-main
     ports:
     - 2000:8080
     environment:
@@ -39,9 +39,19 @@ services:
     - query-engine.logging.level.uk=TRACE
     - query-engine.audit.dataSource.url=jdbc:mysql://mysql/test?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
     - query-engine.audit.dataSource.user.username=user
-    - query-engine.audit.dataSource.user.password=T0p-secret
+    - query-engine.audit.dataSource.user.password=T0p-Secret
     - query-engine.audit.dataSource.adminUser.username=user
-    - query-engine.audit.dataSource.adminUser.password=T0p-secret
+    - query-engine.audit.dataSource.adminUser.password=T0p-Secret
     - query-engine.audit.retryLimit=100
     - query-engine.audit.retryIncrementMs=500
     - query-engine.jwt.acceptableIssuerRegexes[0]=.*
+    - query-engine.sampleDataLoads[0].url=mysql://query-engine-mysql-1:3306/test
+    - query-engine.sampleDataLoads[0].adminUser.username=user
+    - query-engine.sampleDataLoads[0].adminUser.password=T0p-Secret
+    - query-engine.sampleDataLoads[1].url=postgresql://query-engine-postgresql-1:5432/test
+    - query-engine.sampleDataLoads[1].adminUser.username=postgres
+    - query-engine.sampleDataLoads[1].adminUser.password=T0p-Secret
+    - query-engine.sampleDataLoads[2].url=sqlserver://query-engine-mssql-1:1433/test
+    - query-engine.sampleDataLoads[2].adminUser.username=sa
+    - query-engine.sampleDataLoads[2].adminUser.password=T0p-Secret
+    
