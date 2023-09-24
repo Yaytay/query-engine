@@ -75,10 +75,11 @@ public class DesignHandler {
   
   private static final Logger logger = LoggerFactory.getLogger(DesignHandler.class);
   
+  private static final Pattern BANNED_CHARS = Pattern.compile("\\\"|\\||<|>|\\:|\\?|\\*|\\\\|\\p{C}");
   private static final Pattern GOOD_FILE = Pattern.compile("[^/\"|<>:?*\\p{C}]+\\.(json|yaml|yml|json.vm|yaml.vm|yml.vm|jexl)");
-  private static final Pattern GOOD_FILE_PATH = Pattern.compile("[^/\"|.<>:?*\\p{C}][^\"|.<>:?*\\p{C}]+\\.(json|yaml|yml|json.vm|yaml.vm|yml.vm|jexl)");
+  private static final Pattern GOOD_FILE_PATH = Pattern.compile("[^\"|.<>:?*\\p{C}]+\\.(json|yaml|yml|json.vm|yaml.vm|yml.vm|jexl)");
   private static final Pattern GOOD_FOLDER = Pattern.compile("[^/\"|<>:?*\\p{C}.]+");
-  private static final Pattern GOOD_FOLDER_PATH = Pattern.compile("[^/\"|.<>:?*\\p{C}][^\"|.<>:?*\\p{C}]+");
+  private static final Pattern GOOD_FOLDER_PATH = Pattern.compile("[^\"|.<>:?*\\p{C}]+");
   private static final List<String> EXTENSIONS = Arrays.asList(".json", ".yaml", ".yml", ".json.vm", ".yaml.vm", ".yml.vm", ".jexl");
   
   private static final String MEDIA_TYPE_FOLDER = "inode/directory";
@@ -394,6 +395,11 @@ public class DesignHandler {
     try {
       MediaType contentType = getContentType(request);
             
+      if (path.startsWith("/")) {
+        reportError(logger, "The path (" + path + ") must not start with a '/'", response, new ServiceException(400, "Illegal path name"), true);
+        return ;
+      }
+      
       Future<Void> creationFuture;
       String action;
       if (MEDIA_TYPE_FOLDER_TYPE.isCompatible(contentType)) {
@@ -416,8 +422,7 @@ public class DesignHandler {
           reportError(logger, "File path (" + fullPath + ") does not match " + GOOD_FILE_PATH, response, new ServiceException(400, "Illegal file name"), true);
           return ;
         }
-        
-        
+                
         int dotPos = fullPath.indexOf(".");
         String extn = fullPath.substring(dotPos + 1);
         if (extn != null) {
@@ -706,6 +711,12 @@ public class DesignHandler {
     }
     if (normPath.contains("..")) {
       throw new ServiceException(400, "Path may not contain ..");
+    }
+    if (normPath.startsWith("/")) {
+      throw new ServiceException(400, "Path may not start with /");
+    }
+    if (BANNED_CHARS.matcher(normPath).find()) {
+      throw new ServiceException(400, "Path may not contain banned characters (must not match /" + BANNED_CHARS +"/)");
     }
     return normPath;
   }

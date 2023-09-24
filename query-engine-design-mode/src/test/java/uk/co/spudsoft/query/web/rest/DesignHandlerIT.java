@@ -233,6 +233,32 @@ public class DesignHandlerIT {
             // Outputs the full error message because this is in "outputAllErrorMessages" mode
             .body(startsWith("Unable to read file at path 'target" + File.separator + "query-engine" + File.separator + "samples-designhandlerit" + File.separator + "sub4" + File.separator + "sub5" + File.separator + "Nonexistent.yml'"));
     
+    // Request for a valid file using .. should fail
+    given().accept(ContentType.ANY).log().all()
+            .get("/api/design/file/sub1/../sub1/sub2/TemplatedJsonToPipelineIT.json.vm")
+            .then().log().all()
+            .statusCode(400)
+            .contentType(equalTo("text/plain;charset=UTF-8"))
+            .body(startsWith("Path may not contain .. (from ServiceException"));
+    
+    // Request for a file with a leading / should fail
+    given().accept(ContentType.ANY).log().all()
+            .urlEncodingEnabled(false)
+            .get("/api/design/file/%2Ftemp")
+            .then().log().all()
+            .statusCode(400)
+            .contentType(equalTo("text/plain;charset=UTF-8"))
+            .body(startsWith("Path may not start with / (from ServiceException"));
+    
+    // Request for a file with a \ should fail
+    given().accept(ContentType.ANY).log().all()
+            .urlEncodingEnabled(false)
+            .get("/api/design/file/sub1%5Csub2/TemplatedJsonToPipelineIT.json.vm")
+            .then().log().all()
+            .statusCode(400)
+            .contentType(equalTo("text/plain;charset=UTF-8"))
+            .body(startsWith("Path may not contain banned characters (must not match /\\\"|\\||<|>|\\:|\\?|\\*|\\\\|\\p{C}/) (from ServiceException"));
+    
     given().log().all()
             .get("/api/design/file/sub1/sub2/permissions.jexl")
             .then().log().all()
