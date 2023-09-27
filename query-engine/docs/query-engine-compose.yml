@@ -3,7 +3,7 @@ version: "3.8"
 services:
   mysql:
     image: mysql:8.0
-    command: mysqld --default-authentication-plugin=mysql_native_password
+    command: mysqld --default-authentication-plugin=mysql_native_password --skip-log-bin
     ports:
     - 2001:3306
     environment:
@@ -11,6 +11,7 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: T0p-Secret
       MYSQL_DATABASE: test
+      
   
   mssql:
     image: mcr.microsoft.com/mssql/server:2019-latest
@@ -31,7 +32,7 @@ services:
       POSTGRES_DB: test
       
   query-engine:
-    image: ghcr.io/yaytay/query-engine-design-mode:0.0.18
+    image: ghcr.io/yaytay/query-engine-design-mode:0.0.18-1-main
     ports:
     - 2000:8080
     environment:
@@ -45,6 +46,8 @@ services:
     - query-engine.audit.retryLimit=100
     - query-engine.audit.retryIncrementMs=500
     - query-engine.jwt.acceptableIssuerRegexes[0]=.*
+    - query-engine.zipkin.serviceName=query-engine2
+    - query-engine.zipkin.baseUrl=http://nonexistent/
     - query-engine.sampleDataLoads[0].url=mysql://query-engine-mysql-1:3306/test
     - query-engine.sampleDataLoads[0].adminUser.username=user
     - query-engine.sampleDataLoads[0].adminUser.password=T0p-Secret

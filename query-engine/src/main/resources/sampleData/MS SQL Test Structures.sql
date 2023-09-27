@@ -31,9 +31,10 @@ IF NOT EXISTS (SELECT * FROM Fields WHERE fieldId = 7)
 -- This could just as easily use an INT for the id column, the only reason for choosing the GUID is to demonstrate the difference across platforms
 IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='RefData' AND xtype='U')
     CREATE TABLE "RefData" (
-        "refId" UNIQUEIDENTIFIER NOT NULL,
-        "value" VARCHAR(100) NOT NULL CONSTRAINT UQ_value UNIQUE,
-        PRIMARY KEY ("refId")
+        "refId" UNIQUEIDENTIFIER NOT NULL
+        , "value" VARCHAR(100) NOT NULL CONSTRAINT UQ_value UNIQUE
+        , "ordering" INT NOT NULL CONSTRAINT UQ_ordering UNIQUE
+        , PRIMARY KEY ("refId")
     );
 
 -- Colours Table
@@ -409,7 +410,7 @@ BEGIN
   SET @i = @i + 1
   DECLARE @val VARCHAR(200) = dbo.NumberToWords(@i)
   IF NOT EXISTS (SELECT * FROM "RefData" WHERE "value" = @val)
-    INSERT INTO "RefData" ("refId", "value") VALUES (convert(uniqueidentifier, hashbytes('SHA', convert(varbinary(128), @i))), @val)
+    INSERT INTO "RefData" ("refId", "value", "ordering") VALUES (convert(uniqueidentifier, hashbytes('SHA', convert(varbinary(128), @i))), @val, @i)
 END
 
 SET @i = 0

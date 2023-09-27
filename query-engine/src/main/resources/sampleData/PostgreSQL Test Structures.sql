@@ -24,6 +24,7 @@ INSERT INTO "Fields" ("fieldId", "name", "type", "valueField") VALUES (7, 'TextF
 CREATE TABLE IF NOT EXISTS "RefData" (
     "refId" UUID NOT NULL
     , "value" VARCHAR(100) NOT NULL UNIQUE
+    , "ordering" INT NOT NULL UNIQUE
     , PRIMARY KEY ("refId")
 );
 
@@ -397,7 +398,7 @@ BEGIN
   WHILE i < 1000 LOOP
     i = i + 1;
     val = "NumberToWords"(i);
-    INSERT INTO "RefData" ("refId", "value") VALUES (int2uuid(i), val) ON CONFLICT DO NOTHING;
+    INSERT INTO "RefData" ("refId", "value", "ordering") VALUES (int2uuid(i), val, i) ON CONFLICT DO NOTHING;
   END LOOP;
 
   i = 0;

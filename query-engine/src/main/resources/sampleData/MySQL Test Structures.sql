@@ -24,6 +24,7 @@ INSERT IGNORE INTO `Fields` (`fieldId`, `name`, `type`, `valueField`) VALUES (7,
 CREATE TABLE IF NOT EXISTS `RefData` (
     `refId` BINARY(16) NOT NULL
     , `value` VARCHAR(100) NOT NULL UNIQUE
+    , `ordering` INT NOT NULL UNIQUE
     , CONSTRAINT PRIMARY KEY (`refId`)
 );
 
@@ -449,7 +450,7 @@ BEGIN
       SET @i = @i + 1;
       SET @val = NumberToWords(@i);
       SET @guid = CAST(SHA(CAST(@i AS BINARY(16))) AS BINARY(16));
-      INSERT IGNORE INTO `RefData` (`refId`, `value`) VALUES (@guid, @val);
+      INSERT IGNORE INTO `RefData` (`refId`, `value`, `ordering`) VALUES (@guid, @val, @i);
     END WHILE;
   
     SET @i = 0;
