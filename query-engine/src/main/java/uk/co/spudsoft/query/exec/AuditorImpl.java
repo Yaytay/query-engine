@@ -31,6 +31,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.healthchecks.Status;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -78,7 +79,7 @@ public class AuditorImpl implements Auditor {
   private static final Logger logger = LoggerFactory.getLogger(AuditorImpl.class);
   private static final String CHANGESET_RESOURCE_PATH = "/db/changelog/query-engine.yaml";
 
-  
+  private static final String PROCESS_ID = ManagementFactory.getRuntimeMXBean().getName();
   private static final Base64.Encoder ENCODER = java.util.Base64.getUrlEncoder();
   private static final Base64.Decoder DECODER = java.util.Base64.getUrlDecoder();
   
@@ -213,17 +214,21 @@ public class AuditorImpl implements Auditor {
                   insert into #SCHEMA#.#request# (
                     #id#
                     , #timestamp#
+                    , #processId#
                     , #url#
                     , #clientIp#
                     , #host#
                     , #arguments#
                     , #headers#
+                    , #openIdDetails#
                     , #issuer#
                     , #subject#
-                    , #nameFromJwt#
+                    , #username#
                     , #groups#
                   ) values (
                     ?
+                    , ?
+                    , ?
                     , ?
                     , ?
                     , ?
@@ -295,6 +300,7 @@ public class AuditorImpl implements Auditor {
     JsonObject headers = multiMapToJson(context.getHeaders());
     JsonObject arguments = multiMapToJson(context.getArguments());
     JsonArray groups = listToJson(context.getGroups());
+    String openIdDetails = context.getJwt() == null ? null : context.getJwt().getPayloadAsString();
     
     logger.info("Request: {} {} {} {} {} {} {} {} {}",
              context.getUrl(),
@@ -309,17 +315,20 @@ public class AuditorImpl implements Auditor {
     );
     
     return runSql(recordRequest, ps -> {
-                    ps.setString(1, limitLength(context.getRequestId(), 100));
-                    ps.setTimestamp(2, Timestamp.from(Instant.now()));
-                    ps.setString(3, limitLength(context.getUrl(), 1000));
-                    ps.setString(4, limitLength(context.getClientIp().toNormalizedString(), 40));
-                    ps.setString(5, limitLength(context.getHost(), 100));
-                    ps.setString(6, toString(arguments));
-                    ps.setString(7, toString(headers));
-                    ps.setString(8, limitLength(context.getIssuer(), 1000));
-                    ps.setString(9, limitLength(context.getSubject(), 1000));
-                    ps.setString(10, limitLength(context.getNameFromJwt(), 1000));
-                    ps.setString(11, toString(groups));                    
+                    int param = 1; 
+                    ps.setString(param++, limitLength(context.getRequestId(), 100));
+                    ps.setTimestamp(param++, Timestamp.from(Instant.now()));
+                    ps.setString(param++, limitLength(PROCESS_ID, 1000));
+                    ps.setString(param++, limitLength(context.getUrl(), 1000));
+                    ps.setString(param++, limitLength(context.getClientIp().toNormalizedString(), 40));
+                    ps.setString(param++, limitLength(context.getHost(), 100));
+                    ps.setString(param++, toString(arguments));
+                    ps.setString(param++, toString(headers));
+                    ps.setString(param++, openIdDetails);
+                    ps.setString(param++, limitLength(context.getIssuer(), 1000));
+                    ps.setString(param++, limitLength(context.getSubject(), 1000));
+                    ps.setString(param++, limitLength(context.getNameFromJwt(), 1000));
+                    ps.setString(param++, toString(groups));                    
     })
             .recover(ex -> {
               logger.error("Audit record failed: ", ex);

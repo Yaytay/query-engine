@@ -534,6 +534,12 @@ public class Main extends Application {
             if (idx > 0) {
               String scheme = destUrl.substring(0, idx);
               fileContents = fileContents.replaceAll(scheme + "://localhost:[0-9]+/test", destUrl);
+              
+              int idx2 = destUrl.indexOf(":", idx + 1);
+              if (idx2 > 0) {
+                String urlWithoutPort = destUrl.substring(0, idx2) + ":";
+                fileContents = fileContents.replaceAll(scheme + "://localhost:", urlWithoutPort);
+              }
             }
           }
         }

@@ -9,14 +9,16 @@ databaseChangeLog:
         columns:
         - {column: {name: id, type: varchar(100), constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_request}}}
         - {column: {name: timestamp, type: timestamp, constraints: {nullable: false}}}
-        - {column: {name: url, type: varchar(1000), constraints: {nullable: true}}}
-        - {column: {name: clientIp, type: varchar(40), constraints: {nullable: true}}}
-        - {column: {name: host, type: varchar(100), constraints: {nullable: true}}}
-        - {column: {name: arguments, type: clob, constraints: {nullable: true}}}
-        - {column: {name: headers, type: clob, constraints: {nullable: true}}}
+        - {column: {name: processId, type: varchar(1000), constraints: {nullable: false}}}
+        - {column: {name: url, type: varchar(1000), constraints: {nullable: false}}}
+        - {column: {name: clientIp, type: varchar(40), constraints: {nullable: false}}}
+        - {column: {name: host, type: varchar(100), constraints: {nullable: false}}}
+        - {column: {name: arguments, type: clob, constraints: {nullable: false}}}
+        - {column: {name: headers, type: clob, constraints: {nullable: false}}}
+        - {column: {name: openIdDetails, type: clob, constraints: {nullable: true}}}
         - {column: {name: issuer, type: varchar(1000), constraints: {nullable: true}}}
         - {column: {name: subject, type: varchar(1000), constraints: {nullable: true}}}
-        - {column: {name: nameFromJwt, type: varchar(1000), constraints: {nullable: true}}}
+        - {column: {name: username, type: varchar(1000), constraints: {nullable: true}}}
         - {column: {name: groups, type: clob, constraints: {nullable: true}}}
         - {column: {name: filePath, type: varchar(1000), constraints: {nullable: true}}}
         - {column: {name: fileSize, type: bigint, constraints: {nullable: true}}}
@@ -33,4 +35,10 @@ databaseChangeLog:
         - {column: {name: responseSize, type: bigint, constraints: {nullable: true}}}
         - {column: {name: responseHeaders, type: clob, constraints: {nullable: true}}}
         
-
+    - createIndex:   
+       indexName:  idx_request_timestamp
+       tableName:  request
+       columns:  
+       - column:
+          name:  timestamp
+       unique:  false
