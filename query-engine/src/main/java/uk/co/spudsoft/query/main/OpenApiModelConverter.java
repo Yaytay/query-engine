@@ -41,9 +41,9 @@ public class OpenApiModelConverter implements ModelConverter {
   public Schema resolve(AnnotatedType type, ModelConverterContext context, Iterator<ModelConverter> chain) {
     if (chain.hasNext()) {
       Schema schema = chain.next().resolve(type, context, chain);
-      JavaType _type = Json.mapper().constructType(type.getType());
-      if (_type != null) {
-        Class<?> cls = _type.getRawClass();
+      JavaType javaType = Json.mapper().constructType(type.getType());
+      if (javaType != null) {
+        Class<?> cls = javaType.getRawClass();
         if (Map.class.isAssignableFrom(cls) || List.class.isAssignableFrom(cls)) {
           if (schema != null && schema.getProperties() != null) {
             schema.getProperties().remove("empty");
