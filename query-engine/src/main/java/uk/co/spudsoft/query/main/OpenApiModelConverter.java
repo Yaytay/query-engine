@@ -34,8 +34,6 @@ import org.slf4j.LoggerFactory;
  */
 public class OpenApiModelConverter implements ModelConverter {
 
-  private static final Logger logger = LoggerFactory.getLogger(OpenApiModelConverter.class);
-  
   @Override
   @SuppressWarnings({"unchecked", "rawtypes"})  
   public Schema resolve(AnnotatedType type, ModelConverterContext context, Iterator<ModelConverter> chain) {
@@ -45,12 +43,7 @@ public class OpenApiModelConverter implements ModelConverter {
       if (javaType != null) {
         Class<?> cls = javaType.getRawClass();
         if (Map.class.isAssignableFrom(cls) || List.class.isAssignableFrom(cls)) {
-          if (schema != null && schema.getProperties() != null) {
-            schema.getProperties().remove("empty");
-            if (schema.getProperties().isEmpty()) {
-              schema.setProperties(null);
-            }
-          }
+          removeEmptyProperty(schema);
         }
       }
       return schema;
@@ -59,6 +52,16 @@ public class OpenApiModelConverter implements ModelConverter {
     }
   }
 
+  @SuppressWarnings({"unchecked", "rawtypes"})  
+  static void removeEmptyProperty(Schema schema) {
+    if (schema != null && schema.getProperties() != null) {
+      schema.getProperties().remove("empty");
+      if (schema.getProperties().isEmpty()) {
+        schema.setProperties(null);
+      }
+    }
+  }
+  
   @Override
   public boolean isOpenapi31() {
     return true;
