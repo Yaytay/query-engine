@@ -34,6 +34,7 @@ import uk.co.spudsoft.query.logging.LoggingConfiguration;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
+import io.swagger.v3.core.converter.ModelConverters;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.integration.SwaggerConfiguration;
 import io.swagger.v3.oas.integration.api.OpenAPIConfiguration;
@@ -402,6 +403,7 @@ public class Main extends Application {
 
     OpenAPIConfiguration openApiConfig = createOpenapiConfiguration(controllers);
     OpenApiHandler openApiHandler = new OpenApiHandler(this, openApiConfig, "/api");
+    ModelConverters.getInstance().addConverter(new OpenApiModelConverter());
     
     PipelineExecutor pipelineExecutor = new PipelineExecutorImpl(params.getSecrets());
     router.route(QueryRouter.PATH_ROOT + "/*").handler(new QueryRouter(vertx, auditor, rcb, defnLoader, pipelineExecutor, outputAllErrorMessages()));

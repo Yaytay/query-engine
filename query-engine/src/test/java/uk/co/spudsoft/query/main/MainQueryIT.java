@@ -23,7 +23,6 @@ import io.vertx.junit5.VertxExtension;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
-import java.nio.file.Files;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -33,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
@@ -106,12 +106,13 @@ public class MainQueryIT {
             .log().all()
             .get("/openapi.yaml")
             .then()
-            .log().ifError()
+            .log().all()
             .statusCode(200)
             .extract().body().asString();
     
     assertThat(body, startsWith("openapi: 3.1.0"));
     assertThat(body, containsString("SpudSoft Query Engine"));
+    assertThat(body, not(containsString("empty")));
     
     body = given()
             .log().all()
@@ -123,6 +124,7 @@ public class MainQueryIT {
     
     assertThat(body, containsString("\"openapi\" : \"3.1.0\","));
     assertThat(body, containsString("SpudSoft Query Engine"));
+    assertThat(body, not(containsString("empty")));
     
     body = given()
             .log().all()
