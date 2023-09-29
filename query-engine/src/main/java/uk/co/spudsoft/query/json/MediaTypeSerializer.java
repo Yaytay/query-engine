@@ -14,20 +14,33 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package uk.co.spudsoft.query.json;
 
-package uk.co.spudsoft.query.main;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import com.google.common.net.MediaType;
+import java.io.IOException;
 
 /**
- * Set the version from the pom.
- * 
+ *
  * @author njt
  */
-public final class Version {
+public class MediaTypeSerializer extends StdSerializer<MediaType> {
 
-  public static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-  public static final String MAVEN_PROJECT_VERSION = "0.0.19-main";
+  private static final long serialVersionUID = 1L;
 
-  private Version() {
+  public MediaTypeSerializer() {
+    this(null);
   }
-  
+
+  public MediaTypeSerializer(Class<MediaType> t) {
+    super(t);
+  }
+
+  @Override
+  public void serialize(MediaType value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+    gen.writeString(value.toString());
+  }
+
 }

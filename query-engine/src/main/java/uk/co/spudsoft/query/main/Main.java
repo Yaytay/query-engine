@@ -23,10 +23,7 @@ import brave.http.HttpTracing;
 import brave.sampler.Sampler;
 import ch.qos.logback.classic.LoggerContext;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.jakarta.rs.json.JacksonJsonProvider;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -95,6 +92,7 @@ import uk.co.spudsoft.query.exec.AuditorImpl;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineExecutorImpl;
 import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
+import uk.co.spudsoft.query.json.ObjectMapperConfiguration;
 import uk.co.spudsoft.query.json.TracingOptionsMixin;
 import uk.co.spudsoft.query.main.sample.SampleDataLoader;
 import uk.co.spudsoft.query.main.sample.SampleDataLoaderMsSQL;
@@ -208,17 +206,7 @@ public class Main extends Application {
   public int getPort() {
     return port;
   }
-    
-  private ObjectMapper configureObjectMapper(ObjectMapper mapper) {
-    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true);
-    mapper.registerModule(new JavaTimeModule());
-    mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-    mapper.configure(SerializationFeature.WRITE_DURATIONS_AS_TIMESTAMPS, false);
-    mapper.setDefaultMergeable(Boolean.TRUE);
-    mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-    return mapper;
-  }
-  
+      
   @SuppressFBWarnings(value = "PATH_TRAVERSAL_IN", justification = "False positive, the dirs at this stage cannot be specified by the user")
   protected Future<Integer> innerMain(String[] args, PrintStream stdout) {
     
@@ -299,8 +287,8 @@ public class Main extends Application {
     SLF4JBridgeHandler.install();
     java.util.logging.Logger.getLogger("").setLevel(Level.FINEST);
 
-    configureObjectMapper(DatabindCodec.mapper());
-    configureObjectMapper(DatabindCodec.prettyMapper());
+    ObjectMapperConfiguration.configureObjectMapper(DatabindCodec.mapper());
+    ObjectMapperConfiguration.configureObjectMapper(DatabindCodec.prettyMapper().enable(SerializationFeature.INDENT_OUTPUT));
 
     try {
       logger.info("Params: {}", DatabindCodec.mapper().writeValueAsString(params));    

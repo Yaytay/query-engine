@@ -34,7 +34,6 @@ import static org.junit.Assert.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import uk.co.spudsoft.query.main.Credentials;
-import uk.co.spudsoft.query.main.Main;
 
 /**
  *

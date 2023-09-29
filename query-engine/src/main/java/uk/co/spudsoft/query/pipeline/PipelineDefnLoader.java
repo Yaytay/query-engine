@@ -16,15 +16,12 @@
  */
 package uk.co.spudsoft.query.pipeline;
 
-import uk.co.spudsoft.query.trees.AsyncDirTreeMapper;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import uk.co.spudsoft.query.trees.AsyncDirTreeMapper;
 import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.cache.CacheBuilder;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -59,6 +56,7 @@ import uk.co.spudsoft.query.main.CacheConfig;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.json.ObjectMapperConfiguration;
 import uk.co.spudsoft.query.web.ServiceException;
 
 /**
@@ -96,13 +94,10 @@ public class PipelineDefnLoader {
 
   private static ObjectMapper createObjectMapper(JsonFactory jf) {
     ObjectMapper mapper = new ObjectMapper(jf);
-    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true);
-    mapper.registerModule(new JavaTimeModule());
-    mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-    mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+    ObjectMapperConfiguration.configureObjectMapper(mapper);
     mapper.setDefaultMergeable(Boolean.TRUE);
+    mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     mapper.addHandler(PROBLEM_HANDLER);
-    mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
     return mapper;
   }
   
