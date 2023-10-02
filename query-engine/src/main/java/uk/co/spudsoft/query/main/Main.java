@@ -102,6 +102,7 @@ import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 import uk.co.spudsoft.query.web.QueryRouter;
 import uk.co.spudsoft.query.web.UiRouter;
 import uk.co.spudsoft.query.web.rest.DocHandler;
+import uk.co.spudsoft.query.web.rest.FormIoHandler;
 import uk.co.spudsoft.query.web.rest.InfoHandler;
 import uk.co.spudspoft.vertx.rest.JaxRsHandler;
 import uk.co.spudspoft.vertx.rest.OpenApiHandler;
@@ -384,6 +385,7 @@ public class Main extends Application {
     List<Object> controllers = new ArrayList<>();
     controllers.add(new InfoHandler(rcb, defnLoader, outputAllErrorMessages()));
     controllers.add(new DocHandler(rcb, outputAllErrorMessages()));
+    controllers.add(new FormIoHandler(rcb, defnLoader, outputAllErrorMessages()));
     addExtraControllers(params, controllers);
     List<Object> providers = Arrays.asList(
         new JacksonJsonProvider(PipelineDefnLoader.JSON_OBJECT_MAPPER, JacksonJsonProvider.BASIC_ANNOTATIONS)

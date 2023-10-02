@@ -138,6 +138,17 @@ public class MainQueryIT {
     assertThat(body, containsString("\"mediaType\":\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\""));
         
     body = given()
+            .log().all()
+            .get("/api/formio/demo/FeatureRichExample")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .extract().body().asString();
+    
+    assertThat(body, startsWith("{\"type\":\"form\""));
+    assertThat(body, containsString("Output"));
+        
+    body = given()
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
             .accept("text/html, application/xhtml+xml, image/webp, image/apng, application/xml; q=0.9, application/signed-exchange; v=b3; q=0.9, */*; q=0.8")

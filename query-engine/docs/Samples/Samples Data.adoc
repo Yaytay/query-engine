@@ -96,6 +96,7 @@ A many-to-many join table between Data and RefData.
 |dataId | Integer | ID for row in the Data table to which this data belongs
 |sort | Integer | Numerical value for sorting the data within each Data row
 |refId | UUID | ID for the data in the RefData table
+|ordering | Integer | A sort order column
 |===
 
 == DynamicEndpoint

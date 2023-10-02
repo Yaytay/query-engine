@@ -89,7 +89,7 @@ public class RunIT {
       , "--httpServerOptions.port=8000"
       , "--managementEndpointPort=8001"
       , "--managementEndpointUrl=http://localhost:8001/manage"
-      , "--corsAllowedOrigin=.*"
+      , "--corsAllowedOriginRegex=.*"
     }, stdout);
     
     for (int i = 0; i < 14400; ++i) {
