@@ -16,138 +16,53 @@
  */
 package uk.co.spudsoft.query.web.formio;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import java.io.IOException;
+
 /**
  *
- * @author njt
+ * @author jtalbut
  */
-public class Errors {
+public class Errors extends AbstractComponent<Errors> {
+
+  public Errors(JsonGenerator generator) throws IOException {
+    super(generator);
+  }
   
-  private String required;
-  private String min;
-  private String max;
-  private String minLength;
-  private String maxLength;
-  private String invalid_email;
-  private String invalid_date;
-  private String pattern;
-  private String custom;
-
-  public String getRequired() {
-    return required;
+  public Errors withRequired(final String value) throws IOException {
+    return with("required", value);
   }
 
-  public void setRequired(String required) {
-    this.required = required;
+  public Errors withMin(final String value) throws IOException {
+    return with("min", value);
   }
 
-  public String getMin() {
-    return min;
+  public Errors withMax(final String value) throws IOException {
+    return with("max", value);
   }
 
-  public void setMin(String min) {
-    this.min = min;
+  public Errors withMinLength(final String value) throws IOException {
+    return with("minLength", value);
   }
 
-  public String getMax() {
-    return max;
+  public Errors withMaxLength(final String value) throws IOException {
+    return with("maxLength", value);
   }
 
-  public void setMax(String max) {
-    this.max = max;
+  public Errors withInvalidEmail(final String value) throws IOException {
+    return with("invalid_email", value);
   }
 
-  public String getMinLength() {
-    return minLength;
+  public Errors withInvalidDate(final String value) throws IOException {
+    return with("invalid_date", value);
   }
 
-  public void setMinLength(String minLength) {
-    this.minLength = minLength;
+  public Errors withPattern(final String value) throws IOException {
+    return with("pattern", value);
   }
 
-  public String getMaxLength() {
-    return maxLength;
+  public Errors withCustom(final String value) throws IOException {
+    return with("custom", value);
   }
-
-  public void setMaxLength(String maxLength) {
-    this.maxLength = maxLength;
-  }
-
-  public String getInvalid_email() {
-    return invalid_email;
-  }
-
-  public void setInvalid_email(String invalid_email) {
-    this.invalid_email = invalid_email;
-  }
-
-  public String getInvalid_date() {
-    return invalid_date;
-  }
-
-  public void setInvalid_date(String invalid_date) {
-    this.invalid_date = invalid_date;
-  }
-
-  public String getPattern() {
-    return pattern;
-  }
-
-  public void setPattern(String pattern) {
-    this.pattern = pattern;
-  }
-
-  public String getCustom() {
-    return custom;
-  }
-
-  public void setCustom(String custom) {
-    this.custom = custom;
-  }
-
-  public Errors withRequired(final String value) {
-    this.required = value;
-    return this;
-  }
-
-  public Errors withMin(final String value) {
-    this.min = value;
-    return this;
-  }
-
-  public Errors withMax(final String value) {
-    this.max = value;
-    return this;
-  }
-
-  public Errors withMinLength(final String value) {
-    this.minLength = value;
-    return this;
-  }
-
-  public Errors withMaxLength(final String value) {
-    this.maxLength = value;
-    return this;
-  }
-
-  public Errors withInvalid_email(final String value) {
-    this.invalid_email = value;
-    return this;
-  }
-
-  public Errors withInvalid_date(final String value) {
-    this.invalid_date = value;
-    return this;
-  }
-
-  public Errors withPattern(final String value) {
-    this.pattern = value;
-    return this;
-  }
-
-  public Errors withCustom(final String value) {
-    this.custom = value;
-    return this;
-  }
-
   
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 njt
+ * Copyright (C) 2023 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,116 +16,52 @@
  */
 package uk.co.spudsoft.query.web.formio;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import java.io.IOException;
+
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class Button extends Component<Button> {
 
-  public static enum ActionType {
+  public enum ActionType {
     submit, reset, event, oauth
   }
   
-  private String size;
-  private String leftIcon;
-  private String rightIcon;
-  private Boolean block;
-  private ActionType action;
-  private Boolean disableOnInvalid;
-  private String theme;
-  
-  public Button() {
-    super("button");
+  public Button(JsonGenerator generator) throws IOException {
+    super(generator, "button");
   }
 
-  public String getSize() {
-    return size;
+  public Button withSize(final String value) throws IOException {
+    return with("size", value);
   }
 
-  public void setSize(String size) {
-    this.size = size;
+  public Button withLeftIcon(final String value) throws IOException {
+    return with("leftIcon", value);
   }
 
-  public String getLeftIcon() {
-    return leftIcon;
+  public Button withRightIcon(final String value) throws IOException {
+    return with("rightIcon", value);
   }
 
-  public void setLeftIcon(String leftIcon) {
-    this.leftIcon = leftIcon;
+  public Button withBlock(final Boolean value) throws IOException {
+    return with("block", value);
   }
 
-  public String getRightIcon() {
-    return rightIcon;
+  public Button withAction(final ActionType value) throws IOException {
+    if (value != null) {
+      return with("action", value.name());
+    } else {
+      return null;
+    }
   }
 
-  public void setRightIcon(String rightIcon) {
-    this.rightIcon = rightIcon;
+  public Button withDisableOnInvalid(final Boolean value) throws IOException {
+    return with("disableOnInvalid", value);
   }
 
-  public Boolean getBlock() {
-    return block;
-  }
-
-  public void setBlock(Boolean block) {
-    this.block = block;
-  }
-
-  public ActionType getAction() {
-    return action;
-  }
-
-  public void setAction(ActionType action) {
-    this.action = action;
-  }
-
-  public Boolean getDisableOnInvalid() {
-    return disableOnInvalid;
-  }
-
-  public void setDisableOnInvalid(Boolean disableOnInvalid) {
-    this.disableOnInvalid = disableOnInvalid;
-  }
-
-  public String getTheme() {
-    return theme;
-  }
-
-  public void setTheme(String theme) {
-    this.theme = theme;
-  }
-
-  public Button withSize(final String value) {
-    this.size = value;
-    return this;
-  }
-
-  public Button withLeftIcon(final String value) {
-    this.leftIcon = value;
-    return this;
-  }
-
-  public Button withRightIcon(final String value) {
-    this.rightIcon = value;
-    return this;
-  }
-
-  public Button withBlock(final Boolean value) {
-    this.block = value;
-    return this;
-  }
-
-  public Button withAction(final ActionType value) {
-    this.action = value;
-    return this;
-  }
-
-  public Button withDisableOnInvalid(final Boolean value) {
-    this.disableOnInvalid = value;
-    return this;
-  }
-
-  public Button withTheme(final String value) {
-    this.theme = value;
-    return this;
+  public Button withTheme(final String value) throws IOException {
+    return with("theme", value);
   }
 }

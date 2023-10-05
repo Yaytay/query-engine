@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 njt
+ * Copyright (C) 2023 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,35 +16,23 @@
  */
 package uk.co.spudsoft.query.web.formio;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.util.List;
+import com.fasterxml.jackson.core.JsonGenerator;
+import java.io.IOException;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  * @param <T> The concrete class the derives from this base class.
  */
-@SuppressFBWarnings(value = {"EI_EXPOSE_REP", "EI_EXPOSE_REP2"}, justification = "Data object purely for translating to JSON")
 public abstract class AbstractContainer<T extends AbstractContainer<T>> extends Component<T> {
+    
+  public AbstractContainer(JsonGenerator generator, String type) throws IOException {
+    super(generator, type);
+  }
   
-  private List<Component<?>> components;
-
-  public AbstractContainer(String type) {
-    super(type);
-  }
-
-  public List<Component<?>> getComponents() {
-    return components;
-  }
-
-  public void setComponents(List<Component<?>> components) {
-    this.components = components;
-  }
-
-  @SuppressWarnings("unchecked")
-  public T withComponents(final List<Component<?>> value) {
-    this.components = value;
-    return (T) this;
+  public ComponentArray addComponents() throws IOException {
+    generator.writeFieldName("components");
+    return new ComponentArray(generator);    
   }
   
 }

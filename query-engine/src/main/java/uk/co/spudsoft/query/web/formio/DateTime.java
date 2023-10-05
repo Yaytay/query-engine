@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 njt
+ * Copyright (C) 2023 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,324 +16,129 @@
  */
 package uk.co.spudsoft.query.web.formio;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.IOException;
 import java.time.LocalDateTime;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 @SuppressFBWarnings(value = {"EI_EXPOSE_REP", "EI_EXPOSE_REP2"}, justification = "Data object purely for translating to JSON")
 public class DateTime extends Component<DateTime> {
 
-  public static enum DatePickerMode {
+  public enum DatePickerMode {
     day, week, month, year
   }
   
-  public static class DatePicker {
-    private Boolean showWeeks;
-    private Integer startingDay;
-    private DatePickerMode minMode;
-    private DatePickerMode maxMode;
-    private Integer yearRows;
-    private Integer yearColumns;
-    private LocalDateTime minDate;
-    private LocalDateTime maxDate;
-
-    public Boolean getShowWeeks() {
-      return showWeeks;
+  public static class DatePicker extends AbstractComponent<DatePicker> {
+  
+    protected DatePicker(JsonGenerator generator) throws IOException {
+      super(generator);
     }
 
-    public void setShowWeeks(Boolean showWeeks) {
-      this.showWeeks = showWeeks;
+    public DatePicker withShowWeeks(final Boolean value) throws IOException {
+      return with("showWeeks", value);
     }
 
-    public Integer getStartingDay() {
-      return startingDay;
+    public DatePicker withStartingDay(final Integer value) throws IOException {
+      return with("startingDay", value);
     }
 
-    public void setStartingDay(Integer startingDay) {
-      this.startingDay = startingDay;
+    public DatePicker withMinMode(final DatePickerMode value) throws IOException {
+      return with("minMode", value.name());
     }
 
-    public DatePickerMode getMinMode() {
-      return minMode;
+    public DatePicker withMaxMode(final DatePickerMode value) throws IOException {
+      return with("maxMode", value.name());
     }
 
-    public void setMinMode(DatePickerMode minMode) {
-      this.minMode = minMode;
+    public DatePicker withYearRows(final Integer value) throws IOException {
+      return with("yearRows", value);
     }
 
-    public DatePickerMode getMaxMode() {
-      return maxMode;
+    public DatePicker withYearColumns(final Integer value) throws IOException {
+      return with("yearColumns", value);
     }
 
-    public void setMaxMode(DatePickerMode maxMode) {
-      this.maxMode = maxMode;
+    public DatePicker withMinDate(final LocalDateTime value) throws IOException {
+      return with("minDate", value);
     }
 
-    public Integer getYearRows() {
-      return yearRows;
-    }
-
-    public void setYearRows(Integer yearRows) {
-      this.yearRows = yearRows;
-    }
-
-    public Integer getYearColumns() {
-      return yearColumns;
-    }
-
-    public void setYearColumns(Integer yearColumns) {
-      this.yearColumns = yearColumns;
-    }
-
-    public LocalDateTime getMinDate() {
-      return minDate;
-    }
-
-    public void setMinDate(LocalDateTime minDate) {
-      this.minDate = minDate;
-    }
-
-    public LocalDateTime getMaxDate() {
-      return maxDate;
-    }
-
-    public void setMaxDate(LocalDateTime maxDate) {
-      this.maxDate = maxDate;
-    }
-
-    public DatePicker withShowWeeks(final Boolean value) {
-      this.showWeeks = value;
-      return this;
-    }
-
-    public DatePicker withStartingDay(final Integer value) {
-      this.startingDay = value;
-      return this;
-    }
-
-    public DatePicker withMinMode(final DatePickerMode value) {
-      this.minMode = value;
-      return this;
-    }
-
-    public DatePicker withMaxMode(final DatePickerMode value) {
-      this.maxMode = value;
-      return this;
-    }
-
-    public DatePicker withYearRows(final Integer value) {
-      this.yearRows = value;
-      return this;
-    }
-
-    public DatePicker withYearColumns(final Integer value) {
-      this.yearColumns = value;
-      return this;
-    }
-
-    public DatePicker withMinDate(final LocalDateTime value) {
-      this.minDate = value;
-      return this;
-    }
-
-    public DatePicker withMaxDate(final LocalDateTime value) {
-      this.maxDate = value;
-      return this;
+    public DatePicker withMaxDate(final LocalDateTime value) throws IOException {
+      return with("maxDate", value);
     }
   }
   
-  public static class TimePicker {
-    private Integer hourStep;
-    private Integer minuteStep;
-    private Boolean showMeridian;
-    private Boolean readonlyInput;
-    private Boolean mousewheel;
-    private Boolean arrowkeys;
-
-    public Integer getHourStep() {
-      return hourStep;
+  public static class TimePicker extends AbstractComponent<TimePicker> {
+  
+    protected TimePicker(JsonGenerator generator) throws IOException {
+      super(generator);
     }
 
-    public void setHourStep(Integer hourStep) {
-      this.hourStep = hourStep;
+    public TimePicker withHourStep(final Integer value) throws IOException {
+      return with("hourStep", value);
     }
 
-    public Integer getMinuteStep() {
-      return minuteStep;
+    public TimePicker withMinuteStep(final Integer value) throws IOException {
+      return with("minuteStep", value);
     }
 
-    public void setMinuteStep(Integer minuteStep) {
-      this.minuteStep = minuteStep;
+    public TimePicker withShowMeridian(final Boolean value) throws IOException {
+      return with("showMeridian", value);
     }
 
-    public Boolean getShowMeridian() {
-      return showMeridian;
+    public TimePicker withReadonlyInput(final Boolean value) throws IOException {
+      return with("readonlyInput", value);
     }
 
-    public void setShowMeridian(Boolean showMeridian) {
-      this.showMeridian = showMeridian;
+    public TimePicker withMousewheel(final Boolean value) throws IOException {
+      return with("mousewheel", value);
     }
 
-    public Boolean getReadonlyInput() {
-      return readonlyInput;
-    }
-
-    public void setReadonlyInput(Boolean readonlyInput) {
-      this.readonlyInput = readonlyInput;
-    }
-
-    public Boolean getMousewheel() {
-      return mousewheel;
-    }
-
-    public void setMousewheel(Boolean mousewheel) {
-      this.mousewheel = mousewheel;
-    }
-
-    public Boolean getArrowkeys() {
-      return arrowkeys;
-    }
-
-    public void setArrowkeys(Boolean arrowkeys) {
-      this.arrowkeys = arrowkeys;
-    }
-
-    public TimePicker withHourStep(final Integer value) {
-      this.hourStep = value;
-      return this;
-    }
-
-    public TimePicker withMinuteStep(final Integer value) {
-      this.minuteStep = value;
-      return this;
-    }
-
-    public TimePicker withShowMeridian(final Boolean value) {
-      this.showMeridian = value;
-      return this;
-    }
-
-    public TimePicker withReadonlyInput(final Boolean value) {
-      this.readonlyInput = value;
-      return this;
-    }
-
-    public TimePicker withMousewheel(final Boolean value) {
-      this.mousewheel = value;
-      return this;
-    }
-
-    public TimePicker withArrowkeys(final Boolean value) {
-      this.arrowkeys = value;
-      return this;
+    public TimePicker withArrowkeys(final Boolean value) throws IOException {
+      return with("arrowkeys", value);
     }
         
   }
   
-  private String format;
-  private Boolean enableDate;
-  private Boolean enableTime;
-  private LocalDateTime defaultDate;
-  private DatePickerMode datepickerMode;
-  private DatePicker datePicker;
-  private TimePicker timePicker;
-  
-  public DateTime() {
-    super("datetime");
+  public DateTime(JsonGenerator generator) throws IOException {
+    super(generator, "datetime");
   }
 
-  public String getFormat() {
-    return format;
+  public DateTime withFormat(final String value) throws IOException {
+    return with("format", value);
   }
 
-  public void setFormat(String format) {
-    this.format = format;
+  public DateTime withEnableDate(final Boolean value) throws IOException {
+    return with("enableDate", value);
   }
 
-  public Boolean getEnableDate() {
-    return enableDate;
+  public DateTime withEnableTime(final Boolean value) throws IOException {
+    return with("enableTime", value);
   }
 
-  public void setEnableDate(Boolean enableDate) {
-    this.enableDate = enableDate;
+  public DateTime withDefaultDate(final LocalDateTime value) throws IOException {
+    return with("defaultDate", value);
   }
 
-  public Boolean getEnableTime() {
-    return enableTime;
+  public DateTime withDatepickerMode(final DatePickerMode value) throws IOException {
+    if (value != null) {
+      return with("datepickerMode", value.name());
+    } else {
+      return this;
+    }
   }
 
-  public void setEnableTime(Boolean enableTime) {
-    this.enableTime = enableTime;
+  public DatePicker addDatePicker() throws IOException {
+    generator.writeFieldName("datePicker");
+    return new DatePicker(generator);
   }
 
-  public LocalDateTime getDefaultDate() {
-    return defaultDate;
-  }
-
-  public void setDefaultDate(LocalDateTime defaultDate) {
-    this.defaultDate = defaultDate;
-  }
-
-  public DatePickerMode getDatepickerMode() {
-    return datepickerMode;
-  }
-
-  public void setDatepickerMode(DatePickerMode datepickerMode) {
-    this.datepickerMode = datepickerMode;
-  }
-
-  public DatePicker getDatePicker() {
-    return datePicker;
-  }
-
-  public void setDatePicker(DatePicker datePicker) {
-    this.datePicker = datePicker;
-  }
-
-  public TimePicker getTimePicker() {
-    return timePicker;
-  }
-
-  public void setTimePicker(TimePicker timePicker) {
-    this.timePicker = timePicker;
-  }
-
-  public DateTime withFormat(final String value) {
-    this.format = value;
-    return this;
-  }
-
-  public DateTime withEnableDate(final Boolean value) {
-    this.enableDate = value;
-    return this;
-  }
-
-  public DateTime withEnableTime(final Boolean value) {
-    this.enableTime = value;
-    return this;
-  }
-
-  public DateTime withDefaultDate(final LocalDateTime value) {
-    this.defaultDate = value;
-    return this;
-  }
-
-  public DateTime withDatepickerMode(final DatePickerMode value) {
-    this.datepickerMode = value;
-    return this;
-  }
-
-  public DateTime withDatePicker(final DatePicker value) {
-    this.datePicker = value;
-    return this;
-  }
-
-  public DateTime withTimePicker(final TimePicker value) {
-    this.timePicker = value;
-    return this;
+  public TimePicker addTimePicker() throws IOException {
+    generator.writeFieldName("timePicker");
+    return new TimePicker(generator);
   }
   
 }

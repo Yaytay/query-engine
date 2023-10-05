@@ -16,81 +16,37 @@
  */
 package uk.co.spudsoft.query.web.formio;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import java.io.IOException;
+
 /**
  *
- * @author njt
+ * @author jtalbut
  */
-public class Validation {
-  
-  private Boolean required;
-  private Integer minLength;
-  private Integer maxLength;
-  private String pattern;
-  private String custom;
+public class Validation extends AbstractComponent<Validation> {
 
-  public Boolean getRequired() {
-    return required;
+  protected Validation(JsonGenerator generator) throws IOException {
+    super(generator);
   }
 
-  public void setRequired(Boolean required) {
-    this.required = required;
+  public Validation withRequired(final Boolean value) throws IOException {
+    return with("required", value);
   }
 
-  public Integer getMinLength() {
-    return minLength;
+  public Validation withMinLength(final Integer value) throws IOException {
+    return with("minLength", value);
   }
 
-  public void setMinLength(Integer minLength) {
-    this.minLength = minLength;
+  public Validation withMaxLength(final Integer value) throws IOException {
+    return with("maxLength", value);
   }
 
-  public Integer getMaxLength() {
-    return maxLength;
+  public Validation withPattern(final String value) throws IOException {
+    return with("pattern", value);
   }
 
-  public void setMaxLength(Integer maxLength) {
-    this.maxLength = maxLength;
-  }
-
-  public String getPattern() {
-    return pattern;
-  }
-
-  public void setPattern(String pattern) {
-    this.pattern = pattern;
-  }
-
-  public String getCustom() {
-    return custom;
-  }
-
-  public void setCustom(String custom) {
-    this.custom = custom;
-  }
-
-  public Validation withRequired(final Boolean value) {
-    this.required = value;
-    return this;
-  }
-
-  public Validation withMinLength(final Integer value) {
-    this.minLength = value;
-    return this;
-  }
-
-  public Validation withMaxLength(final Integer value) {
-    this.maxLength = value;
-    return this;
-  }
-
-  public Validation withPattern(final String value) {
-    this.pattern = value;
-    return this;
-  }
-
-  public Validation withCustom(final String value) {
-    this.custom = value;
-    return this;
+  public Validation withCustom(final String value) throws IOException {
+    return with("custom", value);
   }
 
   

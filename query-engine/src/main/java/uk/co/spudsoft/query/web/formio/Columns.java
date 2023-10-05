@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 njt
+ * Copyright (C) 2023 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,121 +16,57 @@
  */
 package uk.co.spudsoft.query.web.formio;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.util.List;
+import java.io.IOException;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 @SuppressFBWarnings(value = {"EI_EXPOSE_REP", "EI_EXPOSE_REP2"}, justification = "Data object purely for translating to JSON")
 public class Columns extends Component<Columns> {
 
-  public static class Column {
-    private List<Component<?>> components;
-    private int width = 6;
-    private Integer offset;
-    private Integer push;
-    private Integer pull;
-    private String size;
-
-    public List<Component<?>> getComponents() {
-      return components;
-    }
-
-    public void setComponents(List<Component<?>> components) {
-      this.components = components;
-    }
-
-    public int getWidth() {
-      return width;
-    }
-
-    public void setWidth(int width) {
-      this.width = width;
-    }
-
-    public Integer getOffset() {
-      return offset;
-    }
-
-    public void setOffset(Integer offset) {
-      this.offset = offset;
-    }
-
-    public Integer getPush() {
-      return push;
-    }
-
-    public void setPush(Integer push) {
-      this.push = push;
-    }
-
-    public Integer getPull() {
-      return pull;
-    }
-
-    public void setPull(Integer pull) {
-      this.pull = pull;
-    }
-
-    public String getSize() {
-      return size;
-    }
-
-    public void setSize(String size) {
-      this.size = size;
-    }
+  public static class Column extends AbstractComponent<Column> {
     
-    public Column withComponents(final List<Component<?>> value) {
-      this.components = value;
-      return this;
+    protected Column(JsonGenerator generator) throws IOException {
+      super(generator);
     }
 
-    public Column withWidth(final int value) {
-      this.width = value;
-      return this;
+    public ComponentArray addComponents() throws IOException {
+      generator.writeFieldName("components");
+      return new ComponentArray(generator);    
     }
 
-    public Column withOffset(final Integer value) {
-      this.offset = value;
-      return this;
+    public Column withWidth(final int value) throws IOException {
+      return with("width", value);
     }
 
-    public Column withPush(final Integer value) {
-      this.push = value;
-      return this;
+    public Column withOffset(final Integer value) throws IOException {
+      return with("offset", value);
     }
 
-    public Column withPull(final Integer value) {
-      this.pull = value;
-      return this;
+    public Column withPush(final Integer value) throws IOException {
+      return with("push", value);
     }
 
-    public Column withSize(final String value) {
-      this.size = value;
-      return this;
+    public Column withPull(final Integer value) throws IOException {
+      return with("pull", value);
+    }
+
+    public Column withSize(final String value) throws IOException {
+      return with("size", value);
     }
     
   }
   
-  private List<Column> columns;
-  
-  public Columns() {
-    super("columns");
+  public Columns(JsonGenerator generator) throws IOException {
+    super(generator, "columns");
   }
 
-  public List<Column> getColumns() {
-    return columns;
-  }
-
-  public void setColumns(List<Column> columns) {
-    this.columns = columns;
-  }
-
-  public Columns withColumns(final List<Column> value) {
-    this.columns = value;
-    return this;
+  public ComponentArray addColumns() throws IOException {
+    generator.writeFieldName("columns");
+    return new ComponentArray(generator);    
   }
 
 }

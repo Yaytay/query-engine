@@ -43,4 +43,17 @@
                 <goal>install</goal>
             </goals>
         </action>
+        <action>
+            <actionName>rebuild</actionName>
+            <packagings>
+                <packaging>*</packaging>
+            </packagings>
+            <goals>
+                <goal>clean</goal>
+                <goal>install</goal>
+            </goals>
+            <activatedProfiles>
+                <activatedProfile>ui</activatedProfile>
+            </activatedProfiles>
+        </action>
     </actions>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 njt
+ * Copyright (C) 2023 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,219 +16,313 @@
  */
 package uk.co.spudsoft.query.web.formio;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Strings;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.Collection;
-import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Argument;
 import uk.co.spudsoft.query.defn.ArgumentType;
 import uk.co.spudsoft.query.defn.ArgumentValue;
 import uk.co.spudsoft.query.defn.Format;
 import uk.co.spudsoft.query.pipeline.PipelineNodesTree.PipelineFile;
+import uk.co.spudsoft.query.web.formio.DateTime.DatePicker;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
+@SuppressWarnings("try")
 public class FormBuilder {
   
-  private final ObjectMapper objectMapper;
+  private static final Logger logger = LoggerFactory.getLogger(FormBuilder.class);
+  
+  private final JsonFactory factory;
 
-  public FormBuilder(ObjectMapper objectMapper) {
-    this.objectMapper = objectMapper;
+  public FormBuilder() {
+    this.factory = new JsonFactory();
   }
   
-  private static boolean isNullOrEmpty(Collection<?> collection) {
+  static boolean isNullOrEmpty(Collection<?> collection) {
     return collection == null || collection.isEmpty();
   }
   
-  public static Form buildForm(PipelineFile pipeline) {
+  public void buildForm(PipelineFile pipeline, OutputStream stream) throws IOException {
     
-    Form f = new Form()
-            .withName(pipeline.getName())
+    try (JsonGenerator generator = factory.createGenerator(stream, JsonEncoding.UTF8)) {
+      try (Form f = new Form(generator)) {        
+        f.withName(pipeline.getName())
             .withTitle(pipeline.getTitle())
             .withPath(pipeline.getPath())
             .withDisplay("form")
-            .withComponents(
-                    Arrays.asList(
-                            buildDescription(pipeline)
-                            , buildArguments(pipeline)
-                            , buildOutput(pipeline)
-                            , buildButtons(pipeline)
-                    )
-            )
             ;
-    
-    return f;
+        try (ComponentArray a = f.addComponents()) {
+          buildDescription(generator, pipeline);
+          buildArguments(generator, pipeline);
+          buildOutput(generator, pipeline);
+          buildButtons(generator, pipeline);
+        }
+      }
+    }      
   }
   
-  static Content buildDescription(PipelineFile pipeline) {
-    Content description = new Content()
+  void buildDescription(JsonGenerator generator, PipelineFile pipeline) throws IOException {
+    try (Content description = new Content(generator)) {
+      description
             .withHtml("<p><h2>" + pipeline.getTitle() + "</h2></p><p>" + pipeline.getDescription() + "</p>")
             .withCustomClass("border-bottom")
             ;
-    return description;
+    }
   }
   
-  static FieldSet buildArguments(PipelineFile pipeline) {
-    List<Component<?>> args = new ArrayList<>();
-    for (Argument arg : pipeline.getArguments()) {
-      switch(arg.getType()) {
-        case Date:
-        case Time:
-        case DateTime:
-          args.add(buildDateTime(arg));
-          break;
-        case Double:
-        case Integer:
-        case Long:
-          args.add(buildNumber(arg));
-          break;
-        case String:
-          if (!isNullOrEmpty(arg.getPossibleValues()) || !Strings.isNullOrEmpty(arg.getPossibleValuesUrl())) {
-            args.add(buildSelect(arg));
-          } else {
-            args.add(buildTextField(arg));
+  void buildArguments(JsonGenerator generator, PipelineFile pipeline) throws IOException {
+    try (FieldSet fieldSet = new FieldSet(generator)) {
+      fieldSet
+            .withLegend("Arguments")
+            .withCustomClass("border-bottom");
+
+      try (ComponentArray a = fieldSet.addComponents()) {
+        for (Argument arg : pipeline.getArguments()) {
+          switch (arg.getType()) {
+            case Date:
+            case Time:
+            case DateTime:
+              buildDateTime(generator, arg);
+              break;
+            case Double:
+            case Integer:
+            case Long:
+              buildNumber(generator, arg);
+              break;
+            case String:
+              if (!isNullOrEmpty(arg.getPossibleValues()) || !Strings.isNullOrEmpty(arg.getPossibleValuesUrl())) {
+                buildSelect(generator, arg);
+              } else {
+                buildTextField(generator, arg);
+              }
+              break;
+            default:
+              throw new IllegalStateException("New types added to ArgumentType and not implemented here");
           }
-          break;
+        }
       }
     }
-    FieldSet argSet = new FieldSet()
-            .withLegend("Arguments")
-            .withCustomClass("border-bottom")
-            .withComponents(args)
-            ;
-    return argSet;
   }
   
-  static FieldSet buildOutput(PipelineFile pipeline) {
-    FieldSet output = new FieldSet()
-            .withLegend("Output")
-            .withComponents(
-                    Arrays.asList(
-                            buildOutputSelect(pipeline)
-                    )
-            )
-            ;
-    return output;    
+  void buildOutput(JsonGenerator generator, PipelineFile pipeline) throws IOException {
+    try (FieldSet output = new FieldSet(generator)) {
+      output.withLegend("Output");
+      try (ComponentArray a = output.addComponents()) {
+        buildOutputSelect(generator, pipeline);
+      }
+    }
   }
   
-  static Select buildOutputSelect(PipelineFile pipeline) {
-    Select select = new Select()
+  void buildOutputSelect(JsonGenerator generator, PipelineFile pipeline) throws IOException {
+    try (Select select = new Select(generator)) {
+      select 
             .withDescription(null)
             .withKey("format")
             .withClearOnHide(false)
-            .withValidate(new Validation().withRequired(Boolean.TRUE))
-            ;            
+            ;
+      try (Validation v = select.addValidate()) {
+        v.withRequired(Boolean.TRUE);
+      }
 
-    List<Select.DataValue> values = new ArrayList<>();
-    for (Format f : pipeline.getDestinations()) {
-      values.add(new Select.DataValue().withLabel(f.getName()).withValue(f.getName()));
+      try (ComponentArray a = select.addDataValues()) {
+        for (Format f : pipeline.getDestinations()) {
+          try (Select.DataValue value = new Select.DataValue(generator)) {
+            value
+                    .withLabel(f.getName())
+                    .withValue(f.getName())
+                     ;
+          }
+        }
+      }
     }
-    select.withDataSrc(Select.DataSrcType.values).withData(values);
-
-    return select;        
   }
 
-  static Component<?> buildButtons(PipelineFile pipeline) {
-    FieldSet fs = new FieldSet()
-            .withComponents(
-                    Arrays.asList(
-                            new Columns()
-                                    .withColumns(
-                                            Arrays.asList(
-                                                    new Columns.Column()
-                                                            .withComponents(
-                                                                    Arrays.asList(
-                                                                            new Button()
-                                                                                    .withLabel("Submit")
-                                                                                    .withKey("submit")
-                                                                                    .withDisableOnInvalid(true)
-                                                                                    .withAction(Button.ActionType.submit)
-                                                                    )
-                                                            )
-                                                            .withSize("xs"),
-                                                     new Columns.Column()
-                                                            .withComponents(
-                                                                    Arrays.asList(
-                                                                            new Button()
-                                                                                    .withLabel("Cancel")
-                                                                                    .withKey("cancel")
-                                                                                    .withDisableOnInvalid(false)
-                                                                                    .withTheme("secondary")
-                                                                                    .withAction(Button.ActionType.event)
-                                                                    )
-                                                            )
-                                                            .withSize("xs")
-                                            )
-                                    )
-                    )
-            );
-    return fs;
+  void buildButtons(JsonGenerator generator, PipelineFile pipeline) throws IOException {
+    try (FieldSet fs = new FieldSet(generator)) {
+      try (ComponentArray a1 = fs.addComponents()) {
+        try (Columns columns = new Columns(generator)) {
+          try (ComponentArray a2 = columns.addColumns()) {
+            try (Columns.Column col = new Columns.Column(generator)) {
+              col.withSize("xs");
+              try (ComponentArray a3 = col.addComponents()) {
+                try (Button b = new Button(generator)) {
+                  b
+                        .withLabel("Submit")
+                        .withKey("submit")
+                        .withDisableOnInvalid(true)
+                        .withAction(Button.ActionType.submit)
+                        ;
+                }                      
+              }
+            }
+            try (Columns.Column col = new Columns.Column(generator)) {
+              col.withSize("xs");
+              try (ComponentArray a3 = col.addComponents()) {
+                try (Button b = new Button(generator)) {
+                  b
+                        .withLabel("Cancel")
+                        .withKey("cancel")
+                        .withDisableOnInvalid(false)
+                        .withTheme("secondary")
+                        .withAction(Button.ActionType.event)
+                        ;
+                }                      
+              }
+            }
+          }
+        }
+      }
+    }
   }
   
-  static DateTime buildDateTime(Argument arg) {
-    DateTime dateTime = new DateTime()
-            .withLabel(arg.getTitle())
-            .withDescription(arg.getDescription())
-            .withKey(arg.getName())
-            .withMultiple(arg.isMultiValued())
-            .withValidate(new Validation().withRequired(!arg.isOptional()))
-            .withEnableDate(arg.getType() == ArgumentType.Date || arg.getType() == ArgumentType.DateTime)
-            .withEnableTime(arg.getType() == ArgumentType.Time || arg.getType() == ArgumentType.DateTime)
-            ;
-    return dateTime;
-  }
-
-  static Number buildNumber(Argument arg) {
-    Number number = new Number()
-            .withLabel(arg.getTitle())
-            .withDescription(arg.getDescription())
-            .withKey(arg.getName())
-            .withMultiple(arg.isMultiValued())
-            .withValidate(
-                    new Number.NumberValidation()
-                            .withInteger(arg.getType() != ArgumentType.Double)
-                            .withRequired(!arg.isOptional())
-            )
-            ;
-    return number;    
-  }
-
-  static TextField buildTextField(Argument arg) {
-    TextField textField = new TextField()
-            .withLabel(arg.getTitle())
-            .withDescription(arg.getDescription())
-            .withKey(arg.getName())
-            .withMultiple(arg.isMultiValued())
-            .withValidate(
-                    new Validation()
-                            .withRequired(!arg.isOptional())
-            )
-            ;
-    return textField;    
-  }
-
-  static Select buildSelect(Argument arg) {
-    Select select = new Select()
-            .withLabel(arg.getTitle())
-            .withDescription(arg.getDescription())
-            .withKey(arg.getName())
-            .withMultiple(arg.isMultiValued())
-            ;
-    if (isNullOrEmpty(arg.getPossibleValues())) {
-      Select.DataUrl url = new Select.DataUrl()
-              .withUrl(arg.getPossibleValuesUrl());
-      select.withDataSrc(Select.DataSrcType.url).withData(url);
-    } else {
-      List<Select.DataValue> values = new ArrayList<>();
-      for (ArgumentValue av : arg.getPossibleValues()) {
-        values.add(new Select.DataValue().withLabel(av.getLabel()).withValue(av.getValue()));
-      }
-      select.withDataSrc(Select.DataSrcType.values).withData(values);
+  static LocalDateTime parseToLocalDateTime(String value) {
+    if (Strings.isNullOrEmpty(value)) {
+      return null;
     }
-    return select;    
+    try {
+      return LocalDateTime.parse(value);
+    } catch (DateTimeParseException ex) {
+      try {
+        LocalDate ld = LocalDate.parse(value);
+        return ld.atTime(0, 0);
+      } catch (DateTimeParseException ex1) {
+        try {
+          LocalTime lt = LocalTime.parse(value);
+          return lt.atDate(LocalDate.ofEpochDay(0));
+        } catch (DateTimeParseException ex2) {
+          logger.warn("Cannot parse \"{}\" as LocalDateTime, LocalDate or LocalTime", value);
+          return null;
+        }
+      }
+    }
+  }
+  
+  void buildDateTime(JsonGenerator generator, Argument arg) throws IOException {    
+    try (DateTime dateTime = new DateTime(generator)) {
+      dateTime
+              .withLabel(arg.getTitle())
+              .withDescription(arg.getDescription())
+              .withKey(arg.getName())
+              .withMultiple(arg.isMultiValued())
+              .withEnableDate(arg.getType() == ArgumentType.Date || arg.getType() == ArgumentType.DateTime)
+              .withEnableTime(arg.getType() == ArgumentType.Time || arg.getType() == ArgumentType.DateTime)
+            ;
+      
+      
+      
+      try (Validation v = dateTime.addValidate()) {
+        v.withRequired(!arg.isOptional());
+      }
+      
+      try (DatePicker dp = dateTime.addDatePicker()) {
+        dp.withMaxDate(parseToLocalDateTime(arg.getMaximumValue()));
+        dp.withMinDate(parseToLocalDateTime(arg.getMinimumValue()));
+      }
+    }
+  }
+
+  void buildNumber(JsonGenerator generator, Argument arg) throws IOException {
+    try (Number number = new Number(generator)) {
+      number
+            .withLabel(arg.getTitle())
+            .withDescription(arg.getDescription())
+            .withKey(arg.getName())
+            .withMultiple(arg.isMultiValued())
+            ;
+      try (Number.NumberValidation v = number.addNumberValidate()) {
+        v
+                .withInteger(arg.getType() != ArgumentType.Double)
+                .withRequired(!arg.isOptional())
+                ;
+        if (arg.getMaximumValue() != null) {
+          try {
+            switch (arg.getType()) {
+              case Double:
+                v.withMax(Double.valueOf(arg.getMaximumValue()));
+                break ;
+              case Integer:
+                v.withMax(Integer.valueOf(arg.getMaximumValue()));
+                break ;
+              case Long: 
+                v.withMax(Long.valueOf(arg.getMaximumValue()));
+                break ;
+              default:
+            }
+          } catch (NumberFormatException ex) {
+            logger.warn("Unable to parse {} as a {}: ", arg.getMaximumValue(), arg.getType(), ex);
+          }
+        }
+        if (arg.getMinimumValue() != null) {
+          try {
+            switch (arg.getType()) {
+              case Double:
+                v.withMin(Double.valueOf(arg.getMinimumValue()));
+                break ;
+              case Integer:
+                v.withMin(Integer.valueOf(arg.getMinimumValue()));
+                break ;
+              case Long: 
+                v.withMin(Long.valueOf(arg.getMinimumValue()));
+                break ;
+              default:
+            }
+          } catch (NumberFormatException ex) {
+            logger.warn("Unable to parse {} as a {}: ", arg.getMaximumValue(), arg.getType(), ex);
+          }
+        }
+      }
+    }
+  }
+
+  void buildTextField(JsonGenerator generator, Argument arg) throws IOException {
+    try (TextField textField = new TextField(generator)) {
+      textField
+            .withLabel(arg.getTitle())
+            .withDescription(arg.getDescription())
+            .withKey(arg.getName())
+            .withMultiple(arg.isMultiValued())
+            ;
+      try (Validation v = textField.addValidate()) {
+        v.withRequired(!arg.isOptional());
+      }
+    }
+  }
+
+  void buildSelect(JsonGenerator generator, Argument arg) throws IOException {
+    try (Select select = new Select(generator)) {
+      select 
+            .withLabel(arg.getTitle())
+            .withDescription(arg.getDescription())
+            .withKey(arg.getName())
+            .withMultiple(arg.isMultiValued())
+            ;
+      try (Validation v = select.addValidate()) {
+        v.withRequired(!arg.isOptional());
+      }
+      if (isNullOrEmpty(arg.getPossibleValues())) {
+        try (Select.DataUrl url = select.addDataUrl()) {
+          url.withUrl(arg.getPossibleValuesUrl());
+        }
+      } else {
+        try (ComponentArray a = select.addDataValues()) {
+          for (ArgumentValue av : arg.getPossibleValues()) {
+            select.addCompleteDataValue(av.getLabel(), av.getValue());
+          }
+        }
+      }
+    }
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 njt
+ * Copyright (C) 2023 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,30 +16,22 @@
  */
 package uk.co.spudsoft.query.web.formio;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import java.io.IOException;
+
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class Content extends Component<Content> {
   
-  private String html;
-
-  public Content() {
-    super("content");
+  public Content(JsonGenerator generator) throws IOException {
+    super(generator, "content");
     this.withInput(false).withTableView(false);
   }
 
-  public String getHtml() {
-    return html;
-  }
-
-  public void setHtml(String html) {
-    this.html = html;
-  }
-
-  public Content withHtml(final String value) {
-    this.html = value;
-    return this;
+  public Content withHtml(final String value) throws IOException {
+    return with("html", value);
   }
   
 }

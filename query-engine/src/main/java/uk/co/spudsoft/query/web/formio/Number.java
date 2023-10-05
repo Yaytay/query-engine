@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 njt
+ * Copyright (C) 2023 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,81 +16,74 @@
  */
 package uk.co.spudsoft.query.web.formio;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import java.io.IOException;
+
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class Number extends Component<Number> {
   
-  public static class NumberValidation extends Validation {
-    private Double min;
-    private Double max;
-    private Double step;
-    private Boolean integer;
+  public static class NumberValidation extends AbstractComponent<NumberValidation> {
 
-    public Double getMin() {
-      return min;
+    protected NumberValidation(JsonGenerator generator) throws IOException {
+      super(generator);
     }
 
-    public void setMin(Double min) {
-      this.min = min;
+    public NumberValidation withMin(final Double value) throws IOException {
+      return with("min", value);
     }
 
-    public Double getMax() {
-      return max;
+    public NumberValidation withMin(final Integer value) throws IOException {
+      return with("min", value);
     }
 
-    public void setMax(Double max) {
-      this.max = max;
+    public NumberValidation withMin(final Long value) throws IOException {
+      return with("min", value);
     }
 
-    public Double getStep() {
-      return step;
+    public NumberValidation withMax(final Double value) throws IOException {
+      return with("max", value);
     }
 
-    public void setStep(Double step) {
-      this.step = step;
+    public NumberValidation withMax(final Integer value) throws IOException {
+      return with("max", value);
     }
 
-    public Boolean getInteger() {
-      return integer;
+    public NumberValidation withMax(final Long value) throws IOException {
+      return with("max", value);
     }
 
-    public void setInteger(Boolean integer) {
-      this.integer = integer;
+    public NumberValidation withStep(final Double value) throws IOException {
+      return with("step", value);
     }
 
-    public Validation withMin(final Double value) {
-      this.min = value;
-      return this;
+    public NumberValidation withInteger(final Boolean value) throws IOException {
+      return with("integer", value);
+    }
+    
+    public NumberValidation withRequired(final Boolean value) throws IOException {
+      return with("required", value);
     }
 
-    public Validation withMax(final Double value) {
-      this.max = value;
-      return this;
+    public NumberValidation withPattern(final String value) throws IOException {
+      return with("pattern", value);
     }
 
-    public Validation withStep(final Double value) {
-      this.step = value;
-      return this;
-    }
-
-    public Validation withInteger(final Boolean value) {
-      this.integer = value;
-      return this;
+    public NumberValidation withCustom(final String value) throws IOException {
+      return with("custom", value);
     }
   }
+  
 
-  public Number() {
-    super("number");
+  public Number(JsonGenerator generator) throws IOException {
+    super(generator, "number");
   }
 
-  public Number withValidate(NumberValidation value) {
-    return super.withValidate(value);
-  }
-
-  public void setValidate(NumberValidation validate) {
-    super.setValidate(validate);
+  public NumberValidation addNumberValidate() throws IOException {
+    generator.writeFieldName("validate");
+    return new NumberValidation(generator);
   }
 
 }

@@ -16,71 +16,33 @@
  */
 package uk.co.spudsoft.query.web.formio;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import java.io.IOException;
+
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class Form extends AbstractContainer<Form> {
 
-  private String name;
-  private String title;
-  private String path;
-  private String display;
-  
-  public Form() {
-    super("form");
+  public Form(JsonGenerator generator) throws IOException {
+    super(generator, "form");
   }
 
-  public String getName() {
-    return name;
+  public Form withName(final String value) throws IOException {
+    return with("name", value);
   }
 
-  public void setName(String name) {
-    this.name = name;
+  public Form withTitle(final String value) throws IOException {
+    return with("title", value);
   }
 
-  public String getTitle() {
-    return title;
+  public Form withPath(final String value) throws IOException {
+    return with("path", value);
   }
 
-  public void setTitle(String title) {
-    this.title = title;
-  }
-
-  public String getPath() {
-    return path;
-  }
-
-  public void setPath(String path) {
-    this.path = path;
-  }
-
-  public String getDisplay() {
-    return display;
-  }
-
-  public void setDisplay(String display) {
-    this.display = display;
-  }
-
-  public Form withName(final String value) {
-    this.name = value;
-    return this;
-  }
-
-  public Form withTitle(final String value) {
-    this.title = value;
-    return this;
-  }
-
-  public Form withPath(final String value) {
-    this.path = value;
-    return this;
-  }
-
-  public Form withDisplay(final String value) {
-    this.display = value;
-    return this;
+  public Form withDisplay(final String value) throws IOException {
+    return with("display", value);
   }
 
 }

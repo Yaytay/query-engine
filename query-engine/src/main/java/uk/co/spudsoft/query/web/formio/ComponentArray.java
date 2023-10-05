@@ -17,20 +17,27 @@
 package uk.co.spudsoft.query.web.formio;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.Closeable;
 import java.io.IOException;
 
 /**
  *
  * @author jtalbut
  */
-public class FieldSet extends AbstractContainer<FieldSet> {
+public class ComponentArray implements Closeable {
 
-  public FieldSet(JsonGenerator generator) throws IOException {
-    super(generator, "fieldset");
+  private final JsonGenerator generator;
+
+  @SuppressFBWarnings("EI_EXPOSE_REP2")
+  public ComponentArray(JsonGenerator generator) throws IOException {
+    this.generator = generator;
+    generator.writeStartArray();
   }
 
-  public FieldSet withLegend(final String value) throws IOException {
-    return with("legend", value);
+  @Override
+  public void close() throws IOException {
+    generator.writeEndArray();
   }
-  
+
 }

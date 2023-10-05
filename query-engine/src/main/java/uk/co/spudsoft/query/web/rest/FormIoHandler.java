@@ -25,17 +25,19 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.container.Suspended;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.StreamingOutput;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +64,23 @@ public class FormIoHandler {
   private final RequestContextBuilder requestContextBuilder;
   private final PipelineDefnLoader loader;
   private final boolean outputAllErrorMessages;
+  private final FormBuilder builder = new FormBuilder();
 
+  private class PipelineStreamer implements StreamingOutput {
+    
+    private final PipelineFile pipeline;
+
+    PipelineStreamer(PipelineFile pipeline) {
+      this.pipeline = pipeline;
+    }
+
+    @Override
+    public void write(OutputStream output) throws IOException, WebApplicationException {
+      builder.buildForm(pipeline, output);
+    }
+    
+  }
+  
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The PipelineDefnLoader is mutable because it changes the filesystem")
   public FormIoHandler(RequestContextBuilder requestContextBuilder, PipelineDefnLoader loader, boolean outputAllErrorMessages) {
     this.requestContextBuilder = requestContextBuilder;
@@ -96,10 +114,8 @@ public class FormIoHandler {
             .compose(root -> {
               try {
                 PipelineFile file = findFile(root, path);
-                Form fd = FormBuilder.buildForm(file);
-                String json = Json.CODEC.toString(fd);
-                return Future.succeededFuture(new JsonObject(json));
-              } catch(Throwable ex) {
+                return Future.succeededFuture(new PipelineStreamer(file));
+              } catch (Throwable ex) {
                 return Future.failedFuture(ex);
               }
             })

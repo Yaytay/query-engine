@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 njt
+ * Copyright (C) 2023 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,238 +16,123 @@
  */
 package uk.co.spudsoft.query.web.formio;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonGenerator;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.util.List;
+import java.io.IOException;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 @SuppressFBWarnings(value = {"EI_EXPOSE_REP", "EI_EXPOSE_REP2"}, justification = "Data object purely for translating to JSON")
 public class Select extends Component<Select> {
 
-  public static enum DataSrcType {
+  public enum DataSrcType {
     values, json, url, resource, customer
   }
   
-  public static class DataValue {
-    private String label;
-    private String value;
+  public static class DataValue extends AbstractComponent<DataValue> {
 
-    public String getLabel() {
-      return label;
+    public DataValue(JsonGenerator generator) throws IOException {
+      super(generator);
     }
 
-    public void setLabel(String label) {
-      this.label = label;
+    public DataValue withLabel(final String value) throws IOException {
+      return with("label", value);
     }
 
-    public String getValue() {
-      return value;
-    }
-
-    public void setValue(String value) {
-      this.value = value;
-    }
-
-    public DataValue withLabel(final String value) {
-      this.label = value;
-      return this;
-    }
-
-    public DataValue withValue(final String value) {
-      this.value = value;
-      return this;
+    public DataValue withValue(final String value) throws IOException {
+      return with("value", value);
     }
   }
   
-  public static class DataUrlHeader {
-    private String key;
-    private String value;
+  public static class DataUrlHeader extends AbstractComponent<DataUrlHeader> {
 
-    public String getKey() {
-      return key;
+    public DataUrlHeader(JsonGenerator generator) throws IOException {
+      super(generator);
     }
 
-    public void setKey(String key) {
-      this.key = key;
+    public DataUrlHeader withKey(final String value) throws IOException {
+      return with("key", value);
     }
 
-    public String getValue() {
-      return value;
-    }
-
-    public void setValue(String value) {
-      this.value = value;
-    }
-
-    public DataUrlHeader withKey(final String value) {
-      this.key = value;
-      return this;
-    }
-
-    public DataUrlHeader withValue(final String value) {
-      this.value = value;
-      return this;
+    public DataUrlHeader withValue(final String value) throws IOException {
+      return with("value", value);
     }
 
   }
   
-  public static class DataUrl {
-    private String url;
-    private DataUrlHeader headers;
+  public static class DataUrl extends AbstractComponent<DataUrl> {
 
-    public String getUrl() {
-      return url;
+    public DataUrl(JsonGenerator generator) throws IOException {
+      super(generator);
     }
 
-    public void setUrl(String url) {
-      this.url = url;
+    public DataUrl withUrl(final String value) throws IOException {
+      return with("url", value);
     }
 
-    public DataUrlHeader getHeaders() {
-      return headers;
+    public ComponentArray addHeaders() throws IOException {
+      generator.writeFieldName("headers");
+      return new ComponentArray(generator);    
     }
+  }
 
-    public void setHeaders(DataUrlHeader headers) {
-      this.headers = headers;
-    }
+  public Select(JsonGenerator generator) throws IOException {
+    super(generator, "select");
+  }
 
-    public DataUrl withUrl(final String value) {
-      this.url = value;
-      return this;
+  public Select withDataSrc(final DataSrcType value) throws IOException {
+    if (value != null) {
+      return with("dataSrc", value.toString());
     }
-
-    public DataUrl withHeaders(final DataUrlHeader value) {
-      this.headers = value;
-      return this;
-    }
-    
-    
+    return this;
   }
   
-  private DataSrcType dataSrc;
-  private List<DataValue> dataValues;
-  private DataUrl dataUrl;
-  private String valueProperty;
-  private String refreshOn;
-  private String filter;
-  private Boolean authenticate;
-  private String template;
-  
-  public Select() {
-    super("select");
-  }
-
-  public DataSrcType getDataSrc() {
-    return dataSrc;
-  }
-
-  public void setDataSrc(DataSrcType dataSrc) {
-    this.dataSrc = dataSrc;
-  }
-
-  @JsonProperty("data")
-  public Object getDataValues() {
-    switch(dataSrc) {
-    case values:
-      return dataValues;
-    case url:
-      return dataUrl;
-    default:
-      return null;
+  public void addCompleteDataValue(String label, String value) throws IOException {
+    try (DataValue dv = new DataValue(generator)) {
+      dv.withLabel(label);
+      dv.withValue(value);
     }
   }
 
-  public void setData(List<DataValue> dataValues) {
-    this.dataSrc = DataSrcType.values;
-    this.dataValues = dataValues;
+  public void addCompleteDataUrlHeader(String key, String value) throws IOException {
+    try (DataUrlHeader header = new DataUrlHeader(generator)) {
+      header.withKey(key);
+      header.withValue(value);
+    }
   }
 
-  public void setData(DataUrl dataUrl) {
-    this.dataSrc = DataSrcType.url;
-    this.dataUrl = dataUrl;
+  public ComponentArray addDataValues() throws IOException {
+    withDataSrc(DataSrcType.values);
+    generator.writeFieldName("data");
+    return new ComponentArray(generator);    
   }
 
-  public String getValueProperty() {
-    return valueProperty;
+  public DataUrl addDataUrl() throws IOException {
+    withDataSrc(DataSrcType.url);
+    generator.writeFieldName("data");
+    return new DataUrl(generator);    
   }
 
-  public void setValueProperty(String valueProperty) {
-    this.valueProperty = valueProperty;
+  public Select withValueProperty(final String value) throws IOException {
+    return with("valueProperty", value);
   }
 
-  public String getRefreshOn() {
-    return refreshOn;
+  public Select withRefreshOn(final String value) throws IOException {
+    return with("refreshOn", value);
   }
 
-  public void setRefreshOn(String refreshOn) {
-    this.refreshOn = refreshOn;
+  public Select withFilter(final String value) throws IOException {
+    return with("filter", value);
   }
 
-  public String getFilter() {
-    return filter;
+  public Select withAuthenticate(final Boolean value) throws IOException {
+    return with("authenticate", value);
   }
 
-  public void setFilter(String filter) {
-    this.filter = filter;
-  }
-
-  public Boolean getAuthenticate() {
-    return authenticate;
-  }
-
-  public void setAuthenticate(Boolean authenticate) {
-    this.authenticate = authenticate;
-  }
-
-  public String getTemplate() {
-    return template;
-  }
-
-  public void setTemplate(String template) {
-    this.template = template;
-  }
-
-  public Select withDataSrc(final DataSrcType value) {
-    this.dataSrc = value;
-    return this;
-  }
-
-  public Select withData(final List<DataValue> value) {
-    this.dataValues = value;
-    return this;
-  }
-
-  public Select withData(final DataUrl value) {
-    this.dataUrl = value;
-    return this;
-  }
-
-  public Select withValueProperty(final String value) {
-    this.valueProperty = value;
-    return this;
-  }
-
-  public Select withRefreshOn(final String value) {
-    this.refreshOn = value;
-    return this;
-  }
-
-  public Select withFilter(final String value) {
-    this.filter = value;
-    return this;
-  }
-
-  public Select withAuthenticate(final Boolean value) {
-    this.authenticate = value;
-    return this;
-  }
-
-  public Select withTemplate(final String value) {
-    this.template = value;
-    return this;
+  public Select withTemplate(final String value) throws IOException {
+    return with("template", value);
   }
 
   

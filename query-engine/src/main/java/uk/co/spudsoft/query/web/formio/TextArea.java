@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 njt
+ * Copyright (C) 2023 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,44 +16,25 @@
  */
 package uk.co.spudsoft.query.web.formio;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import java.io.IOException;
+
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class TextArea extends Component<TextArea> {
-  
-  private Integer rows;
-  private Boolean wysiwyg;
-          
-  public TextArea() {
-    super("textarea");
+
+  public TextArea(JsonGenerator generator) throws IOException {
+    super(generator, "textarea");
   }
 
-  public Integer getRows() {
-    return rows;
+  public TextArea withRows(final Integer value) throws IOException {
+    return with("rows", value);
   }
 
-  public void setRows(Integer rows) {
-    this.rows = rows;
+  public TextArea withWysiwyg(final Boolean value) throws IOException {
+    return with("wysiwyg", value);
   }
-
-  public Boolean getWysiwyg() {
-    return wysiwyg;
-  }
-
-  public void setWysiwyg(Boolean wysiwyg) {
-    this.wysiwyg = wysiwyg;
-  }
-
-  public TextArea withRows(final Integer value) {
-    this.rows = value;
-    return this;
-  }
-
-  public TextArea withWysiwyg(final Boolean value) {
-    this.wysiwyg = value;
-    return this;
-  }
-
   
 }

@@ -33,7 +33,7 @@ public abstract class AbstractSource implements SourceInstance, SourceNameTracke
   }
 
   @Override
-  public String getName() {
+  public final String getName() {
     return name;
   }
 

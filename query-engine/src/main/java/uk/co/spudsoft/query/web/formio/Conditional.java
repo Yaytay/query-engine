@@ -16,67 +16,33 @@
  */
 package uk.co.spudsoft.query.web.formio;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import java.io.IOException;
+
 /**
  *
- * @author njt
+ * @author jtalbut
  */
-public class Conditional {
+public class Conditional extends AbstractComponent<Conditional> {
+
+  public Conditional(JsonGenerator generator) throws IOException {
+    super(generator);
+  }
   
-  private Boolean show;
-  private String when;
-  private String eq;
-  private String json;
-
-  public Boolean getShow() {
-    return show;
+  public Conditional withShow(final Boolean value) throws IOException {
+    return with("show", value);
   }
 
-  public void setShow(Boolean show) {
-    this.show = show;
+  public Conditional withWhen(final String value) throws IOException {
+    return with("when", value);
   }
 
-  public String getWhen() {
-    return when;
+  public Conditional withEq(final String value) throws IOException {
+    return with("eq", value);
   }
 
-  public void setWhen(String when) {
-    this.when = when;
-  }
-
-  public String getEq() {
-    return eq;
-  }
-
-  public void setEq(String eq) {
-    this.eq = eq;
-  }
-
-  public String getJson() {
-    return json;
-  }
-
-  public void setJson(String json) {
-    this.json = json;
-  }
-
-  public Conditional withShow(final Boolean value) {
-    this.show = value;
-    return this;
-  }
-
-  public Conditional withWhen(final String value) {
-    this.when = value;
-    return this;
-  }
-
-  public Conditional withEq(final String value) {
-    this.eq = value;
-    return this;
-  }
-
-  public Conditional withJson(final String value) {
-    this.json = value;
-    return this;
+  public Conditional withJson(final String value) throws IOException {
+    return with("json", value);
   }
 
 }

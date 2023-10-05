@@ -16,306 +16,99 @@
  */
 package uk.co.spudsoft.query.web.formio;
 
-import com.oracle.js.parser.ir.ObjectNode;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import com.fasterxml.jackson.core.JsonGenerator;
+import java.io.IOException;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  * @param <T> The concrete class the derives from this base class.
  */
 @SuppressWarnings("unchecked")
-@SuppressFBWarnings(value = {"EI_EXPOSE_REP", "EI_EXPOSE_REP2"}, justification = "Data object purely for translating to JSON")
-public abstract class Component<T extends Component<T>> {
+public abstract class Component<T extends Component<T>> extends AbstractComponent<T> {
 
-  protected ObjectNode node;
-  
-  private String type;
-  private String label;
-  private String key;
-  private String description;
-  private String placeholder;
-  private boolean input;
-  private boolean tableView;
-  private boolean multiple;
-  private boolean protect;
-  private String customClass;
-  private String prefix;
-  private String suffix;
-  private String defaultValue;
-  private boolean clearOnHide;
-  private boolean unique;
-  private boolean persistent;
-  private boolean hidden;
-  private Validation validate;
-  private Conditional conditional;
-  private Errors errors;
-
-  protected Component(String type) {
-    this.type = type;
+  protected Component(JsonGenerator generator, String type) throws IOException {
+    super(generator);
+    generator.writeStringField("type", type);
   }
 
-  public String getType() {
-    return type;
+  public T withLabel(final String value) throws IOException {
+    return with("label", value);
   }
 
-  public void setType(String type) {
-    this.type = type;
+  public T withKey(final String value) throws IOException {
+    return with("key", value);
   }
 
-  public String getLabel() {
-    return label;
+  public T withDescription(final String value) throws IOException {
+    return with("description", value);
   }
 
-  public void setLabel(String label) {
-    this.label = label;
+  public T withPlaceholder(final String value) throws IOException {
+    return with("placeholder", value);
   }
 
-  public String getKey() {
-    return key;
+  public T withInput(final Boolean value) throws IOException {
+    return with("input", value);
   }
 
-  public void setKey(String key) {
-    this.key = key;
+  public T withTableView(final Boolean value) throws IOException {
+    return with("tableView", value);
   }
 
-  public String getDescription() {
-    return description;
+  public T withMultiple(final Boolean value) throws IOException {
+    return with("multiple", value);
   }
 
-  public void setDescription(String description) {
-    this.description = description;
+  public T withProtect(final Boolean value) throws IOException {
+    return with("protect", value);
   }
 
-  
-  public String getPlaceholder() {
-    return placeholder;
+  public T withCustomClass(final String value) throws IOException {
+    return with("customClass", value);
   }
 
-  public void setPlaceholder(String placeholder) {
-    this.placeholder = placeholder;
+  public T withPrefix(final String value) throws IOException {
+    return with("prefix", value);
   }
 
-  public boolean isInput() {
-    return input;
+  public T withSuffix(final String value) throws IOException {
+    return with("suffix", value);
   }
 
-  public void setInput(boolean input) {
-    this.input = input;
+  public T withDefaultValue(final String value) throws IOException {
+    return with("defaultValue", value);
   }
 
-  public boolean isTableView() {
-    return tableView;
+  public T withClearOnHide(final Boolean value) throws IOException {
+    return with("clearOnHide", value);
   }
 
-  public void setTableView(boolean tableView) {
-    this.tableView = tableView;
+  public T withUnique(final Boolean value) throws IOException {
+    return with("unique", value);
   }
 
-  public boolean isMultiple() {
-    return multiple;
+  public T withPersistent(final Boolean value) throws IOException {
+    return with("persistent", value);
   }
 
-  public void setMultiple(boolean multiple) {
-    this.multiple = multiple;
+  public T withHidden(final Boolean value) throws IOException {
+    return with("hidden", value);
   }
 
-  public boolean isProtect() {
-    return protect;
+  public Validation addValidate() throws IOException {
+    generator.writeFieldName("validate");
+    return new Validation(generator);
   }
 
-  public void setProtect(boolean protect) {
-    this.protect = protect;
+  public Conditional addConditional() throws IOException {
+    generator.writeFieldName("conditional");
+    return new Conditional(generator);
   }
 
-  public String getCustomClass() {
-    return customClass;
+  public Errors addErrors() throws IOException {
+    generator.writeFieldName("errors");
+    return new Errors(generator);
   }
-
-  public void setCustomClass(String customClass) {
-    this.customClass = customClass;
-  }
-
-  public String getPrefix() {
-    return prefix;
-  }
-
-  public void setPrefix(String prefix) {
-    this.prefix = prefix;
-  }
-
-  public String getSuffix() {
-    return suffix;
-  }
-
-  public void setSuffix(String suffix) {
-    this.suffix = suffix;
-  }
-
-  public String getDefaultValue() {
-    return defaultValue;
-  }
-
-  public void setDefaultValue(String defaultValue) {
-    this.defaultValue = defaultValue;
-  }
-
-  public boolean isClearOnHide() {
-    return clearOnHide;
-  }
-
-  public void setClearOnHide(boolean clearOnHide) {
-    this.clearOnHide = clearOnHide;
-  }
-
-  public boolean isUnique() {
-    return unique;
-  }
-
-  public void setUnique(boolean unique) {
-    this.unique = unique;
-  }
-
-  public boolean isPersistent() {
-    return persistent;
-  }
-
-  public void setPersistent(boolean persistent) {
-    this.persistent = persistent;
-  }
-
-  public boolean isHidden() {
-    return hidden;
-  }
-
-  public void setHidden(boolean hidden) {
-    this.hidden = hidden;
-  }
-
-  public Validation getValidate() {
-    return validate;
-  }
-
-  public void setValidate(Validation validate) {
-    this.validate = validate;
-  }
-
-  public Conditional getConditional() {
-    return conditional;
-  }
-
-  public void setConditional(Conditional conditional) {
-    this.conditional = conditional;
-  }
-
-  public Errors getErrors() {
-    return errors;
-  }
-
-  public void setErrors(Errors errors) {
-    this.errors = errors;
-  }
-
-  public T withType(final String value) {
-    this.type = value;
-    return (T) this;
-  }
-
-  public T withLabel(final String value) {
-    this.label = value;
-    return (T) this;
-  }
-
-  public T withKey(final String value) {
-    this.key = value;
-    return (T) this;
-  }
-
-  public T withDescription(final String value) {
-    this.description = value;
-    return (T) this;
-  }
-
-  public T withPlaceholder(final String value) {
-    this.placeholder = value;
-    return (T) this;
-  }
-
-  public T withInput(final boolean value) {
-    this.input = value;
-    return (T) this;
-  }
-
-  public T withTableView(final boolean value) {
-    this.tableView = value;
-    return (T) this;
-  }
-
-  public T withMultiple(final boolean value) {
-    this.multiple = value;
-    return (T) this;
-  }
-
-  public T withProtect(final boolean value) {
-    this.protect = value;
-    return (T) this;
-  }
-
-  public T withCustomClass(final String value) {
-    this.customClass = value;
-    return (T) this;
-  }
-
-  public T withPrefix(final String value) {
-    this.prefix = value;
-    return (T) this;
-  }
-
-  public T withSuffix(final String value) {
-    this.suffix = value;
-    return (T) this;
-  }
-
-  public T withDefaultValue(final String value) {
-    this.defaultValue = value;
-    return (T) this;
-  }
-
-  public T withClearOnHide(final boolean value) {
-    this.clearOnHide = value;
-    return (T) this;
-  }
-
-  public T withUnique(final boolean value) {
-    this.unique = value;
-    return (T) this;
-  }
-
-  public T withPersistent(final boolean value) {
-    this.persistent = value;
-    return (T) this;
-  }
-
-  public T withHidden(final boolean value) {
-    this.hidden = value;
-    return (T) this;
-  }
-
-  public T withValidate(final Validation value) {
-    this.validate = value;
-    return (T) this;
-  }
-
-  public T withConditional(final Conditional value) {
-    this.conditional = value;
-    return (T) this;
-  }
-
-  public T withErrors(final Errors value) {
-    this.errors = value;
-    return (T) this;
-  }
-  
-  
 
 }
