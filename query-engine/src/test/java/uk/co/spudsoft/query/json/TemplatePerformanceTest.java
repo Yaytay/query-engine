@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import org.stringtemplate.v4.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.BeforeAll;
 
 /**
  *
@@ -73,6 +74,11 @@ public class TemplatePerformanceTest {
       .findFirst()
       .map(StackWalker.StackFrame::getMethodName));
     return methodName.get().substring(4);
+  }
+  
+  @BeforeAll
+  public static void headers() {
+    logger.debug("{}\t{}\t{}\t{}\t{}", "Method", "JVM", "Iterations", "Duration/s", "Rate (iterations/second)");
   }
   
   @Test

@@ -257,21 +257,18 @@
       <version>${slf4j.version}</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.graalvm.truffle</groupId>
-      <artifactId>truffle-api</artifactId>
+    <dependency> 
+      <groupId>org.graalvm.polyglot</groupId> 
+      <artifactId>polyglot</artifactId> 
       <version>${graalvm.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.graalvm.truffle</groupId>
-      <artifactId>truffle-dsl-processor</artifactId>
+    <dependency> 
+      <groupId>org.graalvm.polyglot</groupId> 
+      <artifactId>js</artifactId> 
       <version>${graalvm.version}</version>
+      <type>pom</type>
     </dependency>
-    <dependency>
-      <groupId>org.graalvm.js</groupId>
-      <artifactId>js</artifactId>
-      <version>${graalvm.version}</version>
-    </dependency>
+    <!-- add additional languages if needed -->
     <dependency>
       <groupId>com.github.spotbugs</groupId>
       <artifactId>spotbugs-annotations</artifactId>

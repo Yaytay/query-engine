@@ -32,7 +32,7 @@
 
   <properties>
     <!-- For production usage JDK must be compatible with GraalVM and must be receiving security updates, effectively meaning the most recent LTS -->
-    <jdk.version>17</jdk.version>
+    <jdk.version>21</jdk.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <argLine></argLine>
@@ -41,7 +41,7 @@
     <junit-jupiter.version>5.10.0</junit-jupiter.version>
     <junit-platform.version>1.10.0</junit-platform.version>
     <testcontainers.version>1.19.1</testcontainers.version>
-    <graalvm.version>23.0.1</graalvm.version>
+    <graalvm.version>23.1.0</graalvm.version>
     <jackson.version>2.15.2</jackson.version>
     
     <!-- The qe-version property exists so that the design mode project can override it to run with a specific version -->
@@ -432,50 +432,6 @@
                 <prefix>dependencies</prefix>
                 <outputFile>target/classpath</outputFile>
                 <outputProperty>dependencies-class-path</outputProperty>
-              </configuration>
-            </execution>
-            <execution>
-              <id>copy-compiler</id>
-              <phase>process-test-classes</phase>
-              <goals>
-                <goal>copy</goal>
-              </goals>
-              <configuration>
-                <artifactItems>
-                  <artifactItem>
-                    <groupId>org.graalvm.compiler</groupId>
-                    <artifactId>compiler</artifactId>
-                    <version>${graalvm.version}</version>
-                    <type>jar</type>
-                    <overWrite>true</overWrite>
-                    <destFileName>compiler.jar</destFileName>
-                  </artifactItem>
-                  <artifactItem>
-                    <groupId>org.graalvm.compiler</groupId>
-                    <artifactId>compiler-management</artifactId>
-                    <version>${graalvm.version}</version>
-                    <type>jar</type>
-                    <overWrite>true</overWrite>
-                    <destFileName>compiler-management.jar</destFileName>
-                  </artifactItem>
-                  <artifactItem>
-                    <groupId>org.graalvm.truffle</groupId>
-                    <artifactId>truffle-api</artifactId>
-                    <version>${graalvm.version}</version>
-                    <type>jar</type>
-                    <overWrite>true</overWrite>
-                    <destFileName>truffle-api.jar</destFileName>
-                  </artifactItem>
-                  <artifactItem>
-                    <groupId>org.graalvm.sdk</groupId>
-                    <artifactId>graal-sdk</artifactId>
-                    <version>${graalvm.version}</version>
-                    <type>jar</type>
-                    <overWrite>true</overWrite>
-                    <destFileName>graal-sdk.jar</destFileName>
-                  </artifactItem>
-                </artifactItems>
-                <outputDirectory>${compiler.dir}</outputDirectory>
               </configuration>
             </execution>
           </executions>
