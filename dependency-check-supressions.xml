@@ -19,4 +19,60 @@
         <packageUrl regex="true">^pkg:maven/org.yaml/snakeyaml.*$</packageUrl>
         <vulnerabilityName>CVE-2022-1471</vulnerabilityName>
     </suppress>
+    <suppress>
+        <notes><![CDATA[
+        The CVE relates to ICU4C.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org.graalvm.shadowed/icu4j.*</packageUrl>
+        <vulnerabilityName>CVE-2016-6293</vulnerabilityName>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        The CVE relates to ICU4C.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org.graalvm.shadowed/icu4j.*</packageUrl>
+        <vulnerabilityName>CVE-2016-7415</vulnerabilityName>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        The CVE relates to ICU4C.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org.graalvm.shadowed/icu4j.*</packageUrl>
+        <vulnerabilityName>CVE-2017-17484</vulnerabilityName>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        The CVE relates to ICU4C.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org.graalvm.shadowed/icu4j.*</packageUrl>
+        <vulnerabilityName>CVE-2014-9911</vulnerabilityName>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        The CVE relates to ICU4C.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org.graalvm.shadowed/icu4j.*</packageUrl>
+        <vulnerabilityName>CVE-2020-10531</vulnerabilityName>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        The CVE relates to ICU4C.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org.graalvm.shadowed/icu4j.*</packageUrl>
+        <vulnerabilityName>CVE-2014-9654</vulnerabilityName>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        The CVE relates to ICU4C.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org.graalvm.shadowed/icu4j.*</packageUrl>
+        <vulnerabilityName>CVE-2017-14952</vulnerabilityName>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        The CVE relates to ICU4C.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org.graalvm.shadowed/icu4j.*</packageUrl>
+        <vulnerabilityName>CVE-2015-5922</vulnerabilityName>
+    </suppress>
 </suppressions>

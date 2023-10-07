@@ -32,67 +32,67 @@ public abstract class Component<T extends Component<T>> extends AbstractComponen
     generator.writeStringField("type", type);
   }
 
-  public T withLabel(final String value) throws IOException {
+  public final T withLabel(final String value) throws IOException {
     return with("label", value);
   }
 
-  public T withKey(final String value) throws IOException {
+  public final T withKey(final String value) throws IOException {
     return with("key", value);
   }
 
-  public T withDescription(final String value) throws IOException {
+  public final T withDescription(final String value) throws IOException {
     return with("description", value);
   }
 
-  public T withPlaceholder(final String value) throws IOException {
+  public final T withPlaceholder(final String value) throws IOException {
     return with("placeholder", value);
   }
 
-  public T withInput(final Boolean value) throws IOException {
+  public final T withInput(final Boolean value) throws IOException {
     return with("input", value);
   }
 
-  public T withTableView(final Boolean value) throws IOException {
+  public final T withTableView(final Boolean value) throws IOException {
     return with("tableView", value);
   }
 
-  public T withMultiple(final Boolean value) throws IOException {
+  public final T withMultiple(final Boolean value) throws IOException {
     return with("multiple", value);
   }
 
-  public T withProtect(final Boolean value) throws IOException {
+  public final T withProtect(final Boolean value) throws IOException {
     return with("protect", value);
   }
 
-  public T withCustomClass(final String value) throws IOException {
+  public final T withCustomClass(final String value) throws IOException {
     return with("customClass", value);
   }
 
-  public T withPrefix(final String value) throws IOException {
+  public final T withPrefix(final String value) throws IOException {
     return with("prefix", value);
   }
 
-  public T withSuffix(final String value) throws IOException {
+  public final T withSuffix(final String value) throws IOException {
     return with("suffix", value);
   }
 
-  public T withDefaultValue(final String value) throws IOException {
+  public final T withDefaultValue(final String value) throws IOException {
     return with("defaultValue", value);
   }
 
-  public T withClearOnHide(final Boolean value) throws IOException {
+  public final T withClearOnHide(final Boolean value) throws IOException {
     return with("clearOnHide", value);
   }
 
-  public T withUnique(final Boolean value) throws IOException {
+  public final T withUnique(final Boolean value) throws IOException {
     return with("unique", value);
   }
 
-  public T withPersistent(final Boolean value) throws IOException {
+  public final T withPersistent(final Boolean value) throws IOException {
     return with("persistent", value);
   }
 
-  public T withHidden(final Boolean value) throws IOException {
+  public final T withHidden(final Boolean value) throws IOException {
     return with("hidden", value);
   }
 

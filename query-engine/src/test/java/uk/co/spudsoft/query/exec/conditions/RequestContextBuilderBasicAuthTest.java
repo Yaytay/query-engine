@@ -16,7 +16,6 @@
  */
 package uk.co.spudsoft.query.exec.conditions;
 
-import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;

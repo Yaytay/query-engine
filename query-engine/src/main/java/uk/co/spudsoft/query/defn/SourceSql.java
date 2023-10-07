@@ -34,7 +34,7 @@ import uk.co.spudsoft.query.exec.sources.sql.SourceSqlStreamingInstance;
  * @author jtalbut
  */
 @JsonDeserialize(builder = SourceSql.Builder.class)
-public class SourceSql implements Source {
+public final class SourceSql implements Source {
 
   @Override
   public SourceInstance createInstance(Vertx vertx, Context context, SharedMap sharedMap, String defaultName) {

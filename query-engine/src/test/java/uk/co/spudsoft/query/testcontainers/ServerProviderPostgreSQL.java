@@ -38,7 +38,7 @@ public class ServerProviderPostgreSQL extends AbstractServerProvider implements 
 
   private static final Logger logger = LoggerFactory.getLogger(ServerProviderPostgreSQL.class);
   
-  public static final String PGSQL_IMAGE_NAME = "postgres:14.1-alpine";
+  public static final String PGSQL_IMAGE_NAME = "postgres:16.0-alpine";
 
   private static final Object lock = new Object();
   private static PostgreSQLContainer<?> pgsqlserver;

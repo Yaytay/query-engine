@@ -45,7 +45,7 @@ import uk.co.spudsoft.query.exec.procs.PassthroughStream;
  *
  * @author jtalbut
  */
-public class ProcessorScriptInstance implements ProcessorInstance {
+public final class ProcessorScriptInstance implements ProcessorInstance {
   
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ProcessorScriptInstance.class);
@@ -175,12 +175,10 @@ public class ProcessorScriptInstance implements ProcessorInstance {
     try {
       engine = Engine.newBuilder()
               .option("engine.WarnInterpreterOnly", "false")
-              .option("engine.Mode", "throughput")
               .build();
     } catch (Throwable ex) {
       engine = Engine.newBuilder()
               .option("engine.WarnInterpreterOnly", "false")
-              .option("engine.Mode", "throughput")
               .build();
     }
     

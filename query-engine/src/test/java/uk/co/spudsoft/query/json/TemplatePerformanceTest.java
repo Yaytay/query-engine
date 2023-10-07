@@ -53,8 +53,8 @@ public class TemplatePerformanceTest {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(TemplatePerformanceTest.class);
   
-  private final static int WARMUPS = 1000;
-  private final static int TIMED = 1000;
+  private final static int WARMUPS = 10000;
+  private final static int TIMED = 10000;
   
   private final static List<String> EXPECTED_RESULTS = buildExpectedResults();
 
@@ -78,7 +78,7 @@ public class TemplatePerformanceTest {
   
   @BeforeAll
   public static void headers() {
-    logger.debug("{}\t{}\t{}\t{}\t{}", "Method", "JVM", "Iterations", "Duration/s", "Rate (iterations/second)");
+    logger.debug("{}\t{}\t{}\t{}\t{}", " Method", "JVM", "Iterations", "Duration/s", "Rate (iterations/second)");
   }
   
   @Test

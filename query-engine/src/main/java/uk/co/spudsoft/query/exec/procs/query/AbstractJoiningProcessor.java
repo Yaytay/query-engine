@@ -130,7 +130,7 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
     return null;    
   }
   
-  protected Future<Void> parentStreamProcess(DataRow data, AsyncHandler<DataRow> chain) {
+  private Future<Void> parentStreamProcess(DataRow data, AsyncHandler<DataRow> chain) {
     try {
       sourceNameTracker.addNameToContextLocalData(context);
       logger.trace("parent process {}", data);
@@ -148,7 +148,7 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
     }
   }
 
-  protected Future<Void> childStreamProcess(DataRow data, AsyncHandler<DataRow> chain) {
+  private Future<Void> childStreamProcess(DataRow data, AsyncHandler<DataRow> chain) {
     try {
       sourceNameTracker.addNameToContextLocalData(context);
       logger.trace("child process {}", data);

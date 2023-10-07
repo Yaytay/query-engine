@@ -1,8 +1,8 @@
-FROM azul/zulu-openjdk-alpine:20.0.1-20.30.11
+FROM azul/zulu-openjdk-alpine:21.0.0
 
 RUN jlink --output /qe-java --add-modules java.base,java.compiler,java.management,jdk.management,jdk.unsupported,java.sql.rowset,java.desktop,jdk.naming.dns
 
-FROM alpine:3.18.2
+FROM alpine:3.18.4
 
 ARG DEPS
 

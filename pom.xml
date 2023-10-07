@@ -249,7 +249,7 @@
             </dependency>
           </dependencies>
         </plugin>
-
+        
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
@@ -257,14 +257,23 @@
           <configuration>
             <forkCount>1</forkCount>
             <reuseForks>true</reuseForks>
-            <argLine>@{argLine} -Dfile.encoding=UTF-8 -XX:+UnlockExperimentalVMOptions -XX:+UseJVMCICompiler --module-path=${compiler.dir} --upgrade-module-path=${compiler.dir}</argLine>
+            <argLine>
+              @{argLine} 
+              -Dfile.encoding=UTF-8 
+              -XX:+UnlockExperimentalVMOptions
+              -XX:+EnableJVMCI
+              --module-path=${compiler.dir} 
+              --upgrade-module-path=${project.build.directory}/compiler
+              --add-exports org.graalvm.polyglot/org.graalvm.polyglot.impl=ALL-UNNAMED
+              --add-exports org.graalvm.truffle.compiler/com.oracle.truffle.compiler=ALL-UNNAMED
+            </argLine>
             <trimStackTrace>false</trimStackTrace>
             <excludes>
               <exclude>**/sandbox/**</exclude>
             </excludes>
           </configuration>
         </plugin>
-
+        
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-failsafe-plugin</artifactId>
@@ -288,6 +297,16 @@
             <useModulePath>false</useModulePath>
             <reuseForks>true</reuseForks>
             <argLine>@{argLine} -Dfile.encoding=UTF-8 -XX:+UnlockExperimentalVMOptions -XX:+UseJVMCICompiler --module-path=${compiler.dir} --upgrade-module-path=${compiler.dir}</argLine>
+            <argLine>
+              @{argLine} 
+              -Dfile.encoding=UTF-8 
+              -XX:+UnlockExperimentalVMOptions
+              -XX:+EnableJVMCI
+              --module-path=${compiler.dir} 
+              --upgrade-module-path=${project.build.directory}/compiler
+              --add-exports org.graalvm.polyglot/org.graalvm.polyglot.impl=ALL-UNNAMED
+              --add-exports org.graalvm.truffle.compiler/com.oracle.truffle.compiler=ALL-UNNAMED
+            </argLine>
             <excludes>
               <exclude>**/sandbox/**</exclude>
             </excludes>

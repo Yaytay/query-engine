@@ -41,7 +41,7 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
 
   private static final Logger logger = LoggerFactory.getLogger(ServerProviderMsSQL.class);
   
-  public static final String MSSQL_IMAGE_NAME = "mcr.microsoft.com/mssql/server:2019-latest";
+  public static final String MSSQL_IMAGE_NAME = "mcr.microsoft.com/mssql/server:2022-latest";
 
   private static final Object lock = new Object();
   private static MSSQLServerContainer<?> mssqlserver;

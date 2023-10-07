@@ -43,7 +43,7 @@ public class SourceTestInstance extends AbstractSource {
     this.rowCount = definition.getRowCount();
     this.types = new Types();
     this.types.putIfAbsent("value", DataType.Integer);
-    if (!Strings.isNullOrEmpty(getName())) {
+    if (!Strings.isNullOrEmpty(definition.getName()) && Strings.isNullOrEmpty(defaultName)) {
       types.putIfAbsent("name", DataType.String);
     }
     this.stream = new BlockingReadStream<>(context, rowCount, types);

@@ -23,7 +23,7 @@ import java.io.IOException;
  *
  * @author jtalbut
  */
-public class Content extends Component<Content> {
+public final class Content extends Component<Content> {
   
   public Content(JsonGenerator generator) throws IOException {
     super(generator, "content");

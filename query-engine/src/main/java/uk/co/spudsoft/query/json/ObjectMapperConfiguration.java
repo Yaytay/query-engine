@@ -44,8 +44,10 @@ public class ObjectMapperConfiguration {
     mediaTypeModule.addSerializer(MediaType.class, new MediaTypeSerializer());
     
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true);
-    mapper.registerModule(new JavaTimeModule());
-    mapper.registerModule(mediaTypeModule);
+    mapper.registerModules(
+            new JavaTimeModule()
+            , mediaTypeModule
+    );
     mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     mapper.configure(SerializationFeature.WRITE_DURATIONS_AS_TIMESTAMPS, false);
     mapper.setDefaultMergeable(Boolean.TRUE);

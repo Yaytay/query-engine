@@ -22,7 +22,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
  *
  * @author jtalbut
  */
-public class TemplateDeserializerModule extends SimpleModule {
+public final class TemplateDeserializerModule extends SimpleModule {
 
   private static final long serialVersionUID = 1987676L;
 
