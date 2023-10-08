@@ -64,6 +64,8 @@ public class Pipeline extends SourcePipeline {
   private final String title;
   private final String description;
   private final Condition condition;
+  private final RateLimitRule rateLimitRule;
+  private final ConcurrencyRule concurrencyRule;
   private final ImmutableList<Argument> arguments;
   private final ImmutableMap<String, Endpoint> sourceEndpoints;
   private final ImmutableList<DynamicEndpoint> dynamicEndpoints;
@@ -74,6 +76,12 @@ public class Pipeline extends SourcePipeline {
     super.validate();
     if (condition != null) {
       condition.validate();
+    }
+    if (rateLimitRule != null) {
+      rateLimitRule.validate();
+    }
+    if (concurrencyRule != null) {
+      concurrencyRule.validate();
     }
     if (formats.isEmpty()) {
       throw new IllegalArgumentException("No formats specified in pipeline");
@@ -150,8 +158,30 @@ public class Pipeline extends SourcePipeline {
             , implementation = String.class
             , externalDocs = @ExternalDocumentation(description = "Conditions", url = "")
     )
-    public Condition getCondition() {
+  public Condition getCondition() {
     return condition;
+  }
+
+  @Schema(description = """
+                        <P>
+                        A rate limit rule constrains how frequently pipelines can be run.
+                        </P>
+                        """
+            , implementation = RateLimitRule.class
+    )
+  public RateLimitRule getRateLimitRule() {
+    return rateLimitRule;
+  }    
+
+  @Schema(description = """
+                        <P>
+                        A concurrency rule prevents the pipeline from being run concurrently.
+                        </P>
+                        """
+            , implementation = RateLimitRule.class
+    )
+  public ConcurrencyRule getConcurrencyRule() {
+    return concurrencyRule;
   }
     
   @ArraySchema(
@@ -279,6 +309,8 @@ public class Pipeline extends SourcePipeline {
     private String title;
     private String description;
     private Condition condition;
+    private RateLimitRule rateLimitRule;
+    private ConcurrencyRule concurrencyRule;
     private List<Argument> arguments;
     private Map<String, Endpoint> sourceEndpoints;
     private List<DynamicEndpoint> dynamicEndpoints;
@@ -286,15 +318,14 @@ public class Pipeline extends SourcePipeline {
 
     private Builder() {
     }
-
-    public Builder title(final String value) {
-      this.title = value;
-      return self();
+    @Override
+    public Pipeline build() {
+      return new Pipeline(title, description, condition, rateLimitRule, concurrencyRule, arguments, sourceEndpoints, source, dynamicEndpoints, processors, formats);
     }
 
-    public Builder description(final String value) {
-      this.description = value;
-      return self();
+    public Builder source(final Source value) {
+      this.source = value;
+      return this;
     }
 
     /**
@@ -302,19 +333,44 @@ public class Pipeline extends SourcePipeline {
      * @param value the condition on the Endpoint.
      * @return this, so that the builder may be used fluently.
      */
+    public Builder processors(final List<Processor> value) {
+      this.processors = value;
+      return this;
+    }
+    
+    public Builder title(final String value) {
+      this.title = value;
+      return this;
+    }
+
+    public Builder description(final String value) {
+      this.description = value;
+      return this;
+    }
+
     public Builder condition(final Condition value) {
       this.condition = value;
       return this;
     }
-    
+
+    public Builder rateLimitRule(final RateLimitRule value) {
+      this.rateLimitRule = value;
+      return this;
+    }
+
+    public Builder concurrencyRule(final ConcurrencyRule value) {
+      this.concurrencyRule = value;
+      return this;
+    }
+
     public Builder arguments(final List<Argument> value) {
       this.arguments = value;
-      return self();
+      return this;
     }
 
     public Builder sourceEndpoints(final Map<String, Endpoint> value) {
       this.sourceEndpoints = value;
-      return self();
+      return this;
     }
 
     public Builder dynamicEndpoints(final List<DynamicEndpoint> value) {
@@ -326,22 +382,19 @@ public class Pipeline extends SourcePipeline {
       this.formats = value;
       return this;
     }
-
-    @Override
-    public Pipeline build() {
-      return new Pipeline(title, description, condition, arguments, sourceEndpoints, source, dynamicEndpoints, processors, formats);
-    }
   }
 
   public static Pipeline.Builder builder() {
     return new Pipeline.Builder();
   }
 
-  private Pipeline(String title, String description, Condition condition, List<Argument> arguments, Map<String, Endpoint> sourceEndpoints, Source source, List<DynamicEndpoint> dynamicEndpoints, List<Processor> processors, List<Format> formats) {
+  private Pipeline(String title, String description, Condition condition, RateLimitRule rateLimitRule, ConcurrencyRule concurrencyRule, List<Argument> arguments, Map<String, Endpoint> sourceEndpoints, Source source, List<DynamicEndpoint> dynamicEndpoints, List<Processor> processors, List<Format> formats) {
     super(source, processors);
     this.title = title;
     this.description = description;
     this.condition = condition;
+    this.rateLimitRule = rateLimitRule;
+    this.concurrencyRule = concurrencyRule;
     this.arguments = ImmutableCollectionTools.copy(arguments);
     Set<String> usedNames = new HashSet<>();
     for (Argument arg : this.arguments) {

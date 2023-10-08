@@ -82,6 +82,66 @@ public class PipelineTest {
             )
             .build();
     instance3.validate();
+
+    assertThrows(IllegalArgumentException.class, () -> {
+            Pipeline.builder()
+                  .source(SourceTest.builder().rowCount(1).build())
+                  .formats(Arrays.asList(FormatDelimited.builder().build()))
+                  .arguments(
+                          Arrays.asList(
+                                  Argument.builder().name("arg1").type(ArgumentType.String).build()
+                                  , Argument.builder().name("arg1").type(ArgumentType.String).build()
+                          )
+                  )
+                  .build();
+    });
+    
+
+    assertThrows(IllegalArgumentException.class, () -> {
+            Pipeline.builder()
+                  .source(SourceTest.builder().rowCount(1).build())
+                  .formats(Arrays.asList(FormatDelimited.builder().build(), FormatDelimited.builder().build()))
+                  .build();
+    });
+    
+    Pipeline instance4 = Pipeline.builder()
+            .source(SourceTest.builder().rowCount(1).build())
+            .formats(Arrays.asList(FormatDelimited.builder().build()))
+            .build();
+    instance4.validate();
+    
+    Pipeline instance5 = Pipeline.builder()
+            .condition(new Condition("£$%£$%"))
+            .source(SourceTest.builder().rowCount(1).build())
+            .formats(Arrays.asList(FormatDelimited.builder().build()))
+            .build();
+    assertThrows(IllegalArgumentException.class, () -> {instance5.validate();});
+
+    Pipeline instance6 = Pipeline.builder()
+            .concurrencyRule(ConcurrencyRule.builder().build())
+            .source(SourceTest.builder().rowCount(1).build())
+            .formats(Arrays.asList(FormatDelimited.builder().build()))
+            .build();
+    assertThrows(IllegalArgumentException.class, () -> {instance6.validate();});
+
+    Pipeline instance7 = Pipeline.builder()
+            .rateLimitRule(RateLimitRule.builder().build())
+            .source(SourceTest.builder().rowCount(1).build())
+            .formats(Arrays.asList(FormatDelimited.builder().build()))
+            .build();
+    assertThrows(IllegalArgumentException.class, () -> {instance7.validate();});
+
+    Pipeline instance8 = Pipeline.builder()
+            .source(SourceTest.builder().rowCount(1).build())
+            .formats(Arrays.asList(FormatDelimited.builder().build()))
+            .arguments(
+                    Arrays.asList(
+                            Argument.builder().name("arg1").type(ArgumentType.String).build()
+                            , Argument.builder().name("arg").type(ArgumentType.String).dependsUpon(Arrays.asList("arg12")).build()
+                    )
+            )
+            .build();
+    assertThrows(IllegalArgumentException.class, () -> {instance8.validate();});
   }
 
   @Test
@@ -109,6 +169,32 @@ public class PipelineTest {
     Source source = SourceSql.builder().type(SourceType.SQL).build();
     instance = Pipeline.builder().source(source).build();
     assertEquals(source, instance.getSource());
+  }
+
+  @Test
+  public void testGetCondition() {
+    Pipeline instance = Pipeline.builder().build();
+    assertNull(instance.getCondition());
+    instance = Pipeline.builder().condition(new Condition("true;")).build();
+    assertEquals("true;", instance.getCondition().getExpression());
+  }
+
+  @Test
+  public void testRateLimitRule() {
+    Pipeline instance = Pipeline.builder().build();
+    assertNull(instance.getRateLimitRule());
+    RateLimitRule rule = RateLimitRule.builder().build();
+    instance = Pipeline.builder().rateLimitRule(rule).build();
+    assertEquals(rule, instance.getRateLimitRule());
+  }
+
+  @Test
+  public void testGetConcurrencyRule() {
+    Pipeline instance = Pipeline.builder().build();
+    assertNull(instance.getConcurrencyRule());
+    ConcurrencyRule rule = ConcurrencyRule.builder().build();
+    instance = Pipeline.builder().concurrencyRule(rule).build();
+    assertEquals(rule, instance.getConcurrencyRule());
   }
 
   @Test

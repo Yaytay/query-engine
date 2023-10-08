@@ -12,15 +12,15 @@ databaseChangeLog:
         - {column: {name: processId, type: varchar(1000), constraints: {nullable: false}}}
         - {column: {name: url, type: varchar(1000), constraints: {nullable: false}}}
         - {column: {name: clientIp, type: varchar(40), constraints: {nullable: false}}}
-        - {column: {name: host, type: varchar(100), constraints: {nullable: false}}}
+        - {column: {name: host, type: varchar(260), constraints: {nullable: false}}}
         - {column: {name: arguments, type: clob, constraints: {nullable: false}}}
         - {column: {name: headers, type: clob, constraints: {nullable: false}}}
         - {column: {name: openIdDetails, type: clob, constraints: {nullable: true}}}
         - {column: {name: issuer, type: varchar(1000), constraints: {nullable: true}}}
         - {column: {name: subject, type: varchar(1000), constraints: {nullable: true}}}
-        - {column: {name: username, type: varchar(1000), constraints: {nullable: true}}}
+        - {column: {name: username, type: varchar(500), constraints: {nullable: true}}}
         - {column: {name: groups, type: clob, constraints: {nullable: true}}}
-        - {column: {name: filePath, type: varchar(1000), constraints: {nullable: true}}}
+        - {column: {name: filePath, type: varchar(500), constraints: {nullable: true}}}
         - {column: {name: fileSize, type: bigint, constraints: {nullable: true}}}
         - {column: {name: fileModified, type: timestamp, constraints: {nullable: true}}}
         - {column: {name: exceptionTime, type: timestamp, constraints: {nullable: true}}}
@@ -39,6 +39,46 @@ databaseChangeLog:
        indexName:  idx_request_timestamp
        tableName:  request
        columns:  
+       - column:
+          name:  timestamp
+       unique:  false
+
+    - createIndex:   
+       indexName:  idx_request_clientIp_timestamp
+       tableName:  request
+       columns:  
+       - column:
+          name:  clientIp
+       - column:
+          name:  timestamp
+       unique:  false
+
+    - createIndex:   
+       indexName:  idx_request_host_timestamp
+       tableName:  request
+       columns:  
+       - column:
+          name:  host
+       - column:
+          name:  timestamp
+       unique:  false
+
+    - createIndex:   
+       indexName:  idx_request_username_timestamp
+       tableName:  request
+       columns:  
+       - column:
+          name:  username
+       - column:
+          name:  timestamp
+       unique:  false
+
+    - createIndex:   
+       indexName:  idx_request_filePath_timestamp
+       tableName:  request
+       columns:  
+       - column:
+          name:  filePath
        - column:
           name:  timestamp
        unique:  false

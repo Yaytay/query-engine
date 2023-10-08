@@ -68,7 +68,20 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
   
   private Comparable<Object> lastSeenParentId;
   
-  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
+  /**
+   * Constructor.
+   * @param logger  The logger that should be used (so that log messages identify the child class).
+   * @param vertx The vertx instance.
+   * @param sourceNameTracker Source name tracker used to identify source names in log messages
+   * @param context Vertx context used by this class.
+   * @param parentIdColumn The column from the parent dataset that identifies a row.
+   * @param childIdColumn The column from the child dataset that identifies a row.
+   * @param innerJoin If true parent rows without child rows will be excluded.
+   * 
+   * It is safe to suppress the "this-escape" lint check as long as none of the streams are flowing until the constructor completes.
+   */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")  
+  @SuppressWarnings("this-escape")
   public AbstractJoiningProcessor(Logger logger, Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String parentIdColumn, String childIdColumn, boolean innerJoin) {
     this.logger = logger;
     this.vertx = vertx;

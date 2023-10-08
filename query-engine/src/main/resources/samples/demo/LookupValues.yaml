@@ -11,12 +11,13 @@ source:
   endpoint: MySQL
   replaceDoubleQuotes: true
   query: |
-    select distinct 
-      value 
-    from 
-      "ManyData" m 
-      join "RefData" r on r."refId" = m."refId"
+    select
+        value
+    from
+        "RefData"
+    where
+        "refId" in (select "refId" from "ManyData")
     order by
-      "ordering"
+       "ordering"
 formats:
 - type: JSON
