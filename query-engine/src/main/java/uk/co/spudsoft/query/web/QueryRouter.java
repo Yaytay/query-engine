@@ -27,6 +27,7 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.defn.ConcurrencyRule;
 import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.FormatRequest;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
@@ -36,6 +37,7 @@ import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 import uk.co.spudsoft.query.main.ExceptionToString;
 import uk.co.spudsoft.query.defn.Format;
+import uk.co.spudsoft.query.defn.RateLimitRule;
 import uk.co.spudsoft.query.exec.FormatInstance;
 
 
@@ -114,7 +116,7 @@ public class QueryRouter implements Handler<RoutingContext> {
                   .compose(requestContext -> {
                     return auditor.recordRequest(requestContext).map(requestContext);
                   })
-                  .compose(requestContext -> {                    
+                  .compose(requestContext -> {
                     try {
                       logger.trace("Request context: {}", requestContext);
                       Vertx.currentContext().putLocal("req", requestContext);
@@ -133,6 +135,16 @@ public class QueryRouter implements Handler<RoutingContext> {
                     });
                   })
                   .compose(pipeline -> pipelineExecutor.validatePipeline(pipeline))
+                  .compose(pipeline -> {
+                    ConcurrencyRule concurrencyRule = pipeline.getConcurrencyRule();
+                    RateLimitRule rateLimitRule = pipeline.getRateLimitRule();
+                    if (concurrencyRule == null && rateLimitRule == null) {
+                      return Future.succeededFuture(pipeline);
+                    } else {
+                      RequestContext requestContext = (RequestContext) Vertx.currentContext().getLocal("req");
+                      return auditor.validateRateAndConcurrencyRules(requestContext, pipeline);
+                    }
+                  })
                   .compose(pipeline -> {
                     PipelineInstance instance;
                     try {

@@ -63,6 +63,7 @@ import liquibase.resource.ResourceAccessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.dircache.DirCacheTree;
+import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.main.Audit;
 import uk.co.spudsoft.query.main.Credentials;
@@ -388,6 +389,11 @@ public class AuditorImpl implements Auditor {
     });
   }
 
+  @Override
+  public Future<Pipeline> validateRateAndConcurrencyRules(RequestContext context, Pipeline pipeline) {
+    return Future.succeededFuture(pipeline);
+  }
+  
   static String localizeUsername(String username) {
     if (username == null) {
       return username;

@@ -24,6 +24,7 @@ import liquibase.exception.LiquibaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.dircache.DirCacheTree;
+import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 
 /**
@@ -79,6 +80,11 @@ public class NullAuditor implements Auditor {
   @Override
   public void recordResponse(RequestContext context, HttpServerResponse response) {
     logger.info("Request complete: {} {} bytes {}", response.getStatusCode(), response.bytesWritten(), response.headers());
+  }
+
+  @Override
+  public Future<Pipeline> validateRateAndConcurrencyRules(RequestContext context, Pipeline pipeline) {
+    return Future.succeededFuture(pipeline);
   }
   
 }

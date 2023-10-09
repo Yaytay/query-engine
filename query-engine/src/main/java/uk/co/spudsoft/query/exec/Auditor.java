@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import liquibase.exception.LiquibaseException;
 import uk.co.spudsoft.dircache.DirCacheTree.File;
+import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 
 /**
@@ -44,6 +45,8 @@ public interface Auditor {
   void recordFileDetails(RequestContext context, File file);
 
   Future<Void> recordRequest(RequestContext context);
+
+  Future<Pipeline> validateRateAndConcurrencyRules(RequestContext context, Pipeline pipeline);
 
   void recordResponse(RequestContext context, HttpServerResponse response);
   
