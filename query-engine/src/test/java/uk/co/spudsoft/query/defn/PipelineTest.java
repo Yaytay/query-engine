@@ -117,15 +117,8 @@ public class PipelineTest {
             .build();
     assertThrows(IllegalArgumentException.class, () -> {instance5.validate();});
 
-    Pipeline instance6 = Pipeline.builder()
-            .concurrencyRule(ConcurrencyRule.builder().build())
-            .source(SourceTest.builder().rowCount(1).build())
-            .formats(Arrays.asList(FormatDelimited.builder().build()))
-            .build();
-    assertThrows(IllegalArgumentException.class, () -> {instance6.validate();});
-
     Pipeline instance7 = Pipeline.builder()
-            .rateLimitRule(RateLimitRule.builder().build())
+            .rateLimitRules(Arrays.asList(RateLimitRule.builder().build()))
             .source(SourceTest.builder().rowCount(1).build())
             .formats(Arrays.asList(FormatDelimited.builder().build()))
             .build();
@@ -180,21 +173,12 @@ public class PipelineTest {
   }
 
   @Test
-  public void testRateLimitRule() {
+  public void testRateLimitRules() {
     Pipeline instance = Pipeline.builder().build();
-    assertNull(instance.getRateLimitRule());
+    assertEquals(0, instance.getRateLimitRules().size());
     RateLimitRule rule = RateLimitRule.builder().build();
-    instance = Pipeline.builder().rateLimitRule(rule).build();
-    assertEquals(rule, instance.getRateLimitRule());
-  }
-
-  @Test
-  public void testGetConcurrencyRule() {
-    Pipeline instance = Pipeline.builder().build();
-    assertNull(instance.getConcurrencyRule());
-    ConcurrencyRule rule = ConcurrencyRule.builder().build();
-    instance = Pipeline.builder().concurrencyRule(rule).build();
-    assertEquals(rule, instance.getConcurrencyRule());
+    instance = Pipeline.builder().rateLimitRules(Arrays.asList(rule)).build();
+    assertEquals(rule, instance.getRateLimitRules().get(0));
   }
 
   @Test

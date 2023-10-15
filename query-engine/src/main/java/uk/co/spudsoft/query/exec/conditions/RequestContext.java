@@ -59,6 +59,8 @@ public class RequestContext {
   
   private final String host;
   
+  private final String path;
+  
   private final MultiMap arguments;
   
   private final MultiMap headers;
@@ -86,6 +88,7 @@ public class RequestContext {
     this.url = request.absoluteURI();
     this.clientIp = extractRemoteIp(request);
     this.host = extractHost(request);
+    this.path = request.path();
     this.arguments = request.params();
     this.headers = request.headers();
     this.cookies = ImmutableSet.copyOf(request.cookies());
@@ -97,17 +100,19 @@ public class RequestContext {
    * @param requestId an ID that is unique to this request.
    * @param url The absolute URL of the request.
    * @param host The value to use for the host.
+   * @param path The path from the URL.
    * @param arguments Arguments that should have been extracted from the request.
    * @param headers Headers that should have been extracted from the request.
    * @param cookies Cookies that should have been extracted from the request.
    * @param clientIp Client IP address that should have been extracted from the request.
    * @param jwt JWT that should have been extracted from the request.
    */
-  public RequestContext(String requestId, String url, String host, MultiMap arguments, MultiMap headers, Set<Cookie> cookies, IPAddressString clientIp, JWT jwt) {
+  public RequestContext(String requestId, String url, String host, String path, MultiMap arguments, MultiMap headers, Set<Cookie> cookies, IPAddressString clientIp, JWT jwt) {
     this.startTime = System.currentTimeMillis();
     this.requestId = requestId;
     this.url = url;
     this.host = host;
+    this.path = path;
     this.arguments = arguments == null ? new HeadersMultiMap() : arguments;
     this.headers = headers == null ? new HeadersMultiMap() : headers;
     this.cookies = ImmutableSet.copyOf(cookies == null ? Collections.emptySet() : cookies);
@@ -345,6 +350,14 @@ public class RequestContext {
    */
   public String getHost() {
     return host;
+  }
+  
+  /**
+   * Get the path part of the URL.
+   * @return the path part of the URL.
+   */
+  public String getPath() {
+    return path;
   }
   
   /**

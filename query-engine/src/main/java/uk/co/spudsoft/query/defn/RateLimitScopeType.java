@@ -40,7 +40,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
                        * It is possible to combine multiple scope types in one rule.
                       </P>
                       """)
-public enum ConcurrencyScopeType {
+public enum RateLimitScopeType {
   
   /**
    * Runs are constrained by the host header in requests.

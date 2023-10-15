@@ -64,8 +64,7 @@ public class Pipeline extends SourcePipeline {
   private final String title;
   private final String description;
   private final Condition condition;
-  private final RateLimitRule rateLimitRule;
-  private final ConcurrencyRule concurrencyRule;
+  private final ImmutableList<RateLimitRule> rateLimitRules;
   private final ImmutableList<Argument> arguments;
   private final ImmutableMap<String, Endpoint> sourceEndpoints;
   private final ImmutableList<DynamicEndpoint> dynamicEndpoints;
@@ -77,11 +76,8 @@ public class Pipeline extends SourcePipeline {
     if (condition != null) {
       condition.validate();
     }
-    if (rateLimitRule != null) {
-      rateLimitRule.validate();
-    }
-    if (concurrencyRule != null) {
-      concurrencyRule.validate();
+    for (RateLimitRule rule : rateLimitRules) {
+      rule.validate();
     }
     if (formats.isEmpty()) {
       throw new IllegalArgumentException("No formats specified in pipeline");
@@ -169,20 +165,9 @@ public class Pipeline extends SourcePipeline {
                         """
             , implementation = RateLimitRule.class
     )
-  public RateLimitRule getRateLimitRule() {
-    return rateLimitRule;
+  public List<RateLimitRule> getRateLimitRules() {
+    return rateLimitRules;
   }    
-
-  @Schema(description = """
-                        <P>
-                        A concurrency rule prevents the pipeline from being run concurrently.
-                        </P>
-                        """
-            , implementation = RateLimitRule.class
-    )
-  public ConcurrencyRule getConcurrencyRule() {
-    return concurrencyRule;
-  }
     
   @ArraySchema(
           schema = @Schema(
@@ -309,8 +294,7 @@ public class Pipeline extends SourcePipeline {
     private String title;
     private String description;
     private Condition condition;
-    private RateLimitRule rateLimitRule;
-    private ConcurrencyRule concurrencyRule;
+    private List<RateLimitRule> rateLimitRules;
     private List<Argument> arguments;
     private Map<String, Endpoint> sourceEndpoints;
     private List<DynamicEndpoint> dynamicEndpoints;
@@ -320,7 +304,7 @@ public class Pipeline extends SourcePipeline {
     }
     @Override
     public Pipeline build() {
-      return new Pipeline(title, description, condition, rateLimitRule, concurrencyRule, arguments, sourceEndpoints, source, dynamicEndpoints, processors, formats);
+      return new Pipeline(title, description, condition, rateLimitRules, arguments, sourceEndpoints, source, dynamicEndpoints, processors, formats);
     }
 
     public Builder source(final Source value) {
@@ -333,6 +317,7 @@ public class Pipeline extends SourcePipeline {
      * @param value the condition on the Endpoint.
      * @return this, so that the builder may be used fluently.
      */
+    @Override
     public Builder processors(final List<Processor> value) {
       this.processors = value;
       return this;
@@ -353,13 +338,8 @@ public class Pipeline extends SourcePipeline {
       return this;
     }
 
-    public Builder rateLimitRule(final RateLimitRule value) {
-      this.rateLimitRule = value;
-      return this;
-    }
-
-    public Builder concurrencyRule(final ConcurrencyRule value) {
-      this.concurrencyRule = value;
+    public Builder rateLimitRules(final List<RateLimitRule> value) {
+      this.rateLimitRules = value;
       return this;
     }
 
@@ -388,13 +368,12 @@ public class Pipeline extends SourcePipeline {
     return new Pipeline.Builder();
   }
 
-  private Pipeline(String title, String description, Condition condition, RateLimitRule rateLimitRule, ConcurrencyRule concurrencyRule, List<Argument> arguments, Map<String, Endpoint> sourceEndpoints, Source source, List<DynamicEndpoint> dynamicEndpoints, List<Processor> processors, List<Format> formats) {
+  private Pipeline(String title, String description, Condition condition, List<RateLimitRule> rateLimitRules, List<Argument> arguments, Map<String, Endpoint> sourceEndpoints, Source source, List<DynamicEndpoint> dynamicEndpoints, List<Processor> processors, List<Format> formats) {
     super(source, processors);
     this.title = title;
     this.description = description;
     this.condition = condition;
-    this.rateLimitRule = rateLimitRule;
-    this.concurrencyRule = concurrencyRule;
+    this.rateLimitRules = ImmutableCollectionTools.copy(rateLimitRules);
     this.arguments = ImmutableCollectionTools.copy(arguments);
     Set<String> usedNames = new HashSet<>();
     for (Argument arg : this.arguments) {

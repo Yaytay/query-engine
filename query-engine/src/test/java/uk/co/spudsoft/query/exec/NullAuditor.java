@@ -83,7 +83,7 @@ public class NullAuditor implements Auditor {
   }
 
   @Override
-  public Future<Pipeline> validateRateAndConcurrencyRules(RequestContext context, Pipeline pipeline) {
+  public Future<Pipeline> runRateLimitRules(RequestContext context, Pipeline pipeline) {
     return Future.succeededFuture(pipeline);
   }
   

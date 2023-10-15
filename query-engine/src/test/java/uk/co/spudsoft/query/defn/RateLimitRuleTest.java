@@ -35,54 +35,55 @@ public class RateLimitRuleTest {
   @Test
   public void testValidate() {
     RateLimitRule instance1 = RateLimitRule.builder()
-            .byteLimit(17)
+            .byteLimit("17M")
             .timeLimit(Duration.of(1, ChronoUnit.MICROS))
-            .scope(Arrays.asList(ConcurrencyScopeType.path))
+            .scope(Arrays.asList(RateLimitScopeType.path))
             .build();
     instance1.validate();
     
     RateLimitRule instance2 = RateLimitRule.builder()
             .timeLimit(Duration.of(1, ChronoUnit.MICROS))
-            .scope(Arrays.asList(ConcurrencyScopeType.path))
+            .concurrencyLimit(-2)
+            .scope(Arrays.asList(RateLimitScopeType.path))
             .build();
     assertThrows(IllegalArgumentException.class, () -> { instance2.validate(); });
     
     RateLimitRule instance3 = RateLimitRule.builder()
-            .byteLimit(0)
+            .byteLimit("red")
             .timeLimit(Duration.of(1, ChronoUnit.MICROS))
-            .scope(Arrays.asList(ConcurrencyScopeType.path))
+            .scope(Arrays.asList(RateLimitScopeType.path))
             .build();
     assertThrows(IllegalArgumentException.class, () -> { instance3.validate(); });
     
     RateLimitRule instance4 = RateLimitRule.builder()
-            .byteLimit(-7)
+            .byteLimit("-7")
             .timeLimit(Duration.of(1, ChronoUnit.MICROS))
-            .scope(Arrays.asList(ConcurrencyScopeType.path))
+            .scope(Arrays.asList(RateLimitScopeType.path))
             .build();
     assertThrows(IllegalArgumentException.class, () -> { instance4.validate(); });
     
     RateLimitRule instance5 = RateLimitRule.builder()
-            .byteLimit(17)
-            .scope(Arrays.asList(ConcurrencyScopeType.path))
+            .byteLimit("17k")
+            .scope(Arrays.asList(RateLimitScopeType.path))
             .build();
     assertThrows(IllegalArgumentException.class, () -> { instance5.validate(); });
     
     RateLimitRule instance6 = RateLimitRule.builder()
-            .byteLimit(17)
+            .byteLimit("17")
             .timeLimit(Duration.of(0, ChronoUnit.MICROS))
-            .scope(Arrays.asList(ConcurrencyScopeType.path))
+            .scope(Arrays.asList(RateLimitScopeType.path))
             .build();
     assertThrows(IllegalArgumentException.class, () -> { instance6.validate(); });
     
     RateLimitRule instance7 = RateLimitRule.builder()
-            .byteLimit(17)
+            .byteLimit("17")
             .timeLimit(Duration.of(-1, ChronoUnit.MICROS))
-            .scope(Arrays.asList(ConcurrencyScopeType.path))
+            .scope(Arrays.asList(RateLimitScopeType.path))
             .build();
     assertThrows(IllegalArgumentException.class, () -> { instance7.validate(); });
     
     RateLimitRule instance8 = RateLimitRule.builder()
-            .byteLimit(17)
+            .byteLimit("17")
             .timeLimit(Duration.of(1, ChronoUnit.MICROS))
             .build();
     assertThrows(IllegalArgumentException.class, () -> { instance8.validate(); });
@@ -93,8 +94,8 @@ public class RateLimitRuleTest {
   public void testGetScope() {
     RateLimitRule instance = RateLimitRule.builder().build();
     assertThat(instance.getScope(), hasSize(0));
-    instance = RateLimitRule.builder().scope(Arrays.asList(ConcurrencyScopeType.clientip)).build();
-    assertEquals(ConcurrencyScopeType.clientip, instance.getScope().get(0));
+    instance = RateLimitRule.builder().scope(Arrays.asList(RateLimitScopeType.clientip)).build();
+    assertEquals(RateLimitScopeType.clientip, instance.getScope().get(0));
   }
 
   @Test
@@ -108,9 +109,17 @@ public class RateLimitRuleTest {
   @Test
   public void testGetByteLimit() {
     RateLimitRule instance = RateLimitRule.builder().build();
-    assertEquals(0L, instance.getByteLimit());
-    instance = RateLimitRule.builder().byteLimit(13).build();
-    assertEquals(13L, instance.getByteLimit());
+    assertNull(instance.getByteLimit());
+    instance = RateLimitRule.builder().byteLimit("13").build();
+    assertEquals("13", instance.getByteLimit());
+    instance = RateLimitRule.builder().byteLimit("13").build();
+    assertEquals(13L, instance.getParsedByteLimit());
+    instance = RateLimitRule.builder().byteLimit("13G").build();
+    assertEquals(13000000000L, instance.getParsedByteLimit());
+    instance = RateLimitRule.builder().byteLimit("13M").build();
+    assertEquals(13000000L, instance.getParsedByteLimit());
+    instance = RateLimitRule.builder().byteLimit("13k").build();
+    assertEquals(13000L, instance.getParsedByteLimit());
   }
   
 }

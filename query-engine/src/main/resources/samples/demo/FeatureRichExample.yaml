@@ -1,6 +1,16 @@
 title: Feature Rich Example
 description: |
   A complex pipeline that tries to demonstrate as many features as I can cram into a single pipeline.
+rateLimitRules:
+- scope: 
+  - path
+  - username
+  timeLimit: P1D
+- scope: 
+  - path
+  - username
+  timeLimit: PT60M
+  byteLimit: 1M  
 arguments:
   - name: minDate
     type: Date

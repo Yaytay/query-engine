@@ -46,7 +46,7 @@ public interface Auditor {
 
   Future<Void> recordRequest(RequestContext context);
 
-  Future<Pipeline> validateRateAndConcurrencyRules(RequestContext context, Pipeline pipeline);
+  Future<Pipeline> runRateLimitRules(RequestContext context, Pipeline pipeline);
 
   void recordResponse(RequestContext context, HttpServerResponse response);
   

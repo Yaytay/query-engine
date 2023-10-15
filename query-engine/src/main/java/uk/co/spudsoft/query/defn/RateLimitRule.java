@@ -18,12 +18,14 @@ package uk.co.spudsoft.query.defn;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Duration;
 import java.util.List;
+import java.util.Locale;
 import org.apache.commons.collections4.CollectionUtils;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
@@ -65,9 +67,11 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 )
 public class RateLimitRule {
   
-  private final ImmutableList<ConcurrencyScopeType> scope;
+  private final ImmutableList<RateLimitScopeType> scope;
   private final Duration timeLimit;
-  private final long byteLimit;
+  private final String runLimit;
+  private final String byteLimit;
+  private final int concurrencyLimit;
 
   public void validate() {
     if (CollectionUtils.isEmpty(scope))  {
@@ -82,11 +86,45 @@ public class RateLimitRule {
     if (timeLimit.isZero())  {
       throw new IllegalArgumentException("No byteLimit timeLimit for rate limit rule.");
     }
-    if (byteLimit < 0)  {
-      throw new IllegalArgumentException("Negative byteLimit provided for rate limit rule.");
+    if (!Strings.isNullOrEmpty(runLimit)) {
+      long runLimitLong = parse("run limit", runLimit);
+      if (runLimitLong < 0)  {
+        throw new IllegalArgumentException("Negative run limit provided for rate limit rule.");
+      }
+      if (runLimitLong == 0)  {
+        throw new IllegalArgumentException("Zero run limit provided for rate limit rule.");
+      }
     }
-    if (byteLimit == 0)  {
-      throw new IllegalArgumentException("No byteLimit provided for rate limit rule.");
+    if (!Strings.isNullOrEmpty(byteLimit)) {
+      long byteLimitLong = parse("byte limit", byteLimit);
+      if (byteLimitLong < 0)  {
+        throw new IllegalArgumentException("Negative byte limit provided for rate limit rule.");
+      }
+      if (byteLimitLong == 0)  {
+        throw new IllegalArgumentException("Zero byte limit provided for rate limit rule.");
+      }
+    }
+    if (concurrencyLimit < 0)  {
+      throw new IllegalArgumentException("Negative concurrency limit provided for rate limit rule.");
+    }
+  }
+  
+  private static long parse(String name, String value) {
+    long multiplier = 1;
+    if (value.endsWith("M")) {
+      multiplier = 1000 * 1000;
+      value = value.substring(0, value.length() - 1);
+    } else if (value.endsWith("G")) {
+      multiplier = 1000 * 1000 * 1000;
+      value = value.substring(0, value.length() - 1);
+    } else if (value.endsWith("K")) {
+      multiplier = 1000;
+      value = value.substring(0, value.length() - 1);
+    }
+    try {
+      return Long.parseLong(value) * multiplier;
+    } catch (NumberFormatException ex) {
+      throw new IllegalArgumentException("The value for the " + name + " cannot be parsed");
     }
   }
   
@@ -96,7 +134,7 @@ public class RateLimitRule {
    */
   @ArraySchema(
           schema = @Schema(
-                  implementation = ConcurrencyScopeType.class
+                  implementation = RateLimitScopeType.class
                   , description = """
                           <P>The scope of the rate limit rule.</P>
                           <P>At least one value must be provided.</P>
@@ -105,7 +143,7 @@ public class RateLimitRule {
           , minItems = 1
           , uniqueItems = true
   )
-  public List<ConcurrencyScopeType> getScope() {
+  public List<RateLimitScopeType> getScope() {
     return scope;
   }
 
@@ -130,25 +168,48 @@ public class RateLimitRule {
                         <P>The limit on the number of bytes that may be been sent by previous runs.</P>
                         """
   , requiredMode = Schema.RequiredMode.REQUIRED)
-  public long getByteLimit() {
+  public String getByteLimit() {
     return byteLimit;
   }
+  
+  public Long getParsedByteLimit() {
+    if (Strings.isNullOrEmpty(byteLimit)) {
+      return null;
+    } else {
+      return parse("byte limit", byteLimit);
+    }
+  }
 
-  /**
-   * Builder class for {@link Endpoint} objects.
-   */
-  @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "Builder class should result in all instances being immutable when object is built")
+  public String getRunLimit() {
+    return runLimit;
+  }
+
+  public Long getParsedRunLimit() {
+    if (Strings.isNullOrEmpty(runLimit)) {
+      return null;
+    } else {
+      return parse("run limit", runLimit);
+    }
+  }
+
+  public int getConcurrencyLimit() {
+    return concurrencyLimit;
+  }
+
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
+  @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "Builder class should result in all instances being immutable when object is built")
   public static class Builder {
 
-    private List<ConcurrencyScopeType> scope;
+    private List<RateLimitScopeType> scope;
     private Duration timeLimit;
-    private long byteLimit;
+    private String runLimit;
+    private String byteLimit;
+    private int concurrencyLimit;
 
     private Builder() {
     }
 
-    public Builder scope(final List<ConcurrencyScopeType> value) {
+    public Builder scope(final List<RateLimitScopeType> value) {
       this.scope = value;
       return this;
     }
@@ -158,13 +219,23 @@ public class RateLimitRule {
       return this;
     }
 
-    public Builder byteLimit(final long value) {
+    public Builder runLimit(final String value) {
+      this.runLimit = value;
+      return this;
+    }
+
+    public Builder byteLimit(final String value) {
       this.byteLimit = value;
       return this;
     }
 
+    public Builder concurrencyLimit(final int value) {
+      this.concurrencyLimit = value;
+      return this;
+    }
+
     public RateLimitRule build() {
-      return new uk.co.spudsoft.query.defn.RateLimitRule(scope, timeLimit, byteLimit);
+      return new uk.co.spudsoft.query.defn.RateLimitRule(scope, timeLimit, runLimit, byteLimit, concurrencyLimit);
     }
   }
 
@@ -172,11 +243,12 @@ public class RateLimitRule {
     return new RateLimitRule.Builder();
   }
 
-  private RateLimitRule(final List<ConcurrencyScopeType> scope, final Duration timeLimit, final long byteLimit) {
+  private RateLimitRule(final List<RateLimitScopeType> scope, final Duration timeLimit, final String runLimit, final String byteLimit, final int concurrencyLimit) {
     this.scope = ImmutableCollectionTools.copy(scope);
     this.timeLimit = timeLimit;
-    this.byteLimit = byteLimit;
+    this.runLimit = runLimit == null ? null : runLimit.toUpperCase(Locale.ROOT);
+    this.byteLimit = byteLimit == null ? null : byteLimit.toUpperCase(Locale.ROOT);
+    this.concurrencyLimit = concurrencyLimit;
   }
-  
-  
+
 }

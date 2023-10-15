@@ -1,0 +1,31 @@
+description: Test pipeline that returns no rows
+source:
+  name: TestData
+  type: Test
+  rowCount: 100
+  delayMs: 50
+rateLimitRules:
+- scope:
+  - path
+  timeLimit: P1D  
+- scope:
+  - host
+  timeLimit: PT1H
+  byteLimit: 100M  
+formats:
+- type: HTML
+- type: XLSX
+- type: Delimited
+  name: tab
+  delimiter: "\t"
+  newline: "\n"
+  extension: tsv
+  headerRow: true
+  mediaType: text/tsv
+- type: Delimited
+  name: oneline
+  delimiter: ","
+  newline: "\t"
+  extension: tsv
+  headerRow: true
+  mediaType: text/tsv

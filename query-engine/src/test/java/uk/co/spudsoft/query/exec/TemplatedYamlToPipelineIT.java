@@ -85,6 +85,7 @@ public class TemplatedYamlToPipelineIT {
                         null
                         , null
                         , "localhost"
+                        , null
                         , args
                         , new HeadersMultiMap().add("Host", "localhost:123")
                         , null

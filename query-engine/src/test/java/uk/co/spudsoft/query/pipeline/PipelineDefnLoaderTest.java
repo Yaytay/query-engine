@@ -21,6 +21,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.impl.headers.HeadersMultiMap;
+import io.vertx.core.json.Json;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.io.File;
@@ -29,6 +30,8 @@ import java.util.regex.Pattern;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.dircache.DirCache;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.main.CacheConfig;
@@ -39,6 +42,8 @@ import uk.co.spudsoft.query.main.CacheConfig;
  */
 @ExtendWith(VertxExtension.class)
 public class PipelineDefnLoaderTest {
+  
+  private static final Logger logger = LoggerFactory.getLogger(PipelineDefnLoaderTest.class);
   
   @Test
   public void testGetAccessible(Vertx vertx, VertxTestContext testContext) throws Exception {
@@ -52,6 +57,7 @@ public class PipelineDefnLoaderTest {
             , null
             , "localhost"
             , null
+            , null
             , new HeadersMultiMap().add("Host", "localhost:123")
             , null
             , new IPAddressString("127.0.0.1")
@@ -64,6 +70,7 @@ public class PipelineDefnLoaderTest {
               } else {
                 testContext.verify(() -> {
                   PipelineNodesTree.PipelineDir root = ar.result();
+                  logger.debug("Nodes: {}", Json.encode(root));
                   assertEquals("", root.getName());
                   assertEquals("", root.getPath());
                   assertEquals(2, root.getChildren().size());
@@ -77,18 +84,20 @@ public class PipelineDefnLoaderTest {
                   assertEquals("sub1", root.getChildren().get(1).getName());
                   assertEquals("sub1/sub2", root.getChildren().get(1).getChildren().get(0).getPath());
                   assertEquals("sub2", root.getChildren().get(1).getChildren().get(0).getName());
-                  assertEquals("sub1/sub2/DynamicEndpointPipelineIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(0).getPath());                  
-                  assertEquals("DynamicEndpointPipelineIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(0).getName());
-                  assertEquals("sub1/sub2/EmptyDataIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(1).getPath());
-                  assertEquals("EmptyDataIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(1).getName());
-                  assertEquals("sub1/sub2/JsonToPipelineIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(2).getPath());
-                  assertEquals("JsonToPipelineIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(2).getName());
-                  assertEquals("sub1/sub2/TemplatedJsonToPipelineIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(3).getPath());
-                  assertEquals("TemplatedJsonToPipelineIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(3).getName());
-                  assertEquals("sub1/sub2/TemplatedYamlToPipelineIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(4).getPath());
-                  assertEquals("TemplatedYamlToPipelineIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(4).getName());
-                  assertEquals("sub1/sub2/YamlToPipelineIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(5).getPath());
-                  assertEquals("YamlToPipelineIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(5).getName());
+                  assertEquals("sub1/sub2/ConcurrentRulesIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(0).getPath());
+                  assertEquals("ConcurrentRulesIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(0).getName());
+                  assertEquals("sub1/sub2/DynamicEndpointPipelineIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(1).getPath());                  
+                  assertEquals("DynamicEndpointPipelineIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(1).getName());
+                  assertEquals("sub1/sub2/EmptyDataIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(2).getPath());
+                  assertEquals("EmptyDataIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(2).getName());
+                  assertEquals("sub1/sub2/JsonToPipelineIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(3).getPath());
+                  assertEquals("JsonToPipelineIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(3).getName());
+                  assertEquals("sub1/sub2/TemplatedJsonToPipelineIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(4).getPath());
+                  assertEquals("TemplatedJsonToPipelineIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(4).getName());
+                  assertEquals("sub1/sub2/TemplatedYamlToPipelineIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(5).getPath());
+                  assertEquals("TemplatedYamlToPipelineIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(5).getName());
+                  assertEquals("sub1/sub2/YamlToPipelineIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(6).getPath());
+                  assertEquals("YamlToPipelineIT", root.getChildren().get(1).getChildren().get(0).getChildren().get(6).getName());
                 });
                 testContext.completeNow();
               }
@@ -107,6 +116,7 @@ public class PipelineDefnLoaderTest {
             null
             , null
             , "unknown"
+            , null
             , null
             , new HeadersMultiMap().add("Host", "bad")
             , null

@@ -27,6 +27,7 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.healthchecks.Status;
@@ -36,11 +37,14 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -60,15 +64,20 @@ import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.LiquibaseException;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.resource.ResourceAccessor;
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.dircache.DirCacheTree;
 import uk.co.spudsoft.query.defn.Pipeline;
+import uk.co.spudsoft.query.defn.RateLimitRule;
+import uk.co.spudsoft.query.defn.RateLimitScopeType;
+import static uk.co.spudsoft.query.defn.RateLimitScopeType.host;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.main.Audit;
 import uk.co.spudsoft.query.main.Credentials;
 import uk.co.spudsoft.query.main.DataSourceConfig;
 import uk.co.spudsoft.query.main.ExceptionToString;
+import uk.co.spudsoft.query.web.ServiceException;
 
 /**
  *
@@ -88,6 +97,7 @@ public class AuditorImpl implements Auditor {
   private final MeterRegistry meterRegistry;
   private final Audit configuration;
   private DataSource dataSource;
+  private String quote;
   
   private boolean prepared;
 
@@ -138,7 +148,7 @@ public class AuditorImpl implements Auditor {
         String username = dataSourceConfig.getAdminUser() == null ? null : dataSourceConfig.getAdminUser().getUsername();
         String password = dataSourceConfig.getAdminUser() == null ? null : dataSourceConfig.getAdminUser().getPassword();
         try (Connection jdbcConnection = DriverManager.getConnection(url, username, password)) {
-          String quote = jdbcConnection.getMetaData().getIdentifierQuoteString();
+          quote = jdbcConnection.getMetaData().getIdentifierQuoteString();
           recordRequest = recordRequest.replaceAll("#", quote);
           recordFile = recordFile.replaceAll("#", quote);
           recordException = recordException.replaceAll("#", quote);
@@ -219,6 +229,7 @@ public class AuditorImpl implements Auditor {
                     , #url#
                     , #clientIp#
                     , #host#
+                    , #path#
                     , #arguments#
                     , #headers#
                     , #openIdDetails#
@@ -228,6 +239,7 @@ public class AuditorImpl implements Auditor {
                     , #groups#
                   ) values (
                     ?
+                    , ?
                     , ?
                     , ?
                     , ?
@@ -303,10 +315,11 @@ public class AuditorImpl implements Auditor {
     JsonArray groups = listToJson(context.getGroups());
     String openIdDetails = context.getJwt() == null ? null : context.getJwt().getPayloadAsString();
     
-    logger.info("Request: {} {} {} {} {} {} {} {} {}",
+    logger.info("Request: {} {} {} {} {} {} {} {} {} {}",
              context.getUrl(),
              context.getClientIp(),
              context.getHost(),
+             context.getPath(),
              arguments,
              headers,
              context.getIssuer(),
@@ -315,14 +328,15 @@ public class AuditorImpl implements Auditor {
              context.getGroups()
     );
     
-    return runSql(recordRequest, ps -> {
+    return runSqlUpdate(recordRequest, ps -> {
                     int param = 1; 
                     ps.setString(param++, limitLength(context.getRequestId(), 100));
                     ps.setTimestamp(param++, Timestamp.from(Instant.now()));
                     ps.setString(param++, limitLength(PROCESS_ID, 1000));
                     ps.setString(param++, limitLength(context.getUrl(), 1000));
                     ps.setString(param++, limitLength(context.getClientIp().toNormalizedString(), 40));
-                    ps.setString(param++, limitLength(context.getHost(), 100));
+                    ps.setString(param++, limitLength(context.getHost(), 250));
+                    ps.setString(param++, limitLength(context.getPath(), 250));
                     ps.setString(param++, toString(arguments));
                     ps.setString(param++, toString(headers));
                     ps.setString(param++, openIdDetails);
@@ -341,7 +355,7 @@ public class AuditorImpl implements Auditor {
   @Override
   public void recordFileDetails(RequestContext context, DirCacheTree.File file) {
     logger.info("File: {} {} {}", file.getPath(), file.getSize(), file.getModified());
-    runSql(recordFile, ps -> {
+    runSqlUpdate(recordFile, ps -> {
              ps.setString(1, limitLength(toString(file.getPath()), 1000));
              ps.setLong(2, file.getSize());
              if (file.getModified() != null) {
@@ -357,7 +371,7 @@ public class AuditorImpl implements Auditor {
   public void recordException(RequestContext context, Throwable ex) {
     logger.info("Exception: {} {}", ex.getClass().getCanonicalName(), ex.getMessage());
 
-    runSql(recordException, ps -> {
+    runSqlUpdate(recordException, ps -> {
              ps.setTimestamp(1, Timestamp.from(Instant.now()));
              ps.setString(2, limitLength(ex.getClass().getCanonicalName(), 1000));
              ps.setString(3, limitLength(ex.getMessage(), 1000));
@@ -369,11 +383,15 @@ public class AuditorImpl implements Auditor {
   @Override
   public void recordResponse(RequestContext context, HttpServerResponse response) {
     JsonObject headers = multiMapToJson(context.getHeaders());
+    logger.info("Request complete: {} {} bytes in {}s {}"
+            , response.getStatusCode()
+            , response.bytesWritten()
+            , (System.currentTimeMillis() - context.getStartTime()) / 1000.0
+            , headers
+    );
     
-    logger.info("Request complete: {} {} bytes {}", response.getStatusCode(), response.bytesWritten(), headers);
     
-    
-    runSql(recordResponse, ps -> {
+    runSqlUpdate(recordResponse, ps -> {
              ps.setTimestamp(1, Timestamp.from(Instant.now()));
              if (context.getHeadersSentTime() > 0) {
                ps.setLong(2, context.getHeadersSentTime() - context.getStartTime());
@@ -390,8 +408,132 @@ public class AuditorImpl implements Auditor {
   }
 
   @Override
-  public Future<Pipeline> validateRateAndConcurrencyRules(RequestContext context, Pipeline pipeline) {
-    return Future.succeededFuture(pipeline);
+  public Future<Pipeline> runRateLimitRules(RequestContext context, Pipeline pipeline) {
+    List<RateLimitRule> rules = pipeline.getRateLimitRules();
+
+    logger.debug("Performing rate limit check with {} rules", rules.size());
+    if (CollectionUtils.isEmpty(rules)) {
+      return Future.succeededFuture(pipeline);
+    }
+
+    Instant now = LocalDateTime.now().toInstant(ZoneOffset.UTC);
+
+    List<Object> args = new ArrayList<>();
+    StringBuilder sql = new StringBuilder();
+    for (int i = 0; i < rules.size(); ++i) {
+      RateLimitRule rule = rules.get(i);
+      if (i > 0) {
+        sql.append(" union all ");
+      }
+      sql.append("select ").append(i).append(" as ").append(quote).append("ruleId").append(quote);
+      sql.append(", count(*) - count(").append(quote).append("responseTime").append(quote).append(") as outstanding");
+      sql.append(", count(*) as count");
+      sql.append(", sum(").append(quote).append("responseSize").append(quote).append(") as bytes");
+      sql.append(", current_timestamp ");
+      sql.append("from request where timestamp > ? ");
+      args.add(Timestamp.from(now.minus(rule.getTimeLimit()))); 
+      sql.append("and id <> ? ");
+      args.add(context.getRequestId()); 
+      for (RateLimitScopeType scope : rule.getScope()) {
+        switch (scope) {
+          case clientip:
+            sql.append("and ").append(quote).append("clientIp").append(quote).append(" = ? ");
+            args.add(context.getClientIp());
+            break;
+          case host:
+            sql.append("and ").append(quote).append("host").append(quote).append(" = ? ");
+            args.add(context.getHost());
+            break;
+          case path:
+            sql.append("and ").append(quote).append("path").append(quote).append(" = ? ");
+            args.add(context.getPath());
+            break;
+          case username:
+            sql.append("and ").append(quote).append("username").append(quote).append(" = ? ");
+            args.add(context.getUsername());
+            break;
+          default:
+            throw new IllegalStateException("Unknown RateLimitScope type");
+        }
+      }
+    }
+    boolean[] done = new boolean[rules.size()];
+    return runSqlSelect(sql.toString(), ps -> {
+        for (int i = 0; i < args.size(); ++i) {
+          ps.setObject(i + 1, args.get(i));
+        }
+      }, rs -> {
+        while (rs.next()) {
+          if (logger.isTraceEnabled()) {
+            logger.trace("RateLimitRow: id: {}, outstanding: {}, runs: {}, bytes: {}, time: {}"
+                    , rs.getInt(1)
+                    , rs.getInt(2)
+                    , rs.getInt(3)
+                    , rs.getLong(4)
+                    , rs.getTimestamp(5).toInstant()
+                    );
+          }
+          int index = rs.getInt(1);
+          if (index >= rules.size()) {
+            logger.error("Error in rate limit processing: index {} out of bounds", index);
+            throw new ServiceException(500, "Internal error");
+          }
+          if (done[index]) {
+            logger.error("Error in rate limit processing: index {} found more than once", index);
+            throw new ServiceException(500, "Internal error");
+          } else {
+            done[index] = true;
+          }
+          RateLimitRule rule = rules.get(index);
+          evaluateRateLimitRule(rule
+                  , now
+                  , index
+                  , rs.getInt(2)
+                  , rs.getInt(3)
+                  , rs.getLong(4)
+                  , rs.getTimestamp(5).toLocalDateTime()
+          );
+        }
+        for (int i = 0; i < done.length; ++i) {
+          if (!done[i]) {
+            logger.error("Error in rate limit processing: index {} not processed", i);
+            throw new ServiceException(500, "Internal error");
+          }
+        }
+      }).map(pipeline);
+  }
+  
+  static void evaluateRateLimitRule(RateLimitRule rule, Instant now, int index, int outstanding, int runs, long bytes, LocalDateTime timestamp) throws ServiceException {
+    if (outstanding > rule.getConcurrencyLimit()) {
+      String logmsg = outstanding > 1 
+              ? "RateLimitRule {} failed: Concurrency limit failed. At {} there were {} outstanding runs since {}. Rule: {}"
+              : "RateLimitRule {} failed: Concurrency limit failed. At {} there was {} outstanding run since {}. Rule: {}"
+              ;
+      logger.error(logmsg, index, timestamp, outstanding, now.minus(rule.getTimeLimit()), Json.encode(rule));
+      throw new ServiceException(429, "Query already running, please try again later");
+    }
+    Long runLimit = rule.getParsedRunLimit();
+    if (runLimit != null) {
+      if (runs > runLimit) {
+        String logmsg = runs > 1 
+                ? "RateLimitRule {} failed: Run limit failed. At {} there had been {} runs since {}. Rule: {}"
+                : "RateLimitRule {} failed: Run limit failed. At {} there had been {} run since {}. Rule: {}"
+                ;
+        logger.error(logmsg, index, timestamp, outstanding, now.minus(rule.getTimeLimit()), Json.encode(rule));
+        throw new ServiceException(429, "Run too many times, please try again later");
+      }
+    }
+    Long byteLimit = rule.getParsedByteLimit();
+    if (byteLimit != null) {
+      if (bytes > byteLimit) {
+        String logmsg = bytes > 1 
+                ? "RateLimitRule {} failed: Byte limit failed. At {} there had been {} bytes sent since {}. Rule: {}"
+                : "RateLimitRule {} failed: Byte limit failed. At {} there had been {} byte sent since {}. Rule: {}"
+                ;
+        logger.error(logmsg, index, timestamp, outstanding, now.minus(rule.getTimeLimit()), Json.encode(rule));
+        throw new ServiceException(429, "Rate limit exceeded, please try again later");
+      }
+    }
   }
   
   static String localizeUsername(String username) {
@@ -440,12 +582,12 @@ public class AuditorImpl implements Auditor {
     void accept(T t) throws Throwable;
   }
 
-  private Future<Integer> runSql(String sql, SqlConsumer<PreparedStatement> prepareStatement) {
-    return vertx.executeBlocking(() -> runSqlSynchronously(sql, prepareStatement));
+  private Future<Integer> runSqlUpdate(String sql, SqlConsumer<PreparedStatement> prepareStatement) {
+    return vertx.executeBlocking(() -> runSqlUpdateSynchronously(sql, prepareStatement));
   }
 
   @SuppressFBWarnings(value = "SQL_INJECTION_JDBC", justification = "SQL is generated from static strings")
-  private int runSqlSynchronously(String sql, SqlConsumer<PreparedStatement> prepareStatement) throws Exception {
+  private int runSqlUpdateSynchronously(String sql, SqlConsumer<PreparedStatement> prepareStatement) throws Exception {
     String logMessage = null;
     try {
       logMessage = "Failed to get connection: ";
@@ -458,6 +600,55 @@ public class AuditorImpl implements Auditor {
           prepareStatement.accept(statement);
           logMessage = "Failed to execute query: ";
           return statement.executeUpdate();
+        } finally {
+          closeStatement(statement);
+        }
+      } finally {
+        closeConnection(conn);
+      }
+    } catch (Exception ex) {
+      logger.error(logMessage, ex);
+      throw ex;
+    } catch (Throwable ex) {
+      logger.error(logMessage, ex);
+      throw new RuntimeException(logMessage, ex);
+    }
+  }
+
+  private Future<Void> runSqlSelect(String sql
+          , SqlConsumer<PreparedStatement> prepareStatement
+          , SqlConsumer<ResultSet> resultSetHandler
+  ) {
+    return vertx.executeBlocking(() -> {
+      runSqlSelectSynchronously(sql, prepareStatement, resultSetHandler);
+      return null;
+    });
+  }
+
+  @SuppressFBWarnings(value = "SQL_INJECTION_JDBC", justification = "SQL is generated from static strings")
+  private void runSqlSelectSynchronously(String sql
+          , SqlConsumer<PreparedStatement> prepareStatement
+          , SqlConsumer<ResultSet> resultSetHandler
+  ) throws Exception {
+    logger.trace("Running SQL: {}", sql);
+    String logMessage = null;
+    try {
+      logMessage = "Failed to get connection: ";
+      Connection conn = dataSource.getConnection();
+      try {
+        logMessage = "Failed to create statement: ";
+        PreparedStatement statement = conn.prepareStatement(sql);
+        try {
+          logMessage = "Failed to prepare statement: ";
+          prepareStatement.accept(statement);
+          
+          logMessage = "Failed to execute query: ";
+          ResultSet rs = statement.executeQuery();
+          try {
+            resultSetHandler.accept(rs);
+          } finally {
+            rs.close();
+          }
         } finally {
           closeStatement(statement);
         }
