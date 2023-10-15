@@ -393,7 +393,7 @@ public class Main extends Application {
 
     OpenAPIConfiguration openApiConfig = createOpenapiConfiguration(controllers);
     OpenApiHandler openApiHandler = new OpenApiHandler(this, openApiConfig, "/api");
-    ModelConverters.getInstance().addConverter(new OpenApiModelConverter());
+    ModelConverters.getInstance(true).addConverter(new OpenApiModelConverter());
     
     PipelineExecutor pipelineExecutor = new PipelineExecutorImpl(params.getSecrets());
     router.route(QueryRouter.PATH_ROOT + "/*").handler(new QueryRouter(vertx, auditor, rcb, defnLoader, pipelineExecutor, outputAllErrorMessages()));
