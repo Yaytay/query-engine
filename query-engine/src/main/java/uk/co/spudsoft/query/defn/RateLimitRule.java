@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.defn;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.Strings;
@@ -42,7 +43,6 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
  * says that if the current user has executed the current pipeline (same path) within the past ten minutes generating more than ten million bytes then this request should be refused.
  * 
  * Refused requests result in an HTTP status code 429 ("Too Many Requests").
- * The body of the response will indicate whether the failure was caused by a RateLimitRule or a ConcurrencyRule but will not give further details.
  * 
  * @author jtalbut
  */
@@ -61,7 +61,6 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
                        </p>
                        <p>
                        Refused requests result in an HTTP status code 429 ("Too Many Requests").
-                       The body of the response will indicate whether the failure was caused by a RateLimit or a ConcurrencyRule but will not give further details.
                        </p>
                        """
 )
@@ -172,6 +171,7 @@ public class RateLimitRule {
     return byteLimit;
   }
   
+  @JsonIgnore
   public Long getParsedByteLimit() {
     if (Strings.isNullOrEmpty(byteLimit)) {
       return null;
@@ -184,6 +184,7 @@ public class RateLimitRule {
     return runLimit;
   }
 
+  @JsonIgnore
   public Long getParsedRunLimit() {
     if (Strings.isNullOrEmpty(runLimit)) {
       return null;
