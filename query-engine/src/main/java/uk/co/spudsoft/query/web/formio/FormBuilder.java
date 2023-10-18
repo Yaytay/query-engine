@@ -78,7 +78,7 @@ public class FormBuilder {
     try (Content description = new Content(generator)) {
       description
             .withHtml("<p><h2>" + pipeline.getTitle() + "</h2></p><p>" + pipeline.getDescription() + "</p>")
-            .withCustomClass("border-bottom")
+            .withCustomClass("border-bottom mb-3")
             ;
     }
   }
@@ -87,7 +87,7 @@ public class FormBuilder {
     try (FieldSet fieldSet = new FieldSet(generator)) {
       fieldSet
             .withLegend("Arguments")
-            .withCustomClass("border-bottom");
+            .withCustomClass("qe-arguments border-bottom");
 
       try (ComponentArray a = fieldSet.addComponents()) {
         for (Argument arg : pipeline.getArguments()) {
@@ -119,6 +119,7 @@ public class FormBuilder {
   
   void buildOutput(JsonGenerator generator, PipelineFile pipeline) throws IOException {
     try (FieldSet output = new FieldSet(generator)) {
+      output.withCustomClass("qe-output");
       output.withLegend("Output");
       try (ComponentArray a = output.addComponents()) {
         buildOutputSelect(generator, pipeline);
@@ -133,17 +134,20 @@ public class FormBuilder {
             .withKey("format")
             .withClearOnHide(false)
             ;
-      try (Validation v = select.addValidate()) {
+      try (Select.SelectValidation v = select.addValidate()) {
+        v.withOnlyAvailableItems(Boolean.TRUE);
         v.withRequired(Boolean.TRUE);
       }
 
-      try (ComponentArray a = select.addDataValues()) {
-        for (Format f : pipeline.getDestinations()) {
-          try (Select.DataValue value = new Select.DataValue(generator)) {
-            value
-                    .withLabel(f.getName())
-                    .withValue(f.getName())
-                     ;
+      try (Select.DataValues dv = select.addDataValues()) {
+        try (ComponentArray a = dv.addValues()) {
+          for (Format f : pipeline.getDestinations()) {
+            try (Select.DataValue value = new Select.DataValue(generator)) {
+              value
+                      .withLabel(f.getName())
+                      .withValue(f.getName())
+                       ;
+            }
           }
         }
       }
@@ -215,6 +219,7 @@ public class FormBuilder {
       dateTime
               .withLabel(arg.getTitle())
               .withDescription(arg.getDescription())
+              .withPlaceholder(arg.getPrompt())
               .withKey(arg.getName())
               .withMultiple(arg.isMultiValued())
               .withEnableDate(arg.getType() == ArgumentType.Date || arg.getType() == ArgumentType.DateTime)
@@ -239,6 +244,7 @@ public class FormBuilder {
       number
             .withLabel(arg.getTitle())
             .withDescription(arg.getDescription())
+            .withPlaceholder(arg.getPrompt())
             .withKey(arg.getName())
             .withMultiple(arg.isMultiValued())
             ;
@@ -291,6 +297,7 @@ public class FormBuilder {
     try (TextField textField = new TextField(generator)) {
       textField
             .withLabel(arg.getTitle())
+            .withPlaceholder(arg.getPrompt())
             .withDescription(arg.getDescription())
             .withKey(arg.getName())
             .withMultiple(arg.isMultiValued())
@@ -306,6 +313,7 @@ public class FormBuilder {
       select 
             .withLabel(arg.getTitle())
             .withDescription(arg.getDescription())
+            .withPlaceholder(arg.getPrompt())
             .withKey(arg.getName())
             .withMultiple(arg.isMultiValued())
             ;
@@ -317,9 +325,11 @@ public class FormBuilder {
           url.withUrl(arg.getPossibleValuesUrl());
         }
       } else {
-        try (ComponentArray a = select.addDataValues()) {
-          for (ArgumentValue av : arg.getPossibleValues()) {
-            select.addCompleteDataValue(av.getLabel(), av.getValue());
+        try (Select.DataValues dv = select.addDataValues()) {
+          try (ComponentArray a = dv.addValues()) {
+            for (ArgumentValue av : arg.getPossibleValues()) {
+              select.addCompleteDataValue(av.getLabel(), av.getValue());
+            }
           }
         }
       }

@@ -272,7 +272,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(200)
             .contentType(equalTo("application/json"))
-            .body("children[1].children[0].name", equalTo("newfolder"));
+            .body("children[2].children[0].name", equalTo("newfolder"));
 
     // Can create new subdirectory
     given().log().all()
@@ -281,7 +281,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(200)
             .contentType(equalTo("application/json"))
-            .body("children[1].children[0].name", equalTo("newfolder"));
+            .body("children[2].children[0].name", equalTo("newfolder"));
 
     // Cannot put directory with extension
     given().log().all()
@@ -320,7 +320,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(200)
             .contentType(equalTo("application/json"))
-            .body("children[1].children[0].children[1].name", equalTo("new.yaml"));
+            .body("children[2].children[0].children[1].name", equalTo("new.yaml"));
 
     // Can put another correct file
     given().log().all()
@@ -330,7 +330,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(200)
             .contentType(equalTo("application/json"))
-            .body("children[1].children[0].children[1].name", equalTo("new.yaml"));
+            .body("children[2].children[0].children[1].name", equalTo("new.yaml"));
 
     // Can rename file
     given().log().all()
@@ -339,7 +339,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(200)
             .contentType(equalTo("application/json"))
-            .body("children[1].children[0].children[1].name", equalTo("bob.yaml"));
+            .body("children[2].children[0].children[1].name", equalTo("bob.yaml"));
 
     // Cannot rename file to name that already exists
     given().log().all()
@@ -392,7 +392,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(200)
             .contentType(equalTo("application/json"))
-            .body("children[1].children[0].name", equalTo("newdir"));
+            .body("children[2].children[0].name", equalTo("newdir"));
 
     
     // Cannot delete file with its old name

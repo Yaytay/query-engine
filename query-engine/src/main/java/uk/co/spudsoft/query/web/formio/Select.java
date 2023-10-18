@@ -46,6 +46,18 @@ public class Select extends Component<Select> {
     }
   }
   
+  public static class DataValues extends AbstractComponent<DataValues> {
+
+    public DataValues(JsonGenerator generator) throws IOException {
+      super(generator);
+    }
+
+    public ComponentArray addValues() throws IOException {
+      generator.writeFieldName("values");
+      return new ComponentArray(generator);    
+    }
+  }
+  
   public static class DataUrlHeader extends AbstractComponent<DataUrlHeader> {
 
     public DataUrlHeader(JsonGenerator generator) throws IOException {
@@ -78,6 +90,19 @@ public class Select extends Component<Select> {
     }
   }
 
+  public static class SelectValidation extends Validation {
+
+    public SelectValidation(JsonGenerator generator) throws IOException {
+      super(generator);
+    }
+    
+    public SelectValidation withOnlyAvailableItems(final Boolean value) throws IOException {
+      with("onlyAvailableItems", value);
+      return this;
+    }
+
+  }
+  
   public Select(JsonGenerator generator) throws IOException {
     super(generator, "select");
   }
@@ -103,10 +128,10 @@ public class Select extends Component<Select> {
     }
   }
 
-  public ComponentArray addDataValues() throws IOException {
+  public DataValues addDataValues() throws IOException {
     withDataSrc(DataSrcType.values);
     generator.writeFieldName("data");
-    return new ComponentArray(generator);    
+    return new DataValues(generator);
   }
 
   public DataUrl addDataUrl() throws IOException {
@@ -135,6 +160,10 @@ public class Select extends Component<Select> {
     return with("template", value);
   }
 
-  
+  @Override
+  public SelectValidation addValidate() throws IOException {
+    generator.writeFieldName("validate");
+    return new SelectValidation(generator);
+  }  
   
 }

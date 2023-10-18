@@ -1,0 +1,19 @@
+description: Test pipeline that has 1 argument
+arguments:
+  - name: arg1
+    title: First
+    prompt: arg1
+    description: The First Argument
+    type: String
+source:
+  type: Test
+formats:
+- type: HTML
+- type: XLSX
+- type: Delimited
+  name: tab
+  delimiter: "\t"
+  newline: "\n"
+  extension: tsv
+  headerRow: true
+  mediaType: text/tsv

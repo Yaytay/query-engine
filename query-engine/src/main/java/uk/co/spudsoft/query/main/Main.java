@@ -487,6 +487,23 @@ public class Main extends Application {
     String[] children = baseConfigFile.list();
     if (children != null && children.length == 0) {
       logger.info("Creating sample configs");
+      extractSampleFile(baseConfigFile, "samples/args/Args00.yaml", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/args/Args01.yaml", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/args/Args02.yaml", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/args/Args03.yaml", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/args/Args04.yaml", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/args/Args05.yaml", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/args/Args06.yaml", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/args/Args07.yaml", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/args/Args08.yaml", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/args/Args09.yaml", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/args/Args10.yaml", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/args/Args11.yaml", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/args/Args12.yaml", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/args/Args13.yaml", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/args/Args14.yaml", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/args/Args15.yaml", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/args/Args16.yaml", sampleDataLoads);
       extractSampleFile(baseConfigFile, "samples/demo/FeatureRichExample.yaml", sampleDataLoads);
       extractSampleFile(baseConfigFile, "samples/demo/LookupValues.yaml", sampleDataLoads);
       extractSampleFile(baseConfigFile, "samples/sub1/sub2/ConcurrentRulesIT.yaml", sampleDataLoads);

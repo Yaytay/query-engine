@@ -1,0 +1,34 @@
+description: Test pipeline that has 4 arguments
+arguments:
+  - name: arg1
+    title: First
+    prompt: arg1
+    description: The First Argument
+    type: String
+  - name: arg2
+    title: Second
+    prompt: arg2
+    description: The Second Argument
+    type: String
+  - name: arg3
+    title: Third
+    prompt: arg3
+    description: The Third Argument
+    type: String
+  - name: arg4
+    title: Fourth
+    prompt: arg1
+    description: The Fourth Argument
+    type: String
+source:
+  type: Test
+formats:
+- type: HTML
+- type: XLSX
+- type: Delimited
+  name: tab
+  delimiter: "\t"
+  newline: "\n"
+  extension: tsv
+  headerRow: true
+  mediaType: text/tsv

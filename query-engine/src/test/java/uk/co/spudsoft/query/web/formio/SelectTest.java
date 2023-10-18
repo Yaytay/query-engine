@@ -58,14 +58,16 @@ public class SelectTest {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     try (JsonGenerator generator = factory.createGenerator(baos)) {
       try (Select field = new Select(generator)) {
-        try (ComponentArray ca = field.addDataValues()) {
-          field.addCompleteDataValue("label1", "value1");
-          field.addCompleteDataValue("label2", "value2");
+        try (Select.DataValues dv = field.addDataValues()) {
+          try (ComponentArray ca = dv.addValues()) {
+            field.addCompleteDataValue("label1", "value1");
+            field.addCompleteDataValue("label2", "value2");
+          }
         }
       }
     }
     baos.close();
-    assertEquals("{\"type\":\"select\",\"dataSrc\":\"values\",\"data\":[{\"label\":\"label1\",\"value\":\"value1\"},{\"label\":\"label2\",\"value\":\"value2\"}]}", baos.toString());    
+    assertEquals("{\"type\":\"select\",\"dataSrc\":\"values\",\"data\":{\"values\":[{\"label\":\"label1\",\"value\":\"value1\"},{\"label\":\"label2\",\"value\":\"value2\"}]}}", baos.toString());    
   }
 
   @Test

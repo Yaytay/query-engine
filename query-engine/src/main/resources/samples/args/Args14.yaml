@@ -1,0 +1,84 @@
+description: Test pipeline that has 14 arguments
+arguments:
+  - name: arg1
+    title: First
+    prompt: arg1
+    description: The First Argument
+    type: String
+  - name: arg2
+    title: Second
+    prompt: arg2
+    description: The Second Argument
+    type: String
+  - name: arg3
+    title: Third
+    prompt: arg3
+    description: The Third Argument
+    type: String
+  - name: arg4
+    title: Fourth
+    prompt: arg1
+    description: The Fourth Argument
+    type: String
+  - name: arg5
+    title: Fifth
+    prompt: arg5
+    description: The Fifth Argument
+    type: String
+  - name: arg6
+    title: Sixth
+    prompt: arg6
+    description: The Sixth Argument
+    type: String
+  - name: arg7
+    title: Seventh
+    prompt: arg7
+    description: The Seventh Argument
+    type: String
+  - name: arg8
+    title: Eighth
+    prompt: arg8
+    description: The Eighth Argument
+    type: String
+  - name: arg9
+    title: Ninth
+    prompt: arg9
+    description: The Ninth Argument
+    type: String
+  - name: arg10
+    title: Tenth
+    prompt: arg10
+    description: The Tenth Argument
+    type: String
+  - name: arg11
+    title: Eleventh
+    prompt: arg11
+    description: The Eleventh Argument
+    type: String
+  - name: arg12
+    title: Twelfth
+    prompt: arg12
+    description: The Twelfth Argument
+    type: String
+  - name: arg13
+    title: Thirteenth
+    prompt: arg13
+    description: The Thirteenth Argument
+    type: String
+  - name: arg14
+    title: Fourteenth
+    prompt: arg14
+    description: The Fourteenth Argument
+    type: String
+source:
+  type: Test
+formats:
+- type: HTML
+- type: XLSX
+- type: Delimited
+  name: tab
+  delimiter: "\t"
+  newline: "\n"
+  extension: tsv
+  headerRow: true
+  mediaType: text/tsv
