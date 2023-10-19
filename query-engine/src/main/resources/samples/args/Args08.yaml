@@ -1,3 +1,4 @@
+title: Eight Arguments
 description: Test pipeline that has 8 arguments
 arguments:
   - name: arg1

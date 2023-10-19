@@ -1,3 +1,4 @@
+title: Eleven Arguments
 description: Test pipeline that has 11 arguments
 arguments:
   - name: arg1

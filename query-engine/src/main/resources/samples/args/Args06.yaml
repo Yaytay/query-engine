@@ -1,3 +1,4 @@
+title: Six Arguments
 description: Test pipeline that has 6 arguments
 arguments:
   - name: arg1

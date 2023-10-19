@@ -1,3 +1,4 @@
+title: One Argument
 description: Test pipeline that has 1 argument
 arguments:
   - name: arg1

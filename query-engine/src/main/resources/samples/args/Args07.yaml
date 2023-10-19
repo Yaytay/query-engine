@@ -1,3 +1,4 @@
+title: Seven Arguments
 description: Test pipeline that has 7 arguments
 arguments:
   - name: arg1

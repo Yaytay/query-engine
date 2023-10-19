@@ -1,3 +1,4 @@
+title: Five Arguments
 description: Test pipeline that has 5 arguments
 arguments:
   - name: arg1

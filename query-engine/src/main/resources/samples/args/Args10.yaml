@@ -1,3 +1,4 @@
+title: Ten Arguments
 description: Test pipeline that has 10 arguments
 arguments:
   - name: arg1
