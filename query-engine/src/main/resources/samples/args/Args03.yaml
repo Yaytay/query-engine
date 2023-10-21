@@ -1,5 +1,5 @@
 title: Three Arguments
-description: Test pipeline that has 3 argumens
+description: Test pipeline that has 3 arguments
 arguments:
   - name: arg1
     title: First

@@ -189,28 +189,26 @@ public class FormBuilder {
         try (Columns columns = new Columns(generator)) {
           try (ComponentArray a2 = columns.addColumns()) {
             try (Columns.Column col = new Columns.Column(generator)) {
-              col.withSize("xs");
+              col.withSize("md");
+              col.withWidth(12);
               try (ComponentArray a3 = col.addComponents()) {
                 try (Button b = new Button(generator)) {
                   b
-                        .withLabel("Submit")
-                        .withKey("submit")
-                        .withDisableOnInvalid(true)
-                        .withAction(Button.ActionType.submit)
-                        ;
+                          .withCustomClass("float-left")
+                          .withLabel("Submit")
+                          .withKey("submit")
+                          .withDisableOnInvalid(true)
+                          .withAction(Button.ActionType.submit)
+                          ;
                 }                      
-              }
-            }
-            try (Columns.Column col = new Columns.Column(generator)) {
-              col.withSize("xs");
-              try (ComponentArray a3 = col.addComponents()) {
                 try (Button b = new Button(generator)) {
                   b
-                        .withLabel("Cancel")
-                        .withKey("cancel")
-                        .withDisableOnInvalid(false)
-                        .withTheme("secondary")
-                        .withAction(Button.ActionType.event)
+                          .withCustomClass("float-left")
+                          .withLabel("Cancel")
+                          .withKey("cancel")
+                          .withDisableOnInvalid(false)
+                          .withTheme("secondary")
+                          .withAction(Button.ActionType.event)
                         ;
                 }                      
               }
@@ -357,7 +355,14 @@ public class FormBuilder {
         try (Select.DataValues dv = select.addDataValues()) {
           try (ComponentArray a = dv.addValues()) {
             for (ArgumentValue av : arg.getPossibleValues()) {
-              select.addCompleteDataValue(av.getLabel(), av.getValue());
+              try (Select.DataValue value = new Select.DataValue(generator)) {
+                if (Strings.isNullOrEmpty(av.getLabel())) {
+                  value.withLabel(av.getValue());
+                } else {
+                  value.withLabel(av.getLabel());
+                }
+                value.withValue(av.getValue());
+              }
             }
           }
         }
