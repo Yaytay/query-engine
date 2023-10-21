@@ -92,7 +92,7 @@ public class FormBuilder {
       return ;
     }
     
-    int fieldsPerColumn = Math.max(1, (int) Math.ceil((double)args.size() / columns));
+    int fieldsPerColumn = Math.max(1, (int) Math.ceil((double) args.size() / columns));
     
     try (FieldSet fieldSet = new FieldSet(generator)) {
       fieldSet
