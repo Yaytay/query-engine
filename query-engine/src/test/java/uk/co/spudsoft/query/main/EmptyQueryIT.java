@@ -71,6 +71,8 @@ public class EmptyQueryIT {
       }
     }
     paramsDir.mkdirs();    
+    File outDir = new File("target/temp/EmptyDataIT");
+    outDir.mkdirs();
   }
   
   @Test
