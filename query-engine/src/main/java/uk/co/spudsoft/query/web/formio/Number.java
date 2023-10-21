@@ -31,31 +31,15 @@ public class Number extends Component<Number> {
       super(generator);
     }
 
-    public NumberValidation withMin(final Double value) throws IOException {
+    public NumberValidation withMin(final java.lang.Number value) throws IOException {
       return with("min", value);
     }
 
-    public NumberValidation withMin(final Integer value) throws IOException {
-      return with("min", value);
-    }
-
-    public NumberValidation withMin(final Long value) throws IOException {
-      return with("min", value);
-    }
-
-    public NumberValidation withMax(final Double value) throws IOException {
+    public NumberValidation withMax(final java.lang.Number value) throws IOException {
       return with("max", value);
     }
 
-    public NumberValidation withMax(final Integer value) throws IOException {
-      return with("max", value);
-    }
-
-    public NumberValidation withMax(final Long value) throws IOException {
-      return with("max", value);
-    }
-
-    public NumberValidation withStep(final Double value) throws IOException {
+    public NumberValidation withStep(final java.lang.Number value) throws IOException {
       return with("step", value);
     }
 

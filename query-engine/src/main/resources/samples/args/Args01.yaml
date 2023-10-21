@@ -6,6 +6,10 @@ arguments:
     prompt: arg1
     description: The First Argument
     type: String
+    possibleValues:
+    - value: First
+    - value: Second
+    - value: Third
 source:
   type: Test
 formats:

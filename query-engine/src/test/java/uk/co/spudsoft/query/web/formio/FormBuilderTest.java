@@ -64,6 +64,16 @@ public class FormBuilderTest {
   }
   
   @Test
+  public void testParseNumber() {
+    assertEquals(1.2, FormBuilder.parseNumber(ArgumentType.Double, "1.2"));
+    assertEquals(1L, FormBuilder.parseNumber(ArgumentType.Long, "1"));
+    assertEquals(1, FormBuilder.parseNumber(ArgumentType.Integer, "1"));
+    assertNull(FormBuilder.parseNumber(ArgumentType.String, "1.2"));
+    assertNull(FormBuilder.parseNumber(ArgumentType.Integer, null));
+    assertNull(FormBuilder.parseNumber(ArgumentType.Integer, ""));
+  }
+  
+  @Test
   public void testBuildForm() throws Exception {
     PipelineFile file = new PipelineNodesTree.PipelineFile("path", "Title", "description"
             , Arrays.asList(
@@ -153,7 +163,7 @@ public class FormBuilderTest {
             )
     );
     
-    FormBuilder fb = new FormBuilder();
+    FormBuilder fb = new FormBuilder(3);
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     fb.buildForm(file, baos);
     baos.close();

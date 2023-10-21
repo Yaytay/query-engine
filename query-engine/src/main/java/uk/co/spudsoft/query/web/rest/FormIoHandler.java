@@ -29,6 +29,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.container.Suspended;
@@ -64,14 +65,15 @@ public class FormIoHandler {
   private final RequestContextBuilder requestContextBuilder;
   private final PipelineDefnLoader loader;
   private final boolean outputAllErrorMessages;
-  private final FormBuilder builder = new FormBuilder();
 
   private class PipelineStreamer implements StreamingOutput {
     
     private final PipelineFile pipeline;
+    private final FormBuilder builder;
 
-    PipelineStreamer(PipelineFile pipeline) {
+    PipelineStreamer(PipelineFile pipeline, int columns) {
       this.pipeline = pipeline;
+      this.builder = new FormBuilder(columns);
     }
 
     @Override
@@ -105,7 +107,18 @@ public class FormIoHandler {
           , @Context HttpServerRequest request
           , @Context ObjectMapper objectMapper
           , @PathParam("path") String path
+          , @QueryParam("columns") Integer columns
   ) {
+    
+    if (columns != null)  {
+      if (columns < 1) {
+        columns = 1;
+      } else if (columns > 12) {
+        columns = 12;
+      }
+    }
+    int colCount = columns == null ? 1 : columns;
+    
     requestContextBuilder.buildRequestContext(request)
             .compose(context -> {
               logger.trace("API Request: {}", context);
@@ -114,7 +127,7 @@ public class FormIoHandler {
             .compose(root -> {
               try {
                 PipelineFile file = findFile(root, path);
-                return Future.succeededFuture(new PipelineStreamer(file));
+                return Future.succeededFuture(new PipelineStreamer(file, colCount));
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);
               }

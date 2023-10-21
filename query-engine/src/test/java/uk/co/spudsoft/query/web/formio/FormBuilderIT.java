@@ -94,7 +94,7 @@ public class FormBuilderIT {
     
     String body = given()
             .log().all()
-            .get("/api/formio/demo/FeatureRichExample")
+            .get("/api/formio/demo/FeatureRichExample?columns=2")
             .then()
             .log().all()
             .statusCode(200)
@@ -102,6 +102,41 @@ public class FormBuilderIT {
     
     assertThat(body, startsWith("{\"type\":\"form\""));
     assertThat(body, containsString("Output"));
+    assertThat(body, containsString("minDate"));
+    assertThat(body, containsString("maxId"));
+    assertThat(body, containsString("maxLong"));
+    assertThat(body, containsString("textLike"));
+    assertThat(body, containsString("refValue"));
+        
+    body = given()
+            .log().all()
+            .get("/api/formio/args/Args01?columns=2")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .extract().body().asString();
+    
+    assertThat(body, startsWith("{\"type\":\"form\""));
+    assertThat(body, containsString("Output"));
+    assertThat(body, containsString("arg1"));
+    assertThat(body, containsString("First"));
+    assertThat(body, containsString("Second"));
+    assertThat(body, containsString("Third"));
+        
+    body = given()
+            .log().all()
+            .get("/api/formio/args/Args14?columns=3")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .extract().body().asString();
+    
+    assertThat(body, startsWith("{\"type\":\"form\""));
+    assertThat(body, containsString("Output"));
+    assertThat(body, containsString("arg1"));
+    assertThat(body, containsString("First"));
+    assertThat(body, containsString("Second"));
+    assertThat(body, containsString("Third"));
         
     body = given()
             .log().all()
@@ -135,7 +170,7 @@ public class FormBuilderIT {
         
     body = given()
             .log().all()
-            .get("/api/formio/demo")
+            .get("/api/formio/demo?columns=-2")
             .then()
             .log().all()
             .statusCode(404)
@@ -145,7 +180,7 @@ public class FormBuilderIT {
         
     body = given()
             .log().all()
-            .get("/api/formio/demo/FeatureRichExample/file")
+            .get("/api/formio/demo/FeatureRichExample/file?columns=223")
             .then()
             .log().all()
             .statusCode(404)

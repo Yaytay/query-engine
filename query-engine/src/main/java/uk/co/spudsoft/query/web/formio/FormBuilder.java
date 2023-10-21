@@ -27,6 +27,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.Collection;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Argument;
@@ -46,9 +47,11 @@ public class FormBuilder {
   private static final Logger logger = LoggerFactory.getLogger(FormBuilder.class);
   
   private final JsonFactory factory;
-
-  public FormBuilder() {
+  private final int columns;
+  
+  public FormBuilder(int columns) {
     this.factory = new JsonFactory();
+    this.columns = columns;
   }
   
   static boolean isNullOrEmpty(Collection<?> collection) {
@@ -84,36 +87,62 @@ public class FormBuilder {
   }
   
   void buildArguments(JsonGenerator generator, PipelineFile pipeline) throws IOException {
+    List<Argument> args = pipeline.getArguments();
+    if (args.isEmpty()) {
+      return ;
+    }
+    
+    int fieldsPerColumn = Math.max(1, (int) Math.ceil((double)args.size() / columns));
+    
     try (FieldSet fieldSet = new FieldSet(generator)) {
       fieldSet
             .withLegend("Arguments")
             .withCustomClass("qe-arguments border-bottom");
 
-      try (ComponentArray a = fieldSet.addComponents()) {
-        for (Argument arg : pipeline.getArguments()) {
-          switch (arg.getType()) {
-            case Date:
-            case Time:
-            case DateTime:
-              buildDateTime(generator, arg);
-              break;
-            case Double:
-            case Integer:
-            case Long:
-              buildNumber(generator, arg);
-              break;
-            case String:
-              if (!isNullOrEmpty(arg.getPossibleValues()) || !Strings.isNullOrEmpty(arg.getPossibleValuesUrl())) {
-                buildSelect(generator, arg);
-              } else {
-                buildTextField(generator, arg);
-              }
-              break;
-            default:
-              throw new IllegalStateException("New types added to ArgumentType and not implemented here");
+      try (ComponentArray fieldSetArray = fieldSet.addComponents()) {
+        int fieldIdx = 0;
+        int colIdx = 0;
+        try (Columns columns = new Columns(generator)) {
+          try (ComponentArray columnArray = columns.addColumns()) {
+            while (fieldIdx < args.size()) {
+              try (Columns.Column col = new Columns.Column(generator)) {
+                col.withWidth(12 / this.columns);
+                col.withSize("md");
+                try (ComponentArray fieldArray = col.addComponents()) {
+                  for (; fieldIdx < (colIdx * fieldsPerColumn) + fieldsPerColumn && fieldIdx < args.size(); ++fieldIdx) {
+                    buildArgument(args.get(fieldIdx), generator);
+                  }
+                }
+              }          
+              ++colIdx;
+            }
           }
         }
       }
+    }
+  }
+
+  private void buildArgument(Argument arg, JsonGenerator generator) throws IOException, IllegalStateException {
+    switch (arg.getType()) {
+      case Date:
+      case Time:
+      case DateTime:
+        buildDateTime(generator, arg);
+        break;
+      case Double:
+      case Integer:
+      case Long:
+        buildNumber(generator, arg);
+        break;
+      case String:
+        if (!isNullOrEmpty(arg.getPossibleValues()) || !Strings.isNullOrEmpty(arg.getPossibleValuesUrl())) {
+          buildSelect(generator, arg);
+        } else {
+          buildTextField(generator, arg);
+        }
+        break;
+      default:
+        throw new IllegalStateException("New types added to ArgumentType and not implemented here");
     }
   }
   
@@ -255,17 +284,9 @@ public class FormBuilder {
                 ;
         if (arg.getMaximumValue() != null) {
           try {
-            switch (arg.getType()) {
-              case Double:
-                v.withMax(Double.valueOf(arg.getMaximumValue()));
-                break ;
-              case Integer:
-                v.withMax(Integer.valueOf(arg.getMaximumValue()));
-                break ;
-              case Long: 
-                v.withMax(Long.valueOf(arg.getMaximumValue()));
-                break ;
-              default:
+            java.lang.Number maxValue = parseNumber(arg.getType(), arg.getMaximumValue());
+            if (maxValue != null) {
+              v.withMax(maxValue);
             }
           } catch (NumberFormatException ex) {
             logger.warn("Unable to parse {} as a {}: ", arg.getMaximumValue(), arg.getType(), ex);
@@ -273,23 +294,31 @@ public class FormBuilder {
         }
         if (arg.getMinimumValue() != null) {
           try {
-            switch (arg.getType()) {
-              case Double:
-                v.withMin(Double.valueOf(arg.getMinimumValue()));
-                break ;
-              case Integer:
-                v.withMin(Integer.valueOf(arg.getMinimumValue()));
-                break ;
-              case Long: 
-                v.withMin(Long.valueOf(arg.getMinimumValue()));
-                break ;
-              default:
+            java.lang.Number minValue = parseNumber(arg.getType(), arg.getMaximumValue());
+            if (minValue != null) {
+              v.withMin(minValue);
             }
           } catch (NumberFormatException ex) {
             logger.warn("Unable to parse {} as a {}: ", arg.getMaximumValue(), arg.getType(), ex);
           }
         }
       }
+    }
+  }
+  
+  static java.lang.Number parseNumber(ArgumentType type, String value) {
+    if (Strings.isNullOrEmpty(value)) {
+      return null;
+    }
+    switch (type) {
+      case Double:
+        return Double.valueOf(value);
+      case Integer:
+        return Integer.valueOf(value);
+      case Long: 
+        return Long.valueOf(value);
+      default:
+        return null;
     }
   }
 

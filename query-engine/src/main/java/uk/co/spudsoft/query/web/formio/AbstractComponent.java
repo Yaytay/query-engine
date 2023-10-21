@@ -20,6 +20,8 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.Closeable;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 
 /**
@@ -50,16 +52,23 @@ public class AbstractComponent<T extends AbstractComponent<T>> implements Closea
     return (T) this;    
   }
 
-  protected T with(String key, Long value) throws IOException {
+  protected T with(String key, java.lang.Number value) throws IOException {
     if (value != null) {
-      generator.writeNumberField(key, value);
-    }
-    return (T) this;    
-  }
-
-  protected T with(String key, Double value) throws IOException {
-    if (value != null) {
-      generator.writeNumberField(key, value);
+      if (value instanceof Integer i) {
+        generator.writeNumberField(key, i);        
+      } else if (value instanceof Double i) {
+        generator.writeNumberField(key, i);        
+      } else if (value instanceof Long i) {
+        generator.writeNumberField(key, i);        
+      } else if (value instanceof BigDecimal i) {
+        generator.writeNumberField(key, i);
+      } else if (value instanceof BigInteger i) {
+        generator.writeNumberField(key, i);        
+      } else if (value instanceof Float i) {
+        generator.writeNumberField(key, i);        
+      } else if (value instanceof Short i) {
+        generator.writeNumberField(key, i);        
+      }
     }
     return (T) this;    
   }
