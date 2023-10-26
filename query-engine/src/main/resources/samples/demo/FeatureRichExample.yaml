@@ -11,6 +11,10 @@ rateLimitRules:
   - username
   timeLimit: PT60M
   byteLimit: 1M  
+- scope: 
+  - clientip
+  timeLimit: PT60M
+  runLimit: 1M  
 arguments:
   - name: minDate
     type: Date

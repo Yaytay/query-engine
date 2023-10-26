@@ -68,7 +68,6 @@ public class MainIT {
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--pipelineCache.maxDurationMs=0"
       , "--pipelineCache.purgePeriodMs=10"
-//      , "--logging.level.uk_co_spudsoft_query_main=TRACE" 
     }, stdout);
     
     main.shutdown();
