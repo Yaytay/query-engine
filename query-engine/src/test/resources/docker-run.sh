@@ -8,7 +8,7 @@ fi
 
 docker run -it \
   -e query-engine.httpServerOptions.port=8080 \
-  -e query-engine.logging.level.uk=TRACE \
+  -e query-engine.logging.level.uk=DEBUG \
   -e query-engine.audit.dataSource.url=jdbc:mysql://host.docker.internal:2001/query-engine?useSSL=false\&serverTimezone=UTC \
   -e query-engine.audit.dataSource.user.username=auditor \
   -e query-engine.audit.dataSource.user.password=TopSecret \

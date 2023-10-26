@@ -10,7 +10,7 @@
   </appender>
   <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator" />
 
-  <logger name="uk.co.spudsoft.query" level="TRACE" additivity="false">
+  <logger name="uk.co.spudsoft.query" level="DEBUG" additivity="false">
     <appender-ref ref="STDOUTPUT" />
   </logger>
 
@@ -22,7 +22,7 @@
     <appender-ref ref="STDOUTPUT" />
   </logger>
 
-  <logger name="liquibase" level="TRACE" additivity="false">
+  <logger name="liquibase" level="DEBUG" additivity="false">
     <appender-ref ref="STDOUTPUT" />
   </logger>
 

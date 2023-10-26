@@ -32,12 +32,12 @@ services:
       POSTGRES_DB: test
       
   query-engine:
-    image: ghcr.io/yaytay/query-engine-design-mode:0.0.22-10-main
+    image: ghcr.io/yaytay/query-engine-design-mode:0.0.22-11-main
     ports:
     - 2000:8080
     environment:
     - query-engine.httpServerOptions.port=8080
-    - query-engine.logging.level.uk=TRACE
+    - query-engine.logging.level.uk=DEBUG
     - query-engine.audit.dataSource.url=jdbc:mysql://mysql/test?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
     - query-engine.audit.dataSource.user.username=user
     - query-engine.audit.dataSource.user.password=T0p-Secret

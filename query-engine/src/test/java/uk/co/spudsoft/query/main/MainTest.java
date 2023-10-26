@@ -60,7 +60,7 @@ public class MainTest {
             , "--baseConfigPath=target/query-engine/samples-maintest"
             , "--jwt.acceptableIssuerRegexes[0]=.*"
             , "--jwt.defaultJwksCacheDuration=PT1M"
-            , "--logging.level.uk_co_spudsoft_query_main=TRACE" 
+//            , "--logging.level.uk_co_spudsoft_query_main=TRACE" 
             , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
     }, stdout);
     logger.info("testMainExitOnRun - exit");

@@ -97,7 +97,7 @@ public class MainIT {
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--pipelineCache.maxDurationMs=0"
       , "--pipelineCache.purgePeriodMs=10"
-      , "--logging.level.uk_co_spudsoft_query_main=TRACE" 
+//      , "--logging.level.uk_co_spudsoft_query_main=TRACE" 
       , "--managementEndpoints[0]=up"
       , "--managementEndpoints[2]=prometheus"
       , "--managementEndpoints[3]=threads"
