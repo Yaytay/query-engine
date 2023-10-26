@@ -160,9 +160,10 @@ public class FormBuilder {
     try (Select select = new Select(generator)) {
       select 
             .withDescription(null)
-            .withKey("format")
+            .withKey("_fmt")
             .withClearOnHide(false)
-            ;
+            .withDefaultValue(pipeline.getDestinations().get(0).getName())
+      ;
       try (Select.SelectValidation v = select.addValidate()) {
         v.withOnlyAvailableItems(Boolean.TRUE);
         v.withRequired(Boolean.TRUE);
@@ -196,7 +197,8 @@ public class FormBuilder {
                   b
                           .withCustomClass("float-left")
                           .withLabel("Submit")
-                          .withKey("submit")
+                          .withKey("_submit")
+                          .withCustomClass("qe_formio_submit_button")
                           .withDisableOnInvalid(true)
                           .withAction(Button.ActionType.submit)
                           ;
@@ -205,7 +207,8 @@ public class FormBuilder {
                   b
                           .withCustomClass("float-left")
                           .withLabel("Cancel")
-                          .withKey("cancel")
+                          .withKey("_cancel")
+                          .withCustomClass("qe_formio_cancel_button")
                           .withDisableOnInvalid(false)
                           .withTheme("secondary")
                           .withAction(Button.ActionType.event)
@@ -250,10 +253,11 @@ public class FormBuilder {
               .withKey(arg.getName())
               .withMultiple(arg.isMultiValued())
               .withEnableDate(arg.getType() == ArgumentType.Date || arg.getType() == ArgumentType.DateTime)
-              .withEnableTime(arg.getType() == ArgumentType.Time || arg.getType() == ArgumentType.DateTime)
+              .withEnableTime(arg.getType() == ArgumentType.Time || arg.getType() == ArgumentType.DateTime)              
             ;
-      
-      
+      if (!Strings.isNullOrEmpty(arg.getDefaultValue())) {
+        dateTime.withDefaultValue(arg.getDefaultValue());
+      }
       
       try (Validation v = dateTime.addValidate()) {
         v.withRequired(!arg.isOptional());
@@ -275,6 +279,10 @@ public class FormBuilder {
             .withKey(arg.getName())
             .withMultiple(arg.isMultiValued())
             ;
+      if (!Strings.isNullOrEmpty(arg.getDefaultValue())) {
+        number.withDefaultValue(arg.getDefaultValue());
+      }
+      
       try (Number.NumberValidation v = number.addNumberValidate()) {
         v
                 .withInteger(arg.getType() != ArgumentType.Double)
@@ -329,6 +337,10 @@ public class FormBuilder {
             .withKey(arg.getName())
             .withMultiple(arg.isMultiValued())
             ;
+      if (!Strings.isNullOrEmpty(arg.getDefaultValue())) {
+        textField.withDefaultValue(arg.getDefaultValue());
+      }
+      
       try (Validation v = textField.addValidate()) {
         v.withRequired(!arg.isOptional());
       }
@@ -343,9 +355,13 @@ public class FormBuilder {
             .withPlaceholder(arg.getPrompt())
             .withKey(arg.getName())
             .withMultiple(arg.isMultiValued())
+            .withValueProperty("value")
             ;
       try (Validation v = select.addValidate()) {
         v.withRequired(!arg.isOptional());
+      }
+      if (!Strings.isNullOrEmpty(arg.getDefaultValue())) {
+        select.withDefaultValue(arg.getDefaultValue());
       }
       if (isNullOrEmpty(arg.getPossibleValues())) {
         try (Select.DataUrl url = select.addDataUrl()) {

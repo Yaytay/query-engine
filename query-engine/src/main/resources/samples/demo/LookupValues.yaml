@@ -12,7 +12,8 @@ source:
   replaceDoubleQuotes: true
   query: |
     select
-        value
+        value as label
+        , value
     from
         "RefData"
     where
@@ -21,3 +22,5 @@ source:
        "ordering"
 formats:
 - type: JSON
+- type: HTML
+  name: table
