@@ -159,7 +159,6 @@ public class DataRow {
             || value instanceof LocalDate
             || value instanceof LocalDateTime
             || value instanceof LocalTime
-            || value instanceof LocalTime
             ) {
       return value;
     } else if (value instanceof java.sql.Date d) {
