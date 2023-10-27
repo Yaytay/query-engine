@@ -438,7 +438,7 @@ public class AuditorImpl implements Auditor {
         switch (scope) {
           case clientip:
             sql.append("and ").append(quote).append("clientIp").append(quote).append(" = ? ");
-            args.add(context.getClientIp());
+            args.add(limitLength(context.getClientIp().toNormalizedString(), 40));
             break;
           case host:
             sql.append("and ").append(quote).append("host").append(quote).append(" = ? ");

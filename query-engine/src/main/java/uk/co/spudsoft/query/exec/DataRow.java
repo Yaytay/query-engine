@@ -20,6 +20,7 @@ import uk.co.spudsoft.query.defn.DataType;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.impl.Utils;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -158,6 +159,7 @@ public class DataRow {
             || value instanceof LocalDate
             || value instanceof LocalDateTime
             || value instanceof LocalTime
+            || value instanceof LocalTime
             ) {
       return value;
     } else if (value instanceof java.sql.Date d) {
@@ -169,6 +171,8 @@ public class DataRow {
       return LocalTime.ofNanoOfDay(t * 1000000);
     } else if (value instanceof java.util.Date d) {
       return LocalDateTime.ofInstant(d.toInstant(), ZoneOffset.UTC);
+    } else if (value instanceof Duration d) {
+      return LocalTime.MIDNIGHT.plus(d);
     } else {
       return value.toString();
     }
