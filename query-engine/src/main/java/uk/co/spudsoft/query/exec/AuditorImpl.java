@@ -218,6 +218,8 @@ public class AuditorImpl implements Auditor {
     if (!prepared) {
       logger.debug("Failing health check because audit is not prepared");
       promise.complete(Status.KO());
+    } else {
+      promise.complete(Status.OK());
     }
   }
 

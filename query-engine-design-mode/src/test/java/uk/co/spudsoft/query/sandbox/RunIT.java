@@ -94,8 +94,8 @@ public class RunIT {
       , "--sampleDataLoads[2].adminUser.username=sa"
       , "--sampleDataLoads[2].adminUser.password=unknown"
       , "--httpServerOptions.port=8000"
-      , "--managementEndpointPort=8001" 
-      , "--managementEndpointUrl=http://localhost:8001/manage"
+//      , "--managementEndpointPort=8001" 
+//      , "--managementEndpointUrl=http://localhost:8001/manage"
       , "--corsAllowedOrigin=.*"
     }, stdout);
     
