@@ -62,6 +62,7 @@ arguments:
     type: String
 source:
   type: Test
+  rowCount: 7
 formats:
 - type: HTML
 - type: XLSX

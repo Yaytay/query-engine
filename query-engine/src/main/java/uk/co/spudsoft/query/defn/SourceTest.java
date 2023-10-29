@@ -68,7 +68,7 @@ public class SourceTest implements Source {
   public static class Builder {
 
     private SourceType type = SourceType.TEST;
-    private int rowCount;
+    private int rowCount = 1;
     private String name;
     private int delayMs;
 

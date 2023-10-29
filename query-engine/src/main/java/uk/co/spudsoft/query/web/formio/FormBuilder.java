@@ -195,20 +195,18 @@ public class FormBuilder {
               try (ComponentArray a3 = col.addComponents()) {
                 try (Button b = new Button(generator)) {
                   b
-                          .withCustomClass("float-left")
+                          .withCustomClass("float-left qe_formio_submit_button")
                           .withLabel("Submit")
                           .withKey("_submit")
-                          .withCustomClass("qe_formio_submit_button")
                           .withDisableOnInvalid(true)
                           .withAction(Button.ActionType.submit)
                           ;
-                }                      
+                }
                 try (Button b = new Button(generator)) {
                   b
-                          .withCustomClass("float-left")
+                          .withCustomClass("float-left qe_formio_cancel_button")
                           .withLabel("Cancel")
                           .withKey("_cancel")
-                          .withCustomClass("qe_formio_cancel_button")
                           .withDisableOnInvalid(false)
                           .withTheme("secondary")
                           .withAction(Button.ActionType.event)
