@@ -17,9 +17,7 @@
 package uk.co.spudsoft.query.sandbox;
 
 import uk.co.spudsoft.query.main.*;
-import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
-import io.vertx.junit5.VertxTestContext;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
@@ -66,30 +64,37 @@ public class RunIT {
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-      "--audit.datasource.url=jdbc:" + postgres.getUrl()
-      , "--audit.datasource.adminUser.username=" + postgres.getUser()
-      , "--audit.datasource.adminUser.password=" + postgres.getPassword()
-      , "--audit.datasource.schema=public" 
-      , "--baseConfigPath=target/query-engine/samples-runit"
-      , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
-      , "--jwt.acceptableIssuerRegexes[0]=.*"
-      , "--jwt.defaultJwksCacheDuration=PT1M"
-      , "--logging.jsonFormat=false"
-//      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.pipeline=TRACE"
-//      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec\\\\.procs\\\\.query=TRACE"
-      , "--sampleDataLoads[0].url=" + postgres.getUrl()
-      , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()
-      , "--sampleDataLoads[0].adminUser.password=" + postgres.getPassword()
-      , "--sampleDataLoads[1].url=" + mysql.getUrl()
-      , "--sampleDataLoads[1].user.username=" + mysql.getUser()
-      , "--sampleDataLoads[1].user.password=" + mysql.getPassword()
-      , "--sampleDataLoads[2].url=sqlserver://localhost:1234/test"
-      , "--sampleDataLoads[2].adminUser.username=sa"
-      , "--sampleDataLoads[2].adminUser.password=unknown"
-      , "--httpServerOptions.port=8000"
-      , "--managementEndpointPort=8001"
-      , "--managementEndpointUrl=http://localhost:8001/manage"
-      , "--corsAllowedOriginRegex=.*"
+            "--audit.datasource.url=jdbc:" + postgres.getUrl()
+            , "--audit.datasource.adminUser.username=" + postgres.getUser()
+            , "--audit.datasource.adminUser.password=" + postgres.getPassword()
+            , "--audit.datasource.schema=public" 
+            , "--baseConfigPath=target/query-engine/samples-runit"
+            , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
+            , "--jwt.acceptableIssuerRegexes[0]=.*"
+            , "--jwt.defaultJwksCacheDuration=PT1M"
+            , "--logging.jsonFormat=false"
+      //      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.pipeline=TRACE"
+      //      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec\\\\.procs\\\\.query=TRACE"
+            , "--sampleDataLoads[0].url=" + postgres.getUrl()
+            , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()
+            , "--sampleDataLoads[0].adminUser.password=" + postgres.getPassword()
+            , "--sampleDataLoads[1].url=" + mysql.getUrl()
+            , "--sampleDataLoads[1].user.username=" + mysql.getUser()
+            , "--sampleDataLoads[1].user.password=" + mysql.getPassword()
+            , "--sampleDataLoads[2].url=sqlserver://localhost:1234/test"
+            , "--sampleDataLoads[2].adminUser.username=sa"
+            , "--sampleDataLoads[2].adminUser.password=unknown"
+            , "--httpServerOptions.port=8000"
+            , "--managementEndpointPort=8001"
+            , "--managementEndpointUrl=http://localhost:8001/manage"
+            , "--corsAllowedOriginRegex=.*"
+            , "--session.requireSession=true"
+            , "--session.oauth[0].name=GitHub"
+            , "--session.oauth[0].logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
+            , "--session.oauth[0].url=https://github.com/login/oauth/authorize"
+            , "--session.oauth[0].credentials.clientId=bdab017f4732085a51f9"
+            , "--session.oauth[0].credentials.clientSecret=ddcdc540a847c99ff8ac9263dcf2ebfbdf3ed00d"
+            
     }, stdout);
     
     for (int i = 0; i < 14400; ++i) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 jtalbut
+ * Copyright (C) 2023 njt
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,20 +14,51 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package uk.co.spudsoft.query.main;
 
 /**
- * Set the version from the pom.
- * 
+ *
  * @author njt
  */
-public final class Version {
+public class AuthEndpoint {
+  
+  private String name;
+  private String logoUrl;
+  private String url;
+  private ClientCredentials credentials;
 
-  public static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-  public static final String MAVEN_PROJECT_VERSION = "0.0.22-17-main";
-
-  private Version() {
+  public String getName() {
+    return name;
   }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public String getLogoUrl() {
+    return logoUrl;
+  }
+
+  public void setLogoUrl(String logoUrl) {
+    this.logoUrl = logoUrl;
+  }
+
+  public String getUrl() {
+    return url;
+  }
+
+  public void setUrl(String url) {
+    this.url = url;
+  }
+
+  public ClientCredentials getCredentials() {
+    return credentials;
+  }
+
+  public void setCredentials(ClientCredentials credentials) {
+    this.credentials = credentials;
+  }
+  
+  
   
 }

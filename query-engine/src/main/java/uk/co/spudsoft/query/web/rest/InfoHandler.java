@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.vertx.core.Vertx;
 import io.vertx.core.file.FileSystemException;
 import io.vertx.core.http.HttpServerRequest;
 import jakarta.ws.rs.GET;
@@ -38,7 +39,7 @@ import java.io.FileNotFoundException;
 import java.nio.file.NoSuchFileException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
+import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.main.ExceptionToString;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 import uk.co.spudsoft.query.web.ServiceException;
@@ -53,15 +54,15 @@ public class InfoHandler {
   
   private static final Logger logger = LoggerFactory.getLogger(InfoHandler.class);
 
-  private final RequestContextBuilder requestContextBuilder;
   private final PipelineDefnLoader loader;
   private final boolean outputAllErrorMessages;
+  private final boolean requireSession;
 
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The PipelineDefnLoader is mutable because it changes the filesystem")
-  public InfoHandler(RequestContextBuilder requestContextBuilder, PipelineDefnLoader loader, boolean outputAllErrorMessages) {
-    this.requestContextBuilder = requestContextBuilder;
+  public InfoHandler(PipelineDefnLoader loader, boolean outputAllErrorMessages, boolean requireSession) {
     this.loader = loader;
     this.outputAllErrorMessages = outputAllErrorMessages;
+    this.requireSession = requireSession;
   }
   
   @GET
@@ -83,11 +84,14 @@ public class InfoHandler {
           @Suspended final AsyncResponse response
           , @Context HttpServerRequest request
   ) {
-    requestContextBuilder.buildRequestContext(request)
-            .compose(context -> {
-              logger.trace("API Request: {}", context);
-              return loader.getAccessible(context);
-            })
+    
+    RequestContext requestContext = Vertx.currentContext().getLocal("req");
+    if (requireSession && (requestContext == null || !requestContext.isAuthenticated())) {
+      response.resume(Response.status(Response.Status.UNAUTHORIZED).build());
+      return ;
+    }
+    
+    loader.getAccessible(requestContext)
             .onSuccess(ap -> {
               response.resume(Response.ok(ap, MediaType.APPLICATION_JSON).build());
             })

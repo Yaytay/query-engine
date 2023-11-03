@@ -167,15 +167,22 @@ See:
 | link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/String.html[String]
 | Set the URL that clients should be using to access the management endpoints.
 
-If set (and managementEndpointPort is positive), requests to /manage will return an HTTP temporary redirect to this URL.
+If set (and managementEndpointPort is positive), requests to /manage will return a JSON object containing a single "location" value with this URL.
+ An HTTP redirect would be more appropriate, but causes issues with client UI behaviour.
  
 
 Aimed at use cases where a different ingress is required for accessing the management endpoints.
- The replacement ingress should not be accessible to end users.
+ The replacement ingress should not usually be accessible to end users.
  
 
 If managementEndpointPort does not have a positive value any setting of managementEndpointUrl will be ignored.
  
 
 The value provided must be the full URL to the /manage path.
+ 
+
+If not set, and managementEndpointPort is positive, users will have no way to discover the management endpoint URL (which may be the intention).
+| session
+| uk.co.spudsoft.query.main.SessionConfig
+| Set the authentication configuration of the UI and REST API.
 |===

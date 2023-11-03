@@ -184,14 +184,29 @@ public class Parameters {
   private Integer managementEndpointPort;
   
   /**
-   * If set (and managementEndpointPort is positive), requests to /manage will return an HTTP temporary redirect to this URL.
+   * The URL that clients should be using to access the management endpoints.
+   * <p>
+   * If set (and managementEndpointPort is positive), requests to /manage will return a JSON object containing a single "location" value with this URL.
+   * An HTTP redirect would be more appropriate, but causes issues with client UI behaviour.
    * <p>
    * Aimed at use cases where a different ingress is required for accessing the management endpoints.
+   * The replacement ingress should not usually be accessible to end users.
    * <p>
    * If managementEndpointPort does not have a positive value any setting of managementEndpointUrl will be ignored.
+   * <p>
+   * The value provided must be the full URL to the /manage path.
+   * <p>
+   * If not set, and managementEndpointPort is positive, users will have no way to discover the management endpoint URL (which may be the intention).
+   * 
+   * @param managementEndpointUrl the URL that clients should be using to access the management endpoints.
    */
   private String managementEndpointUrl;
   
+  /**
+   * Configuration of the session management for the UI and REST API.
+   */
+  private SessionConfig session;
+
   /**
    * Get the options for configuring logback.
    * <p>
@@ -609,6 +624,23 @@ public class Parameters {
     this.managementEndpointPort = managementEndpointPort;
   }
 
+  /**
+   * Get the URL that clients should be using to access the management endpoints.
+   * <p>
+   * If set (and managementEndpointPort is positive), requests to /manage will return a JSON object containing a single "location" value with this URL.
+   * An HTTP redirect would be more appropriate, but causes issues with client UI behaviour.
+   * <p>
+   * Aimed at use cases where a different ingress is required for accessing the management endpoints.
+   * The replacement ingress should not usually be accessible to end users.
+   * <p>
+   * If managementEndpointPort does not have a positive value any setting of managementEndpointUrl will be ignored.
+   * <p>
+   * The value provided must be the full URL to the /manage path.
+   * <p>
+   * If not set, and managementEndpointPort is positive, users will have no way to discover the management endpoint URL (which may be the intention).
+   * 
+   * @return the URL that clients should be using to access the management endpoints.
+   */
   public String getManagementEndpointUrl() {
     return managementEndpointUrl;
   }
@@ -616,19 +648,38 @@ public class Parameters {
   /**
    * Set the URL that clients should be using to access the management endpoints.
    * <p>
-   * If set (and managementEndpointPort is positive), requests to /manage will return an HTTP temporary redirect to this URL.
+   * If set (and managementEndpointPort is positive), requests to /manage will return a JSON object containing a single "location" value with this URL.
+   * An HTTP redirect would be more appropriate, but causes issues with client UI behaviour.
    * <p>
    * Aimed at use cases where a different ingress is required for accessing the management endpoints.
-   * The replacement ingress should not be accessible to end users.
+   * The replacement ingress should not usually be accessible to end users.
    * <p>
    * If managementEndpointPort does not have a positive value any setting of managementEndpointUrl will be ignored.
    * <p>
    * The value provided must be the full URL to the /manage path.
+   * <p>
+   * If not set, and managementEndpointPort is positive, users will have no way to discover the management endpoint URL (which may be the intention).
    * 
    * @param managementEndpointUrl the URL that clients should be using to access the management endpoints.
    */
   public void setManagementEndpointUrl(String managementEndpointUrl) {
     this.managementEndpointUrl = managementEndpointUrl;
+  }
+
+  /**
+   * Get the authentication configuration of the UI and REST API.
+   * @return the authentication configuration of the UI and REST API.
+   */
+  public SessionConfig getSession() {
+    return session;
+  }
+
+  /**
+   * Set the authentication configuration of the UI and REST API.
+   * @param session the authentication configuration of the UI and REST API.
+   */
+  public void setSession(SessionConfig session) {
+    this.session = session;
   }
 
   

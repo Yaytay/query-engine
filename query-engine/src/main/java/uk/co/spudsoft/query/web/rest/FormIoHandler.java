@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -42,7 +43,7 @@ import java.io.OutputStream;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
+import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 import uk.co.spudsoft.query.pipeline.PipelineNodesTree.PipelineDir;
 import uk.co.spudsoft.query.pipeline.PipelineNodesTree.PipelineFile;
@@ -62,9 +63,9 @@ public class FormIoHandler {
   
   private static final Logger logger = LoggerFactory.getLogger(FormIoHandler.class);
 
-  private final RequestContextBuilder requestContextBuilder;
   private final PipelineDefnLoader loader;
   private final boolean outputAllErrorMessages;
+  private final boolean requireSession;
 
   private class PipelineStreamer implements StreamingOutput {
     
@@ -84,10 +85,10 @@ public class FormIoHandler {
   }
   
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The PipelineDefnLoader is mutable because it changes the filesystem")
-  public FormIoHandler(RequestContextBuilder requestContextBuilder, PipelineDefnLoader loader, boolean outputAllErrorMessages) {
-    this.requestContextBuilder = requestContextBuilder;
+  public FormIoHandler(PipelineDefnLoader loader, boolean outputAllErrorMessages, boolean requireSession) {
     this.loader = loader;
     this.outputAllErrorMessages = outputAllErrorMessages;
+    this.requireSession = requireSession;
   }
   
   @GET
@@ -119,11 +120,13 @@ public class FormIoHandler {
     }
     int colCount = columns == null ? 1 : columns;
     
-    requestContextBuilder.buildRequestContext(request)
-            .compose(context -> {
-              logger.trace("API Request: {}", context);
-              return loader.getAccessible(context);
-            })
+    RequestContext requestContext = Vertx.currentContext().getLocal("req");
+    if (requireSession && (requestContext == null || !requestContext.isAuthenticated())) {
+      response.resume(Response.status(Response.Status.UNAUTHORIZED).build());
+      return ;
+    }
+    
+    loader.getAccessible(requestContext)
             .compose(root -> {
               try {
                 PipelineFile file = findFile(root, path);

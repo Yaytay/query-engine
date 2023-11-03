@@ -132,6 +132,10 @@ public class RequestContext {
       return value;
     }
   }
+  
+  public boolean isAuthenticated() {
+    return jwt != null;
+  }
 
   /**
    * Get the time (in millis since epoch) of the request.

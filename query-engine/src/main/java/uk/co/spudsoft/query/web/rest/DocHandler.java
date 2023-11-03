@@ -22,7 +22,7 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -41,7 +41,7 @@ import java.util.HashSet;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
+import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.web.MimeTypes;
 import static uk.co.spudsoft.query.web.rest.InfoHandler.reportError;
 
@@ -55,8 +55,8 @@ public class DocHandler {
   
   private static final Logger logger = LoggerFactory.getLogger(DocHandler.class.getName());
   
-  private final RequestContextBuilder requestContextBuilder;
   private final boolean outputAllErrorMessages;
+  private final boolean requireSession;
   
   private static final String BASE_DIR = "/docs/";
   static final DocNodesTree.DocDir DOCS = new DocNodesTree.DocDir(
@@ -115,9 +115,9 @@ public class DocHandler {
     }
   }
 
-  public DocHandler(RequestContextBuilder requestContextBuilder, boolean outputAllErrorMessages) {
-    this.requestContextBuilder = requestContextBuilder;
+  public DocHandler(boolean outputAllErrorMessages, boolean requireSession) {
     this.outputAllErrorMessages = outputAllErrorMessages;
+    this.requireSession = requireSession;
   }
   
   @GET
@@ -139,17 +139,17 @@ public class DocHandler {
           @Suspended final AsyncResponse response
           , @Context HttpServerRequest request
   ) {
-    requestContextBuilder.buildRequestContext(request)
-            .compose(context -> {
-              logger.trace("Document Request: {}", context);
-              return Future.succeededFuture(DOCS);
-            })
-            .onSuccess(ap -> {
-              response.resume(Response.ok(ap, MediaType.APPLICATION_JSON).build());
-            })
-            .onFailure(ex -> {
-              reportError(logger, "Failed to generate list of available documentation: ", response, ex, outputAllErrorMessages);
-            });
+    try {
+      RequestContext requestContext = Vertx.currentContext().getLocal("req");
+      if (requireSession && (requestContext == null || !requestContext.isAuthenticated())) {
+        response.resume(Response.status(Response.Status.UNAUTHORIZED).build());
+        return ;
+      }
+
+      response.resume(Response.ok(DOCS, MediaType.APPLICATION_JSON).build());
+    } catch (Throwable ex) {
+      reportError(logger, "Failed to generate list of available documentation: ", response, ex, outputAllErrorMessages);
+    }
 
   }
   
@@ -166,29 +166,27 @@ public class DocHandler {
           , @Context HttpServerRequest request
           , @PathParam("path") String path
   ) {
-    requestContextBuilder.buildRequestContext(request)
-            .compose(context -> {
-              logger.trace("Document Request: {}", context);
-              try {
-                if (knownDocs.contains(path)) {
-                  String contents;
-                  try (InputStream strm = getClass().getResourceAsStream(BASE_DIR + path)) {
-                    contents = new String(strm.readAllBytes(), StandardCharsets.UTF_8);
-                  }
-                  return Future.succeededFuture(contents);
-                } else {
-                  return Future.failedFuture(new FileNotFoundException(path));
-                }
-              } catch (Throwable ex) {
-                return Future.failedFuture(ex);
-              }
-            })
-            .onSuccess(contents -> {
-              response.resume(Response.ok(contents, MimeTypes.getMimeTypeForFilename(path)).build());
-            })
-            .onFailure(ex -> {
-              reportError(logger, "Failed to get requested documentation: ", response, ex, outputAllErrorMessages);
-            });
+    
+    try {
+      RequestContext requestContext = Vertx.currentContext().getLocal("req");
+      if (requireSession && (requestContext == null || !requestContext.isAuthenticated())) {
+        response.resume(Response.status(Response.Status.UNAUTHORIZED).build());
+        return ;
+      }
+      
+      if (knownDocs.contains(path)) {
+        String contents;
+        try (InputStream strm = getClass().getResourceAsStream(BASE_DIR + path)) {
+          contents = new String(strm.readAllBytes(), StandardCharsets.UTF_8);
+        }
+        
+        response.resume(Response.ok(contents, MimeTypes.getMimeTypeForFilename(path)).build());
+      } else {
+        throw new FileNotFoundException(path);
+      }
+    } catch (Throwable ex) {
+      reportError(logger, "Failed to get requested documentation: ", response, ex, outputAllErrorMessages);
+    }
 
   }
 
