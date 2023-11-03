@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 njt
+ * Copyright (C) 2023 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,10 @@ import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.container.Suspended;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import static uk.co.spudsoft.query.web.rest.InfoHandler.reportError;
 
 /**
  *
@@ -40,6 +43,16 @@ import uk.co.spudsoft.query.exec.conditions.RequestContext;
 @Timed
 public class SessionHandler {
 
+  private static final Logger logger = LoggerFactory.getLogger(SessionHandler.class);
+  
+  private final boolean outputAllErrorMessages;
+  private final boolean requireSession;
+
+  public SessionHandler(boolean outputAllErrorMessages, boolean requireSession) {
+    this.outputAllErrorMessages = outputAllErrorMessages;
+    this.requireSession = requireSession;
+  }
+  
   @GET
   @Path("/profile")
   @Produces(MediaType.APPLICATION_JSON)
@@ -56,14 +69,17 @@ public class SessionHandler {
           @Suspended final AsyncResponse response
           , @Context HttpServerRequest request
   ) {
-    RequestContext requestContext = Vertx.currentContext().getLocal("req");
-    
-    Profile profile = new Profile();
-    profile.setUsername(requestContext.getUsername());
-    profile.setFullname(requestContext.getNameFromJwt());
-    
-    response.resume(profile);
-    
+    try {
+      RequestContext requestContext = HandlerAuthHelper.getRequestContext(Vertx.currentContext(), requireSession);
+
+      Profile profile = new Profile();
+      profile.setUsername(requestContext.getUsername());
+      profile.setFullname(requestContext.getNameFromJwt());
+
+      response.resume(profile);
+    } catch (Throwable ex) {
+      reportError(logger, "Failed to get profile: ", response, ex, outputAllErrorMessages);
+    }    
   }
   
 }

@@ -205,7 +205,7 @@ public class Parameters {
   /**
    * Configuration of the session management for the UI and REST API.
    */
-  private SessionConfig session;
+  private SessionConfig session = new SessionConfig();
 
   /**
    * Get the options for configuring logback.
@@ -670,6 +670,7 @@ public class Parameters {
    * Get the authentication configuration of the UI and REST API.
    * @return the authentication configuration of the UI and REST API.
    */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public SessionConfig getSession() {
     return session;
   }
@@ -678,6 +679,7 @@ public class Parameters {
    * Set the authentication configuration of the UI and REST API.
    * @param session the authentication configuration of the UI and REST API.
    */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public void setSession(SessionConfig session) {
     this.session = session;
   }

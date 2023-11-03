@@ -41,7 +41,6 @@ import java.util.HashSet;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.web.MimeTypes;
 import static uk.co.spudsoft.query.web.rest.InfoHandler.reportError;
 
@@ -140,11 +139,7 @@ public class DocHandler {
           , @Context HttpServerRequest request
   ) {
     try {
-      RequestContext requestContext = Vertx.currentContext().getLocal("req");
-      if (requireSession && (requestContext == null || !requestContext.isAuthenticated())) {
-        response.resume(Response.status(Response.Status.UNAUTHORIZED).build());
-        return ;
-      }
+      HandlerAuthHelper.getRequestContext(Vertx.currentContext(), requireSession);
 
       response.resume(Response.ok(DOCS, MediaType.APPLICATION_JSON).build());
     } catch (Throwable ex) {
@@ -168,11 +163,7 @@ public class DocHandler {
   ) {
     
     try {
-      RequestContext requestContext = Vertx.currentContext().getLocal("req");
-      if (requireSession && (requestContext == null || !requestContext.isAuthenticated())) {
-        response.resume(Response.status(Response.Status.UNAUTHORIZED).build());
-        return ;
-      }
+      HandlerAuthHelper.getRequestContext(Vertx.currentContext(), requireSession);
       
       if (knownDocs.contains(path)) {
         String contents;

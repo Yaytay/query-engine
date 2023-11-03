@@ -120,27 +120,27 @@ public class FormIoHandler {
     }
     int colCount = columns == null ? 1 : columns;
     
-    RequestContext requestContext = Vertx.currentContext().getLocal("req");
-    if (requireSession && (requestContext == null || !requestContext.isAuthenticated())) {
-      response.resume(Response.status(Response.Status.UNAUTHORIZED).build());
-      return ;
-    }
-    
-    loader.getAccessible(requestContext)
-            .compose(root -> {
-              try {
-                PipelineFile file = findFile(root, path);
-                return Future.succeededFuture(new PipelineStreamer(file, colCount));
-              } catch (Throwable ex) {
-                return Future.failedFuture(ex);
-              }
-            })
-            .onSuccess(fd -> {
-              response.resume(Response.ok(fd, MediaType.APPLICATION_JSON).build());
-            })
-            .onFailure(ex -> {
-              reportError(logger, "Failed to generate list of available pipelines: ", response, ex, outputAllErrorMessages);
-            });
+    try {
+      RequestContext requestContext = HandlerAuthHelper.getRequestContext(Vertx.currentContext(), requireSession);
+
+      loader.getAccessible(requestContext)
+              .compose(root -> {
+                try {
+                  PipelineFile file = findFile(root, path);
+                  return Future.succeededFuture(new PipelineStreamer(file, colCount));
+                } catch (Throwable ex) {
+                  return Future.failedFuture(ex);
+                }
+              })
+              .onSuccess(fd -> {
+                response.resume(Response.ok(fd, MediaType.APPLICATION_JSON).build());
+              })
+              .onFailure(ex -> {
+                reportError(logger, "Failed to generate list of available pipelines: ", response, ex, outputAllErrorMessages);
+              });
+    } catch (Throwable ex) {
+      reportError(logger, "Failed to get FormIO data: ", response, ex, outputAllErrorMessages);
+    }    
 
   }
   

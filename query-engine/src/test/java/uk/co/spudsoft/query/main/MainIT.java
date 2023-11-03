@@ -100,6 +100,12 @@ public class MainIT {
       , "--managementEndpoints[0]=up"
       , "--managementEndpoints[2]=prometheus"
       , "--managementEndpoints[3]=threads"
+      , "--session.requireSession=false"
+      , "--session.oauth[0].name=GitHub"
+      , "--session.oauth[0].logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
+      , "--session.oauth[0].url=https://github.com/login/oauth/authorize"
+      , "--session.oauth[0].credentials.clientId=bdab017f4732085a51f9"
+      , "--session.oauth[0].credentials.clientSecret="
     }, stdout);
     assertEquals(0, stdoutStream.size());
     
@@ -127,6 +133,12 @@ public class MainIT {
       , "--managementEndpoints[3]=threads"
       , "--managementEndpointPort=8001"
       , "--managementEndpointUrl=http://localhost:8001/manage"
+      , "--session.requireSession=false"
+      , "--session.oauth[0].name=GitHub"
+      , "--session.oauth[0].logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
+      , "--session.oauth[0].url=https://github.com/login/oauth/authorize"
+      , "--session.oauth[0].credentials.clientId=bdab017f4732085a51f9"
+      , "--session.oauth[0].credentials.clientSecret="
     }, stdout);
     assertEquals(0, stdoutStream.size());
     
@@ -210,6 +222,124 @@ public class MainIT {
             ;
     ArrayNode manageEndpointsJson = Json.decodeValue(manageEndpointsString, ArrayNode.class);
     assertEquals(3, manageEndpointsJson.size());
+    
+    String nonProfile = given()
+            .log().all()
+            .get("/api/session/profile")
+            .then()
+            .statusCode(200)
+            .log().all()
+            .extract().body().asString()
+            ;
+    assertEquals("{}", nonProfile);
+            
+    String authConfig = given()
+            .log().all()
+            .get("/api/auth-config")
+            .then()
+            .statusCode(200)
+            .log().all()
+            .extract().body().asString()
+            ;
+    assertEquals("[{\"name\":\"GitHub\",\"logo\":\"https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg\"}]", authConfig);
+            
+    
+    main.shutdown();
+  }
+  
+  @Test
+  public void testAuthRequired() throws Exception {
+    Main main = new Main();
+    ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
+    PrintStream stdout = new PrintStream(stdoutStream);
+    main.testMain(new String[]{
+      "--audit.datasource.url=jdbc:" + postgres.getUrl()
+      , "--audit.datasource.adminUser.username=" + postgres.getUser()
+      , "--audit.datasource.adminUser.password=" + postgres.getPassword()
+      , "--audit.datasource.schema=public" 
+      , "--baseConfigPath=target/query-engine/samples-mainit"
+      , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
+      , "--jwt.acceptableIssuerRegexes[0]=.*"
+      , "--jwt.defaultJwksCacheDuration=PT1M"
+      , "--logging.jsonFormat=true"
+      , "--loadSampleData=true"
+      , "--managementEndpoints[0]=up"
+      , "--managementEndpoints[2]=prometheus"
+      , "--managementEndpoints[3]=threads"
+      , "--managementEndpointPort=8001"
+      , "--managementEndpointUrl=http://localhost:8001/manage"
+      , "--session.requireSession=true"
+      , "--session.oauth[0].name=GitHub"
+      , "--session.oauth[0].logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
+      , "--session.oauth[0].url=https://github.com/login/oauth/authorize"
+      , "--session.oauth[0].credentials.clientId=bdab017f4732085a51f9"
+      , "--session.oauth[0].credentials.clientSecret="
+    }, stdout);
+    assertEquals(0, stdoutStream.size());
+    
+    RestAssured.port = main.getPort();
+    
+    // UI does not require auth
+    given()
+            .log().all()
+            .get("/ui/index.html")
+            .then()
+            .statusCode(200)
+            .log().all()
+            ;
+    
+    // Manage endpoints do not require auth
+    given()
+            .log().all()
+            .get("/manage")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .body(equalTo("{\"location\":\"http://localhost:8001/manage\"}"))
+            ;
+    
+    given()
+            .log().all()
+            .get("/api/session/profile")
+            .then()
+            .statusCode(401)
+            .log().all()
+            ;
+           
+    // Autho config does not require auth
+    String authConfig = given()
+            .log().all()
+            .get("/api/auth-config")
+            .then()
+            .statusCode(200)
+            .log().all()
+            .extract().body().asString()
+            ;
+    assertEquals("[{\"name\":\"GitHub\",\"logo\":\"https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg\"}]", authConfig);
+            
+    given()
+            .log().all()
+            .get("/api/docs/")
+            .then()
+            .statusCode(401)
+            .log().all()
+            ;
+            
+    given()
+            .log().all()
+            .get("/api/formio/doesntmatterwhatgoeshere-authfailsfirst")
+            .then()
+            .statusCode(401)
+            .log().all()
+            ;
+            
+    given()
+            .log().all()
+            .get("/api/info/available")
+            .then()
+            .statusCode(401)
+            .log().all()
+            ;
     
     main.shutdown();
   }

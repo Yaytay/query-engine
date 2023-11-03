@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 njt
+ * Copyright (C) 2023 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.main;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
 
 /**
@@ -44,10 +45,12 @@ public class SessionConfig {
     this.requireSession = requireSession;
   }
 
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public List<AuthEndpoint> getOauth() {
     return oauth;
   }
 
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public void setOauth(List<AuthEndpoint> oauth) {
     this.oauth = oauth;
   }

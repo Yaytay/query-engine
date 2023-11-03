@@ -99,7 +99,7 @@ import uk.co.spudsoft.query.main.sample.SampleDataLoaderMsSQL;
 import uk.co.spudsoft.query.main.sample.SampleDataLoaderMySQL;
 import uk.co.spudsoft.query.main.sample.SampleDataLoaderPostgreSQL;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
-import uk.co.spudsoft.query.web.AuthHandler;
+import uk.co.spudsoft.query.web.RequestContextHandler;
 import uk.co.spudsoft.query.web.QueryRouter;
 import uk.co.spudsoft.query.web.UiRouter;
 import uk.co.spudsoft.query.web.rest.AuthConfigHandler;
@@ -391,7 +391,7 @@ public class Main extends Application {
     controllers.add(new DocHandler(outputAllErrorMessages(), requireSession));
     controllers.add(new FormIoHandler(defnLoader, outputAllErrorMessages(), requireSession));
     controllers.add(new AuthConfigHandler(params.getSession() == null ? null : params.getSession().getOauth()));
-    controllers.add(new SessionHandler());
+    controllers.add(new SessionHandler(outputAllErrorMessages(), requireSession));
     addExtraControllers(params, controllers);
     List<Object> providers = Arrays.asList(
         new JacksonJsonProvider(PipelineDefnLoader.JSON_OBJECT_MAPPER, JacksonJsonProvider.BASIC_ANNOTATIONS)
@@ -415,7 +415,7 @@ public class Main extends Application {
     router.get("/api").handler(rc -> {
       rc.response().setStatusCode(301).putHeader("Location", "/openapi").end();
     });
-    router.route("/api/*").handler(new AuthHandler(vertx, meterRegistry, rcb, params.getSession(), outputAllErrorMessages()));
+    router.route("/api/*").handler(new RequestContextHandler(vertx, rcb, outputAllErrorMessages()));
     router.route("/api/*").handler(new JaxRsHandler(vertx, meterRegistry, "/api", controllers, providers));
     router.route("/ui/*").handler(UiRouter.create(vertx, "/ui", "/www", "/www/index.html"));
     router.getWithRegex("/openapi\\..*").blockingHandler(openApiHandler);

@@ -162,33 +162,14 @@ public class QueryRouter implements Handler<RoutingContext> {
                     logger.info("Pipeline initiated");
                     return instance.getFinalPromise().future();
                   })
+                  .onFailure(ex -> {
+                    RequestContext requestContext = Vertx.currentContext().getLocal("req");
+                    auditor.recordException(requestContext, ex);
+                    internalError(ex, routingContext, outputAllErrorMessages);
+                  })
                   .onComplete(ar -> {
-                    if (ar.failed()) {
-                      Throwable ex = ar.cause();
-                      logger.warn("Request failed: ", ex);
-                      RequestContext requestContext = Vertx.currentContext().getLocal("req");
-                      auditor.recordException(requestContext, ex);
-                      
-                      int statusCode = 500;
-                      String message = "Failed";
-
-                      if (ex instanceof ServiceException serviceException) {
-                        statusCode = serviceException.getStatusCode();
-                        message = serviceException.getMessage();
-                      } else if (ex instanceof IllegalArgumentException) {
-                        statusCode = 400;
-                        message = ex.getMessage();
-                      }
-                      
-                      if (outputAllErrorMessages) {
-                        message = ExceptionToString.convert(ex, "\n\t");
-                      }
-                      
-                      routingContext.response().setStatusCode(statusCode).end(message);
-                    } else {
-                      vertx.getOrCreateContext().removeLocal(SourceInstance.SOURCE_CONTEXT_KEY);
-                      logger.info("Request completed");
-                    }
+                    vertx.getOrCreateContext().removeLocal(SourceInstance.SOURCE_CONTEXT_KEY);
+                    logger.info("Request completed");
                   });
         }
       } catch (ServiceException ex) {
@@ -201,7 +182,29 @@ public class QueryRouter implements Handler<RoutingContext> {
     } else {
       routingContext.next();
     }
-            
   }
+
+  static void internalError(Throwable ex, RoutingContext routingContext, boolean outputAllErrorMessages) {
+    logger.warn("Request failed: ", ex);
     
+    int statusCode = 500;
+    String message = "Failed";
+    
+    if (ex instanceof ServiceException serviceException) {
+      statusCode = serviceException.getStatusCode();
+      message = serviceException.getMessage();
+    } else if (ex instanceof IllegalArgumentException) {
+      statusCode = 400;
+      message = ex.getMessage();
+    }
+    
+    if (outputAllErrorMessages) {
+      message = ExceptionToString.convert(ex, "\n\t");
+    }
+    
+    routingContext
+            .response()
+            .setStatusCode(statusCode)
+            .end(message);
+  }
 }

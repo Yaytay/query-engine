@@ -16,29 +16,31 @@
  */
 package uk.co.spudsoft.query.web.rest;
 
+import io.vertx.core.Context;
+import jakarta.ws.rs.core.Response;
+import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.web.ServiceException;
+
 /**
  *
  * @author njt
  */
-public class Profile {
+public class HandlerAuthHelper {
+
+  private HandlerAuthHelper() {}
+
+
+  public static RequestContext getRequestContext(Context context, boolean required) throws ServiceException {
+    RequestContext requestContext = context.getLocal("req");
+    if (required) {
+      if (requestContext == null) {
+        throw new ServiceException(Response.Status.UNAUTHORIZED.getStatusCode(), "");
+      } else if (!requestContext.isAuthenticated()) {
+        throw new ServiceException(Response.Status.UNAUTHORIZED.getStatusCode(), "");
+      }
+    }
+    return requestContext;
+  }
   
-  private String username;
-  private String fullname;
-
-  public String getUsername() {
-    return username;
-  }
-
-  public void setUsername(String username) {
-    this.username = username;
-  }
-
-  public String getFullname() {
-    return fullname;
-  }
-
-  public void setFullname(String fullname) {
-    this.fullname = fullname;
-  }
   
 }

@@ -84,21 +84,19 @@ public class InfoHandler {
           @Suspended final AsyncResponse response
           , @Context HttpServerRequest request
   ) {
-    
-    RequestContext requestContext = Vertx.currentContext().getLocal("req");
-    if (requireSession && (requestContext == null || !requestContext.isAuthenticated())) {
-      response.resume(Response.status(Response.Status.UNAUTHORIZED).build());
-      return ;
-    }
-    
-    loader.getAccessible(requestContext)
-            .onSuccess(ap -> {
-              response.resume(Response.ok(ap, MediaType.APPLICATION_JSON).build());
-            })
-            .onFailure(ex -> {
-              reportError(logger, "Failed to generate list of available pipelines: ", response, ex, outputAllErrorMessages);
-            });
+    try {
+      RequestContext requestContext = HandlerAuthHelper.getRequestContext(Vertx.currentContext(), requireSession);
 
+      loader.getAccessible(requestContext)
+              .onSuccess(ap -> {
+                response.resume(Response.ok(ap, MediaType.APPLICATION_JSON).build());
+              })
+              .onFailure(ex -> {
+                reportError(logger, "Failed to generate list of available pipelines: ", response, ex, outputAllErrorMessages);
+              });
+    } catch (Throwable ex) {
+      reportError(logger, "Failed to getAvailable pipelines: ", response, ex, outputAllErrorMessages);
+    }    
   }
   
   static void reportError(Logger logger, String log, AsyncResponse response, Throwable ex, boolean outputAllErrorMessages) {
