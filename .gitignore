@@ -15,3 +15,5 @@ node
 node_modules
 /query-engine-design-mode/nbproject/
 /query-engine/targetquery-enginesamples/
+
+query-engine/nbactions.xml

@@ -92,8 +92,13 @@ public class RunIT {
             , "--session.oauth[0].name=GitHub"
             , "--session.oauth[0].logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
             , "--session.oauth[0].url=https://github.com/login/oauth/authorize"
-            , "--session.oauth[0].credentials.clientId=bdab017f4732085a51f9"
-            , "--session.oauth[0].credentials.clientSecret=ddcdc540a847c99ff8ac9263dcf2ebfbdf3ed00d"
+            , "--session.oauth[0].credentials.id=bdab017f4732085a51f9"
+            , "--session.oauth[0].credentials.secret=" + System.getProperty("queryEngineGithubSecret")
+            , "--session.oauth[1].name=Microsoft"
+            , "--session.oauth[1].logoUrl=https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg"
+            , "--session.oauth[1].url=https://microsoft.com"
+            , "--session.oauth[1].credentials.id=haha"
+            , "--session.oauth[1].credentials.secret="
             
     }, stdout);
     
