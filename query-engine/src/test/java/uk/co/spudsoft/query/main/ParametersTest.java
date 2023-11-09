@@ -73,14 +73,14 @@ public class ParametersTest {
   }
 
   @Test
-  public void testGetAudit() {
+  public void testGetPersistence() {
     Parameters instance = new Parameters();
-    assertNotNull(instance.getAudit());
-    instance = new Parameters().setAudit(null);
-    assertNull(instance.getAudit());
-    Audit audit = new Audit().setRetryBaseMs(17);
-    instance = new Parameters().setAudit(audit);
-    assertEquals(17, instance.getAudit().getRetryBaseMs());
+    assertNotNull(instance.getPersistence());
+    instance = new Parameters().setPersistence(null);
+    assertNull(instance.getPersistence());
+    Persistence audit = new Persistence().setRetryBaseMs(17);
+    instance = new Parameters().setPersistence(audit);
+    assertEquals(17, instance.getPersistence().getRetryBaseMs());
   }
   
   @Test
@@ -203,7 +203,7 @@ public class ParametersTest {
   @Test
   public void testProps() {
     String[] args = new String[]{
-      "audit.datasource.url=jdbc:bob"
+      "persistence.datasource.url=jdbc:bob"
       , "baseConfigPath=target/classes/samples"
       , "vertxOptions.eventLoopPoolSize=5"
       , "vertxOptions.workerPoolSize=5"
@@ -218,7 +218,7 @@ public class ParametersTest {
             .create();
 
     Parameters p = p4j.gatherParameters();
-    assertEquals("jdbc:bob", p.getAudit().getDataSource().getUrl());
+    assertEquals("jdbc:bob", p.getPersistence().getDataSource().getUrl());
     assertEquals("target/classes/samples", p.getBaseConfigPath());
     assertEquals(5, p.getVertxOptions().getEventLoopPoolSize());
     assertEquals(5, p.getVertxOptions().getWorkerPoolSize());
@@ -246,7 +246,7 @@ public class ParametersTest {
                           "tracingPolicy": "ALWAYS"
                       }
                   	, "baseConfigPath": "target/classes/samples"
-                  	, "audit": {
+                  	, "persistence": {
                           "dataSource": {
                               "url": "jdbc:bob"
                           }
@@ -264,7 +264,7 @@ public class ParametersTest {
             .create();
 
     Parameters p = p4j.gatherParameters();
-    assertEquals("jdbc:bob", p.getAudit().getDataSource().getUrl());
+    assertEquals("jdbc:bob", p.getPersistence().getDataSource().getUrl());
     assertEquals("target/classes/samples", p.getBaseConfigPath());
     assertEquals(5, p.getVertxOptions().getEventLoopPoolSize());
     assertEquals(8, p.getVertxOptions().getWorkerPoolSize());

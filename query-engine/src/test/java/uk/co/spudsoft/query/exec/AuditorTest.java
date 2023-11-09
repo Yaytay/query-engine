@@ -25,7 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
 import org.junit.jupiter.api.Test;
-import uk.co.spudsoft.query.main.Audit;
+import uk.co.spudsoft.query.main.Persistence;
 import uk.co.spudsoft.query.main.DataSourceConfig;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -52,7 +52,7 @@ public class AuditorTest {
     AuditorImpl auditor = new AuditorImpl(
             null,
             null,
-            new Audit()
+            new Persistence()
                     .setDataSource(new DataSourceConfig()
                                     .setUrl(url)
                     )
@@ -75,7 +75,7 @@ public class AuditorTest {
     AuditorImpl auditor = new AuditorImpl(
             null,
             null,
-            new Audit()
+            new Persistence()
                     .setDataSource(null)
                     .setRetryBaseMs(100)
                     .setRetryIncrementMs(10)
@@ -97,7 +97,7 @@ public class AuditorTest {
     AuditorImpl auditor = new AuditorImpl(
             null,
             null,
-            new Audit()
+            new Persistence()
                     .setDataSource(new DataSourceConfig()
                                     .setUrl(url)
                     )
@@ -121,7 +121,7 @@ public class AuditorTest {
     AuditorImpl auditor = new AuditorImpl(
             null,
             null,
-            new Audit()
+            new Persistence()
                     .setDataSource(new DataSourceConfig()
                                     .setUrl(url)
                     )

@@ -81,13 +81,13 @@ public class EmptyQueryIT {
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-      "--audit.datasource.url=jdbc:" + mysql.getUrl()
-      , "--audit.datasource.adminUser.username=" + mysql.getUser()
-      , "--audit.datasource.adminUser.password=" + mysql.getPassword()
-      , "--audit.datasource.user.username=" + mysql.getUser()
-      , "--audit.datasource.user.password=" + mysql.getPassword()
-      , "--audit.retryLimit=100"
-      , "--audit.retryIncrementMs=500"
+      "--persistence.datasource.url=jdbc:" + mysql.getUrl()
+      , "--persistence.datasource.adminUser.username=" + mysql.getUser()
+      , "--persistence.datasource.adminUser.password=" + mysql.getPassword()
+      , "--persistence.datasource.user.username=" + mysql.getUser()
+      , "--persistence.datasource.user.password=" + mysql.getPassword()
+      , "--persistence.retryLimit=100"
+      , "--persistence.retryIncrementMs=500"
       , "--baseConfigPath=" + BASE_CONFIG_DIR
       , "--vertxOptions.eventLoopPoolSize=5"
       , "--vertxOptions.workerPoolSize=5"

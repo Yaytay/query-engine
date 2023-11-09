@@ -22,7 +22,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  *
  * @author jtalbut
  */
-public class Audit {
+public class Persistence {
 
   /**
    * JDBC data source for storing audit information.
@@ -59,22 +59,22 @@ public class Audit {
   }
 
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
-  public Audit setDataSource(DataSourceConfig dataSource) {
+  public Persistence setDataSource(DataSourceConfig dataSource) {
     this.dataSource = dataSource;
     return this;
   }
 
-  public Audit setRetryBaseMs(int retryBaseMs) {
+  public Persistence setRetryBaseMs(int retryBaseMs) {
     this.retryBaseMs = retryBaseMs;
     return this;
   }
 
-  public Audit setRetryIncrementMs(int retryIncrementMs) {
+  public Persistence setRetryIncrementMs(int retryIncrementMs) {
     this.retryIncrementMs = retryIncrementMs;
     return this;
   }
 
-  public Audit setRetryLimit(int retryLimit) {
+  public Persistence setRetryLimit(int retryLimit) {
     this.retryLimit = retryLimit;
     return this;
   }

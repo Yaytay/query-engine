@@ -17,7 +17,7 @@
 package uk.co.spudsoft.query.main;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -26,8 +26,11 @@ import java.util.List;
 public class SessionConfig {
   
   private boolean requireSession;
+  private int stateLength = 256;
+  private int codeVerifierLength = 256;
+  private int nonceLength = 256;
   
-  private List<AuthEndpoint> oauth;
+  private Map<String, AuthEndpoint> oauth;
 
   /**
    * Get the flag to indicate that a session is required for all REST API calls.
@@ -45,14 +48,37 @@ public class SessionConfig {
     this.requireSession = requireSession;
   }
 
+  public int getStateLength() {
+    return stateLength;
+  }
+
+  public void setStateLength(int stateLength) {
+    this.stateLength = stateLength;
+  }
+
+  public int getCodeVerifierLength() {
+    return codeVerifierLength;
+  }
+
+  public void setCodeVerifierLength(int codeVerifierLength) {
+    this.codeVerifierLength = codeVerifierLength;
+  }
+
+  public int getNonceLength() {
+    return nonceLength;
+  }
+
+  public void setNonceLength(int nonceLength) {
+    this.nonceLength = nonceLength;
+  }
+  
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
-  public List<AuthEndpoint> getOauth() {
+  public Map<String, AuthEndpoint> getOauth() {
     return oauth;
   }
 
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
-  public void setOauth(List<AuthEndpoint> oauth) {
+  public void setOauth(Map<String, AuthEndpoint> oauth) {
     this.oauth = oauth;
-  }
-
+  }  
 }

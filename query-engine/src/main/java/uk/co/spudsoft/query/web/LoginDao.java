@@ -14,20 +14,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package uk.co.spudsoft.query.web;
 
-package uk.co.spudsoft.query.main;
+import io.vertx.core.Future;
 
 /**
- * Set the version from the pom.
- * 
- * @author njt
+ *
+ * @author jtalbut
  */
-public final class Version {
-
-  public static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-  public static final String MAVEN_PROJECT_VERSION = "0.0.22-22-main";
-
-  private Version() {
-  }
+public interface LoginDao {
+  
+  Future<Void> store(String state, String provider, String codeVerifier, String nonce, String redirectUri, String targetUrl);
+  
+  record RequestData(String provider, String codeVerifier, String nonce, String redirectUri, String targetUrl) {};
+  
+  Future<RequestData> getRequestData(String state);
   
 }

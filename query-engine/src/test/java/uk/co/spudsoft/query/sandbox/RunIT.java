@@ -64,11 +64,11 @@ public class RunIT {
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-            "--audit.datasource.url=jdbc:" + postgres.getUrl()
-            , "--audit.datasource.adminUser.username=" + postgres.getUser()
-            , "--audit.datasource.adminUser.password=" + postgres.getPassword()
-            , "--audit.datasource.schema=public" 
-            , "--baseConfigPath=target/query-engine/samples-runit"
+            "--baseConfigPath=target/query-engine/samples-runit"
+//            , "--persistence.datasource.url=jdbc:" + postgres.getUrl()
+//            , "--persistence.datasource.adminUser.username=" + postgres.getUser()
+//            , "--persistence.datasource.adminUser.password=" + postgres.getPassword()
+//            , "--persistence.datasource.schema=public" 
             , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
             , "--jwt.acceptableIssuerRegexes[0]=.*"
             , "--jwt.defaultJwksCacheDuration=PT1M"
@@ -89,16 +89,18 @@ public class RunIT {
             , "--managementEndpointUrl=http://localhost:8001/manage"
             , "--corsAllowedOriginRegex=.*"
             , "--session.requireSession=true"
-            , "--session.oauth[0].name=GitHub"
-            , "--session.oauth[0].logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
-            , "--session.oauth[0].url=https://github.com/login/oauth/authorize"
-            , "--session.oauth[0].credentials.id=bdab017f4732085a51f9"
-            , "--session.oauth[0].credentials.secret=" + System.getProperty("queryEngineGithubSecret")
-            , "--session.oauth[1].name=Microsoft"
-            , "--session.oauth[1].logoUrl=https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg"
-            , "--session.oauth[1].url=https://microsoft.com"
-            , "--session.oauth[1].credentials.id=haha"
-            , "--session.oauth[1].credentials.secret="
+            , "--session.codeVerifierLength=30"
+            , "--session.oauth.GitHub.logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
+            , "--session.oauth.GitHub.authorizationEndpoint=https://github.com/login/oauth/authorize"
+            , "--session.oauth.GitHub.tokenEndpoint=https://github.com/login/oauth/access_token"
+            , "--session.oauth.GitHub.credentials.id=bdab017f4732085a51f9"
+            , "--session.oauth.GitHub.credentials.secret=" + System.getProperty("queryEngineGithubSecret")
+            , "--session.oauth.GitHub.pkce=false"
+            , "--session.oauth.Microsoft.logoUrl=https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg"
+            , "--session.oauth.Microsoft.issuer=" + System.getProperty("queryEngineEntraUrl")
+            , "--session.oauth.Microsoft.credentials.id=" + System.getProperty("queryEngineEntraId")
+            , "--session.oauth.Microsoft.credentials.secret=" + System.getProperty("queryEngineEntraSecret")
+            , "--session.oauth.Microsoft.scope=openid profile api://e85e3298-a99e-4743-a3bd-9ea0a96f0664/qe2"
             
     }, stdout);
     

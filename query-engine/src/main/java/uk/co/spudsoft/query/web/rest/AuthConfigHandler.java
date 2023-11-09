@@ -33,6 +33,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import uk.co.spudsoft.query.main.AuthEndpoint;
 
@@ -46,10 +47,10 @@ public class AuthConfigHandler {
   
   private final List<AuthConfig> config;
 
-  public AuthConfigHandler(List<AuthEndpoint> config) {
+  public AuthConfigHandler(Map<String, AuthEndpoint> config) {
     this.config = config == null
             ? new ArrayList<>()
-            : config.stream().map(ae -> new AuthConfig(ae.getName(), ae.getLogoUrl())).collect(Collectors.toList());
+            : config.entrySet().stream().map(e -> new AuthConfig(e.getKey(), e.getValue().getLogoUrl())).collect(Collectors.toList());
   }
   
   @GET

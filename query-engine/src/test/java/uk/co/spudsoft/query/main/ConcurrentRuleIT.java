@@ -62,10 +62,10 @@ public class ConcurrentRuleIT {
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-      "--audit.datasource.url=jdbc:" + postgres.getUrl()
-      , "--audit.datasource.adminUser.username=" + postgres.getUser()
-      , "--audit.datasource.adminUser.password=" + postgres.getPassword()
-      , "--audit.datasource.schema=public" 
+      "--persistence.datasource.url=jdbc:" + postgres.getUrl()
+      , "--persistence.datasource.adminUser.username=" + postgres.getUser()
+      , "--persistence.datasource.adminUser.password=" + postgres.getPassword()
+      , "--persistence.datasource.schema=public" 
       , "--baseConfigPath=target/query-engine/samples-concurrentrulesit"
       , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--jwt.acceptableIssuerRegexes[0]=.*"

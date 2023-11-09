@@ -198,7 +198,7 @@
         <plugin>
           <groupId>com.github.spotbugs</groupId>
           <artifactId>spotbugs-maven-plugin</artifactId>
-          <version>4.7.3.6</version>
+          <version>4.8.1.0</version>
           <configuration>
             <fork>true</fork>
             <effort>Max</effort>
@@ -473,7 +473,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.6.0</version>
+          <version>3.6.2</version>
           <executions>
             <execution>
               <id>attach-javadocs</id>

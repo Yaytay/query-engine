@@ -99,7 +99,11 @@ import uk.co.spudsoft.query.main.sample.SampleDataLoaderMsSQL;
 import uk.co.spudsoft.query.main.sample.SampleDataLoaderMySQL;
 import uk.co.spudsoft.query.main.sample.SampleDataLoaderPostgreSQL;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
+import uk.co.spudsoft.query.web.LoginDao;
+import uk.co.spudsoft.query.web.LoginDaoMemoryImpl;
+import uk.co.spudsoft.query.web.LoginDaoPersistenceImpl;
 import uk.co.spudsoft.query.web.RequestContextHandler;
+import uk.co.spudsoft.query.web.LoginRouter;
 import uk.co.spudsoft.query.web.QueryRouter;
 import uk.co.spudsoft.query.web.UiRouter;
 import uk.co.spudsoft.query.web.rest.AuthConfigHandler;
@@ -136,6 +140,10 @@ public class Main extends Application {
   private HealthCheckHandler healthCheckHandler;
   private HealthCheckHandler upCheckHandler;
   private AtomicBoolean up = new AtomicBoolean();
+  
+  private OpenIdDiscoveryHandler openIdDiscoveryHandler;
+  private JwtValidatorVertx jwtValidatorVertx;
+
   
   private int port;
   
@@ -321,14 +329,19 @@ public class Main extends Application {
     vertx = Vertx.vertx(vertxOptions);
     meterRegistry = (PrometheusMeterRegistry) BackendRegistries.getDefaultNow();
     
-    auditor = new AuditorImpl(vertx, meterRegistry, params.getAudit());
+    auditor = new AuditorImpl(vertx, meterRegistry, params.getPersistence());
     try {
       auditor.prepare();
-      logger.info("Audit database prepared");
+      logger.info("Persistence database prepared");
     } catch (Throwable ex) {
       logger.error("Failed to prepare audit database: ", ex);
       return Future.succeededFuture(-2);
     }
+    
+//    LoginDao loginDao = params.getPersistence() == null
+//            ? new LoginDaoMemoryImpl()
+//            : new LoginDaoPersistenceImpl(vertx, meterRegistry, params.getPersistence());
+    LoginDao loginDao = new LoginDaoMemoryImpl();
     
     httpServer = vertx.createHttpServer(params.getHttpServerOptions());
     try {
@@ -420,6 +433,9 @@ public class Main extends Application {
     router.route("/ui/*").handler(UiRouter.create(vertx, "/ui", "/www", "/www/index.html"));
     router.getWithRegex("/openapi\\..*").blockingHandler(openApiHandler);
     router.get("/openapi").handler(openApiHandler.getUiHandler());
+    LoginRouter loginRouter = new LoginRouter(vertx, loginDao, openIdDiscoveryHandler, jwtValidatorVertx, params.getSession(), outputAllErrorMessages());
+    router.get("/login").handler(loginRouter);
+    router.get("/login/return").handler(loginRouter);
     router.route("/").handler(rc -> {
       rc.response().setStatusCode(307);
       rc.redirect("/ui/");
@@ -573,18 +589,15 @@ public class Main extends Application {
   
 
   protected RequestContextBuilder createRequestContextBuilder(Parameters params) {    
-    OpenIdDiscoveryHandler discoverer = null;
-    JwtValidatorVertx validator = null;
-
     JwtValidationConfig jwtConfig = params.getJwt();
-    discoverer = new JWKSOpenIdDiscoveryHandlerImpl(WebClient.create(vertx)
+    openIdDiscoveryHandler = new JWKSOpenIdDiscoveryHandlerImpl(WebClient.create(vertx)
             , IssuerAcceptabilityHandler.create(jwtConfig.getAcceptableIssuerRegexes()
                     , jwtConfig.getAcceptableIssuersFile()
                     , jwtConfig.getFilePollPeriodDuration()
             ), jwtConfig.getDefaultJwksCacheDuration().toSeconds());
-    validator = JwtValidatorVertx.create((JWKSOpenIdDiscoveryHandlerImpl) discoverer);   
+    jwtValidatorVertx = JwtValidatorVertx.create((JWKSOpenIdDiscoveryHandlerImpl) openIdDiscoveryHandler);   
     
-    RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx), validator, discoverer, params.getOpenIdIntrospectionHeaderName(), jwtConfig.getRequiredAudience());
+    RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx), jwtValidatorVertx, openIdDiscoveryHandler, params.getOpenIdIntrospectionHeaderName(), jwtConfig.getRequiredAudience());
     return rcb;
   }
   

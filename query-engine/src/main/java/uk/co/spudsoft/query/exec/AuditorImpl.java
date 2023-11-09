@@ -73,7 +73,7 @@ import uk.co.spudsoft.query.defn.RateLimitRule;
 import uk.co.spudsoft.query.defn.RateLimitScopeType;
 import static uk.co.spudsoft.query.defn.RateLimitScopeType.host;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
-import uk.co.spudsoft.query.main.Audit;
+import uk.co.spudsoft.query.main.Persistence;
 import uk.co.spudsoft.query.main.Credentials;
 import uk.co.spudsoft.query.main.DataSourceConfig;
 import uk.co.spudsoft.query.main.ExceptionToString;
@@ -95,14 +95,14 @@ public class AuditorImpl implements Auditor {
   
   private final Vertx vertx;
   private final MeterRegistry meterRegistry;
-  private final Audit configuration;
+  private final Persistence configuration;
   private DataSource dataSource;
   private String quote;
   
   private boolean prepared;
 
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "MeterRegisty is intended to be mutable by any user")
-  public AuditorImpl(Vertx vertx, MeterRegistry meterRegistry, Audit audit) {
+  public AuditorImpl(Vertx vertx, MeterRegistry meterRegistry, Persistence audit) {
     this.vertx = vertx;
     this.meterRegistry = meterRegistry;
     this.configuration = audit;

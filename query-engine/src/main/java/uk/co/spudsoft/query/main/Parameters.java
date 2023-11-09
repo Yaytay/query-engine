@@ -75,9 +75,11 @@ public class Parameters {
   private String baseConfigPath = "/var/query-engine";
   
   /**
-   * Configuration of the audit of requests.
+   * Persistence is used for both audit and state management of logins.
+   * Persistence is optional, without it there will be no audit and login state
+   * will be scoped to the current process.
    */
-  private Audit audit = new Audit();
+  private Persistence persistence = new Persistence();
   
   /**
    * Configuration of the JWT validator.
@@ -301,13 +303,17 @@ public class Parameters {
   }
   
   /**
-   * Get the configuration of the audit of requests.
-   * @return configuration of the audit of requests.
+   * Get the persistence configuration.
+   * Persistence is used for both audit and state management of logins.
+   * Persistence is optional, without it there will be no audit and login state
+   * will be scoped to the current process.
+   * @return the persistence configuration
    */
-  public Audit getAudit() {
-    return audit;
+  public Persistence getPersistence() {
+    return persistence;
   }
 
+  
   /**
    * Get the configuration of the pipeline cache.
    * @return Configuration of the pipeline cache.
@@ -377,13 +383,15 @@ public class Parameters {
   }
 
   /**
-   * The configuration of the audit of requests.
-   * <p>
-   * @param audit the configuration of the audit of requests.
+   * Set the persistence configuration.
+   * Persistence is used for both audit and state management of logins.
+   * Persistence is optional, without it there will be no audit and login state
+   * will be scoped to the current process.
+   * @param persistence the persistence configuration
    * @return this, so that the method may be called in a fluent manner.
    */
-  public Parameters setAudit(Audit audit) {
-    this.audit = audit;
+  public Parameters setPersistence(Persistence persistence) {
+    this.persistence = persistence;
     return this;
   }
 
