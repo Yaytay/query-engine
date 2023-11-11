@@ -17,8 +17,6 @@
 package uk.co.spudsoft.query.exec;
 
 import com.google.common.base.Strings;
-import com.zaxxer.hikari.HikariDataSource;
-import com.zaxxer.hikari.metrics.micrometer.MicrometerMetricsTrackerFactory;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Future;
@@ -36,8 +34,6 @@ import java.lang.management.ManagementFactory;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
@@ -49,9 +45,6 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import javax.annotation.Nullable;
-import javax.sql.DataSource;
 import liquibase.Scope;
 import liquibase.command.CommandScope;
 import liquibase.command.core.UpdateCommandStep;
@@ -62,8 +55,6 @@ import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.LiquibaseException;
-import liquibase.resource.ClassLoaderResourceAccessor;
-import liquibase.resource.ResourceAccessor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,8 +87,9 @@ public class AuditorImpl implements Auditor {
   private final Vertx vertx;
   private final MeterRegistry meterRegistry;
   private final Persistence configuration;
-  private DataSource dataSource;
   private String quote;
+  
+  private JdbcHelper jdbcHelper;
   
   private boolean prepared;
 
@@ -209,7 +201,7 @@ public class AuditorImpl implements Auditor {
       if (credentials == null) {
         credentials = dataSourceConfig.getAdminUser();
       }
-      dataSource = createDataSource(dataSourceConfig, credentials, meterRegistry);
+      jdbcHelper = new JdbcHelper(vertx, JdbcHelper.createDataSource(dataSourceConfig, credentials, meterRegistry));
     }
     prepared = true;
   }
@@ -288,11 +280,6 @@ public class AuditorImpl implements Auditor {
            where
             #id# = ?""";
   
-  private ResourceAccessor getBestResourceAccessor() throws IOException {
-    ResourceAccessor resourceAccessor = new ClassLoaderResourceAccessor(Thread.currentThread().getContextClassLoader());
-    return resourceAccessor;
-  }
-
   private boolean baseSqlExceptionIsNonexistantDriver(Throwable ex) {
     while (ex != null) {
       if (ex instanceof SQLException) {
@@ -330,22 +317,22 @@ public class AuditorImpl implements Auditor {
              context.getGroups()
     );
     
-    return runSqlUpdate(recordRequest, ps -> {
+    return jdbcHelper.runSqlUpdate(recordRequest, ps -> {
                     int param = 1; 
-                    ps.setString(param++, limitLength(context.getRequestId(), 100));
+                    ps.setString(param++, JdbcHelper.limitLength(context.getRequestId(), 100));
                     ps.setTimestamp(param++, Timestamp.from(Instant.now()));
-                    ps.setString(param++, limitLength(PROCESS_ID, 1000));
-                    ps.setString(param++, limitLength(context.getUrl(), 1000));
-                    ps.setString(param++, limitLength(context.getClientIp().toNormalizedString(), 40));
-                    ps.setString(param++, limitLength(context.getHost(), 250));
-                    ps.setString(param++, limitLength(context.getPath(), 250));
-                    ps.setString(param++, toString(arguments));
-                    ps.setString(param++, toString(headers));
+                    ps.setString(param++, JdbcHelper.limitLength(PROCESS_ID, 1000));
+                    ps.setString(param++, JdbcHelper.limitLength(context.getUrl(), 1000));
+                    ps.setString(param++, JdbcHelper.limitLength(context.getClientIp().toNormalizedString(), 40));
+                    ps.setString(param++, JdbcHelper.limitLength(context.getHost(), 250));
+                    ps.setString(param++, JdbcHelper.limitLength(context.getPath(), 250));
+                    ps.setString(param++, JdbcHelper.toString(arguments));
+                    ps.setString(param++, JdbcHelper.toString(headers));
                     ps.setString(param++, openIdDetails);
-                    ps.setString(param++, limitLength(context.getIssuer(), 1000));
-                    ps.setString(param++, limitLength(context.getSubject(), 1000));
-                    ps.setString(param++, limitLength(context.getNameFromJwt(), 1000));
-                    ps.setString(param++, toString(groups));                    
+                    ps.setString(param++, JdbcHelper.limitLength(context.getIssuer(), 1000));
+                    ps.setString(param++, JdbcHelper.limitLength(context.getSubject(), 1000));
+                    ps.setString(param++, JdbcHelper.limitLength(context.getNameFromJwt(), 1000));
+                    ps.setString(param++, JdbcHelper.toString(groups));                    
     })
             .recover(ex -> {
               logger.error("Audit record failed: ", ex);
@@ -357,15 +344,15 @@ public class AuditorImpl implements Auditor {
   @Override
   public void recordFileDetails(RequestContext context, DirCacheTree.File file) {
     logger.info("File: {} {} {}", file.getPath(), file.getSize(), file.getModified());
-    runSqlUpdate(recordFile, ps -> {
-             ps.setString(1, limitLength(toString(file.getPath()), 1000));
+    jdbcHelper.runSqlUpdate(recordFile, ps -> {
+             ps.setString(1, JdbcHelper.limitLength(JdbcHelper.toString(file.getPath()), 1000));
              ps.setLong(2, file.getSize());
              if (file.getModified() != null) {
                ps.setTimestamp(3, Timestamp.from(file.getModified().toInstant(ZoneOffset.UTC)));
              } else {
                ps.setTimestamp(3, null);
              }
-             ps.setString(4, limitLength(context.getRequestId(), 100));
+             ps.setString(4, JdbcHelper.limitLength(context.getRequestId(), 100));
     });
   }
 
@@ -373,10 +360,10 @@ public class AuditorImpl implements Auditor {
   public void recordException(RequestContext context, Throwable ex) {
     logger.info("Exception: {} {}", ex.getClass().getCanonicalName(), ex.getMessage());
 
-    runSqlUpdate(recordException, ps -> {
+    jdbcHelper.runSqlUpdate(recordException, ps -> {
              ps.setTimestamp(1, Timestamp.from(Instant.now()));
-             ps.setString(2, limitLength(ex.getClass().getCanonicalName(), 1000));
-             ps.setString(3, limitLength(ex.getMessage(), 1000));
+             ps.setString(2, JdbcHelper.limitLength(ex.getClass().getCanonicalName(), 1000));
+             ps.setString(3, JdbcHelper.limitLength(ex.getMessage(), 1000));
              ps.setString(4, ExceptionToString.convert(ex, "; "));
              ps.setString(5, context.getRequestId());
     });
@@ -393,7 +380,7 @@ public class AuditorImpl implements Auditor {
     );
     
     
-    runSqlUpdate(recordResponse, ps -> {
+    jdbcHelper.runSqlUpdate(recordResponse, ps -> {
              ps.setTimestamp(1, Timestamp.from(Instant.now()));
              if (context.getHeadersSentTime() > 0) {
                ps.setLong(2, context.getHeadersSentTime() - context.getStartTime());
@@ -404,8 +391,8 @@ public class AuditorImpl implements Auditor {
              ps.setInt(4, response.getStatusCode());
              ps.setLong(5, context.getRowsWritten());
              ps.setLong(6, response.bytesWritten());
-             ps.setString(7, toString(headers));
-             ps.setString(8, limitLength(context.getRequestId(), 100));
+             ps.setString(7, JdbcHelper.toString(headers));
+             ps.setString(8, JdbcHelper.limitLength(context.getRequestId(), 100));
     });
   }
 
@@ -440,7 +427,7 @@ public class AuditorImpl implements Auditor {
         switch (scope) {
           case clientip:
             sql.append("and ").append(quote).append("clientIp").append(quote).append(" = ? ");
-            args.add(limitLength(context.getClientIp().toNormalizedString(), 40));
+            args.add(JdbcHelper.limitLength(context.getClientIp().toNormalizedString(), 40));
             break;
           case host:
             sql.append("and ").append(quote).append("host").append(quote).append(" = ? ");
@@ -460,7 +447,7 @@ public class AuditorImpl implements Auditor {
       }
     }
     boolean[] done = new boolean[rules.size()];
-    return runSqlSelect(sql.toString(), ps -> {
+    return jdbcHelper.runSqlSelect(sql.toString(), ps -> {
         for (int i = 0; i < args.size(); ++i) {
           ps.setObject(i + 1, args.get(i));
         }
@@ -502,6 +489,7 @@ public class AuditorImpl implements Auditor {
             throw new ServiceException(500, "Internal error");
           }
         }
+        return null;
       }).map(pipeline);
   }
   
@@ -546,161 +534,23 @@ public class AuditorImpl implements Auditor {
     return parts[0];
   }
 
-  static HikariDataSource createDataSource(DataSourceConfig config, @Nullable Credentials credentials, @Nullable MeterRegistry meterRegistry) {
-    HikariDataSource ds = new HikariDataSource();
-    ds.setJdbcUrl(config.getUrl());
-    if (credentials != null) {
-      ds.setUsername(localizeUsername(credentials.getUsername()));
-      ds.setPassword(credentials.getPassword());
-    }
-    if (config.getSchema() != null) {
-      ds.setSchema(config.getSchema());
-    }
-    ds.setMaximumPoolSize(config.getMaxPoolSize());
-    ds.setMinimumIdle(config.getMinPoolSize());
-    ds.setIdleTimeout(30000);
-    ds.setAutoCommit(true);
-    if (meterRegistry != null) {
-      ds.setMetricsTrackerFactory(new MicrometerMetricsTrackerFactory(meterRegistry));
-    }
-    return ds;
-
-  }
-
-  /**
-   * Functional interface defining a consumer that takes in one argument and can throw an exception.
-   *
-   * @param <T> The type of the argument.
-   */
-  @FunctionalInterface
-  interface SqlConsumer<T> {
-
-    /**
-     * Perform this operation on the given argument.
-     *
-     * @param t the input argument
-     * @throws Throwable if something goes wrong
-     */
-    void accept(T t) throws Throwable;
-  }
-
-  private Future<Integer> runSqlUpdate(String sql, SqlConsumer<PreparedStatement> prepareStatement) {
-    return vertx.executeBlocking(() -> runSqlUpdateSynchronously(sql, prepareStatement));
-  }
-
-  @SuppressFBWarnings(value = "SQL_INJECTION_JDBC", justification = "SQL is generated from static strings")
-  private int runSqlUpdateSynchronously(String sql, SqlConsumer<PreparedStatement> prepareStatement) throws Exception {
-    String logMessage = null;
-    try {
-      logMessage = "Failed to get connection: ";
-      Connection conn = dataSource.getConnection();
-      try {
-        logMessage = "Failed to create statement: ";
-        PreparedStatement statement = conn.prepareStatement(sql);
-        try {
-          logMessage = "Failed to prepare statement: ";
-          prepareStatement.accept(statement);
-          logMessage = "Failed to execute query: ";
-          return statement.executeUpdate();
-        } finally {
-          closeStatement(statement);
-        }
-      } finally {
-        closeConnection(conn);
-      }
-    } catch (Exception ex) {
-      logger.error(logMessage, ex);
-      throw ex;
-    } catch (Throwable ex) {
-      logger.error(logMessage, ex);
-      throw new RuntimeException(logMessage, ex);
-    }
-  }
-
-  private Future<Void> runSqlSelect(String sql
-          , SqlConsumer<PreparedStatement> prepareStatement
-          , SqlConsumer<ResultSet> resultSetHandler
-  ) {
-    return vertx.executeBlocking(() -> {
-      runSqlSelectSynchronously(sql, prepareStatement, resultSetHandler);
-      return null;
-    });
-  }
-
-  @SuppressFBWarnings(value = "SQL_INJECTION_JDBC", justification = "SQL is generated from static strings")
-  private void runSqlSelectSynchronously(String sql
-          , SqlConsumer<PreparedStatement> prepareStatement
-          , SqlConsumer<ResultSet> resultSetHandler
-  ) throws Exception {
-    logger.trace("Running SQL: {}", sql);
-    String logMessage = null;
-    try {
-      logMessage = "Failed to get connection: ";
-      Connection conn = dataSource.getConnection();
-      try {
-        logMessage = "Failed to create statement: ";
-        PreparedStatement statement = conn.prepareStatement(sql);
-        try {
-          logMessage = "Failed to prepare statement: ";
-          prepareStatement.accept(statement);
-          
-          logMessage = "Failed to execute query: ";
-          ResultSet rs = statement.executeQuery();
-          try {
-            resultSetHandler.accept(rs);
-          } finally {
-            rs.close();
-          }
-        } finally {
-          closeStatement(statement);
-        }
-      } finally {
-        closeConnection(conn);
-      }
-    } catch (Exception ex) {
-      logger.error(logMessage, ex);
-      throw ex;
-    } catch (Throwable ex) {
-      logger.error(logMessage, ex);
-      throw new RuntimeException(logMessage, ex);
-    }
-  }
-  
-  static String limitLength(String value, int maxLen) {
-    if (value == null) {
-      return value;
-    }
-    if (value.length() < maxLen) {
-      return value;
-    } else {
-      return value.substring(0, maxLen - 4) + "...";
-    }
-  }
-  
-  static String toString(Object value) {
-    if (value == null) {
-      return null;
-    }
-    return value.toString();
-  }
-  
   static JsonArray listToJson(List<String> items) {
     if (items == null) {
       return null;
     }
     return new JsonArray(items);
   }
-
+    
   private static final String AUTH = HttpHeaders.AUTHORIZATION.toString();
   private static final String BEARER = "Bearer ";
   private static final String BASIC = "Basic ";
   
-  static JsonObject multiMapToJson(MultiMap map) {
+  public static JsonObject multiMapToJson(MultiMap map) {
     if (map == null) {
       return null;
     }
     JsonObject jo = new JsonObject();
-    for (Entry<String, String> entry : map.entries()) {
+    for (Map.Entry<String, String> entry : map.entries()) {
       String key = entry.getKey();
       String value = entry.getValue();
       if (AUTH.equalsIgnoreCase(key)) {
@@ -746,19 +596,4 @@ public class AuditorImpl implements Auditor {
     return value;
   }
   
-  static void closeConnection(Connection conn) {
-    try {
-      conn.close();
-    } catch (Throwable ex) {
-      logger.error("Failed to close connection: ", ex);
-    }
-  }
-
-  static void closeStatement(PreparedStatement statement) {
-    try {
-      statement.close();
-    } catch (Throwable ex) {
-      logger.error("Failed to close statement: ", ex);
-    }
-  }
 }

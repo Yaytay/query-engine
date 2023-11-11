@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.web.formio;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 
 /**
@@ -27,6 +28,7 @@ import java.io.IOException;
 @SuppressWarnings("unchecked")
 public abstract class Component<T extends Component<T>> extends AbstractComponent<T> {
 
+  @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
   protected Component(JsonGenerator generator, String type) throws IOException {
     super(generator);
     generator.writeStringField("type", type);

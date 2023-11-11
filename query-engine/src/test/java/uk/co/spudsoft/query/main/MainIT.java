@@ -59,6 +59,7 @@ public class MainIT {
     
   @Test
   public void testHelp() throws Exception {
+    logger.debug("Running testHelp");
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
@@ -72,6 +73,7 @@ public class MainIT {
     
   @Test
   public void testHelpEnv() throws Exception {
+    logger.debug("Running testHelpEnv");
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
@@ -85,6 +87,7 @@ public class MainIT {
   
   @Test
   public void testBadAudit() throws Exception {
+    logger.debug("Running testBadAudit");
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
@@ -101,11 +104,12 @@ public class MainIT {
       , "--managementEndpoints[2]=prometheus"
       , "--managementEndpoints[3]=threads"
       , "--session.requireSession=false"
-      , "--session.oauth[0].name=GitHub"
-      , "--session.oauth[0].logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
-      , "--session.oauth[0].url=https://github.com/login/oauth/authorize"
-      , "--session.oauth[0].credentials.clientId=bdab017f4732085a51f9"
-      , "--session.oauth[0].credentials.clientSecret="
+      , "--session.oauth.GitHub.logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
+      , "--session.oauth.GitHub.authorizationEndpoint=https://github.com/login/oauth/authorize"
+      , "--session.oauth.GitHub.tokenEndpoint=https://github.com/login/oauth/access_token"
+      , "--session.oauth.GitHub.credentials.id=bdab017f4732085a51f9"
+      , "--session.oauth.GitHub.credentials.secret=" + System.getProperty("queryEngineGithubSecret")
+      , "--session.oauth.GitHub.pkce=false"
     }, stdout);
     assertEquals(0, stdoutStream.size());
     
@@ -114,6 +118,7 @@ public class MainIT {
   
   @Test
   public void testMainDaemon() throws Exception {
+    logger.debug("Running testMainDaemon");
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
@@ -127,18 +132,21 @@ public class MainIT {
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--logging.jsonFormat=true"
-      , "--loadSampleData=true"
+      , "--sampleDataLoads[0].url=" + postgres.getUrl()
+      , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()
+      , "--sampleDataLoads[0].adminUser.password=" + postgres.getPassword()
       , "--managementEndpoints[0]=up"
       , "--managementEndpoints[2]=prometheus"
       , "--managementEndpoints[3]=threads"
       , "--managementEndpointPort=8001"
       , "--managementEndpointUrl=http://localhost:8001/manage"
       , "--session.requireSession=false"
-      , "--session.oauth[0].name=GitHub"
-      , "--session.oauth[0].logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
-      , "--session.oauth[0].url=https://github.com/login/oauth/authorize"
-      , "--session.oauth[0].credentials.clientId=bdab017f4732085a51f9"
-      , "--session.oauth[0].credentials.clientSecret="
+      , "--session.oauth.GitHub.logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
+      , "--session.oauth.GitHub.authorizationEndpoint=https://github.com/login/oauth/authorize"
+      , "--session.oauth.GitHub.tokenEndpoint=https://github.com/login/oauth/access_token"
+      , "--session.oauth.GitHub.credentials.id=bdab017f4732085a51f9"
+      , "--session.oauth.GitHub.credentials.secret=" + System.getProperty("queryEngineGithubSecret")
+      , "--session.oauth.GitHub.pkce=false"
     }, stdout);
     assertEquals(0, stdoutStream.size());
     
@@ -249,6 +257,7 @@ public class MainIT {
   
   @Test
   public void testAuthRequired() throws Exception {
+    logger.debug("Running testAuthRequired");
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
@@ -262,18 +271,21 @@ public class MainIT {
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--logging.jsonFormat=true"
-      , "--loadSampleData=true"
+      , "--sampleDataLoads[0].url=" + postgres.getUrl()
+      , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()
+      , "--sampleDataLoads[0].adminUser.password=" + postgres.getPassword()
       , "--managementEndpoints[0]=up"
       , "--managementEndpoints[2]=prometheus"
       , "--managementEndpoints[3]=threads"
       , "--managementEndpointPort=8001"
       , "--managementEndpointUrl=http://localhost:8001/manage"
       , "--session.requireSession=true"
-      , "--session.oauth[0].name=GitHub"
-      , "--session.oauth[0].logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
-      , "--session.oauth[0].url=https://github.com/login/oauth/authorize"
-      , "--session.oauth[0].credentials.clientId=bdab017f4732085a51f9"
-      , "--session.oauth[0].credentials.clientSecret="
+      , "--session.oauth.GitHub.logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
+      , "--session.oauth.GitHub.authorizationEndpoint=https://github.com/login/oauth/authorize"
+      , "--session.oauth.GitHub.tokenEndpoint=https://github.com/login/oauth/access_token"
+      , "--session.oauth.GitHub.credentials.id=bdab017f4732085a51f9"
+      , "--session.oauth.GitHub.credentials.secret=" + System.getProperty("queryEngineGithubSecret")
+      , "--session.oauth.GitHub.pkce=false"
     }, stdout);
     assertEquals(0, stdoutStream.size());
     

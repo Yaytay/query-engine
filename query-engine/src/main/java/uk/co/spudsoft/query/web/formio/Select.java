@@ -33,6 +33,7 @@ public class Select extends Component<Select> {
   
   public static class DataValue extends AbstractComponent<DataValue> {
 
+    @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
     public DataValue(JsonGenerator generator) throws IOException {
       super(generator);
     }
@@ -48,6 +49,7 @@ public class Select extends Component<Select> {
   
   public static class DataValues extends AbstractComponent<DataValues> {
 
+    @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
     public DataValues(JsonGenerator generator) throws IOException {
       super(generator);
     }
@@ -60,6 +62,7 @@ public class Select extends Component<Select> {
   
   public static class DataUrlHeader extends AbstractComponent<DataUrlHeader> {
 
+    @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
     public DataUrlHeader(JsonGenerator generator) throws IOException {
       super(generator);
     }
@@ -76,6 +79,7 @@ public class Select extends Component<Select> {
   
   public static class DataUrl extends AbstractComponent<DataUrl> {
 
+    @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
     public DataUrl(JsonGenerator generator) throws IOException {
       super(generator);
     }
@@ -92,6 +96,7 @@ public class Select extends Component<Select> {
 
   public static class SelectValidation extends Validation {
 
+    @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
     public SelectValidation(JsonGenerator generator) throws IOException {
       super(generator);
     }
@@ -103,6 +108,7 @@ public class Select extends Component<Select> {
 
   }
   
+  @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
   public Select(JsonGenerator generator) throws IOException {
     super(generator, "select");
   }

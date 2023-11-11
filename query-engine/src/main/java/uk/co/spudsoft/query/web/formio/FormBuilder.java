@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Strings;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDate;
@@ -49,6 +50,7 @@ public class FormBuilder {
   private final JsonFactory factory;
   private final int columns;
   
+  @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
   public FormBuilder(int columns) {
     this.factory = new JsonFactory();
     this.columns = columns;

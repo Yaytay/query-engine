@@ -23,8 +23,12 @@ import io.vertx.core.Future;
  * @author jtalbut
  */
 public interface LoginDao {
+
+  void prepare() throws Exception;
   
   Future<Void> store(String state, String provider, String codeVerifier, String nonce, String redirectUri, String targetUrl);
+  
+  Future<Void> markUsed(String state);
   
   record RequestData(String provider, String codeVerifier, String nonce, String redirectUri, String targetUrl) {};
   

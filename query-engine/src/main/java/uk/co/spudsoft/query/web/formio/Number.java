@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.web.formio;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 
 /**
@@ -27,6 +28,7 @@ public class Number extends Component<Number> {
   
   public static class NumberValidation extends AbstractComponent<NumberValidation> {
 
+    @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
     protected NumberValidation(JsonGenerator generator) throws IOException {
       super(generator);
     }
@@ -60,7 +62,7 @@ public class Number extends Component<Number> {
     }
   }
   
-
+  @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
   public Number(JsonGenerator generator) throws IOException {
     super(generator, "number");
   }

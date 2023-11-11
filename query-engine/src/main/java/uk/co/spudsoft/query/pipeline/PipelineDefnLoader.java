@@ -64,7 +64,7 @@ import uk.co.spudsoft.query.web.ServiceException;
  * @author jtalbut
  */
 @SuppressFBWarnings(value = "PATH_TRAVERSAL_IN", justification = "The path should come from configuration, not end user")
-public class PipelineDefnLoader {
+public final class PipelineDefnLoader {
   
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(PipelineDefnLoader.class);

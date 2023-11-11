@@ -17,6 +17,8 @@
 package uk.co.spudsoft.query.main;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
 /**
@@ -26,9 +28,10 @@ import java.util.Map;
 public class SessionConfig {
   
   private boolean requireSession;
-  private int stateLength = 256;
-  private int codeVerifierLength = 256;
-  private int nonceLength = 256;
+  private Duration purgeDelay = Duration.of(1, ChronoUnit.HOURS);
+  private int stateLength = 120;
+  private int codeVerifierLength = 120;
+  private int nonceLength = 120;
   
   private Map<String, AuthEndpoint> oauth;
 
@@ -46,6 +49,14 @@ public class SessionConfig {
    */
   public void setRequireSession(boolean requireSession) {
     this.requireSession = requireSession;
+  }
+
+  public Duration getPurgeDelay() {
+    return purgeDelay;
+  }
+
+  public void setPurgeDelay(Duration purgeDelay) {
+    this.purgeDelay = purgeDelay;
   }
 
   public int getStateLength() {

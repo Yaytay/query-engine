@@ -34,6 +34,7 @@ public class DateTime extends Component<DateTime> {
   
   public static class DatePicker extends AbstractComponent<DatePicker> {
   
+    @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
     protected DatePicker(JsonGenerator generator) throws IOException {
       super(generator);
     }
@@ -73,6 +74,7 @@ public class DateTime extends Component<DateTime> {
   
   public static class TimePicker extends AbstractComponent<TimePicker> {
   
+    @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
     protected TimePicker(JsonGenerator generator) throws IOException {
       super(generator);
     }
@@ -103,6 +105,7 @@ public class DateTime extends Component<DateTime> {
         
   }
   
+  @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
   public DateTime(JsonGenerator generator) throws IOException {
     super(generator, "datetime");
   }

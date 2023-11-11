@@ -22,10 +22,8 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.CookieSameSite;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.http.impl.CookieImpl;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.VertxContextPRNG;
 import io.vertx.ext.web.RoutingContext;
@@ -77,8 +75,8 @@ public class LoginRouter  implements Handler<RoutingContext> {
   }
   
   private static class RequestDataAndAuthEndpoint {
-    AuthEndpoint authEndpoint;
-    RequestData requestData;
+    private AuthEndpoint authEndpoint;
+    private RequestData requestData;
   }
 
   public LoginRouter(Vertx vertx
@@ -98,7 +96,11 @@ public class LoginRouter  implements Handler<RoutingContext> {
     this.nonceLength = sessionConfig.getNonceLength();
     this.authEndpoints = new HashMap<>();
     // Deep copy of auth endpoints because they may be changed
-    sessionConfig.getOauth().entrySet().stream().forEach(e -> {this.authEndpoints.put(e.getKey(), new AuthEndpoint(e.getValue()));});
+    if (sessionConfig.getOauth() != null) {
+      sessionConfig.getOauth().entrySet().stream().forEach(e -> {
+        this.authEndpoints.put(e.getKey(), new AuthEndpoint(e.getValue()));
+      });    
+    }
     this.outputAllErrorMessages = outputAllErrorMessages;
   }
 
@@ -191,9 +193,11 @@ public class LoginRouter  implements Handler<RoutingContext> {
       loginDao.getRequestData(state)
               .compose(requestData -> {
                 requestDataAndAuthEndpoint.requestData = requestData;
-                requestDataAndAuthEndpoint.authEndpoint = authEndpoints.get(requestData.provider());
+                return loginDao.markUsed(state);
+              }).compose(v -> {
+                requestDataAndAuthEndpoint.authEndpoint = authEndpoints.get(requestDataAndAuthEndpoint.requestData.provider());
                 if (null == requestDataAndAuthEndpoint.authEndpoint) {
-                  logger.warn("OAuth provider {} not found in {}", requestData.provider(), authEndpoints.keySet());
+                  logger.warn("OAuth provider {} not found in {}", requestDataAndAuthEndpoint.requestData.provider(), authEndpoints.keySet());
                   return Future.failedFuture(new IllegalArgumentException("OAuth provider not known"));
                 }
                 
@@ -226,7 +230,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
                   JsonObject body;
                   try {
                     body = codeResponse.bodyAsJsonObject();
-                  } catch(Throwable ex) {
+                  } catch (Throwable ex) {
                     String stringBody = codeResponse.bodyAsString();
                     logger.warn("Failed to get access token ({}): {}", codeResponse.statusCode(), stringBody);
                     return Future.failedFuture(new HttpException(codeResponse.statusCode(), stringBody));
@@ -235,8 +239,8 @@ public class LoginRouter  implements Handler<RoutingContext> {
                   String accessToken = body.getString("access_token");
                   
                   String targetUrl = requestDataAndAuthEndpoint.requestData.targetUrl();
-                  targetUrl = targetUrl + 
-                          (targetUrl.contains("?") ? "&" : "?")
+                  targetUrl = targetUrl
+                          + (targetUrl.contains("?") ? "&" : "?")
                           + "access_token=" + accessToken
                           ;
                   

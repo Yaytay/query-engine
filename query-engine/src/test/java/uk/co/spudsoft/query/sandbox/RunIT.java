@@ -100,7 +100,7 @@ public class RunIT {
             , "--session.oauth.Microsoft.issuer=" + System.getProperty("queryEngineEntraUrl")
             , "--session.oauth.Microsoft.credentials.id=" + System.getProperty("queryEngineEntraId")
             , "--session.oauth.Microsoft.credentials.secret=" + System.getProperty("queryEngineEntraSecret")
-            , "--session.oauth.Microsoft.scope=openid profile api://e85e3298-a99e-4743-a3bd-9ea0a96f0664/qe2"
+            , "--session.oauth.Microsoft.scope=openid profile api://341fde39-b5d8-4ee7-807f-813ec7bfff77/query-engine"
             
     }, stdout);
     

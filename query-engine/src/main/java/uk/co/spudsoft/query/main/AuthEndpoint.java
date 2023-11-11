@@ -56,10 +56,10 @@ public class AuthEndpoint {
   public void updateFromOpenIdConfiguration(DiscoveryData discoveryData) {
     String tempTokenEndpoint = discoveryData.getTokenEndpoint();
     String tempAuthorizationEndpoint = discoveryData.getAuthorizationEndpoint();
-    if (this.tokenEndpoint == null) {
+    if (tempTokenEndpoint != null) {
       this.tokenEndpoint = tempTokenEndpoint;
     }
-    if (this.authorizationEndpoint == null) {
+    if (tempAuthorizationEndpoint != null) {
       this.authorizationEndpoint = tempAuthorizationEndpoint;
     }
     this.invalidDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(discoveryData.getExpiry()), ZoneOffset.UTC);
@@ -83,6 +83,10 @@ public class AuthEndpoint {
 
   public String getIssuer() {
     return issuer;
+  }
+
+  public void setIssuer(String issuer) {
+    this.issuer = issuer;
   }
 
   public String getAuthorizationEndpoint() {

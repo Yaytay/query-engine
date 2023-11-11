@@ -34,7 +34,7 @@ public class AbstractComponent<T extends AbstractComponent<T>> implements Closea
   
   protected final JsonGenerator generator;
   
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
+  @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
   protected AbstractComponent(JsonGenerator generator) throws IOException {
     this.generator = generator;
     generator.writeStartObject();

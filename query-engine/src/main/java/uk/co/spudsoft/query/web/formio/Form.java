@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.web.formio;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 
 /**
@@ -25,6 +26,7 @@ import java.io.IOException;
  */
 public class Form extends AbstractContainer<Form> {
 
+  @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
   public Form(JsonGenerator generator) throws IOException {
     super(generator, "form");
   }

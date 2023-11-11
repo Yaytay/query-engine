@@ -41,7 +41,7 @@ import uk.co.spudsoft.query.exec.Types;
  * @author jtalbut
  * @param <T> The type of item processed by the ReadStream (usually JsonObject).
  */
-public class BlockingReadStream<T> implements DataRowStream<T> {
+public final class BlockingReadStream<T> implements DataRowStream<T> {
 
   private final Types types;
   private final BlockingQueue<T> queue;

@@ -7,7 +7,7 @@ databaseChangeLog:
     - createTable:
         tableName: login
         columns:
-        - {column: {name: state, type: varchar(300), constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_request}}}
+        - {column: {name: state, type: varchar(300), constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_login}}}
         - {column: {name: provider, type: varchar(300), constraints: {nullable: false}}}
         - {column: {name: timestamp, type: timestamp, constraints: {nullable: false}}}
         - {column: {name: completed, type: timestamp, constraints: {nullable: false}}}

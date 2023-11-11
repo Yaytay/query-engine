@@ -338,10 +338,9 @@ public class Main extends Application {
       return Future.succeededFuture(-2);
     }
     
-//    LoginDao loginDao = params.getPersistence() == null
-//            ? new LoginDaoMemoryImpl()
-//            : new LoginDaoPersistenceImpl(vertx, meterRegistry, params.getPersistence());
-    LoginDao loginDao = new LoginDaoMemoryImpl();
+    LoginDao loginDao = params.getPersistence() == null
+            ? new LoginDaoMemoryImpl(params.getSession().getPurgeDelay())
+            : new LoginDaoPersistenceImpl(vertx, meterRegistry, params.getPersistence(), params.getSession().getPurgeDelay());
     
     httpServer = vertx.createHttpServer(params.getHttpServerOptions());
     try {
@@ -469,7 +468,10 @@ public class Main extends Application {
       DataSourceConfig source = iter.next();
       String url = source.getUrl();
       SampleDataLoader loader;
-      if (url.startsWith("mysql")) {
+      if (url == null) {
+        logger.warn("No URL configured for sample data loader {}", source);
+        return performSampleDataLoads(iter);
+      } else if (url.startsWith("mysql")) {
         loader = new SampleDataLoaderMySQL();
       } else if (url.startsWith("sqlserver")) {
         loader = new SampleDataLoaderMsSQL();

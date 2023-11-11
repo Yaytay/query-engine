@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 njt
+ * Copyright (C) 2023 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,11 @@ package uk.co.spudsoft.query.web;
 
 import io.vertx.core.Future;
 import io.vertx.core.json.Json;
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +39,7 @@ public class LoginDaoMemoryImpl implements LoginDao {
     private LocalDateTime completed;
     private RequestData requestData;
 
-    public Data(RequestData requestData) {      
+    Data(RequestData requestData) {      
       this.timestamp = LocalDateTime.now();
       this.requestData = requestData;
     }
@@ -62,16 +63,29 @@ public class LoginDaoMemoryImpl implements LoginDao {
   }
   
   private final Map<String, Data> data = new HashMap<>();
+  private final Duration purgeDelay;
+  private final AtomicBoolean prepared = new AtomicBoolean(false);
+
+  public LoginDaoMemoryImpl(Duration purgeDelay) {
+    this.purgeDelay = purgeDelay;
+  }
+
+  @Override
+  public void prepare() throws Exception {
+    if (prepared.compareAndExchange(false, true)) {
+      throw new IllegalStateException("Already prepared");
+    }
+  }
   
   @Override
   public Future<Void> store(String state, String provider, String codeVerifier, String nonce, String redirectUri, String targetUrl) {
 
-    synchronized(data) {
+    synchronized (data) {
       data.put(state, new Data(new RequestData(provider, codeVerifier, nonce, redirectUri, targetUrl)));
       
       // Purge history
       int previousCount = data.size();
-      LocalDateTime limit = LocalDateTime.now().minus(6, ChronoUnit.HOURS);
+      LocalDateTime limit = LocalDateTime.now().minus(purgeDelay);
       data.entrySet().removeIf(e -> e.getValue().timestamp.isBefore(limit));
       if (data.size() < previousCount) {
         logger.debug("Size of login request store reduced from {} to {}", previousCount, data.size());
@@ -84,11 +98,28 @@ public class LoginDaoMemoryImpl implements LoginDao {
   }
 
   @Override
-  public Future<RequestData> getRequestData(String state) {
-    synchronized(data) {
+  public Future<Void> markUsed(String state) {
+    synchronized (data) {
       Data input = data.get(state);
       if (input == null) {
         logger.debug("State {} not found in {}", state, Json.encode(data.keySet()));
+        return Future.failedFuture(new SecurityException("State not known"));
+      }
+      input.completed = LocalDateTime.now();
+      return Future.succeededFuture();
+    }    
+  }
+  
+  @Override
+  public Future<RequestData> getRequestData(String state) {
+    synchronized (data) {
+      Data input = data.get(state);
+      if (input == null) {
+        logger.debug("State {} not found in {}", state, Json.encode(data.keySet()));
+        return Future.failedFuture(new SecurityException("State not known"));
+      }
+      if (input.completed != null) {
+        logger.debug("State {} already marked completed at {}", state, input.completed);
         return Future.failedFuture(new SecurityException("State not known"));
       }
       return Future.succeededFuture(input.getRequestData());

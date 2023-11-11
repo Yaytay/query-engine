@@ -1,0 +1,137 @@
+/*
+ * Copyright (C) 2023 jtalbut
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package uk.co.spudsoft.query.main;
+
+import io.vertx.core.json.JsonObject;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+import uk.co.spudsoft.jwtvalidatorvertx.DiscoveryData;
+
+
+/**
+ *
+ * @author njt
+ */
+public class AuthEndpointTest {
+  
+  @Test
+  public void testUpdateFromOpenIdConfiguration() {
+    DiscoveryData dd = new DiscoveryData(12000, new JsonObject());
+    AuthEndpoint authEndpoint = new AuthEndpoint();
+    authEndpoint.updateFromOpenIdConfiguration(dd);
+    assertNull(authEndpoint.getAuthorizationEndpoint());
+    assertNull(authEndpoint.getTokenEndpoint());
+    assertEquals(12, authEndpoint.getInvalidDate().toEpochSecond(ZoneOffset.UTC));
+
+    dd = new DiscoveryData(12000, new JsonObject("{\"token_endpoint\": \"toke\", \"authorization_endpoint\": \"authe\"}"));
+    authEndpoint.updateFromOpenIdConfiguration(dd);
+    assertEquals("authe", authEndpoint.getAuthorizationEndpoint());
+    assertEquals("toke", authEndpoint.getTokenEndpoint());
+    assertEquals(12, authEndpoint.getInvalidDate().toEpochSecond(ZoneOffset.UTC));
+            
+    dd = new DiscoveryData(13000, new JsonObject("{\"token_endpoint\": \"toke2\", \"authorization_endpoint\": \"authe2\"}"));
+    authEndpoint.updateFromOpenIdConfiguration(dd);
+    assertEquals("authe2", authEndpoint.getAuthorizationEndpoint());
+    assertEquals("toke2", authEndpoint.getTokenEndpoint());
+    assertEquals(13, authEndpoint.getInvalidDate().toEpochSecond(ZoneOffset.UTC));
+            
+    dd = new DiscoveryData(14000, new JsonObject());
+    authEndpoint.updateFromOpenIdConfiguration(dd);
+    assertEquals("authe2", authEndpoint.getAuthorizationEndpoint());
+    assertEquals("toke2", authEndpoint.getTokenEndpoint());
+    assertEquals(14, authEndpoint.getInvalidDate().toEpochSecond(ZoneOffset.UTC));
+  }
+
+  @Test
+  public void testGetName() {
+    AuthEndpoint authEndpoint = new AuthEndpoint();
+    assertNull(authEndpoint.getName());
+    authEndpoint.setName("name");
+    assertEquals("name", authEndpoint.getName());
+  }
+
+  @Test
+  public void testGetLogoUrl() {
+    AuthEndpoint authEndpoint = new AuthEndpoint();
+    assertNull(authEndpoint.getLogoUrl());
+    authEndpoint.setLogoUrl("logo url");
+    assertEquals("logo url", authEndpoint.getLogoUrl());
+  }
+
+  @Test
+  public void testGetIssuer() {
+    AuthEndpoint authEndpoint = new AuthEndpoint();
+    assertNull(authEndpoint.getIssuer());
+    authEndpoint.setIssuer("issuer");
+    assertEquals("issuer", authEndpoint.getIssuer());
+  }
+
+  @Test
+  public void testGetAuthorizationEndpoint() {
+    AuthEndpoint authEndpoint = new AuthEndpoint();
+    assertNull(authEndpoint.getAuthorizationEndpoint());
+    authEndpoint.setAuthorizationEndpoint("auth endpoint");
+    assertEquals("auth endpoint", authEndpoint.getAuthorizationEndpoint());
+  }
+
+  @Test
+  public void testGetTokenEndpoint() {
+    AuthEndpoint authEndpoint = new AuthEndpoint();
+    assertNull(authEndpoint.getTokenEndpoint());
+    authEndpoint.setTokenEndpoint("token endpoint");
+    assertEquals("token endpoint", authEndpoint.getTokenEndpoint());
+  }
+
+  @Test
+  public void testGetScope() {
+    AuthEndpoint authEndpoint = new AuthEndpoint();
+    assertNull(authEndpoint.getScope());
+    authEndpoint.setScope("scope");
+    assertEquals("scope", authEndpoint.getScope());
+  }
+
+  @Test
+  public void testIsPkce() {
+    AuthEndpoint authEndpoint = new AuthEndpoint();
+    assertTrue(authEndpoint.isPkce());
+    authEndpoint.setPkce(false);
+    assertFalse(authEndpoint.isPkce());
+  }
+
+  @Test
+  public void testIsNonce() {
+    AuthEndpoint authEndpoint = new AuthEndpoint();
+    assertTrue(authEndpoint.isNonce());
+    authEndpoint.setNonce(false);
+    assertFalse(authEndpoint.isNonce());
+  }
+
+  @Test
+  public void testGetInvalidDate() {
+    AuthEndpoint authEndpoint = new AuthEndpoint();
+    assertNull(authEndpoint.getInvalidDate());
+    LocalDateTime now = LocalDateTime.now();
+    authEndpoint.setInvalidDate(now);
+    assertEquals(now, authEndpoint.getInvalidDate());
+  }
+  
+}

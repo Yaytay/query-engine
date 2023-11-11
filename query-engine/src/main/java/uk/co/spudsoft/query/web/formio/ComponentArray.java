@@ -29,7 +29,7 @@ public class ComponentArray implements Closeable {
 
   private final JsonGenerator generator;
 
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
+  @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
   public ComponentArray(JsonGenerator generator) throws IOException {
     this.generator = generator;
     generator.writeStartArray();

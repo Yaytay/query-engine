@@ -29,6 +29,7 @@ public class Columns extends Component<Columns> {
 
   public static class Column extends AbstractComponent<Column> {
     
+    @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
     protected Column(JsonGenerator generator) throws IOException {
       super(generator);
     }
@@ -60,6 +61,7 @@ public class Columns extends Component<Columns> {
     
   }
   
+  @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
   public Columns(JsonGenerator generator) throws IOException {
     super(generator, "columns");
   }

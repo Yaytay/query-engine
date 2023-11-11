@@ -24,7 +24,7 @@ import uk.co.spudsoft.query.defn.Argument;
  *
  * @author jtalbut
  */
-public class ArgumentInstance {
+public final class ArgumentInstance {
   
   private final String name;
   private final Argument definition;

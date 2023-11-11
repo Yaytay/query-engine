@@ -59,7 +59,7 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
                       The distinctino is irrelevant to the Query Engine itself, but can help when configuring Pipelines.
                       """
 )
-public class Pipeline extends SourcePipeline {
+public final class Pipeline extends SourcePipeline {
   
   private final String title;
   private final String description;
