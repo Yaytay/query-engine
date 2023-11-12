@@ -85,13 +85,21 @@ public class RequestContextBuilder {
     if (hap != null) {
       sb.append(hap.host());
       int port = hap.port();
-      if (!("https".equals(scheme) && port == 443) && !("http".equals(scheme) && port == 80)) {
+      if (!isStandardHttpsPort(scheme, port) && !isStandardHttpPort(scheme, port)) {
         sb.append(":");
         sb.append(port);
       }
     }
 
     return sb.toString();
+  }
+
+  public static boolean isStandardHttpPort(String scheme, int port) {
+    return "http".equals(scheme) && port == 80;
+  }
+
+  public static boolean isStandardHttpsPort(String scheme, int port) {
+    return "https".equals(scheme) && port == 443;
   }
 
   /**

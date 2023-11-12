@@ -28,11 +28,13 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.sql.DataSource;
 import liquibase.exception.LiquibaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.JdbcHelper;
+import uk.co.spudsoft.query.main.Credentials;
 import uk.co.spudsoft.query.main.DataSourceConfig;
 import uk.co.spudsoft.query.main.Persistence;
 
@@ -55,6 +57,8 @@ public class LoginDaoPersistenceImpl implements LoginDao {
   private final AtomicBoolean prepared = new AtomicBoolean(false);
   
   private JdbcHelper jdbcHelper;
+  
+  private final AtomicLong lastPurge = new AtomicLong();
   
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "MeterRegisty is intended to be mutable by any user")
   public LoginDaoPersistenceImpl(Vertx vertx, MeterRegistry meterRegistry, Persistence configuration, Duration purgeDelay) {
@@ -90,28 +94,28 @@ public class LoginDaoPersistenceImpl implements LoginDao {
                     #completed# = ?
                   where
                     #state# = ?
-                  )""";
+                  """;
   
   private String purgeLogins = """
                   delete from
                     #SCHEMA#.#login#
                   where
                     #timestamp# < ?
-                  )""";
+                  """;
   
   private String getData = """
                   select
                      #provider#
-                     , #codeVerifier#
+                     , #code_verifier#
                      , #nonce#
-                     , #redirectUri#
-                     , #targetUrl#
+                     , #redirect_uri#
+                     , #target_url#
                   from
-                    #SCHEMA#.#request#
+                    #SCHEMA#.#login#
                   where
                     #state# = ?
                     and #completed# is null
-                  )""";
+                  """;
   
   /**
    *
@@ -144,7 +148,11 @@ public class LoginDaoPersistenceImpl implements LoginDao {
       getData = getData.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
     }
 
-    dataSource = JdbcHelper.createDataSource(dataSourceConfig, dataSourceConfig.getUser(), meterRegistry);
+    Credentials credentials = dataSourceConfig.getUser();
+    if (credentials == null) {
+      credentials = dataSourceConfig.getAdminUser();
+    }
+    dataSource = JdbcHelper.createDataSource(dataSourceConfig, credentials, meterRegistry);
     jdbcHelper = new JdbcHelper(vertx, dataSource);
     try (Connection connection = dataSource.getConnection()) {
       quote = connection.getMetaData().getIdentifierQuoteString();
@@ -179,13 +187,25 @@ public class LoginDaoPersistenceImpl implements LoginDao {
                     ps.setString(param++, JdbcHelper.limitLength(redirectUri, 2000));
                     ps.setString(param++, JdbcHelper.limitLength(targetUrl, 2000));
     })
-            .mapEmpty();
+            .compose(rows -> {
+              long now = System.currentTimeMillis();
+              long lastPurgeTime = lastPurge.get();
+              if (lastPurgeTime < now - 60000) {
+                if (lastPurge.compareAndSet(lastPurgeTime, now)) {
+                  // Kick off a purge, but don't wait for it.
+                  jdbcHelper.runSqlUpdate(purgeLogins, ps -> {
+                    ps.setTimestamp(1, new Timestamp(now - 8640000));
+                  });
+                }
+              }
+              return Future.succeededFuture();
+            });
     
   }
 
   @Override
   public Future<Void> markUsed(String state) {
-    return jdbcHelper.runSqlUpdate(recordLogin, ps -> {
+    return jdbcHelper.runSqlUpdate(markUsed, ps -> {
                     int param = 1; 
                     ps.setTimestamp(param++, Timestamp.from(Instant.now()));
                     ps.setString(param++, JdbcHelper.limitLength(state, 300));

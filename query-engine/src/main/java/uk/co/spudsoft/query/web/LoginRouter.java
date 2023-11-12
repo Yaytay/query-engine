@@ -28,7 +28,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.VertxContextPRNG;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.WebClient;
-import io.vertx.ext.web.handler.HttpException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -39,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.jwtvalidatorvertx.JwtValidatorVertx;
 import uk.co.spudsoft.jwtvalidatorvertx.OpenIdDiscoveryHandler;
+import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 import uk.co.spudsoft.query.main.AuthEndpoint;
 import uk.co.spudsoft.query.main.SessionConfig;
 import uk.co.spudsoft.query.web.LoginDao.RequestData;
@@ -110,9 +110,9 @@ public class LoginRouter  implements Handler<RoutingContext> {
     if (Strings.isNullOrEmpty(scheme)) {
       scheme = request.scheme();
       int portNum = request.authority().port();
-      if (portNum == 443 && "https".equals(scheme)) {
+      if (RequestContextBuilder.isStandardHttpsPort(scheme, portNum)) {
         port = "";
-      } else if (portNum == 80 && "http".equals(scheme)) {
+      } else if (RequestContextBuilder.isStandardHttpPort(scheme, portNum)) {
         port = "";
       } else {
         port = Integer.toString(portNum);
@@ -225,7 +225,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
                   String responseBody = codeResponse.bodyAsString();
                   logger.warn("Failed to get access token from {} ({}): {}"
                           , requestDataAndAuthEndpoint.authEndpoint.getTokenEndpoint(), codeResponse.statusCode(), responseBody);
-                  return Future.failedFuture(new HttpException(codeResponse.statusCode(), responseBody));
+                  return Future.failedFuture(new IllegalStateException("Failed to get access token from provider"));
                 } else {
                   JsonObject body;
                   try {
@@ -233,10 +233,15 @@ public class LoginRouter  implements Handler<RoutingContext> {
                   } catch (Throwable ex) {
                     String stringBody = codeResponse.bodyAsString();
                     logger.warn("Failed to get access token ({}): {}", codeResponse.statusCode(), stringBody);
-                    return Future.failedFuture(new HttpException(codeResponse.statusCode(), stringBody));
+                    return Future.failedFuture(new IllegalStateException("Failed to get access token from provider"));
                   }
                   logger.debug("Access token response: {}", body);
                   String accessToken = body.getString("access_token");
+                  if (Strings.isNullOrEmpty(accessToken)) {
+                    String stringBody = codeResponse.bodyAsString();
+                    logger.warn("Failed to get access token ({}): {}", codeResponse.statusCode(), stringBody);
+                    return Future.failedFuture(new IllegalStateException("Failed to get access token from provider"));
+                  }
                   
                   String targetUrl = requestDataAndAuthEndpoint.requestData.targetUrl();
                   targetUrl = targetUrl
@@ -291,7 +296,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
       url.append("&code_challenge=").append(createCodeChallenge(codeVerifier));
       url.append("&code_challenge_method=S256");
     }
-    if (authEndpoint.isPkce()) {
+    if (authEndpoint.isNonce()) {
       nonce = prng.nextString(nonceLength);
       url.append("&nonce=").append(nonce);
     }

@@ -338,9 +338,17 @@ public class Main extends Application {
       return Future.succeededFuture(-2);
     }
     
-    LoginDao loginDao = params.getPersistence() == null
+    LoginDao loginDao = params.getPersistence() == null 
+            || params.getPersistence().getDataSource() == null 
+            || Strings.isNullOrEmpty(params.getPersistence().getDataSource().getUrl())
             ? new LoginDaoMemoryImpl(params.getSession().getPurgeDelay())
             : new LoginDaoPersistenceImpl(vertx, meterRegistry, params.getPersistence(), params.getSession().getPurgeDelay());
+    try {
+      loginDao.prepare();
+    } catch (Throwable ex) {
+      logger.error("Failed to prepare login data: ", ex);
+      return Future.succeededFuture(-2);
+    }
     
     httpServer = vertx.createHttpServer(params.getHttpServerOptions());
     try {
@@ -432,7 +440,7 @@ public class Main extends Application {
     router.route("/ui/*").handler(UiRouter.create(vertx, "/ui", "/www", "/www/index.html"));
     router.getWithRegex("/openapi\\..*").blockingHandler(openApiHandler);
     router.get("/openapi").handler(openApiHandler.getUiHandler());
-    LoginRouter loginRouter = new LoginRouter(vertx, loginDao, openIdDiscoveryHandler, jwtValidatorVertx, params.getSession(), outputAllErrorMessages());
+    LoginRouter loginRouter = LoginRouter.create(vertx, loginDao, openIdDiscoveryHandler, jwtValidatorVertx, params.getSession(), outputAllErrorMessages());
     router.get("/login").handler(loginRouter);
     router.get("/login/return").handler(loginRouter);
     router.route("/").handler(rc -> {

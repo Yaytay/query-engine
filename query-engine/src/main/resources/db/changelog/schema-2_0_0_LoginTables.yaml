@@ -10,7 +10,7 @@ databaseChangeLog:
         - {column: {name: state, type: varchar(300), constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_login}}}
         - {column: {name: provider, type: varchar(300), constraints: {nullable: false}}}
         - {column: {name: timestamp, type: timestamp, constraints: {nullable: false}}}
-        - {column: {name: completed, type: timestamp, constraints: {nullable: false}}}
+        - {column: {name: completed, type: timestamp, constraints: {nullable: true}}}
         - {column: {name: code_verifier, type: varchar(300), constraints: {nullable: true}}}
         - {column: {name: nonce, type: varchar(300), constraints: {nullable: true}}}
         - {column: {name: redirect_uri, type: varchar(2000), constraints: {nullable: false}}}

@@ -59,15 +59,8 @@
     </dependency>
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
-      <artifactId>jwt-validator-vertx</artifactId>
-      <version>0.0.21</version>
-      <classifier>tests</classifier>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>uk.co.spudsoft</groupId>
       <artifactId>params4j</artifactId>
-      <version>0.0.18</version>
+      <version>0.0.19</version>
       <exclusions>
       </exclusions>
     </dependency>
@@ -98,12 +91,12 @@
     <dependency>
       <groupId>io.swagger.core.v3</groupId>
       <artifactId>swagger-jaxrs2-jakarta</artifactId>
-      <version>2.2.18</version>
+      <version>2.2.19</version>
     </dependency>
     <dependency>
       <groupId>io.swagger.core.v3</groupId>
       <artifactId>swagger-annotations-jakarta</artifactId>
-      <version>2.2.18</version>
+      <version>2.2.19</version>
     </dependency>
     <dependency>
       <groupId>com.github.seancfoley</groupId>

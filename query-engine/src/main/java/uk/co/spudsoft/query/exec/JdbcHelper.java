@@ -113,6 +113,7 @@ public class JdbcHelper {
 
   @SuppressFBWarnings(value = "SQL_INJECTION_JDBC", justification = "SQL is generated from static strings")
   private int runSqlUpdateSynchronously(String sql, SqlConsumer<PreparedStatement> prepareStatement) throws Exception {
+    logger.debug("Executing update: {}", sql);
     String logMessage = null;
     try {
       logMessage = "Failed to get connection: ";
@@ -145,8 +146,7 @@ public class JdbcHelper {
           , SqlFunction<ResultSet, R> resultSetHandler
   ) {
     return vertx.executeBlocking(() -> {
-      runSqlSelectSynchronously(sql, prepareStatement, resultSetHandler);
-      return null;
+      return runSqlSelectSynchronously(sql, prepareStatement, resultSetHandler);
     });
   }
 
@@ -155,7 +155,7 @@ public class JdbcHelper {
           , SqlConsumer<PreparedStatement> prepareStatement
           , SqlFunction<ResultSet, R> resultSetHandler
   ) throws Exception {
-    logger.trace("Running SQL: {}", sql);
+    logger.debug("Executing select: {}", sql);
     String logMessage = null;
     try {
       logMessage = "Failed to get connection: ";
