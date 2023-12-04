@@ -32,7 +32,7 @@ import java.util.Collections;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.jwtvalidatorvertx.JWT;
+import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
 import uk.co.spudsoft.jwtvalidatorvertx.OpenIdDiscoveryHandler;
 import uk.co.spudsoft.jwtvalidatorvertx.JwtValidatorVertx;
 
@@ -61,7 +61,7 @@ public class RequestContextBuilder {
    * 
    * @param webClient The WebClient that will be used.
    * The WebClient should be created specifically for use by the RequestContextBuilder.
-   * @param validator The JWT Validator that will be used for validating all tokens.
+   * @param validator The Jwt Validator that will be used for validating all tokens.
    * @param discoverer The Open ID Discovery handler that will be used for locating the auth URL for the host.
    * This does not have to be the same discoverer as used by the validator, but it will be more efficient if it is (shared cache).
    * @param openIdIntrospectionHeaderName The name of the header that will contain the payload from a token as Json (that may be base64 encoded or not).
@@ -157,7 +157,7 @@ public class RequestContextBuilder {
         json = new String(Base64.getDecoder().decode(base64Json.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
       } catch (Throwable ex) {        
       }
-      JWT jwt = new JWT(null, new JsonObject(json), null, null);      
+      Jwt jwt = new Jwt(null, new JsonObject(json), null, null);      
       RequestContext result = new RequestContext(request, jwt);
       return Future.succeededFuture(result);
     } catch (Throwable ex) {
@@ -166,7 +166,7 @@ public class RequestContextBuilder {
     }
   }
   
-  static Future<RequestContext> build(HttpServerRequest request, JWT jwt) {
+  static Future<RequestContext> build(HttpServerRequest request, Jwt jwt) {
     try {
       RequestContext result = new RequestContext(request, jwt);
       return Future.succeededFuture(result);

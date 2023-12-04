@@ -36,7 +36,7 @@ import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.jwtvalidatorvertx.JWT;
+import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
 import static uk.co.spudsoft.query.logging.VertxZipkinLogbackConverter.ACTIVE_SPAN;
 
 
@@ -69,7 +69,7 @@ public class RequestContext {
 
   public final IPAddressString clientIp;
   
-  public final JWT jwt;
+  public final Jwt jwt;
   
   private long headersSentTime;
   
@@ -82,7 +82,7 @@ public class RequestContext {
    * @param jwt JsonWebToken extracted from the request.
    * 
    */
-  public RequestContext(HttpServerRequest request, JWT jwt) {
+  public RequestContext(HttpServerRequest request, Jwt jwt) {
     this.startTime = System.currentTimeMillis();
     this.requestId = extractRequestId();
     this.url = request.absoluteURI();
@@ -107,7 +107,7 @@ public class RequestContext {
    * @param clientIp Client IP address that should have been extracted from the request.
    * @param jwt JWT that should have been extracted from the request.
    */
-  public RequestContext(String requestId, String url, String host, String path, MultiMap arguments, MultiMap headers, Set<Cookie> cookies, IPAddressString clientIp, JWT jwt) {
+  public RequestContext(String requestId, String url, String host, String path, MultiMap arguments, MultiMap headers, Set<Cookie> cookies, IPAddressString clientIp, Jwt jwt) {
     this.startTime = System.currentTimeMillis();
     this.requestId = requestId;
     this.url = url;
@@ -193,7 +193,7 @@ public class RequestContext {
    * Get the JWT found in (or created for) the request context.
    * @return the JWT found in (or created for) the request context.
    */
-  public JWT getJwt() {
+  public Jwt getJwt() {
     return jwt;
   }
 

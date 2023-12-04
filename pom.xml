@@ -412,7 +412,8 @@
               dependency-check-supressions.xml
             </suppressionFiles>
             <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
-          </configuration>
+			<nvdApiKey>${NVD_API_KEY}</nvdApiKey>
+		  </configuration>
           <executions>
             <execution>
               <goals>
@@ -617,6 +618,7 @@
           <suppressionFiles>
             dependency-check-supressions.xml
           </suppressionFiles>
+          <nvdApiKey>${NVD_API_KEY}</nvdApiKey>
         </configuration>
       </plugin>
       
