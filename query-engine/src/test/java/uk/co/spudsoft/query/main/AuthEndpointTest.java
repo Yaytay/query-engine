@@ -19,6 +19,9 @@ package uk.co.spudsoft.query.main;
 import io.vertx.core.json.JsonObject;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -35,30 +38,34 @@ public class AuthEndpointTest {
   
   @Test
   public void testUpdateFromOpenIdConfiguration() {
-    DiscoveryData dd = new DiscoveryData(12000, new JsonObject());
+    DiscoveryData dd = new DiscoveryData(new JsonObject());
     AuthEndpoint authEndpoint = new AuthEndpoint();
     authEndpoint.updateFromOpenIdConfiguration(dd);
     assertNull(authEndpoint.getAuthorizationEndpoint());
     assertNull(authEndpoint.getTokenEndpoint());
-    assertEquals(12, authEndpoint.getInvalidDate().toEpochSecond(ZoneOffset.UTC));
+    assertThat(authEndpoint.getInvalidDate(), not(greaterThan(LocalDateTime.now().plusDays(1))));
+    assertThat(authEndpoint.getInvalidDate(), greaterThan(LocalDateTime.now().plusDays(1).minusMinutes(1)));
 
-    dd = new DiscoveryData(12000, new JsonObject("{\"token_endpoint\": \"toke\", \"authorization_endpoint\": \"authe\"}"));
+    dd = new DiscoveryData(new JsonObject("{\"token_endpoint\": \"toke\", \"authorization_endpoint\": \"authe\"}"));
     authEndpoint.updateFromOpenIdConfiguration(dd);
     assertEquals("authe", authEndpoint.getAuthorizationEndpoint());
     assertEquals("toke", authEndpoint.getTokenEndpoint());
-    assertEquals(12, authEndpoint.getInvalidDate().toEpochSecond(ZoneOffset.UTC));
+    assertThat(authEndpoint.getInvalidDate(), not(greaterThan(LocalDateTime.now().plusDays(1))));
+    assertThat(authEndpoint.getInvalidDate(), greaterThan(LocalDateTime.now().plusDays(1).minusMinutes(1)));
             
-    dd = new DiscoveryData(13000, new JsonObject("{\"token_endpoint\": \"toke2\", \"authorization_endpoint\": \"authe2\"}"));
+    dd = new DiscoveryData(new JsonObject("{\"token_endpoint\": \"toke2\", \"authorization_endpoint\": \"authe2\"}"));
     authEndpoint.updateFromOpenIdConfiguration(dd);
     assertEquals("authe2", authEndpoint.getAuthorizationEndpoint());
     assertEquals("toke2", authEndpoint.getTokenEndpoint());
-    assertEquals(13, authEndpoint.getInvalidDate().toEpochSecond(ZoneOffset.UTC));
+    assertThat(authEndpoint.getInvalidDate(), not(greaterThan(LocalDateTime.now().plusDays(1))));
+    assertThat(authEndpoint.getInvalidDate(), greaterThan(LocalDateTime.now().plusDays(1).minusMinutes(1)));
             
-    dd = new DiscoveryData(14000, new JsonObject());
+    dd = new DiscoveryData(new JsonObject());
     authEndpoint.updateFromOpenIdConfiguration(dd);
     assertEquals("authe2", authEndpoint.getAuthorizationEndpoint());
     assertEquals("toke2", authEndpoint.getTokenEndpoint());
-    assertEquals(14, authEndpoint.getInvalidDate().toEpochSecond(ZoneOffset.UTC));
+    assertThat(authEndpoint.getInvalidDate(), not(greaterThan(LocalDateTime.now().plusDays(1))));
+    assertThat(authEndpoint.getInvalidDate(), greaterThan(LocalDateTime.now().plusDays(1).minusMinutes(1)));
   }
 
   @Test

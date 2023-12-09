@@ -105,6 +105,12 @@ public class LoginDaoMemoryImpl implements LoginDao {
         logger.debug("State {} not found in {}", state, Json.encode(data.keySet()));
         return Future.failedFuture(new SecurityException("State not known"));
       }
+      LocalDateTime limit = LocalDateTime.now().minus(purgeDelay);
+      if (input.getTimestamp().isBefore(limit)) {
+        data.remove(state);
+        logger.debug("State {} expired at {}", state, input.getTimestamp());
+        return Future.failedFuture(new SecurityException("State not known"));
+      }
       input.setCompleted(LocalDateTime.now());
       return Future.succeededFuture();
     }    

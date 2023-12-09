@@ -20,8 +20,8 @@ import uk.co.spudsoft.query.testhelpers.RowSetHelper;
 import com.github.dockerjava.api.model.Container;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.mssqlclient.MSSQLBuilder;
 import io.vertx.mssqlclient.MSSQLConnectOptions;
-import io.vertx.mssqlclient.MSSQLPool;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
 import java.util.Arrays;
@@ -78,7 +78,11 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
               }
             })
             .compose(v -> {
-              Pool pool = MSSQLPool.pool(vertx, getConnectOptions(), new PoolOptions().setMaxSize(1));
+              Pool pool = MSSQLBuilder.pool()
+                      .using(vertx)
+                      .connectingTo(getConnectOptions())
+                      .with(new PoolOptions().setMaxSize(1))
+                      .build();
               return pool.preparedQuery("select count(*) from sys.databases where name = 'test'").execute()
                       .compose(rs -> {
                         int existingDb = rs.iterator().next().getInteger(0);

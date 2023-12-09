@@ -125,44 +125,46 @@ public class LoginDaoPersistenceImpl implements LoginDao {
    *
    */
   @Override
+  @SuppressFBWarnings(value = "JLM_JSR166_UTILCONCURRENT_MONITORENTER", justification = "The prepared field is final and only accessed in this method, within those constraints this usage is fine")
   public void prepare() throws Exception {
-    if (prepared.get()) {
-      throw new IllegalStateException("Already prepared");
-    }
     
-    DataSourceConfig dataSourceConfig = configuration.getDataSource();
-    
-    if (dataSourceConfig == null || Strings.isNullOrEmpty(dataSourceConfig.getUrl())) {
-      throw new IllegalStateException("No persistence URL provided, should not have reached here");
-    }
+    synchronized (prepared) {
+      if (prepared.get()) {
+        throw new IllegalStateException("Already prepared");
+      }
 
-    if (Strings.isNullOrEmpty(dataSourceConfig.getSchema())) {
-      recordLogin = recordLogin.replaceAll("#SCHEMA#.", "");
-      markUsed = markUsed.replaceAll("#SCHEMA#.", "");
-      purgeLogins = purgeLogins.replaceAll("#SCHEMA#.", "");
-      getData = getData.replaceAll("#SCHEMA#.", "");
-    } else {
-      recordLogin = recordLogin.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
-      markUsed = markUsed.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
-      purgeLogins = purgeLogins.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
-      getData = getData.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
-    }
+      DataSourceConfig dataSourceConfig = configuration.getDataSource();
 
-    Credentials credentials = dataSourceConfig.getUser();
-    if (credentials == null) {
-      credentials = dataSourceConfig.getAdminUser();
-    }
-    dataSource = JdbcHelper.createDataSource(dataSourceConfig, credentials, meterRegistry);
-    jdbcHelper = new JdbcHelper(vertx, dataSource);
-    try (Connection connection = dataSource.getConnection()) {
-      quote = connection.getMetaData().getIdentifierQuoteString();
-      recordLogin = recordLogin.replaceAll("#", quote);
-      markUsed = markUsed.replaceAll("#", quote);
-      purgeLogins = purgeLogins.replaceAll("#", quote);
-      getData = getData.replaceAll("#", quote);
-    }
-    if (prepared.compareAndExchange(false, true)) {
-      throw new IllegalStateException("Already prepared");
+      if (dataSourceConfig == null || Strings.isNullOrEmpty(dataSourceConfig.getUrl())) {
+        throw new IllegalStateException("No persistence URL provided, should not have reached here");
+      }
+
+      if (Strings.isNullOrEmpty(dataSourceConfig.getSchema())) {
+        recordLogin = recordLogin.replaceAll("#SCHEMA#.", "");
+        markUsed = markUsed.replaceAll("#SCHEMA#.", "");
+        purgeLogins = purgeLogins.replaceAll("#SCHEMA#.", "");
+        getData = getData.replaceAll("#SCHEMA#.", "");
+      } else {
+        recordLogin = recordLogin.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
+        markUsed = markUsed.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
+        purgeLogins = purgeLogins.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
+        getData = getData.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
+      }
+
+      Credentials credentials = dataSourceConfig.getUser();
+      if (credentials == null) {
+        credentials = dataSourceConfig.getAdminUser();
+      }
+      dataSource = JdbcHelper.createDataSource(dataSourceConfig, credentials, meterRegistry);
+      jdbcHelper = new JdbcHelper(vertx, dataSource);
+      try (Connection connection = dataSource.getConnection()) {
+        quote = connection.getMetaData().getIdentifierQuoteString();
+        recordLogin = recordLogin.replaceAll("#", quote);
+        markUsed = markUsed.replaceAll("#", quote);
+        purgeLogins = purgeLogins.replaceAll("#", quote);
+        getData = getData.replaceAll("#", quote);
+      }
+      prepared.set(true);
     }
   }
   

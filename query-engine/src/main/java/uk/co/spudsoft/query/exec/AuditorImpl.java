@@ -317,6 +317,9 @@ public class AuditorImpl implements Auditor {
              context.getGroups()
     );
     
+    if (jdbcHelper == null) {
+      return Future.succeededFuture();
+    }
     return jdbcHelper.runSqlUpdate(recordRequest, ps -> {
                     int param = 1; 
                     ps.setString(param++, JdbcHelper.limitLength(context.getRequestId(), 100));
@@ -344,6 +347,9 @@ public class AuditorImpl implements Auditor {
   @Override
   public void recordFileDetails(RequestContext context, DirCacheTree.File file) {
     logger.info("File: {} {} {}", file.getPath(), file.getSize(), file.getModified());
+    if (jdbcHelper == null) {
+      return ;
+    }
     jdbcHelper.runSqlUpdate(recordFile, ps -> {
              ps.setString(1, JdbcHelper.limitLength(JdbcHelper.toString(file.getPath()), 1000));
              ps.setLong(2, file.getSize());
@@ -360,6 +366,9 @@ public class AuditorImpl implements Auditor {
   public void recordException(RequestContext context, Throwable ex) {
     logger.info("Exception: {} {}", ex.getClass().getCanonicalName(), ex.getMessage());
 
+    if (jdbcHelper == null) {
+      return ;
+    }
     jdbcHelper.runSqlUpdate(recordException, ps -> {
              ps.setTimestamp(1, Timestamp.from(Instant.now()));
              ps.setString(2, JdbcHelper.limitLength(ex.getClass().getCanonicalName(), 1000));
@@ -379,7 +388,9 @@ public class AuditorImpl implements Auditor {
             , headers
     );
     
-    
+    if (jdbcHelper == null) {
+      return ;
+    }
     jdbcHelper.runSqlUpdate(recordResponse, ps -> {
              ps.setTimestamp(1, Timestamp.from(Instant.now()));
              if (context.getHeadersSentTime() > 0) {

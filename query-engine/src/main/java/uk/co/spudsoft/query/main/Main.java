@@ -81,7 +81,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import uk.co.spudsoft.dircache.DirCache;
 import uk.co.spudsoft.jwtvalidatorvertx.IssuerAcceptabilityHandler;
-import uk.co.spudsoft.jwtvalidatorvertx.JwtValidatorVertx;
+import uk.co.spudsoft.jwtvalidatorvertx.JwtValidator;
 import uk.co.spudsoft.jwtvalidatorvertx.OpenIdDiscoveryHandler;
 import uk.co.spudsoft.jwtvalidatorvertx.impl.JWKSOpenIdDiscoveryHandlerImpl;
 import uk.co.spudsoft.mgmt.ManagementRoute;
@@ -142,7 +142,7 @@ public class Main extends Application {
   private AtomicBoolean up = new AtomicBoolean();
   
   private OpenIdDiscoveryHandler openIdDiscoveryHandler;
-  private JwtValidatorVertx jwtValidatorVertx;
+  private JwtValidator jwtValidator;
 
   
   private int port;
@@ -440,7 +440,7 @@ public class Main extends Application {
     router.route("/ui/*").handler(UiRouter.create(vertx, "/ui", "/www", "/www/index.html"));
     router.getWithRegex("/openapi\\..*").blockingHandler(openApiHandler);
     router.get("/openapi").handler(openApiHandler.getUiHandler());
-    LoginRouter loginRouter = LoginRouter.create(vertx, loginDao, openIdDiscoveryHandler, jwtValidatorVertx, params.getSession(), outputAllErrorMessages());
+    LoginRouter loginRouter = LoginRouter.create(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, params.getSession(), outputAllErrorMessages());
     router.get("/login").handler(loginRouter);
     router.get("/login/return").handler(loginRouter);
     router.route("/").handler(rc -> {
@@ -605,9 +605,16 @@ public class Main extends Application {
                     , jwtConfig.getAcceptableIssuersFile()
                     , jwtConfig.getFilePollPeriodDuration()
             ), jwtConfig.getDefaultJwksCacheDuration().toSeconds());
-    jwtValidatorVertx = JwtValidatorVertx.create((JWKSOpenIdDiscoveryHandlerImpl) openIdDiscoveryHandler);   
+    jwtValidator = JwtValidator.create((JWKSOpenIdDiscoveryHandlerImpl) openIdDiscoveryHandler);   
     
-    RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx), jwtValidatorVertx, openIdDiscoveryHandler, params.getOpenIdIntrospectionHeaderName(), jwtConfig.getRequiredAudience());
+    RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx)
+            , jwtValidator
+            , openIdDiscoveryHandler
+            , params.getOpenIdIntrospectionHeaderName()
+            , jwtConfig.getIssuer()
+            , jwtConfig.getIssuerHostPath()
+            , jwtConfig.getRequiredAudience()
+    );
     return rcb;
   }
   

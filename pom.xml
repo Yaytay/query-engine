@@ -36,13 +36,13 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <argLine></argLine>
-    <vertx.version>4.4.6</vertx.version>
+    <vertx.version>4.5.0</vertx.version>
     <slf4j.version>2.0.9</slf4j.version>
     <junit-jupiter.version>5.10.1</junit-jupiter.version>
     <junit-platform.version>1.10.0</junit-platform.version>
-    <testcontainers.version>1.19.1</testcontainers.version>
+    <testcontainers.version>1.19.3</testcontainers.version>
     <graalvm.version>23.1.1</graalvm.version>
-    <jackson.version>2.15.3</jackson.version>
+    <jackson.version>2.16.0</jackson.version>
     
     <!-- The qe-version property exists so that the design mode project can override it to run with a specific version -->
     <qe-version>${project.version}</qe-version>
@@ -245,7 +245,7 @@
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>10.12.4</version>
+              <version>10.12.6</version>
             </dependency>
           </dependencies>
         </plugin>
@@ -474,7 +474,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.6.2</version>
+          <version>3.6.3</version>
           <executions>
             <execution>
               <id>attach-javadocs</id>

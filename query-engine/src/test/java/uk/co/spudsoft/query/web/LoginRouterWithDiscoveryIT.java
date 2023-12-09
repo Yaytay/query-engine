@@ -16,16 +16,26 @@
  */
 package uk.co.spudsoft.query.web;
 
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
+import io.vertx.core.json.JsonObject;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintStream;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -40,15 +50,62 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
  *
  * @author njt
  */
-public class LoginRouterIT {
+public class LoginRouterWithDiscoveryIT {
   
-  private static final Logger logger = LoggerFactory.getLogger(LoginRouterIT.class);
+  private static final Logger logger = LoggerFactory.getLogger(LoginRouterWithDiscoveryIT.class);
   
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
   
+  private HttpServer createServer(int port) throws Exception {
+    ExecutorService exeSvc = Executors.newFixedThreadPool(2);
+    HttpServer server = HttpServer.create(new InetSocketAddress(port), 2);
+    server.setExecutor(exeSvc);
+    return server;
+  }
+
+  private int findPort() throws IOException {
+    try (ServerSocket s = new ServerSocket(0)) {
+      return s.getLocalPort();
+    }
+  }
+  
+  private void sendResponse(HttpExchange exchange, int responseCode, String body) throws IOException {
+    byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);
+    exchange.sendResponseHeaders(responseCode, bodyBytes.length);
+    try (OutputStream os = exchange.getResponseBody()) {
+      os.write(bodyBytes);
+    }
+  }
+  
   @Test
-  public void login() throws Exception {
-    logger.debug("Running testMainDaemon");
+  public void testLoginWithDiscoveryIT() throws Exception {
+    logger.debug("Running testLoginWithDiscoveryIT");
+    
+    int port = findPort();
+    HttpServer server = createServer(port);
+    server.createContext("/", new HttpHandler() {
+      @Override
+      public void handle(HttpExchange exchange) throws IOException {
+        switch (exchange.getRequestURI().getPath()) {
+          case "/.well-known/openid-configuration":
+            JsonObject config = new JsonObject();
+            config.put("token_endpoint", "http://localhost:" + port + "/token");
+            config.put("authorization_endpoint", "http://localhost:" + port + "/authorization_endpoint");
+            sendResponse(exchange, 200, config.toString());
+            break;            
+          case "/token":
+            // High security, you ask for a token you get one!
+            JsonObject response = new JsonObject();
+            response.put("access_token", "toucan");
+            sendResponse(exchange, 200, response.toString());
+            break;                        
+          default:
+            sendResponse(exchange, 404, "Not found");
+        }
+      }
+    });    
+    server.start();
+    
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
@@ -71,12 +128,11 @@ public class LoginRouterIT {
       , "--managementEndpointPort=8001"
       , "--managementEndpointUrl=http://localhost:8001/manage"
       , "--session.requireSession=false"
-      , "--session.oauth.GitHub.logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
-      , "--session.oauth.GitHub.authorizationEndpoint=https://github.com/login/oauth/authorize"
-      , "--session.oauth.GitHub.tokenEndpoint=https://github.com/login/oauth/access_token"
-      , "--session.oauth.GitHub.credentials.id=bdab017f4732085a51f9"
-      , "--session.oauth.GitHub.credentials.secret=" + System.getProperty("queryEngineGithubSecret")
-      , "--session.oauth.GitHub.pkce=false"
+      , "--session.oauth.test.logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
+      , "--session.oauth.test.issuer=http://localhost:" + port + "/"
+      , "--session.oauth.test.credentials.id=bdab017f4732085a51f9"
+      , "--session.oauth.test.credentials.secret=" + System.getProperty("queryEngineGithubSecret")
+      , "--session.oauth.test.pkce=true"
     }, stdout);
     assertEquals(0, stdoutStream.size());
     
@@ -155,7 +211,7 @@ public class LoginRouterIT {
     // Provider is case sensistive
     body = given()
             .log().all()
-            .get("/login?return=http://fred/&provider=github")
+            .get("/login?return=http://fred/&provider=TEST")
             .then()
             .statusCode(400)
             .log().all()
@@ -166,13 +222,13 @@ public class LoginRouterIT {
     String authUiUrl = given()
             .redirects().follow(false)
             .log().all()
-            .get("/login?provider=GitHub&return=http://fred")
+            .get("/login?provider=test&return=http://fred")
             .then()
             .statusCode(307)
             .log().all()
             .extract().header("Location")
             ;
-    assertThat(authUiUrl, startsWith("https://github.com/login/oauth/authorize"));
+    assertThat(authUiUrl, startsWith("http://localhost:" + port + "/authorization_endpoint"));
     Map<String, List<String>> authUiParams = new QueryStringDecoder(authUiUrl).parameters();
     assertEquals(Arrays.asList("code"), authUiParams.get("response_type"));
     assertEquals(Arrays.asList("bdab017f4732085a51f9"), authUiParams.get("client_id"));
@@ -183,14 +239,15 @@ public class LoginRouterIT {
     assertThat(authUiParams.get("redirect_uri").get(0), startsWith("http://localhost:" + Integer.toString(main.getPort()) + "/login/return"));
     
 
-    // Can't actually login, so this call will fail at the point of trying to get the token
+    // The test endpint will happiler give out an invalid token
     given()
             .redirects().follow(false)
             .log().all()
             .get("/login/return?code=wibble&state=" + authUiParams.get("state").get(0))
             .then()
             .log().all()
-            .statusCode(500)
+            .statusCode(307)
+            .header("Location", "http://fred?access_token=toucan")
             ;
     
     

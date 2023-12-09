@@ -33,8 +33,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
+import uk.co.spudsoft.jwtvalidatorvertx.JwtValidator;
 import uk.co.spudsoft.jwtvalidatorvertx.OpenIdDiscoveryHandler;
-import uk.co.spudsoft.jwtvalidatorvertx.JwtValidatorVertx;
 
 /**
  *
@@ -48,9 +48,11 @@ public class RequestContextBuilder {
   private static final String BEARER = "Bearer ";
   
   private final WebClient webClient;
-  private final JwtValidatorVertx validator;
+  private final JwtValidator validator;
   private final OpenIdDiscoveryHandler discoverer;
   private final String openIdIntrospectionHeaderName;
+  private final String issuer;
+  private final String issuerHostPath;
   private final List<String> audList;
 
   /**
@@ -65,14 +67,25 @@ public class RequestContextBuilder {
    * @param discoverer The Open ID Discovery handler that will be used for locating the auth URL for the host.
    * This does not have to be the same discoverer as used by the validator, but it will be more efficient if it is (shared cache).
    * @param openIdIntrospectionHeaderName The name of the header that will contain the payload from a token as Json (that may be base64 encoded or not).
+   * @param issuer Fixed issuer to be used for all requests.  See {@link uk.co.spudsoft.query.main.JwtValidationConfig#issuer}.
+   * @param issuerHostPath  Path to be appended to the Host to derive the issuer.  See {@link uk.co.spudsoft.query.main.JwtValidationConfig#issuerHostPath}.
    * @param aud The audience that must be found in any token.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The WebClient should be created specifically for use by the RequestContextBuilder.")
-  public RequestContextBuilder(WebClient webClient, JwtValidatorVertx validator, OpenIdDiscoveryHandler discoverer, String openIdIntrospectionHeaderName, String aud) {
+  public RequestContextBuilder(WebClient webClient
+          , JwtValidator validator
+          , OpenIdDiscoveryHandler discoverer
+          , String openIdIntrospectionHeaderName
+          , String issuer
+          , String issuerHostPath
+          , String aud
+  ) {
     this.webClient = webClient;
     this.validator = validator;
     this.discoverer = discoverer;
     this.openIdIntrospectionHeaderName = openIdIntrospectionHeaderName;
+    this.issuer = issuer;
+    this.issuerHostPath = Strings.isNullOrEmpty(issuerHostPath) ? "" : issuerHostPath.startsWith("/") ? issuerHostPath : ("/" + issuerHostPath);
     this.audList = Collections.singletonList(aud);
   }
   
@@ -93,13 +106,21 @@ public class RequestContextBuilder {
 
     return sb.toString();
   }
-
+  
   public static boolean isStandardHttpPort(String scheme, int port) {
     return "http".equals(scheme) && port == 80;
   }
 
   public static boolean isStandardHttpsPort(String scheme, int port) {
     return "https".equals(scheme) && port == 443;
+  }
+
+  String issuer(HttpServerRequest request) {
+    if (Strings.isNullOrEmpty(issuer)) {
+      return baseRequestUrl(request) + issuerHostPath;
+    } else {
+      return this.issuer;
+    }
   }
 
   /**
@@ -132,13 +153,16 @@ public class RequestContextBuilder {
       String clientId = credentials.substring(0, colon);
       String clientSecret = credentials.substring(colon + 1);      
       return performClientCredentialsGrant(baseRequestUrl(request), clientId, clientSecret)
-              .compose(token -> validator.validateToken(token, audList, true))
+              .compose(token -> {
+                logger.debug("Login for {} got token: {}", clientId, token);
+                return validator.validateToken(issuer(request), token, audList, true);
+              })
               .compose(jwt -> build(request, jwt));
       
     } else if (authHeader.startsWith(BEARER)) {
       
       String token = authHeader.substring(BEARER.length());
-      return validator.validateToken(token, audList, true)
+      return validator.validateToken(issuer(request), token, audList, true)
               .compose(jwt -> build(request, jwt));
       
     } else {

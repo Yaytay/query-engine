@@ -72,7 +72,7 @@ public class ConditionInstanceTest {
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
     
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, "X-OpenID-Introspection", "aud");
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, "X-OpenID-Introspection", null, null, "aud");
     RequestContext ctx = rcb.buildRequestContext(req).result();
     
     assertFalse(new ConditionInstance("req").evaluate(ctx));

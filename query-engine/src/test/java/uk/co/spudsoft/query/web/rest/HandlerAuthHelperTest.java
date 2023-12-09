@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import uk.co.spudsoft.jwtvalidatorvertx.JWT;
+import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.web.ServiceException;
 
@@ -51,7 +51,7 @@ public class HandlerAuthHelperTest {
     when(vertxContext.getLocal("req")).thenReturn(emptyRequestContext);
     assertThrows(ServiceException.class, () -> { HandlerAuthHelper.getRequestContext(vertxContext, true); });
     
-    RequestContext fullRequestContext = new RequestContext(null, null, null, null, null, null, null, null, new JWT(null, null, null, null));
+    RequestContext fullRequestContext = new RequestContext(null, null, null, null, null, null, null, null, new Jwt(null, null, null, null));
     when(vertxContext.getLocal("req")).thenReturn(fullRequestContext);
     assertEquals(fullRequestContext, HandlerAuthHelper.getRequestContext(vertxContext, true));
     

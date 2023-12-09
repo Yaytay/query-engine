@@ -16,9 +16,7 @@
  */
 package uk.co.spudsoft.query.main;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import uk.co.spudsoft.jwtvalidatorvertx.DiscoveryData;
 
 /**
@@ -62,7 +60,7 @@ public class AuthEndpoint {
     if (tempAuthorizationEndpoint != null) {
       this.authorizationEndpoint = tempAuthorizationEndpoint;
     }
-    this.invalidDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(discoveryData.getExpiry()), ZoneOffset.UTC);
+    this.invalidDate = LocalDateTime.now().plusDays(1);
   }
   
   public String getName() {

@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.conditions;
 
+import com.google.common.cache.Cache;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
@@ -29,7 +30,7 @@ import io.vertx.ext.web.codec.BodyCodec;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.io.IOException;
-import java.security.KeyPair;
+import java.security.PublicKey;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Map;
@@ -40,10 +41,11 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.jwtvalidatorvertx.AlgorithmAndKeyPair;
 import uk.co.spudsoft.jwtvalidatorvertx.IssuerAcceptabilityHandler;
-import uk.co.spudsoft.jwtvalidatorvertx.JWK;
 import uk.co.spudsoft.jwtvalidatorvertx.JsonWebAlgorithm;
-import uk.co.spudsoft.jwtvalidatorvertx.JwtValidatorVertx;
+import uk.co.spudsoft.jwtvalidatorvertx.JwkBuilder;
+import uk.co.spudsoft.jwtvalidatorvertx.JwtValidator;
 import uk.co.spudsoft.jwtvalidatorvertx.OpenIdDiscoveryHandler;
 import uk.co.spudsoft.jwtvalidatorvertx.impl.JWKSOpenIdDiscoveryHandlerImpl;
 import uk.co.spudsoft.jwtvalidatorvertx.jdk.JdkTokenBuilder;
@@ -59,7 +61,8 @@ public class RequestContextBuilderBearerAuthTest {
   private static final Logger logger = LoggerFactory.getLogger(RequestContextBuilderBearerAuthTest.class);
   
   private OpenIdDiscoveryHandler discoverer;
-  private JwtValidatorVertx validator;
+  private JwtValidator validator;
+  private Cache<String, AlgorithmAndKeyPair> cache;
   private JdkTokenBuilder tokenBuilder;
   
   private HttpServer destServer;
@@ -67,15 +70,16 @@ public class RequestContextBuilderBearerAuthTest {
 
   @BeforeAll
   public void init(Vertx vertx) throws IOException {
-    tokenBuilder = new JdkTokenBuilder();
+    cache = AlgorithmAndKeyPair.createCache(Duration.ofHours(1));
+    tokenBuilder = new JdkTokenBuilder(cache);
 
     discoverer = new JWKSOpenIdDiscoveryHandlerImpl(WebClient.create(vertx), IssuerAcceptabilityHandler.create(Arrays.asList(".*"), null, Duration.ZERO), 60);
-    validator = JwtValidatorVertx.create((JWKSOpenIdDiscoveryHandlerImpl) discoverer);   
+    validator = JwtValidator.create((JWKSOpenIdDiscoveryHandlerImpl) discoverer);   
   }
 
   @Test
   public void testBuildRequestContext(Vertx vertx, VertxTestContext testContext) throws Exception {
-    RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx), validator, discoverer, null, "aud");
+    RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx), validator, discoverer, null, null, null, "aud");
           
     destServer = vertx.createHttpServer();    
     Router router = Router.router(vertx);
@@ -95,15 +99,18 @@ public class RequestContextBuilderBearerAuthTest {
     router.route(HttpMethod.GET, "/jwks").handler(ctx -> {
       logger.info("Got request to {}", ctx.request().uri());
 
-      Map<String, KeyPair> keyMap = tokenBuilder.getKeys();
+      Map<String, AlgorithmAndKeyPair> keyMap = cache.asMap();
 
       JsonObject jwkSet = new JsonObject();
       JsonArray jwks = new JsonArray();
       jwkSet.put("keys", jwks);
-      for (Map.Entry<String, KeyPair> keyEntry : keyMap.entrySet()) {
+      for (Map.Entry<String, AlgorithmAndKeyPair> akEntry : keyMap.entrySet()) {
         try {
-          JWK<?> jwk = JWK.create(0, keyEntry.getKey(), keyEntry.getValue().getPublic());
-          jwks.add(jwk.getJson());
+          String kid = akEntry.getKey();
+          AlgorithmAndKeyPair akp = akEntry.getValue();
+          PublicKey key = akp.getKeyPair().getPublic();
+          JsonObject json = JwkBuilder.get(key).toJson(kid, akp.getAlgorithm().getName(), key);
+          jwks.add(json);
         } catch(Throwable ex) {
           logger.error("Failed to create JWK from key: ", ex);
         }
@@ -142,7 +149,7 @@ public class RequestContextBuilderBearerAuthTest {
               long now = System.currentTimeMillis() / 1000;              
               String token;
               try {
-                token = tokenBuilder.buildToken(JsonWebAlgorithm.RS256, "kid", "http://localhost:" + destPort + "/", "username", Arrays.asList("aud"), now - 1, now + 60, null);
+                token = tokenBuilder.buildToken(JsonWebAlgorithm.RS256, "kid", "http://localhost:" + destPort, "username", Arrays.asList("aud"), now - 1, now + 60, null);
               } catch(Throwable ex) {
                 return Future.failedFuture(ex);
               }

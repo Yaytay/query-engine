@@ -36,7 +36,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.jwtvalidatorvertx.JwtValidatorVertx;
+import uk.co.spudsoft.jwtvalidatorvertx.JwtValidator;
 import uk.co.spudsoft.jwtvalidatorvertx.OpenIdDiscoveryHandler;
 import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 import uk.co.spudsoft.query.main.AuthEndpoint;
@@ -57,7 +57,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
   private final WebClient webClient;
   private final LoginDao loginDao;
   private final OpenIdDiscoveryHandler openIdDiscoveryHandler;
-  private final JwtValidatorVertx jwtValidatorVertx;
+  private final JwtValidator jwtValidator;
   private final int stateLength;
   private final int codeVerifierLength;
   private final int nonceLength;
@@ -67,11 +67,11 @@ public class LoginRouter  implements Handler<RoutingContext> {
   public static LoginRouter create(Vertx vertx
           , LoginDao loginDao
           , OpenIdDiscoveryHandler openIdDiscoveryHandler
-          , JwtValidatorVertx jwtValidatorVertx
+          , JwtValidator jwtValidator
           , SessionConfig sessionConfig
           , boolean outputAllErrorMessages
   ) {
-    return new LoginRouter(vertx, loginDao, openIdDiscoveryHandler, jwtValidatorVertx, sessionConfig, outputAllErrorMessages);
+    return new LoginRouter(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, sessionConfig, outputAllErrorMessages);
   }
   
   private static class RequestDataAndAuthEndpoint {
@@ -82,7 +82,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
   public LoginRouter(Vertx vertx
           , LoginDao loginDao
           , OpenIdDiscoveryHandler openIdDiscoveryHandler
-          , JwtValidatorVertx jwtValidatorVertx
+          , JwtValidator jwtValidator
           , SessionConfig sessionConfig
           , boolean outputAllErrorMessages
   ) {
@@ -90,7 +90,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
     this.webClient = WebClient.create(vertx);
     this.loginDao = loginDao;
     this.openIdDiscoveryHandler = openIdDiscoveryHandler;
-    this.jwtValidatorVertx = jwtValidatorVertx;
+    this.jwtValidator = jwtValidator;
     this.stateLength = sessionConfig.getStateLength();
     this.codeVerifierLength = sessionConfig.getCodeVerifierLength();
     this.nonceLength = sessionConfig.getNonceLength();
@@ -104,6 +104,22 @@ public class LoginRouter  implements Handler<RoutingContext> {
     this.outputAllErrorMessages = outputAllErrorMessages;
   }
 
+  /**
+   * Return the base URL used to make this request with a suffix of /login/return.
+   * 
+   * The following headers are used, if present:
+   * <UL>
+   * <LI>X-Forwarded-Proto
+   * <LI>X-Forwarded-Port
+   * <LI>X-Forwarded-Host
+   * </UL>
+   * Any components of the URL not found in headers is taken from the request.
+   * 
+   * This method is not used when path hijacks are in operation (because login is not used when path hijacks are in operation).
+   * 
+   * @param request The request.
+   * @return The URL that should be used by an OpenID redirect.
+   */
   static String redirectUri(HttpServerRequest request) {
     String port = request.getHeader("X-Forwarded-Port");
     String scheme = request.getHeader("X-Forwarded-Proto");
@@ -118,7 +134,9 @@ public class LoginRouter  implements Handler<RoutingContext> {
         port = Integer.toString(portNum);
       }
     }
-    if (!Strings.isNullOrEmpty(port)) {
+    if (Strings.isNullOrEmpty(port)) {
+      port = "";
+    } else {
       port = ":" + port;
     }
     String host = request.getHeader("X-Forwarded-Host");
@@ -152,13 +170,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
         QueryRouter.internalError(new IllegalArgumentException("OAuth provider not known"), event, outputAllErrorMessages);
         return ;
       }
-      if (!Strings.isNullOrEmpty(authEndpoint.getIssuer())
-              && (
-                Strings.isNullOrEmpty(authEndpoint.getAuthorizationEndpoint())
-                || Strings.isNullOrEmpty(authEndpoint.getTokenEndpoint())
-                || authEndpoint.getInvalidDate() == null
-                || authEndpoint.getInvalidDate().isBefore(LocalDateTime.now())
-              )) {
+      if (shouldDiscover(authEndpoint)) {
         openIdDiscoveryHandler.performOpenIdDiscovery(authEndpoint.getIssuer())
                 .onSuccess(discoveryData -> {
                   authEndpoint.updateFromOpenIdConfiguration(discoveryData);
@@ -266,6 +278,16 @@ public class LoginRouter  implements Handler<RoutingContext> {
     } else {
       event.next();
     }
+  }
+
+  static boolean shouldDiscover(AuthEndpoint authEndpoint) {
+    return !Strings.isNullOrEmpty(authEndpoint.getIssuer())
+            && (
+               Strings.isNullOrEmpty(authEndpoint.getAuthorizationEndpoint())
+            || Strings.isNullOrEmpty(authEndpoint.getTokenEndpoint())
+            || authEndpoint.getInvalidDate() == null
+            || authEndpoint.getInvalidDate().isBefore(LocalDateTime.now())
+            );
   }
 
   private void redirectToAuthEndpoint(RoutingContext event, AuthEndpoint authEndpoint, String provider, String targetUrl) {

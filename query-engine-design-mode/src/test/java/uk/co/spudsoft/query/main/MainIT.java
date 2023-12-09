@@ -19,7 +19,6 @@ package uk.co.spudsoft.query.main;
 import io.restassured.RestAssured;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
-import io.vertx.junit5.VertxTestContext;
 import java.io.File;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -33,6 +32,7 @@ import static io.restassured.config.RedirectConfig.redirectConfig;
 import io.restassured.config.RestAssuredConfig;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 /**
@@ -48,19 +48,19 @@ public class MainIT {
   private static final Logger logger = LoggerFactory.getLogger(MainIT.class);
   
   @BeforeAll
-  public static void createDirs(Vertx vertx, VertxTestContext testContext) {
+  public static void createDirs(Vertx vertx) {
     File paramsDir = new File("target/query-engine/samples-mainit");
-    Main.prepareBaseConfigPath(paramsDir, null);
-    postgres.prepareTestDatabase(vertx).onComplete(testContext.succeedingThenComplete());
+    paramsDir.mkdirs();
   }
     
   @Test
   public void testBadAudit() throws Exception {
-    Main main = new DesignMain();
+    logger.debug("Running testBadAudit");
+    Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-        "--audit.datasource.url=wibble"
+      "--persistence.datasource.url=wibble"
       , "--baseConfigPath=target/query-engine/samples-mainit"
       , "--vertxOptions.tracingOptions.type=io.vertx.tracing.zipkin.ZipkinTracingOptions"
       , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
@@ -68,26 +68,55 @@ public class MainIT {
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--pipelineCache.maxDurationMs=0"
       , "--pipelineCache.purgePeriodMs=10"
+      , "--managementEndpoints[0]=up"
+      , "--managementEndpoints[2]=prometheus"
+      , "--managementEndpoints[3]=threads"
+      , "--session.requireSession=false"
+      , "--session.oauth.GitHub.logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
+      , "--session.oauth.GitHub.authorizationEndpoint=https://github.com/login/oauth/authorize"
+      , "--session.oauth.GitHub.tokenEndpoint=https://github.com/login/oauth/access_token"
+      , "--session.oauth.GitHub.credentials.id=bdab017f4732085a51f9"
+      , "--session.oauth.GitHub.credentials.secret=" + System.getProperty("queryEngineGithubSecret")
+      , "--session.oauth.GitHub.pkce=false"
     }, stdout);
+    assertEquals(0, stdoutStream.size());
     
     main.shutdown();
   }
   
   @Test
   public void testMainDaemon() throws Exception {
-    Main main = new DesignMain();
+    logger.debug("Running testMainDaemon");
+    Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-        "--audit.datasource.url=jdbc:" + postgres.getUrl()
-      , "--audit.datasource.adminUser.username=" + postgres.getUser()
-      , "--audit.datasource.adminUser.password=" + postgres.getPassword()
-      , "--audit.datasource.schema=public" 
+      "--persistence.datasource.url=jdbc:" + postgres.getUrl()
+      , "--persistence.datasource.adminUser.username=" + postgres.getUser()
+      , "--persistence.datasource.adminUser.password=" + postgres.getPassword()
+      , "--persistence.datasource.schema=public" 
       , "--baseConfigPath=target/query-engine/samples-mainit"
       , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
+      , "--logging.jsonFormat=true"
+      , "--sampleDataLoads[0].url=" + postgres.getUrl()
+      , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()
+      , "--sampleDataLoads[0].adminUser.password=" + postgres.getPassword()
+      , "--managementEndpoints[0]=up"
+      , "--managementEndpoints[2]=prometheus"
+      , "--managementEndpoints[3]=threads"
+      , "--managementEndpointPort=8001"
+      , "--managementEndpointUrl=http://localhost:8001/manage"
+      , "--session.requireSession=false"
+      , "--session.oauth.GitHub.logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
+      , "--session.oauth.GitHub.authorizationEndpoint=https://github.com/login/oauth/authorize"
+      , "--session.oauth.GitHub.tokenEndpoint=https://github.com/login/oauth/access_token"
+      , "--session.oauth.GitHub.credentials.id=bdab017f4732085a51f9"
+      , "--session.oauth.GitHub.credentials.secret=" + System.getProperty("queryEngineGithubSecret")
+      , "--session.oauth.GitHub.pkce=false"
     }, stdout);
+    assertEquals(0, stdoutStream.size());
     
     RestAssured.port = main.getPort();
     
