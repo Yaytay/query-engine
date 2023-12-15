@@ -81,9 +81,9 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import uk.co.spudsoft.dircache.DirCache;
 import uk.co.spudsoft.jwtvalidatorvertx.IssuerAcceptabilityHandler;
+import uk.co.spudsoft.jwtvalidatorvertx.JsonWebKeySetOpenIdDiscoveryHandler;
 import uk.co.spudsoft.jwtvalidatorvertx.JwtValidator;
 import uk.co.spudsoft.jwtvalidatorvertx.OpenIdDiscoveryHandler;
-import uk.co.spudsoft.jwtvalidatorvertx.impl.JWKSOpenIdDiscoveryHandlerImpl;
 import uk.co.spudsoft.mgmt.ManagementRoute;
 import uk.co.spudsoft.params4j.ConfigurationProperty;
 import uk.co.spudsoft.params4j.FileType;
@@ -600,12 +600,20 @@ public class Main extends Application {
 
   protected RequestContextBuilder createRequestContextBuilder(Parameters params) {    
     JwtValidationConfig jwtConfig = params.getJwt();
-    openIdDiscoveryHandler = new JWKSOpenIdDiscoveryHandlerImpl(WebClient.create(vertx)
-            , IssuerAcceptabilityHandler.create(jwtConfig.getAcceptableIssuerRegexes()
+    IssuerAcceptabilityHandler iah = IssuerAcceptabilityHandler.create(jwtConfig.getAcceptableIssuerRegexes()
                     , jwtConfig.getAcceptableIssuersFile()
                     , jwtConfig.getFilePollPeriodDuration()
-            ), jwtConfig.getDefaultJwksCacheDuration().toSeconds());
-    jwtValidator = JwtValidator.create((JWKSOpenIdDiscoveryHandlerImpl) openIdDiscoveryHandler);   
+            );
+    
+    WebClient webClient = WebClient.create(vertx);
+    if (jwtConfig.getJwksEndpoints() != null && !jwtConfig.getJwksEndpoints().isEmpty()) {
+      openIdDiscoveryHandler = JsonWebKeySetOpenIdDiscoveryHandler.create(webClient, iah, jwtConfig.getDefaultJwksCacheDuration());
+      jwtValidator = JwtValidator.createStatic(webClient, jwtConfig.getJwksEndpoints(), jwtConfig.getDefaultJwksCacheDuration(), iah);
+    } else {
+      JsonWebKeySetOpenIdDiscoveryHandler jsonWebKeySetHandler = JsonWebKeySetOpenIdDiscoveryHandler.create(webClient, iah, jwtConfig.getDefaultJwksCacheDuration());
+      openIdDiscoveryHandler = jsonWebKeySetHandler;
+      jwtValidator = JwtValidator.create(jsonWebKeySetHandler, iah);
+    }
     
     RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx)
             , jwtValidator

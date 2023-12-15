@@ -87,6 +87,7 @@ public class MainQueryIT {
       , "--logging.jsonFormat=false"
       , "--zipkin.baseUrl=http://localhost/wontwork"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
+      , "--jwt.jwksEndpoints[0]=http://localhost/"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--sampleDataLoads[0].url=" + postgres.getUrl()
       , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()

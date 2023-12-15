@@ -53,6 +53,19 @@ public class JwtValidationConfig {
   private String issuerHostPath;
   
   /**
+   * JWKS endpoints.
+   * <P>
+   * If any values are set here they will be the only endpoints used for downloading JSON Web Keys.
+   * If this value is empty the issuer will be determined (typically from the Host header, see {@link #issuer} and {@link #issuerHostPath}), tested for acceptability, and used to perform OpenID Discovery.
+   * <P>
+   * In a SAAS deployment the appropriate setting depends on whether the clients share a single JWKS.
+   * If the JWKS is shared the URL for it should be provided here, if there is a separate pool of keys for each client then this setting should be left empty and OpenID Discovery will be used for each issuer.
+   * <P>
+   * Regardless of how the JWKS endpoints are found, the acceptable issuers must be configured as tightly as possible.
+   */
+  private List<String> jwksEndpoints;
+  
+  /**
    * Path to a file that may contain acceptable issuers to validate token issuers.
    * <p>
    * This is a core security control and must be set as tightly as possible.
@@ -60,6 +73,8 @@ public class JwtValidationConfig {
    * The file itself may be updated in a running system, but the path to the file is immutable.
    * <p>
    * An issuer is considered acceptable if it matches an entry in this file OR an acceptableIssuerRegex.
+   * <p>
+   * For the security of the system every URL in this file must be an https endpoint.
    */
   private String acceptableIssuersFile;
 
@@ -80,6 +95,8 @@ public class JwtValidationConfig {
    * This is a core security control and must be set as tightly as possible.
    * <p>
    * An issuer is considered acceptable if it matches one of these regular expressions, OR it matches an entry in the acceptableIssuersFile.
+   * <p>
+   * For the security of the system only https endpoints should match these regular expressions.
    */
   private List<String> acceptableIssuerRegexes;
 
@@ -295,4 +312,42 @@ public class JwtValidationConfig {
     return this;
   }
 
+  /**
+   * Set the explicitly configured endpoints that will be used to download JWK sets.
+   * <P>
+   * If any values are set here they will be the only endpoints used for downloading JSON Web Keys.
+   * If this value is empty the issuer will be determined (typically from the Host header, see {@link #issuer} and {@link #issuerHostPath}), tested for acceptability, and used to perform OpenID Discovery.
+   * <P>
+   * In a SAAS deployment the appropriate setting depends on whether the clients share a single JWKS.
+   * If the JWKS is shared the URL for it should be provided here, if there is a separate pool of keys for each client then this setting should be left empty and OpenID Discovery will be used for each issuer.
+   * <P>
+   * Regardless of how the JWKS endpoints are found, the acceptable issuers must be configured as tightly as possible.
+   * 
+   * @return the explicitly configured endpoints that will be used to download JWK sets.
+   */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
+  public List<String> getJwksEndpoints() {
+    return jwksEndpoints;
+  }
+
+  /**
+   * Get the explicitly configured endpoints that will be used to download JWK sets.
+   * <P>
+   * If any values are set here they will be the only endpoints used for downloading JSON Web Keys.
+   * If this value is empty the issuer will be determined (typically from the Host header, see {@link #issuer} and {@link #issuerHostPath}), tested for acceptability, and used to perform OpenID Discovery.
+   * <P>
+   * In a SAAS deployment the appropriate setting depends on whether the clients share a single JWKS.
+   * If the JWKS is shared the URL for it should be provided here, if there is a separate pool of keys for each client then this setting should be left empty and OpenID Discovery will be used for each issuer.
+   * <P>
+   * Regardless of how the JWKS endpoints are found, the acceptable issuers must be configured as tightly as possible.
+   * 
+   * @param jwksEndpoints the explicitly configured endpoints that will be used to download JWK sets.
+   * @return this, so that the method may be called in a fluent manner.
+   */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
+  public JwtValidationConfig setJwksEndpoints(List<String> jwksEndpoints) {
+    this.jwksEndpoints = jwksEndpoints;
+    return this;
+  }
+  
 }

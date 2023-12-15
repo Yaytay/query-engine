@@ -73,8 +73,9 @@ public class RequestContextBuilderBearerAuthTest {
     cache = AlgorithmAndKeyPair.createCache(Duration.ofHours(1));
     tokenBuilder = new JdkTokenBuilder(cache);
 
-    discoverer = new JWKSOpenIdDiscoveryHandlerImpl(WebClient.create(vertx), IssuerAcceptabilityHandler.create(Arrays.asList(".*"), null, Duration.ZERO), 60);
-    validator = JwtValidator.create((JWKSOpenIdDiscoveryHandlerImpl) discoverer);   
+    IssuerAcceptabilityHandler iah = IssuerAcceptabilityHandler.create(Arrays.asList(".*"), null, Duration.ZERO);
+    discoverer = new JWKSOpenIdDiscoveryHandlerImpl(WebClient.create(vertx), iah, Duration.ofSeconds(60));
+    validator = JwtValidator.create((JWKSOpenIdDiscoveryHandlerImpl) discoverer, iah);
   }
 
   @Test

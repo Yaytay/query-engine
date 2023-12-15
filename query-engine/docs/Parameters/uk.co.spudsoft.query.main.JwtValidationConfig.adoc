@@ -73,4 +73,17 @@ An issuer is considered acceptable if it matches one of these regular expression
 | Set the default period to cache JWKS data for.
 
 This is expected to be overridden by cache-control/max-age headers on the JWKS response, so the default value is usually reasonable.
+| jwksEndpoints
+| link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/util/List.html[List]<link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/String.html[String]>
+| Get the explicitly configured endpoints that will be used to download JWK sets.
+
+If any values are set here they will be the only endpoints used for downloading JSON Web Keys.
+ If this value is empty the issuer will be determined (typically from the Host header, see  and ), tested for acceptability, and used to perform OpenID Discovery.
+ 
+
+In a SAAS deployment the appropriate setting depends on whether the clients share a single JWKS.
+ If the JWKS is shared the URL for it should be provided here, if there is a separate pool of keys for each client then this setting should be left empty and OpenID Discovery will be used for each issuer.
+ 
+
+Regardless of how the JWKS endpoints are found, the acceptable issuers must be configured as tightly as possible.
 |===
