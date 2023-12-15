@@ -43,6 +43,7 @@ jobs:
     
     - name: Build with Maven
       env:
+        NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         JAVA_OPTS: -Djava.security.manager=allow
         MAVEN_OPTS: -Djava.security.manager=allow
       run: mvn -P ui -B clean install site

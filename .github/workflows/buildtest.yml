@@ -49,6 +49,8 @@ jobs:
         maven-version: 3.9.2
 
     - name: Build with Maven
+      env:
+        NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
       run: mvn -P ui -B clean install site --file pom.xml
       
     - uses: codecov/codecov-action@v3
