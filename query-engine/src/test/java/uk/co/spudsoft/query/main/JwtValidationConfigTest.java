@@ -27,15 +27,7 @@ import org.junit.jupiter.api.Test;
  *
  * @author njt
  */
-public class JwtValidationConfigIT {
-  
-  @Test
-  public void testGetIssuer() {
-    JwtValidationConfig instance = new JwtValidationConfig();
-    assertNull(instance.getIssuer());
-    instance.setIssuer("issuer");
-    assertEquals("issuer", instance.getIssuer());
-  }
+public class JwtValidationConfigTest {
 
   @Test
   public void testGetIssuerHostPath() {

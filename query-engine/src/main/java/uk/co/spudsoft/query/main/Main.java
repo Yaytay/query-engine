@@ -440,9 +440,11 @@ public class Main extends Application {
     router.route("/ui/*").handler(UiRouter.create(vertx, "/ui", "/www", "/www/index.html"));
     router.getWithRegex("/openapi\\..*").blockingHandler(openApiHandler);
     router.get("/openapi").handler(openApiHandler.getUiHandler());
-    LoginRouter loginRouter = LoginRouter.create(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, params.getSession(), outputAllErrorMessages());
-    router.get("/login").handler(loginRouter);
-    router.get("/login/return").handler(loginRouter);
+    if (params.getSession() != null && params.getSession().getOauth() != null && !params.getSession().getOauth().isEmpty()) {
+      LoginRouter loginRouter = LoginRouter.create(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, params.getSession(), outputAllErrorMessages());
+      router.get("/login").handler(loginRouter);
+      router.get("/login/return").handler(loginRouter);
+    }
     router.route("/").handler(rc -> {
       rc.response().setStatusCode(307);
       rc.redirect("/ui/");
@@ -619,7 +621,7 @@ public class Main extends Application {
             , jwtValidator
             , openIdDiscoveryHandler
             , params.getOpenIdIntrospectionHeaderName()
-            , jwtConfig.getIssuer()
+            , jwtConfig.getJwksEndpoints() == null || jwtConfig.getJwksEndpoints().isEmpty()
             , jwtConfig.getIssuerHostPath()
             , jwtConfig.getRequiredAudience()
     );

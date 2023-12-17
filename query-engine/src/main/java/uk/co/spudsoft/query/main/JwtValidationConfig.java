@@ -21,24 +21,20 @@ import java.time.Duration;
 import java.util.List;
 
 /**
- *
+ * JWT validation configuration.
+ * 
+ * The JWT validator can be configured with either a dynamic or a static configuration.
+ * <p>
+ * With a dynamic configuration the issuer is derived from the Host (or X-Forwarded-Host) header (with a fixed suffix appended) and OpenID Discovery is used to determine the JWKS endpoint to use.
+ * Key IDs (kid) only have to be unique for each issuer.
+ * <p>
+ * With a static configuration the issuer is not derived and any key from any of the configured JWKS endpoints may be used.
+ * Key IDs (kid) only have to be unique across all JWKS endpoints.
+ * <p>
+ * 
  * @author njt
  */
 public class JwtValidationConfig {
-  
-  /**
-   * Fixed issuer to be used for all requests.
-   * <p>
-   * This is useful when all tokens that will be encountered have the same issuer,
-   * which could either be because the Query Engine is not being used in a SAAS deployment or because a single
-   * token service is used for all clients.
-   * <p>
-   * If a fixed issuer is not configured the Host on the request will be used as the issuer.
-   * <p>
-   * Setting this value does not remove the need to configure the acceptable issuers (but probably means that a
-   * regular expression with no variation should be used).
-   */
-  private String issuer;
   
   /**
    * Path to be appended to the Host to derive the issuer.
@@ -47,8 +43,7 @@ public class JwtValidationConfig {
    * to have a path as long as, when ".well-known/openid-configuration" is appended to it it results in a valid URL
    * to the OpenID configuration for that issuer.
    * <p>
-   * This value is <em>not</em> used to signify that the issuer should be derived from the header, that indication is driven entirely 
-   * by the fixed {@link issuer} value.
+   * This value is used to signify that the issuer should be derived from the header.
    */
   private String issuerHostPath;
   
@@ -113,42 +108,6 @@ public class JwtValidationConfig {
   private Duration defaultJwksCacheDuration = Duration.ofMinutes(1);
 
   /**
-   * Get the fixed issuer to be used for all requests.
-   * <p>
-   * This is useful when all tokens that will be encountered have the same issuer,
-   * which could either be because the Query Engine is not being used in a SAAS deployment or because a single
-   * token service is used for all clients.
-   * <p>
-   * If a fixed issuer is not configured the Host on the request will be used as the issuer.
-   * <p>
-   * Setting this value does not remove the need to configure the acceptable issuers (but probably means that a
-   * regular expression with no variation should be used).
-   * @return the fixed issuer to be used for all requests.
-   */
-  public String getIssuer() {
-    return issuer;
-  }
-
-  /**
-   * Set the fixed issuer to be used for all requests.
-   * <p>
-   * This is useful when all tokens that will be encountered have the same issuer,
-   * which could either be because the Query Engine is not being used in a SAAS deployment or because a single
-   * token service is used for all clients.
-   * <p>
-   * If a fixed issuer is not configured the Host on the request will be used as the issuer.
-   * <p>
-   * Setting this value does not remove the need to configure the acceptable issuers (but probably means that a
-   * regular expression with no variation should be used).
-   * @param issuer the fixed issuer to be used for all requests.
-   * @return this, so that the method may be called in a fluent manner.
-   */
-  public JwtValidationConfig setIssuer(String issuer) {
-    this.issuer = issuer;
-    return this;
-  }
-
-  /**
    * Get the path to be appended to the Host to derive the issuer.
    * <p>
    * Usually an issuer has an empty path, being just https://host[:port]/ however it is perfectly valid for an issuer
@@ -156,7 +115,7 @@ public class JwtValidationConfig {
    * to the OpenID configuration for that issuer.
    * <p>
    * This value is <em>not</em> used to signify that the issuer should be derived from the header, that indication is driven entirely 
-   * by the fixed {@link issuer} value.
+   * by the {@link jwksEndpoints} value.
    * @return the path to be appended to the Host to derive the issuer.
    */
   public String getIssuerHostPath() {
@@ -171,7 +130,7 @@ public class JwtValidationConfig {
    * to the OpenID configuration for that issuer.
    * <p>
    * This value is <em>not</em> used to signify that the issuer should be derived from the header, that indication is driven entirely 
-   * by the fixed {@link issuer} value.
+   * by the {@link jwksEndpoints} value.
    * @param issuerHostPath the path to be appended to the Host to derive the issuer. 
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -198,7 +157,6 @@ public class JwtValidationConfig {
     this.requiredAudience = requiredAudience;
     return this;
   }
-  
   
   /**
    * Get that path to the acceptable issuers file.
@@ -316,7 +274,7 @@ public class JwtValidationConfig {
    * Set the explicitly configured endpoints that will be used to download JWK sets.
    * <P>
    * If any values are set here they will be the only endpoints used for downloading JSON Web Keys.
-   * If this value is empty the issuer will be determined (typically from the Host header, see {@link #issuer} and {@link #issuerHostPath}), tested for acceptability, and used to perform OpenID Discovery.
+   * If this value is empty the issuer will be determined (typically from the Host header, see {@link #issuerHostPath}), tested for acceptability, and used to perform OpenID Discovery.
    * <P>
    * In a SAAS deployment the appropriate setting depends on whether the clients share a single JWKS.
    * If the JWKS is shared the URL for it should be provided here, if there is a separate pool of keys for each client then this setting should be left empty and OpenID Discovery will be used for each issuer.
@@ -334,7 +292,7 @@ public class JwtValidationConfig {
    * Get the explicitly configured endpoints that will be used to download JWK sets.
    * <P>
    * If any values are set here they will be the only endpoints used for downloading JSON Web Keys.
-   * If this value is empty the issuer will be determined (typically from the Host header, see {@link #issuer} and {@link #issuerHostPath}), tested for acceptability, and used to perform OpenID Discovery.
+   * If this value is empty the issuer will be determined (typically from the Host header, see {@link #issuerHostPath}), tested for acceptability, and used to perform OpenID Discovery.
    * <P>
    * In a SAAS deployment the appropriate setting depends on whether the clients share a single JWKS.
    * If the JWKS is shared the URL for it should be provided here, if there is a separate pool of keys for each client then this setting should be left empty and OpenID Discovery will be used for each issuer.

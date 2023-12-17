@@ -80,7 +80,7 @@ public class RequestContextBuilderBearerAuthTest {
 
   @Test
   public void testBuildRequestContext(Vertx vertx, VertxTestContext testContext) throws Exception {
-    RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx), validator, discoverer, null, null, null, "aud");
+    RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx), validator, discoverer, null, true, null, "aud");
           
     destServer = vertx.createHttpServer();    
     Router router = Router.router(vertx);

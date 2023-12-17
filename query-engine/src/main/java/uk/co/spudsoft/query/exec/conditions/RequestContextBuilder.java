@@ -51,7 +51,7 @@ public class RequestContextBuilder {
   private final JwtValidator validator;
   private final OpenIdDiscoveryHandler discoverer;
   private final String openIdIntrospectionHeaderName;
-  private final String issuer;
+  private final boolean deriveIssuerFromHost;
   private final String issuerHostPath;
   private final List<String> audList;
 
@@ -67,7 +67,7 @@ public class RequestContextBuilder {
    * @param discoverer The Open ID Discovery handler that will be used for locating the auth URL for the host.
    * This does not have to be the same discoverer as used by the validator, but it will be more efficient if it is (shared cache).
    * @param openIdIntrospectionHeaderName The name of the header that will contain the payload from a token as Json (that may be base64 encoded or not).
-   * @param issuer Fixed issuer to be used for all requests.  See {@link uk.co.spudsoft.query.main.JwtValidationConfig#issuer}.
+   * @param deriveIssuerFromHost If true the issuer should be derived from the Host (or X-Forwarded-Host) header.
    * @param issuerHostPath  Path to be appended to the Host to derive the issuer.  See {@link uk.co.spudsoft.query.main.JwtValidationConfig#issuerHostPath}.
    * @param aud The audience that must be found in any token.
    */
@@ -76,7 +76,7 @@ public class RequestContextBuilder {
           , JwtValidator validator
           , OpenIdDiscoveryHandler discoverer
           , String openIdIntrospectionHeaderName
-          , String issuer
+          , boolean deriveIssuerFromHost
           , String issuerHostPath
           , String aud
   ) {
@@ -84,7 +84,7 @@ public class RequestContextBuilder {
     this.validator = validator;
     this.discoverer = discoverer;
     this.openIdIntrospectionHeaderName = openIdIntrospectionHeaderName;
-    this.issuer = issuer;
+    this.deriveIssuerFromHost = deriveIssuerFromHost;
     this.issuerHostPath = Strings.isNullOrEmpty(issuerHostPath) ? "" : issuerHostPath.startsWith("/") ? issuerHostPath : ("/" + issuerHostPath);
     this.audList = Collections.singletonList(aud);
   }
@@ -116,10 +116,10 @@ public class RequestContextBuilder {
   }
 
   String issuer(HttpServerRequest request) {
-    if (Strings.isNullOrEmpty(issuer)) {
+    if (deriveIssuerFromHost) {
       return baseRequestUrl(request) + issuerHostPath;
     } else {
-      return this.issuer;
+      return null;
     }
   }
 

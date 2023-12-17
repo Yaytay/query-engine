@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.main;
 
+import com.google.common.base.Strings;
 import java.time.LocalDateTime;
 import uk.co.spudsoft.jwtvalidatorvertx.DiscoveryData;
 
@@ -61,6 +62,15 @@ public class AuthEndpoint {
       this.authorizationEndpoint = tempAuthorizationEndpoint;
     }
     this.invalidDate = LocalDateTime.now().plusDays(1);
+  }
+  
+  public void validate() {
+    if (Strings.isNullOrEmpty(name)) {
+      throw new IllegalArgumentException("AuthEndpoint configured with no name");
+    }
+    if (Strings.isNullOrEmpty(issuer)) {
+      throw new IllegalArgumentException("AuthEndpoint \"" + name + "\" configured with no issuer");
+    }
   }
   
   public String getName() {

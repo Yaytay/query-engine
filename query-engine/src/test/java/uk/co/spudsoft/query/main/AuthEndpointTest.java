@@ -18,13 +18,13 @@ package uk.co.spudsoft.query.main;
 
 import io.vertx.core.json.JsonObject;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import uk.co.spudsoft.jwtvalidatorvertx.DiscoveryData;
@@ -66,6 +66,22 @@ public class AuthEndpointTest {
     assertEquals("toke2", authEndpoint.getTokenEndpoint());
     assertThat(authEndpoint.getInvalidDate(), not(greaterThan(LocalDateTime.now().plusDays(1))));
     assertThat(authEndpoint.getInvalidDate(), greaterThan(LocalDateTime.now().plusDays(1).minusMinutes(1)));
+  }
+  
+  @Test
+  public void testValidate() throws IllegalArgumentException {
+    AuthEndpoint authEndpoint = new AuthEndpoint();
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+      authEndpoint.validate();
+    });
+    assertEquals("AuthEndpoint configured with no name", ex.getMessage());
+    authEndpoint.setName("name");
+    ex = assertThrows(IllegalArgumentException.class, () -> {
+      authEndpoint.validate();
+    });
+    assertEquals("AuthEndpoint \"name\" configured with no issuer", ex.getMessage());
+    authEndpoint.setIssuer("issuer");
+    authEndpoint.validate();
   }
 
   @Test

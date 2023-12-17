@@ -72,6 +72,7 @@ public class RunIT {
             , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
             , "--jwt.acceptableIssuerRegexes[0]=.*"
             , "--jwt.defaultJwksCacheDuration=PT1M"
+            , "--jwt.jwksEndpoints[0]=" + System.getProperty("queryEngineEntraUrl").replace("v2.0", "discovery/v2.0/keys")
             , "--logging.jsonFormat=false"
       //      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.pipeline=TRACE"
       //      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec\\\\.procs\\\\.query=TRACE"
@@ -90,12 +91,6 @@ public class RunIT {
             , "--corsAllowedOriginRegex=.*"
             , "--session.requireSession=true"
             , "--session.codeVerifierLength=30"
-            , "--session.oauth.GitHub.logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
-            , "--session.oauth.GitHub.authorizationEndpoint=https://github.com/login/oauth/authorize"
-            , "--session.oauth.GitHub.tokenEndpoint=https://github.com/login/oauth/access_token"
-            , "--session.oauth.GitHub.credentials.id=bdab017f4732085a51f9"
-            , "--session.oauth.GitHub.credentials.secret=" + System.getProperty("queryEngineGithubSecret")
-            , "--session.oauth.GitHub.pkce=false"
             , "--session.oauth.Microsoft.logoUrl=https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg"
             , "--session.oauth.Microsoft.issuer=" + System.getProperty("queryEngineEntraUrl")
             , "--session.oauth.Microsoft.credentials.id=" + System.getProperty("queryEngineEntraId")
