@@ -55,7 +55,7 @@
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>jwt-validator-vertx</artifactId>
-      <version>0.0.26-main-SNAPSHOT</version>
+      <version>0.0.27</version>
     </dependency>
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
@@ -79,7 +79,7 @@
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>vertx-resteasy-helpers</artifactId>
-      <version>0.0.19-35-main-SNAPSHOT</version>
+      <version>0.0.20</version>
       <exclusions>
         <exclusion>
           <groupId>jakarta.activation</groupId>

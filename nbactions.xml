@@ -39,6 +39,7 @@
             <actionName>CUSTOM-Update</actionName>
             <displayName>Update</displayName>
             <goals>
+                <goal>-U</goal>
                 <goal>clean</goal>
                 <goal>install</goal>
             </goals>
