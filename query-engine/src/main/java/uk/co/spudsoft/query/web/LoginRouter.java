@@ -154,130 +154,132 @@ public class LoginRouter  implements Handler<RoutingContext> {
   @Override
   public void handle(RoutingContext event) {
     if (event.request().path().endsWith("/login")) {
-      String targetUrl = event.request().getParam("return");
-      if (Strings.isNullOrEmpty(targetUrl)) {
-        QueryRouter.internalError(new IllegalArgumentException("Target URL not specified"), event, outputAllErrorMessages);
-        return ;
-      }
-      String provider = event.request().getParam("provider");
-      if (Strings.isNullOrEmpty(provider)) {
-        QueryRouter.internalError(new IllegalArgumentException("OAuth provider not specified"), event, outputAllErrorMessages);
-        return ;
-      }
-      AuthEndpoint authEndpoint = authEndpoints.get(provider);
-      if (null == authEndpoint) {
-        logger.warn("OAuth provider {} not found in {}", provider, authEndpoints.keySet());
-        QueryRouter.internalError(new IllegalArgumentException("OAuth provider not known"), event, outputAllErrorMessages);
-        return ;
-      }
-      if (shouldDiscover(authEndpoint)) {
-        openIdDiscoveryHandler.performOpenIdDiscovery(authEndpoint.getIssuer())
-                .onSuccess(discoveryData -> {
-                  authEndpoint.updateFromOpenIdConfiguration(discoveryData);
-                  redirectToAuthEndpoint(event, authEndpoint, provider, targetUrl);
-                 })
-                .onFailure(ex -> {
-                  logger.warn("Failed to OpenID configuration for issuer {}: ", authEndpoint.getIssuer(), ex);
-                  QueryRouter.internalError(ex, event, outputAllErrorMessages);
-                })
-                ;
-      } else {
-        redirectToAuthEndpoint(event, authEndpoint, provider, targetUrl);
-      }
-      
+      handleLoginRequest(event);
     } else if (event.request().path().endsWith("/login/return")) {
-
-      String code = event.request().getParam("code");
-      if (Strings.isNullOrEmpty(code)) {
-        QueryRouter.internalError(new IllegalArgumentException("Code not specified"), event, outputAllErrorMessages);
-        return ;
-      }
-      String state = event.request().getParam("state");
-      if (Strings.isNullOrEmpty(state)) {
-        QueryRouter.internalError(new IllegalArgumentException("State not specified"), event, outputAllErrorMessages);
-        return ;
-      }
-      
-      RequestDataAndAuthEndpoint requestDataAndAuthEndpoint = new RequestDataAndAuthEndpoint();
-      
-      logger.debug("State: {}", state);
-      
-      loginDao.getRequestData(state)
-              .compose(requestData -> {
-                requestDataAndAuthEndpoint.requestData = requestData;
-                return loginDao.markUsed(state);
-              }).compose(v -> {
-                requestDataAndAuthEndpoint.authEndpoint = authEndpoints.get(requestDataAndAuthEndpoint.requestData.provider());
-                if (null == requestDataAndAuthEndpoint.authEndpoint) {
-                  logger.warn("OAuth provider {} not found in {}", requestDataAndAuthEndpoint.requestData.provider(), authEndpoints.keySet());
-                  return Future.failedFuture(new IllegalArgumentException("OAuth provider not known"));
-                }
-                
-                MultiMap body = MultiMap.caseInsensitiveMultiMap();
-                body.add("client_id", requestDataAndAuthEndpoint.authEndpoint.getCredentials().getId());
-                body.add("client_secret", requestDataAndAuthEndpoint.authEndpoint.getCredentials().getSecret());
-                body.add("code", code);
-                if (!Strings.isNullOrEmpty(requestDataAndAuthEndpoint.authEndpoint.getScope())) {
-                  body.add("scope", requestDataAndAuthEndpoint.authEndpoint.getScope());
-                }
-                body.add("redirect_uri", requestDataAndAuthEndpoint.requestData.redirectUri());
-                body.add("grant_type", "authorization_code");
-                if (requestDataAndAuthEndpoint.authEndpoint.isPkce()) {
-                  body.add("code_verifier", requestDataAndAuthEndpoint.requestData.codeVerifier());
-                }
-                
-                logger.debug("Token endpoiont: {} and body: {}", requestDataAndAuthEndpoint.authEndpoint.getTokenEndpoint(), body);
-                return webClient.requestAbs(HttpMethod.POST, requestDataAndAuthEndpoint.authEndpoint.getTokenEndpoint())
-                        .putHeader("Accept", "application/json")
-                        .sendForm(body)
-                        ;
-              })
-              .compose(codeResponse -> {
-                if (codeResponse.statusCode() != 200) {
-                  String responseBody = codeResponse.bodyAsString();
-                  logger.warn("Failed to get access token from {} ({}): {}"
-                          , requestDataAndAuthEndpoint.authEndpoint.getTokenEndpoint(), codeResponse.statusCode(), responseBody);
-                  return Future.failedFuture(new IllegalStateException("Failed to get access token from provider"));
-                } else {
-                  JsonObject body;
-                  try {
-                    body = codeResponse.bodyAsJsonObject();
-                  } catch (Throwable ex) {
-                    String stringBody = codeResponse.bodyAsString();
-                    logger.warn("Failed to get access token ({}): {}", codeResponse.statusCode(), stringBody);
-                    return Future.failedFuture(new IllegalStateException("Failed to get access token from provider"));
-                  }
-                  logger.debug("Access token response: {}", body);
-                  String accessToken = body.getString("access_token");
-                  if (Strings.isNullOrEmpty(accessToken)) {
-                    String stringBody = codeResponse.bodyAsString();
-                    logger.warn("Failed to get access token ({}): {}", codeResponse.statusCode(), stringBody);
-                    return Future.failedFuture(new IllegalStateException("Failed to get access token from provider"));
-                  }
-                  
-                  String targetUrl = requestDataAndAuthEndpoint.requestData.targetUrl();
-                  targetUrl = targetUrl
-                          + (targetUrl.contains("?") ? "&" : "?")
-                          + "access_token=" + accessToken
-                          ;
-                  
-                  event.response()
-                          .putHeader("Location", targetUrl)
-                          .setStatusCode(307)
-                          .end();
-                }
-                return Future.succeededFuture();
-              })
-              .onFailure(ex -> {
-                QueryRouter.internalError(ex, event, outputAllErrorMessages);
-              })
-              ;
-      
-      
-      
+      handleLoginResponse(event);
     } else {
       event.next();
     }
+  }
+
+  boolean handleLoginResponse(RoutingContext event) {
+    String code = event.request().getParam("code");
+    if (Strings.isNullOrEmpty(code)) {
+      QueryRouter.internalError(new IllegalArgumentException("Code not specified"), event, outputAllErrorMessages);
+      return true;
+    }
+    String state = event.request().getParam("state");
+    if (Strings.isNullOrEmpty(state)) {
+      QueryRouter.internalError(new IllegalArgumentException("State not specified"), event, outputAllErrorMessages);
+      return true;
+    }
+    RequestDataAndAuthEndpoint requestDataAndAuthEndpoint = new RequestDataAndAuthEndpoint();
+    logger.debug("State: {}", state);
+    loginDao.getRequestData(state)
+            .compose(requestData -> {
+              requestDataAndAuthEndpoint.requestData = requestData;
+              return loginDao.markUsed(state);
+            }).compose(v -> {
+              requestDataAndAuthEndpoint.authEndpoint = authEndpoints.get(requestDataAndAuthEndpoint.requestData.provider());
+              if (null == requestDataAndAuthEndpoint.authEndpoint) {
+                logger.warn("OAuth provider {} not found in {}", requestDataAndAuthEndpoint.requestData.provider(), authEndpoints.keySet());
+                return Future.failedFuture(new IllegalArgumentException("OAuth provider not known"));
+              }
+              
+              MultiMap body = MultiMap.caseInsensitiveMultiMap();
+              body.add("client_id", requestDataAndAuthEndpoint.authEndpoint.getCredentials().getId());
+              body.add("client_secret", requestDataAndAuthEndpoint.authEndpoint.getCredentials().getSecret());
+              body.add("code", code);
+              if (!Strings.isNullOrEmpty(requestDataAndAuthEndpoint.authEndpoint.getScope())) {
+                body.add("scope", requestDataAndAuthEndpoint.authEndpoint.getScope());
+              }
+              body.add("redirect_uri", requestDataAndAuthEndpoint.requestData.redirectUri());
+              body.add("grant_type", "authorization_code");
+              if (requestDataAndAuthEndpoint.authEndpoint.isPkce()) {
+                body.add("code_verifier", requestDataAndAuthEndpoint.requestData.codeVerifier());
+              }
+              
+              logger.debug("Token endpoiont: {} and body: {}", requestDataAndAuthEndpoint.authEndpoint.getTokenEndpoint(), body);
+              return webClient.requestAbs(HttpMethod.POST, requestDataAndAuthEndpoint.authEndpoint.getTokenEndpoint())
+                      .putHeader("Accept", "application/json")
+                      .sendForm(body)
+                      ;
+            })
+            .compose(codeResponse -> {
+              if (codeResponse.statusCode() != 200) {
+                String responseBody = codeResponse.bodyAsString();
+                logger.warn("Failed to get access token from {} ({}): {}"
+                        , requestDataAndAuthEndpoint.authEndpoint.getTokenEndpoint(), codeResponse.statusCode(), responseBody);
+                return Future.failedFuture(new IllegalStateException("Failed to get access token from provider"));
+              } else {
+                JsonObject body;
+                try {
+                  body = codeResponse.bodyAsJsonObject();
+                } catch (Throwable ex) {
+                  String stringBody = codeResponse.bodyAsString();
+                  logger.warn("Failed to get access token ({}): {}", codeResponse.statusCode(), stringBody);
+                  return Future.failedFuture(new IllegalStateException("Failed to get access token from provider"));
+                }
+                logger.debug("Access token response: {}", body);
+                String accessToken = body.getString("access_token");
+                if (Strings.isNullOrEmpty(accessToken)) {
+                  String stringBody = codeResponse.bodyAsString();
+                  logger.warn("Failed to get access token ({}): {}", codeResponse.statusCode(), stringBody);
+                  return Future.failedFuture(new IllegalStateException("Failed to get access token from provider"));
+                }
+                
+                String targetUrl = requestDataAndAuthEndpoint.requestData.targetUrl();
+                targetUrl = targetUrl
+                        + (targetUrl.contains("?") ? "&" : "?")
+                        + "access_token=" + accessToken
+                        ;
+                
+                event.response()
+                        .putHeader("Location", targetUrl)
+                        .setStatusCode(307)
+                        .end();
+              }
+              return Future.succeededFuture();
+            })
+            .onFailure(ex -> {
+              QueryRouter.internalError(ex, event, outputAllErrorMessages);
+            })
+            ;
+    return false;
+  }
+
+  boolean handleLoginRequest(RoutingContext event) {
+    String targetUrl = event.request().getParam("return");
+    if (Strings.isNullOrEmpty(targetUrl)) {
+      QueryRouter.internalError(new IllegalArgumentException("Target URL not specified"), event, outputAllErrorMessages);
+      return true;
+    }
+    String provider = event.request().getParam("provider");
+    if (Strings.isNullOrEmpty(provider)) {
+      QueryRouter.internalError(new IllegalArgumentException("OAuth provider not specified"), event, outputAllErrorMessages);
+      return true;
+    }
+    AuthEndpoint authEndpoint = authEndpoints.get(provider);
+    if (null == authEndpoint) {
+      logger.warn("OAuth provider {} not found in {}", provider, authEndpoints.keySet());
+      QueryRouter.internalError(new IllegalArgumentException("OAuth provider not known"), event, outputAllErrorMessages);
+      return true;
+    }
+    if (shouldDiscover(authEndpoint)) {
+      openIdDiscoveryHandler.performOpenIdDiscovery(authEndpoint.getIssuer())
+              .onSuccess(discoveryData -> {
+                authEndpoint.updateFromOpenIdConfiguration(discoveryData);
+                redirectToAuthEndpoint(event, authEndpoint, provider, targetUrl);
+              })
+              .onFailure(ex -> {
+                logger.warn("Failed to OpenID configuration for issuer {}: ", authEndpoint.getIssuer(), ex);
+                QueryRouter.internalError(ex, event, outputAllErrorMessages);
+              })
+              ;
+    } else {
+      redirectToAuthEndpoint(event, authEndpoint, provider, targetUrl);
+    }
+    return false;
   }
 
   static boolean shouldDiscover(AuthEndpoint authEndpoint) {

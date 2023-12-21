@@ -152,18 +152,26 @@ public class RequestContextBuilder {
       int colon = credentials.indexOf(":");
       String clientId = credentials.substring(0, colon);
       String clientSecret = credentials.substring(colon + 1);      
+      request.pause();
       return performClientCredentialsGrant(baseRequestUrl(request), clientId, clientSecret)
               .compose(token -> {
                 logger.debug("Login for {} got token: {}", clientId, token);
+                request.resume();
                 return validator.validateToken(issuer(request), token, audList, true);
               })
-              .compose(jwt -> build(request, jwt));
+              .compose(jwt -> {
+                return build(request, jwt);
+              });
       
     } else if (authHeader.startsWith(BEARER)) {
       
       String token = authHeader.substring(BEARER.length());
+      request.pause();
       return validator.validateToken(issuer(request), token, audList, true)
-              .compose(jwt -> build(request, jwt));
+              .compose(jwt -> {
+                request.resume();
+                return build(request, jwt);
+              });
       
     } else {
       

@@ -31,8 +31,6 @@ public class RequestContextHandler implements Handler<RoutingContext> {
   
   private static final Logger logger = LoggerFactory.getLogger(RequestContextHandler.class);
   
-  private static final String BEARER = "Bearer ";
-  
   private final Vertx vertx;
   private final RequestContextBuilder requestContextBuilder;
   private final boolean outputAllErrorMessages;
@@ -49,7 +47,7 @@ public class RequestContextHandler implements Handler<RoutingContext> {
             .buildRequestContext(event.request())
             .onSuccess(requestContext -> {
               Vertx.currentContext().putLocal("req", requestContext);
-              
+              logger.debug("Context found for request to {}", event.request().absoluteURI());
               event.next();
             })
             .onFailure(ex -> {
