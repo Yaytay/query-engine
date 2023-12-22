@@ -89,7 +89,7 @@ public class DocHandler {
                   , new DocNodesTree.DocDir(
                           "Samples"
                           , Arrays.asList(
-                                  new DocNodesTree.DocFile("Samples/Samples Data.html", "Sample Data")
+                                  new DocNodesTree.DocFile("Samples/Sample Data.html", "Sample Data")
                                   , new DocNodesTree.DocFile("Samples/Test Database ERD.svg", "")
                           )
                   )
@@ -163,8 +163,6 @@ public class DocHandler {
   ) {
     
     try {
-      HandlerAuthHelper.getRequestContext(Vertx.currentContext(), requireSession);
-      
       if (knownDocs.contains(path)) {
         String contents;
         try (InputStream strm = getClass().getResourceAsStream(BASE_DIR + path)) {

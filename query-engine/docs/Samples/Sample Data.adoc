@@ -2,12 +2,12 @@
 
 The sample database is completely meaningless and only exists to demonstrate some of the features of the Query Engine.
 
-image:Test%20Database%20ERD.svg[Test Database ERD]
+image:../Samples/Test%20Database%20ERD.svg[Test Database ERD]
 
 In addition to the tables, the load scripts also create a number of functions and/or procedures.
 These are only used in the generation of the data for the sample tables.
 
-Depending on configuration the sample database may also contain the link:../Audit.hhtml[audit table].
+Depending on configuration the sample database may also contain the link:../Audit.html[audit table].
 
 The tables of the same database are:
 
