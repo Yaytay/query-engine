@@ -33,6 +33,7 @@ import jakarta.ws.rs.core.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.main.Version;
 import static uk.co.spudsoft.query.web.rest.InfoHandler.reportError;
 
 /**
@@ -75,6 +76,7 @@ public class SessionHandler {
       Profile profile = new Profile();
       profile.setUsername(requestContext.getUsername());
       profile.setFullname(requestContext.getNameFromJwt());
+      profile.setVersion(Version.MAVEN_PROJECT_NAME + " " + Version.MAVEN_PROJECT_VERSION);
 
       response.resume(profile);
     } catch (Throwable ex) {

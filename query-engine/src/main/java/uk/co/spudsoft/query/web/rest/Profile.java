@@ -24,6 +24,7 @@ public class Profile {
   
   private String username;
   private String fullname;
+  private String version;
 
   public String getUsername() {
     return username;
@@ -39,6 +40,14 @@ public class Profile {
 
   public void setFullname(String fullname) {
     this.fullname = fullname;
+  }
+
+  public String getVersion() {
+    return version;
+  }
+
+  public void setVersion(String version) {
+    this.version = version;
   }
   
 }

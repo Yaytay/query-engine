@@ -239,7 +239,7 @@ public class MainIT {
             .log().all()
             .extract().body().asString()
             ;
-    assertEquals("{}", nonProfile);
+    assertEquals("{\"version\":\"" + Version.MAVEN_PROJECT_NAME + " " + Version.MAVEN_PROJECT_VERSION + "\"}", nonProfile);
             
     String authConfig = given()
             .log().all()
