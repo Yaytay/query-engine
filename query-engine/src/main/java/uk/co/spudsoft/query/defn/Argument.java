@@ -357,7 +357,9 @@ public class Argument {
    * @return a list of values that this Argument may be given.
    */
   @ArraySchema(
-          schema = @Schema(description = """
+          schema = @Schema(
+                  implementation = ArgumentValue.class
+                  , description = """
                         <P>A list of possible values that the argument may have.</P>
                         <P>
                         The possible values are not validated, if an invalid value is provided the pipeline will still

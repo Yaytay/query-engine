@@ -17,14 +17,19 @@
 package uk.co.spudsoft.query.main;
 
 import com.fasterxml.jackson.databind.JavaType;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 import io.swagger.v3.core.converter.AnnotatedType;
 import io.swagger.v3.core.converter.ModelConverter;
 import io.swagger.v3.core.converter.ModelConverterContext;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.media.Schema;
+import java.time.Duration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -32,6 +37,8 @@ import java.util.Map;
  */
 public class OpenApiModelConverter implements ModelConverter {
 
+  private static final Logger logger = LoggerFactory.getLogger(OpenApiModelConverter.class);
+  
   @Override
   @SuppressWarnings({"unchecked", "rawtypes"})  
   public Schema resolve(AnnotatedType type, ModelConverterContext context, Iterator<ModelConverter> chain) {
@@ -43,10 +50,23 @@ public class OpenApiModelConverter implements ModelConverter {
         if (Map.class.isAssignableFrom(cls) || List.class.isAssignableFrom(cls)) {
           removeEmptyProperty(schema);
         }
+        if (Duration.class.isAssignableFrom(cls)) {
+          convertDuration(schema);
+        }
+        setSchemaType(schema);
       }
       return schema;
     } else {
       return null;
+    }
+  }
+
+  @SuppressWarnings({"unchecked", "rawtypes"})  
+  void setSchemaType(Schema schema) {
+    // logger.debug("{} {} ({} or {}): {}", schema.getClass(), schema.getName(), schema.getTypes(), schema.getType(), schema.getProperties() == null ? null : schema.getProperties().size());
+    if (schema.getType() != null && schema.getTypes() == null) {
+      // logger.debug("Adding {} type to {}", schema.getType(), schema.getName());
+      schema.setTypes(ImmutableSet.builder().add(schema.getType()).build());
     }
   }
 
@@ -57,6 +77,16 @@ public class OpenApiModelConverter implements ModelConverter {
       if (schema.getProperties().isEmpty()) {
         schema.setProperties(null);
       }
+    }
+  }
+  
+  @SuppressWarnings({"unchecked", "rawtypes"})  
+  static void convertDuration(Schema schema) {
+    if (schema != null) {
+      schema.setProperties(null);
+      schema.setTypes(ImmutableSet.builder().add("string").build());
+      schema.setMaxLength(40);
+      schema.setPattern("^P(?!$)(\\\\d+Y)?(\\\\d+M)?(\\\\d+W)?(\\\\d+D)?(T(?=\\\\d)(\\\\d+H)?(\\\\d+M)?(\\\\d+S)?)?$");
     }
   }
   

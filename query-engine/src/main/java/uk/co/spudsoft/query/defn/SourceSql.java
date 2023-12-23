@@ -191,8 +191,7 @@ public final class SourceSql implements Source {
     return replaceDoubleQuotes;
   }
 
-  @Schema(
-          description = """
+  @Schema(description = """
                         <P>The idle timeout for the connection pool that will be created.</P>
                         <P>
                         After this time has passed the connection will be closed and a new one will be opened by subequent pipelines.
@@ -213,8 +212,6 @@ public final class SourceSql implements Source {
                         The ISO8601 period format permits negative values, but they make no sense for timeouts and will cause an error.
                         </P>
                         """
-          , implementation = String.class
-          , maxLength = 100
   )
   @JsonFormat(shape = Shape.STRING)
   public Duration getIdleTimeout() {
@@ -243,8 +240,6 @@ public final class SourceSql implements Source {
                         The ISO8601 period format permits negative values, but they make no sense for timeouts and will cause an error.
                         </P>
                         """
-          , implementation = String.class
-          , maxLength = 100
   )
   @JsonFormat(shape = Shape.STRING)
   public Duration getConnectionTimeout() {

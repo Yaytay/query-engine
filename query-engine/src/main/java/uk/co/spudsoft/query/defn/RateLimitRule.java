@@ -154,7 +154,8 @@ public class RateLimitRule {
                         <P>The duration of the rate limit.</P>
                         <P>Expressions in ISO8601 time period notication (e.g. PT10M for ten minutes).</P>
                         """
-  , requiredMode = Schema.RequiredMode.REQUIRED)
+          , requiredMode = Schema.RequiredMode.REQUIRED
+  )
   public Duration getTimeLimit() {
     return timeLimit;
   }

@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.main;
 
+import com.google.common.collect.ImmutableSet;
 import io.swagger.v3.core.converter.ModelConverter;
 import io.swagger.v3.oas.models.media.Schema;
 import java.util.HashMap;
@@ -26,6 +27,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
@@ -80,6 +83,26 @@ public class OpenApiModelConverterTest {
     map.put("other", "yes");
     OpenApiModelConverter.removeEmptyProperty(schema);
     assertEquals(1, map.size());
+    
+  }
+
+  /**
+   * Test of removeEmptyProperty method, of class OpenApiModelConverter.
+   */
+  @Test
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  public void testConvertDuration() {
+    
+    OpenApiModelConverter.convertDuration(null);;
+    
+    Schema schema = mock(Schema.class);
+    OpenApiModelConverter.convertDuration(schema);
+    
+    verify(schema, times(1)).setTypes(ImmutableSet.builder().add("string").build());
+    verify(schema, times(1)).setProperties(null);
+    verify(schema, times(1)).setMaxLength(40);
+    verify(schema, times(1)).setPattern("^P(?!$)(\\\\d+Y)?(\\\\d+M)?(\\\\d+W)?(\\\\d+D)?(T(?=\\\\d)(\\\\d+H)?(\\\\d+M)?(\\\\d+S)?)?$");
+    
     
   }
   
