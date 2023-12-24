@@ -100,7 +100,8 @@ public class FormIoHandler {
           , description = "A form.io definition for a given document."
           , content = @Content(
                   mediaType = MediaType.APPLICATION_JSON
-                  , schema = @Schema(implementation = Form.class)
+                  , schema = @Schema(
+                  )
           )
   )
   public void getFormIO(

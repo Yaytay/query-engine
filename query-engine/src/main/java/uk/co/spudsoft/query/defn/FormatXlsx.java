@@ -287,7 +287,7 @@ public class FormatXlsx implements Format {
                         The key in this map is the name of the field as it appears in the data rows as they reach the outputter.
                         </P>
                         """)
-  public ImmutableMap<String, FormatXlsxColumn> getColumns() {
+  public Map<String, FormatXlsxColumn> getColumns() {
     return columns;
   }
 

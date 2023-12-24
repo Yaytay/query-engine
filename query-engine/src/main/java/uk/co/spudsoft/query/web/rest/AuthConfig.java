@@ -16,24 +16,56 @@
  */
 package uk.co.spudsoft.query.web.rest;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
- *
+ * Configuration data for the display of authentication selection.
+ * 
  * @author njt
  */
+@Schema(description = """
+                      <P>
+                      Configuration data for the display of authentication selection.
+                      </P>
+                      """)
 public class AuthConfig {
   
   private final String name;
   private final String logo;
 
+  /**
+   * 
+   * @param name The name to use in the list of authentication providers.
+   * @param logo The URL to the logo to use in the list of authentication providers.
+   */
   public AuthConfig(String name, String logo) {
     this.name = name;
     this.logo = logo;
   }
 
+  
+  /**
+   * Get the name to use in the list of authentication providers.
+   * @return the name to use in the list of authentication providers.
+   */
+  @Schema(description = """
+                        <P>
+                        The name to use in the list of authentication providers.
+                        </P>
+                        """)
   public String getName() {
     return name;
   }
 
+  /**
+   * Set the URL to the logo to use in the list of authentication providers.
+   * @return the URL to the logo to use in the list of authentication providers.
+   */
+  @Schema(description = """
+                        <P>
+                        The URL to the logo to use in the list of authentication providers.
+                        </P>
+                        """)
   public String getLogo() {
     return logo;
   }

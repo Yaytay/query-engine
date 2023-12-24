@@ -35,11 +35,14 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 import io.vertx.junit5.Timeout;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  *
@@ -105,27 +108,53 @@ public class OpenApiSchemaIT {
     JsonObject jo = new JsonObject(body);
     logger.debug("OpenAPI: {}", jo);
     JsonObject schemas = jo.getJsonObject("components").getJsonObject("schemas");
-    boolean failed = false;
-    for (String type : schemas.fieldNames()) {
-      logger.debug("{}: {}", type, describe(type, schemas.getJsonObject(type)));
-      String validationMessage = validate(type, schemas.getJsonObject(type));
+    List<String> validationFailures = new ArrayList<>();
+    for (String current : schemas.fieldNames()) {
+      JsonObject schema = schemas.getJsonObject(current);
+      logger.debug("{}: {}", current, describe(schema));
+      String validationMessage = validate(current, schema);
       if (validationMessage != null) {
-        failed = true;
-        logger.warn(validationMessage);
+        validationFailures.add(validationMessage + " " + schema.encode());
       }
+      JsonObject props = schema.getJsonObject("properties");
+      if (schema.containsKey("allOf")) {
+        props = schema.getJsonArray("allOf").getJsonObject(1).getJsonObject("properties");
+      }
+      if (props != null) {
+        for (Iterator<Entry<String,Object>> iter = props.iterator(); iter.hasNext(); ) {
+          Entry<String,Object> propSchemaEntry = iter.next();
+          String qualName = current + "." + propSchemaEntry.getKey();
+          if (propSchemaEntry.getValue() instanceof JsonObject propSchema) {
+            logger.debug("{}: {}", qualName, describe(propSchema)); 
+
+            validationMessage = validate(qualName, schema);
+            if (validationMessage != null) {
+              validationFailures.add(validationMessage + " " + schema.encode());
+            }
+          }
+        }
+      }      
     }
-    assertFalse(failed, "At least one validation failed");
+    
+    for (String validationFailure : validationFailures) {
+      logger.warn(validationFailure);
+    }
+    assertTrue(validationFailures.isEmpty(), "At least one validation failed");
         
     main.shutdown();
   }
 
-  private String describe(String name, JsonObject schema) {
-    if (schema.containsKey("type")) {
-      return schema.getString("type");
-    } else if (schema.getValue("allOf") != null) {
+  private String describe(JsonObject schema) {
+    String type = schema.getString("type");
+    if (type == null) {
+      type = schema.getString("$ref");
+      if (type != null) {
+        type = type.replaceAll("#/components/schemas/", "");
+      }
+    }
+    if (schema.getValue("allOf") != null) {
       JsonArray allOf = schema.getJsonArray("allOf");
       String parent = null;
-      String type = null;
       for (Iterator<Object> iter = allOf.iterator(); iter.hasNext(); ) {
         Object oItem = iter.next();
         if (oItem instanceof JsonObject item) {
@@ -133,20 +162,80 @@ public class OpenApiSchemaIT {
             String ref = item.getString("$ref");
             parent = ref.replaceAll("#/components/schemas/", "");
           } else {
-            type = item.getString(type);
+            type = item.getString("type");
           }
         }
       }
-      return type + " subclass of " + parent;
+      type = type + " subclass of " + parent;
+    } else if ("array".equals(type)) {
+      JsonObject items = schema.getJsonObject("items");
+      String ref = items.getString("$ref");
+      if (!Strings.isNullOrEmpty(ref)) {
+        type = type + " of " + ref.replaceAll("#/components/schemas/", "");
+      } else {
+        type = type + " of " + items.getString("type");
+      }
+    } else if ("object".equals(type)) {
+      if (schema.containsKey("additionalProperties")) {
+        JsonObject addProp = schema.getJsonObject("additionalProperties");
+        String ref = addProp.getString("$ref");
+        if (ref != null) {
+          ref = ref.replaceAll("#/components/schemas/", "");
+          type = "map to " + ref + " objects";
+        }
+      }
     }
-    return "Unknown";
-    //
+    if (schema.containsKey("enum")) {
+      JsonArray options = schema.getJsonArray("enum");
+      type = type + " (" + options.size() + " possible values)";
+    }
+    if (type == null) {
+      type = "Unknown";
+    }
+    if (schema.containsKey("description")) {
+      type = type + " (has description)";
+    }
+    
+    return type;
   }
   
   private String validate(String name, JsonObject schema) {
-    if (Strings.isNullOrEmpty(schema.getString("type")) && schema.getValue("allOf") == null) {
-      return name + " has no type set: " + schema.encode();
+    String type = schema.getString("type");
+    if (type == null) {
+      type = schema.getString("$ref");
+      if (type != null) {
+        type = type.replaceAll("#/components/schemas/", "");
+      }
+    } else if (schema.getValue("allOf") != null) {
+      JsonArray allOf = schema.getJsonArray("allOf");
+      if (!allOf.getJsonObject(0).containsKey("$ref")) {
+        return name + " is an \"allOf\" but the first elemement is not $ref";
+      }
+      if (!allOf.getJsonObject(1).containsKey("type")) {
+        return name + " is an \"allOf\" but the second elemement has no type";
+      }
+    } else if ("array".equals(type)) {
+      JsonObject items = schema.getJsonObject("items");
+      String ref = items.getString("$ref");
+      if (!Strings.isNullOrEmpty(ref)) {
+        type = type + " of " + ref.replaceAll("#/components/schemas/", "");
+      } else {
+        type = type + " of " + items.getString("type");
+      }
+    } else if ("object".equals(type)) {
+      if (schema.containsKey("additionalProperties")) {
+        JsonObject addProp = schema.getJsonObject("additionalProperties");
+        String ref = addProp.getString("$ref");
+        if (ref != null) {
+          ref = ref.replaceAll("#/components/schemas/", "");
+          type = "map to " + ref + " objects";
+        }
+      }
     }
+    if (!schema.containsKey("description")) {
+      return name + " has no description";
+    }
+    
     return null;
   }
 }

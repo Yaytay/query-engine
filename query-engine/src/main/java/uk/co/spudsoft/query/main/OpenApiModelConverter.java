@@ -17,8 +17,8 @@
 package uk.co.spudsoft.query.main;
 
 import com.fasterxml.jackson.databind.JavaType;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.net.MediaType;
 import io.swagger.v3.core.converter.AnnotatedType;
 import io.swagger.v3.core.converter.ModelConverter;
 import io.swagger.v3.core.converter.ModelConverterContext;
@@ -45,6 +45,12 @@ public class OpenApiModelConverter implements ModelConverter {
     if (chain.hasNext()) {
       Schema schema = chain.next().resolve(type, context, chain);
       JavaType javaType = Json.mapper().constructType(type.getType());
+      if ("ImmutableListArgument".equals(schema.getName())) {
+        return null;
+      }
+      if ("ImmutableListFormat".equals(schema.getName())) {
+        return null;
+      }
       if (javaType != null) {
         Class<?> cls = javaType.getRawClass();
         if (Map.class.isAssignableFrom(cls) || List.class.isAssignableFrom(cls)) {
@@ -52,6 +58,9 @@ public class OpenApiModelConverter implements ModelConverter {
         }
         if (Duration.class.isAssignableFrom(cls)) {
           convertDuration(schema);
+        }
+        if (MediaType.class.isAssignableFrom(cls)) {
+          convertMediaType(schema);
         }
         setSchemaType(schema);
       }
@@ -87,6 +96,17 @@ public class OpenApiModelConverter implements ModelConverter {
       schema.setTypes(ImmutableSet.builder().add("string").build());
       schema.setMaxLength(40);
       schema.setPattern("^P(?!$)(\\\\d+Y)?(\\\\d+M)?(\\\\d+W)?(\\\\d+D)?(T(?=\\\\d)(\\\\d+H)?(\\\\d+M)?(\\\\d+S)?)?$");
+    }
+  }
+  
+  @SuppressWarnings({"unchecked", "rawtypes"})  
+  static void convertMediaType(Schema schema) {
+    if (schema != null) {
+      schema.setProperties(null);
+      schema.setTypes(ImmutableSet.builder().add("string").build());
+      schema.setMaxLength(40);
+      String restrictedName = "[A-Za-z0-9][A-Za-z0-9!#$&-^_.+]{0,126}";
+      schema.setPattern("^(" + restrictedName + ")/(" + restrictedName + ")(; *" + restrictedName + "(=" + restrictedName + "))*$");
     }
   }
   

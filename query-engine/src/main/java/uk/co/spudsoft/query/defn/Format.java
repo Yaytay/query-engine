@@ -201,8 +201,6 @@ public interface Format {
                         The media type will also be set as the Content-Type header in the response.
                         </P>
                         """
-          , implementation = String.class
-          , maxLength = 1000
   )
   MediaType getMediaType();
 

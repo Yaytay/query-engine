@@ -34,10 +34,18 @@ public class DocNodesTree extends AbstractTree {
   private DocNodesTree() {
   }
   
+  /**
+   * Base class for documentation files and the directories that contain them.
+   */
   @JsonSubTypes({
     @JsonSubTypes.Type(value = DocNodesTree.DocDir.class),
     @JsonSubTypes.Type(value = DocNodesTree.DocFile.class)
   })
+  @Schema(description = """
+                        <P>
+                        Base class for documentation files and the directories that contain them.
+                        </P>
+                        """)
   public static class DocNode extends AbstractNode<DocNode> {
     
     private final String path; 
@@ -52,9 +60,50 @@ public class DocNodesTree extends AbstractTree {
       this.path = path;      
     }
 
+    /**
+     * Get the relative path to the node from the root.
+     * @return the relative path to the node from the root.
+     */
     @NotNull
+    @Schema(description = """
+                          <P>
+                          The relative path to the node from the root.
+                          </P>
+                          """)
     public String getPath() {
       return path;
+    }
+
+    /**
+     * Get the children of the node.
+     * If this is null then the node is a file, otherwise it is a directory.
+     * @return the children of the node.
+     */
+    @Override
+    @Schema(description = """
+                          <P>
+                          The children of the node.
+                          </P>
+                          <P>
+                          If this is null then the node is a file, otherwise it is a directory.
+                          </P>
+                          """)
+    public List<DocNode> getChildren() {
+      return super.getChildren();
+    }
+
+    /**
+     * Get the leaf name of the node.
+     * @return the leaf name of the node.
+     */
+    @Override
+    @Schema(description = """
+                          <P>
+                          The leaf name of the node.
+                          </P>
+                          """)
+    public String getName() {
+      return super.getName();
     }
 
     static String nameFromPath(String path) {
@@ -75,6 +124,14 @@ public class DocNodesTree extends AbstractTree {
 
   }
   
+  /**
+   * A directory containing documentation files.
+   */
+  @Schema(description = """
+                        <P>
+                        A directory containing documentation files.
+                        </P>
+                        """)
   public static class DocDir extends DocNode {
     
     public DocDir(String path,  List<DocNode> children) {
@@ -90,6 +147,14 @@ public class DocNodesTree extends AbstractTree {
     
   }
   
+  /**
+   * A documentation file.
+   */
+  @Schema(description = """
+                        <P>
+                        A documentation file.
+                        </P>
+                        """)
   public static class DocFile extends DocNode {
     
     private final String title;
@@ -100,7 +165,20 @@ public class DocNodesTree extends AbstractTree {
       this.title = Objects.requireNonNull(title);
     }
 
+    /**
+     * Get the title of the document.
+     * The title is what should be displayed in any UI.
+     * @return the title of the document.
+     */
     @NotNull
+    @Schema(description = """
+                          <P>
+                          The title of the document.
+                          </P>
+                          <P>
+                          The title is what should be displayed in any UI.
+                          </P>
+                          """)
     public String getTitle() {
       return title;
     }
