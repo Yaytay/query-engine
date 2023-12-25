@@ -16,16 +16,32 @@
  */
 package uk.co.spudsoft.query.web.rest;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
- *
+ * Information about the current user and environment.
  * @author njt
  */
+@Schema(description = """
+                      Information about the current user and environment.
+                      <P>
+                      This information is pulled from the access token and is only available if present there.
+                      """)
 public class Profile {
   
   private String username;
   private String fullname;
   private String version;
 
+  @Schema(description = """
+                        The username from the token.
+                        <P>
+                        This is taken from the first of the following claims to have a value:
+                        <UL>
+                        <LI>preferred_username
+                        <LI>sub
+                        </UL>
+                        """)
   public String getUsername() {
     return username;
   }
@@ -34,6 +50,17 @@ public class Profile {
     this.username = username;
   }
 
+  @Schema(description = """
+                        The users full name from the token.
+                        <P>
+                        This is taken from the first of the following claims to have a value:
+                        <UL>
+                        <LI>name
+                        <LI>given_name & family_name (either or both)
+                        <LI>preferred_username
+                        <LI>sub
+                        </UL>
+                        """)
   public String getFullname() {
     return fullname;
   }
@@ -42,6 +69,9 @@ public class Profile {
     this.fullname = fullname;
   }
 
+  @Schema(description = """
+                        The version of the Query Engine backend.
+                        """)
   public String getVersion() {
     return version;
   }

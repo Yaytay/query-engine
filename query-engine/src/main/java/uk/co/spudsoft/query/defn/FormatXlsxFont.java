@@ -31,6 +31,9 @@ import uk.co.spudsoft.xlsx.FontDefinition;
  * @author njt
  */
 @JsonDeserialize(builder = FormatXlsxFont.Builder.class)
+@Schema(description = """
+                      Specification of a font to use in XLSX output.
+                      """)
 public class FormatXlsxFont {
   
   private final String fontName;

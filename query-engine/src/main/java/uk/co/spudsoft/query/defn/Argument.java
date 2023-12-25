@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.extensions.Extension;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -356,10 +357,7 @@ public class Argument {
    * This serves as a hint to the UI and is not validated by the Query Engine.
    * @return a list of values that this Argument may be given.
    */
-  @ArraySchema(
-          schema = @Schema(
-                  implementation = ArgumentValue.class
-                  , description = """
+  @Parameter(description = """
                         <P>A list of possible values that the argument may have.</P>
                         <P>
                         The possible values are not validated, if an invalid value is provided the pipeline will still
@@ -369,7 +367,14 @@ public class Argument {
                         If more than a few values are possible the possibleValuesUrl should be used instead.
                         </P>
                         """
-          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  @ArraySchema(
+          arraySchema = @Schema(
+                  requiredMode = Schema.RequiredMode.NOT_REQUIRED
+          ),
+           schema = @Schema(
+                  implementation = ArgumentValue.class
+                   , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           )
   )
   public List<ArgumentValue> getPossibleValues() {

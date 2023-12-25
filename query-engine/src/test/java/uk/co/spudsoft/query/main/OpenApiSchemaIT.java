@@ -127,9 +127,9 @@ public class OpenApiSchemaIT {
           if (propSchemaEntry.getValue() instanceof JsonObject propSchema) {
             logger.debug("{}: {}", qualName, describe(propSchema)); 
 
-            validationMessage = validate(qualName, schema);
+            validationMessage = validate(qualName, propSchema);
             if (validationMessage != null) {
-              validationFailures.add(validationMessage + " " + schema.encode());
+              validationFailures.add(validationMessage + " " + propSchema.encode());
             }
           }
         }

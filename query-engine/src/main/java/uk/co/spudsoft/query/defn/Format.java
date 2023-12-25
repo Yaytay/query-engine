@@ -169,14 +169,14 @@ public interface Format {
   
   /**
    * Get the extension of the format.
-   * The extension is only used to determine the format based upon the URL path.
+   * The extension is used to determine the format based upon the URL path and also to set the default filename for the content-disposition header.
    * If multiple formats have the same extension the first in the list will be used.
    * @return the extension of the format.
    */
   @Schema(description = """
                         <P>The extension of the format.</P>
                         <P>
-                        The extension is only used to determine the format based upon the URL path.
+                        The extension is used to determine the format based upon the URL path and also to set the default filename for the content-disposition header.
                         If multiple formats have the same extension the first in the list will be used.
                         </P>
                         """

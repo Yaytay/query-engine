@@ -44,11 +44,17 @@ public class OpenApiModelConverter implements ModelConverter {
   public Schema resolve(AnnotatedType type, ModelConverterContext context, Iterator<ModelConverter> chain) {
     if (chain.hasNext()) {
       Schema schema = chain.next().resolve(type, context, chain);
+      if (schema == null) {
+        return null;
+      }
       JavaType javaType = Json.mapper().constructType(type.getType());
       if ("ImmutableListArgument".equals(schema.getName())) {
         return null;
       }
       if ("ImmutableListFormat".equals(schema.getName())) {
+        return null;
+      }
+      if ("MediaType".equals(schema.getName())) {
         return null;
       }
       if (javaType != null) {

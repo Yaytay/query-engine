@@ -34,6 +34,10 @@ import uk.co.spudsoft.query.exec.FormatInstance;
  * @author jtalbut
  */
 @JsonDeserialize(builder = FormatJson.Builder.class)
+@Schema(description = """
+                      Configuration for an output format of JSON.
+                      There are no formatting options for JSON output.
+                      """)
 public class FormatJson implements Format {
 
   private final FormatType type;
@@ -59,20 +63,73 @@ public class FormatJson implements Format {
     return type;
   }
 
+  /**
+   * Get the name of the format, as will be used on query string parameters.
+   * No two formats in a single pipeline should have the same name.
+   * @return the name of the format, as will be used on query string parameters.
+   */
   @Override
-  @Schema(defaultValue = "json")
+  @Schema(description = """
+                        <P>The name of the format.</P>
+                        <P>
+                        The name is used to determine the format based upon the '_fmt' query string argument.
+                        </P>
+                        <P>
+                        It is an error for two Formats to have the same name.
+                        This is different from the other Format determinators which can be repeated, the name is the
+                        ultimate arbiter and must be unique.
+                        This ensures that all configured Formats can be used.
+                        </P>
+                        """
+          , maxLength = 100
+          , defaultValue = "json"
+  )
   public String getName() {
     return name;
   }
 
+  /**
+   * Get the extension of the format.
+   * The extension is used to determine the format based upon the URL path and also to set the default filename for the content-disposition header.
+   * If multiple formats have the same extension the first in the list will be used.
+   * @return the extension of the format.
+   */
   @Override
-  @Schema(defaultValue = "json")
+  @Schema(description = """
+                        <P>The extension of the format.</P>
+                        <P>
+                        The extension is used to determine the format based upon the URL path and also to set the default filename for the content-disposition header.
+                        If multiple formats have the same extension the first in the list will be used.
+                        </P>
+                        """
+          , maxLength = 20
+          , defaultValue = "json"
+  )
   public String getExtension() {
     return extension;
   }
 
+  /**
+   * Get the media type of the format.
+   * The media type is used to determine the format based upon the Accept header in the request.
+   * If multiple formats have the same media type the first in the list will be used.
+   * The media type will also be set as the Content-Type header in the response.
+   * @return the media type of the format.
+   */
   @Override
-  @Schema(defaultValue = "application/json", implementation = String.class)
+  @Schema(description = """
+                        <P>The media type of the format.</P>
+                        <P>
+                        The media type is used to determine the format based upon the Accept header in the request.
+                        If multiple formats have the same media type the first in the list will be used.
+                        </P>
+                        <P>
+                        The media type will also be set as the Content-Type header in the response.
+                        </P>
+                        """
+          , defaultValue = "application/json"
+          , implementation = String.class
+  )
   public MediaType getMediaType() {
     return mediaType;
   }

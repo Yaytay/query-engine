@@ -138,9 +138,24 @@ public class DocNodesTree extends AbstractTree {
       super(path, children);
     }
 
+    /**
+     * Get the children of the node.
+     * This value must be not-null (though it may be empty), because this is a directory.
+     * @return the children of the node.
+     */
     @Override
     @NotNull
-    @Schema(nullable = false)
+    @Schema(description = """
+                          <P>
+                          The children of the node.
+                          </P>
+                          <P>
+                          This value must be not-null (though it may be empty), because this is a directory.
+                          </P>
+                          """
+            , nullable = false
+            , requiredMode = Schema.RequiredMode.REQUIRED
+    )
     public List<DocNode> getChildren() {
       return super.getChildren(); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
     }

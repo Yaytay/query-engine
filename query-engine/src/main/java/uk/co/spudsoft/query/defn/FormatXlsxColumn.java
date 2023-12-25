@@ -30,6 +30,9 @@ import uk.co.spudsoft.xlsx.ColumnDefinition;
  * @author njt
  */
 @JsonDeserialize(builder = FormatXlsxColumn.Builder.class)
+@Schema(description = """
+                      Specification of the formatting of a column in XLSX output.
+                      """)
 public class FormatXlsxColumn {
   
   private final String header;

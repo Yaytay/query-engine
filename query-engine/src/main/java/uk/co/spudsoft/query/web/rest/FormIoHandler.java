@@ -49,7 +49,6 @@ import uk.co.spudsoft.query.pipeline.PipelineNodesTree.PipelineDir;
 import uk.co.spudsoft.query.pipeline.PipelineNodesTree.PipelineFile;
 import uk.co.spudsoft.query.pipeline.PipelineNodesTree.PipelineNode;
 import uk.co.spudsoft.query.web.ServiceException;
-import uk.co.spudsoft.query.web.formio.Form;
 import uk.co.spudsoft.query.web.formio.FormBuilder;
 import static uk.co.spudsoft.query.web.rest.InfoHandler.reportError;
 

@@ -44,6 +44,23 @@ import uk.co.spudsoft.xlsx.ColourDefinition;
  * @author njt
  */
 @JsonDeserialize(builder = FormatXlsxColours.Builder.class)
+@Schema(description = """
+                      Specification of colours used in XLSX output.
+                      <P>
+                      Colours should be specified as 3 or 4 pairs of hexadecimal digits.
+                      <P>
+                      A colour specification consists of two colours - a foreground colour and a background colour.
+                      <P>
+                      Some examples:
+                      <UL>
+                      <LI>FFFFFF: White
+                      <LI>999999: Grey
+                      <LI>990000: Red
+                      <LI>000099: Blue
+                      <LI>0A5F42: I hope to get around to making these colours more descriptive!
+                      </UL>
+                      """
+)
 public class FormatXlsxColours {
   
   public static final Pattern VALID_COLOUR = Pattern.compile("[0-9A-F]{6}([0-9A-F]{2})?");  

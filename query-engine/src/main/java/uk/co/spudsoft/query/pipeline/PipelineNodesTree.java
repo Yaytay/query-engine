@@ -40,6 +40,11 @@ public class PipelineNodesTree extends AbstractTree {
     @JsonSubTypes.Type(value = PipelineDir.class),
     @JsonSubTypes.Type(value = PipelineFile.class)
   })
+  @Schema(description = """
+                        <P>
+                        Base class for pipelines and the directories that contain them.
+                        </P>
+                        """)
   public static class PipelineNode extends AbstractNode<PipelineNode> {
 
     private final String path;
@@ -55,8 +60,36 @@ public class PipelineNodesTree extends AbstractTree {
     }
 
     @NotNull
+    @Schema(description = """
+                          <P>
+                          The relative path to the node from the root.
+                          </P>
+                          """)
     public String getPath() {
       return path;
+    }
+
+    @Override
+    @Schema(description = """
+                          <P>
+                          The children of the node.
+                          </P>
+                          <P>
+                          If this is null then the node is a file, otherwise it is a directory.
+                          </P>
+                          """)
+    public List<PipelineNode> getChildren() {
+      return super.getChildren();
+    }
+
+    @Override
+    @Schema(description = """
+                          <P>
+                          The leaf name of the node.
+                          </P>
+                          """)
+    public String getName() {
+      return super.getName();
     }
 
     static String nameFromPath(String path) {
@@ -84,6 +117,11 @@ public class PipelineNodesTree extends AbstractTree {
     }
   }
 
+  @Schema(description = """
+                        <P>
+                        A directory containing pipelines.
+                        </P>
+                        """)
   public static class PipelineDir extends PipelineNode {
 
     public PipelineDir(String path, List<PipelineNode> children) {
@@ -92,13 +130,24 @@ public class PipelineNodesTree extends AbstractTree {
 
     @Override
     @NotNull
-    @Schema(nullable = false)
+    @Schema(nullable = false
+            , requiredMode = Schema.RequiredMode.REQUIRED
+            , description = """
+                          <P>
+                          The children of the directory.
+                          </P>
+                          """)
     public List<PipelineNode> getChildren() {
       return super.getChildren(); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
     }
 
   }
 
+  @Schema(description = """
+                        <P>
+                        A pipeline.
+                        </P>
+                        """)
   public static class PipelineFile extends PipelineNode {
 
     private final String title;
@@ -114,18 +163,38 @@ public class PipelineNodesTree extends AbstractTree {
       this.destinations = ImmutableCollectionTools.copy(destinations);
     }
 
+    @Schema(description = """
+                          <P>
+                          The title of the pipeline, to be displayed in the UI.
+                          </P>
+                          """)
     public String getTitle() {
       return title;
     }
 
+    @Schema(description = """
+                          <P>
+                          The description of the pipeline.
+                          </P>
+                          """)
     public String getDescription() {
       return description;
     }
 
+    @Schema(description = """
+                          <P>
+                          The arguments that the pipeline accepts/requires.
+                          </P>
+                          """)
     public ImmutableList<Argument> getArguments() {
       return arguments;
     }
 
+    @Schema(description = """
+                          <P>
+                          The outputs that the pipeline supports.
+                          </P>
+                          """)
     public ImmutableList<Format> getDestinations() {
       return destinations;
     }

@@ -483,11 +483,7 @@ public class RequestContext {
     if (jwt == null) {
       return null;
     }
-    Object node = jwt.getClaim("preferred_username");
-    if (node instanceof String s) {
-      return s;
-    }    
-    node = jwt.getClaim("name");
+    Object node = jwt.getClaim("name");
     if (node instanceof String s) {
       return s;
     }
@@ -509,6 +505,10 @@ public class RequestContext {
       } else {
         return givenName + " " + familyName;
       }
+    }    
+    node = jwt.getClaim("preferred_username");
+    if (node instanceof String s) {
+      return s;
     }    
     node = jwt.getClaim("sub");
     if (node instanceof String s) {
