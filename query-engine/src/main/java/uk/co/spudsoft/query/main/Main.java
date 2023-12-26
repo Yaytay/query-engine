@@ -633,6 +633,7 @@ public class Main extends Application {
             .resourceClasses(Stream.concat(resources.stream(), Stream.of(this)).map(r -> r.getClass().getCanonicalName())
                     .collect(Collectors.toSet()))
             .prettyPrint(true)
+            .filterClass("uk.co.spudsoft.query.main.OpenApiFilterClass")
             .openAPI31(Boolean.TRUE)
             .openAPI(
                     new OpenAPI()

@@ -175,7 +175,7 @@ public class RequestContextTest {
     RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, "X-OpenID-Introspection", false, null, "aud");
     RequestContext ctx = rcb.buildRequestContext(req).result();
 
-    assertEquals("bob.fred", ctx.getNameFromJwt());
+    assertEquals("Bob Fred", ctx.getNameFromJwt());
   }
 
   private static final String OPENID_GIVENNAME_FAMILYNAME = Base64.getEncoder().encodeToString("{\"jti\":\"a28849b9-3624-42c3-aaad-21c5f80ffc55\",\"exp\":1653142100,\"nbf\":0,\"iat\":1653142040,\"iss\":\"http://ca.localtest.me\",\"aud\":\"security-admin-console\",\"sub\":\"af78202f-b54a-439d-913c-0bbe99ba6bf8\",\"typ\":\"Bearer\",\"azp\":\"QE2\",\"scope\":\"openid profile email qe2\",\"email_verified\":false,\"given_name\":\"Bob\",\"family_name\":\"Fred\",\"email\":\"bob@localtest.me\",\"groups\":[\"group1\",\"group2\",\"group3\"]}".getBytes(StandardCharsets.UTF_8));

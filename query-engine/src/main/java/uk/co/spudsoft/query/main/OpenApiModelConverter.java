@@ -23,13 +23,16 @@ import io.swagger.v3.core.converter.AnnotatedType;
 import io.swagger.v3.core.converter.ModelConverter;
 import io.swagger.v3.core.converter.ModelConverterContext;
 import io.swagger.v3.core.util.Json;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.models.media.Schema;
+import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.defn.Argument;
 
 /**
  *
@@ -54,13 +57,13 @@ public class OpenApiModelConverter implements ModelConverter {
       if ("ImmutableListFormat".equals(schema.getName())) {
         return null;
       }
-      if ("MediaType".equals(schema.getName())) {
-        return null;
-      }
       if (javaType != null) {
         Class<?> cls = javaType.getRawClass();
         if (Map.class.isAssignableFrom(cls) || List.class.isAssignableFrom(cls)) {
           removeEmptyProperty(schema);
+        }
+        if (Argument.class.isAssignableFrom(cls)) {
+          fixArgumentPossibleValuesDescription(schema);
         }
         if (Duration.class.isAssignableFrom(cls)) {
           convertDuration(schema);
@@ -85,6 +88,19 @@ public class OpenApiModelConverter implements ModelConverter {
     }
   }
 
+  @SuppressWarnings({"unchecked", "rawtypes"})  
+  static void fixArgumentPossibleValuesDescription(Schema schema) {
+    Schema possibleValues = (Schema) schema.getProperties().get("possibleValues");
+    Method method;
+    try {
+      method = Argument.class.getMethod("getPossibleValues");
+    } catch (NoSuchMethodException ex) {
+      return ;
+    }
+    ArraySchema arraySchema = method.getAnnotation(ArraySchema.class);
+    possibleValues.setDescription(arraySchema.arraySchema().description());
+  }
+  
   @SuppressWarnings({"unchecked", "rawtypes"})  
   static void removeEmptyProperty(Schema schema) {
     if (schema != null && schema.getProperties() != null) {
