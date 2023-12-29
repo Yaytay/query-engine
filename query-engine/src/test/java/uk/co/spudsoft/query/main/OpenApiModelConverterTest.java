@@ -16,12 +16,19 @@
  */
 package uk.co.spudsoft.query.main;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.swagger.v3.core.converter.ModelConverter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.models.media.JsonSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -30,14 +37,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
+import uk.co.spudsoft.query.defn.Processor;
 
 /**
  *
  * @author njt
  */
 public class OpenApiModelConverterTest {
-  
+
   public OpenApiModelConverterTest() {
   }
 
@@ -69,12 +76,12 @@ public class OpenApiModelConverterTest {
   @Test
   @SuppressWarnings("rawtypes")
   public void testRemoveEmptyProperty() {
-    
+
     OpenApiModelConverter.removeEmptyProperty(null);
-    
+
     Schema schema = mock(Schema.class);
     OpenApiModelConverter.removeEmptyProperty(schema);
-    
+
     Map<String, Object> map = new HashMap<>();
     when(schema.getProperties()).thenReturn(map);
 
@@ -83,7 +90,7 @@ public class OpenApiModelConverterTest {
     map.put("other", "yes");
     OpenApiModelConverter.removeEmptyProperty(schema);
     assertEquals(1, map.size());
-    
+
   }
 
   /**
@@ -92,18 +99,125 @@ public class OpenApiModelConverterTest {
   @Test
   @SuppressWarnings({"unchecked", "rawtypes"})
   public void testConvertDuration() {
-    
+
     OpenApiModelConverter.convertDuration(null);;
-    
+
     Schema schema = mock(Schema.class);
     OpenApiModelConverter.convertDuration(schema);
-    
+
     verify(schema, times(1)).setTypes(ImmutableSet.builder().add("string").build());
     verify(schema, times(1)).setProperties(null);
     verify(schema, times(1)).setMaxLength(40);
     verify(schema, times(1)).setPattern("^P(?!$)(\\\\d+Y)?(\\\\d+M)?(\\\\d+W)?(\\\\d+D)?(T(?=\\\\d)(\\\\d+H)?(\\\\d+M)?(\\\\d+S)?)?$");
-    
-    
   }
-  
+
+  private static class SourcePipelineArraySchema {
+
+    private final ImmutableList<Processor> processors;
+
+    public SourcePipelineArraySchema(ImmutableList<Processor> processors) {
+      this.processors = processors;
+    }
+
+    @ArraySchema(
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = Processor.class)
+            , arraySchema = @io.swagger.v3.oas.annotations.media.Schema(type = "array", description = "It's the processors")
+            , minItems = 0
+    )
+    public List<Processor> getProcessors() {
+      return processors;
+    }
+
+  }
+
+  @Test
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  public void testFixArrrayPropertyDescriptionsArraySchema() {
+    
+    JsonSchema propSchema = new JsonSchema();
+    propSchema.name("processors");
+    propSchema.minItems(0);
+    JsonSchema schema = new JsonSchema();
+    schema.setProperties(ImmutableMap.<String,Schema>builder()
+            .put("processors", propSchema)
+            .build());
+    OpenApiModelConverter.fixArrrayPropertyDescriptions(SourcePipelineArraySchema.class, schema);
+    String processorsString = schema.getProperties().get("processors").toString();
+    assertThat(processorsString, containsString("type: [array]"));
+    assertThat(processorsString, containsString("description: It's the processors"));
+    assertThat(processorsString, containsString("minItems: 0"));
+  }
+
+  private static class SourcePipelineItemSchema {
+
+    private final ImmutableList<Processor> processors;
+
+    public SourcePipelineItemSchema(ImmutableList<Processor> processors) {
+      this.processors = processors;
+    }
+
+    @ArraySchema(
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = Processor.class, description = "It's the processors")
+            , arraySchema = @io.swagger.v3.oas.annotations.media.Schema(type = "array")
+            , minItems = 0
+    )
+    public List<Processor> getProcessors() {
+      return processors;
+    }
+
+  }
+
+  @Test
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  public void testFixArrrayPropertyDescriptionsItemSchema() {
+    
+    JsonSchema propSchema = new JsonSchema();
+    propSchema.name("processors");
+    propSchema.minItems(0);
+    JsonSchema schema = new JsonSchema();
+    schema.setProperties(ImmutableMap.<String,Schema>builder()
+            .put("processors", propSchema)
+            .build());
+    OpenApiModelConverter.fixArrrayPropertyDescriptions(SourcePipelineItemSchema.class, schema);
+    String processorsString = schema.getProperties().get("processors").toString();
+    assertThat(processorsString, containsString("type: [array]"));
+    assertThat(processorsString, containsString("description: It's the processors"));
+    assertThat(processorsString, containsString("minItems: 0"));
+  }
+
+  private static class SourcePipelineNoSchema {
+
+    private final ImmutableList<Processor> processors;
+
+    public SourcePipelineNoSchema(ImmutableList<Processor> processors) {
+      this.processors = processors;
+    }
+
+    @ArraySchema(
+            minItems = 0
+    )
+    public List<Processor> getProcessors() {
+      return processors;
+    }
+
+  }
+
+  @Test
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  public void testFixArrrayPropertyDescriptionsNoSchema() {
+    
+    JsonSchema propSchema = new JsonSchema();
+    propSchema.name("processors");
+    propSchema.minItems(0);
+    JsonSchema schema = new JsonSchema();
+    schema.setProperties(ImmutableMap.<String,Schema>builder()
+            .put("processors", propSchema)
+            .build());
+    OpenApiModelConverter.fixArrrayPropertyDescriptions(SourcePipelineNoSchema.class, schema);
+    String processorsString = schema.getProperties().get("processors").toString();
+    assertThat(processorsString, containsString("type: [array]"));
+    assertThat(processorsString, containsString("description: null"));
+    assertThat(processorsString, containsString("minItems: 0"));
+  }
+
 }

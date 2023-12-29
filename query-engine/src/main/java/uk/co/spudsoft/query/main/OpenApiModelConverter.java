@@ -25,6 +25,7 @@ import io.swagger.v3.core.converter.ModelConverter;
 import io.swagger.v3.core.converter.ModelConverterContext;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.models.media.JsonSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import java.lang.reflect.Method;
 import java.time.Duration;
@@ -51,13 +52,10 @@ public class OpenApiModelConverter implements ModelConverter {
         return null;
       }
       JavaType javaType = Json.mapper().constructType(type.getType());
-      if ("ImmutableListArgument".equals(schema.getName())) {
-        return null;
-      }
-      if ("ImmutableListFormat".equals(schema.getName())) {
-        return null;
-      }
       if (javaType != null) {
+        if ("SourcePipeline".equals(schema.getName())) {
+          logger.debug("Break");
+        }
         Class<?> cls = javaType.getRawClass();
         fixArrrayPropertyDescriptions(cls, schema);
         if (Map.class.isAssignableFrom(cls) || List.class.isAssignableFrom(cls)) {
@@ -92,29 +90,38 @@ public class OpenApiModelConverter implements ModelConverter {
     if (props != null) {
       props.forEach((k, v) -> {
         if (v instanceof Schema s) {
-          if (Strings.isNullOrEmpty(s.getDescription())) {
-            String propName = s.getName();
-            String methodName = "get" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
+          String propName = s.getName();
+          String methodName = "get" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
 
-            try {
-              Method method = cls.getMethod(methodName);
-
-              ArraySchema arraySchema = method.getAnnotation(ArraySchema.class);
-              if (arraySchema != null) {
-                if (arraySchema.arraySchema() != null) {
-                  if (!Strings.isNullOrEmpty(arraySchema.arraySchema().description())) {
-                    s.setDescription(arraySchema.arraySchema().description());
-                    return ;
-                  }
-                } 
-                if (arraySchema.schema() != null) {
-                  if (!Strings.isNullOrEmpty(arraySchema.schema().description())) {
-                    s.setDescription(arraySchema.schema().description());
-                  }
-                } 
-              }
-            } catch (NoSuchMethodException ex) {
+          Method method;
+          try {
+            method = cls.getMethod(methodName);
+          } catch (NoSuchMethodException ex) {
+            return ;
+          }
+          ArraySchema arraySchema = method.getAnnotation(ArraySchema.class);
+          if (arraySchema != null) {
+            if (s.getTypes() == null || s.getTypes().isEmpty()) {
+              s.setTypes(ImmutableSet.builder().add("array").build());
             }
+            if (arraySchema.arraySchema() != null) {
+              if (Strings.isNullOrEmpty(s.getDescription()) && !Strings.isNullOrEmpty(arraySchema.arraySchema().description())) {
+                s.setDescription(arraySchema.arraySchema().description());
+              }
+            } 
+            if (arraySchema.schema() != null) {
+              io.swagger.v3.oas.annotations.media.Schema itemSchemaAnnotation = arraySchema.schema();
+              if (s.getItems() == null) {
+                JsonSchema itemSchema = new JsonSchema();
+                if (itemSchemaAnnotation.implementation() != null) {
+                  itemSchema.$ref("#/components/schemas/" + itemSchemaAnnotation.implementation().getSimpleName());
+                }
+                s.setItems(itemSchema);
+              }
+              if (Strings.isNullOrEmpty(s.getDescription()) && !Strings.isNullOrEmpty(itemSchemaAnnotation.description())) {
+                s.setDescription(itemSchemaAnnotation.description());
+              }
+            } 
           }
         }
       });

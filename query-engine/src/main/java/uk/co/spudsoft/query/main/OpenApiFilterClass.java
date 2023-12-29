@@ -16,11 +16,13 @@
  */
 package uk.co.spudsoft.query.main;
 
+import com.google.common.collect.ImmutableSet;
 import io.swagger.v3.core.filter.AbstractSpecFilter;
 import io.swagger.v3.oas.models.media.Schema;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  *
@@ -28,6 +30,10 @@ import java.util.Optional;
  */
 public class OpenApiFilterClass extends AbstractSpecFilter {
 
+  private static final Set<String> UNDESIRABLE = ImmutableSet.<String>builder()
+          .add("MediaType")
+          .build();
+  
   @Override
   public boolean isOpenAPI31Filter() {
     return true;
@@ -36,7 +42,7 @@ public class OpenApiFilterClass extends AbstractSpecFilter {
   @Override
   @SuppressWarnings({"unchecked", "rawtypes"})  
   public Optional<Schema> filterSchema(Schema schema, Map<String, List<String>> params, Map<String, String> cookies, Map<String, List<String>> headers) {
-    if ("MediaType".equals(schema.getName())) {
+    if (UNDESIRABLE.contains(schema.getName())) {
       return Optional.empty();
     }
     return super.filterSchema(schema, params, cookies, headers); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody

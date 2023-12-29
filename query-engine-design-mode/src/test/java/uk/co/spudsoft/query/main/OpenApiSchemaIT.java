@@ -72,7 +72,7 @@ public class OpenApiSchemaIT {
   @Test
   @Timeout(value = 2400, timeUnit = TimeUnit.SECONDS)
   public void testQuery() throws Exception {
-    Main main = new Main();
+    Main main = new DesignMain();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
