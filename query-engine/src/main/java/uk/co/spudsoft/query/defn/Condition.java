@@ -36,7 +36,7 @@ import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
  * Conditions are expressions using <A href="https://commons.apache.org/proper/commons-jexl/" target="_blank">JEXL</A> that control access to something.
  * 
  * <p>
- * Conditions have no properties, they are a single expression.
+ * Conditions are a single expression.
  * 
  * <P>
  * Conditions can be applied to:
@@ -152,6 +152,9 @@ public class Condition {
     this.expression = expression;
   }
 
+  @Schema(description = """
+                        The expression that makes up the condition.
+                        """)
   public String getExpression() {
     return expression;
   }

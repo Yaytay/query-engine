@@ -16,12 +16,15 @@
  */
 package uk.co.spudsoft.query.main;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.json.jackson.DatabindCodec;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.io.File;
@@ -109,10 +112,11 @@ public class OpenApiSchemaIT {
     logger.debug("OpenAPI: {}", jo);
     JsonObject schemas = jo.getJsonObject("components").getJsonObject("schemas");
     List<String> validationFailures = new ArrayList<>();
+    validateRefs(validationFailures, body);
     for (String current : schemas.fieldNames()) {
       JsonObject schema = schemas.getJsonObject(current);
       logger.debug("{}: {}", current, describe(schema));
-      String validationMessage = validate(current, schema);
+      String validationMessage = validate(current, schema, true);
       if (validationMessage != null) {
         validationFailures.add(validationMessage + " " + schema.encode());
       }
@@ -127,7 +131,7 @@ public class OpenApiSchemaIT {
           if (propSchemaEntry.getValue() instanceof JsonObject propSchema) {
             logger.debug("{}: {}", qualName, describe(propSchema)); 
 
-            validationMessage = validate(qualName, propSchema);
+            validationMessage = validate(qualName, propSchema, false);
             if (validationMessage != null) {
               validationFailures.add(validationMessage + " " + propSchema.encode());
             }
@@ -139,7 +143,7 @@ public class OpenApiSchemaIT {
     for (String validationFailure : validationFailures) {
       logger.warn(validationFailure);
     }
-    assertTrue(validationFailures.isEmpty(), "At least one validation failed");
+    assertTrue(validationFailures.isEmpty(), "At least one (" + validationFailures.size() + ") validation failed");
         
     main.shutdown();
   }
@@ -199,41 +203,67 @@ public class OpenApiSchemaIT {
     return type;
   }
   
-  private String validate(String name, JsonObject schema) {
-    String type = schema.getString("type");
-    if (type == null) {
-      type = schema.getString("$ref");
-      if (type != null) {
-        type = type.replaceAll("#/components/schemas/", "");
-      }
-    } else if (schema.getValue("allOf") != null) {
-      JsonArray allOf = schema.getJsonArray("allOf");
-      if (!allOf.getJsonObject(0).containsKey("$ref")) {
-        return name + " is an \"allOf\" but the first elemement is not $ref";
-      }
-      if (!allOf.getJsonObject(1).containsKey("type")) {
-        return name + " is an \"allOf\" but the second elemement has no type";
-      }
-    } else if ("array".equals(type)) {
-      JsonObject items = schema.getJsonObject("items");
-      String ref = items.getString("$ref");
-      if (!Strings.isNullOrEmpty(ref)) {
-        type = type + " of " + ref.replaceAll("#/components/schemas/", "");
-      } else {
-        type = type + " of " + items.getString("type");
-      }
-    } else if ("object".equals(type)) {
-      if (schema.containsKey("additionalProperties")) {
-        JsonObject addProp = schema.getJsonObject("additionalProperties");
-        String ref = addProp.getString("$ref");
-        if (ref != null) {
-          ref = ref.replaceAll("#/components/schemas/", "");
-          type = "map to " + ref + " objects";
+  private void validateRefs(List<String> messages, String jsonSchema) {
+    try {
+      ObjectNode root = (ObjectNode) DatabindCodec.mapper().readTree(jsonSchema);
+      ObjectNode schemas = (ObjectNode) root.get("components").get("schemas");
+      List<JsonNode> parents = schemas.findParents("$ref");
+      for (JsonNode parent : parents) {
+        String ref = parent.get("$ref").textValue();
+        String cls = ref.replaceAll("#/components/schemas/", "");
+        if (!schemas.has(cls)) {
+          messages.add("There is a reference to " + ref + " but no " + cls + " exists in schemas");
         }
       }
+    } catch (Throwable ex) {
+      messages.add(ex.getMessage());
     }
+  }
+  
+  private String validate(String name, JsonObject schema, boolean isTopLevelSchema) {
     if (!schema.containsKey("description")) {
       return name + " has no description";
+    }
+    
+    String type = schema.getString("type");
+    if (isTopLevelSchema) {
+      // Must either have a type, or have an allOf with a ref and then a type
+      // In both cases the type must be "object"
+       if (Strings.isNullOrEmpty(type)) {
+         JsonArray allOf = schema.getJsonArray("allOf");
+         if (allOf == null || allOf.isEmpty()) {
+           return name + " has no type or allOf field";
+         } else {
+           if (allOf.size() != 2) {
+             return name + " has allOf array with " + allOf.size() + " values";
+           }
+           if (!allOf.getJsonObject(0).containsKey("$ref")) {
+             return name + " has allOf array with first element that does not have a \"$ref\" field";
+           }
+           type = allOf.getJsonObject(1).getString("type");
+           if (Strings.isNullOrEmpty(type)) {
+             return name + " has allOf array with select element that does not have a \"type\" field";
+           }
+         }
+       }
+       if (!"object".equals(type)) {
+         return name + " is a top level schema type that is not an object";
+       }
+    } else {
+      // Properties must all have a type or a $ref
+      if (Strings.isNullOrEmpty(type) && !schema.containsKey("$ref")) {
+        return name + " has no \"type\" or \"$ref\" field";
+      }
+      // Additionally, array properties must have an item ref
+      if ("array".equals(type)) {
+        JsonObject  items = schema.getJsonObject("items");
+        if (items == null) {
+          return name + " is an array but has no \"items\" field";
+        }
+        if (!items.containsKey("$ref") && !items.containsKey("type")) {
+          return name + " is an array and has an \"items\" field, but that \"items\" object has no \"$ref\" or \"type\" field";
+        }
+      }
     }
     
     return null;

@@ -42,7 +42,10 @@ import uk.co.spudsoft.query.exec.procs.PassthroughStream;
 
 
 /**
- *
+ * Process rows of the output using GraalVM scripting.
+ * 
+ * Any installed language may be used, though by default this is restricted to Javascript.
+ * 
  * @author jtalbut
  */
 public final class ProcessorScriptInstance implements ProcessorInstance {

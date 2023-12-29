@@ -18,6 +18,8 @@ package uk.co.spudsoft.query.defn;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.google.common.base.Strings;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import uk.co.spudsoft.query.exec.SharedMap;
@@ -26,9 +28,30 @@ import uk.co.spudsoft.query.exec.sources.test.SourceTestInstance;
 
 /**
  *
+ * Source producing a fixed set of data without any need to communicate with a database.
+ * <P>
+ * The data stream will have two fields:
+ * <UL>
+ * <LI>value
+ * A monotonically increasing integer.
+ * <LI>name
+ * The name of the source.
+ * </UL>
  * @author jtalbut
  */
 @JsonDeserialize(builder = SourceTest.Builder.class)
+@Schema(description = """
+                      Source producing a fixed set of data without any need to communicate with a database.
+                      <P>
+                      The data stream will have two fields:
+                      <UL>
+                      <LI>value
+                      A monotonically increasing integer.
+                      <LI>name
+                      The name of the source.
+                      </UL>
+                      The number of rows to be returned can be configured, as can a delay between each row returned.
+                      """)
 public class SourceTest implements Source {
 
   private final SourceType type;
@@ -39,6 +62,15 @@ public class SourceTest implements Source {
   @Override
   public void validate() {
     validateType(SourceType.TEST, type);
+    if (Strings.isNullOrEmpty(name)) {
+      throw new IllegalArgumentException("SourceTest has no name");
+    }
+    if (rowCount < 0) {
+      throw new IllegalArgumentException("SourceTest " + name + " has negative value for rowCount");
+    }
+    if (delayMs < 0) {
+      throw new IllegalArgumentException("SourceTest " + name + " has negative value for delayMs");
+    }
   }
   
   @Override
@@ -46,6 +78,15 @@ public class SourceTest implements Source {
     return type;
   }
 
+  /**
+   * Get the number of rows that the source will return.
+   * @return the number of rows that the source will return.
+   */
+  @Schema(description = """
+                        The number of rows that the source will return.
+                        """
+          , minimum = "0"
+  )
   public int getRowCount() {
     return rowCount;
   }
@@ -55,6 +96,20 @@ public class SourceTest implements Source {
     return name;
   }  
 
+  /**
+   * Get the number of milliseconds to delay between production of each data row.
+   * <P>
+   * Note that 0 explicitly outputs all rows in a single thread and any non-zero value will use a periodic timer to output rows.
+   * 
+   * @return the number of milliseconds to delay between production of each data row.
+   */
+  @Schema(description = """
+                        Get the number of milliseconds to delay between production of each data row.
+                        <P>
+                        Note that 0 explicitly outputs all rows in a single thread and any non-zero value will use a periodic timer to output rows.
+                        """
+            , minimum = "0"
+)
   public int getDelayMs() {
     return delayMs;
   }

@@ -106,13 +106,13 @@ public class ProcessorGroupConcatInstanceTest {
   public void testChildEndsEarly(Vertx vertx, VertxTestContext testContext) {
     
     Pipeline pipeline = Pipeline.builder()
-            .source(SourceTest.builder().rowCount(10).build())
+            .source(SourceTest.builder().name("test").rowCount(10).build())
             .processors(
                     Arrays.asList(
                             ProcessorGroupConcat.builder()
                                     .input(
                                             SourcePipeline.builder()
-                                                    .source(SourceTest.builder().rowCount(7).build())
+                                                    .source(SourceTest.builder().name("test").rowCount(7).build())
                                                     .build()                                            
                                     )
                                     .parentIdColumn("value")
@@ -156,13 +156,13 @@ public class ProcessorGroupConcatInstanceTest {
   public void testChildEndsLate(Vertx vertx, VertxTestContext testContext) {
     
     Pipeline pipeline = Pipeline.builder()
-            .source(SourceTest.builder().rowCount(10).build())
+            .source(SourceTest.builder().name("test").rowCount(10).build())
             .processors(
                     Arrays.asList(
                             ProcessorGroupConcat.builder()
                                     .input(
                                             SourcePipeline.builder()
-                                                    .source(SourceTest.builder().rowCount(17).build())
+                                                    .source(SourceTest.builder().name("test").rowCount(17).build())
                                                     .build()                                            
                                     )
                                     .parentIdColumn("value")
@@ -268,13 +268,13 @@ public class ProcessorGroupConcatInstanceTest {
   public void testChildSuppliesEveryOther(Vertx vertx, VertxTestContext testContext) {
     
     Pipeline pipeline = Pipeline.builder()
-            .source(SourceTest.builder().rowCount(10).build())
+            .source(SourceTest.builder().name("test").rowCount(10).build())
             .processors(
                     Arrays.asList(
                             ProcessorGroupConcat.builder()
                                     .input(
                                             SourcePipeline.builder()
-                                                    .source(SourceTest.builder().rowCount(7).build())
+                                                    .source(SourceTest.builder().name("test").rowCount(7).build())
                                                     .processors(
                                                             Arrays.asList(
                                                                     ProcessorScript.builder()

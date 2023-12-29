@@ -63,7 +63,7 @@ public class PipelineExecutorImplTest {
   @Test
   public void testValidatePipeline(Vertx vertx, VertxTestContext testContext) {
     Pipeline definition = Pipeline.builder()
-            .source(SourceTest.builder().build())
+            .source(SourceTest.builder().name("test").build())
             .formats(Arrays.asList(FormatDelimited.builder().build()))
             .build();
     PipelineExecutorImpl instance = new PipelineExecutorImpl(null);
@@ -73,7 +73,7 @@ public class PipelineExecutorImplTest {
   @Test
   public void testCreateProcessors(Vertx vertx) {
     Pipeline definition = Pipeline.builder()
-            .source(SourceTest.builder().build())
+            .source(SourceTest.builder().name("test").build())
             .processors(
                     Arrays.asList(
                             ProcessorLimit.builder().limit(1).build()
@@ -128,7 +128,7 @@ public class PipelineExecutorImplTest {
   public void testInitializePipeline(Vertx vertx, VertxTestContext testContext) {
     
     Pipeline definition = Pipeline.builder()
-            .source(SourceTest.builder().build())
+            .source(SourceTest.builder().name("test").build())
             .processors(
                     Arrays.asList(
                             ProcessorLimit.builder().limit(3).build()
@@ -149,7 +149,7 @@ public class PipelineExecutorImplTest {
             MultiMap.caseInsensitiveMultiMap()
             );
     
-    SourceTest sourceDefn = SourceTest.builder().rowCount(7).build();
+    SourceTest sourceDefn = SourceTest.builder().name("test").rowCount(7).build();
     SourceInstance source = sourceDefn.createInstance(vertx, vertx.getOrCreateContext(), instance, "source");
     FormatDelimited destDefn = FormatDelimited.builder().build();
     FormatInstance dest = destDefn.createInstance(vertx, vertx.getOrCreateContext(), new LoggingWriteStream<>(rows -> {}));

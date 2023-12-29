@@ -248,7 +248,7 @@ public final class Pipeline extends SourcePipeline {
           schema = @Schema(
                   implementation = Format.class
                   , description = """
-                                  <P>The output formats that this Pipeline supports.</P>
+                                  <P>The outputs that this Pipeline supports.</P>
                                   <P>
                                   The format to use for a pipeline is chosen by according to the following rules:
                                   <ol>

@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.defn;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
@@ -25,10 +26,13 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.procs.query.ProcessorGroupConcatInstance;
 
 /**
- *
+ * Processor that combines multiple values from a child query into a single concatenated string value.
  * @author jtalbut
  */
 @JsonDeserialize(builder = ProcessorGroupConcat.Builder.class)
+@Schema(description = """
+                      Processor that combines multiple values from a child query into a single concatenated string value.
+                      """)
 public class ProcessorGroupConcat implements Processor {
 
   private final ProcessorType type;
@@ -65,6 +69,15 @@ public class ProcessorGroupConcat implements Processor {
    * 
    * @return the data feed.
    */
+  @Schema(description = """
+                        The data feed.
+                        <P>
+                        This data feed should result in two columns childIdColumn and childValueColumn (any other columns will be ignored).
+                        The data should be sorted by childIdColumn (and the parent feed should be sorted by parentIdColumn).
+                        <P>
+                        The values in childValueColumn for each value of childIdColumn will be concatenated together using delimiter as a delimiter and the result will be set as parentValueColumn in the parent feed.
+                        """
+  )
   public SourcePipeline getInput() {
     return input;
   }
@@ -74,6 +87,12 @@ public class ProcessorGroupConcat implements Processor {
    * If set to true the parent row will only be output if the child feed has at least one matching row.
    * @return the inner join flag.
    */
+  @Schema(description = """
+                        The inner join flag.
+                        <P>
+                        If set to true the parent row will only be output if the child feed has at least one matching row.
+                        """
+  )
   public boolean isInnerJoin() {
     return innerJoin;
   }
@@ -86,6 +105,13 @@ public class ProcessorGroupConcat implements Processor {
    * 
    * @return the parent ID column.
    */
+  @Schema(description = """
+                        The parent ID column.
+                        <P>
+                        This is the name of the field in the main stream that is to be used to match against child rows.
+                        The main stream must be sorted by this field.
+                        """
+  )
   public String getParentIdColumn() {
     return parentIdColumn;
   }
@@ -98,6 +124,13 @@ public class ProcessorGroupConcat implements Processor {
    * 
    * @return the parent ID column.
    */
+  @Schema(description = """
+                        The child ID column.
+                        <P>
+                        This is the name of the field in the child stream that is to be used to match against parent rows.
+                        The child stream must be sorted by this field.
+                        """
+  )
   public String getChildIdColumn() {
     return childIdColumn;
   }
@@ -109,6 +142,12 @@ public class ProcessorGroupConcat implements Processor {
    * 
    * @return the child value column.
    */
+  @Schema(description = """
+                        The child value column.
+                        <P>
+                        This is the name of the field in the child stream that contains the data to be extracted.
+                        """
+  )
   public String getChildValueColumn() {
     return childValueColumn;
   }
@@ -120,6 +159,12 @@ public class ProcessorGroupConcat implements Processor {
    * 
    * @return the parent value column.
    */
+  @Schema(description = """
+                        The parent value column.
+                        <P>
+                        This is the name of the field that will be created in the parent stream to contain the data from the child stream.
+                        """
+  )
   public String getParentValueColumn() {
     return parentValueColumn;
   }
@@ -128,6 +173,10 @@ public class ProcessorGroupConcat implements Processor {
    * Get the delimiter to place between each value returned.
    * @return the delimiter to place between each value returned.
    */
+  @Schema(description = """
+                        The delimiter to place between each value returned.
+                        """
+  )
   public String getDelimiter() {
     return delimiter;
   }

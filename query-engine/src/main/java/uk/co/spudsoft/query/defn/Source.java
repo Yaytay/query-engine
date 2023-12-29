@@ -28,7 +28,7 @@ import uk.co.spudsoft.query.exec.SharedMap;
 import uk.co.spudsoft.query.exec.SourceInstance;
 
 /**
- *
+ * The source of data for a pipeline.
  * @author jtalbut
  */
 @JsonTypeInfo(
@@ -40,8 +40,10 @@ import uk.co.spudsoft.query.exec.SourceInstance;
   @Type(value = SourceSql.class, name = "SQL"), 
   @Type(value = SourceTest.class, name = "Test") 
 })
-@Schema(
-        discriminatorProperty = "type"
+@Schema(description = """
+                      A Source is the source of data for a pipeline.
+                      """
+        , discriminatorProperty = "type"
         , discriminatorMapping = {
           @DiscriminatorMapping(schema = SourceSql.class, value = "SQL")
           , @DiscriminatorMapping(schema = SourceTest.class, value = "Test")

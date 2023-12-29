@@ -30,10 +30,18 @@ import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.sources.sql.SourceSqlStreamingInstance;
 
 /**
- *
+ * Pipeline data source that gets data from a SQL database.
+ * <P>
+ * This is the standard source of data for pipelines.
+ * 
  * @author jtalbut
  */
 @JsonDeserialize(builder = SourceSql.Builder.class)
+@Schema(description = """
+                      Pipeline data source that gets data from a SQL database.
+                      <P>
+                      This is the standard source of data for pipelines.
+                      """)
 public final class SourceSql implements Source {
 
   @Override

@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.defn;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
@@ -29,6 +30,10 @@ import uk.co.spudsoft.query.exec.procs.limit.ProcessorLimitInstance;
  * @author jtalbut
  */
 @JsonDeserialize(builder = ProcessorLimit.Builder.class)
+@Schema(description = """
+                      Processor that curtails the output after the configured number of rows.
+                      """
+)
 public class ProcessorLimit implements Processor {
   
   private final ProcessorType type;
@@ -49,6 +54,10 @@ public class ProcessorLimit implements Processor {
     return type;
   }
 
+  @Schema(description = """
+                        The limit on the number of rows that will be output by this processor.
+                        """
+  )
   public int getLimit() {
     return limit;
   }

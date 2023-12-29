@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.main;
 
 import com.fasterxml.jackson.databind.JavaType;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.net.MediaType;
 import io.swagger.v3.core.converter.AnnotatedType;
@@ -32,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.defn.Argument;
 
 /**
  *
@@ -59,11 +59,9 @@ public class OpenApiModelConverter implements ModelConverter {
       }
       if (javaType != null) {
         Class<?> cls = javaType.getRawClass();
+        fixArrrayPropertyDescriptions(cls, schema);
         if (Map.class.isAssignableFrom(cls) || List.class.isAssignableFrom(cls)) {
           removeEmptyProperty(schema);
-        }
-        if (Argument.class.isAssignableFrom(cls)) {
-          fixArgumentPossibleValuesDescription(schema);
         }
         if (Duration.class.isAssignableFrom(cls)) {
           convertDuration(schema);
@@ -88,17 +86,39 @@ public class OpenApiModelConverter implements ModelConverter {
     }
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes"})  
-  static void fixArgumentPossibleValuesDescription(Schema schema) {
-    Schema possibleValues = (Schema) schema.getProperties().get("possibleValues");
-    Method method;
-    try {
-      method = Argument.class.getMethod("getPossibleValues");
-    } catch (NoSuchMethodException ex) {
-      return ;
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  static void fixArrrayPropertyDescriptions(Class<?> cls, Schema schema) {
+    Map props = schema.getProperties();
+    if (props != null) {
+      props.forEach((k, v) -> {
+        if (v instanceof Schema s) {
+          if (Strings.isNullOrEmpty(s.getDescription())) {
+            String propName = s.getName();
+            String methodName = "get" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
+
+            try {
+              Method method = cls.getMethod(methodName);
+
+              ArraySchema arraySchema = method.getAnnotation(ArraySchema.class);
+              if (arraySchema != null) {
+                if (arraySchema.arraySchema() != null) {
+                  if (!Strings.isNullOrEmpty(arraySchema.arraySchema().description())) {
+                    s.setDescription(arraySchema.arraySchema().description());
+                    return ;
+                  }
+                } 
+                if (arraySchema.schema() != null) {
+                  if (!Strings.isNullOrEmpty(arraySchema.schema().description())) {
+                    s.setDescription(arraySchema.schema().description());
+                  }
+                } 
+              }
+            } catch (NoSuchMethodException ex) {
+            }
+          }
+        }
+      });
     }
-    ArraySchema arraySchema = method.getAnnotation(ArraySchema.class);
-    possibleValues.setDescription(arraySchema.arraySchema().description());
   }
   
   @SuppressWarnings({"unchecked", "rawtypes"})  

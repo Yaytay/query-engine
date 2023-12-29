@@ -48,7 +48,7 @@ public class SourcePipelineTest {
   @Test
   public void testBuilder() {
     SourcePipeline pipeline = SourcePipeline.builder()
-            .source(SourceTest.builder().rowCount(4).build())
+            .source(SourceTest.builder().name("test").rowCount(4).build())
             .processors(new ArrayList<>())
             .build();
     assertEquals(SourceType.TEST, pipeline.getSource().getType());
@@ -57,7 +57,7 @@ public class SourcePipelineTest {
     pipeline.validate();
     
     pipeline = SourcePipeline.builder()
-            .source(SourceTest.builder().build())
+            .source(SourceTest.builder().name("test").build())
             .processors(null)
             .build();
     assertNotNull(pipeline.getSource());

@@ -37,7 +37,7 @@ public class DynamicEndpointTest {
     assertThrows(IllegalArgumentException.class, () -> {
       DynamicEndpoint.builder().input(
               SourcePipeline.builder()
-                      .source(SourceTest.builder().build())                      
+                      .source(SourceTest.builder().name("test").build())                      
                       .build()
       ).build().validate();
     });
@@ -45,7 +45,7 @@ public class DynamicEndpointTest {
       DynamicEndpoint.builder()
               .input(
                       SourcePipeline.builder()
-                              .source(SourceTest.builder().build())
+                              .source(SourceTest.builder().name("test").build())
                               .build()
               )
               .keyField("key")
@@ -57,7 +57,7 @@ public class DynamicEndpointTest {
     DynamicEndpoint.builder()
             .input(
                     SourcePipeline.builder()
-                            .source(SourceTest.builder().build())
+                            .source(SourceTest.builder().name("test").build())
                             .build()
                     )
             .key("key")
@@ -66,7 +66,7 @@ public class DynamicEndpointTest {
     DynamicEndpoint.builder()
             .input(
                     SourcePipeline.builder()
-                            .source(SourceTest.builder().build())
+                            .source(SourceTest.builder().name("test").build())
                             .build()
                     )
             .keyField("key")
@@ -79,7 +79,7 @@ public class DynamicEndpointTest {
     DynamicEndpoint de = DynamicEndpoint.builder()
             .input(
                     SourcePipeline.builder()
-                            .source(SourceTest.builder().build())
+                            .source(SourceTest.builder().name("test").build())
                             .build()
                     )
             .key("key")
@@ -95,7 +95,7 @@ public class DynamicEndpointTest {
     DynamicEndpoint de = DynamicEndpoint.builder()
             .input(
                     SourcePipeline.builder()
-                            .source(SourceTest.builder().build())
+                            .source(SourceTest.builder().name("test").build())
                             .build()
                     )
             .key("key")
@@ -111,7 +111,7 @@ public class DynamicEndpointTest {
     DynamicEndpoint de = DynamicEndpoint.builder()
             .input(
                     SourcePipeline.builder()
-                            .source(SourceTest.builder().build())
+                            .source(SourceTest.builder().name("test").build())
                             .build()
                     )
             .key("key")
@@ -127,7 +127,7 @@ public class DynamicEndpointTest {
     DynamicEndpoint de = DynamicEndpoint.builder()
             .input(
                     SourcePipeline.builder()
-                            .source(SourceTest.builder().build())
+                            .source(SourceTest.builder().name("test").build())
                             .build()
                     )
             .key("key")
@@ -143,7 +143,7 @@ public class DynamicEndpointTest {
     DynamicEndpoint de = DynamicEndpoint.builder()
             .input(
                     SourcePipeline.builder()
-                            .source(SourceTest.builder().build())
+                            .source(SourceTest.builder().name("test").build())
                             .build()
                     )
             .key("key")

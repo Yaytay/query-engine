@@ -66,9 +66,7 @@ public class SourceTestInstance extends AbstractSource {
         for (int i = 0; i < rowCount; ++i) {
           DataRow data = DataRow.create(types);
           data.put("value", i);
-          if (!Strings.isNullOrEmpty(getName())) {
-            data.put("name", getName());
-          }
+          data.put("name", getName());
           stream.add(data);
         }
         stream.end();
@@ -83,9 +81,7 @@ public class SourceTestInstance extends AbstractSource {
         if (i > 0) {
           DataRow data = DataRow.create(types);
           data.put("value", i);
-          if (!Strings.isNullOrEmpty(getName())) {
-            data.put("name", getName());
-          }
+          data.put("name", getName());
           try {
             stream.add(data);
           } catch (InterruptedException ex) {

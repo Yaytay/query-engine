@@ -38,7 +38,7 @@ public class ProcessorDynamicFieldTest {
             .fieldDefns(
                     SourcePipeline.builder()
                             .source(
-                                    SourceTest.builder().build()
+                                    SourceTest.builder().name("test").build()
                             )
                             .build()
             )
@@ -50,14 +50,14 @@ public class ProcessorDynamicFieldTest {
             .fieldDefns(
                     SourcePipeline.builder()
                             .source(
-                                    SourceTest.builder().build()
+                                    SourceTest.builder().name("test").build()
                             )
                             .build()
             )
             .fieldValues(
                     SourcePipeline.builder()
                             .source(
-                                    SourceTest.builder().build()
+                                    SourceTest.builder().name("test").build()
                             )
                             .build()
             )

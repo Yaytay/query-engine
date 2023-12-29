@@ -17,11 +17,10 @@
 package uk.co.spudsoft.query.defn;
 
 
-import uk.co.spudsoft.query.defn.SourceType;
-import uk.co.spudsoft.query.defn.SourceTest;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -57,6 +56,20 @@ public class SourceTestTest {
   public void testGetName() {
     SourceTest instance = SourceTest.builder().name("name").build();
     assertEquals("name", instance.getName());
+  }
+  
+  @Test
+  public void testValidate() {
+    assertThrows(IllegalArgumentException.class, () -> {
+      SourceTest.builder().build().validate();
+    });
+    assertThrows(IllegalArgumentException.class, () -> {
+      SourceTest.builder().name("name").rowCount(-1).build().validate();
+    });
+    assertThrows(IllegalArgumentException.class, () -> {
+      SourceTest.builder().name("name").delayMs(-1).build().validate();
+    });
+    
   }
   
 }

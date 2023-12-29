@@ -149,9 +149,6 @@ public class DocNodesTree extends AbstractTree {
                           <P>
                           The children of the node.
                           </P>
-                          <P>
-                          This value must be not-null (though it may be empty), because this is a directory.
-                          </P>
                           """
             , nullable = false
             , requiredMode = Schema.RequiredMode.REQUIRED

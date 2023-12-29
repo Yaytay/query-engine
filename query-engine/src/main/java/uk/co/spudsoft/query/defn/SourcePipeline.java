@@ -57,8 +57,7 @@ public class SourcePipeline {
 
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Source.name may have to be set after creation, must not be changed after PipelineInstance is created")
   @Schema(
-          type = "object"
-          , description = """
+          description = """
                           <P>
                           The query for the pipeline.
                           </P>
@@ -72,9 +71,12 @@ public class SourcePipeline {
   @ArraySchema(
           schema = @Schema(
                   implementation = Processor.class
+          )
+          , arraySchema = @Schema(
+                  type = "array"
                   , description = """
-                          <P>Processors to run on the data as it flows from the Source.</P>
-                          """
+                                <P>Processors to run on the data as it flows from the Source.</P>
+                                """
           )
           , minItems = 0
           , uniqueItems = true

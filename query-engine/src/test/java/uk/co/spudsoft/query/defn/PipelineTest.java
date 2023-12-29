@@ -50,7 +50,7 @@ public class PipelineTest {
   @Test
   public void testValidateArgumentDepends() {
     Pipeline instance1 = Pipeline.builder()
-            .source(SourceTest.builder().rowCount(1).build())
+            .source(SourceTest.builder().name("test").rowCount(1).build())
             .formats(Arrays.asList(FormatDelimited.builder().build()))
             .arguments(
                     Arrays.asList(
@@ -60,7 +60,7 @@ public class PipelineTest {
     instance1.validate();
 
     Pipeline instance2 = Pipeline.builder()
-            .source(SourceTest.builder().rowCount(1).build())
+            .source(SourceTest.builder().name("test").rowCount(1).build())
             .formats(Arrays.asList(FormatDelimited.builder().build()))
             .arguments(
                     Arrays.asList(
@@ -72,7 +72,7 @@ public class PipelineTest {
     instance2.validate();
 
     Pipeline instance3 = Pipeline.builder()
-            .source(SourceTest.builder().rowCount(1).build())
+            .source(SourceTest.builder().name("test").rowCount(1).build())
             .formats(Arrays.asList(FormatDelimited.builder().build()))
             .arguments(
                     Arrays.asList(
@@ -85,7 +85,7 @@ public class PipelineTest {
 
     assertThrows(IllegalArgumentException.class, () -> {
             Pipeline.builder()
-                  .source(SourceTest.builder().rowCount(1).build())
+                  .source(SourceTest.builder().name("test").rowCount(1).build())
                   .formats(Arrays.asList(FormatDelimited.builder().build()))
                   .arguments(
                           Arrays.asList(
@@ -99,33 +99,33 @@ public class PipelineTest {
 
     assertThrows(IllegalArgumentException.class, () -> {
             Pipeline.builder()
-                  .source(SourceTest.builder().rowCount(1).build())
+                  .source(SourceTest.builder().name("test").rowCount(1).build())
                   .formats(Arrays.asList(FormatDelimited.builder().build(), FormatDelimited.builder().build()))
                   .build();
     });
     
     Pipeline instance4 = Pipeline.builder()
-            .source(SourceTest.builder().rowCount(1).build())
+            .source(SourceTest.builder().name("test").rowCount(1).build())
             .formats(Arrays.asList(FormatDelimited.builder().build()))
             .build();
     instance4.validate();
     
     Pipeline instance5 = Pipeline.builder()
             .condition(new Condition("£$%£$%"))
-            .source(SourceTest.builder().rowCount(1).build())
+            .source(SourceTest.builder().name("test").rowCount(1).build())
             .formats(Arrays.asList(FormatDelimited.builder().build()))
             .build();
     assertThrows(IllegalArgumentException.class, () -> {instance5.validate();});
 
     Pipeline instance7 = Pipeline.builder()
             .rateLimitRules(Arrays.asList(RateLimitRule.builder().build()))
-            .source(SourceTest.builder().rowCount(1).build())
+            .source(SourceTest.builder().name("test").rowCount(1).build())
             .formats(Arrays.asList(FormatDelimited.builder().build()))
             .build();
     assertThrows(IllegalArgumentException.class, () -> {instance7.validate();});
 
     Pipeline instance8 = Pipeline.builder()
-            .source(SourceTest.builder().rowCount(1).build())
+            .source(SourceTest.builder().name("test").rowCount(1).build())
             .formats(Arrays.asList(FormatDelimited.builder().build()))
             .arguments(
                     Arrays.asList(

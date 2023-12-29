@@ -41,6 +41,11 @@ public class DesignNodesTree extends AbstractTree {
     @JsonSubTypes.Type(value = DesignNodesTree.DesignDir.class),
     @JsonSubTypes.Type(value = DesignNodesTree.DesignFile.class)
   })
+  @Schema(description = """
+                        <P>
+                        Base class for pipeline design files and the directories that contain them.
+                        </P>
+                        """)
   public abstract static class DesignNode extends AbstractNode<DesignNode> {
 
     private final String path;
@@ -74,12 +79,50 @@ public class DesignNodesTree extends AbstractTree {
     }
 
     /**
-     * Get the {@link java.nio.file.Path} that relates to this Node.
-     * @return the {@link java.nio.file.Path} that relates to this Node.
+     * Get the relative path to the node from the root.
+     * @return the relative path to the node from the root.
      */
-    @NotNull 
+    @NotNull
+    @Schema(description = """
+                          <P>
+                          The relative path to the node from the root.
+                          </P>
+                          """)
     public String getPath() {
       return path;
+    }
+
+    /**
+     * Get the children of the node.
+     * If this is null then the node is a file, otherwise it is a directory.
+     * @return the children of the node.
+     */
+    @Override
+    @Schema(description = """
+                          <P>
+                          The children of the node.
+                          </P>
+                          <P>
+                          If this is null then the node is a file, otherwise it is a directory.
+                          </P>
+                          """)
+    public List<DesignNode> getChildren() {
+      return super.getChildren();
+    }
+
+    /**
+     * Get the leaf name of the node.
+     * @return the leaf name of the node.
+     */
+    @Override
+    @NotNull
+    @Schema(description = """
+                          <P>
+                          The leaf name of the node.
+                          </P>
+                          """)
+    public String getName() {
+      return super.getName();
     }
 
     /**
@@ -87,22 +130,25 @@ public class DesignNodesTree extends AbstractTree {
      * @return the modified timestamp.
      */
     @NotNull 
+    @Schema(description = """
+                          <P>
+                          The time that the design file was last modified, as reported by the underlying filesystem.
+                          </P>
+                          <P>
+                          Design files must be stored on a filesystem that supports a last-modified timestamp.
+                          </P>
+                          """)
     public LocalDateTime getModified() {
       return modified;
     }
 
-    /**
-     * Get the name of the directory entry.
-     * @return the name of the directory entry.
-     */
-    @NotNull 
-    @Override
-    public String getName() {
-      return name;
-    }
-
   }
 
+  @Schema(description = """
+                        <P>
+                        A directory containing pipeline files.
+                        </P>
+                        """)
   public static class DesignDir extends DesignNode {
 
     private static List<DesignNode> buildChildren(java.nio.file.Path root, DirCacheTree.Directory src) {
@@ -141,7 +187,16 @@ public class DesignNodesTree extends AbstractTree {
      */
     @Override
     @NotNull
-    @Schema(nullable = false)
+    @Schema(nullable = false
+            , requiredMode = Schema.RequiredMode.REQUIRED
+            , description = """
+                          <P>
+                          The children of the node.
+                          </P>
+                          <P>
+                          If this is null then the node is a file, otherwise it is a directory.
+                          </P>
+                          """)
     public List<DesignNodesTree.DesignNode> getChildren() {
       return super.getChildren(); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
     }
@@ -157,6 +212,11 @@ public class DesignNodesTree extends AbstractTree {
     return relativePath;    
   }
   
+  @Schema(description = """
+                        <P>
+                        A pipeline definition file.
+                        </P>
+                        """)
   public static class DesignFile extends DesignNode {
 
     private final long size;
@@ -183,6 +243,11 @@ public class DesignNodesTree extends AbstractTree {
      * @return the size of the file on disc, in bytes.
      */
     @NotNull 
+    @Schema(description = """
+                          <P>
+                          The size of the file on disc, in bytes.
+                          </P>
+                          """)
     public long getSize() {
       return size;
     }

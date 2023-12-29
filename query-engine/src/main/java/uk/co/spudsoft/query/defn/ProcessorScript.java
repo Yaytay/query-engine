@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.defn;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
@@ -25,10 +26,15 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.procs.script.ProcessorScriptInstance;
 
 /**
- *
+ * Processor that runs a custom script on each row of the output.
+ * 
  * @author jtalbut
  */
 @JsonDeserialize(builder = ProcessorLimit.Builder.class)
+@Schema(description = """
+                      Run a custom script on each row of the output.
+                      """
+)
 public class ProcessorScript implements Processor {
   
   private final ProcessorType type;
@@ -51,14 +57,31 @@ public class ProcessorScript implements Processor {
     return type;
   }
 
+  @Schema(description = """
+                        The language to use, as understood by GraalVM.
+                        <P>
+                        By default the only acceptable value is "js", but custom builds can use other lanaguages.
+                        """
+  )
   public String getLanguage() {
     return language;
   }
 
+  @Schema(description = """
+                        A predicate script is used to determine whether or not the row should be discarded.
+                        <P>
+                        The script should return a value that is either true or false, if the value is false the row will be discarded.
+                        """
+  )
   public String getPredicate() {
     return predicate;
   }
 
+  @Schema(description = """
+                        A process script can manipulate the row in any way it wants.
+                        <P>
+                        """
+  )
   public String getProcess() {
     return process;
   }
@@ -67,7 +90,7 @@ public class ProcessorScript implements Processor {
   public static class Builder {
 
     private ProcessorType type = ProcessorType.SCRIPT;
-    private String language;
+    private String language = "js";
     private String predicate;
     private String process;
 

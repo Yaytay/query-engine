@@ -370,7 +370,7 @@ public class Argument {
                         """
                   , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           ),
-           schema = @Schema(
+          schema = @Schema(
                   implementation = ArgumentValue.class
                    , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           )
