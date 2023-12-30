@@ -113,7 +113,7 @@ public final class SourceSql implements Source {
                         If both fields are provided it is an error.
                         </P>
                         """
-          , maxLength = 200          
+          , maxLength = 100
   )
   public String getEndpoint() {
     return endpoint;
@@ -129,7 +129,7 @@ public final class SourceSql implements Source {
                         If both fields are provided it is an error.
                         </P>
                         """
-          , maxLength = 200          
+          , maxLength = 1000000
   )
   public String getEndpointTemplate() {
     return endpointTemplate;
@@ -141,6 +141,7 @@ public final class SourceSql implements Source {
                         A SQL statement.
                         </P>
                         """
+          , maxLength = 1000000
   )
   public String getQuery() {
     return query;

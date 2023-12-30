@@ -41,7 +41,9 @@ public class Profile {
                         <LI>preferred_username
                         <LI>sub
                         </UL>
-                        """)
+                        """
+          , maxLength = 1000
+  )
   public String getUsername() {
     return username;
   }
@@ -60,7 +62,9 @@ public class Profile {
                         <LI>preferred_username
                         <LI>sub
                         </UL>
-                        """)
+                        """
+          , maxLength = 1000
+  )
   public String getFullname() {
     return fullname;
   }
@@ -71,7 +75,9 @@ public class Profile {
 
   @Schema(description = """
                         The version of the Query Engine backend.
-                        """)
+                        """
+          , maxLength = 100
+  )
   public String getVersion() {
     return version;
   }

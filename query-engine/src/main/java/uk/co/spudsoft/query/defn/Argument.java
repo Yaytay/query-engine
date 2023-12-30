@@ -113,6 +113,7 @@ public class Argument {
                         """
           , pattern = "\\p{Letter}[\\p{Letter}\\p{Number}]+"
           , type = "string"
+          , minLength = 1
           , maxLength = 100
           , requiredMode = Schema.RequiredMode.REQUIRED
           , extensions = {@Extension(properties = {@ExtensionProperty(name="prompt", value="name")})}
@@ -180,6 +181,7 @@ public class Argument {
                         </P>
                         """
           , type = "string"
+          , maxLength = 10000
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           )
   public String getDescription() {
@@ -427,7 +429,7 @@ public class Argument {
                         """
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           , type = "string"
-          , maxLength = 2000
+          , maxLength = 1000
           )
   public String getPossibleValuesUrl() {
     return possibleValuesUrl;

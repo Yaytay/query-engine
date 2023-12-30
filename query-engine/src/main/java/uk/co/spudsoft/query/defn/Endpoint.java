@@ -109,7 +109,8 @@ public class Endpoint {
   @Schema(description = """
                         <P>The type of Endpoint being configured</P>
                         """
-  , requiredMode = Schema.RequiredMode.REQUIRED)
+          , requiredMode = Schema.RequiredMode.REQUIRED
+  )
   public EndpointType getType() {
     return type;
   }
@@ -131,7 +132,8 @@ public class Endpoint {
                         </P>
                         """
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
-          , maxLength = 2000
+          , maxLength = 1000
+          , format = "uri"
   )
   public String getUrl() {
     return url;
@@ -154,7 +156,7 @@ public class Endpoint {
                         </P>
                         """
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
-          , maxLength = 4000
+          , maxLength = 1000000
   )
   public String getUrlTemplate() {
     return urlTemplate;

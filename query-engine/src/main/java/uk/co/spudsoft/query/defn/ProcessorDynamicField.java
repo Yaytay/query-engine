@@ -236,6 +236,7 @@ public class ProcessorDynamicField implements Processor {
                         This is the name of the field in the main stream that is to be used to match against child rows.
                         The main stream must be sorted by this field.
                         """
+          , maxLength = 100
   )
   public String getParentIdColumn() {
     return parentIdColumn;
@@ -248,6 +249,7 @@ public class ProcessorDynamicField implements Processor {
   @Schema(description = """
                         The name of the column in the field defns feed that is used to identify the extra column.
                         """
+          , maxLength = 100
   )
   public String getFieldIdColumn() {
     return fieldIdColumn;
@@ -260,6 +262,7 @@ public class ProcessorDynamicField implements Processor {
   @Schema(description = """
                         The name of the column in the field defns feed that is used to name the extra column.
                         """
+          , maxLength = 100
   )
   public String getFieldNameColumn() {
     return fieldNameColumn;
@@ -272,6 +275,7 @@ public class ProcessorDynamicField implements Processor {
   @Schema(description = """
                         The name of the column in the field defns feed that is used to determine the type of the extra column.
                         """
+          , maxLength = 100
   )
   public String getFieldTypeColumn() {
     return fieldTypeColumn;
@@ -284,6 +288,7 @@ public class ProcessorDynamicField implements Processor {
   @Schema(description = """
                         The name of the column in the field defns feed that is used to find the name of the field in the values feed that contains the actual value.
                         """
+          , maxLength = 100
   )
   public String getFieldColumnColumn() {
     return fieldColumnColumn;
@@ -299,6 +304,7 @@ public class ProcessorDynamicField implements Processor {
                         <P>
                         The values feed must be sorted by this column.
                         """
+          , maxLength = 100
   )
   public String getValuesParentIdColumn() {
     return valuesParentIdColumn;
@@ -311,6 +317,7 @@ public class ProcessorDynamicField implements Processor {
   @Schema(description = """
                         The name of the column in the values feed that contains the ID of the field represented by that row.
                         """
+          , maxLength = 100
   )
   public String getValuesFieldIdColumn() {
     return valuesFieldIdColumn;

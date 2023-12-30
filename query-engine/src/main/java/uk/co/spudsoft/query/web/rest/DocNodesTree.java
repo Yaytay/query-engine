@@ -69,7 +69,9 @@ public class DocNodesTree extends AbstractTree {
                           <P>
                           The relative path to the node from the root.
                           </P>
-                          """)
+                          """
+          , maxLength = 1000
+    )
     public String getPath() {
       return path;
     }
@@ -101,7 +103,9 @@ public class DocNodesTree extends AbstractTree {
                           <P>
                           The leaf name of the node.
                           </P>
-                          """)
+                          """
+          , maxLength = 100
+    )
     public String getName() {
       return super.getName();
     }
@@ -190,7 +194,9 @@ public class DocNodesTree extends AbstractTree {
                           <P>
                           The title is what should be displayed in any UI.
                           </P>
-                          """)
+                          """
+          , maxLength = 10000
+    )
     public String getTitle() {
       return title;
     }

@@ -111,6 +111,7 @@ public class ProcessorGroupConcat implements Processor {
                         This is the name of the field in the main stream that is to be used to match against child rows.
                         The main stream must be sorted by this field.
                         """
+          , maxLength = 100
   )
   public String getParentIdColumn() {
     return parentIdColumn;
@@ -130,6 +131,7 @@ public class ProcessorGroupConcat implements Processor {
                         This is the name of the field in the child stream that is to be used to match against parent rows.
                         The child stream must be sorted by this field.
                         """
+          , maxLength = 100
   )
   public String getChildIdColumn() {
     return childIdColumn;
@@ -147,6 +149,7 @@ public class ProcessorGroupConcat implements Processor {
                         <P>
                         This is the name of the field in the child stream that contains the data to be extracted.
                         """
+          , maxLength = 100
   )
   public String getChildValueColumn() {
     return childValueColumn;
@@ -164,6 +167,7 @@ public class ProcessorGroupConcat implements Processor {
                         <P>
                         This is the name of the field that will be created in the parent stream to contain the data from the child stream.
                         """
+          , maxLength = 100
   )
   public String getParentValueColumn() {
     return parentValueColumn;
@@ -176,6 +180,7 @@ public class ProcessorGroupConcat implements Processor {
   @Schema(description = """
                         The delimiter to place between each value returned.
                         """
+          , maxLength = 10
   )
   public String getDelimiter() {
     return delimiter;

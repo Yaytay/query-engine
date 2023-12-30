@@ -78,6 +78,7 @@ public interface Source {
                         This is optional, if it is not set a numeric (or delimited numeric) name will be allocated.
                         </P>
                         """
+          , maxLength = 100
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
   String getName();

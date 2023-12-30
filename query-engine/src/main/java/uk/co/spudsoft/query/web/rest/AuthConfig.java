@@ -52,7 +52,11 @@ public class AuthConfig {
                         <P>
                         The name to use in the list of authentication providers.
                         </P>
-                        """)
+                        """
+          , minLength = 1
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.REQUIRED
+  )
   public String getName() {
     return name;
   }
@@ -65,7 +69,12 @@ public class AuthConfig {
                         <P>
                         The URL to the logo to use in the list of authentication providers.
                         </P>
-                        """)
+                        """
+          , minLength = 1
+          , maxLength = 1000
+          , format = "uri"
+          , requiredMode = Schema.RequiredMode.REQUIRED
+  )
   public String getLogo() {
     return logo;
   }

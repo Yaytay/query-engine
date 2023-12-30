@@ -87,7 +87,9 @@ public class DesignNodesTree extends AbstractTree {
                           <P>
                           The relative path to the node from the root.
                           </P>
-                          """)
+                          """
+          , maxLength = 1000
+    )
     public String getPath() {
       return path;
     }
@@ -120,7 +122,9 @@ public class DesignNodesTree extends AbstractTree {
                           <P>
                           The leaf name of the node.
                           </P>
-                          """)
+                          """
+          , maxLength = 100
+    )
     public String getName() {
       return super.getName();
     }
@@ -137,7 +141,10 @@ public class DesignNodesTree extends AbstractTree {
                           <P>
                           Design files must be stored on a filesystem that supports a last-modified timestamp.
                           </P>
-                          """)
+                          """
+            , maxLength = 40
+            , requiredMode = Schema.RequiredMode.REQUIRED
+    )
     public LocalDateTime getModified() {
       return modified;
     }

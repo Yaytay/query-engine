@@ -65,7 +65,9 @@ public class PipelineNodesTree extends AbstractTree {
                           <P>
                           The relative path to the node from the root.
                           </P>
-                          """)
+                          """
+            , maxLength = 1000
+    )
     public String getPath() {
       return path;
     }
@@ -88,7 +90,9 @@ public class PipelineNodesTree extends AbstractTree {
                           <P>
                           The leaf name of the node.
                           </P>
-                          """)
+                          """
+            , maxLength = 100
+    )
     public String getName() {
       return super.getName();
     }
@@ -168,7 +172,9 @@ public class PipelineNodesTree extends AbstractTree {
                           <P>
                           The title of the pipeline, to be displayed in the UI.
                           </P>
-                          """)
+                          """
+            , maxLength = 100
+    )
     public String getTitle() {
       return title;
     }
@@ -177,7 +183,9 @@ public class PipelineNodesTree extends AbstractTree {
                           <P>
                           The description of the pipeline.
                           </P>
-                          """)
+                          """
+            , maxLength = 10000
+    )
     public String getDescription() {
       return description;
     }

@@ -154,7 +154,10 @@ public class Condition {
 
   @Schema(description = """
                         The expression that makes up the condition.
-                        """)
+                        """
+          , maxLength = 1000000
+          , requiredMode = Schema.RequiredMode.REQUIRED
+  )
   public String getExpression() {
     return expression;
   }

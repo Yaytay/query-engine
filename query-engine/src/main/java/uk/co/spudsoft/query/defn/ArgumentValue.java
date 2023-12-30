@@ -54,7 +54,9 @@ public class ArgumentValue {
                         The value is considered required, the label field is not.
                         </P>
                         """
-                        , requiredMode = Schema.RequiredMode.REQUIRED
+          , minLength = 1
+          , maxLength = 200
+          , requiredMode = Schema.RequiredMode.REQUIRED
   )
   public String getValue() {
     return value;
@@ -72,7 +74,10 @@ public class ArgumentValue {
                         <P>
                         This label  is nullable, in which case the value should be displayed to the user.
                         </P>
-                        """)
+                        """
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
   public String getLabel() {
     return label;
   }

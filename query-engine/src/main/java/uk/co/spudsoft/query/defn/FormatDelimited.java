@@ -148,7 +148,9 @@ public class FormatDelimited implements Format {
   @Schema(description = """
                         The delimiter between field values in the output.
                         """
-          , defaultValue = ",")
+          , defaultValue = ","
+          , maxLength = 10
+  )
   public String getDelimiter() {
     return delimiter;
   }
@@ -156,7 +158,9 @@ public class FormatDelimited implements Format {
   @Schema(description = """
                         Any string values in the output will be prefixed by this value.
                         """
-          , defaultValue = "\"")
+          , defaultValue = "\""
+          , maxLength = 10
+)
   public String getOpenQuote() {
     return openQuote;
   }
@@ -164,7 +168,9 @@ public class FormatDelimited implements Format {
   @Schema(description = """
                         Any string values in the output will be suffixed by this value.
                         """
-          , defaultValue = "\"")
+          , defaultValue = "\""
+          , maxLength = 10
+  )
   public String getCloseQuote() {
     return closeQuote;
   }
@@ -172,7 +178,9 @@ public class FormatDelimited implements Format {
   @Schema(description = """
                         Each row in the output will be suffixed by this value.
                         """
-          , defaultValue = "\r\n")
+          , defaultValue = "\r\n"
+          , maxLength = 10
+  )
   public String getNewline() {
     return newline;
   }

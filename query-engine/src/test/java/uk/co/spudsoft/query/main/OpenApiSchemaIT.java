@@ -177,7 +177,15 @@ public class OpenApiSchemaIT {
       if (!Strings.isNullOrEmpty(ref)) {
         type = type + " of " + ref.replaceAll("#/components/schemas/", "");
       } else {
-        type = type + " of " + items.getString("type");
+        String itemType = items.getString("type");
+        if ("string".equals(itemType)) {
+          if (items.containsKey("maxLength")) {
+            itemType = itemType + "[" + items.getString("maxLength")  + "]";
+          } else {
+            itemType = "clob";
+          }
+        }
+        type = type + " of " + itemType;
       }
     } else if ("object".equals(type)) {
       if (schema.containsKey("additionalProperties")) {
@@ -187,6 +195,12 @@ public class OpenApiSchemaIT {
           ref = ref.replaceAll("#/components/schemas/", "");
           type = "map to " + ref + " objects";
         }
+      }
+    } else if ("string".equals(type)) {
+      if (schema.containsKey("maxLength")) {
+        type = type + "[" + schema.getString("maxLength")  + "]";
+      } else {
+        type = "clob";
       }
     }
     if (schema.containsKey("enum")) {
@@ -263,6 +277,15 @@ public class OpenApiSchemaIT {
         if (!items.containsKey("$ref") && !items.containsKey("type")) {
           return name + " is an array and has an \"items\" field, but that \"items\" object has no \"$ref\" or \"type\" field";
         }
+      }
+    }
+    if (schema.containsKey("enum")) {
+      if (!"string".equals(type)) {
+        return name + " is an enum that isn't a string";
+      }
+    } else if ("string".equals(type)) {
+      if (!schema.containsKey("maxLength")) {
+        return name + " is a string with no maxiumum length";
       }
     }
     

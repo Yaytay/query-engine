@@ -167,7 +167,8 @@ public class RateLimitRule {
   @Schema(description = """
                         <P>The limit on the number of bytes that may be been sent by previous runs.</P>
                         """
-  , requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   public String getByteLimit() {
     return byteLimit;
   }
@@ -188,7 +189,9 @@ public class RateLimitRule {
   @Schema(description = """
                         <P>The limit on the number of pipeline runs matching the scope that may be initiated.</P>
                         """
-  , requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
   public String getRunLimit() {
     return runLimit;
   }
@@ -209,7 +212,8 @@ public class RateLimitRule {
   @Schema(description = """
                         <P>The limit on the number of runs matching the scope that may have been started but not completed within the time limit.</P>
                         """
-  , requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   public int getConcurrencyLimit() {
     return concurrencyLimit;
   }

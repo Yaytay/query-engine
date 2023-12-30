@@ -140,6 +140,7 @@ public final class Pipeline extends SourcePipeline {
                         </P>
                         """
           , implementation = String.class
+          , maxLength = 1000000
   )
   public String getDescription() {
     return description;

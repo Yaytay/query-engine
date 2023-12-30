@@ -62,6 +62,7 @@ public class ProcessorScript implements Processor {
                         <P>
                         By default the only acceptable value is "js", but custom builds can use other lanaguages.
                         """
+          , maxLength = 100
   )
   public String getLanguage() {
     return language;
@@ -72,6 +73,7 @@ public class ProcessorScript implements Processor {
                         <P>
                         The script should return a value that is either true or false, if the value is false the row will be discarded.
                         """
+          , maxLength = 1000000
   )
   public String getPredicate() {
     return predicate;
@@ -81,6 +83,7 @@ public class ProcessorScript implements Processor {
                         A process script can manipulate the row in any way it wants.
                         <P>
                         """
+          , maxLength = 1000000
   )
   public String getProcess() {
     return process;
