@@ -8,17 +8,17 @@ arguments:
   - name: port
     type: Integer
 sourceEndpoints:
-  MS SQL Server:
+  - name: MS SQL Server
     type: SQL
     url: "sqlserver://localhost:${params.port}/test"
     username: sa
     password: T0p-Secret
-  MySQL:
+  - name: MySQL
     type: SQL
     url: "mysql://localhost:${params.port}/test"
     username: user
     password: T0p-Secret
-  PostgreSQL:
+  - name: PostgreSQL
     type: SQL
     url: "postgresql://localhost:$params.port/test"
     username: postgres

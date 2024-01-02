@@ -16,8 +16,8 @@
  */
 package uk.co.spudsoft.query.defn;
 
-import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
+import java.util.Collections;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -150,9 +150,10 @@ public class PipelineTest {
   public void testGetSourceEndpoints() {
     Pipeline instance = Pipeline.builder().build();
     assertTrue(instance.getSourceEndpoints().isEmpty());
-    Endpoint endpoint = Endpoint.builder().build();
-    instance = Pipeline.builder().sourceEndpoints(ImmutableMap.<String, Endpoint>builder().put("one", endpoint).build()).build();
-    assertEquals(endpoint, instance.getSourceEndpoints().get("one"));
+    Endpoint endpoint = Endpoint.builder().name("one").build();    
+    instance = Pipeline.builder().sourceEndpoints(Collections.singletonList(endpoint)).build();
+    assertEquals(endpoint, instance.getSourceEndpoints().get(0));
+    assertEquals(endpoint, instance.getSourceEndpointsMap().get("one"));
   }
 
   @Test

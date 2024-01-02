@@ -35,6 +35,7 @@ import uk.co.spudsoft.xlsx.ColumnDefinition;
                       """)
 public class FormatXlsxColumn {
   
+  private final String name;
   private final String header;
   private final String format;
   private final Double width;
@@ -46,6 +47,22 @@ public class FormatXlsxColumn {
     return new ColumnDefinition(calculatedHeader, calculatedFormat, calculatedWidth);
   }
 
+  /**
+   * Get the name of the column that this definition applies to.
+   * This should match one of the field names in the output.
+   * @return the name of the column that this definition applies to.
+   */
+  @Schema(description = """
+                        <P>The the name of the column that this definition applies to.</P>
+                        <P>This should match one of the field names in the output.</P>
+                        """
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.REQUIRED
+  )
+  public String getName() {
+    return name;
+  }
+  
   /**
    * Get the title to put in the header row instead of the field name.
    * @return the title to put in the header row instead of the field name.
@@ -154,11 +171,14 @@ public class FormatXlsxColumn {
   }
   
   public void validate() {
+    if (Strings.isNullOrEmpty(name)) {
+      throw new IllegalArgumentException("FormatXlsxColumn has no name");
+    }
     if (Strings.isNullOrEmpty(header) && Strings.isNullOrEmpty(format) && width == null) {
-      throw new IllegalArgumentException("FormatXlsxColumn has no data");
+      throw new IllegalArgumentException("FormatXlsxColumn " + name + " has no data");
     }
     if (width != null && width < 1.0) {
-      throw new IllegalArgumentException("FormatXlsxColumn has width less than 1");
+      throw new IllegalArgumentException("FormatXlsxColumn " + name + " has width less than 1");
     }
   }
   
@@ -166,11 +186,17 @@ public class FormatXlsxColumn {
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
+    private String name;
     private String header;
     private String format;
     private Double width;
 
     private Builder() {
+    }
+
+    public Builder name(final String value) {
+      this.name = value;
+      return this;
     }
 
     public Builder header(final String value) {
@@ -189,7 +215,7 @@ public class FormatXlsxColumn {
     }
 
     public FormatXlsxColumn build() {
-      return new uk.co.spudsoft.query.defn.FormatXlsxColumn(header, format, width);
+      return new uk.co.spudsoft.query.defn.FormatXlsxColumn(name, header, format, width);
     }
   }
 
@@ -197,7 +223,8 @@ public class FormatXlsxColumn {
     return new FormatXlsxColumn.Builder();
   }
 
-  private FormatXlsxColumn(final String header, final String format, final Double width) {
+  private FormatXlsxColumn(final String name, final String header, final String format, final Double width) {
+    this.name = name;
     this.header = header;
     this.format = format;
     this.width = width;

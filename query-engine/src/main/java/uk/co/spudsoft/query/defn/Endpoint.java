@@ -76,6 +76,7 @@ import uk.co.spudsoft.params4j.SecretsSerializer;
 
 public class Endpoint {
   
+  private final String name;
   private final EndpointType type;
   private final String url;
   private final String urlTemplate;
@@ -85,21 +86,38 @@ public class Endpoint {
   private final Condition condition;
 
   public void validate() {
+    if (Strings.isNullOrEmpty(name)) {
+      throw new IllegalArgumentException("Endpoint has no name.");
+    }
     if (condition != null) {
       condition.validate();
     }
     if (Strings.isNullOrEmpty(url) && Strings.isNullOrEmpty(urlTemplate))  {
-      throw new IllegalArgumentException("Endpoint has neither url nor urlTemplate set.");
+      throw new IllegalArgumentException("Endpoint " + name + " has neither url nor urlTemplate set.");
     }
     if (!Strings.isNullOrEmpty(url) && !Strings.isNullOrEmpty(urlTemplate))  {
-      throw new IllegalArgumentException("Endpoint has both url and urlTemplate set, they are mutually incompatible.");
+      throw new IllegalArgumentException("Endpoint " + name + " has both url and urlTemplate set, they are mutually incompatible.");
     }
     if (!Strings.isNullOrEmpty(username) && !Strings.isNullOrEmpty(secret))  {
-      throw new IllegalArgumentException("Endpoint has both username and secret set, they are mutually incompatible.");
+      throw new IllegalArgumentException("Endpoint " + name + " has both username and secret set, they are mutually incompatible.");
     }
     if (!Strings.isNullOrEmpty(password) && !Strings.isNullOrEmpty(secret))  {
-      throw new IllegalArgumentException("Endpoint has both password and secret set, they are mutually incompatible.");
+      throw new IllegalArgumentException("Endpoint " + name + " has both password and secret set, they are mutually incompatible.");
     }
+  }
+  
+  /**
+   * Get the name of the Endpoint, that will be used to refer to it in Sources.
+   * @return the name of the Endpoint.
+   */
+  @Schema(description = """
+                        <P>The name of the Endpoint, that will be used to refer to it in Sources.
+                        """
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.REQUIRED
+  )
+  public String getName() {
+    return name;
   }
   
   /**
@@ -251,6 +269,7 @@ public class Endpoint {
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
+    private String name;
     private EndpointType type;
     private String url;
     private String urlTemplate;
@@ -260,6 +279,16 @@ public class Endpoint {
     private Condition condition;
 
     private Builder() {
+    }
+
+    /**
+     * Set the name of the Endpoint in the builder.
+     * @param value the name of the Endpoint.
+     * @return this, so that the builder may be used fluently.
+     */
+    public Builder name(final String value) {
+      this.name = value;
+      return this;
     }
 
     /**
@@ -337,7 +366,7 @@ public class Endpoint {
      * @return a new Endpoint object.
      */
     public Endpoint build() {
-      return new Endpoint(type, url, urlTemplate, secret, username, password, condition);
+      return new Endpoint(name, type, url, urlTemplate, secret, username, password, condition);
     }
   }
 
@@ -349,7 +378,8 @@ public class Endpoint {
     return new Endpoint.Builder();
   }
 
-  private Endpoint(final EndpointType type, final String url, final String urlTemplate, final String secret, final String username, final String password, final Condition condition) {
+  private Endpoint(final String name, final EndpointType type, final String url, final String urlTemplate, final String secret, final String username, final String password, final Condition condition) {
+    this.name = name;
     this.type = type;
     this.url = url;
     this.urlTemplate = urlTemplate;

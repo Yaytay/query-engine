@@ -12,17 +12,17 @@ arguments:
   - name: port
     type: Integer
 sourceEndpoints:
-  MS SQL Server:
+  - name: MS SQL Server
     type: SQL
     urlTemplate: "sqlserver://localhost:<port>/test"
     username: sa
     password: T0p-Secret
-  MySQL:
+  - name: MySQL
     type: SQL
     urlTemplate: "mysql://localhost:<port>/test"
     username: user
     password: T0p-Secret
-  PostgreSQL:
+  - name: PostgreSQL
     type: SQL
     urlTemplate: "postgresql://localhost:<port>/test"
     username: postgres

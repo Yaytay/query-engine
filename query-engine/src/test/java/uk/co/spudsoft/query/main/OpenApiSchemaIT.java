@@ -39,9 +39,11 @@ import io.vertx.junit5.Timeout;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -144,6 +146,15 @@ public class OpenApiSchemaIT {
       logger.warn(validationFailure);
     }
     assertTrue(validationFailures.isEmpty(), "At least one (" + validationFailures.size() + ") validation failed");
+    
+    Set<String> refProps = new HashSet<>();
+    collateProps(refProps, body, "$ref");
+    logger.debug("Properties on $ref structures are: {}", refProps.stream().sorted().toList());
+    
+    Set<String> typeProps = new HashSet<>();
+    collateProps(typeProps, body, "type");
+    logger.debug("Properties on type structures are: {}", typeProps.stream().sorted().toList());
+    
         
     main.shutdown();
   }
@@ -217,6 +228,30 @@ public class OpenApiSchemaIT {
     return type;
   }
   
+  private void collateProps(Set<String> props, String jsonSchema, String key) throws Exception {
+    ObjectNode root = (ObjectNode) DatabindCodec.mapper().readTree(jsonSchema);
+    ObjectNode schemas = (ObjectNode) root.get("components").get("schemas");
+    collateProps(props, schemas, key);
+  }
+
+  private void collateProps(Set<String> props, ObjectNode schemas, String key) {
+    List<JsonNode> parents = schemas.findParents(key);
+    for (JsonNode parent : parents) {
+      JsonNode keyValue = parent.get(key);
+      // Skip anything that might have used the key for something else (mainly because we have classes with "type" fields
+      if (keyValue.isTextual()) { 
+        for (Iterator<Entry<String, JsonNode>> iter = parent.fields(); iter.hasNext();){
+          Entry<String, JsonNode> entry = iter.next();
+          String field = entry.getKey();
+          props.add(field);
+          if (entry.getValue() instanceof ObjectNode fieldObject) {
+            collateProps(props, fieldObject, key);
+          }
+        }
+      }
+    }
+  }
+  
   private void validateRefs(List<String> messages, String jsonSchema) {
     try {
       ObjectNode root = (ObjectNode) DatabindCodec.mapper().readTree(jsonSchema);
@@ -240,6 +275,9 @@ public class OpenApiSchemaIT {
     }
     
     String type = schema.getString("type");
+    if ("object".equals(type) && schema.containsKey("additionalProperties")) {
+      return name + " is a map (object with additionalProperties), please change to a List";
+    }
     if (isTopLevelSchema) {
       // Must either have a type, or have an allOf with a ref and then a type
       // In both cases the type must be "object"

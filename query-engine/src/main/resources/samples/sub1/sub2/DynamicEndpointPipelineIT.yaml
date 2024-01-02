@@ -10,7 +10,7 @@ arguments:
     optional: true
     defaultValue: 1000
 sourceEndpoints:
-  db:
+  - name: db
     type: SQL
     urlTemplate: "mysql://localhost:<port>/test"
     secret: cred

@@ -18,8 +18,10 @@ package uk.co.spudsoft.query.main;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  *
@@ -32,6 +34,33 @@ public class ImmutableCollectionTools {
       return ImmutableMap.of();
     } else {
       return ImmutableMap.copyOf(src);
+    }
+  }
+  
+  /**
+   * Create an ImmutableMap based on the contents of a Collection.
+   * 
+   * Note that if the id function returns null for a value that value will be excluded from the Map.
+   * Please ensure that validation of the Collection happens to alert the user to this issue.
+   * 
+   * @param <K> The key type for the Map.
+   * @param <V> The value type for the Map.
+   * @param src The collection being converted.
+   * @param id Function to extract the ID from a Collection entry.
+   * @return A newly created ImmutableMap.
+   */
+  public static <K, V> ImmutableMap<K, V> listToMap(Collection<V> src, Function<V, K> id) {
+    if (src == null) {
+      return ImmutableMap.of();
+    } else {
+      var builder = ImmutableMap.<K, V>builder();
+      src.forEach(v -> {
+        K key = id.apply(v);
+        if (key != null) {
+          builder.put(key, v);
+        }
+      });
+      return builder.build();
     }
   }
   

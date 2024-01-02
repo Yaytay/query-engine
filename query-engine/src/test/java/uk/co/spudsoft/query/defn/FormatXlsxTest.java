@@ -16,8 +16,9 @@
  */
 package uk.co.spudsoft.query.defn;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.net.MediaType;
+import java.util.Arrays;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -71,7 +72,7 @@ public class FormatXlsxTest {
             .headerColours(FormatXlsxColours.builder().fgColour("000000").bgColour("FFFFFF").build())
             .evenColours(FormatXlsxColours.builder().fgColour("000000").bgColour("FFFFFF").build())
             .oddColours(FormatXlsxColours.builder().fgColour("000000").bgColour("FFFFFF").build())
-            .columns(ImmutableMap.<String, FormatXlsxColumn>builder().put("one", FormatXlsxColumn.builder().header("First").build()).build())
+            .columns(Arrays.asList(FormatXlsxColumn.builder().name("one").header("First").build()))
             .build()
             .validate();    
     assertThrows(IllegalArgumentException.class, () -> {
@@ -82,7 +83,7 @@ public class FormatXlsxTest {
               .headerColours(FormatXlsxColours.builder().fgColour("000000").bgColour("FFFFFF").build())
               .evenColours(FormatXlsxColours.builder().fgColour("000000").bgColour("FFFFFF").build())
               .oddColours(FormatXlsxColours.builder().fgColour("000000").bgColour("FFFFFF").build())
-              .columns(ImmutableMap.<String, FormatXlsxColumn>builder().put("", FormatXlsxColumn.builder().header("First").build()).build())
+              .columns(Arrays.asList(FormatXlsxColumn.builder().header("First").build()))
               .build()
               .validate();    
     });
@@ -231,9 +232,10 @@ public class FormatXlsxTest {
   @Test
   public void testGetColumns() {
     FormatXlsx instance = FormatXlsx.builder().build();
-    assertEquals(ImmutableMap.builder().build(), instance.getColumns());
-    instance = FormatXlsx.builder().columns(ImmutableMap.<String, FormatXlsxColumn>builder().put("one", FormatXlsxColumn.builder().header("First").build()).build()).build();
-    assertEquals("First", instance.getColumns().get("one").toColumnDefinition("one", DataType.Time).name);
+    assertEquals(ImmutableList.builder().build(), instance.getColumns());
+    instance = FormatXlsx.builder().columns(Arrays.asList(FormatXlsxColumn.builder().name("one").header("First").build())).build();
+    assertEquals("First", instance.getColumns().get(0).toColumnDefinition("one", DataType.Time).name);
+    assertEquals("First", instance.getColumnsMap().get("one").toColumnDefinition("one", DataType.Time).name);
   }
 
 }

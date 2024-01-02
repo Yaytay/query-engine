@@ -132,7 +132,7 @@ public class ProcessorGroupConcatInstanceTest {
     SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, vertx.getOrCreateContext(), executor, "source");
     PipelineInstance pipelineInstance = new PipelineInstance(
             null
-            , pipeline.getSourceEndpoints()
+            , pipeline.getSourceEndpointsMap()
             , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
             , sourceInstance
             , executor.createProcessors(vertx, sourceInstance, vertx.getOrCreateContext(), pipeline)
@@ -182,7 +182,7 @@ public class ProcessorGroupConcatInstanceTest {
     SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, vertx.getOrCreateContext(), executor, "source");
     PipelineInstance pipelineInstance = new PipelineInstance(
             null
-            , pipeline.getSourceEndpoints()
+            , pipeline.getSourceEndpointsMap()
             , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
             , sourceInstance
             , executor.createProcessors(vertx, sourceInstance, vertx.getOrCreateContext(), pipeline)
@@ -245,7 +245,7 @@ public class ProcessorGroupConcatInstanceTest {
     SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, vertx.getOrCreateContext(), executor, "source");
     PipelineInstance pipelineInstance = new PipelineInstance(
             null
-            , pipeline.getSourceEndpoints()
+            , pipeline.getSourceEndpointsMap()
             , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
             , sourceInstance
             , executor.createProcessors(vertx, sourceInstance, vertx.getOrCreateContext(), pipeline)
@@ -303,7 +303,7 @@ public class ProcessorGroupConcatInstanceTest {
     SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, vertx.getOrCreateContext(), executor, "source");
     PipelineInstance pipelineInstance = new PipelineInstance(
             null
-            , pipeline.getSourceEndpoints()
+            , pipeline.getSourceEndpointsMap()
             , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
             , sourceInstance
             , executor.createProcessors(vertx, sourceInstance, vertx.getOrCreateContext(), pipeline)

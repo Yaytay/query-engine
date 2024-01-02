@@ -42,10 +42,10 @@ public class FormatXlsxColumnTest {
    */
   @Test
   public void testValidate() {
-    FormatXlsxColumn.builder().header("Wibble").format("000000").width(7.0).build().validate();
-    FormatXlsxColumn.builder().format("000000").width(7.0).build().validate();
-    FormatXlsxColumn.builder().format("000000").build().validate();
-    FormatXlsxColumn.builder().width(7.0).build().validate();
+    FormatXlsxColumn.builder().name("h").header("Wibble").format("000000").width(7.0).build().validate();
+    FormatXlsxColumn.builder().name("h").format("000000").width(7.0).build().validate();
+    FormatXlsxColumn.builder().name("h").format("000000").build().validate();
+    FormatXlsxColumn.builder().name("h").width(7.0).build().validate();
     assertThrows(IllegalArgumentException.class, () -> {
       FormatXlsxColumn.builder().build().validate();    
     });

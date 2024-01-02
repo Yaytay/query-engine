@@ -49,7 +49,7 @@ arguments:
     optional: true
     possibleValuesUrl: http://localhost:8000/query/demo/LookupValues
 sourceEndpoints:
-  MySQL:
+  - name: MySQL
     type: SQL
     urlTemplate: "mysql://localhost:2001/test"
     username: user

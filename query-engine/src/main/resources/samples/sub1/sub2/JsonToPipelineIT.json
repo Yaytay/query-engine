@@ -10,24 +10,25 @@
       , "name": "port"
     }
   ],
-  "sourceEndpoints": {
-    "MS SQL Server": {
+  "sourceEndpoints": [
+    
+    { "name": "MS SQL Server",
       "urlTemplate": "sqlserver://localhost:<port>/test",
       "username": "sa",
       "password": "T0p-Secret"
     },
-    "MySQL": {
+    { "name": "MySQL",
       "urlTemplate": "mysql://localhost:<port>/test",
       "username": "user",
       "password": "T0p-Secret"
     }
     ,
-    "PostgreSQL": {
+    { "name": "PostgreSQL",
       "urlTemplate": "postgresql://localhost:<port>/test",
       "username": "postgres",
       "password": "T0p-Secret"
     }
-  }
+  ]
   ,
   "source": {    
     "type": "SQL",

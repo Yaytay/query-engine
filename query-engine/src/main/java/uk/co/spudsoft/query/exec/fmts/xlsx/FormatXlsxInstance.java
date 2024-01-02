@@ -153,7 +153,7 @@ public class FormatXlsxInstance implements FormatInstance {
     row.forEach((cd, v) -> {
       ColumnDefinition defn = null;
       if (definition.getColumns() != null) {
-        FormatXlsxColumn formatColumn = definition.getColumns().get(cd.name());
+        FormatXlsxColumn formatColumn = definition.getColumnsMap().get(cd.name());
         if (formatColumn != null) {
           defn = formatColumn.toColumnDefinition(cd.name(), cd.type());
         }

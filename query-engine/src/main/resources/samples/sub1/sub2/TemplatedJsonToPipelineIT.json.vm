@@ -9,14 +9,14 @@
       , "name": "port"
     }
   ],
-  "sourceEndpoints": {
-    "MS SQL Server": {
+  "sourceEndpoints": [
+    { "name": "MS SQL Server",
       "type": "SQL",
       "url": "sqlserver://localhost:$params.port/test",
       "username": "sa",
       "password": "T0p-Secret"
     },
-    "MySQL": {
+    { "name": "MySQL",
       "type": "SQL",
 #if($request.clientIp=="127.0.0.1")
       "url": "mysql://localhost:$params.port/test",
@@ -27,13 +27,13 @@
       "password": "T0p-Secret"
     }
     ,
-    "PostgreSQL": {
+    { "name": "PostgreSQL",
       "type": "SQL",
       "url": "postgresql://localhost:$params.port/test",
       "username": "postgres",
       "password": "T0p-Secret"
     }
-  }
+  ]
   ,
   "source": {    
     "type": "SQL",

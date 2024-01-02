@@ -104,7 +104,7 @@ public class TemplatedJsonToPipelineIT {
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), executor, "source");
               PipelineInstance instance = new PipelineInstance(
                       executor.prepareArguments(pipeline.getArguments(), args)
-                      , pipeline.getSourceEndpoints()
+                      , pipeline.getSourceEndpointsMap()
                       , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                       , sourceInstance
                       , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline)

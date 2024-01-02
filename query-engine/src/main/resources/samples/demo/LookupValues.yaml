@@ -1,7 +1,7 @@
 title: Lookup Values
 description: Extract values to use for the demo/FeatureRichExample.
 sourceEndpoints:
-  MySQL:
+  - name: MySQL
     type: SQL
     urlTemplate: "mysql://localhost:2001/test"
     username: user

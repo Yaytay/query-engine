@@ -146,7 +146,7 @@ public class QueryRouter implements Handler<RoutingContext> {
                       SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), pipelineExecutor, ROOT_SOURCE_DEFAULT_NAME);
                       instance = new PipelineInstance(
                               pipelineExecutor.prepareArguments(pipeline.getArguments(), routingContext.request().params())
-                              , pipeline.getSourceEndpoints()
+                              , pipeline.getSourceEndpointsMap()
                               , pipelineExecutor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                               , sourceInstance
                               , pipelineExecutor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline)

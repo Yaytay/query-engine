@@ -16,9 +16,11 @@
  */
 package uk.co.spudsoft.query.defn;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.net.MediaType;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -27,8 +29,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.List;
 import uk.co.spudsoft.query.exec.fmts.xlsx.FormatXlsxInstance;
 import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
@@ -60,7 +61,8 @@ public class FormatXlsx implements Format {
   private final FormatXlsxColours headerColours;
   private final FormatXlsxColours evenColours;
   private final FormatXlsxColours oddColours;
-  private final ImmutableMap<String, FormatXlsxColumn> columns;
+  private final ImmutableList<FormatXlsxColumn> columns;
+  private final ImmutableMap<String, FormatXlsxColumn> columnsMap;
   
   @Override
   public FormatInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
@@ -89,14 +91,8 @@ public class FormatXlsx implements Format {
       oddColours.validate();
     }
     if (columns != null) {
-      for (Entry<String, FormatXlsxColumn> entry : columns.entrySet()) {
-        if (Strings.isNullOrEmpty(entry.getKey())) {
-          throw new IllegalArgumentException("FormatXlsxColumn configuration has invalid name");
-        }
-        if (entry.getValue() == null) {
-          throw new IllegalArgumentException("FormatXlsxColumn configuration is null");
-        }
-        entry.getValue().validate();
+      for (FormatXlsxColumn column : columns) {
+        column.validate();
       }
     }
   }
@@ -343,10 +339,15 @@ public class FormatXlsx implements Format {
                         The key in this map is the name of the field as it appears in the data rows as they reach the outputter.
                         </P>
                         """)
-  public Map<String, FormatXlsxColumn> getColumns() {
+  public List<FormatXlsxColumn> getColumns() {
     return columns;
   }
 
+  @JsonIgnore
+  public ImmutableMap<String, FormatXlsxColumn> getColumnsMap() {
+    return columnsMap;
+  }
+  
   /**
    * Builder class for FormatXlsx.
    */
@@ -367,7 +368,7 @@ public class FormatXlsx implements Format {
     private FormatXlsxColours headerColours;
     private FormatXlsxColours evenColours;
     private FormatXlsxColours oddColours;
-    private Map<String, FormatXlsxColumn> columns;
+    private List<FormatXlsxColumn> columns;
 
     private Builder() {
     }
@@ -437,7 +438,7 @@ public class FormatXlsx implements Format {
       return this;
     }
 
-    public Builder columns(final Map<String, FormatXlsxColumn> value) {
+    public Builder columns(final List<FormatXlsxColumn> value) {
       this.columns = value;
       return this;
     }
@@ -456,7 +457,7 @@ public class FormatXlsx implements Format {
     return new FormatXlsx.Builder();
   }
 
-  private FormatXlsx(final FormatType type, final String name, final String extension, final MediaType mediaType, final String sheetName, final String creator, final boolean gridLines, final boolean headers, final FormatXlsxFont headerFont, final FormatXlsxFont bodyFont, final FormatXlsxColours headerColours, final FormatXlsxColours evenColours, final FormatXlsxColours oddColours, final Map<String, FormatXlsxColumn> columns) {
+  private FormatXlsx(final FormatType type, final String name, final String extension, final MediaType mediaType, final String sheetName, final String creator, final boolean gridLines, final boolean headers, final FormatXlsxFont headerFont, final FormatXlsxFont bodyFont, final FormatXlsxColours headerColours, final FormatXlsxColours evenColours, final FormatXlsxColours oddColours, final List<FormatXlsxColumn> columns) {
     validateType(FormatType.XLSX, type);
     this.type = type;
     this.name = name;
@@ -472,6 +473,7 @@ public class FormatXlsx implements Format {
     this.evenColours = evenColours;
     this.oddColours = oddColours;
     this.columns = ImmutableCollectionTools.copy(columns);
+    this.columnsMap = ImmutableCollectionTools.listToMap(columns, c -> c.getName());
   }
     
   

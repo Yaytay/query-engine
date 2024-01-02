@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.defn;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.Strings;
@@ -27,7 +28,6 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
@@ -66,7 +66,8 @@ public final class Pipeline extends SourcePipeline {
   private final Condition condition;
   private final ImmutableList<RateLimitRule> rateLimitRules;
   private final ImmutableList<Argument> arguments;
-  private final ImmutableMap<String, Endpoint> sourceEndpoints;
+  private final ImmutableList<Endpoint> sourceEndpoints;
+  private final ImmutableMap<String, Endpoint> sourceEndpointsMap;
   private final ImmutableList<DynamicEndpoint> dynamicEndpoints;
   private final ImmutableList<Format> formats;  
 
@@ -91,7 +92,7 @@ public final class Pipeline extends SourcePipeline {
       formats.forEach(Format::validate);
     }
     
-    sourceEndpoints.forEach((k, v) -> v.validate());
+    sourceEndpoints.forEach(v -> v.validate());
     if (arguments != null && !arguments.isEmpty()) {
       Set<String> argNames = new HashSet<>();
       for (Argument arg : arguments) {
@@ -209,8 +210,13 @@ public final class Pipeline extends SourcePipeline {
                           </P>
                           """
   )
-  public Map<String, Endpoint> getSourceEndpoints() {
+  public List<Endpoint> getSourceEndpoints() {
     return sourceEndpoints;
+  }
+
+  @JsonIgnore
+  public ImmutableMap<String, Endpoint> getSourceEndpointsMap() {
+    return sourceEndpointsMap;
   }
 
   @ArraySchema(
@@ -297,7 +303,7 @@ public final class Pipeline extends SourcePipeline {
     private Condition condition;
     private List<RateLimitRule> rateLimitRules;
     private List<Argument> arguments;
-    private Map<String, Endpoint> sourceEndpoints;
+    private List<Endpoint> sourceEndpoints;
     private List<DynamicEndpoint> dynamicEndpoints;
     private List<Format> formats;
 
@@ -349,7 +355,7 @@ public final class Pipeline extends SourcePipeline {
       return this;
     }
 
-    public Builder sourceEndpoints(final Map<String, Endpoint> value) {
+    public Builder sourceEndpoints(final List<Endpoint> value) {
       this.sourceEndpoints = value;
       return this;
     }
@@ -369,7 +375,7 @@ public final class Pipeline extends SourcePipeline {
     return new Pipeline.Builder();
   }
 
-  private Pipeline(String title, String description, Condition condition, List<RateLimitRule> rateLimitRules, List<Argument> arguments, Map<String, Endpoint> sourceEndpoints, Source source, List<DynamicEndpoint> dynamicEndpoints, List<Processor> processors, List<Format> formats) {
+  private Pipeline(String title, String description, Condition condition, List<RateLimitRule> rateLimitRules, List<Argument> arguments, List<Endpoint> sourceEndpoints, Source source, List<DynamicEndpoint> dynamicEndpoints, List<Processor> processors, List<Format> formats) {
     super(source, processors);
     this.title = title;
     this.description = description;
@@ -384,7 +390,8 @@ public final class Pipeline extends SourcePipeline {
       }
       usedNames.add(arg.getName());
     }
-    this.sourceEndpoints = ImmutableCollectionTools.copy(sourceEndpoints);
+    this.sourceEndpoints = ImmutableCollectionTools.copy(sourceEndpoints);    
+    this.sourceEndpointsMap = ImmutableCollectionTools.listToMap(sourceEndpoints, e -> e.getName());
     this.dynamicEndpoints = ImmutableCollectionTools.copy(dynamicEndpoints);
     this.formats = ImmutableCollectionTools.copy(formats);
     usedNames.clear();
