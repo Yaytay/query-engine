@@ -264,19 +264,26 @@ public class Argument {
    * This serves no purpose in the processing of the pipeline (it is explicitly not validated at runtime).
    * @return a list of the name(s) of another argument(s) that this argument requires.
    */
-  @Schema(description = """
-                        <P>
-                        A list of the name(s) of another argument(s) that this argument requires.
-                        </P>
-                        <P>
-                        This is intended to allow the UI to disable inputs until their dependent argument has been provided.
-                        </P>
-                        <P>
-                        This serves no purpose in the processing of the pipeline (it is explicitly not validated at runtime).
-                        </P>
-                        """
-          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  @ArraySchema(
+          arraySchema = @Schema(
+                  description = """
+                          <P>
+                          A list of the name(s) of another argument(s) that this argument requires.
+                          </P>
+                          <P>
+                          This is intended to allow the UI to disable inputs until their dependent argument has been provided.
+                          </P>
+                          <P>
+                          This serves no purpose in the processing of the pipeline (it is explicitly not validated at runtime).
+                          </P>
+                          """,
+                   requiredMode = Schema.RequiredMode.NOT_REQUIRED
           )
+          , items = @Schema(
+                  types = "string"
+                  , maxLength = 100
+          )
+  )
   public List<String> getDependsUpon() {
     return dependsUpon;
   }
@@ -372,7 +379,7 @@ public class Argument {
                         """
                   , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           ),
-          schema = @Schema(
+          items = @Schema(
                   implementation = ArgumentValue.class
                    , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           )

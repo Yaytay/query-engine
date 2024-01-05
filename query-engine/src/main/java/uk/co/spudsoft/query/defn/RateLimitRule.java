@@ -132,12 +132,15 @@ public class RateLimitRule {
    * @return the scope of the rate limit.
    */
   @ArraySchema(
-          schema = @Schema(
-                  implementation = RateLimitScopeType.class
-                  , description = """
+          arraySchema = @Schema(
+                  description = """
                           <P>The scope of the rate limit rule.</P>
                           <P>At least one value must be provided.</P>
                           """
+                  , requiredMode = Schema.RequiredMode.REQUIRED
+          )
+          , items = @Schema(
+                  implementation = RateLimitScopeType.class
           )
           , minItems = 1
           , uniqueItems = true

@@ -62,14 +62,18 @@ public class SourceTest implements Source {
   @Override
   public void validate() {
     validateType(SourceType.TEST, type);
-    if (Strings.isNullOrEmpty(name)) {
-      throw new IllegalArgumentException("SourceTest has no name");
+    String label = name;
+    if (!Strings.isNullOrEmpty(name)) {
+      label = label + " ";
     }
     if (rowCount < 0) {
-      throw new IllegalArgumentException("SourceTest " + name + " has negative value for rowCount");
+      throw new IllegalArgumentException(type + "Source " + label + "has negative value for rowCount");
+    }
+    if (rowCount == 0) {
+      throw new IllegalArgumentException(type + "Source " + label + "has zero value for rowCount");
     }
     if (delayMs < 0) {
-      throw new IllegalArgumentException("SourceTest " + name + " has negative value for delayMs");
+      throw new IllegalArgumentException(type + "Source " + label + "has negative value for delayMs");
     }
   }
   

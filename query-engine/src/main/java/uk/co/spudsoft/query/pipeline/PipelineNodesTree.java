@@ -191,9 +191,8 @@ public class PipelineNodesTree extends AbstractTree {
     }
 
     @ArraySchema(
-            schema = @Schema(
-                    implementation = Argument.class
-                    , description = """
+            arraySchema = @Schema(
+                    description = """
                             <P>Declared arguments to the Pipeline.</P>
                             <P>
                             Pipelines can receive arguments via the HTTP query string.
@@ -210,6 +209,9 @@ public class PipelineNodesTree extends AbstractTree {
                             </P>
                             """
             )
+            , items = @Schema(
+                    implementation = Argument.class
+            )
             , minItems = 0
             , uniqueItems = true
     )
@@ -218,9 +220,8 @@ public class PipelineNodesTree extends AbstractTree {
     }
 
     @ArraySchema(
-            schema = @Schema(
-                    implementation = Format.class
-                    , description = """
+            arraySchema = @Schema(
+                    description = """
                                     <P>The outputs that this Pipeline supports.</P>
                                     <P>
                                     The format to use for a pipeline is chosen by according to the following rules:
@@ -252,6 +253,9 @@ public class PipelineNodesTree extends AbstractTree {
                                     </ol>
                                     <p>
                                     """
+            )
+            , items = @Schema(
+                    implementation = Format.class
             )
             , minItems = 1
             , uniqueItems = true

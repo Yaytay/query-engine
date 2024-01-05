@@ -152,7 +152,6 @@ public final class Pipeline extends SourcePipeline {
                         A condition that constrains who can use the Pipeline.
                         </P>
                         """
-            , maxLength = 100
             , implementation = String.class
             , externalDocs = @ExternalDocumentation(description = "Conditions", url = "")
     )
@@ -172,9 +171,8 @@ public final class Pipeline extends SourcePipeline {
   }    
     
   @ArraySchema(
-          schema = @Schema(
-                  implementation = Argument.class
-                  , description = """
+          arraySchema = @Schema(
+                  description = """
                           <P>Declared arguments to the Pipeline.</P>
                           <P>
                           Pipelines can receive arguments via the HTTP query string.
@@ -190,6 +188,9 @@ public final class Pipeline extends SourcePipeline {
                           between them).
                           </P>
                           """
+          )
+          , items = @Schema(
+                  implementation = Argument.class
           )
           , minItems = 0
           , uniqueItems = true
@@ -220,9 +221,8 @@ public final class Pipeline extends SourcePipeline {
   }
 
   @ArraySchema(
-          schema = @Schema(
-                  implementation = DynamicEndpoint.class
-                  , description = """
+          arraySchema = @Schema(
+                  description = """
                                   <P>Sub-Pipelines that can be run prior to the main Pipeline in order to generate more SourceEndpoints.</P>
                                   <P>
                                   The expected use is for the source to query a database that contains connection strings (in vertx format, not JDBC format)
@@ -244,6 +244,9 @@ public final class Pipeline extends SourcePipeline {
                                   </P>
                                   """
           )
+          , items = @Schema(
+                  implementation = DynamicEndpoint.class
+          )
           , minItems = 0
           , uniqueItems = true
   )
@@ -252,9 +255,8 @@ public final class Pipeline extends SourcePipeline {
   }
   
   @ArraySchema(
-          schema = @Schema(
-                  implementation = Format.class
-                  , description = """
+          arraySchema = @Schema(
+                  description = """
                                   <P>The outputs that this Pipeline supports.</P>
                                   <P>
                                   The format to use for a pipeline is chosen by according to the following rules:
@@ -286,6 +288,9 @@ public final class Pipeline extends SourcePipeline {
                                   </ol>
                                   <p>
                                   """
+          )
+          , items = @Schema(
+                  implementation = Format.class
           )
           , minItems = 1
           , uniqueItems = true

@@ -120,7 +120,7 @@ public class OpenApiModelConverterTest {
     }
 
     @ArraySchema(
-            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = Processor.class)
+            items = @io.swagger.v3.oas.annotations.media.Schema(implementation = Processor.class)
             , arraySchema = @io.swagger.v3.oas.annotations.media.Schema(type = "array", description = "It's the processors")
             , minItems = 0
     )
@@ -157,7 +157,7 @@ public class OpenApiModelConverterTest {
     }
 
     @ArraySchema(
-            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = Processor.class, description = "It's the processors")
+            items = @io.swagger.v3.oas.annotations.media.Schema(implementation = Processor.class, description = "It's the processors")
             , arraySchema = @io.swagger.v3.oas.annotations.media.Schema(type = "array")
             , minItems = 0
     )
@@ -218,6 +218,45 @@ public class OpenApiModelConverterTest {
     assertThat(processorsString, containsString("type: [array]"));
     assertThat(processorsString, containsString("description: null"));
     assertThat(processorsString, containsString("minItems: 0"));
+  }
+
+  private static class SourcePipelineItemsRequired {
+
+    private final ImmutableList<Processor> processors;
+
+    public SourcePipelineItemsRequired(ImmutableList<Processor> processors) {
+      this.processors = processors;
+    }
+
+    @ArraySchema(
+            items = @io.swagger.v3.oas.annotations.media.Schema(implementation = Processor.class, description = "It's the processors")
+            , arraySchema = @io.swagger.v3.oas.annotations.media.Schema(type = "array", requiredMode = io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED)
+            , minItems = 1
+    )
+    public List<Processor> getProcessors() {
+      return processors;
+    }
+
+  }
+
+  @Test
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  public void testFixArrrayPropertyDescriptionsRequired() {
+    
+    JsonSchema propSchema = new JsonSchema();
+    propSchema.name("processors");
+    propSchema.minItems(0);
+    JsonSchema schema = new JsonSchema();
+    schema.setProperties(ImmutableMap.<String,Schema>builder()
+            .put("processors", propSchema)
+            .build());
+    OpenApiModelConverter.fixArrrayPropertyDescriptions(SourcePipelineItemsRequired.class, schema);
+    String processorsString = schema.getProperties().get("processors").toString();
+    assertThat(processorsString, containsString("type: [array]"));
+    assertThat(processorsString, containsString("description: It's the processors"));
+    String parentString = schema.toString();
+    assertThat(processorsString, containsString("minItems: 0"));
+    assertThat(parentString, containsString("required: [processors]"));
   }
 
 }

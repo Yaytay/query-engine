@@ -25,10 +25,13 @@ import io.swagger.v3.core.converter.ModelConverter;
 import io.swagger.v3.core.converter.ModelConverterContext;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import io.swagger.v3.oas.models.media.JsonSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import java.lang.reflect.Method;
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -53,9 +56,6 @@ public class OpenApiModelConverter implements ModelConverter {
       }
       JavaType javaType = Json.mapper().constructType(type.getType());
       if (javaType != null) {
-        if ("SourcePipeline".equals(schema.getName())) {
-          logger.debug("Break");
-        }
         Class<?> cls = javaType.getRawClass();
         fixArrrayPropertyDescriptions(cls, schema);
         if (Map.class.isAssignableFrom(cls) || List.class.isAssignableFrom(cls)) {
@@ -86,43 +86,63 @@ public class OpenApiModelConverter implements ModelConverter {
 
   @SuppressWarnings({"unchecked", "rawtypes"})
   static void fixArrrayPropertyDescriptions(Class<?> cls, Schema schema) {
-    Map props = schema.getProperties();
+    Map<String, Schema> props = schema.getProperties();
     if (props != null) {
-      props.forEach((k, v) -> {
-        if (v instanceof Schema s) {
-          String propName = s.getName();
-          String methodName = "get" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
+      props.forEach((k, s) -> {
+        String propName = s.getName();
+        String methodName = "get" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
 
-          Method method;
-          try {
-            method = cls.getMethod(methodName);
-          } catch (NoSuchMethodException ex) {
-            return ;
+        Method method;
+        try {
+          method = cls.getMethod(methodName);
+        } catch (NoSuchMethodException ex) {
+          return ;
+        }
+        ArraySchema arraySchema = method.getAnnotation(ArraySchema.class);
+        if (arraySchema != null) {
+          if (s.getTypes() == null || s.getTypes().isEmpty()) {
+            s.setTypes(ImmutableSet.builder().add("array").build());
           }
-          ArraySchema arraySchema = method.getAnnotation(ArraySchema.class);
-          if (arraySchema != null) {
-            if (s.getTypes() == null || s.getTypes().isEmpty()) {
-              s.setTypes(ImmutableSet.builder().add("array").build());
+          if (arraySchema.minItems() > 0 && arraySchema.minItems() != Integer.MAX_VALUE && s.getMinItems() == null) {
+            s.setMinItems(arraySchema.minItems());
+          }
+          if (arraySchema.arraySchema() != null) {
+            if (Strings.isNullOrEmpty(s.getDescription()) && !Strings.isNullOrEmpty(arraySchema.arraySchema().description())) {
+              s.setDescription(arraySchema.arraySchema().description());
             }
-            if (arraySchema.arraySchema() != null) {
-              if (Strings.isNullOrEmpty(s.getDescription()) && !Strings.isNullOrEmpty(arraySchema.arraySchema().description())) {
-                s.setDescription(arraySchema.arraySchema().description());
-              }
-            } 
-            if (arraySchema.schema() != null) {
-              io.swagger.v3.oas.annotations.media.Schema itemSchemaAnnotation = arraySchema.schema();
-              if (s.getItems() == null) {
-                JsonSchema itemSchema = new JsonSchema();
-                if (itemSchemaAnnotation.implementation() != null) {
-                  itemSchema.$ref("#/components/schemas/" + itemSchemaAnnotation.implementation().getSimpleName());
-                }
-                s.setItems(itemSchema);
-              }
-              if (Strings.isNullOrEmpty(s.getDescription()) && !Strings.isNullOrEmpty(itemSchemaAnnotation.description())) {
-                s.setDescription(itemSchemaAnnotation.description());
-              }
-            } 
+            if (arraySchema.arraySchema().requiredMode() == RequiredMode.REQUIRED && (schema.getRequired() == null || !schema.getRequired().contains(k))) {
+              schema.addRequiredItem(k);
+            }
           }
+          if (arraySchema.items() != null) {
+            io.swagger.v3.oas.annotations.media.Schema itemSchemaAnnotation = arraySchema.items();
+            Schema itemSchema = s.getItems();
+            if (itemSchema == null) {
+              itemSchema = new JsonSchema();
+            }
+            if (itemSchemaAnnotation.types() != null && itemSchemaAnnotation.types().length > 0) {
+              itemSchema.setTypes(new HashSet<>(Arrays.asList(itemSchemaAnnotation.types())));
+            }
+            if (itemSchema.getTypes() == null || itemSchema.getTypes().isEmpty() || itemSchema.getTypes().contains("object")) {
+              if (itemSchemaAnnotation.implementation() != null) {
+                itemSchema.$ref("#/components/schemas/" + itemSchemaAnnotation.implementation().getSimpleName());
+
+              }
+            }
+            if (itemSchemaAnnotation.maxLength() > 0 && itemSchemaAnnotation.maxLength() != Integer.MAX_VALUE) {
+              itemSchema.maxLength(itemSchemaAnnotation.maxLength());
+            }
+            s.setItems(itemSchema);
+            if (Strings.isNullOrEmpty(s.getDescription()) && !Strings.isNullOrEmpty(itemSchemaAnnotation.description())) {
+              s.setDescription(itemSchemaAnnotation.description());
+            }
+          } 
+          if (arraySchema.schema() != null) {
+            io.swagger.v3.oas.annotations.media.Schema itemSchemaAnnotation = arraySchema.schema();
+            if (Strings.isNullOrEmpty(s.getDescription()) && !Strings.isNullOrEmpty(itemSchemaAnnotation.description())) {
+              s.setDescription(itemSchemaAnnotation.description());
+            }
+          } 
         }
       });
     }

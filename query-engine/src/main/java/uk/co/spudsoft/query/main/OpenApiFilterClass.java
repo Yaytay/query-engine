@@ -48,6 +48,4 @@ public class OpenApiFilterClass extends AbstractSpecFilter {
     return super.filterSchema(schema, params, cookies, headers); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
   }
   
-  
-  
 }
