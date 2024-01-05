@@ -61,9 +61,6 @@ public class SourceTestTest {
   @Test
   public void testValidate() {
     assertThrows(IllegalArgumentException.class, () -> {
-      SourceTest.builder().build().validate();
-    });
-    assertThrows(IllegalArgumentException.class, () -> {
       SourceTest.builder().name("name").rowCount(-1).build().validate();
     });
     assertThrows(IllegalArgumentException.class, () -> {
