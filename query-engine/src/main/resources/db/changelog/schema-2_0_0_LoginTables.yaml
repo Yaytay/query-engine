@@ -1,6 +1,6 @@
 databaseChangeLog:
 - changeSet:
-    id: 1645774409578-2
+    id: 2_0_0
     author: jtalbut (generated)
     runWith: jdbc
     changes:

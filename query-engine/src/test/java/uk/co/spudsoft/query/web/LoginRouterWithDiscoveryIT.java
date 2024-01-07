@@ -63,9 +63,11 @@ public class LoginRouterWithDiscoveryIT {
     return server;
   }
 
-  private int findPort() throws IOException {
+  public static int findUnusedPort() {
     try (ServerSocket s = new ServerSocket(0)) {
       return s.getLocalPort();
+    } catch (IOException ex) {
+      throw new RuntimeException(ex);
     }
   }
   
@@ -81,7 +83,7 @@ public class LoginRouterWithDiscoveryIT {
   public void testLoginWithDiscoveryIT() throws Exception {
     logger.debug("Running testLoginWithDiscoveryIT");
     
-    int port = findPort();
+    int port = findUnusedPort();
     HttpServer server = createServer(port);
     server.createContext("/", new HttpHandler() {
       @Override

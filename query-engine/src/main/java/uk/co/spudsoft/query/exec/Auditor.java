@@ -20,19 +20,24 @@ import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerResponse;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 import liquibase.exception.LiquibaseException;
 import uk.co.spudsoft.dircache.DirCacheTree.File;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 
 /**
- *
+ * The main class for tracking requests to the Query Engine and for accessing that tracking.
+ * 
  * @author jtalbut
  */
 public interface Auditor {
 
   /**
-   *
+   * Prepare the Auditor.
+   * <P>
+   * This method uses blocking methods, call before handing control to Vertx.
+   * </P>
    * @throws IOException if the resource accessor fails.
    * @throws SQLException if the exception thrown by the SQL driver is a non-existent driver exception.
    * @throws LiquibaseException if Liquibase is unable to prepare the database (for a non-driver error).
@@ -49,5 +54,7 @@ public interface Auditor {
   Future<Pipeline> runRateLimitRules(RequestContext context, Pipeline pipeline);
 
   void recordResponse(RequestContext context, HttpServerResponse response);
+  
+  Future<List<AuditHistory>> getHistory(String issuer, String subject, int maxRows, int skipRows);
   
 }

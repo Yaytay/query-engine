@@ -109,6 +109,7 @@ import uk.co.spudsoft.query.web.UiRouter;
 import uk.co.spudsoft.query.web.rest.AuthConfigHandler;
 import uk.co.spudsoft.query.web.rest.DocHandler;
 import uk.co.spudsoft.query.web.rest.FormIoHandler;
+import uk.co.spudsoft.query.web.rest.HistoryHandler;
 import uk.co.spudsoft.query.web.rest.InfoHandler;
 import uk.co.spudsoft.query.web.rest.SessionHandler;
 import uk.co.spudsoft.vertx.rest.JaxRsHandler;
@@ -412,6 +413,8 @@ public class Main extends Application {
     controllers.add(new FormIoHandler(defnLoader, outputAllErrorMessages(), requireSession));
     controllers.add(new AuthConfigHandler(params.getSession() == null ? null : params.getSession().getOauth()));
     controllers.add(new SessionHandler(outputAllErrorMessages(), requireSession));
+    
+    controllers.add(new HistoryHandler(auditor, outputAllErrorMessages()));
     addExtraControllers(params, controllers);
     List<Object> providers = Arrays.asList(
         new JacksonJsonProvider(PipelineDefnLoader.JSON_OBJECT_MAPPER, JacksonJsonProvider.BASIC_ANNOTATIONS)

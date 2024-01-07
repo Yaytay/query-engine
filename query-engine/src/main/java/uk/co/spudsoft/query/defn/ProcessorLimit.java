@@ -26,7 +26,7 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.procs.limit.ProcessorLimitInstance;
 
 /**
- *
+ * Processor that curtails the output after the configured number of rows.
  * @author jtalbut
  */
 @JsonDeserialize(builder = ProcessorLimit.Builder.class)

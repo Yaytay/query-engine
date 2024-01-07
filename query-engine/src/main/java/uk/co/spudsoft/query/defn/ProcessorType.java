@@ -16,10 +16,15 @@
  */
 package uk.co.spudsoft.query.defn;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
- *
+ * The type of Processor.
  * @author jtalbut
  */
+@Schema(description = """
+                      The type of Processor.
+                      """)
 public enum ProcessorType {
   
   LIMIT

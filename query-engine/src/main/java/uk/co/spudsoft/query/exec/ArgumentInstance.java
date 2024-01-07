@@ -21,7 +21,7 @@ import java.util.List;
 import uk.co.spudsoft.query.defn.Argument;
 
 /**
- *
+ * The realisation of an Argument passed in to a pipeline.
  * @author jtalbut
  */
 public final class ArgumentInstance {

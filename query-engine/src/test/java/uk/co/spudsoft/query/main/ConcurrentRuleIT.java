@@ -36,6 +36,7 @@ import java.util.List;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import uk.co.spudsoft.query.web.LoginRouterWithDiscoveryIT;
 
 
 /**
@@ -49,6 +50,8 @@ public class ConcurrentRuleIT {
   
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ConcurrentRuleIT.class);
+  
+  private final int mgmtPort = LoginRouterWithDiscoveryIT.findUnusedPort();
   
   @BeforeAll
   public static void createDirs(Vertx vertx) {
@@ -75,8 +78,8 @@ public class ConcurrentRuleIT {
       , "--managementEndpoints[0]=up"
       , "--managementEndpoints[2]=prometheus"
       , "--managementEndpoints[3]=threads"
-      , "--managementEndpointPort=8001"
-      , "--managementEndpointUrl=http://localhost:8001/manage"
+      , "--managementEndpointPort=" + mgmtPort
+      , "--managementEndpointUrl=http://localhost:" + mgmtPort + "/manage"
     }, stdout);
     assertEquals(0, stdoutStream.size());
     

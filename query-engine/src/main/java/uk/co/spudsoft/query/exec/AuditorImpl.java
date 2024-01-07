@@ -42,6 +42,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -128,11 +129,13 @@ public class AuditorImpl implements Auditor {
         recordFile = recordFile.replaceAll("#SCHEMA#.", "");
         recordException = recordException.replaceAll("#SCHEMA#.", "");
         recordResponse = recordResponse.replaceAll("#SCHEMA#.", "");
+        getHistory = getHistory.replaceAll("#SCHEMA#.", "");
       } else {
         recordRequest = recordRequest.replaceAll("SCHEMA", dataSourceConfig.getSchema());
         recordFile = recordFile.replaceAll("SCHEMA", dataSourceConfig.getSchema());
         recordException = recordException.replaceAll("SCHEMA", dataSourceConfig.getSchema());
         recordResponse = recordResponse.replaceAll("SCHEMA", dataSourceConfig.getSchema());
+        getHistory = getHistory.replaceAll("SCHEMA", dataSourceConfig.getSchema());
       }
 
       for (int retry = 0; configuration.getRetryLimit() < 0 || retry <= configuration.getRetryLimit(); ++retry) {
@@ -145,6 +148,7 @@ public class AuditorImpl implements Auditor {
           recordFile = recordFile.replaceAll("#", quote);
           recordException = recordException.replaceAll("#", quote);
           recordResponse = recordResponse.replaceAll("#", quote);
+          getHistory = getHistory.replaceAll("#", quote);
           
           Map<String, Object> liquibaseConfig = new HashMap<>();
           Scope.child(liquibaseConfig, () -> {
@@ -230,9 +234,11 @@ public class AuditorImpl implements Auditor {
                     , #issuer#
                     , #subject#
                     , #username#
+                    , #name#
                     , #groups#
                   ) values (
                     ?
+                    , ?
                     , ?
                     , ?
                     , ?
@@ -279,6 +285,29 @@ public class AuditorImpl implements Auditor {
             , #responseHeaders# = ?
            where
             #id# = ?""";
+  private String getHistory = """
+          select
+             #timestamp#
+             , #id#
+             , #path#
+             , #arguments#
+             , #host#
+             , #issuer#
+             , #subject#
+             , #username#
+             , #name#
+             , #responseCode#
+             , #responseRows#
+             , #responseSize#
+             , #responseStreamStartMillis#
+             , #responseDurationMillis#
+           from
+             #SCHEMA#.#request#
+           where
+             #issuer# = ?
+             and #subject# = ?
+           order by
+             #timestamp# desc""";
   
   private boolean baseSqlExceptionIsNonexistantDriver(Throwable ex) {
     while (ex != null) {
@@ -304,7 +333,7 @@ public class AuditorImpl implements Auditor {
     JsonArray groups = listToJson(context.getGroups());
     String openIdDetails = context.getJwt() == null ? null : context.getJwt().getPayloadAsString();
     
-    logger.info("Request: {} {} {} {} {} {} {} {} {} {}",
+    logger.info("Request: {} {} {} {} {} {} {} {} {} {} {}",
              context.getUrl(),
              context.getClientIp(),
              context.getHost(),
@@ -313,6 +342,7 @@ public class AuditorImpl implements Auditor {
              headers,
              context.getIssuer(),
              context.getSubject(),
+             context.getUsername(),
              context.getNameFromJwt(),
              context.getGroups()
     );
@@ -334,6 +364,7 @@ public class AuditorImpl implements Auditor {
                     ps.setString(param++, openIdDetails);
                     ps.setString(param++, JdbcHelper.limitLength(context.getIssuer(), 1000));
                     ps.setString(param++, JdbcHelper.limitLength(context.getSubject(), 1000));
+                    ps.setString(param++, JdbcHelper.limitLength(context.getUsername(), 1000));
                     ps.setString(param++, JdbcHelper.limitLength(context.getNameFromJwt(), 1000));
                     ps.setString(param++, JdbcHelper.toString(groups));                    
     })
@@ -605,6 +636,46 @@ public class AuditorImpl implements Auditor {
       }
     }
     return value;
+  }
+
+  @Override
+  public Future<List<AuditHistory>> getHistory(String issuerArg, String subjectArg, int maxRows, int skipRows) {
+    logger.info("Get history for : {} {}", issuerArg, subjectArg);
+    
+    if (jdbcHelper == null) {
+      return Future.succeededFuture(Collections.emptyList());      
+    }
+    int currentRow[] = {0};
+    return jdbcHelper.runSqlSelect(getHistory, ps -> {
+                    int param = 1;
+                    ps.setString(param++, JdbcHelper.limitLength(issuerArg, 1000));
+                    ps.setString(param++, JdbcHelper.limitLength(subjectArg, 1000));
+                    ps.setMaxRows(skipRows + maxRows);
+             }, rs -> {
+              List<AuditHistory> list = new ArrayList<>();
+              while (rs.next()) {
+                if (currentRow[0]++  > skipRows) {
+                  LocalDateTime timestamp = LocalDateTime.ofInstant(rs.getTimestamp(1).toInstant(), ZoneOffset.UTC);
+                  String id = rs.getString(2);
+                  String path = rs.getString(3);
+                  JsonObject arguments = new JsonObject(rs.getString(4));
+                  String host = rs.getString(5);
+                  String issuer = rs.getString(6);
+                  String subject = rs.getString(7);
+                  String username = rs.getString(8);
+                  String name = rs.getString(9);
+                  int responseCode = rs.getInt(10);
+                  long responseRows = rs.getLong(11);
+                  long responseSize = rs.getLong(12);
+                  long responseStreamStartMs = rs.getLong(13);
+                  long responseDurationMs = rs.getLong(14);
+                
+                  AuditHistory ah = new AuditHistory(timestamp, id, path, arguments, host, issuer, subject, username, name, responseCode, responseRows, responseSize, responseStreamStartMs, responseDurationMs);
+                  list.add(ah);
+                }
+              }
+              return list;
+            });
   }
   
 }

@@ -16,7 +16,6 @@
  */
 package uk.co.spudsoft.query.main;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.restassured.RestAssured;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
@@ -29,14 +28,11 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
 import static io.restassured.RestAssured.given;
-import static io.restassured.config.RedirectConfig.redirectConfig;
-import io.restassured.config.RestAssuredConfig;
-import io.vertx.core.json.Json;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.net.URI;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import uk.co.spudsoft.query.web.LoginRouterWithDiscoveryIT;
 
 
 /**
@@ -47,6 +43,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class MainAuthRequiredIT {
   
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
+  
+  private final int mgmtPort = LoginRouterWithDiscoveryIT.findUnusedPort();
   
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(MainAuthRequiredIT.class);
@@ -79,8 +77,8 @@ public class MainAuthRequiredIT {
       , "--managementEndpoints[0]=up"
       , "--managementEndpoints[2]=prometheus"
       , "--managementEndpoints[3]=threads"
-      , "--managementEndpointPort=8001"
-      , "--managementEndpointUrl=http://localhost:8001/manage"
+      , "--managementEndpointPort=" + mgmtPort            
+      , "--managementEndpointUrl=http://localhost:" + mgmtPort + "/manage"
       , "--session.requireSession=true"
       , "--session.oauth.GitHub.logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
       , "--session.oauth.GitHub.authorizationEndpoint=https://github.com/login/oauth/authorize"
@@ -109,7 +107,7 @@ public class MainAuthRequiredIT {
             .then()
             .log().all()
             .statusCode(200)
-            .body(equalTo("{\"location\":\"http://localhost:8001/manage\"}"))
+            .body(equalTo("{\"location\":\"http://localhost:" + mgmtPort + "/manage\"}"))
             ;
     
     given()

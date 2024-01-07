@@ -19,8 +19,8 @@
     <property name="message" value="Line contains tabs, convert to spaces."/>
   </module>
   <module name="RegexpHeader">
-    <!--property name="header" value="/[*]\n [*] Copyright (C) 202[23] jtalbut\n [*]\n [*] This program is free software: you can redistribute it and/or modify"/-->
-    <property name="header" value="^/[*]\n [*] Copyright \(C\) 202[23] jtalbut\n [*]\n [*] This program is free software: you can redistribute it and/or modify"/>
+    <!--property name="header" value="/[*]\n [*] Copyright (C) 202[234] jtalbut\n [*]\n [*] This program is free software: you can redistribute it and/or modify"/-->
+    <property name="header" value="^/[*]\n [*] Copyright \(C\) 202[234] jtalbut\n [*]\n [*] This program is free software: you can redistribute it and/or modify"/>
     <property name="fileExtensions" value="java"/>
   </module>
   <module name="SuppressWarningsFilter"/>

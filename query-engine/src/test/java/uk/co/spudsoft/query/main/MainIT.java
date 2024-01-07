@@ -37,6 +37,7 @@ import java.io.PrintStream;
 import java.net.URI;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import uk.co.spudsoft.query.web.LoginRouterWithDiscoveryIT;
 
 
 /**
@@ -51,9 +52,11 @@ public class MainIT {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(MainIT.class);
   
+  private final int mgmtPort = LoginRouterWithDiscoveryIT.findUnusedPort();
+  
   @BeforeAll
   public static void createDirs(Vertx vertx) {
-    File paramsDir = new File("target/query-engine/samples-mainit");
+    File paramsDir = new File("target/query-engine/sammainit");
     paramsDir.mkdirs();
   }
     
@@ -138,8 +141,8 @@ public class MainIT {
       , "--managementEndpoints[0]=up"
       , "--managementEndpoints[2]=prometheus"
       , "--managementEndpoints[3]=threads"
-      , "--managementEndpointPort=8001"
-      , "--managementEndpointUrl=http://localhost:8001/manage"
+      , "--managementEndpointPort=" + mgmtPort
+      , "--managementEndpointUrl=http://localhost:" + mgmtPort + "/manage"
       , "--session.requireSession=false"
       , "--session.oauth.GitHub.logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
       , "--session.oauth.GitHub.authorizationEndpoint=https://github.com/login/oauth/authorize"
@@ -217,12 +220,12 @@ public class MainIT {
             .then()
             .log().all()
             .statusCode(200)
-            .body(equalTo("{\"location\":\"http://localhost:8001/manage\"}"))
+            .body(equalTo("{\"location\":\"http://localhost:" + mgmtPort + "/manage\"}"))
             ;
     
      String manageEndpointsString = given()
             .log().all()
-            .get(URI.create("http://localhost:8001/manage"))
+            .get(URI.create("http://localhost:" + mgmtPort + "/manage"))
             .then()
             .statusCode(200)
             .log().all()
@@ -277,8 +280,8 @@ public class MainIT {
       , "--managementEndpoints[0]=up"
       , "--managementEndpoints[2]=prometheus"
       , "--managementEndpoints[3]=threads"
-      , "--managementEndpointPort=8001"
-      , "--managementEndpointUrl=http://localhost:8001/manage"
+      , "--managementEndpointPort=" + mgmtPort
+      , "--managementEndpointUrl=http://localhost:" + mgmtPort + "/manage"
       , "--session.requireSession=true"
       , "--session.oauth.GitHub.logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
       , "--session.oauth.GitHub.authorizationEndpoint=https://github.com/login/oauth/authorize"
@@ -307,7 +310,7 @@ public class MainIT {
             .then()
             .log().all()
             .statusCode(200)
-            .body(equalTo("{\"location\":\"http://localhost:8001/manage\"}"))
+            .body(equalTo("{\"location\":\"http://localhost:" + mgmtPort + "/manage\"}"))
             ;
     
     given()

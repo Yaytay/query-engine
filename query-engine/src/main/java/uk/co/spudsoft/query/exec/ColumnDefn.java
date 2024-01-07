@@ -21,7 +21,10 @@ import java.sql.JDBCType;
 import uk.co.spudsoft.query.defn.DataType;
 
 /**
- *
+ * The definition of a column.
+ * <P>
+ * This is not part of the definition of a pipeline, but is used in the output from pipelines.
+ * </P>
  * @author njt
  */
 public class ColumnDefn implements ColumnDescriptor {
