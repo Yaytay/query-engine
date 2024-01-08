@@ -16,6 +16,8 @@
  */
 package uk.co.spudsoft.query.exec;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -28,12 +30,14 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.json.jackson.DatabindCodec;
 import io.vertx.ext.healthchecks.Status;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
@@ -84,6 +88,8 @@ public class AuditorImpl implements Auditor {
   private static final String PROCESS_ID = ManagementFactory.getRuntimeMXBean().getName();
   private static final Base64.Encoder ENCODER = java.util.Base64.getUrlEncoder();
   private static final Base64.Decoder DECODER = java.util.Base64.getUrlDecoder();
+  
+  private final ObjectMapper mapper = DatabindCodec.mapper();
   
   private final Vertx vertx;
   private final MeterRegistry meterRegistry;
@@ -658,7 +664,7 @@ public class AuditorImpl implements Auditor {
                   LocalDateTime timestamp = LocalDateTime.ofInstant(rs.getTimestamp(1).toInstant(), ZoneOffset.UTC);
                   String id = rs.getString(2);
                   String path = rs.getString(3);
-                  JsonObject arguments = new JsonObject(rs.getString(4));
+                  ObjectNode arguments = getArguments(rs, 4, id);
                   String host = rs.getString(5);
                   String issuer = rs.getString(6);
                   String subject = rs.getString(7);
@@ -676,6 +682,20 @@ public class AuditorImpl implements Auditor {
               }
               return list;
             });
+  }
+
+  @SuppressFBWarnings("CRLF_INJECTION_LOGS")
+  ObjectNode getArguments(ResultSet rs, int idx, String id) throws SQLException {
+    ObjectNode arguments = null;
+    String value = rs.getString(idx);
+    try {
+      if (!Strings.isNullOrEmpty(value)) {
+        arguments = mapper.readValue(value, ObjectNode.class);
+      }
+    } catch (Throwable ex) {
+      logger.warn("Arguments from database ({}) for id {} failed to parse: ", value.replaceAll("[\r\n]", ""), id, ex);
+    }
+    return arguments;
   }
   
 }

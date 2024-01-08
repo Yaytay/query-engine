@@ -16,9 +16,9 @@
  */
 package uk.co.spudsoft.query.exec;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.vertx.core.json.JsonObject;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
@@ -36,7 +36,7 @@ public class AuditHistory {
   private final LocalDateTime timestamp;
   private final String id;
   private final String path;
-  private final JsonObject arguments;
+  private final ObjectNode arguments;
   private final String host;
   private final String issuer;
   private final String subject;
@@ -66,7 +66,7 @@ public class AuditHistory {
    * @param responseDurationMillis The time (in milli seconds) between the request being made and the final row being returned.
    */
   @SuppressFBWarnings(value="EI_EXPOSE_REP2", justification = "AuditHistory is just a carrier")
-  public AuditHistory(LocalDateTime timestamp, String id, String path, JsonObject arguments, String host, String issuer, String subject, String username, String name, int responseCode, long responseRows, long responseSize, long responseStreamStartMillis, long responseDurationMillis) {
+  public AuditHistory(LocalDateTime timestamp, String id, String path, ObjectNode arguments, String host, String issuer, String subject, String username, String name, int responseCode, long responseRows, long responseSize, long responseStreamStartMillis, long responseDurationMillis) {
     this.timestamp = timestamp;
     this.id = id;
     this.path = path;
@@ -105,6 +105,7 @@ public class AuditHistory {
           description = """
                         Unique ID for the request.
                         """
+          , maxLength = 100
           , requiredMode = Schema.RequiredMode.REQUIRED
   )
   public String getId() {
@@ -119,6 +120,7 @@ public class AuditHistory {
           description = """
                         Path to the pipeline.
                         """
+          , maxLength = 260
           , requiredMode = Schema.RequiredMode.REQUIRED
   )
   public String getPath() {
@@ -136,7 +138,7 @@ public class AuditHistory {
           , requiredMode = Schema.RequiredMode.REQUIRED
   )
   @SuppressFBWarnings(value="EI_EXPOSE_REP", justification = "AuditHistory is just a carrier")
-  public JsonObject getArguments() {
+  public ObjectNode getArguments() {
     return arguments;
   }
 
@@ -148,6 +150,7 @@ public class AuditHistory {
           description = """
                         The host from the request.
                         """
+          , maxLength = 260
           , requiredMode = Schema.RequiredMode.REQUIRED
   )
   public String getHost() {
@@ -162,6 +165,7 @@ public class AuditHistory {
           description = """
                         The issuer of the token used to authenticate the user.
                         """
+          , maxLength = 1000
           , requiredMode = Schema.RequiredMode.REQUIRED
   )
   public String getIssuer() {
@@ -177,6 +181,7 @@ public class AuditHistory {
           description = """
                         The subject from the token (unique ID for the user within the issuer).
                         """
+          , maxLength = 1000
           , requiredMode = Schema.RequiredMode.REQUIRED
   )
   public String getSubject() {
@@ -191,6 +196,7 @@ public class AuditHistory {
           description = """
                         The user name of the user making the request.
                         """
+          , maxLength = 1000
           , requiredMode = Schema.RequiredMode.REQUIRED
   )
   public String getUsername() {
@@ -205,6 +211,7 @@ public class AuditHistory {
           description = """
                         The human name of the user making the request.
                         """
+          , maxLength = 500
           , requiredMode = Schema.RequiredMode.REQUIRED
   )
   public String getName() {

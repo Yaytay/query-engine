@@ -34,6 +34,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.exec.AuditHistory;
 import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import static uk.co.spudsoft.query.web.rest.InfoHandler.reportError;
@@ -65,7 +66,7 @@ public class HistoryHandler {
           , description = "Details of the current user."
           , content = @Content(
                   mediaType = MediaType.APPLICATION_JSON
-                  , schema = @Schema(implementation = Profile.class)
+                  , schema = @Schema(implementation = AuditHistory.class)
           )
   )
   public void getHistory(

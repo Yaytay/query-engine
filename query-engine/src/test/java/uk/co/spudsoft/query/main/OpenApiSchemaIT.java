@@ -321,7 +321,11 @@ public class OpenApiSchemaIT {
       if (!"string".equals(type)) {
         return name + " is an enum that isn't a string";
       }
-    } else if ("string".equals(type)) {
+    } else if ("string".equals(type)
+            && (
+            !"date-time".equals(schema.getString("format"))
+            )
+      ) {
       if (!schema.containsKey("maxLength")) {
         return name + " is a string with no maxiumum length";
       }

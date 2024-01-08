@@ -32,6 +32,7 @@ public class OpenApiFilterClass extends AbstractSpecFilter {
 
   private static final Set<String> UNDESIRABLE = ImmutableSet.<String>builder()
           .add("MediaType")
+          .add("ObjectNode")
           .build();
   
   @Override
