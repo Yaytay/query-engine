@@ -81,7 +81,7 @@ public class EmptyQueryIT {
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-      "--persistence.datasource.url=jdbc:" + mysql.getUrl()
+      "--persistence.datasource.url=" + mysql.getJdbcUrl()
       , "--persistence.datasource.adminUser.username=" + mysql.getUser()
       , "--persistence.datasource.adminUser.password=" + mysql.getPassword()
       , "--persistence.datasource.user.username=" + mysql.getUser()
@@ -98,10 +98,10 @@ public class EmptyQueryIT {
       , "--zipkin.baseUrl=http://localhost/wontwork"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
-      , "--sampleDataLoads[0].url=" + postgres.getUrl()
+      , "--sampleDataLoads[0].url=" + postgres.getVertxUrl()
       , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()
       , "--sampleDataLoads[0].adminUser.password=" + postgres.getPassword()
-      , "--sampleDataLoads[1].url=" + mysql.getUrl()
+      , "--sampleDataLoads[1].url=" + mysql.getVertxUrl()
       , "--sampleDataLoads[1].user.username=" + mysql.getUser()
       , "--sampleDataLoads[1].user.password=" + mysql.getPassword()
     }, stdout);

@@ -21,7 +21,6 @@ import io.vertx.core.http.HttpServerResponse;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collections;
-import java.util.List;
 import liquibase.exception.LiquibaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,10 +87,10 @@ public class NullAuditor implements Auditor {
   public Future<Pipeline> runRateLimitRules(RequestContext context, Pipeline pipeline) {
     return Future.succeededFuture(pipeline);
   }
-
+  
   @Override
-  public Future<List<AuditHistory>> getHistory(String issuer, String subject, int maxRows, int skipRows) {
-    return Future.succeededFuture(Collections.emptyList());
+  public Future<AuditHistory> getHistory(String issuerArg, String subjectArg, int firstRow, int maxRows) {
+    return Future.succeededFuture(new AuditHistory(firstRow, 0, Collections.emptyList()));
   }
   
 }

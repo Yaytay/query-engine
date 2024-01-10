@@ -74,7 +74,7 @@ public class RunIT {
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-        "--persistence.datasource.url=jdbc:" + postgres.getUrl()
+        "--persistence.datasource.url=" + postgres.getJdbcUrl()
       , "--persistence.datasource.adminUser.username=" + postgres.getUser()
       , "--persistence.datasource.adminUser.password=" + postgres.getPassword()
       , "--persistence.datasource.schema=public" 
@@ -85,10 +85,10 @@ public class RunIT {
       , "--logging.jsonFormat=false"
 //      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.vertx\\\\.rest=TRACE"
 //      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec\\\\.procs\\\\.query=TRACE"
-      , "--sampleDataLoads[0].url=" + postgres.getUrl()
+      , "--sampleDataLoads[0].url=" + postgres.getVertxUrl()
       , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()
       , "--sampleDataLoads[0].adminUser.password=" + postgres.getPassword()
-      , "--sampleDataLoads[1].url=" + mysql.getUrl()
+      , "--sampleDataLoads[1].url=" + mysql.getVertxUrl()
       , "--sampleDataLoads[1].user.username=" + mysql.getUser()
       , "--sampleDataLoads[1].user.password=" + mysql.getPassword()
       , "--sampleDataLoads[2].url=sqlserver://localhost:1234/test"

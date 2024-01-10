@@ -20,7 +20,6 @@ import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerResponse;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
 import liquibase.exception.LiquibaseException;
 import uk.co.spudsoft.dircache.DirCacheTree.File;
 import uk.co.spudsoft.query.defn.Pipeline;
@@ -55,6 +54,6 @@ public interface Auditor {
 
   void recordResponse(RequestContext context, HttpServerResponse response);
   
-  Future<List<AuditHistory>> getHistory(String issuer, String subject, int maxRows, int skipRows);
+  Future<AuditHistory> getHistory(String issuer, String subject, int skipRows, int maxRows);
   
 }

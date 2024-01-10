@@ -72,16 +72,16 @@ public class HistoryHandler {
   public void getHistory(
           @Suspended final AsyncResponse response
           , @Context HttpServerRequest request
-          , @QueryParam("maxRows") Integer maxRows
           , @QueryParam("skipRows") Integer skipRows
+          , @QueryParam("maxRows") Integer maxRows
   ) {
     try {
       RequestContext requestContext = HandlerAuthHelper.getRequestContext(Vertx.currentContext(), true);
       
-      maxRows = boundInt(maxRows, 1000000, 0, 1000000);
       skipRows = boundInt(skipRows, 0, 0, 1000000);
+      maxRows = boundInt(maxRows, 1000000, 0, 1000000);
 
-      auditor.getHistory(requestContext.getIssuer(), requestContext.getSubject(), maxRows, skipRows)
+      auditor.getHistory(requestContext.getIssuer(), requestContext.getSubject(), skipRows, maxRows)
               .onSuccess(history -> {
                 response.resume(Response.ok(history, MediaType.APPLICATION_JSON).build());
               })

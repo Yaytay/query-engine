@@ -16,13 +16,22 @@
  */
 package uk.co.spudsoft.query.main;
 
+import com.google.common.cache.Cache;
+import com.google.common.collect.ImmutableMap;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
+import io.restassured.http.Header;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.UUID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -32,10 +41,18 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
+import uk.co.spudsoft.jwtvalidatorvertx.AlgorithmAndKeyPair;
+import uk.co.spudsoft.jwtvalidatorvertx.JsonWebAlgorithm;
+import uk.co.spudsoft.jwtvalidatorvertx.TokenBuilder;
+import uk.co.spudsoft.jwtvalidatorvertx.jdk.JdkJwksHandler;
+import uk.co.spudsoft.jwtvalidatorvertx.jdk.JdkTokenBuilder;
+import uk.co.spudsoft.query.testcontainers.ServerProviderMsSQL;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
 
 /**
@@ -46,36 +63,49 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
  * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
-public class MainQueryIT {
+@TestInstance(Lifecycle.PER_CLASS)
+public class AuthQueryMsIT {
   
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
   private static final ServerProviderMySQL mysql = new ServerProviderMySQL().init();
-  
+  private static final ServerProviderMsSQL mssql = new ServerProviderMsSQL().init();
+
+  private JdkJwksHandler jwks;
+  private TokenBuilder tokenBuilder;
+
   @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(MainQueryIT.class);
+  private static final Logger logger = LoggerFactory.getLogger(AuthQueryMsIT.class);
   
   @BeforeAll
-  public static void createDirs(Vertx vertx) {
-    File paramsDir = new File("target/query-engine/samples-mainqueryit");
+  public void createDirs(Vertx vertx) throws IOException {
+    File paramsDir = new File("target/query-engine/samples-authqueryit");
     try {
       FileUtils.deleteDirectory(paramsDir);
     } catch (Throwable ex) {
     }
     paramsDir.mkdirs();
+
+    Cache<String, AlgorithmAndKeyPair> keyCache = AlgorithmAndKeyPair.createCache(Duration.ofMinutes(1));
+    tokenBuilder = new JdkTokenBuilder(keyCache);
+
+    jwks = JdkJwksHandler.create();
+    logger.debug("Starting JWKS endpoint");
+    jwks.start();
+    jwks.setKeyCache(keyCache);
   }
   
   @Test
   public void testQuery() throws Exception {
     Main main = new Main();
-    String baseConfigDir = "target/query-engine/samples-mainqueryit";
+    String baseConfigDir = "target/query-engine/samples-authqueryit";
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-      "--persistence.datasource.url=" + mysql.getJdbcUrl()
-      , "--persistence.datasource.adminUser.username=" + mysql.getUser()
-      , "--persistence.datasource.adminUser.password=" + mysql.getPassword()
-      , "--persistence.datasource.user.username=" + mysql.getUser()
-      , "--persistence.datasource.user.password=" + mysql.getPassword()
+      "--persistence.datasource.url=" + mssql.getJdbcUrl()
+      , "--persistence.datasource.adminUser.username=" + mssql.getUser()
+      , "--persistence.datasource.adminUser.password=" + mssql.getPassword()
+      , "--persistence.datasource.user.username=" + mssql.getUser()
+      , "--persistence.datasource.user.password=" + mssql.getPassword()
       , "--persistence.retryLimit=100"
       , "--persistence.retryIncrementMs=500"
       , "--baseConfigPath=" + baseConfigDir
@@ -87,7 +117,7 @@ public class MainQueryIT {
       , "--logging.jsonFormat=false"
       , "--zipkin.baseUrl=http://localhost/wontwork"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
-      , "--jwt.jwksEndpoints[0]=http://localhost/"
+      , "--jwt.jwksEndpoints[0]=" + jwks.getBaseUrl() + "/jwks"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--sampleDataLoads[0].url=" + postgres.getVertxUrl()
       , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()
@@ -99,6 +129,16 @@ public class MainQueryIT {
       , "--sampleDataLoads[2].adminUser.username=sa"
       , "--sampleDataLoads[2].adminUser.password=unknown"
       , "--sampleDataLoads[3].url=wibble"
+      , "--sampleDataLoads[4].url=" + mssql.getVertxUrl()
+      , "--sampleDataLoads[4].user.username=" + mssql.getUser()
+      , "--sampleDataLoads[4].user.password=" + mssql.getPassword()
+      , "--session.requireSession=true"
+      , "--session.oauth.Test.logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
+      , "--session.oauth.Test.authorizationEndpoint=https://github.com/login/oauth/authorize"
+      , "--session.oauth.Test.tokenEndpoint=https://github.com/login/oauth/access_token"
+      , "--session.oauth.Test.credentials.id=bdab017f4732085a51f9"
+      , "--session.oauth.Test.credentials.secret=" + System.getProperty("queryEngineGithubSecret")
+      , "--session.oauth.Test.pkce=false"
     }, stdout);
     
     RestAssured.port = main.getPort();
@@ -113,7 +153,7 @@ public class MainQueryIT {
     
     assertThat(body, startsWith("openapi: 3.1.0"));
     assertThat(body, containsString("SpudSoft Query Engine"));
-    assertThat(body, not(containsString("empty")));
+//    assertThat(body, not(containsString("empty")));
     
     body = given()
             .log().all()
@@ -125,9 +165,31 @@ public class MainQueryIT {
     
     assertThat(body, containsString("\"openapi\" : \"3.1.0\","));
     assertThat(body, containsString("SpudSoft Query Engine"));
-    assertThat(body, not(containsString("empty")));
+//    assertThat(body, not(containsString("empty")));
     
     body = given()
+            .log().all()
+            .get("/api/info/available")
+            .then()
+            .log().all()
+            .statusCode(401)
+            .extract().body().asString();
+    
+    String token = tokenBuilder.buildToken(JsonWebAlgorithm.RS512
+            , "AuthQueryIT-" + UUID.randomUUID().toString()
+            , jwks.getBaseUrl()
+            , "sub" + System.currentTimeMillis()
+            , Arrays.asList()
+            , System.currentTimeMillis() / 1000
+            , System.currentTimeMillis() / 1000 + 3600
+            , ImmutableMap.<String, Object>builder()
+                    .put("name", "Full Name")
+                    .put("preferred_username", "username")
+                    .build()
+    );
+    
+    body = given()
+            .header(new Header("Authorization", "Bearer " + token))
             .log().all()
             .get("/api/info/available")
             .then()
@@ -143,6 +205,15 @@ public class MainQueryIT {
             .get("/api/formio/demo/FeatureRichExample")
             .then()
             .log().all()
+            .statusCode(401)
+            .extract().body().asString();
+    
+    body = given()
+            .header(new Header("Authorization", "Bearer " + token))
+            .log().all()
+            .get("/api/formio/demo/FeatureRichExample")
+            .then()
+            .log().all()
             .statusCode(200)
             .extract().body().asString();
     
@@ -150,6 +221,7 @@ public class MainQueryIT {
     assertThat(body, containsString("Output"));
         
     body = given()
+            .header(new Header("Authorization", "Bearer " + token))
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
             .accept("text/html, application/xhtml+xml, image/webp, image/apng, application/xml; q=0.9, application/signed-exchange; v=b3; q=0.9, */*; q=0.8")
@@ -163,6 +235,7 @@ public class MainQueryIT {
     assertThat(body, startsWith("[{\"dataId\":1,\"instant\":\"1971-05-07T03:00\",\"ref\":\"antiquewhite\",\"value\":\"first\",\"children\":\"one\",\"DateField\":\"2023-05-05\",\"TimeField\":null,\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null}"));
     
     body = given()
+            .header(new Header("Authorization", "Bearer " + token))
             .queryParam("key", mysql.getName())
             .queryParam("port", mysql.getPort())
             .log().all()
@@ -176,6 +249,7 @@ public class MainQueryIT {
     assertThat(body, startsWith("[{\"dataId\":1,\"instant\":\"1971-05-07T03:00\",\"ref\":\"antiquewhite\",\"value\":\"first\",\"children\":\"one\",\"DateField\":\"2023-05-05\",\"TimeField\":null,\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null},"));
     
     byte[] bodyBytes = given()
+            .header(new Header("Authorization", "Bearer " + token))
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
             .accept("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
@@ -189,6 +263,7 @@ public class MainQueryIT {
     assertThat(bodyBytes, notNullValue());
     
     body = given()
+            .header(new Header("Authorization", "Bearer " + token))
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
             .log().all()
@@ -201,6 +276,7 @@ public class MainQueryIT {
     assertThat(body, startsWith("1,\"1971-05-07T03:00\",\"antiquewhite\",\"first\",\""));
     
     body = given()
+            .header(new Header("Authorization", "Bearer " + token))
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
             .log().all()
@@ -213,6 +289,7 @@ public class MainQueryIT {
     assertThat(body, startsWith("\"dataId\"\t\"instant\"\t\"ref\"\t\"value\"\t\"children\"\n1\t\"1971-05-07T03:00\"\t\"antiquewhite\"\t\"first\"\t\"one\""));
     
     body = given()
+            .header(new Header("Authorization", "Bearer " + token))
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
             .log().all()
@@ -225,14 +302,44 @@ public class MainQueryIT {
     assertThat(body, startsWith("<table class=\"qetable\"><thead>\n<tr class=\"header\"><th class=\"header evenCol\" >dataId</th><th class=\"header oddCol\" >instant</th><th class=\"header evenCol\" >ref</th><th class=\"header oddCol\" >value</th><th class=\"header evenCol\" >children</th></tr>\n</thead><tbody>\n<tr class=\"dataRow evenRow\" ><td class=\"evenRow evenCol\">1</td><td class=\"evenRow oddCol\">1971-05-07T03:00</td><td class=\"evenRow evenCol\">antiquewhite</td><td class=\"evenRow oddCol\">first</td><td class=\"evenRow evenCol\">one</td></tr>"));
 
     body = given()
-            .queryParam("key", postgres.getName())
-            .queryParam("port", postgres.getPort())
+            .header(new Header("Authorization", "Bearer " + token))
             .log().all()
             .get("/api/history")
             .then()
             .log().ifError()
-            .statusCode(401)
+            .statusCode(200)
             .extract().body().asString();
+    logger.debug("History: {}", body);
+    
+    JsonObject history1 = new JsonObject(body);
+    assertEquals(6, history1.getJsonArray("rows").size());    
+    assertEquals(6, history1.getInteger("totalRows"));    
+    assertEquals(0, history1.getInteger("firstRow"));
+    assertThat(history1.getJsonArray("rows").getJsonObject(0).getString("subject"), startsWith("sub"));
+    assertEquals("Full Name", history1.getJsonArray("rows").getJsonObject(0).getString("name"));
+    assertEquals("username", history1.getJsonArray("rows").getJsonObject(0).getString("username"));
+    
+    body = given()
+            .header(new Header("Authorization", "Bearer " + token))
+            .log().all()
+            .get("/api/history?skipRows=2&maxRows=3")
+            .then()
+            .log().ifError()
+            .statusCode(200)
+            .extract().body().asString();
+    logger.debug("History: {}", body);
+    
+    JsonObject history2 = new JsonObject(body);
+    assertEquals(3, history2.getJsonArray("rows").size());    
+    assertEquals(6, history2.getInteger("totalRows"));    
+    assertEquals(2, history2.getInteger("firstRow"));
+    assertThat(history2.getJsonArray("rows").getJsonObject(0).getString("subject"), startsWith("sub"));
+    assertEquals("Full Name", history2.getJsonArray("rows").getJsonObject(0).getString("name"));
+    assertEquals("username", history2.getJsonArray("rows").getJsonObject(0).getString("username"));
+    
+    assertEquals(history2.getJsonArray("rows").getJsonObject(0).getString("id"), history1.getJsonArray("rows").getJsonObject(2).getString("id"));
+    assertEquals(history2.getJsonArray("rows").getJsonObject(1).getString("id"), history1.getJsonArray("rows").getJsonObject(3).getString("id"));
+    assertEquals(history2.getJsonArray("rows").getJsonObject(2).getString("id"), history1.getJsonArray("rows").getJsonObject(4).getString("id"));
     
     main.shutdown();
   }

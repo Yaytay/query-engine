@@ -36,25 +36,25 @@ public class AuditHistoryTest {
 
   @Test
   public void testGetTimestamp() throws JsonProcessingException {
-    AuditHistory ah = new AuditHistory(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1, 2, 3, 4);
+    AuditHistoryRow ah = new AuditHistoryRow(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1L, 2L, 3L, 4L);
     assertEquals(LocalDateTime.MAX, ah.getTimestamp());
   }
 
   @Test
   public void testGetId() throws JsonProcessingException {
-    AuditHistory ah = new AuditHistory(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1, 2, 3, 4);
+    AuditHistoryRow ah = new AuditHistoryRow(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1L, 2L, 3L, 4L);
     assertEquals("id", ah.getId());
   }
 
   @Test
   public void testGetPath() throws JsonProcessingException {
-    AuditHistory ah = new AuditHistory(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1, 2, 3, 4);
+    AuditHistoryRow ah = new AuditHistoryRow(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1L, 2L, 3L, 4L);
     assertEquals("path", ah.getPath());
   }
 
   @Test
   public void testGetArguments() throws JsonProcessingException {
-    AuditHistory ah = new AuditHistory(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1, 2, 3, 4);
+    AuditHistoryRow ah = new AuditHistoryRow(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1L, 2L, 3L, 4L);
     assertNotNull(ah.getArguments());
     assertEquals(1, ah.getArguments().size());
     assertEquals("value", ah.getArguments().get("arg1").textValue());
@@ -62,62 +62,62 @@ public class AuditHistoryTest {
 
   @Test
   public void testGetHost() throws JsonProcessingException {
-    AuditHistory ah = new AuditHistory(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1, 2, 3, 4);
+    AuditHistoryRow ah = new AuditHistoryRow(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1L, 2L, 3L, 4L);
     assertEquals("host", ah.getHost());
   }
 
   @Test
   public void testGetIssuer() throws JsonProcessingException {
-    AuditHistory ah = new AuditHistory(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1, 2, 3, 4);
+    AuditHistoryRow ah = new AuditHistoryRow(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1L, 2L, 3L, 4L);
     assertEquals("issuer", ah.getIssuer());
   }
 
   @Test
   public void testGetSubject() throws JsonProcessingException {
-    AuditHistory ah = new AuditHistory(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1, 2, 3, 4);
+    AuditHistoryRow ah = new AuditHistoryRow(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1L, 2L, 3L, 4L);
     assertEquals("subject", ah.getSubject());
   }
 
   @Test
   public void testGetUsername() throws JsonProcessingException {
-    AuditHistory ah = new AuditHistory(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1, 2, 3, 4);
+    AuditHistoryRow ah = new AuditHistoryRow(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1L, 2L, 3L, 4L);
     assertEquals("username", ah.getUsername());
   }
 
   @Test
   public void testGetName() throws JsonProcessingException {
-    AuditHistory ah = new AuditHistory(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1, 2, 3, 4);
+    AuditHistoryRow ah = new AuditHistoryRow(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1L, 2L, 3L, 4L);
     assertEquals("Full Name", ah.getName());
   }
 
   @Test
   public void testGetResponseCode() throws JsonProcessingException {
-    AuditHistory ah = new AuditHistory(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1, 2, 3, 4);
+    AuditHistoryRow ah = new AuditHistoryRow(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1L, 2L, 3L, 4L);
     assertEquals(200, ah.getResponseCode());
   }
 
   @Test
   public void testGetResponseRows() throws JsonProcessingException {
-    AuditHistory ah = new AuditHistory(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1, 2, 3, 4);
+    AuditHistoryRow ah = new AuditHistoryRow(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1L, 2L, 3L, 4L);
     assertEquals(1, ah.getResponseRows());
   }
 
   @Test
   public void testGetResponseSize() throws JsonProcessingException {
-    AuditHistory ah = new AuditHistory(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1, 2, 3, 4);
+    AuditHistoryRow ah = new AuditHistoryRow(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1L, 2L, 3L, 4L);
     assertEquals(2, ah.getResponseSize());
   }
 
   @Test
   public void testGetResponseStreamStart() throws JsonProcessingException {
-    AuditHistory ah = new AuditHistory(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1, 2, 3, 4);
-    assertEquals(3, ah.getResponseStreamStart().toMillis());
+    AuditHistoryRow ah = new AuditHistoryRow(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1L, 2L, 3L, 4L);
+    assertEquals(0.003, ah.getResponseStreamStart());
   }
 
   @Test
   public void testGetResponseDuration() throws JsonProcessingException {
-    AuditHistory ah = new AuditHistory(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1, 2, 3, 4);
-    assertEquals(4, ah.getResponseDuration().toMillis());
+    AuditHistoryRow ah = new AuditHistoryRow(LocalDateTime.MAX, "id", "path", mapper.readValue("{\"arg1\": \"value\"}", ObjectNode.class), "host", "issuer", "subject", "username", "Full Name", 200, 1L, 2L, 3L, 4L);
+    assertEquals(0.004, ah.getResponseDuration());
   }
 
 }

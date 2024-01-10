@@ -77,10 +77,15 @@ public class ServerProviderPostgreSQL extends AbstractServerProvider implements 
   }
 
   @Override
-  public String getUrl() {
+  public String getVertxUrl() {
     return "postgresql://localhost:" + port + "/test";
   }
 
+  @Override
+  public String getJdbcUrl() {
+    return "jdbc:postgresql://localhost:" + port + "/test";
+  }
+  
   @Override
   public String getUser() {
     return "postgres";
@@ -141,7 +146,7 @@ public class ServerProviderPostgreSQL extends AbstractServerProvider implements 
   @Override
   public Future<Void> prepareTestDatabase(Vertx vertx) {
     SampleDataLoader loader = new SampleDataLoaderPostgreSQL();
-    return loader.prepareTestDatabase(vertx, getUrl(), getUser(), getPassword());
+    return loader.prepareTestDatabase(vertx, getVertxUrl(), getUser(), getPassword());
   }
 
 }

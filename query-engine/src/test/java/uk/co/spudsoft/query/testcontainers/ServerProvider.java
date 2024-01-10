@@ -36,7 +36,9 @@ public interface ServerProvider {
 
   Future<Void> prepareTestDatabase(Vertx vertx);
   
-  String getUrl();
+  String getVertxUrl();
+  
+  String getJdbcUrl();
   
   String getUser();
   

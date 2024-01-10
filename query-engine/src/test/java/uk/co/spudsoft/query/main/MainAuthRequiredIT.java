@@ -62,7 +62,7 @@ public class MainAuthRequiredIT {
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-      "--persistence.datasource.url=jdbc:" + postgres.getUrl()
+      "--persistence.datasource.url=" + postgres.getJdbcUrl()
       , "--persistence.datasource.adminUser.username=" + postgres.getUser()
       , "--persistence.datasource.adminUser.password=" + postgres.getPassword()
       , "--persistence.datasource.schema=public" 
@@ -71,7 +71,7 @@ public class MainAuthRequiredIT {
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--logging.jsonFormat=true"
-      , "--sampleDataLoads[0].url=" + postgres.getUrl()
+      , "--sampleDataLoads[0].url=" + postgres.getVertxUrl()
       , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()
       , "--sampleDataLoads[0].adminUser.password=" + postgres.getPassword()
       , "--managementEndpoints[0]=up"

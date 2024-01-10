@@ -70,7 +70,7 @@ public class MainQueryIT {
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-        "--persistence.datasource.url=jdbc:" + mysql.getUrl()
+        "--persistence.datasource.url=" + mysql.getJdbcUrl()
       , "--persistence.datasource.adminUser.username=" + mysql.getUser()
       , "--persistence.datasource.adminUser.password=" + mysql.getPassword()
       , "--persistence.datasource.user.username=" + mysql.getUser()

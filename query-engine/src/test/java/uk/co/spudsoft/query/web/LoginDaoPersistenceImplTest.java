@@ -50,7 +50,7 @@ public class LoginDaoPersistenceImplTest {
     assertThrows(IllegalStateException.class, () -> {
       instance.prepare();
     });
-    dataSourceConfig.setUrl("jdbc:" + postgres.getUrl());
+    dataSourceConfig.setUrl(postgres.getJdbcUrl());
     dataSourceConfig.setSchema("public");
     dataSourceConfig.setAdminUser(new Credentials(postgres.getUser(), postgres.getPassword()));
     instance.prepare();

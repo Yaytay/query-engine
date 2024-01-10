@@ -64,7 +64,7 @@ public class StartContainersIT {
               .compose(container -> {
                 logger.debug("{} - {}s: Container started", instance.getName(), (System.currentTimeMillis() - startTime) / 1000.0);
                 try {
-                  SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(instance.getUrl());
+                  SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(instance.getVertxUrl());
                   connectOptions.setUser(instance.getUser());
                   connectOptions.setPassword(instance.getPassword());
                   Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(4));

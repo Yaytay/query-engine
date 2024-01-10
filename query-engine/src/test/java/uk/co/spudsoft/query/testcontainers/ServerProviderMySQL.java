@@ -87,8 +87,13 @@ public class ServerProviderMySQL extends AbstractServerProvider implements Serve
   }
 
   @Override
-  public String getUrl() {
+  public String getVertxUrl() {
     return "mysql://localhost:" + port + "/test";
+  }
+
+  @Override
+  public String getJdbcUrl() {
+    return "jdbc:mysql://localhost:" + port + "/test";
   }
 
   @Override
@@ -143,6 +148,6 @@ public class ServerProviderMySQL extends AbstractServerProvider implements Serve
   @Override
   public Future<Void> prepareTestDatabase(Vertx vertx) {
     SampleDataLoader loader = new SampleDataLoaderMySQL();
-    return loader.prepareTestDatabase(vertx, getUrl(), getUser(), getPassword());
+    return loader.prepareTestDatabase(vertx, getVertxUrl(), getUser(), getPassword());
   }
 }

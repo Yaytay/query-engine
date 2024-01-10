@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.exec;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Future;
@@ -36,6 +37,7 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -80,6 +82,11 @@ import uk.co.spudsoft.query.web.ServiceException;
  * @author jtalbut
  */
 public class AuditorImpl implements Auditor {
+  
+  private enum OffsetLimitType {
+    limitOffset
+    , offsetFetch
+  }
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(AuditorImpl.class);
@@ -95,6 +102,8 @@ public class AuditorImpl implements Auditor {
   private final MeterRegistry meterRegistry;
   private final Persistence configuration;
   private String quote;
+  private OffsetLimitType offsetLimitType;
+
   
   private JdbcHelper jdbcHelper;
   
@@ -120,99 +129,117 @@ public class AuditorImpl implements Auditor {
     SQLException lastSQLException = null;
     LiquibaseException lastLiquibaseException = null;
 
-    String url = null;
-    if (dataSourceConfig != null) {
-      url = dataSourceConfig.getUrl();
-    }
-    
-    if (Strings.isNullOrEmpty(url)) {
+    if (dataSourceConfig == null || Strings.isNullOrEmpty(dataSourceConfig.getUrl())) {
       logger.info("No audit URL provided, audit disabled");
-      prepared = true;
-    } else {
-
-      if (Strings.isNullOrEmpty(dataSourceConfig.getSchema())) {
-        recordRequest = recordRequest.replaceAll("#SCHEMA#.", "");
-        recordFile = recordFile.replaceAll("#SCHEMA#.", "");
-        recordException = recordException.replaceAll("#SCHEMA#.", "");
-        recordResponse = recordResponse.replaceAll("#SCHEMA#.", "");
-        getHistory = getHistory.replaceAll("#SCHEMA#.", "");
-      } else {
-        recordRequest = recordRequest.replaceAll("SCHEMA", dataSourceConfig.getSchema());
-        recordFile = recordFile.replaceAll("SCHEMA", dataSourceConfig.getSchema());
-        recordException = recordException.replaceAll("SCHEMA", dataSourceConfig.getSchema());
-        recordResponse = recordResponse.replaceAll("SCHEMA", dataSourceConfig.getSchema());
-        getHistory = getHistory.replaceAll("SCHEMA", dataSourceConfig.getSchema());
-      }
-
-      for (int retry = 0; configuration.getRetryLimit() < 0 || retry <= configuration.getRetryLimit(); ++retry) {
-        logger.debug("Running liquibase, attempt {}", retry);        
-        String username = dataSourceConfig.getAdminUser() == null ? null : dataSourceConfig.getAdminUser().getUsername();
-        String password = dataSourceConfig.getAdminUser() == null ? null : dataSourceConfig.getAdminUser().getPassword();
-        try (Connection jdbcConnection = DriverManager.getConnection(url, username, password)) {
-          quote = jdbcConnection.getMetaData().getIdentifierQuoteString();
-          recordRequest = recordRequest.replaceAll("#", quote);
-          recordFile = recordFile.replaceAll("#", quote);
-          recordException = recordException.replaceAll("#", quote);
-          recordResponse = recordResponse.replaceAll("#", quote);
-          getHistory = getHistory.replaceAll("#", quote);
-          
-          Map<String, Object> liquibaseConfig = new HashMap<>();
-          Scope.child(liquibaseConfig, () -> {
-            Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(jdbcConnection));
-            if (!Strings.isNullOrEmpty(dataSourceConfig.getSchema())) {
-              logger.trace("Setting default schema to {}", dataSourceConfig.getSchema());
-              database.setDefaultSchemaName(dataSourceConfig.getSchema());
-            }
-            
-            CommandScope updateCommand = new CommandScope(UpdateCommandStep.COMMAND_NAME);
-            updateCommand.addArgumentValue(DbUrlConnectionArgumentsCommandStep.DATABASE_ARG, database);
-            updateCommand.addArgumentValue(UpdateCommandStep.CHANGELOG_FILE_ARG, CHANGESET_RESOURCE_PATH);
-            updateCommand.addArgumentValue(UpdateCommandStep.CONTEXTS_ARG, null);
-            updateCommand.addArgumentValue(UpdateCommandStep.LABEL_FILTER_ARG, null);
-            updateCommand.addArgumentValue(ChangeExecListenerCommandStep.CHANGE_EXEC_LISTENER_ARG, null);
-            updateCommand.addArgumentValue(DatabaseChangelogCommandStep.CHANGELOG_PARAMETERS, null);
-            updateCommand.execute();
-          });
-          
-          logger.info("Database updated");
-          lastSQLException = null;
-          lastLiquibaseException = null;
-          break;
-        } catch (Throwable ex) {
-          lastLiquibaseException = null;
-          lastSQLException = null;
-          if (ex instanceof LiquibaseException le) {
-            logger.error("Failed to config database: {}", ex.getMessage());
-            lastLiquibaseException = le;
-          } else if (ex instanceof SQLException se) {
-            logger.error("Failed to update database: {}", ex.getMessage());
-            lastSQLException = se;
-          } else {
-            logger.error("Error attempting to update database: {}", ex.getMessage());
-          }
-          if (baseSqlExceptionIsNonexistantDriver(ex)) {
-            throw ex;
-          }
-        }
-        try {
-          Thread.sleep(configuration.getRetryBaseMs() + retry * configuration.getRetryIncrementMs());
-        } catch (InterruptedException ex) {
-          logger.warn("Liquibase retry delay interrupted");
-        }
-      }
-      if (lastSQLException != null) {
-        throw lastSQLException;
-      }
-      if (lastLiquibaseException != null) {
-        throw lastLiquibaseException;
-      }
-
-      Credentials credentials = dataSourceConfig.getUser();
-      if (credentials == null) {
-        credentials = dataSourceConfig.getAdminUser();
-      }
-      jdbcHelper = new JdbcHelper(vertx, JdbcHelper.createDataSource(dataSourceConfig, credentials, meterRegistry));
+      this.prepared = true;
+      return ;
     }
+
+    String url = dataSourceConfig.getUrl();
+    
+    if (Strings.isNullOrEmpty(dataSourceConfig.getSchema())) {
+      recordRequest = recordRequest.replaceAll("#SCHEMA#.", "");
+      recordFile = recordFile.replaceAll("#SCHEMA#.", "");
+      recordException = recordException.replaceAll("#SCHEMA#.", "");
+      recordResponse = recordResponse.replaceAll("#SCHEMA#.", "");
+      getHistory = getHistory.replaceAll("#SCHEMA#.", "");
+      getHistoryCount = getHistoryCount.replaceAll("#SCHEMA#.", "");
+    } else {
+      recordRequest = recordRequest.replaceAll("SCHEMA", dataSourceConfig.getSchema());
+      recordFile = recordFile.replaceAll("SCHEMA", dataSourceConfig.getSchema());
+      recordException = recordException.replaceAll("SCHEMA", dataSourceConfig.getSchema());
+      recordResponse = recordResponse.replaceAll("SCHEMA", dataSourceConfig.getSchema());
+      getHistory = getHistory.replaceAll("SCHEMA", dataSourceConfig.getSchema());
+      getHistoryCount = getHistoryCount.replaceAll("SCHEMA", dataSourceConfig.getSchema());
+    }
+
+    for (int retry = 0; configuration.getRetryLimit() < 0 || retry <= configuration.getRetryLimit(); ++retry) {
+      logger.debug("Running liquibase, attempt {}", retry);        
+      String username = dataSourceConfig.getAdminUser() == null ? null : dataSourceConfig.getAdminUser().getUsername();
+      String password = dataSourceConfig.getAdminUser() == null ? null : dataSourceConfig.getAdminUser().getPassword();
+      try (Connection jdbcConnection = DriverManager.getConnection(url, username, password)) {
+        DatabaseMetaData dmd = jdbcConnection.getMetaData();
+        quote = dmd.getIdentifierQuoteString();
+        recordRequest = recordRequest.replaceAll("#", quote);
+        recordFile = recordFile.replaceAll("#", quote);
+        recordException = recordException.replaceAll("#", quote);
+        recordResponse = recordResponse.replaceAll("#", quote);
+        getHistory = getHistory.replaceAll("#", quote);
+        getHistoryCount = getHistoryCount.replaceAll("#", quote);
+        
+        String databaseProduct = dmd.getDatabaseProductName();
+        logger.debug("Database product: {}", databaseProduct);
+        switch (databaseProduct) {
+          case "PostgreSQL":
+            this.offsetLimitType = OffsetLimitType.limitOffset;
+            break;
+          case "MySQL":
+            this.offsetLimitType = OffsetLimitType.limitOffset;
+            break;
+          case "Microsoft SQL Server":
+            this.offsetLimitType = OffsetLimitType.offsetFetch;
+            break;
+          default:
+            this.offsetLimitType = OffsetLimitType.limitOffset;
+            break;
+        }
+
+        Map<String, Object> liquibaseConfig = new HashMap<>();
+        Scope.child(liquibaseConfig, () -> {
+          Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(jdbcConnection));
+          if (!Strings.isNullOrEmpty(dataSourceConfig.getSchema())) {
+            logger.trace("Setting default schema to {}", dataSourceConfig.getSchema());
+            database.setDefaultSchemaName(dataSourceConfig.getSchema());
+          }
+
+          CommandScope updateCommand = new CommandScope(UpdateCommandStep.COMMAND_NAME);
+          updateCommand.addArgumentValue(DbUrlConnectionArgumentsCommandStep.DATABASE_ARG, database);
+          updateCommand.addArgumentValue(UpdateCommandStep.CHANGELOG_FILE_ARG, CHANGESET_RESOURCE_PATH);
+          updateCommand.addArgumentValue(UpdateCommandStep.CONTEXTS_ARG, null);
+          updateCommand.addArgumentValue(UpdateCommandStep.LABEL_FILTER_ARG, null);
+          updateCommand.addArgumentValue(ChangeExecListenerCommandStep.CHANGE_EXEC_LISTENER_ARG, null);
+          updateCommand.addArgumentValue(DatabaseChangelogCommandStep.CHANGELOG_PARAMETERS, null);
+          updateCommand.execute();
+        });
+
+        logger.info("Database updated");
+        lastSQLException = null;
+        lastLiquibaseException = null;
+        break;
+      } catch (Throwable ex) {
+        lastLiquibaseException = null;
+        lastSQLException = null;
+        if (ex instanceof LiquibaseException le) {
+          logger.error("Failed to config database: {}", ex.getMessage());
+          lastLiquibaseException = le;
+        } else if (ex instanceof SQLException se) {
+          logger.error("Failed to update database: {}", ex);
+          lastSQLException = se;
+        } else {
+          logger.error("Error attempting to update database: {}", ex.getMessage());
+        }
+        if (baseSqlExceptionIsNonexistantDriver(ex)) {
+          throw ex;
+        }
+      }
+      try {
+        Thread.sleep(configuration.getRetryBaseMs() + retry * configuration.getRetryIncrementMs());
+      } catch (InterruptedException ex) {
+        logger.warn("Liquibase retry delay interrupted");
+      }
+    }
+    if (lastSQLException != null) {
+      throw lastSQLException;
+    }
+    if (lastLiquibaseException != null) {
+      throw lastLiquibaseException;
+    }
+
+    Credentials credentials = dataSourceConfig.getUser();
+    if (credentials == null) {
+      credentials = dataSourceConfig.getAdminUser();
+    }
+    jdbcHelper = new JdbcHelper(vertx, JdbcHelper.createDataSource(dataSourceConfig, credentials, meterRegistry));
     prepared = true;
   }
   
@@ -291,6 +318,14 @@ public class AuditorImpl implements Auditor {
             , #responseHeaders# = ?
            where
             #id# = ?""";
+  private String getHistoryCount = """
+          select count(*)
+          from
+            #SCHEMA#.#request#
+          where
+            #issuer# = ?
+            and #subject# = ?
+          """;
   private String getHistory = """
           select
              #timestamp#
@@ -644,44 +679,96 @@ public class AuditorImpl implements Auditor {
     return value;
   }
 
+  
+  
   @Override
-  public Future<List<AuditHistory>> getHistory(String issuerArg, String subjectArg, int maxRows, int skipRows) {
-    logger.info("Get history for : {} {}", issuerArg, subjectArg);
+  public Future<AuditHistory> getHistory(String issuerArg, String subjectArg, int skipRows, int maxRows) {
+    logger.info("Get history for : {} {} ({}, {})", issuerArg, subjectArg, skipRows, maxRows);
     
     if (jdbcHelper == null) {
-      return Future.succeededFuture(Collections.emptyList());      
+      return Future.succeededFuture(new AuditHistory(0, 0, Collections.emptyList()));
     }
-    int currentRow[] = {0};
-    return jdbcHelper.runSqlSelect(getHistory, ps -> {
-                    int param = 1;
-                    ps.setString(param++, JdbcHelper.limitLength(issuerArg, 1000));
-                    ps.setString(param++, JdbcHelper.limitLength(subjectArg, 1000));
-                    ps.setMaxRows(skipRows + maxRows);
-             }, rs -> {
-              List<AuditHistory> list = new ArrayList<>();
-              while (rs.next()) {
-                if (currentRow[0]++  > skipRows) {
-                  LocalDateTime timestamp = LocalDateTime.ofInstant(rs.getTimestamp(1).toInstant(), ZoneOffset.UTC);
-                  String id = rs.getString(2);
-                  String path = rs.getString(3);
-                  ObjectNode arguments = getArguments(rs, 4, id);
-                  String host = rs.getString(5);
-                  String issuer = rs.getString(6);
-                  String subject = rs.getString(7);
-                  String username = rs.getString(8);
-                  String name = rs.getString(9);
-                  int responseCode = rs.getInt(10);
-                  long responseRows = rs.getLong(11);
-                  long responseSize = rs.getLong(12);
-                  long responseStreamStartMs = rs.getLong(13);
-                  long responseDurationMs = rs.getLong(14);
-                
-                  AuditHistory ah = new AuditHistory(timestamp, id, path, arguments, host, issuer, subject, username, name, responseCode, responseRows, responseSize, responseStreamStartMs, responseDurationMs);
-                  list.add(ah);
-                }
-              }
-              return list;
+    
+    Future<List<AuditHistoryRow>> rowsFuture = getRows(issuerArg, subjectArg, skipRows, maxRows);
+    Future<Long> countFuture = countRows(issuerArg, subjectArg);
+    
+    return Future.all(rowsFuture, countFuture)
+            .map(cf -> {
+              return new AuditHistory(
+                      skipRows
+                      , countFuture.result()
+                      , rowsFuture.result()
+                      );
             });
+  }
+
+  private Future<Long> countRows(String issuerArg, String subjectArg) {
+    return jdbcHelper.runSqlSelect(getHistoryCount, ps -> {
+      int param = 1;
+      ps.setString(param++, JdbcHelper.limitLength(issuerArg, 1000));
+      ps.setString(param++, JdbcHelper.limitLength(subjectArg, 1000));
+    }, rs -> {
+      while (rs.next()) {
+        return rs.getLong(1);
+      }
+      return 0L;
+    });
+  }
+  
+  private Future<List<AuditHistoryRow>> getRows(String issuerArg, String subjectArg, int skipRows, int maxRows) {
+    
+    String sql = getHistory;
+    switch (offsetLimitType) {
+      case limitOffset -> sql = sql + " limit " + maxRows + " offset " + skipRows + " ";
+      case offsetFetch -> sql = sql + " offset " + skipRows + " rows fetch next " + maxRows + " rows only ";
+      default -> logger.error("No configuration for offset limit type of {}", offsetLimitType);
+    }
+    
+    return jdbcHelper.runSqlSelect(sql, ps -> {
+      int param = 1;
+      ps.setString(param++, JdbcHelper.limitLength(issuerArg, 1000));
+      ps.setString(param++, JdbcHelper.limitLength(subjectArg, 1000));
+    }, rs -> {
+      ImmutableList.Builder<AuditHistoryRow> builder = ImmutableList.<AuditHistoryRow>builder();
+      while (rs.next()) {
+        LocalDateTime timestamp = LocalDateTime.ofInstant(rs.getTimestamp(1).toInstant(), ZoneOffset.UTC);
+        String id = rs.getString(2);
+        String path = rs.getString(3);
+        ObjectNode arguments = getArguments(rs, 4, id);
+        String host = rs.getString(5);
+        String issuer = rs.getString(6);
+        String subject = rs.getString(7);
+        String username = rs.getString(8);
+        String name = rs.getString(9);
+        int responseCode = getInteger(rs, 10);
+        long responseRows = getLong(rs, 11);
+        long responseSize = getLong(rs, 12);
+        long responseStreamStartMs = rs.getLong(13);
+        long responseDurationMs = rs.getLong(14);
+        
+        AuditHistoryRow ah = new AuditHistoryRow(timestamp, id, path, arguments, host, issuer, subject, username, name, responseCode, responseRows, responseSize, responseStreamStartMs, responseDurationMs);
+        builder.add(ah);
+      }
+      return builder.build();
+    });
+  }
+  
+  private Integer getInteger(ResultSet rs, int colIdx) throws SQLException {
+    int value = rs.getInt(colIdx);
+    if (rs.wasNull()) {
+      return null;
+    } else {
+      return value;
+    }
+  }
+
+  private Long getLong(ResultSet rs, int colIdx) throws SQLException {
+    long value = rs.getLong(colIdx);
+    if (rs.wasNull()) {
+      return null;
+    } else {
+      return value;
+    }
   }
 
   @SuppressFBWarnings("CRLF_INJECTION_LOGS")

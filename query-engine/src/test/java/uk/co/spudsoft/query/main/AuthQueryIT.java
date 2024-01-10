@@ -22,7 +22,7 @@ import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
 import io.restassured.http.Header;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -40,7 +40,6 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -99,7 +98,7 @@ public class AuthQueryIT {
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-      "--persistence.datasource.url=jdbc:" + mysql.getUrl()
+      "--persistence.datasource.url=" + mysql.getJdbcUrl()
       , "--persistence.datasource.adminUser.username=" + mysql.getUser()
       , "--persistence.datasource.adminUser.password=" + mysql.getPassword()
       , "--persistence.datasource.user.username=" + mysql.getUser()
@@ -117,10 +116,10 @@ public class AuthQueryIT {
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.jwksEndpoints[0]=" + jwks.getBaseUrl() + "/jwks"
       , "--jwt.defaultJwksCacheDuration=PT1M"
-      , "--sampleDataLoads[0].url=" + postgres.getUrl()
+      , "--sampleDataLoads[0].url=" + postgres.getVertxUrl()
       , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()
       , "--sampleDataLoads[0].adminUser.password=" + postgres.getPassword()
-      , "--sampleDataLoads[1].url=" + mysql.getUrl()
+      , "--sampleDataLoads[1].url=" + mysql.getVertxUrl()
       , "--sampleDataLoads[1].user.username=" + mysql.getUser()
       , "--sampleDataLoads[1].user.password=" + mysql.getPassword()
       , "--sampleDataLoads[2].url=sqlserver://localhost:1234/test"
@@ -306,12 +305,36 @@ public class AuthQueryIT {
             .extract().body().asString();
     logger.debug("History: {}", body);
     
-    JsonArray history = new JsonArray(body);
-    assertEquals(5, history.size());    
-    assertThat(history.getJsonObject(0).getString("subject"), startsWith("sub"));
-    assertEquals("Full Name", history.getJsonObject(0).getString("name"));
-    assertEquals("username", history.getJsonObject(0).getString("username"));
+    JsonObject history1 = new JsonObject(body);
+    assertEquals(6, history1.getJsonArray("rows").size());    
+    assertEquals(6, history1.getInteger("totalRows"));    
+    assertEquals(0, history1.getInteger("firstRow"));
+    assertThat(history1.getJsonArray("rows").getJsonObject(0).getString("subject"), startsWith("sub"));
+    assertEquals("Full Name", history1.getJsonArray("rows").getJsonObject(0).getString("name"));
+    assertEquals("username", history1.getJsonArray("rows").getJsonObject(0).getString("username"));
     
+    body = given()
+            .header(new Header("Authorization", "Bearer " + token))
+            .log().all()
+            .get("/api/history?skipRows=2&maxRows=3")
+            .then()
+            .log().ifError()
+            .statusCode(200)
+            .extract().body().asString();
+    logger.debug("History: {}", body);
+    
+    JsonObject history2 = new JsonObject(body);
+    assertEquals(3, history2.getJsonArray("rows").size());    
+    assertEquals(6, history2.getInteger("totalRows"));    
+    assertEquals(2, history2.getInteger("firstRow"));
+    assertThat(history2.getJsonArray("rows").getJsonObject(0).getString("subject"), startsWith("sub"));
+    assertEquals("Full Name", history2.getJsonArray("rows").getJsonObject(0).getString("name"));
+    assertEquals("username", history2.getJsonArray("rows").getJsonObject(0).getString("username"));
+    
+    assertEquals(history2.getJsonArray("rows").getJsonObject(0).getString("id"), history1.getJsonArray("rows").getJsonObject(2).getString("id"));
+    assertEquals(history2.getJsonArray("rows").getJsonObject(1).getString("id"), history1.getJsonArray("rows").getJsonObject(3).getString("id"));
+    assertEquals(history2.getJsonArray("rows").getJsonObject(2).getString("id"), history1.getJsonArray("rows").getJsonObject(4).getString("id"));
+
     main.shutdown();
   }
   

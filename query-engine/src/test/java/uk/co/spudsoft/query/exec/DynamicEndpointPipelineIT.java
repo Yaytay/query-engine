@@ -105,7 +105,7 @@ public class DynamicEndpointPipelineIT {
             })
             .compose(v -> {
               logger.info("Preparing dynamic endpoints");
-              SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getUrl());
+              SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getVertxUrl());
               connectOptions.setUser(serverProviderMy.getUser());
               connectOptions.setPassword(serverProviderMy.getPassword());
               Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(1));
@@ -115,9 +115,9 @@ public class DynamicEndpointPipelineIT {
                         return pool.preparedQuery("insert into DynamicEndpoint (endpointKey, type, url, username, password, useCondition) values (?, ?, ?, ?, ?, ?)")
                             .executeBatch(
                                     Arrays.asList(
-                                            Tuple.of("my", "SQL", serverProviderMy.getUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
-                                            , Tuple.of("ms", "SQL", serverProviderMs.getUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
-                                            , Tuple.of("pg", "SQL", serverProviderPg.getUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
+                                            Tuple.of("my", "SQL", serverProviderMy.getVertxUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
+                                            , Tuple.of("ms", "SQL", serverProviderMs.getVertxUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
+                                            , Tuple.of("pg", "SQL", serverProviderPg.getVertxUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
                                     )
                             );
                       });
@@ -196,7 +196,7 @@ public class DynamicEndpointPipelineIT {
             .compose(v -> serverProviderMy.prepareTestDatabase(vertx))
             .compose(v -> serverProviderPg.prepareTestDatabase(vertx))
             .compose(v -> {
-              SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getUrl());
+              SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getVertxUrl());
               connectOptions.setUser(serverProviderMy.getUser());
               connectOptions.setPassword(serverProviderMy.getPassword());
               Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(1));
@@ -206,9 +206,9 @@ public class DynamicEndpointPipelineIT {
                         return pool.preparedQuery("insert into DynamicEndpoint (endpointKey, type, url, username, password, useCondition) values (?, ?, ?, ?, ?, ?)")
                             .executeBatch(
                                     Arrays.asList(
-                                            Tuple.of("my", "SQL", serverProviderMy.getUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
-                                            , Tuple.of("ms", "SQL", serverProviderMs.getUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
-                                            , Tuple.of("pg", "SQL", serverProviderPg.getUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
+                                            Tuple.of("my", "SQL", serverProviderMy.getVertxUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
+                                            , Tuple.of("ms", "SQL", serverProviderMs.getVertxUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
+                                            , Tuple.of("pg", "SQL", serverProviderPg.getVertxUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
                                     )
                             );
                       });
@@ -292,7 +292,7 @@ public class DynamicEndpointPipelineIT {
             .compose(v -> serverProviderMy.prepareTestDatabase(vertx))
             .compose(v -> serverProviderPg.prepareTestDatabase(vertx))
             .compose(v -> {
-              SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getUrl());
+              SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getVertxUrl());
               connectOptions.setUser(serverProviderMy.getUser());
               connectOptions.setPassword(serverProviderMy.getPassword());
               Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(1));
@@ -302,9 +302,9 @@ public class DynamicEndpointPipelineIT {
                         return pool.preparedQuery("insert into DynamicEndpoint (endpointKey, type, url, username, password, useCondition) values (?, ?, ?, ?, ?, ?)")
                             .executeBatch(
                                     Arrays.asList(
-                                            Tuple.of("my", "SQL", serverProviderMy.getUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
-                                            , Tuple.of("ms", "SQL", serverProviderMs.getUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
-                                            , Tuple.of("pg", "SQL", serverProviderPg.getUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
+                                            Tuple.of("my", "SQL", serverProviderMy.getVertxUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
+                                            , Tuple.of("ms", "SQL", serverProviderMs.getVertxUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
+                                            , Tuple.of("pg", "SQL", serverProviderPg.getVertxUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
                                     )
                             );
                       });
@@ -397,7 +397,7 @@ public class DynamicEndpointPipelineIT {
             })
             .compose(v -> {
               logger.info("Preparing dynamic endpoints");
-              SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getUrl());
+              SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getVertxUrl());
               connectOptions.setUser(serverProviderMy.getUser());
               connectOptions.setPassword(serverProviderMy.getPassword());
               Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(1));
@@ -407,9 +407,9 @@ public class DynamicEndpointPipelineIT {
                         return pool.preparedQuery("insert into DynamicEndpoint (endpointKey, type, url, username, password, useCondition) values (?, ?, ?, ?, ?, ?)")
                             .executeBatch(
                                     Arrays.asList(
-                                            Tuple.of("my", "SQL", serverProviderMy.getUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
-                                            , Tuple.of("ms", "SQL", serverProviderMs.getUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
-                                            , Tuple.of("pg", "SQL", serverProviderPg.getUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
+                                            Tuple.of("my", "SQL", serverProviderMy.getVertxUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
+                                            , Tuple.of("ms", "SQL", serverProviderMs.getVertxUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
+                                            , Tuple.of("pg", "SQL", serverProviderPg.getVertxUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
                                     )
                             );
                       });

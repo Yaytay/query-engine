@@ -82,7 +82,7 @@ public class DesignHandlerIT {
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-      "--audit.datasource.url=jdbc:" + postgres.getUrl()
+      "--audit.datasource.url=" + postgres.getJdbcUrl()
       , "--audit.datasource.adminUser.username=" + postgres.getUser()
       , "--audit.datasource.adminUser.password=" + postgres.getPassword()
       , "--audit.datasource.schema=public"
