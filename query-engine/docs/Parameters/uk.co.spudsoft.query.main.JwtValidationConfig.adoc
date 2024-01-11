@@ -31,11 +31,11 @@ Usually an issuer has an empty path, being just https://host[:port]/ however it 
 
 This value is <em>not</em>  used to signify that the issuer should be derived from the header, that indication is driven entirely 
  by the  value.
-| requiredAudience
-| link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/String.html[String]
-| Set the audience value that must be included in any token for the query engine to accept it.
+| requiredAudiences
+| link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/util/List.html[List]<link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/String.html[String]>
+| Set the set of audience values, any one of which must be included in any token for the query engine to accept it.
 
-
+The token validation requires a non-empty intersection of the required audiences with the provided audiences.
 | acceptableIssuersFile
 | link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/String.html[String]
 | Set the path to the acceptable issuers file.

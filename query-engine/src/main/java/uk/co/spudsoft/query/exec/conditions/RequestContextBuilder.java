@@ -28,13 +28,13 @@ import io.vertx.core.net.HostAndPort;
 import io.vertx.ext.web.client.WebClient;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
 import uk.co.spudsoft.jwtvalidatorvertx.JwtValidator;
 import uk.co.spudsoft.jwtvalidatorvertx.OpenIdDiscoveryHandler;
+import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
  *
@@ -69,7 +69,7 @@ public class RequestContextBuilder {
    * @param openIdIntrospectionHeaderName The name of the header that will contain the payload from a token as Json (that may be base64 encoded or not).
    * @param deriveIssuerFromHost If true the issuer should be derived from the Host (or X-Forwarded-Host) header.
    * @param issuerHostPath  Path to be appended to the Host to derive the issuer.  See {@link uk.co.spudsoft.query.main.JwtValidationConfig#issuerHostPath}.
-   * @param aud The audience that must be found in any token.
+   * @param aud The audience that must be found in any token (any one of the provided audiences matching any aud in the token is acceptable).
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The WebClient should be created specifically for use by the RequestContextBuilder.")
   public RequestContextBuilder(WebClient webClient
@@ -78,7 +78,7 @@ public class RequestContextBuilder {
           , String openIdIntrospectionHeaderName
           , boolean deriveIssuerFromHost
           , String issuerHostPath
-          , String aud
+          , List<String> aud
   ) {
     this.webClient = webClient;
     this.validator = validator;
@@ -86,7 +86,7 @@ public class RequestContextBuilder {
     this.openIdIntrospectionHeaderName = openIdIntrospectionHeaderName;
     this.deriveIssuerFromHost = deriveIssuerFromHost;
     this.issuerHostPath = Strings.isNullOrEmpty(issuerHostPath) ? "" : issuerHostPath.startsWith("/") ? issuerHostPath : ("/" + issuerHostPath);
-    this.audList = Collections.singletonList(aud);
+    this.audList = ImmutableCollectionTools.copy(aud);
   }
   
   static String baseRequestUrl(HttpServerRequest request) {

@@ -27,6 +27,7 @@ import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import uk.co.spudsoft.params4j.FileType;
 import uk.co.spudsoft.params4j.Params4J;
@@ -111,9 +112,9 @@ public class ParametersTest {
   @Test
   public void testGetAudience() {
     Parameters instance = new Parameters();
-    assertEquals("query-engine", instance.getJwt().getRequiredAudience());
-    instance.getJwt().setRequiredAudience("aud");
-    assertEquals("aud", instance.getJwt().getRequiredAudience());
+    assertEquals("query-engine", instance.getJwt().getRequiredAudiences().get(0));
+    instance.getJwt().setRequiredAudiences(Collections.singletonList("aud"));
+    assertEquals("[aud]", instance.getJwt().getRequiredAudiences().toString());
   }
   
   @Test

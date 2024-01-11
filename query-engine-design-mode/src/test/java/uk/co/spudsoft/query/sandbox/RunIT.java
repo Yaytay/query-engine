@@ -82,6 +82,8 @@ public class RunIT {
       , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.jwksEndpoints[0]=" + System.getProperty("queryEngineEntraUrl").replace("v2.0", "discovery/v2.0/keys")
+      , "--jwt.requiredAudiences[0]=query-engine"
+      , "--jwt.requiredAudiences[1]=" + System.getProperty("queryEngineEntraId")
       , "--logging.jsonFormat=false"
 //      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.vertx\\\\.rest=TRACE"
 //      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec\\\\.procs\\\\.query=TRACE"
@@ -104,7 +106,7 @@ public class RunIT {
       , "--session.oauth.Microsoft.issuer=" + System.getProperty("queryEngineEntraUrl")
       , "--session.oauth.Microsoft.credentials.id=" + System.getProperty("queryEngineEntraId")
       , "--session.oauth.Microsoft.credentials.secret=" + System.getProperty("queryEngineEntraSecret")
-      , "--session.oauth.Microsoft.scope=openid profile api://341fde39-b5d8-4ee7-807f-813ec7bfff77/query-engine"
+      , "--session.oauth.Microsoft.scope=openid profile api://" + System.getProperty("queryEngineEntraId") + "/query-engine"
     }, stdout);
     
     for (int i = 0; i < 14400; ++i) {

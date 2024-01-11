@@ -23,6 +23,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.junit5.VertxExtension;
+import java.util.Collections;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.startsWith;
@@ -48,7 +49,7 @@ public class QueryRouterTest {
   public void testBadMethod(Vertx vertx) {
     
     PipelineDefnLoader loader = mock(PipelineDefnLoader.class);
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, null, false, null, "aud");
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, null, false, null, Collections.singletonList("aud"));
     QueryRouter router = new QueryRouter(vertx, new NullAuditor(), rcb, loader, null, true);
     
     RoutingContext routingContext = mock(RoutingContext.class);
@@ -65,7 +66,7 @@ public class QueryRouterTest {
   public void testShortPath(Vertx vertx) {
     
     PipelineDefnLoader loader = mock(PipelineDefnLoader.class);
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, null, false, null, "aud");
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, null, false, null, Collections.singletonList("aud"));
     QueryRouter router = new QueryRouter(vertx, new NullAuditor(), rcb, loader, null, true);
     
     RoutingContext routingContext = mock(RoutingContext.class);

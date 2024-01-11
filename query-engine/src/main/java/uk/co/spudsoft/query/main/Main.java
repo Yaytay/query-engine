@@ -626,7 +626,7 @@ public class Main extends Application {
             , params.getOpenIdIntrospectionHeaderName()
             , jwtConfig.getJwksEndpoints() == null || jwtConfig.getJwksEndpoints().isEmpty()
             , jwtConfig.getIssuerHostPath()
-            , jwtConfig.getRequiredAudience()
+            , jwtConfig.getRequiredAudiences()
     );
     return rcb;
   }

@@ -16,14 +16,12 @@
  */
 package uk.co.spudsoft.query.exec.conditions;
 
-import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
-import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpServerRequest;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -72,7 +70,7 @@ public class ConditionInstanceTest {
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
     
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, "X-OpenID-Introspection", false, null, "aud");
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"));
     RequestContext ctx = rcb.buildRequestContext(req).result();
     
     assertFalse(new ConditionInstance("req").evaluate(ctx));

@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.security.PublicKey;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeAll;
@@ -80,7 +81,7 @@ public class RequestContextBuilderBearerAuthTest {
 
   @Test
   public void testBuildRequestContext(Vertx vertx, VertxTestContext testContext) throws Exception {
-    RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx), validator, discoverer, null, true, null, "aud");
+    RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx), validator, discoverer, null, true, null, Collections.singletonList("aud"));
           
     destServer = vertx.createHttpServer();    
     Router router = Router.router(vertx);

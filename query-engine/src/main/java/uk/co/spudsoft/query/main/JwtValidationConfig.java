@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.main;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -96,9 +97,10 @@ public class JwtValidationConfig {
   private List<String> acceptableIssuerRegexes;
 
   /**
-   * The audience value that must be included in any token for the query engine to accept it.
+   * The set of audience values, any one of which must be included in any token for the query engine to accept it.
+   * The token validation requires a non-empty intersection of the required audiences with the provided audiences.
    */
-  private String requiredAudience = "query-engine";
+  private List<String> requiredAudiences = Arrays.asList("query-engine");
   
   /**
    * The default period to cache JWKS data for.
@@ -140,21 +142,25 @@ public class JwtValidationConfig {
   }
 
   /**
-   * Get the audience value that must be included in any token for the query engine to accept it.
-   * @return the audience value that must be included in any token for the query engine to accept it.
+   * Get the set of audience values, any one of which must be included in any token for the query engine to accept it.
+   * The token validation requires a non-empty intersection of the required audiences with the provided audiences.
+   * @return the set of audience values, any one of which must be included in any token for the query engine to accept it.
    */
-  public String getRequiredAudience() {
-    return requiredAudience;
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
+  public List<String> getRequiredAudiences() {
+    return requiredAudiences;
   }
 
   /**
-   * Set the audience value that must be included in any token for the query engine to accept it.
+   * Set the set of audience values, any one of which must be included in any token for the query engine to accept it.
    * <p>
-   * @param requiredAudience the audience value that must be included in any token for the query engine to accept it.
+   * The token validation requires a non-empty intersection of the required audiences with the provided audiences.
+   * @param requiredAudiences the set of audience values, any one of which must be included in any token for the query engine to accept it.
    * @return this, so that the method may be called in a fluent manner.
    */
-  public JwtValidationConfig setRequiredAudience(String requiredAudience) {
-    this.requiredAudience = requiredAudience;
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
+  public JwtValidationConfig setRequiredAudiences(List<String> requiredAudiences) {
+    this.requiredAudiences = requiredAudiences;
     return this;
   }
   
