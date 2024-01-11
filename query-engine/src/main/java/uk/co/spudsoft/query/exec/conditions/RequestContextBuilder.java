@@ -157,7 +157,7 @@ public class RequestContextBuilder {
               .compose(token -> {
                 logger.debug("Login for {} got token: {}", clientId, token);
                 request.resume();
-                return validator.validateToken(issuer(request), token, audList, true);
+                return validator.validateToken(issuer(request), token, audList, false);
               })
               .compose(jwt -> {
                 return build(request, jwt);
@@ -167,7 +167,7 @@ public class RequestContextBuilder {
       
       String token = authHeader.substring(BEARER.length());
       request.pause();
-      return validator.validateToken(issuer(request), token, audList, true)
+      return validator.validateToken(issuer(request), token, audList, false)
               .compose(jwt -> {
                 request.resume();
                 return build(request, jwt);

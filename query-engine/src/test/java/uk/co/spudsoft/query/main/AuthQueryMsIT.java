@@ -22,7 +22,6 @@ import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
 import io.restassured.http.Header;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import java.io.ByteArrayOutputStream;
@@ -179,7 +178,7 @@ public class AuthQueryMsIT {
             , "AuthQueryIT-" + UUID.randomUUID().toString()
             , jwks.getBaseUrl()
             , "sub" + System.currentTimeMillis()
-            , Arrays.asList()
+            , Arrays.asList("query-engine")
             , System.currentTimeMillis() / 1000
             , System.currentTimeMillis() / 1000 + 3600
             , ImmutableMap.<String, Object>builder()

@@ -47,6 +47,7 @@ public class AuditHistory {
                         <P>The index of the first row (out of all those for the current user) present in this dataset.</P>
                         <P>This shhould equal the skipsRows argument passed in the request for history.</P>
                         """
+          , requiredMode = Schema.RequiredMode.REQUIRED
   )
   public long getFirstRow() {
     return firstRow;
@@ -56,6 +57,7 @@ public class AuditHistory {
           description = """
                         <P>The total number of history records that the current user has.</P>
                         """
+          , requiredMode = Schema.RequiredMode.REQUIRED
   )
   public long getTotalRows() {
     return totalRows;
@@ -66,6 +68,7 @@ public class AuditHistory {
                         <P>Details of specific requests to the query engine for the current user.</P>
                         <P>The number of entries in this array should be no greater than the maxRows argument passed in the request for history.</P>
                         """
+          , requiredMode = Schema.RequiredMode.REQUIRED
   )
   public List<AuditHistoryRow> getRows() {
     return rows;

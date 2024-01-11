@@ -173,7 +173,7 @@ public class AuthQueryIT {
             , "AuthQueryIT-" + UUID.randomUUID().toString()
             , jwks.getBaseUrl()
             , "sub" + System.currentTimeMillis()
-            , Arrays.asList()
+            , Arrays.asList("query-engine")
             , System.currentTimeMillis() / 1000
             , System.currentTimeMillis() / 1000 + 3600
             , ImmutableMap.<String, Object>builder()
