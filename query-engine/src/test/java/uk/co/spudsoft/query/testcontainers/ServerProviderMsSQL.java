@@ -84,29 +84,7 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
         logger.warn("Failed to prepare container: ", ex);
         throw ex;
       }
-    })
-            .compose(v -> {
-              Pool pool = MSSQLBuilder.pool()
-                      .using(vertx)
-                      .connectingTo(getConnectOptions())
-                      .with(new PoolOptions().setMaxSize(1))
-                      .build();
-              return pool.preparedQuery("select count(*) from sys.databases where name = 'test'").execute()
-                      .compose(rs -> {
-                        int existingDb = rs.iterator().next().getInteger(0);
-                        if (existingDb == 0) {
-                          return pool.preparedQuery("create database test").execute();
-                        } else {
-                          return Future.succeededFuture();
-                        }
-                      })
-                      .onSuccess(rs -> {
-                        if (rs != null) {
-                          logger.info("Database created: {}", RowSetHelper.toString(rs));
-                        }
-                      })
-                      .mapEmpty();
-            });
+    }).mapEmpty();
   }
 
   @Override
@@ -169,12 +147,17 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
         );
 
         DataSourceConfig config = new DataSourceConfig();
-        config.setUrl("jdbc:sqlserver://localhost:" + port + ";encrypt=false");
+        config.setUrl("jdbc:sqlserver://localhost:" + mssqlserver.getMappedPort(1433) + ";encrypt=false");
         Credentials credentials = new Credentials("sa", ROOT_PASSWORD);
         try (HikariDataSource dataSource = JdbcHelper.createDataSource(config, credentials, null)) {
           try (Connection conn = dataSource.getConnection()) {
             try (Statement statement = conn.createStatement()) {
-              statement.execute("create database is not exists tests");
+              statement.execute("""
+                                IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'test')
+                                BEGIN
+                                  CREATE DATABASE test;
+                                END
+                                """);
               logger.info("Created test database");
             }
           }
