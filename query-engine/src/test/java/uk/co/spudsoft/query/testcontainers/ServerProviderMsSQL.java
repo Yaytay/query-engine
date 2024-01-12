@@ -18,17 +18,25 @@ package uk.co.spudsoft.query.testcontainers;
 
 import uk.co.spudsoft.query.testhelpers.RowSetHelper;
 import com.github.dockerjava.api.model.Container;
+import com.zaxxer.hikari.HikariDataSource;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.mssqlclient.MSSQLBuilder;
 import io.vertx.mssqlclient.MSSQLConnectOptions;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.Arrays;
 import java.util.stream.Collectors;
+import static liquibase.util.JdbcUtil.closeStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.MSSQLServerContainer;
+import uk.co.spudsoft.query.exec.JdbcHelper;
+import uk.co.spudsoft.query.main.Credentials;
+import uk.co.spudsoft.query.main.DataSourceConfig;
 import uk.co.spudsoft.query.main.sample.SampleDataLoader;
 import uk.co.spudsoft.query.main.sample.SampleDataLoaderMsSQL;
 import static uk.co.spudsoft.query.testcontainers.AbstractServerProvider.ROOT_PASSWORD;
@@ -40,7 +48,7 @@ import static uk.co.spudsoft.query.testcontainers.AbstractServerProvider.ROOT_PA
 public class ServerProviderMsSQL extends AbstractServerProvider implements ServerProvider {
 
   private static final Logger logger = LoggerFactory.getLogger(ServerProviderMsSQL.class);
-  
+
   public static final String MSSQL_IMAGE_NAME = "mcr.microsoft.com/mssql/server:2022-latest";
 
   private static final Object lock = new Object();
@@ -56,7 +64,7 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
   protected String getScript() {
     return "/MS SQL Test Structures.sql";
   }
-  
+
   public ServerProviderMsSQL init() {
     getContainer();
     return this;
@@ -66,17 +74,17 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
   public String getIdentifierQuote() {
     return "\"";
   }
-  
+
   @Override
   public Future<Void> prepareContainer(Vertx vertx) {
     return vertx.executeBlocking(() -> {
-              try {
-                return getContainer();
-              } catch (Throwable ex) {
-                logger.warn("Failed to prepare container: ", ex);
-                throw ex;
-              }
-            })
+      try {
+        return getContainer();
+      } catch (Throwable ex) {
+        logger.warn("Failed to prepare container: ", ex);
+        throw ex;
+      }
+    })
             .compose(v -> {
               Pool pool = MSSQLBuilder.pool()
                       .using(vertx)
@@ -97,8 +105,7 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
                           logger.info("Database created: {}", RowSetHelper.toString(rs));
                         }
                       })
-                      .mapEmpty()
-                      ;
+                      .mapEmpty();
             });
   }
 
@@ -109,8 +116,7 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
             .setPort(port)
             .setHost("localhost")
             .setUser("sa")
-            .setPassword(AbstractServerProvider.ROOT_PASSWORD)
-            ;
+            .setPassword(AbstractServerProvider.ROOT_PASSWORD);
   }
 
   @Override
@@ -137,25 +143,24 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
   public int getPort() {
     return port;
   }
-  
+
   public MSSQLServerContainer<?> getContainer() {
     synchronized (lock) {
       long start = System.currentTimeMillis();
-      
+
       Container createdContainer = findContainer("/query-engine-mssql-1");
       if (createdContainer != null) {
         port = Arrays.asList(createdContainer.ports).stream().filter(cp -> cp.getPrivatePort() == 1433).map(cp -> cp.getPublicPort()).findFirst().orElse(0);
         return null;
-      } 
-      
+      }
+
       if (mssqlserver == null) {
         mssqlserver = new MSSQLServerContainer<>(MSSQL_IMAGE_NAME)
                 .withPassword(ROOT_PASSWORD)
                 .withDatabaseName("test")
                 .withEnv("ACCEPT_EULA", "Y")
                 .withExposedPorts(1433)
-                .withUrlParam("trustServerCertificate", "true")
-                ;
+                .withUrlParam("trustServerCertificate", "true");
       }
       if (!mssqlserver.isRunning()) {
         mssqlserver.start();
@@ -163,6 +168,19 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
                 mssqlserver.getExposedPorts().stream().map(p -> Integer.toString(p) + ":" + Integer.toString(mssqlserver.getMappedPort(p))).collect(Collectors.toList()),
                 (System.currentTimeMillis() - start) / 1000.0
         );
+
+        DataSourceConfig config = new DataSourceConfig();
+        config.setUrl("jdbc:sqlserver://localhost:" + port + ";encrypt=false");
+        Credentials credentials = new Credentials("sa", ROOT_PASSWORD);
+        try (HikariDataSource dataSource = JdbcHelper.createDataSource(config, credentials, null)) {
+          try (Connection conn = dataSource.getConnection()) {
+            try (Statement statement = conn.createStatement()) {
+              statement.execute("create database is not exists tests");
+            }
+          }
+        } catch (Throwable ex) {
+          logger.error("Failed to create test database: ", ex);
+        }
       }
       port = mssqlserver.getMappedPort(1433);
     }
