@@ -1,7 +1,5 @@
 package uk.co.spudsoft.query.exec.sources.sql;
 
-import uk.co.spudsoft.query.exec.sources.sql.MsSqlPreparer;
-import uk.co.spudsoft.query.exec.sources.sql.AbstractSqlPreparer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
