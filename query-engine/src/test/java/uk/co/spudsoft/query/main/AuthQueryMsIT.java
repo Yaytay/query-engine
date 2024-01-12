@@ -77,7 +77,7 @@ public class AuthQueryMsIT {
   
   @BeforeAll
   public void createDirs(Vertx vertx) throws IOException {
-    File paramsDir = new File("target/query-engine/samples-authqueryit");
+    File paramsDir = new File("target/query-engine/samples-authquerymsit");
     try {
       FileUtils.deleteDirectory(paramsDir);
     } catch (Throwable ex) {
@@ -96,7 +96,7 @@ public class AuthQueryMsIT {
   @Test
   public void testQuery() throws Exception {
     Main main = new Main();
-    String baseConfigDir = "target/query-engine/samples-authqueryit";
+    String baseConfigDir = "target/query-engine/samples-authquerymsit";
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
