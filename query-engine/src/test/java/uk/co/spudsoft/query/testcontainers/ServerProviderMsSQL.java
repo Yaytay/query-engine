@@ -175,6 +175,7 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
           try (Connection conn = dataSource.getConnection()) {
             try (Statement statement = conn.createStatement()) {
               statement.execute("create database is not exists tests");
+              logger.info("Created test database");
             }
           }
         } catch (Throwable ex) {
