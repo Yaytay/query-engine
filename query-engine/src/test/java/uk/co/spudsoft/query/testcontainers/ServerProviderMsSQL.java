@@ -157,7 +157,6 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
       if (mssqlserver == null) {
         mssqlserver = new MSSQLServerContainer<>(MSSQL_IMAGE_NAME)
                 .withPassword(ROOT_PASSWORD)
-                .withDatabaseName("test")
                 .withEnv("ACCEPT_EULA", "Y")
                 .withExposedPorts(1433)
                 .withUrlParam("trustServerCertificate", "true");
