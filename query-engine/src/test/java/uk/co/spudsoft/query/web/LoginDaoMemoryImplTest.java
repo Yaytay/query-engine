@@ -17,7 +17,6 @@
 package uk.co.spudsoft.query.web;
 
 import io.vertx.core.Promise;
-import static io.vertx.core.Promise.promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.jackson.DatabindCodec;
 import io.vertx.junit5.VertxExtension;

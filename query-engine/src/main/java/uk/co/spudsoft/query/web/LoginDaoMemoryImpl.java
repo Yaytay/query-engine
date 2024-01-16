@@ -37,7 +37,7 @@ public class LoginDaoMemoryImpl implements LoginDao {
   private static class Data {
     private final LocalDateTime timestamp;
     private LocalDateTime completed;
-    private RequestData requestData;
+    private final RequestData requestData;
 
     Data(RequestData requestData) {      
       this.timestamp = LocalDateTime.now();
@@ -58,11 +58,22 @@ public class LoginDaoMemoryImpl implements LoginDao {
 
     public RequestData getRequestData() {
       return requestData;
+    }    
+  }
+
+  private static class Token {
+    private final LocalDateTime expiry;
+    private final String token;
+
+    Token(LocalDateTime expiry, String token) {
+      this.expiry = expiry;
+      this.token = token;
     }
-    
   }
   
+  
   private final Map<String, Data> data = new HashMap<>();
+  private final Map<String, Token> tokens = new HashMap<>();
   private final Duration purgeDelay;
   private final AtomicBoolean prepared = new AtomicBoolean(false);
 
@@ -103,13 +114,13 @@ public class LoginDaoMemoryImpl implements LoginDao {
       Data input = data.get(state);
       if (input == null) {
         logger.debug("State {} not found in {}", state, Json.encode(data.keySet()));
-        return Future.failedFuture(new SecurityException("State not known"));
+        return Future.failedFuture(new IllegalArgumentException("State does not exist"));
       }
       LocalDateTime limit = LocalDateTime.now().minus(purgeDelay);
       if (input.getTimestamp().isBefore(limit)) {
         data.remove(state);
         logger.debug("State {} expired at {}", state, input.getTimestamp());
-        return Future.failedFuture(new SecurityException("State not known"));
+        return Future.failedFuture(new IllegalArgumentException("State does not exist"));
       }
       input.setCompleted(LocalDateTime.now());
       return Future.succeededFuture();
@@ -122,14 +133,35 @@ public class LoginDaoMemoryImpl implements LoginDao {
       Data input = data.get(state);
       if (input == null) {
         logger.debug("State {} not found in {}", state, Json.encode(data.keySet()));
-        return Future.failedFuture(new SecurityException("State not known"));
+        return Future.failedFuture(new IllegalArgumentException("State does not exist"));
       }
       if (input.completed != null) {
         logger.debug("State {} already marked completed at {}", state, input.completed);
-        return Future.failedFuture(new SecurityException("State not known"));
+        return Future.failedFuture(new IllegalArgumentException("State does not exist"));
       }
       return Future.succeededFuture(input.getRequestData());
-    }    
+    }
   }
 
+  @Override
+  public Future<Void> storeToken(String id, LocalDateTime expiry, String token) {
+    synchronized (tokens) {
+      tokens.put(id, new Token(expiry, token));
+    }
+    return Future.succeededFuture();
+  }
+
+  @Override
+  public Future<String> getToken(String id) {
+    synchronized (tokens) {
+      Token token = tokens.get(id);
+      LocalDateTime now = LocalDateTime.now();
+      if (token.expiry.isBefore(now)) {
+        tokens.remove(id);        
+        token = null;
+        tokens.entrySet().removeIf(entry -> entry.getValue().expiry.isBefore(now));
+      }      
+      return Future.succeededFuture(token == null ? null : token.token);
+    }
+  }
 }

@@ -27,6 +27,8 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.sql.DataSource;
@@ -117,6 +119,42 @@ public class LoginDaoPersistenceImpl implements LoginDao {
                     and #completed# is null
                   """;
   
+  private String storeToken = """
+                  insert into #SCHEMA#.#session# (
+                    #id#
+                    , #expiry#
+                    , #token#
+                  ) values (
+                    ?
+                    , ?
+                    , ?
+                  )
+                  """;
+  
+  private String getToken = """
+                  select
+                    #expiry#
+                    , #token#
+                  from
+                    #SCHEMA#.#session#
+                  where
+                    #id# = ?
+                  """;
+  
+  private String deleteToken = """
+                  delete
+                    #SCHEMA#.#session#
+                  where
+                    #id# = ?
+                  """;
+  
+  private String expireTokens = """
+                  delete
+                    #SCHEMA#.#session#
+                  where
+                    #expiry# < ?
+                  """;
+    
   /**
    *
    * @throws IOException if the resource accessor fails.
@@ -144,11 +182,19 @@ public class LoginDaoPersistenceImpl implements LoginDao {
         markUsed = markUsed.replaceAll("#SCHEMA#.", "");
         purgeLogins = purgeLogins.replaceAll("#SCHEMA#.", "");
         getData = getData.replaceAll("#SCHEMA#.", "");
+        storeToken = storeToken.replaceAll("#SCHEMA#.", "");
+        getToken = getToken.replaceAll("#SCHEMA#.", "");
+        deleteToken = deleteToken.replaceAll("#SCHEMA#.", "");
+        expireTokens = expireTokens.replaceAll("#SCHEMA#.", "");
       } else {
         recordLogin = recordLogin.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
         markUsed = markUsed.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
         purgeLogins = purgeLogins.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
         getData = getData.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
+        storeToken = storeToken.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
+        getToken = getToken.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
+        deleteToken = deleteToken.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
+        expireTokens = expireTokens.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
       }
 
       Credentials credentials = dataSourceConfig.getUser();
@@ -163,6 +209,10 @@ public class LoginDaoPersistenceImpl implements LoginDao {
         markUsed = markUsed.replaceAll("#", quote);
         purgeLogins = purgeLogins.replaceAll("#", quote);
         getData = getData.replaceAll("#", quote);
+        storeToken = storeToken.replaceAll("#", quote);
+        getToken = getToken.replaceAll("#", quote);
+        deleteToken = deleteToken.replaceAll("#", quote);
+        expireTokens = expireTokens.replaceAll("#", quote);
       }
       prepared.set(true);
     }
@@ -239,6 +289,45 @@ public class LoginDaoPersistenceImpl implements LoginDao {
         }
         return result;
       });
+  }
+
+  @Override
+  public Future<Void> storeToken(String id, LocalDateTime expiry, String token) {
+    return jdbcHelper.runSqlUpdate(storeToken, ps -> {
+                    int param = 1; 
+                    ps.setString(param++, id);
+                    ps.setTimestamp(param++, Timestamp.from(expiry.toInstant(ZoneOffset.UTC)));
+                    ps.setString(param++, token);
+    })
+            .mapEmpty();
+  }
+  
+  private record TimestampedToken(LocalDateTime expiry, String token){};
+
+  @Override
+  public Future<String> getToken(String id) {
+    return jdbcHelper.runSqlSelect(getToken, ps -> {
+        ps.setString(1, id);
+      }, rs -> {
+        while (rs.next()) {
+          return new TimestampedToken(rs.getTimestamp(1).toLocalDateTime(), rs.getString(2));
+        }
+        return null;
+      })
+      .compose(tt -> {
+        if (tt != null) {
+          LocalDateTime now = LocalDateTime.now();
+          if (now.isAfter(tt.expiry)) {
+            jdbcHelper.runSqlUpdate(deleteToken, ps -> ps.setString(1, id));
+            jdbcHelper.runSqlUpdate(expireTokens, ps -> ps.setTimestamp(1, Timestamp.from(now.toInstant(ZoneOffset.UTC))));
+            return Future.succeededFuture(null);
+          } else {
+            return Future.succeededFuture(tt.token);
+          }
+        }
+        return Future.succeededFuture(null);
+      });
+            
   }
   
 }

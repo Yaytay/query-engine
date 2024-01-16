@@ -153,10 +153,10 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
           try (Connection conn = dataSource.getConnection()) {
             try (Statement statement = conn.createStatement()) {
               statement.execute("""
-                                IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'test')
-                                BEGIN
-                                  CREATE DATABASE test;
-                                END
+                                if not exists (select * from sys.databases where name = 'test')
+                                begin
+                                  create database test;
+                                end
                                 """);
               logger.info("Created test database");
             }

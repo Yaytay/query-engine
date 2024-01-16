@@ -32,6 +32,7 @@ public class SessionConfig {
   private int stateLength = 120;
   private int codeVerifierLength = 120;
   private int nonceLength = 120;
+  private String sessionCookieName = "qe-session";
   
   private Map<String, AuthEndpoint> oauth;
 
@@ -92,4 +93,13 @@ public class SessionConfig {
   public void setOauth(Map<String, AuthEndpoint> oauth) {
     this.oauth = oauth;
   }  
+
+  public String getSessionCookieName() {
+    return sessionCookieName;
+  }
+
+  public void setSessionCookieName(String sessionCookieName) {
+    this.sessionCookieName = sessionCookieName;
+  }
+  
 }

@@ -400,7 +400,7 @@ public class Main extends Application {
     
     RequestContextBuilder rcb;
     try {
-      rcb = createRequestContextBuilder(params);
+      rcb = createRequestContextBuilder(params, loginDao);
     } catch (Throwable ex) {
       logger.error("Failed to create request context builder: ", ex);
       return Future.succeededFuture(-2);
@@ -444,7 +444,7 @@ public class Main extends Application {
     router.getWithRegex("/openapi\\..*").blockingHandler(openApiHandler);
     router.get("/openapi").handler(openApiHandler.getUiHandler());
     if (params.getSession() != null && params.getSession().getOauth() != null && !params.getSession().getOauth().isEmpty()) {
-      LoginRouter loginRouter = LoginRouter.create(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, params.getSession(), outputAllErrorMessages());
+      LoginRouter loginRouter = LoginRouter.create(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, params.getSession(), params.getJwt().getRequiredAudiences(), outputAllErrorMessages());
       router.get("/login").handler(loginRouter);
       router.get("/login/return").handler(loginRouter);
     }
@@ -603,7 +603,7 @@ public class Main extends Application {
   }
   
 
-  protected RequestContextBuilder createRequestContextBuilder(Parameters params) {    
+  protected RequestContextBuilder createRequestContextBuilder(Parameters params, LoginDao loginDao) {    
     JwtValidationConfig jwtConfig = params.getJwt();
     IssuerAcceptabilityHandler iah = IssuerAcceptabilityHandler.create(jwtConfig.getAcceptableIssuerRegexes()
                     , jwtConfig.getAcceptableIssuersFile()
@@ -623,10 +623,12 @@ public class Main extends Application {
     RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx)
             , jwtValidator
             , openIdDiscoveryHandler
+            , loginDao
             , params.getOpenIdIntrospectionHeaderName()
             , jwtConfig.getJwksEndpoints() == null || jwtConfig.getJwksEndpoints().isEmpty()
             , jwtConfig.getIssuerHostPath()
             , jwtConfig.getRequiredAudiences()
+            , params.getSession().getSessionCookieName()
     );
     return rcb;
   }

@@ -4,7 +4,10 @@ databaseChangeLog:
      relativeToChangelogFile: true
      file: schema-1_0_0_BaseTables.yaml
 
-
   - include:
      relativeToChangelogFile: true
      file: schema-2_0_0_LoginTables.yaml
+
+  - include:
+     relativeToChangelogFile: true
+     file: schema-3_0_0_SessionTable.yaml

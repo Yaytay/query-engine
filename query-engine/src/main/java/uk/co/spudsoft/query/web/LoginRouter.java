@@ -17,11 +17,13 @@
 package uk.co.spudsoft.query.web;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.Cookie;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
@@ -30,9 +32,11 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.WebClient;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +44,7 @@ import uk.co.spudsoft.jwtvalidatorvertx.JwtValidator;
 import uk.co.spudsoft.jwtvalidatorvertx.OpenIdDiscoveryHandler;
 import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 import uk.co.spudsoft.query.main.AuthEndpoint;
+import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 import uk.co.spudsoft.query.main.SessionConfig;
 import uk.co.spudsoft.query.web.LoginDao.RequestData;
 
@@ -53,6 +58,8 @@ public class LoginRouter  implements Handler<RoutingContext> {
 
   private static final Base64.Encoder RAW_BASE64_URLENCODER = Base64.getUrlEncoder().withoutPadding();
   
+  protected static final SecureRandom RANDOM = new SecureRandom();
+  
   private final Vertx vertx;
   private final WebClient webClient;
   private final LoginDao loginDao;
@@ -63,20 +70,28 @@ public class LoginRouter  implements Handler<RoutingContext> {
   private final int nonceLength;
   private final Map<String, AuthEndpoint>  authEndpoints;
   private final boolean outputAllErrorMessages;
+  private final ImmutableList<String> requiredAuds;
 
   public static LoginRouter create(Vertx vertx
           , LoginDao loginDao
           , OpenIdDiscoveryHandler openIdDiscoveryHandler
           , JwtValidator jwtValidator
           , SessionConfig sessionConfig
+          , List<String> requiredAuds
           , boolean outputAllErrorMessages
   ) {
-    return new LoginRouter(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, sessionConfig, outputAllErrorMessages);
+    return new LoginRouter(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, sessionConfig, requiredAuds, outputAllErrorMessages);
   }
   
   private static class RequestDataAndAuthEndpoint {
     private AuthEndpoint authEndpoint;
     private RequestData requestData;
+  }
+  
+  static final String createRandomSessionId() {
+    byte[] bytes = new byte[64];
+    RANDOM.nextBytes(bytes);
+    return RAW_BASE64_URLENCODER.encodeToString(bytes);
   }
 
   public LoginRouter(Vertx vertx
@@ -84,6 +99,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
           , OpenIdDiscoveryHandler openIdDiscoveryHandler
           , JwtValidator jwtValidator
           , SessionConfig sessionConfig
+          , List<String> requiredAuds
           , boolean outputAllErrorMessages
   ) {
     this.vertx = vertx;
@@ -101,6 +117,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
         this.authEndpoints.put(e.getKey(), new AuthEndpoint(e.getValue()));
       });    
     }
+    this.requiredAuds = ImmutableCollectionTools.copy(requiredAuds);
     this.outputAllErrorMessages = outputAllErrorMessages;
   }
 
@@ -145,6 +162,40 @@ public class LoginRouter  implements Handler<RoutingContext> {
     }
     return scheme + "://" + host + port + "/login/return";
   }
+
+  /**
+   * Return the domain used to make this request.
+   * 
+   * The X-Forwarded-Host header is used, if present.
+   * Any components of the URL not found in headers is taken from the request.
+   * 
+   * @param request The request.
+   * @return The domain that the client used to make the request.
+   */
+  static String domain(HttpServerRequest request) {
+    String host = request.getHeader("X-Forwarded-Host");
+    if (Strings.isNullOrEmpty(host)) {
+      host = request.authority().host();
+    }
+    return host;
+  }
+  
+  /**
+   * Return whether the client made the request using TLS.
+   * 
+   * The X-Forwarded-Proto header is used, if present.
+   * Any components of the URL not found in headers is taken from the request.
+   * 
+   * @param request The request.
+   * @return true if client made the request using TLS.
+   */
+  static boolean wasTls(HttpServerRequest request) {
+    String proto = request.getHeader("X-Forwarded-Proto");
+    if (Strings.isNullOrEmpty(proto)) {
+      return "https".equals(proto);
+    }
+    return request.isSSL();
+  }
   
   static String createCodeChallenge(String codeVerifier) {
     byte[] hash = Hashing.sha256().hashString(codeVerifier, StandardCharsets.US_ASCII).asBytes();
@@ -175,6 +226,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
     }
     RequestDataAndAuthEndpoint requestDataAndAuthEndpoint = new RequestDataAndAuthEndpoint();
     logger.debug("State: {}", state);
+    String[] accessTokenPtr = new String[1];
     loginDao.getRequestData(state)
             .compose(requestData -> {
               requestDataAndAuthEndpoint.requestData = requestData;
@@ -221,25 +273,42 @@ public class LoginRouter  implements Handler<RoutingContext> {
                   return Future.failedFuture(new IllegalStateException("Failed to get access token from provider"));
                 }
                 logger.debug("Access token response: {}", body);
-                String accessToken = body.getString("access_token");
-                if (Strings.isNullOrEmpty(accessToken)) {
+                accessTokenPtr[0] = body.getString("access_token");
+                if (Strings.isNullOrEmpty(accessTokenPtr[0])) {
                   String stringBody = codeResponse.bodyAsString();
                   logger.warn("Failed to get access token ({}): {}", codeResponse.statusCode(), stringBody);
                   return Future.failedFuture(new IllegalStateException("Failed to get access token from provider"));
                 }
                 
-                String targetUrl = requestDataAndAuthEndpoint.requestData.targetUrl();
-                targetUrl = targetUrl
-                        + (targetUrl.contains("?") ? "&" : "?")
-                        + "access_token=" + accessToken
-                        ;
-                
-                event.response()
-                        .putHeader("Location", targetUrl)
-                        .setStatusCode(307)
-                        .end();
+                return jwtValidator.validateToken(requestDataAndAuthEndpoint.authEndpoint.getIssuer()
+                        , accessTokenPtr[0]
+                        , requiredAuds
+                        , outputAllErrorMessages
+                );
               }
-              return Future.succeededFuture();
+            })
+            .compose(jwt -> {
+              String targetUrlBase = requestDataAndAuthEndpoint.requestData.targetUrl();
+              String targetUrl = targetUrlBase
+                      + (targetUrlBase.contains("?") ? "&" : "?")
+                      + "access_token=" + accessTokenPtr[0]
+                      ;
+
+              String id = createRandomSessionId();                
+              Cookie cookie = Cookie.cookie("qe-session", id);
+              cookie.setHttpOnly(wasTls(event.request()));
+              cookie.setSecure(outputAllErrorMessages);
+              cookie.setDomain(domain(event.request()));
+              cookie.setMaxAge(jwt.getExpiration() - (System.currentTimeMillis() / 1000));
+              
+              return loginDao.storeToken(id, jwt.getExpirationLocalDateTime(), accessTokenPtr[0])
+                      .compose(v -> {
+                        return event.response()
+                                .addCookie(cookie)
+                                .putHeader("Location", targetUrl)
+                                .setStatusCode(307)
+                                .end();
+                      });
             })
             .onFailure(ex -> {
               QueryRouter.internalError(ex, event, outputAllErrorMessages);

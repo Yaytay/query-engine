@@ -20,6 +20,7 @@ import io.netty.handler.codec.http.QueryStringDecoder;
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpServerRequest;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
@@ -30,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import uk.co.spudsoft.query.web.LoginDaoMemoryImpl;
 
 /**
  *
@@ -70,7 +72,7 @@ public class ConditionInstanceTest {
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
     
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"));
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
     
     assertFalse(new ConditionInstance("req").evaluate(ctx));

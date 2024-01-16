@@ -59,9 +59,9 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
  *
  * @author njt
  */
-public class LoginRouterWithDiscoveryIT {
+public class LoginRouterWithDiscoveryWithoutPersistenceIT {
   
-  private static final Logger logger = LoggerFactory.getLogger(LoginRouterWithDiscoveryIT.class);
+  private static final Logger logger = LoggerFactory.getLogger(LoginRouterWithDiscoveryWithoutPersistenceIT.class);
   
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
   
@@ -143,18 +143,15 @@ public class LoginRouterWithDiscoveryIT {
             sendResponse(exchange, 404, "Not found");
         }
       }
-    });    
+    });
+    logger.info("Creating auth server at http://localhost:{}/", port);
     server.start();
     
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-      "--persistence.datasource.url=" + postgres.getJdbcUrl()
-      , "--persistence.datasource.adminUser.username=" + postgres.getUser()
-      , "--persistence.datasource.adminUser.password=" + postgres.getPassword()
-      , "--persistence.datasource.schema=public" 
-      , "--baseConfigPath=target/query-engine/samples-loginrouterwithdiscoveryit"
+      "--baseConfigPath=target/query-engine/samples-loginrouterwithdiscoverywithoutpersistenceit"
       , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"

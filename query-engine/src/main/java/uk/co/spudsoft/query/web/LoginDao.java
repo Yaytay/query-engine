@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.web;
 
 import io.vertx.core.Future;
+import java.time.LocalDateTime;
 
 /**
  *
@@ -33,5 +34,9 @@ public interface LoginDao {
   record RequestData(String provider, String codeVerifier, String nonce, String redirectUri, String targetUrl) {};
   
   Future<RequestData> getRequestData(String state);
-  
+ 
+  Future<Void> storeToken(String id, LocalDateTime expiry, String token);
+
+  Future<String> getToken(String id);
+
 }

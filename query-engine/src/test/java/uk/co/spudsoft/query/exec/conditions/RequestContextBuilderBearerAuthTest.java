@@ -50,6 +50,7 @@ import uk.co.spudsoft.jwtvalidatorvertx.JwtValidator;
 import uk.co.spudsoft.jwtvalidatorvertx.OpenIdDiscoveryHandler;
 import uk.co.spudsoft.jwtvalidatorvertx.impl.JWKSOpenIdDiscoveryHandlerImpl;
 import uk.co.spudsoft.jwtvalidatorvertx.jdk.JdkTokenBuilder;
+import uk.co.spudsoft.query.web.LoginDaoMemoryImpl;
 
 /**
  *
@@ -81,7 +82,7 @@ public class RequestContextBuilderBearerAuthTest {
 
   @Test
   public void testBuildRequestContext(Vertx vertx, VertxTestContext testContext) throws Exception {
-    RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx), validator, discoverer, null, true, null, Collections.singletonList("aud"));
+    RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx), validator, discoverer, new LoginDaoMemoryImpl(Duration.ZERO), null, true, null, Collections.singletonList("aud"), null);
           
     destServer = vertx.createHttpServer();    
     Router router = Router.router(vertx);
