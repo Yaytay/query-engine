@@ -236,8 +236,8 @@ public class LoginRouter  implements Handler<RoutingContext> {
       Future.all(futures)
               .onComplete(ar -> {
                 Cookie cookie = Cookie.cookie(sessionCookieName, "");
-                cookie.setHttpOnly(wasTls(event.request()));
-                cookie.setSecure(outputAllErrorMessages);
+                cookie.setHttpOnly(true);
+                cookie.setSecure(wasTls(event.request()));
                 cookie.setDomain(domain(event.request()));
                 cookie.setMaxAge(0);
 
@@ -333,8 +333,8 @@ public class LoginRouter  implements Handler<RoutingContext> {
 
               String id = createRandomSessionId();                
               Cookie cookie = Cookie.cookie(sessionCookieName, id);
-              cookie.setHttpOnly(wasTls(event.request()));
-              cookie.setSecure(outputAllErrorMessages);
+              cookie.setHttpOnly(true);
+              cookie.setSecure(wasTls(event.request()));
               cookie.setDomain(domain(event.request()));
               cookie.setMaxAge(jwt.getExpiration() - (System.currentTimeMillis() / 1000));
               

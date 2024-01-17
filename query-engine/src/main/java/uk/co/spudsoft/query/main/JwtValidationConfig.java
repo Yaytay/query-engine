@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.main;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -100,7 +101,7 @@ public class JwtValidationConfig {
    * The set of audience values, any one of which must be included in any token for the query engine to accept it.
    * The token validation requires a non-empty intersection of the required audiences with the provided audiences.
    */
-  private List<String> requiredAudiences = Arrays.asList("query-engine");
+  private List<String> requiredAudiences = new ArrayList<>(Arrays.asList("query-engine"));
   
   /**
    * The default period to cache JWKS data for.
