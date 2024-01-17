@@ -41,6 +41,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -292,6 +294,8 @@ public class LoginRouterWithDiscoveryIT {
             .extract().cookies()
             ;
     logger.debug("Cookies: {}", cookies);
+    assertTrue(cookies.containsKey("qe-session"));
+    assertThat(cookies.get("qe-session").length(), greaterThan(64));
     
     body = given()
             .queryParam("key", postgres.getName())
@@ -314,6 +318,21 @@ public class LoginRouterWithDiscoveryIT {
             .statusCode(200)
             .extract().body().asString();
     logger.debug("History: {}", body);
+
+    cookies = given()
+            .cookies(cookies)
+            .redirects().follow(false)
+            .log().all()
+            .get("/login/logout")
+            .then()
+            .log().all()
+            .statusCode(307)
+            .header("Location", equalTo("/"))
+            .extract().cookies()
+            ;
+    logger.debug("Cookies: {}", cookies);
+    assertTrue(cookies.containsKey("qe-session"));
+    assertThat(cookies.get("qe-session").length(), equalTo(0));    
     
     server.stop(0);
     main.shutdown();

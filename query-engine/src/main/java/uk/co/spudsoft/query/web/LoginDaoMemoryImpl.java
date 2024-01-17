@@ -164,4 +164,12 @@ public class LoginDaoMemoryImpl implements LoginDao {
       return Future.succeededFuture(token == null ? null : token.token);
     }
   }
+
+  @Override
+  public Future<Void> removeToken(String id) {
+    synchronized (tokens) {
+      tokens.remove(id);
+      return Future.succeededFuture(null);
+    }
+  }
 }

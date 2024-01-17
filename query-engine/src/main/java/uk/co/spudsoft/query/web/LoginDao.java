@@ -39,4 +39,6 @@ public interface LoginDao {
 
   Future<String> getToken(String id);
 
+  Future<Void> removeToken(String id);
+
 }

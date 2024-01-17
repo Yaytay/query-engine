@@ -444,9 +444,10 @@ public class Main extends Application {
     router.getWithRegex("/openapi\\..*").blockingHandler(openApiHandler);
     router.get("/openapi").handler(openApiHandler.getUiHandler());
     if (params.getSession() != null && params.getSession().getOauth() != null && !params.getSession().getOauth().isEmpty()) {
-      LoginRouter loginRouter = LoginRouter.create(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, params.getSession(), params.getJwt().getRequiredAudiences(), outputAllErrorMessages());
+      LoginRouter loginRouter = LoginRouter.create(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, params.getSession(), params.getJwt().getRequiredAudiences(), outputAllErrorMessages(), params.getSession().getSessionCookieName());
       router.get("/login").handler(loginRouter);
       router.get("/login/return").handler(loginRouter);
+      router.get("/login/logout").handler(loginRouter);
     }
     router.route("/").handler(rc -> {
       rc.response().setStatusCode(307);

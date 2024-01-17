@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.web;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
@@ -34,10 +35,12 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.jwtvalidatorvertx.JwtValidator;
@@ -71,6 +74,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
   private final Map<String, AuthEndpoint>  authEndpoints;
   private final boolean outputAllErrorMessages;
   private final ImmutableList<String> requiredAuds;
+  private final String sessionCookieName;
 
   public static LoginRouter create(Vertx vertx
           , LoginDao loginDao
@@ -79,8 +83,9 @@ public class LoginRouter  implements Handler<RoutingContext> {
           , SessionConfig sessionConfig
           , List<String> requiredAuds
           , boolean outputAllErrorMessages
+          , String sessionCookie
   ) {
-    return new LoginRouter(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, sessionConfig, requiredAuds, outputAllErrorMessages);
+    return new LoginRouter(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, sessionConfig, requiredAuds, outputAllErrorMessages, sessionCookie);
   }
   
   private static class RequestDataAndAuthEndpoint {
@@ -94,6 +99,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
     return RAW_BASE64_URLENCODER.encodeToString(bytes);
   }
 
+  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public LoginRouter(Vertx vertx
           , LoginDao loginDao
           , OpenIdDiscoveryHandler openIdDiscoveryHandler
@@ -101,6 +107,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
           , SessionConfig sessionConfig
           , List<String> requiredAuds
           , boolean outputAllErrorMessages
+          , String sessionCookie
   ) {
     this.vertx = vertx;
     this.webClient = WebClient.create(vertx);
@@ -119,6 +126,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
     }
     this.requiredAuds = ImmutableCollectionTools.copy(requiredAuds);
     this.outputAllErrorMessages = outputAllErrorMessages;
+    this.sessionCookieName = sessionCookie;
   }
 
   /**
@@ -208,8 +216,37 @@ public class LoginRouter  implements Handler<RoutingContext> {
       handleLoginRequest(event);
     } else if (event.request().path().endsWith("/login/return")) {
       handleLoginResponse(event);
+    } else if (event.request().path().endsWith("/login/logout")) {
+      handleLogout(event);
     } else {
       event.next();
+    }
+  }
+
+  void handleLogout(RoutingContext event) {
+  
+    if (!Strings.isNullOrEmpty(sessionCookieName)) {
+      
+      Set<Cookie> cookies = event.request().cookies(sessionCookieName);
+      List<Future<Void>> futures = new ArrayList<>();
+      for (Cookie cookie : cookies) {
+        futures.add(loginDao.removeToken(cookie.getValue()));
+      }
+      
+      Future.all(futures)
+              .onComplete(ar -> {
+                Cookie cookie = Cookie.cookie(sessionCookieName, "");
+                cookie.setHttpOnly(wasTls(event.request()));
+                cookie.setSecure(outputAllErrorMessages);
+                cookie.setDomain(domain(event.request()));
+                cookie.setMaxAge(0);
+
+                event.response()
+                        .addCookie(cookie)
+                        .putHeader("Location", "/")
+                        .setStatusCode(307)
+                        .end();
+              });
     }
   }
 
@@ -295,7 +332,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
                       ;
 
               String id = createRandomSessionId();                
-              Cookie cookie = Cookie.cookie("qe-session", id);
+              Cookie cookie = Cookie.cookie(sessionCookieName, id);
               cookie.setHttpOnly(wasTls(event.request()));
               cookie.setSecure(outputAllErrorMessages);
               cookie.setDomain(domain(event.request()));

@@ -329,5 +329,10 @@ public class LoginDaoPersistenceImpl implements LoginDao {
       });
             
   }
-  
+
+  @Override
+  public Future<Void> removeToken(String id) {
+    return jdbcHelper.runSqlUpdate(deleteToken, ps -> ps.setString(1, id)).mapEmpty();    
+ }
+
 }
