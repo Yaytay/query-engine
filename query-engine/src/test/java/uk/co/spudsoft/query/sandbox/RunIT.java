@@ -73,6 +73,8 @@ public class RunIT {
             , "--jwt.acceptableIssuerRegexes[0]=.*"
             , "--jwt.defaultJwksCacheDuration=PT1M"
             , "--jwt.jwksEndpoints[0]=" + System.getProperty("queryEngineEntraUrl").replace("v2.0", "discovery/v2.0/keys")
+            , "--jwt.requiredAudiences[0]=query-engine"
+            , "--jwt.requiredAudiences[1]=" + System.getProperty("queryEngineEntraId")
             , "--logging.jsonFormat=false"
       //      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.pipeline=TRACE"
       //      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec\\\\.procs\\\\.query=TRACE"

@@ -35,7 +35,7 @@ import org.mockito.ArgumentCaptor;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import uk.co.spudsoft.query.exec.NullAuditor;
+import uk.co.spudsoft.query.exec.AuditorMemoryImpl;
 import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 
 /**
@@ -50,7 +50,7 @@ public class QueryRouterTest {
     
     PipelineDefnLoader loader = mock(PipelineDefnLoader.class);
     RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, null, null, false, null, Collections.singletonList("aud"), null);
-    QueryRouter router = new QueryRouter(vertx, new NullAuditor(), rcb, loader, null, true);
+    QueryRouter router = new QueryRouter(vertx, new AuditorMemoryImpl(), rcb, loader, null, true);
     
     RoutingContext routingContext = mock(RoutingContext.class);
     HttpServerRequest request = mock(HttpServerRequest.class);
@@ -67,7 +67,7 @@ public class QueryRouterTest {
     
     PipelineDefnLoader loader = mock(PipelineDefnLoader.class);
     RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, null, null, false, null, Collections.singletonList("aud"), null);
-    QueryRouter router = new QueryRouter(vertx, new NullAuditor(), rcb, loader, null, true);
+    QueryRouter router = new QueryRouter(vertx, new AuditorMemoryImpl(), rcb, loader, null, true);
     
     RoutingContext routingContext = mock(RoutingContext.class);
     HttpServerRequest request = mock(HttpServerRequest.class);

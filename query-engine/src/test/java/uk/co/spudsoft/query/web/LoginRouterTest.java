@@ -16,6 +16,8 @@
  */
 package uk.co.spudsoft.query.web;
 
+import io.vertx.core.http.Cookie;
+import io.vertx.core.http.CookieSameSite;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.net.HostAndPort;
 import java.time.LocalDateTime;
@@ -26,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import uk.co.spudsoft.query.main.AuthEndpoint;
+import uk.co.spudsoft.query.main.CookieConfig;
 
 /**
  *
@@ -76,6 +79,81 @@ public class LoginRouterTest {
 
   @Test
   public void testHandle() {
+  }
+  
+  @Test
+  public void testCreateCookie() {
+    CookieConfig nameOnly = new CookieConfig("fred");
+    Cookie cookie = LoginRouter.createCookie(nameOnly, 10, true, "domain", "value");
+    assertEquals("fred", cookie.getName());
+    assertEquals("/", cookie.getPath());
+    assertEquals(10L, cookie.getMaxAge());
+    assertEquals(false, cookie.isHttpOnly());
+    assertEquals(true, cookie.isSecure());
+    assertEquals("domain", cookie.getDomain());
+    assertEquals(null, cookie.getSameSite());
+    assertEquals("value", cookie.getValue());
+    
+    CookieConfig path = new CookieConfig("fred");
+    path.setPath("/bob");
+    cookie = LoginRouter.createCookie(path, 11, false, "domain", "value");
+    assertEquals("fred", cookie.getName());
+    assertEquals("/bob", cookie.getPath());
+    assertEquals(11L, cookie.getMaxAge());
+    assertEquals(false, cookie.isHttpOnly());
+    assertEquals(false, cookie.isSecure());
+    assertEquals("domain", cookie.getDomain());
+    assertEquals(null, cookie.getSameSite());
+    assertEquals("value", cookie.getValue());
+    
+    CookieConfig secure = new CookieConfig("fred");
+    secure.setSecure(Boolean.FALSE);
+    cookie = LoginRouter.createCookie(secure, 10, true, "domain", "value");
+    assertEquals("fred", cookie.getName());
+    assertEquals("/", cookie.getPath());
+    assertEquals(10L, cookie.getMaxAge());
+    assertEquals(false, cookie.isHttpOnly());
+    assertEquals(false, cookie.isSecure());
+    assertEquals("domain", cookie.getDomain());
+    assertEquals(null, cookie.getSameSite());
+    assertEquals("value", cookie.getValue());
+    
+    CookieConfig http = new CookieConfig("fred");
+    http.setHttpOnly(Boolean.TRUE);
+    cookie = LoginRouter.createCookie(http, 10, true, "domain", "value");
+    assertEquals("fred", cookie.getName());
+    assertEquals("/", cookie.getPath());
+    assertEquals(10L, cookie.getMaxAge());
+    assertEquals(true, cookie.isHttpOnly());
+    assertEquals(true, cookie.isSecure());
+    assertEquals("domain", cookie.getDomain());
+    assertEquals(null, cookie.getSameSite());
+    assertEquals("value", cookie.getValue());
+    
+    CookieConfig domain = new CookieConfig("fred");
+    domain.setDomain("other");
+    cookie = LoginRouter.createCookie(domain, 10, true, "domain", "value");
+    assertEquals("fred", cookie.getName());
+    assertEquals("/", cookie.getPath());
+    assertEquals(10L, cookie.getMaxAge());
+    assertEquals(false, cookie.isHttpOnly());
+    assertEquals(true, cookie.isSecure());
+    assertEquals("other", cookie.getDomain());
+    assertEquals(null, cookie.getSameSite());
+    assertEquals("value", cookie.getValue());
+    
+    CookieConfig site = new CookieConfig("fred");
+    site.setSameSite(CookieSameSite.STRICT);
+    cookie = LoginRouter.createCookie(site, 10, true, "domain", "value");
+    assertEquals("fred", cookie.getName());
+    assertEquals("/", cookie.getPath());
+    assertEquals(10L, cookie.getMaxAge());
+    assertEquals(false, cookie.isHttpOnly());
+    assertEquals(true, cookie.isSecure());
+    assertEquals("domain", cookie.getDomain());
+    assertEquals(CookieSameSite.STRICT, cookie.getSameSite());
+    assertEquals("value", cookie.getValue());
+    
   }
   
 }

@@ -49,7 +49,7 @@ public class AuditorTest {
   public void testBadDriver() {
     String url = "jdbc:nonexistant:wibble";
     logger.info("Bad driver: {}", url);
-    AuditorImpl auditor = new AuditorImpl(
+    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(
             null,
             null,
             new Persistence()
@@ -72,7 +72,7 @@ public class AuditorTest {
   public void testNoDatasource() {
     String url = null;
     logger.info("No datasource: {}", url);
-    AuditorImpl auditor = new AuditorImpl(
+    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(
             null,
             null,
             new Persistence()
@@ -94,7 +94,7 @@ public class AuditorTest {
   public void testBadUrl() {
     String url = "jdbc:postgresql://wibble/db";
     logger.info("Bad URL: {}", url);
-    AuditorImpl auditor = new AuditorImpl(
+    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(
             null,
             null,
             new Persistence()
@@ -118,7 +118,7 @@ public class AuditorTest {
   public void testNoRetries() {
     String url = "jdbc:postgresql://wibble/db";
     logger.info("Bad URL: {}", url);
-    AuditorImpl auditor = new AuditorImpl(
+    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(
             null,
             null,
             new Persistence()
@@ -138,15 +138,15 @@ public class AuditorTest {
   
   @Test
   public void testLocalUser() {
-    assertNull(AuditorImpl.localizeUsername(null));
-    assertEquals("Bob", AuditorImpl.localizeUsername("Bob"));
-    assertEquals("Bob", AuditorImpl.localizeUsername("Bob@somewhere"));
+    assertNull(Auditor.localizeUsername(null));
+    assertEquals("Bob", Auditor.localizeUsername("Bob"));
+    assertEquals("Bob", Auditor.localizeUsername("Bob@somewhere"));
   }
   
   @Test
   public void testListToJson() {
-    assertNull(AuditorImpl.listToJson(null));
-    JsonArray ja = AuditorImpl.listToJson(Arrays.asList("one", "two"));
+    assertNull(Auditor.listToJson(null));
+    JsonArray ja = Auditor.listToJson(Arrays.asList("one", "two"));
     assertEquals(2, ja.size());
     assertEquals("one", ja.getValue(0));
     assertEquals("two", ja.getValue(1));
@@ -154,14 +154,14 @@ public class AuditorTest {
   
   @Test
   public void testMultimapToJson() {
-    assertNull(AuditorImpl.multiMapToJson(null));
+    assertNull(AuditorPersistenceImpl.multiMapToJson(null));
     MultiMap map= new HeadersMultiMap()
             .add("one", "first")
             .add("two", "second")
             .add("two", "third")
             .add(HttpHeaders.AUTHORIZATION.toString(), "Bearer a.b.c")
             ;
-    JsonObject jo = AuditorImpl.multiMapToJson(map);
+    JsonObject jo = AuditorPersistenceImpl.multiMapToJson(map);
     assertEquals(3, jo.size());
     assertEquals("first", jo.getValue("one"));
     assertEquals(new JsonArray().add("second").add("third"), jo.getValue("two"));
@@ -172,11 +172,11 @@ public class AuditorTest {
   public void testProtectAuth() {
     Base64.Encoder encoder = Base64.getUrlEncoder();
     
-    assertEquals("bob", AuditorImpl.protectAuthHeader("bob"));
-    assertEquals("Basic YQ==", AuditorImpl.protectAuthHeader("Basic " + new String(encoder.encode("a:b".getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8)));
-    assertEquals("Basic YQ==", AuditorImpl.protectAuthHeader("Basic " + new String(encoder.encode("a".getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8)));
-    assertEquals("Basic ", AuditorImpl.protectAuthHeader("Basic "));
-    assertEquals("Bearer a.b", AuditorImpl.protectAuthHeader("Bearer a.b.c"));
+    assertEquals("bob", AuditorPersistenceImpl.protectAuthHeader("bob"));
+    assertEquals("Basic YQ==", AuditorPersistenceImpl.protectAuthHeader("Basic " + new String(encoder.encode("a:b".getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8)));
+    assertEquals("Basic YQ==", AuditorPersistenceImpl.protectAuthHeader("Basic " + new String(encoder.encode("a".getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8)));
+    assertEquals("Basic ", AuditorPersistenceImpl.protectAuthHeader("Basic "));
+    assertEquals("Bearer a.b", AuditorPersistenceImpl.protectAuthHeader("Bearer a.b.c"));
   }
   
 }

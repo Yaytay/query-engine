@@ -47,6 +47,7 @@ import uk.co.spudsoft.jwtvalidatorvertx.JwtValidator;
 import uk.co.spudsoft.jwtvalidatorvertx.OpenIdDiscoveryHandler;
 import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 import uk.co.spudsoft.query.main.AuthEndpoint;
+import uk.co.spudsoft.query.main.CookieConfig;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 import uk.co.spudsoft.query.main.SessionConfig;
 import uk.co.spudsoft.query.web.LoginDao.RequestData;
@@ -74,7 +75,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
   private final Map<String, AuthEndpoint>  authEndpoints;
   private final boolean outputAllErrorMessages;
   private final ImmutableList<String> requiredAuds;
-  private final String sessionCookieName;
+  private final CookieConfig sessionCookie;
 
   public static LoginRouter create(Vertx vertx
           , LoginDao loginDao
@@ -83,7 +84,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
           , SessionConfig sessionConfig
           , List<String> requiredAuds
           , boolean outputAllErrorMessages
-          , String sessionCookie
+          , CookieConfig sessionCookie
   ) {
     return new LoginRouter(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, sessionConfig, requiredAuds, outputAllErrorMessages, sessionCookie);
   }
@@ -107,7 +108,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
           , SessionConfig sessionConfig
           , List<String> requiredAuds
           , boolean outputAllErrorMessages
-          , String sessionCookie
+          , CookieConfig sessionCookie
   ) {
     this.vertx = vertx;
     this.webClient = WebClient.create(vertx);
@@ -126,7 +127,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
     }
     this.requiredAuds = ImmutableCollectionTools.copy(requiredAuds);
     this.outputAllErrorMessages = outputAllErrorMessages;
-    this.sessionCookieName = sessionCookie;
+    this.sessionCookie = sessionCookie;
   }
 
   /**
@@ -225,9 +226,9 @@ public class LoginRouter  implements Handler<RoutingContext> {
 
   void handleLogout(RoutingContext event) {
   
-    if (!Strings.isNullOrEmpty(sessionCookieName)) {
+    if (sessionCookie != null && !Strings.isNullOrEmpty(sessionCookie.getName())) {
       
-      Set<Cookie> cookies = event.request().cookies(sessionCookieName);
+      Set<Cookie> cookies = event.request().cookies(sessionCookie.getName());
       List<Future<Void>> futures = new ArrayList<>();
       for (Cookie cookie : cookies) {
         futures.add(loginDao.removeToken(cookie.getValue()));
@@ -235,11 +236,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
       
       Future.all(futures)
               .onComplete(ar -> {
-                Cookie cookie = Cookie.cookie(sessionCookieName, "");
-                cookie.setHttpOnly(true);
-                cookie.setSecure(wasTls(event.request()));
-                cookie.setDomain(domain(event.request()));
-                cookie.setMaxAge(0);
+                Cookie cookie = createCookie(sessionCookie, 0, wasTls(event.request()), domain(event.request()), "");
 
                 event.response()
                         .addCookie(cookie)
@@ -331,12 +328,9 @@ public class LoginRouter  implements Handler<RoutingContext> {
                       + "access_token=" + accessTokenPtr[0]
                       ;
 
-              String id = createRandomSessionId();                
-              Cookie cookie = Cookie.cookie(sessionCookieName, id);
-              cookie.setHttpOnly(true);
-              cookie.setSecure(wasTls(event.request()));
-              cookie.setDomain(domain(event.request()));
-              cookie.setMaxAge(jwt.getExpiration() - (System.currentTimeMillis() / 1000));
+              String id = createRandomSessionId();          
+              long maxAge = jwt.getExpiration() - (System.currentTimeMillis() / 1000);
+              Cookie cookie = createCookie(sessionCookie, maxAge, wasTls(event.request()), domain(event.request()), id);
               
               return loginDao.storeToken(id, jwt.getExpirationLocalDateTime(), accessTokenPtr[0])
                       .compose(v -> {
@@ -352,6 +346,19 @@ public class LoginRouter  implements Handler<RoutingContext> {
             })
             ;
     return false;
+  }
+
+  static Cookie createCookie(CookieConfig config, long maxAge, boolean wasTls, String domain, String value) {
+    Cookie cookie = Cookie.cookie(config.getName(), value);
+    cookie.setHttpOnly(config.isHttpOnly() != null ? config.isHttpOnly() : false);
+    cookie.setSecure(config.isSecure() != null ? config.isSecure() : wasTls);
+    cookie.setDomain(config.getDomain() != null ? config.getDomain() : domain);
+    cookie.setPath(config.getPath() != null ? config.getPath() : "/");
+    if (config.getSameSite() != null) {
+      cookie.setSameSite(config.getSameSite());
+    }
+    cookie.setMaxAge(maxAge);
+    return cookie;
   }
 
   boolean handleLoginRequest(RoutingContext event) {

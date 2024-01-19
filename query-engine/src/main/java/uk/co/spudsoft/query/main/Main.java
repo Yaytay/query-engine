@@ -88,7 +88,9 @@ import uk.co.spudsoft.mgmt.ManagementRoute;
 import uk.co.spudsoft.params4j.ConfigurationProperty;
 import uk.co.spudsoft.params4j.FileType;
 import uk.co.spudsoft.params4j.Params4J;
-import uk.co.spudsoft.query.exec.AuditorImpl;
+import uk.co.spudsoft.query.exec.Auditor;
+import uk.co.spudsoft.query.exec.AuditorMemoryImpl;
+import uk.co.spudsoft.query.exec.AuditorPersistenceImpl;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineExecutorImpl;
 import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
@@ -136,7 +138,7 @@ public class Main extends Application {
   
   private DirCache dirCache;
   private PipelineDefnLoader defnLoader;
-  private AuditorImpl auditor;
+  private Auditor auditor;
   
   private HealthCheckHandler healthCheckHandler;
   private HealthCheckHandler upCheckHandler;
@@ -330,7 +332,16 @@ public class Main extends Application {
     vertx = Vertx.vertx(vertxOptions);
     meterRegistry = (PrometheusMeterRegistry) BackendRegistries.getDefaultNow();
     
-    auditor = new AuditorImpl(vertx, meterRegistry, params.getPersistence());
+    LoginDao loginDao;
+    if (params.getPersistence().getDataSource() != null 
+            && !Strings.isNullOrEmpty(params.getPersistence().getDataSource().getUrl())) {
+      auditor = new AuditorPersistenceImpl(vertx, meterRegistry, params.getPersistence());
+      loginDao = new LoginDaoPersistenceImpl(vertx, meterRegistry, params.getPersistence(), params.getSession().getPurgeDelay());
+    } else {
+      logger.info("Persistence is not configured, using in-memory tracking of last {} runs", AuditorMemoryImpl.SIZE);
+      auditor = new AuditorMemoryImpl();
+      loginDao = new LoginDaoMemoryImpl(params.getSession().getPurgeDelay());
+    }
     try {
       auditor.prepare();
       logger.info("Persistence database prepared");
@@ -338,12 +349,7 @@ public class Main extends Application {
       logger.error("Failed to prepare audit database: ", ex);
       return Future.succeededFuture(-2);
     }
-    
-    LoginDao loginDao = params.getPersistence() == null 
-            || params.getPersistence().getDataSource() == null 
-            || Strings.isNullOrEmpty(params.getPersistence().getDataSource().getUrl())
-            ? new LoginDaoMemoryImpl(params.getSession().getPurgeDelay())
-            : new LoginDaoPersistenceImpl(vertx, meterRegistry, params.getPersistence(), params.getSession().getPurgeDelay());
+ 
     try {
       loginDao.prepare();
     } catch (Throwable ex) {
@@ -443,8 +449,8 @@ public class Main extends Application {
     router.route("/ui/*").handler(UiRouter.create(vertx, "/ui", "/www", "/www/index.html"));
     router.getWithRegex("/openapi\\..*").blockingHandler(openApiHandler);
     router.get("/openapi").handler(openApiHandler.getUiHandler());
-    if (params.getSession() != null && params.getSession().getOauth() != null && !params.getSession().getOauth().isEmpty()) {
-      LoginRouter loginRouter = LoginRouter.create(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, params.getSession(), params.getJwt().getRequiredAudiences(), outputAllErrorMessages(), params.getSession().getSessionCookieName());
+    if (params.getSession().getOauth() != null && !params.getSession().getOauth().isEmpty()) {
+      LoginRouter loginRouter = LoginRouter.create(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, params.getSession(), params.getJwt().getRequiredAudiences(), outputAllErrorMessages(), params.getSession().getSessionCookie());
       router.get("/login").handler(loginRouter);
       router.get("/login/return").handler(loginRouter);
       router.get("/login/logout").handler(loginRouter);
@@ -482,7 +488,7 @@ public class Main extends Application {
       DataSourceConfig source = iter.next();
       String url = source.getUrl();
       SampleDataLoader loader;
-      if (url == null) {
+      if (Strings.isNullOrEmpty(url)) {
         logger.warn("No URL configured for sample data loader {}", source);
         return performSampleDataLoads(iter);
       } else if (url.startsWith("mysql")) {
@@ -629,7 +635,7 @@ public class Main extends Application {
             , jwtConfig.getJwksEndpoints() == null || jwtConfig.getJwksEndpoints().isEmpty()
             , jwtConfig.getIssuerHostPath()
             , jwtConfig.getRequiredAudiences()
-            , params.getSession().getSessionCookieName()
+            , params.getSession().getSessionCookie() != null ? params.getSession().getSessionCookie().getName() : null
     );
     return rcb;
   }

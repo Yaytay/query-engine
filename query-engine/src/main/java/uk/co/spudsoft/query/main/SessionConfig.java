@@ -32,7 +32,7 @@ public class SessionConfig {
   private int stateLength = 120;
   private int codeVerifierLength = 120;
   private int nonceLength = 120;
-  private String sessionCookieName = "qe-session";
+  private CookieConfig sessionCookie = new CookieConfig("qe-session");
   
   private Map<String, AuthEndpoint> oauth;
 
@@ -94,12 +94,14 @@ public class SessionConfig {
     this.oauth = oauth;
   }  
 
-  public String getSessionCookieName() {
-    return sessionCookieName;
+  @SuppressFBWarnings("EI_EXPOSE_REP")
+  public CookieConfig getSessionCookie() {
+    return sessionCookie;
   }
 
-  public void setSessionCookieName(String sessionCookieName) {
-    this.sessionCookieName = sessionCookieName;
+  @SuppressFBWarnings("EI_EXPOSE_REP2")
+  public void setSessionCookie(CookieConfig sessionCookie) {
+    this.sessionCookie = sessionCookie;
   }
-  
+
 }

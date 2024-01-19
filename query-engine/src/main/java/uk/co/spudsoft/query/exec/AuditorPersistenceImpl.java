@@ -48,7 +48,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,7 +80,7 @@ import uk.co.spudsoft.query.web.ServiceException;
  *
  * @author jtalbut
  */
-public class AuditorImpl implements Auditor {
+public class AuditorPersistenceImpl implements Auditor {
   
   private enum OffsetLimitType {
     limitOffset
@@ -89,7 +88,7 @@ public class AuditorImpl implements Auditor {
   }
 
   @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(AuditorImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(AuditorPersistenceImpl.class);
   private static final String CHANGESET_RESOURCE_PATH = "/db/changelog/query-engine.yaml";
 
   private static final String PROCESS_ID = ManagementFactory.getRuntimeMXBean().getName();
@@ -110,7 +109,7 @@ public class AuditorImpl implements Auditor {
   private boolean prepared;
 
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "MeterRegisty is intended to be mutable by any user")
-  public AuditorImpl(Vertx vertx, MeterRegistry meterRegistry, Persistence audit) {
+  public AuditorPersistenceImpl(Vertx vertx, MeterRegistry meterRegistry, Persistence audit) {
     this.vertx = vertx;
     this.meterRegistry = meterRegistry;
     this.configuration = audit;
@@ -130,9 +129,7 @@ public class AuditorImpl implements Auditor {
     LiquibaseException lastLiquibaseException = null;
 
     if (dataSourceConfig == null || Strings.isNullOrEmpty(dataSourceConfig.getUrl())) {
-      logger.info("No audit URL provided, audit disabled");
-      this.prepared = true;
-      return ;
+      throw new IllegalStateException("AuditorPersistenceImpl configured without datasource");
     }
 
     String url = dataSourceConfig.getUrl();
@@ -371,7 +368,7 @@ public class AuditorImpl implements Auditor {
     
     JsonObject headers = multiMapToJson(context.getHeaders());
     JsonObject arguments = multiMapToJson(context.getArguments());
-    JsonArray groups = listToJson(context.getGroups());
+    JsonArray groups = Auditor.listToJson(context.getGroups());
     String openIdDetails = context.getJwt() == null ? null : context.getJwt().getPayloadAsString();
     
     logger.info("Request: {} {} {} {} {} {} {} {} {} {} {}",
@@ -388,9 +385,6 @@ public class AuditorImpl implements Auditor {
              context.getGroups()
     );
     
-    if (jdbcHelper == null) {
-      return Future.succeededFuture();
-    }
     return jdbcHelper.runSqlUpdate(recordRequest, ps -> {
                     int param = 1; 
                     ps.setString(param++, JdbcHelper.limitLength(context.getRequestId(), 100));
@@ -419,9 +413,6 @@ public class AuditorImpl implements Auditor {
   @Override
   public void recordFileDetails(RequestContext context, DirCacheTree.File file) {
     logger.info("File: {} {} {}", file.getPath(), file.getSize(), file.getModified());
-    if (jdbcHelper == null) {
-      return ;
-    }
     jdbcHelper.runSqlUpdate(recordFile, ps -> {
              ps.setString(1, JdbcHelper.limitLength(JdbcHelper.toString(file.getPath()), 1000));
              ps.setLong(2, file.getSize());
@@ -437,10 +428,6 @@ public class AuditorImpl implements Auditor {
   @Override
   public void recordException(RequestContext context, Throwable ex) {
     logger.info("Exception: {} {}", ex.getClass().getCanonicalName(), ex.getMessage());
-
-    if (jdbcHelper == null) {
-      return ;
-    }
     jdbcHelper.runSqlUpdate(recordException, ps -> {
              ps.setTimestamp(1, Timestamp.from(Instant.now()));
              ps.setString(2, JdbcHelper.limitLength(ex.getClass().getCanonicalName(), 1000));
@@ -459,10 +446,6 @@ public class AuditorImpl implements Auditor {
             , (System.currentTimeMillis() - context.getStartTime()) / 1000.0
             , headers
     );
-    
-    if (jdbcHelper == null) {
-      return ;
-    }
     jdbcHelper.runSqlUpdate(recordResponse, ps -> {
              ps.setTimestamp(1, Timestamp.from(Instant.now()));
              if (context.getHeadersSentTime() > 0) {
@@ -525,7 +508,7 @@ public class AuditorImpl implements Auditor {
             args.add(context.getUsername());
             break;
           default:
-            throw new IllegalStateException("Unknown RateLimitScope type");
+            throw new IllegalStateException("Unknown RateLimitScope type: " + scope);
         }
       }
     }
@@ -609,21 +592,6 @@ public class AuditorImpl implements Auditor {
     }
   }
   
-  static String localizeUsername(String username) {
-    if (username == null) {
-      return username;
-    }
-    String parts[] = username.split("@");
-    return parts[0];
-  }
-
-  static JsonArray listToJson(List<String> items) {
-    if (items == null) {
-      return null;
-    }
-    return new JsonArray(items);
-  }
-    
   private static final String AUTH = HttpHeaders.AUTHORIZATION.toString();
   private static final String BEARER = "Bearer ";
   private static final String BASIC = "Basic ";
@@ -684,10 +652,6 @@ public class AuditorImpl implements Auditor {
   @Override
   public Future<AuditHistory> getHistory(String issuerArg, String subjectArg, int skipRows, int maxRows) {
     logger.info("Get history for : {} {} ({}, {})", issuerArg, subjectArg, skipRows, maxRows);
-    
-    if (jdbcHelper == null) {
-      return Future.succeededFuture(new AuditHistory(0, 0, Collections.emptyList()));
-    }
     
     Future<List<AuditHistoryRow>> rowsFuture = getRows(issuerArg, subjectArg, skipRows, maxRows);
     Future<Long> countFuture = countRows(issuerArg, subjectArg);

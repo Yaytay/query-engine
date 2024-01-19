@@ -17,9 +17,13 @@
 package uk.co.spudsoft.query.exec;
 
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.JsonArray;
+import io.vertx.ext.healthchecks.Status;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 import liquibase.exception.LiquibaseException;
 import uk.co.spudsoft.dircache.DirCacheTree.File;
 import uk.co.spudsoft.query.defn.Pipeline;
@@ -44,6 +48,8 @@ public interface Auditor {
    */
   void prepare() throws Exception;
 
+  void healthCheck(Promise<Status> promise);
+  
   void recordException(RequestContext context, Throwable ex);
 
   void recordFileDetails(RequestContext context, File file);
@@ -55,5 +61,20 @@ public interface Auditor {
   void recordResponse(RequestContext context, HttpServerResponse response);
   
   Future<AuditHistory> getHistory(String issuer, String subject, int skipRows, int maxRows);
-  
+ 
+  static String localizeUsername(String username) {
+    if (username == null) {
+      return username;
+    }
+    String parts[] = username.split("@");
+    return parts[0];
+  }
+
+  static JsonArray listToJson(List<String> items) {
+    if (items == null) {
+      return null;
+    }
+    return new JsonArray(items);
+  }
+      
 }

@@ -277,6 +277,7 @@ public class MainIT {
       , "--sampleDataLoads[0].url=" + postgres.getVertxUrl()
       , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()
       , "--sampleDataLoads[0].adminUser.password=" + postgres.getPassword()
+      , "--sampleDataLoads[1].url="
       , "--managementEndpoints[0]=up"
       , "--managementEndpoints[2]=prometheus"
       , "--managementEndpoints[3]=threads"

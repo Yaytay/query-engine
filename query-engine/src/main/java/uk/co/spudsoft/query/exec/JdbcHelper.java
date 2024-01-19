@@ -29,7 +29,6 @@ import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static uk.co.spudsoft.query.exec.AuditorImpl.localizeUsername;
 import uk.co.spudsoft.query.main.Credentials;
 import uk.co.spudsoft.query.main.DataSourceConfig;
 
@@ -54,7 +53,7 @@ public class JdbcHelper {
     HikariDataSource ds = new HikariDataSource();
     ds.setJdbcUrl(config.getUrl());
     if (credentials != null) {
-      ds.setUsername(localizeUsername(credentials.getUsername()));
+      ds.setUsername(Auditor.localizeUsername(credentials.getUsername()));
       ds.setPassword(credentials.getPassword());
     }
     if (config.getSchema() != null) {
