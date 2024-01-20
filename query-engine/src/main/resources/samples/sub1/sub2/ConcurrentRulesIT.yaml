@@ -12,6 +12,11 @@ rateLimitRules:
   - host
   timeLimit: PT1H
   byteLimit: 100M  
+- scope:
+  - issuer
+  - subject
+  timeLimit: PT1H
+  byteLimit: 1000M  
 formats:
 - type: HTML
 - type: XLSX

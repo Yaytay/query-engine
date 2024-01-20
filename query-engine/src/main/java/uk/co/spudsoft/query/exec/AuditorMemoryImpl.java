@@ -44,7 +44,9 @@ import uk.co.spudsoft.query.defn.RateLimitRule;
 import uk.co.spudsoft.query.defn.RateLimitScopeType;
 import static uk.co.spudsoft.query.defn.RateLimitScopeType.clientip;
 import static uk.co.spudsoft.query.defn.RateLimitScopeType.host;
+import static uk.co.spudsoft.query.defn.RateLimitScopeType.issuer;
 import static uk.co.spudsoft.query.defn.RateLimitScopeType.path;
+import static uk.co.spudsoft.query.defn.RateLimitScopeType.subject;
 import static uk.co.spudsoft.query.defn.RateLimitScopeType.username;
 import static uk.co.spudsoft.query.exec.AuditorPersistenceImpl.multiMapToJson;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
@@ -223,17 +225,27 @@ public class AuditorMemoryImpl implements Auditor {
           }
           break;
         case host:
-          if (!context.getHost().equals(row.host)) {
+          if (context.getHost() == null || !context.getHost().equals(row.host)) {
             return false;
           }
           break;
         case path:
-          if (!context.getPath().equals(row.path)) {
+          if (context.getPath() == null || !context.getPath().equals(row.path)) {
+            return false;
+          }
+          break;
+        case issuer:
+          if (context.getIssuer() == null || !context.getIssuer().equals(row.issuer)) {
+            return false;
+          }
+          break;
+        case subject:
+          if (context.getSubject() == null || !context.getSubject().equals(row.subject)) {
             return false;
           }
           break;
         case username:
-          if (!context.getUsername().equals(row.username)) {
+          if (context.getUsername() == null || !context.getUsername().equals(row.username)) {
             return false;
           }
           break;

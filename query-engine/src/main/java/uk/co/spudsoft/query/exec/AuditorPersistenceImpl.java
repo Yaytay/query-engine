@@ -69,6 +69,7 @@ import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.defn.RateLimitRule;
 import uk.co.spudsoft.query.defn.RateLimitScopeType;
 import static uk.co.spudsoft.query.defn.RateLimitScopeType.host;
+import static uk.co.spudsoft.query.defn.RateLimitScopeType.username;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.main.Persistence;
 import uk.co.spudsoft.query.main.Credentials;
@@ -502,6 +503,14 @@ public class AuditorPersistenceImpl implements Auditor {
           case path:
             sql.append("and ").append(quote).append("path").append(quote).append(" = ? ");
             args.add(context.getPath());
+            break;
+          case issuer:
+            sql.append("and ").append(quote).append("issuer").append(quote).append(" = ? ");
+            args.add(context.getIssuer());
+            break;
+          case subject:
+            sql.append("and ").append(quote).append("subject").append(quote).append(" = ? ");
+            args.add(context.getSubject());
             break;
           case username:
             sql.append("and ").append(quote).append("username").append(quote).append(" = ? ");

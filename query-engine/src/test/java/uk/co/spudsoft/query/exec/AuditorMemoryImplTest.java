@@ -44,27 +44,44 @@ public class AuditorMemoryImplTest {
             "id", LocalDateTime.MIN, "processId", "url", "127.0.0.1", "host", "path", "arguments", "headers", "openIdDetails", "issuer", "subject", "username", "name", "groups"
     );
     AuditorMemoryImpl.AuditRow badRow = new AuditorMemoryImpl.AuditRow(
-            "id", LocalDateTime.MIN, "processId", "url", "127.0.0.2", "host2", "path2", "arguments", "headers", "openIdDetails", "issuer", "subject", "username2", "name", "groups"
+            "id", LocalDateTime.MIN, "processId", "url", "127.0.0.2", "host2", "path2", "arguments", "headers", "openIdDetails", "issuer2", "subject2", "username2", "name", "groups"
+    );
+    AuditorMemoryImpl.AuditRow nullRow = new AuditorMemoryImpl.AuditRow(
+            "id", LocalDateTime.MIN, "processId", "url", null, null, null, null, "headers", "openIdDetails", null, null, null, "name", "groups"
     );
     
-    Jwt jwt = new Jwt(new JsonObject(), new JsonObject("{\"preferred_username\":\"username\"}"), null, null);
+    Jwt jwt = new Jwt(new JsonObject(), new JsonObject("{\"iss\":\"issuer\",\"sub\":\"subject\",\"preferred_username\":\"username\"}"), null, null);
     RequestContext context = new RequestContext("id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), jwt);
     
     rule = RateLimitRule.builder().scope(Arrays.asList(RateLimitScopeType.clientip)).build();
     assertTrue(AuditorMemoryImpl.rowMatches(context, rule, goodRow));
     assertFalse(AuditorMemoryImpl.rowMatches(context, rule, badRow));
+    assertFalse(AuditorMemoryImpl.rowMatches(context, rule, nullRow));
     
     rule = RateLimitRule.builder().scope(Arrays.asList(RateLimitScopeType.host)).build();
     assertTrue(AuditorMemoryImpl.rowMatches(context, rule, goodRow));
     assertFalse(AuditorMemoryImpl.rowMatches(context, rule, badRow));
+    assertFalse(AuditorMemoryImpl.rowMatches(context, rule, nullRow));
 
     rule = RateLimitRule.builder().scope(Arrays.asList(RateLimitScopeType.path)).build();
     assertTrue(AuditorMemoryImpl.rowMatches(context, rule, goodRow));
     assertFalse(AuditorMemoryImpl.rowMatches(context, rule, badRow));
+    assertFalse(AuditorMemoryImpl.rowMatches(context, rule, nullRow));
+
+    rule = RateLimitRule.builder().scope(Arrays.asList(RateLimitScopeType.issuer)).build();
+    assertTrue(AuditorMemoryImpl.rowMatches(context, rule, goodRow));
+    assertFalse(AuditorMemoryImpl.rowMatches(context, rule, badRow));    
+    assertFalse(AuditorMemoryImpl.rowMatches(context, rule, nullRow));
+
+    rule = RateLimitRule.builder().scope(Arrays.asList(RateLimitScopeType.subject)).build();
+    assertTrue(AuditorMemoryImpl.rowMatches(context, rule, goodRow));
+    assertFalse(AuditorMemoryImpl.rowMatches(context, rule, badRow));    
+    assertFalse(AuditorMemoryImpl.rowMatches(context, rule, nullRow));
 
     rule = RateLimitRule.builder().scope(Arrays.asList(RateLimitScopeType.username)).build();
     assertTrue(AuditorMemoryImpl.rowMatches(context, rule, goodRow));
     assertFalse(AuditorMemoryImpl.rowMatches(context, rule, badRow));    
+    assertFalse(AuditorMemoryImpl.rowMatches(context, rule, nullRow));
   }
   
   @Test

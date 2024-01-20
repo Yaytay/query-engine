@@ -61,7 +61,22 @@ public enum RateLimitScopeType {
   clientip
   , 
   /**
+   * Runs are constrained by the issuer extracted from the authorisation token.
+   * This can be used on its own (it can make a good "client-wide" scope, or combined with either subject or username to identify an individual.
+   */
+  @Schema(description = "Runs are constrained by the issuer extracted from the authorisation token.")
+  issuer
+  , 
+  /**
+   * Runs are constrained by the subject extracted from the authorisation token.
+   * This should always be used in conjunction with the issuer scope type, subjects are only unique within an issuer.
+   */
+  @Schema(description = "Runs are constrained by the subject extracted from the authorisation token.")
+  subject
+  , 
+  /**
    * Runs are constrained by the username extracted from the authorisation token.
+   * This should always be used in conjunction with the issuer scope type, usernames are only unique within an issuer.
    */
   @Schema(description = "Runs are constrained by the username extracted from the authorisation token.")
   username
