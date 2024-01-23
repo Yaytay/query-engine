@@ -54,8 +54,8 @@ This is useful for things such as JIT compilers or CDS preparation.
 | The configuration of the pipeline cache.
 
 
-| corsAllowedOriginRegex
-| link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/String.html[String]
+| corsAllowedOrigins
+| link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/util/List.html[List]<link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/String.html[String]>
 | The Allowed-Origin-Regex to use for CORS.
 
 

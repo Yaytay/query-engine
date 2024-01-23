@@ -35,6 +35,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -331,6 +332,18 @@ public class LoginRouterWithDiscoveryWithoutPersistenceIT {
     assertTrue(cookies.containsKey("qe-session"));
     assertThat(cookies.get("qe-session").length(), equalTo(0));    
     
+    cookies = new HashMap<>();
+    cookies.put("qe-session", "bad");
+    body = given()
+            .cookies(cookies)
+            .log().all()
+            .get("/api/history")
+            .then()
+            .log().ifError()
+            .statusCode(401)
+            .extract().body().asString();
+    logger.debug("History: {}", body);    
+
     server.stop(0);
     main.shutdown();
   }

@@ -388,21 +388,21 @@ public class Main extends Application {
       mgmtRouter.get("/prometheus").handler(new PrometheusScrapingHandlerImpl()).setName("Prometheus");
     }
     
-    CorsHandler corsHandler = null;
-    if (!Strings.isNullOrEmpty(params.getCorsAllowedOriginRegex())) {
-      corsHandler = CorsHandler.create()
-              .addRelativeOrigin(params.getCorsAllowedOriginRegex());
-      corsHandler.allowedMethods(
-              ImmutableSet
-                      .<HttpMethod>builder()
-                      .add(HttpMethod.GET)
-                      .add(HttpMethod.PUT)
-                      .add(HttpMethod.DELETE)
-                      .add(HttpMethod.POST)
-                      .build()
-      );
-      router.route("/*").handler(corsHandler); 
+    CorsHandler corsHandler = CorsHandler.create();
+    if (params.getCorsAllowedOrigins() != null) {
+      corsHandler.addOrigins(params.getCorsAllowedOrigins());
     }
+    corsHandler.allowedMethods(
+            ImmutableSet
+                    .<HttpMethod>builder()
+                    .add(HttpMethod.GET)
+                    .add(HttpMethod.PUT)
+                    .add(HttpMethod.DELETE)
+                    .add(HttpMethod.POST)
+                    .build()
+    );
+    corsHandler.allowCredentials(true);
+    router.route("/*").handler(corsHandler); 
     
     RequestContextBuilder rcb;
     try {
@@ -444,13 +444,14 @@ public class Main extends Application {
     router.get("/api").handler(rc -> {
       rc.response().setStatusCode(301).putHeader("Location", "/openapi").end();
     });
-    router.route("/api/*").handler(new RequestContextHandler(vertx, rcb, outputAllErrorMessages()));
+    RequestContextHandler rch = new RequestContextHandler(vertx, rcb, outputAllErrorMessages());
+    router.route("/api/*").handler(rch);
     router.route("/api/*").handler(new JaxRsHandler(vertx, meterRegistry, "/api", controllers, providers));
     router.route("/ui/*").handler(UiRouter.create(vertx, "/ui", "/www", "/www/index.html"));
     router.getWithRegex("/openapi\\..*").blockingHandler(openApiHandler);
     router.get("/openapi").handler(openApiHandler.getUiHandler());
     if (params.getSession().getOauth() != null && !params.getSession().getOauth().isEmpty()) {
-      LoginRouter loginRouter = LoginRouter.create(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, params.getSession(), params.getJwt().getRequiredAudiences(), outputAllErrorMessages(), params.getSession().getSessionCookie());
+      LoginRouter loginRouter = LoginRouter.create(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, rcb, params.getSession(), params.getJwt().getRequiredAudiences(), outputAllErrorMessages(), params.getSession().getSessionCookie());
       router.get("/login").handler(loginRouter);
       router.get("/login/return").handler(loginRouter);
       router.get("/login/logout").handler(loginRouter);

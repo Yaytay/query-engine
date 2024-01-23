@@ -155,6 +155,9 @@ public class LoginDaoMemoryImpl implements LoginDao {
   public Future<String> getToken(String id) {
     synchronized (tokens) {
       Token token = tokens.get(id);
+      if (token == null) {
+        return Future.succeededFuture();
+      }
       LocalDateTime now = LocalDateTime.now();
       if (token.expiry.isBefore(now)) {
         tokens.remove(id);        

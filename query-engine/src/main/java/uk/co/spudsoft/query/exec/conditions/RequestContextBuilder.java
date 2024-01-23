@@ -163,18 +163,28 @@ public class RequestContextBuilder {
       
       return loginDao.getToken(sessionCookie.getValue())
               .compose(token -> {
-                return validator.validateToken(issuer(request), token, audList, false);
+                if (token == null) {
+                  logger.info("No valid token for cookie {}", sessionCookie.getValue());
+                  return Future.failedFuture(new IllegalArgumentException("No valid token for cookie \"" + sessionCookie.getValue() + "\""));
+                } else {
+                  return validateToken(request, token);
+                }
               })
               .compose(jwt -> {
                 request.resume();
                 return build(request, jwt);
               }, ex -> {
-                logger.info("Failed to validate token from cookie: {}");
+                request.resume();
+                logger.info("Failed to validate token from cookie {}: {}", sessionCookie.getValue(), ex.getMessage());
                 return buildRequestContextWithoutCookie(request);
               });      
     } else {
       return buildRequestContextWithoutCookie(request);
     }
+  }
+
+  public Future<Jwt> validateToken(HttpServerRequest request, String token) {
+    return validator.validateToken(issuer(request), token, audList, false);
   }
     
   private Future<RequestContext> buildRequestContextWithoutCookie(HttpServerRequest request) {
@@ -202,7 +212,7 @@ public class RequestContextBuilder {
               .compose(token -> {
                 logger.debug("Login for {} got token: {}", clientId, token);
                 request.resume();
-                return validator.validateToken(issuer(request), token, audList, false);
+                return validateToken(request, token);
               })
               .compose(jwt -> {
                 return build(request, jwt);

@@ -28,6 +28,9 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.is;
 import org.junit.jupiter.api.Test;
 import uk.co.spudsoft.params4j.FileType;
 import uk.co.spudsoft.params4j.Params4J;
@@ -118,11 +121,12 @@ public class ParametersTest {
   }
   
   @Test
-  public void testGetCorsAllowedOriginRegex() {
+  public void testGetCorsAllowedOrigins() {
     Parameters instance = new Parameters();
-    assertEquals("https?://((localhost):[^/]+)?/?", instance.getCorsAllowedOriginRegex());
-    instance.setCorsAllowedOriginRegex(".*");
-    assertEquals(".*", instance.getCorsAllowedOriginRegex());
+    assertThat(instance.getCorsAllowedOrigins(), is(empty()));
+    instance.setCorsAllowedOrigins(Arrays.asList("http://bob"));
+    assertEquals(1, instance.getCorsAllowedOrigins().size());
+    assertEquals("http://bob", instance.getCorsAllowedOrigins().get(0));
   }
   
   @Test

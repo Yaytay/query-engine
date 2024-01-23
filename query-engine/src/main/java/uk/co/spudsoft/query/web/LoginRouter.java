@@ -69,6 +69,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
   private final LoginDao loginDao;
   private final OpenIdDiscoveryHandler openIdDiscoveryHandler;
   private final JwtValidator jwtValidator;
+  private final RequestContextBuilder requestContextBuilder;
   private final int stateLength;
   private final int codeVerifierLength;
   private final int nonceLength;
@@ -81,12 +82,13 @@ public class LoginRouter  implements Handler<RoutingContext> {
           , LoginDao loginDao
           , OpenIdDiscoveryHandler openIdDiscoveryHandler
           , JwtValidator jwtValidator
+          , RequestContextBuilder requestContextBuilder
           , SessionConfig sessionConfig
           , List<String> requiredAuds
           , boolean outputAllErrorMessages
           , CookieConfig sessionCookie
   ) {
-    return new LoginRouter(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, sessionConfig, requiredAuds, outputAllErrorMessages, sessionCookie);
+    return new LoginRouter(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, requestContextBuilder, sessionConfig, requiredAuds, outputAllErrorMessages, sessionCookie);
   }
   
   private static class RequestDataAndAuthEndpoint {
@@ -105,6 +107,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
           , LoginDao loginDao
           , OpenIdDiscoveryHandler openIdDiscoveryHandler
           , JwtValidator jwtValidator
+          , RequestContextBuilder requestContextBuilder
           , SessionConfig sessionConfig
           , List<String> requiredAuds
           , boolean outputAllErrorMessages
@@ -115,6 +118,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
     this.loginDao = loginDao;
     this.openIdDiscoveryHandler = openIdDiscoveryHandler;
     this.jwtValidator = jwtValidator;
+    this.requestContextBuilder = requestContextBuilder;
     this.stateLength = sessionConfig.getStateLength();
     this.codeVerifierLength = sessionConfig.getCodeVerifierLength();
     this.nonceLength = sessionConfig.getNonceLength();
@@ -322,11 +326,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
               }
             })
             .compose(jwt -> {
-              String targetUrlBase = requestDataAndAuthEndpoint.requestData.targetUrl();
-              String targetUrl = targetUrlBase
-                      + (targetUrlBase.contains("?") ? "&" : "?")
-                      + "access_token=" + accessTokenPtr[0]
-                      ;
+              String targetUrl = buildTargetUrlWithAccessToken(requestDataAndAuthEndpoint.requestData.targetUrl(), accessTokenPtr[0]);
 
               String id = createRandomSessionId();          
               long maxAge = jwt.getExpiration() - (System.currentTimeMillis() / 1000);
@@ -348,6 +348,24 @@ public class LoginRouter  implements Handler<RoutingContext> {
     return false;
   }
 
+  String buildTargetUrlWithAccessToken(String targetUrl, String accessToken) {
+    String targetUrlBase = targetUrl;
+    return targetUrlBase
+            + (targetUrlBase.contains("?") ? "&" : "?")
+            + "access_token=" + accessToken
+            ;
+  }
+
+  private Cookie getSessionCookie(HttpServerRequest request) {
+    if (sessionCookie != null && !Strings.isNullOrEmpty(sessionCookie.getName())) {      
+      Set<Cookie> cookies = request.cookies(sessionCookie.getName());
+      for (Cookie cookie : cookies) {
+        return cookie;
+      }
+    }
+    return null;
+  }
+  
   static Cookie createCookie(CookieConfig config, long maxAge, boolean wasTls, String domain, String value) {
     Cookie cookie = Cookie.cookie(config.getName(), value);
     cookie.setHttpOnly(config.isHttpOnly() != null ? config.isHttpOnly() : false);
@@ -367,6 +385,35 @@ public class LoginRouter  implements Handler<RoutingContext> {
       QueryRouter.internalError(new IllegalArgumentException("Target URL not specified"), event, outputAllErrorMessages);
       return true;
     }
+    // /If there is a valid session cookie just use that access token
+    Cookie cookie = getSessionCookie(event.request());
+    if (cookie != null) {
+      String token[] = new String[1];
+      loginDao.getToken(cookie.getValue())
+              .compose(tokenFromDb -> {
+                token[0] = tokenFromDb;
+                return requestContextBuilder.validateToken(event.request(), token[0]);
+              })
+              .onFailure(ex -> {
+                logger.debug("Request has invalid session cookie, continuing with login");
+                performOAuthRedirect(event, targetUrl);
+              })
+              .onSuccess(jwt -> {
+                logger.debug("Request has valid session cookie, skipping login");
+                String targetUrlWithToken = buildTargetUrlWithAccessToken(targetUrl, token[0]);
+
+                event.response()
+                        .putHeader("Location", targetUrlWithToken)
+                        .setStatusCode(307)
+                        .end();
+                      });
+      return false;
+    } else {
+      return performOAuthRedirect(event, targetUrl);
+    }
+  }
+
+  boolean performOAuthRedirect(RoutingContext event, String targetUrl) {
     String provider = event.request().getParam("provider");
     if (Strings.isNullOrEmpty(provider)) {
       QueryRouter.internalError(new IllegalArgumentException("OAuth provider not specified"), event, outputAllErrorMessages);

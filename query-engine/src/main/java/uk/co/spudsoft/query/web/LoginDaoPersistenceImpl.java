@@ -29,6 +29,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.sql.DataSource;
@@ -61,6 +64,12 @@ public class LoginDaoPersistenceImpl implements LoginDao {
   private JdbcHelper jdbcHelper;
   
   private final AtomicLong lastPurge = new AtomicLong();
+  
+  private record TimestampedToken(LocalDateTime expiry, String token){};
+  
+  private static final int MAX_TOKEN_CACHE_SIZE = 1000;
+  
+  private final Map<String, TimestampedToken> tokenCache = new HashMap<>();
   
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "MeterRegisty is intended to be mutable by any user")
   public LoginDaoPersistenceImpl(Vertx vertx, MeterRegistry meterRegistry, Persistence configuration, Duration purgeDelay) {
@@ -142,14 +151,14 @@ public class LoginDaoPersistenceImpl implements LoginDao {
                   """;
   
   private String deleteToken = """
-                  delete
+                  delete from
                     #SCHEMA#.#session#
                   where
                     #id# = ?
                   """;
   
   private String expireTokens = """
-                  delete
+                  delete from
                     #SCHEMA#.#session#
                   where
                     #expiry# < ?
@@ -216,6 +225,20 @@ public class LoginDaoPersistenceImpl implements LoginDao {
       }
       prepared.set(true);
     }
+    
+    vertx.setPeriodic(purgeDelay.toMillis(), id -> {
+      logger.debug("Scheduled purge of token cache at {}", purgeDelay);
+      int cacheSize;
+      synchronized (tokenCache) {
+        LocalDateTime now = LocalDateTime.now();
+        tokenCache.entrySet().removeIf(entry -> entry.getValue().expiry.isBefore(now));
+        cacheSize = tokenCache.size();        
+        jdbcHelper.runSqlUpdate(purgeLogins, ps -> {
+          ps.setTimestamp(1, Timestamp.from(now.toInstant(ZoneOffset.UTC)));
+        });
+      }
+      logger.debug("Scheduled purge of token cache resulted in cache size of {}", cacheSize);
+    });
   }
   
   @Override
@@ -238,21 +261,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
                     ps.setString(param++, JdbcHelper.limitLength(nonce, 300));
                     ps.setString(param++, JdbcHelper.limitLength(redirectUri, 2000));
                     ps.setString(param++, JdbcHelper.limitLength(targetUrl, 2000));
-    })
-            .compose(rows -> {
-              long now = System.currentTimeMillis();
-              long lastPurgeTime = lastPurge.get();
-              if (lastPurgeTime < now - 60000) {
-                if (lastPurge.compareAndSet(lastPurgeTime, now)) {
-                  // Kick off a purge, but don't wait for it.
-                  jdbcHelper.runSqlUpdate(purgeLogins, ps -> {
-                    ps.setTimestamp(1, new Timestamp(now - 8640000));
-                  });
-                }
-              }
-              return Future.succeededFuture();
-            });
-    
+    }).mapEmpty();
   }
 
   @Override
@@ -293,6 +302,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
 
   @Override
   public Future<Void> storeToken(String id, LocalDateTime expiry, String token) {
+    cacheToken(id, new TimestampedToken(expiry, token));
     return jdbcHelper.runSqlUpdate(storeToken, ps -> {
                     int param = 1; 
                     ps.setString(param++, id);
@@ -302,10 +312,21 @@ public class LoginDaoPersistenceImpl implements LoginDao {
             .mapEmpty();
   }
   
-  private record TimestampedToken(LocalDateTime expiry, String token){};
-
   @Override
   public Future<String> getToken(String id) {
+    synchronized (tokenCache) {
+      TimestampedToken token = tokenCache.get(id);
+      if (token != null) {
+        LocalDateTime now = LocalDateTime.now();
+        if (token.expiry.isBefore(now)) {
+          tokenCache.remove(id);
+          tokenCache.entrySet().removeIf(entry -> entry.getValue().expiry.isBefore(now));
+        } else {
+          return Future.succeededFuture(token.token);
+        }
+      }
+    }
+    
     return jdbcHelper.runSqlSelect(getToken, ps -> {
         ps.setString(1, id);
       }, rs -> {
@@ -322,6 +343,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
             jdbcHelper.runSqlUpdate(expireTokens, ps -> ps.setTimestamp(1, Timestamp.from(now.toInstant(ZoneOffset.UTC))));
             return Future.succeededFuture(null);
           } else {
+            cacheToken(id, tt);
             return Future.succeededFuture(tt.token);
           }
         }
@@ -330,9 +352,42 @@ public class LoginDaoPersistenceImpl implements LoginDao {
             
   }
 
+  void cacheToken(String id, TimestampedToken tt) {
+    Entry<String, TimestampedToken> oldest = null;
+    int cacheSize;
+    synchronized (tokenCache) {
+      cacheSize = tokenCache.size();
+      if (cacheSize >= MAX_TOKEN_CACHE_SIZE) {
+        // Find the oldest cache entry (one that will expire soonest) and remove it
+        for (Entry<String, TimestampedToken> entry : tokenCache.entrySet()) {
+          if (oldest == null || entry.getValue().expiry.isBefore(oldest.getValue().expiry)) {
+            oldest = entry;       
+          }
+        }
+        if (oldest != null) {
+          tokenCache.remove(oldest.getKey());
+        }
+      }
+      tokenCache.put(id, tt);
+    }
+    if (oldest != null) {
+      logger.debug("Token cache contains {} entries, removed entry for {} to accomodate {}", cacheSize, oldest.getKey(), id);
+    }
+  }
+
   @Override
   public Future<Void> removeToken(String id) {
+    synchronized (tokenCache) {
+      tokenCache.remove(id);
+    }
     return jdbcHelper.runSqlUpdate(deleteToken, ps -> ps.setString(1, id)).mapEmpty();    
- }
+  }
+  
+  int getTokenCacheSize() {
+    synchronized (tokenCache) {
+      return tokenCache.size();
+    }
+  }
 
+  
 }

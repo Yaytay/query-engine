@@ -57,7 +57,7 @@ public class LoggingWriteStream<T> implements WriteStream<T> {
 
   @Override
   public void write(T data, Handler<AsyncResult<Void>> handler) {
-    logger.debug("Received: {}", data);
+    logger.trace("Received: {}", data);
     count.incrementAndGet();
     handler.handle(Future.succeededFuture());
   }

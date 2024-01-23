@@ -35,6 +35,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -170,6 +171,7 @@ public class LoginRouterWithDiscoveryIT {
       , "--managementEndpoints[3]=threads"
       , "--managementEndpointPort=8001"
       , "--managementEndpointUrl=http://localhost:8001/manage"
+      , "--session.purgeDelay=PT1S"
       , "--session.requireSession=false"
       , "--session.oauth.test.logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
       , "--session.oauth.test.issuer=http://localhost:" + port + "/"
@@ -319,6 +321,8 @@ public class LoginRouterWithDiscoveryIT {
             .extract().body().asString();
     logger.debug("History: {}", body);
 
+    Thread.sleep(1500);
+    
     cookies = given()
             .cookies(cookies)
             .redirects().follow(false)
@@ -333,6 +337,18 @@ public class LoginRouterWithDiscoveryIT {
     logger.debug("Cookies: {}", cookies);
     assertTrue(cookies.containsKey("qe-session"));
     assertThat(cookies.get("qe-session").length(), equalTo(0));    
+    
+    cookies = new HashMap<>();
+    cookies.put("qe-session", "bad");
+    body = given()
+            .cookies(cookies)
+            .log().all()
+            .get("/api/history")
+            .then()
+            .log().ifError()
+            .statusCode(401)
+            .extract().body().asString();
+    logger.debug("History: {}", body);    
     
     server.stop(0);
     main.shutdown();

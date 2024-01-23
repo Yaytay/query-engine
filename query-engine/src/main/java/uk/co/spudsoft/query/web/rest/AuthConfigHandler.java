@@ -73,8 +73,9 @@ public class AuthConfigHandler {
           , @Context HttpServerRequest request
   ) {
     
-    response.resume(Response.ok(config).build());
     
+    
+    response.resume(Response.ok(config).build());
   }
   
 }

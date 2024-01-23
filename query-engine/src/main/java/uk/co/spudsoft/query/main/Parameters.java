@@ -50,13 +50,9 @@ public class Parameters {
   private HttpServerOptions httpServerOptions = new HttpServerOptions().setPort(0);
   
   /**
-   * The default Allowed-Origin-Regex.
-   * This allows browsers from any port on localhost to access the query engine (most convenient for UI development).
-   * An alternative that is often convenient for internal use is:
-   * "https?://(((.*\\.)internal.net)|(localhost))(:[^/]+)?/?"
-   * This will all browsers on any subdomain of internal.net (on any port) to access the query engine.
+   * The default Allowed-Origin.
    */
-  private String corsAllowedOriginRegex = "https?://((localhost):[^/]+)?/?";    // "https?://(((.*\\.)groupgti.net)|(localhost))(:[^/]+)?/?"
+  private List<String> corsAllowedOrigins = new ArrayList<>();
   
   /**
    * The configuration to use for Zipkin tracing.
@@ -411,18 +407,20 @@ public class Parameters {
    * <p>
    * @return the Allowed-Origin-Regex to use for CORS.
    */
-  public String getCorsAllowedOriginRegex() {
-    return corsAllowedOriginRegex;
+  @SuppressFBWarnings("EI_EXPOSE_REP")
+  public List<String> getCorsAllowedOrigins() {
+    return corsAllowedOrigins;
   }
 
   /**
    * The Allowed-Origin-Regex to use for CORS.
    * <p>
-   * @param corsAllowedOriginRegex the Allowed-Origin-Regex to use for CORS.
+   * @param corsAllowedOrigins the Allowed-Origin valuess to use for CORS.
    * @return this, so that the method may be called in a fluent manner.
    */
-  public Parameters setCorsAllowedOriginRegex(String corsAllowedOriginRegex) {
-    this.corsAllowedOriginRegex = corsAllowedOriginRegex;
+  @SuppressFBWarnings("EI_EXPOSE_REP2")
+  public Parameters setCorsAllowedOrigins(List<String> corsAllowedOrigins) {
+    this.corsAllowedOrigins = corsAllowedOrigins;
     return this;
   }
 

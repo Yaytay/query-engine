@@ -103,7 +103,6 @@ public class AuditorPersistenceImpl implements Auditor {
   private final Persistence configuration;
   private String quote;
   private OffsetLimitType offsetLimitType;
-
   
   private JdbcHelper jdbcHelper;
   

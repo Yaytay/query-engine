@@ -16,13 +16,20 @@
  */
 package uk.co.spudsoft.query.web;
 
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import uk.co.spudsoft.query.exec.AuditorPersistenceImpl;
 import uk.co.spudsoft.query.main.Credentials;
 import uk.co.spudsoft.query.main.DataSourceConfig;
 import uk.co.spudsoft.query.main.Persistence;
@@ -61,4 +68,67 @@ public class LoginDaoPersistenceImplTest {
     testContext.completeNow();
   }
 
+  @Test
+  public void testTokenExpiry(Vertx vertx, VertxTestContext testContext) throws Throwable {
+    Persistence config = new Persistence();
+    
+    DataSourceConfig dataSource = new DataSourceConfig();
+    dataSource.setUrl("jdbc:h2:mem:LoginDaoPersistenceImplTest_testTokenExpiry;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=10");
+    config.setDataSource(dataSource);
+    
+    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config);
+    auditor.prepare();
+    
+    LoginDaoPersistenceImpl instance = new LoginDaoPersistenceImpl(vertx, null, config, Duration.ofMillis(500));
+    instance.prepare();
+    
+    LocalDateTime now = LocalDateTime.now();
+    
+    instance.storeToken("id", now.minusSeconds(1), "token")
+            .compose(v -> instance.storeToken("id2", now.plusSeconds(1), "token"))
+            .compose(v -> instance.getToken("id"))
+            .onFailure(ex -> testContext.failNow("Failed to get token"))
+            .onSuccess(s -> {
+              testContext.verify(() -> {
+                assertNull(s);
+              });
+              testContext.completeNow();
+            })
+            ;
+    
+  }
+
+  @Test
+  public void testTokenCacheOverflow(Vertx vertx, VertxTestContext testContext) throws Throwable {
+    Persistence config = new Persistence();
+    
+    DataSourceConfig dataSource = new DataSourceConfig();
+    dataSource.setUrl("jdbc:h2:mem:LoginDaoPersistenceImplTest_testTokenCacheOverflow;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=10");
+    config.setDataSource(dataSource);
+    
+    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config);
+    auditor.prepare();
+    
+    LoginDaoPersistenceImpl instance = new LoginDaoPersistenceImpl(vertx, null, config, Duration.ofMillis(500));
+    instance.prepare();
+    
+    LocalDateTime now = LocalDateTime.now();
+    
+    List<Future<Void>> futures = new ArrayList<>();
+    for (int i = 0; i < 1500; ++i) {
+      futures.add(instance.storeToken(Integer.toHexString(i), now.plusMinutes(1), "token"));
+    }
+    
+    Future.all(futures)
+            .onFailure(ex -> testContext.failNow("Failed to add all tokens"))
+            .onSuccess(s -> {
+              testContext.verify(() -> {
+                assertEquals(1000, instance.getTokenCacheSize());
+              });
+              testContext.completeNow();
+            })
+            ;
+    
+  }
+  
 }
