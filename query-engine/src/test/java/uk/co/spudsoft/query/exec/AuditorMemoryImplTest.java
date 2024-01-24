@@ -20,6 +20,10 @@ import inet.ipaddr.IPAddressString;
 import io.vertx.core.json.JsonObject;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Comparator;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.lessThan;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
@@ -92,6 +96,270 @@ public class AuditorMemoryImplTest {
     auditor.recordException(context, new Throwable("test"));
     context = new RequestContext(null, "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     auditor.recordException(context, new Throwable("test"));
+  }
+
+  @Test
+  public void testCreateComparatorId() {
+    Comparator<AuditHistoryRow> comparator;
+    AuditHistoryRow row1 = new AuditHistoryRow(null, "A", null, null, null, null, null, null, null, null, null, null, null, null);
+    AuditHistoryRow row2 = new AuditHistoryRow(null, "B", null, null, null, null, null, null, null, null, null, null, null, null);
+    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.id, false);
+    assertThat(comparator.compare(row1, row2), lessThan(0));
+    assertThat(comparator.compare(row1, row3), lessThan(0));
+    assertThat(comparator.compare(row2, row1), greaterThan(0));
+    assertThat(comparator.compare(row2, row3), lessThan(0));
+    assertThat(comparator.compare(row3, row1), greaterThan(0));
+    assertThat(comparator.compare(row3, row2), greaterThan(0));
+    comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.id, true);
+    assertThat(comparator.compare(row1, row2), greaterThan(0));
+    assertThat(comparator.compare(row1, row3), greaterThan(0));
+    assertThat(comparator.compare(row2, row1), lessThan(0));
+    assertThat(comparator.compare(row2, row3), greaterThan(0));
+    assertThat(comparator.compare(row3, row1), lessThan(0));
+    assertThat(comparator.compare(row3, row2), lessThan(0));
+  }
+  
+  @Test
+  public void testCreateComparatorPath() {
+    Comparator<AuditHistoryRow> comparator;
+    AuditHistoryRow row1 = new AuditHistoryRow(null, null, "A", null, null, null, null, null, null, null, null, null, null, null);
+    AuditHistoryRow row2 = new AuditHistoryRow(null, null, "B", null, null, null, null, null, null, null, null, null, null, null);
+    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.path, false);
+    assertThat(comparator.compare(row1, row2), lessThan(0));
+    assertThat(comparator.compare(row1, row3), lessThan(0));
+    assertThat(comparator.compare(row2, row1), greaterThan(0));
+    assertThat(comparator.compare(row2, row3), lessThan(0));
+    assertThat(comparator.compare(row3, row1), greaterThan(0));
+    assertThat(comparator.compare(row3, row2), greaterThan(0));
+    comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.path, true);
+    assertThat(comparator.compare(row1, row2), greaterThan(0));
+    assertThat(comparator.compare(row1, row3), greaterThan(0));
+    assertThat(comparator.compare(row2, row1), lessThan(0));
+    assertThat(comparator.compare(row2, row3), greaterThan(0));
+    assertThat(comparator.compare(row3, row1), lessThan(0));
+    assertThat(comparator.compare(row3, row2), lessThan(0));
+  }
+  
+  @Test
+  public void testCreateComparatorHost() {
+    Comparator<AuditHistoryRow> comparator;
+    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, "A", null, null, null, null, null, null, null, null, null);
+    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, "B", null, null, null, null, null, null, null, null, null);
+    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.host, false);
+    assertThat(comparator.compare(row1, row2), lessThan(0));
+    assertThat(comparator.compare(row1, row3), lessThan(0));
+    assertThat(comparator.compare(row2, row1), greaterThan(0));
+    assertThat(comparator.compare(row2, row3), lessThan(0));
+    assertThat(comparator.compare(row3, row1), greaterThan(0));
+    assertThat(comparator.compare(row3, row2), greaterThan(0));
+    comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.host, true);
+    assertThat(comparator.compare(row1, row2), greaterThan(0));
+    assertThat(comparator.compare(row1, row3), greaterThan(0));
+    assertThat(comparator.compare(row2, row1), lessThan(0));
+    assertThat(comparator.compare(row2, row3), greaterThan(0));
+    assertThat(comparator.compare(row3, row1), lessThan(0));
+    assertThat(comparator.compare(row3, row2), lessThan(0));
+  }
+  
+  @Test
+  public void testCreateComparatorIssuer() {
+    Comparator<AuditHistoryRow> comparator;
+    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, "A", null, null, null, null, null, null, null, null);
+    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, "B", null, null, null, null, null, null, null, null);
+    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.issuer, false);
+    assertThat(comparator.compare(row1, row2), lessThan(0));
+    assertThat(comparator.compare(row1, row3), lessThan(0));
+    assertThat(comparator.compare(row2, row1), greaterThan(0));
+    assertThat(comparator.compare(row2, row3), lessThan(0));
+    assertThat(comparator.compare(row3, row1), greaterThan(0));
+    assertThat(comparator.compare(row3, row2), greaterThan(0));
+    comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.issuer, true);
+    assertThat(comparator.compare(row1, row2), greaterThan(0));
+    assertThat(comparator.compare(row1, row3), greaterThan(0));
+    assertThat(comparator.compare(row2, row1), lessThan(0));
+    assertThat(comparator.compare(row2, row3), greaterThan(0));
+    assertThat(comparator.compare(row3, row1), lessThan(0));
+    assertThat(comparator.compare(row3, row2), lessThan(0));
+  }
+  
+  @Test
+  public void testCreateComparatorSubject() {
+    Comparator<AuditHistoryRow> comparator;
+    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, null, "A", null, null, null, null, null, null, null);
+    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, null, "B", null, null, null, null, null, null, null);
+    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.subject, false);
+    assertThat(comparator.compare(row1, row2), lessThan(0));
+    assertThat(comparator.compare(row1, row3), lessThan(0));
+    assertThat(comparator.compare(row2, row1), greaterThan(0));
+    assertThat(comparator.compare(row2, row3), lessThan(0));
+    assertThat(comparator.compare(row3, row1), greaterThan(0));
+    assertThat(comparator.compare(row3, row2), greaterThan(0));
+    comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.subject, true);
+    assertThat(comparator.compare(row1, row2), greaterThan(0));
+    assertThat(comparator.compare(row1, row3), greaterThan(0));
+    assertThat(comparator.compare(row2, row1), lessThan(0));
+    assertThat(comparator.compare(row2, row3), greaterThan(0));
+    assertThat(comparator.compare(row3, row1), lessThan(0));
+    assertThat(comparator.compare(row3, row2), lessThan(0));
+  }
+  
+  @Test
+  public void testCreateComparatorUsername() {
+    Comparator<AuditHistoryRow> comparator;
+    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, null, null, "A", null, null, null, null, null, null);
+    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, null, null, "B", null, null, null, null, null, null);
+    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.username, false);
+    assertThat(comparator.compare(row1, row2), lessThan(0));
+    assertThat(comparator.compare(row1, row3), lessThan(0));
+    assertThat(comparator.compare(row2, row1), greaterThan(0));
+    assertThat(comparator.compare(row2, row3), lessThan(0));
+    assertThat(comparator.compare(row3, row1), greaterThan(0));
+    assertThat(comparator.compare(row3, row2), greaterThan(0));
+    comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.username, true);
+    assertThat(comparator.compare(row1, row2), greaterThan(0));
+    assertThat(comparator.compare(row1, row3), greaterThan(0));
+    assertThat(comparator.compare(row2, row1), lessThan(0));
+    assertThat(comparator.compare(row2, row3), greaterThan(0));
+    assertThat(comparator.compare(row3, row1), lessThan(0));
+    assertThat(comparator.compare(row3, row2), lessThan(0));
+  }
+  
+  @Test
+  public void testCreateComparatorName() {
+    Comparator<AuditHistoryRow> comparator;
+    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, null, null, null, "A", null, null, null, null, null);
+    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, null, null, null, "B", null, null, null, null, null);
+    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.name, false);
+    assertThat(comparator.compare(row1, row2), lessThan(0));
+    assertThat(comparator.compare(row1, row3), lessThan(0));
+    assertThat(comparator.compare(row2, row1), greaterThan(0));
+    assertThat(comparator.compare(row2, row3), lessThan(0));
+    assertThat(comparator.compare(row3, row1), greaterThan(0));
+    assertThat(comparator.compare(row3, row2), greaterThan(0));
+    comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.name, true);
+    assertThat(comparator.compare(row1, row2), greaterThan(0));
+    assertThat(comparator.compare(row1, row3), greaterThan(0));
+    assertThat(comparator.compare(row2, row1), lessThan(0));
+    assertThat(comparator.compare(row2, row3), greaterThan(0));
+    assertThat(comparator.compare(row3, row1), lessThan(0));
+    assertThat(comparator.compare(row3, row2), lessThan(0));
+  }
+  
+  @Test
+  public void testCreateComparatorResponseCode() {
+    Comparator<AuditHistoryRow> comparator;
+    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, 200, null, null, null, null);
+    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, 400, null, null, null, null);
+    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.responseCode, false);
+    assertThat(comparator.compare(row1, row2), lessThan(0));
+    assertThat(comparator.compare(row1, row3), lessThan(0));
+    assertThat(comparator.compare(row2, row1), greaterThan(0));
+    assertThat(comparator.compare(row2, row3), lessThan(0));
+    assertThat(comparator.compare(row3, row1), greaterThan(0));
+    assertThat(comparator.compare(row3, row2), greaterThan(0));
+    comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.responseCode, true);
+    assertThat(comparator.compare(row1, row2), greaterThan(0));
+    assertThat(comparator.compare(row1, row3), greaterThan(0));
+    assertThat(comparator.compare(row2, row1), lessThan(0));
+    assertThat(comparator.compare(row2, row3), greaterThan(0));
+    assertThat(comparator.compare(row3, row1), lessThan(0));
+    assertThat(comparator.compare(row3, row2), lessThan(0));
+  }
+  
+  @Test
+  public void testCreateComparatorResponseRows() {
+    Comparator<AuditHistoryRow> comparator;
+    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, 7L, null, null, null);
+    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, 8L, null, null, null);
+    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.responseRows, false);
+    assertThat(comparator.compare(row1, row2), lessThan(0));
+    assertThat(comparator.compare(row1, row3), lessThan(0));
+    assertThat(comparator.compare(row2, row1), greaterThan(0));
+    assertThat(comparator.compare(row2, row3), lessThan(0));
+    assertThat(comparator.compare(row3, row1), greaterThan(0));
+    assertThat(comparator.compare(row3, row2), greaterThan(0));
+    comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.responseRows, true);
+    assertThat(comparator.compare(row1, row2), greaterThan(0));
+    assertThat(comparator.compare(row1, row3), greaterThan(0));
+    assertThat(comparator.compare(row2, row1), lessThan(0));
+    assertThat(comparator.compare(row2, row3), greaterThan(0));
+    assertThat(comparator.compare(row3, row1), lessThan(0));
+    assertThat(comparator.compare(row3, row2), lessThan(0));
+  }
+  
+  @Test
+  public void testCreateComparatorResponseSize() {
+    Comparator<AuditHistoryRow> comparator;
+    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, 8L, null, null);
+    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, 9L, null, null);
+    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.responseSize, false);
+    assertThat(comparator.compare(row1, row2), lessThan(0));
+    assertThat(comparator.compare(row1, row3), lessThan(0));
+    assertThat(comparator.compare(row2, row1), greaterThan(0));
+    assertThat(comparator.compare(row2, row3), lessThan(0));
+    assertThat(comparator.compare(row3, row1), greaterThan(0));
+    assertThat(comparator.compare(row3, row2), greaterThan(0));
+    comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.responseSize, true);
+    assertThat(comparator.compare(row1, row2), greaterThan(0));
+    assertThat(comparator.compare(row1, row3), greaterThan(0));
+    assertThat(comparator.compare(row2, row1), lessThan(0));
+    assertThat(comparator.compare(row2, row3), greaterThan(0));
+    assertThat(comparator.compare(row3, row1), lessThan(0));
+    assertThat(comparator.compare(row3, row2), lessThan(0));
+  }
+  
+  @Test
+  public void testCreateComparatorResponseStreamStart() {
+    Comparator<AuditHistoryRow> comparator;
+    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, 3456L, null);
+    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, 4567L, null);
+    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.responseStreamStart, false);
+    assertThat(comparator.compare(row1, row2), lessThan(0));
+    assertThat(comparator.compare(row1, row3), lessThan(0));
+    assertThat(comparator.compare(row2, row1), greaterThan(0));
+    assertThat(comparator.compare(row2, row3), lessThan(0));
+    assertThat(comparator.compare(row3, row1), greaterThan(0));
+    assertThat(comparator.compare(row3, row2), greaterThan(0));
+    comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.responseStreamStart, true);
+    assertThat(comparator.compare(row1, row2), greaterThan(0));
+    assertThat(comparator.compare(row1, row3), greaterThan(0));
+    assertThat(comparator.compare(row2, row1), lessThan(0));
+    assertThat(comparator.compare(row2, row3), greaterThan(0));
+    assertThat(comparator.compare(row3, row1), lessThan(0));
+    assertThat(comparator.compare(row3, row2), lessThan(0));
+  }
+  
+  @Test
+  public void testCreateComparatorResponseDuration() {
+    Comparator<AuditHistoryRow> comparator;
+    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, 1234L);
+    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, 2345L);
+    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.responseDuration, false);
+    assertThat(comparator.compare(row1, row2), lessThan(0));
+    assertThat(comparator.compare(row1, row3), lessThan(0));
+    assertThat(comparator.compare(row2, row1), greaterThan(0));
+    assertThat(comparator.compare(row2, row3), lessThan(0));
+    assertThat(comparator.compare(row3, row1), greaterThan(0));
+    assertThat(comparator.compare(row3, row2), greaterThan(0));
+    comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.responseDuration, true);
+    assertThat(comparator.compare(row1, row2), greaterThan(0));
+    assertThat(comparator.compare(row1, row3), greaterThan(0));
+    assertThat(comparator.compare(row2, row1), lessThan(0));
+    assertThat(comparator.compare(row2, row3), greaterThan(0));
+    assertThat(comparator.compare(row3, row1), lessThan(0));
+    assertThat(comparator.compare(row3, row2), lessThan(0));
   }
   
 }

@@ -48,6 +48,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,6 +96,18 @@ public class AuditorPersistenceImpl implements Auditor {
   private static final String PROCESS_ID = ManagementFactory.getRuntimeMXBean().getName();
   private static final Base64.Encoder ENCODER = java.util.Base64.getUrlEncoder();
   private static final Base64.Decoder DECODER = java.util.Base64.getUrlDecoder();
+  
+  private static final EnumMap<AuditHistorySortOrder, String> SORT_COLUMN_NAMES = prepareSortColumnNames();
+  
+  private static EnumMap<AuditHistorySortOrder, String> prepareSortColumnNames() {
+    EnumMap<AuditHistorySortOrder, String> result = new EnumMap<>(AuditHistorySortOrder.class);
+    for (AuditHistorySortOrder value : AuditHistorySortOrder.values()) {
+      result.put(value, value.name());
+    }
+    result.put(AuditHistorySortOrder.responseStreamStart, "responseStreamStartMillis");
+    result.put(AuditHistorySortOrder.responseDuration, "responseDurationMillis");
+    return result;
+  }
   
   private final ObjectMapper mapper = DatabindCodec.mapper();
   
@@ -345,7 +358,7 @@ public class AuditorPersistenceImpl implements Auditor {
              #issuer# = ?
              and #subject# = ?
            order by
-             #timestamp# desc""";
+             #ORDERBY# ASCDESC""";
   
   private boolean baseSqlExceptionIsNonexistantDriver(Throwable ex) {
     while (ex != null) {
@@ -658,10 +671,10 @@ public class AuditorPersistenceImpl implements Auditor {
   
   
   @Override
-  public Future<AuditHistory> getHistory(String issuerArg, String subjectArg, int skipRows, int maxRows) {
-    logger.info("Get history for : {} {} ({}, {})", issuerArg, subjectArg, skipRows, maxRows);
+  public Future<AuditHistory> getHistory(String issuerArg, String subjectArg, int skipRows, int maxRows, AuditHistorySortOrder sortOrder, boolean sortDescending) {
+    logger.info("Get history for : {} {} ({}, {}, {} {})", issuerArg, subjectArg, skipRows, maxRows, sortOrder, sortDescending);
     
-    Future<List<AuditHistoryRow>> rowsFuture = getRows(issuerArg, subjectArg, skipRows, maxRows);
+    Future<List<AuditHistoryRow>> rowsFuture = getRows(issuerArg, subjectArg, skipRows, maxRows, sortOrder, sortDescending);
     Future<Long> countFuture = countRows(issuerArg, subjectArg);
     
     return Future.all(rowsFuture, countFuture)
@@ -687,9 +700,17 @@ public class AuditorPersistenceImpl implements Auditor {
     });
   }
   
-  private Future<List<AuditHistoryRow>> getRows(String issuerArg, String subjectArg, int skipRows, int maxRows) {
+  
+  
+  private Future<List<AuditHistoryRow>> getRows(String issuerArg, String subjectArg
+          , int skipRows, int maxRows
+          , AuditHistorySortOrder sortOrder, boolean sortDescending
+  ) {
     
     String sql = getHistory;
+    sql = sql.replaceAll("ORDERBY", SORT_COLUMN_NAMES.get(sortOrder));
+    sql = sql.replaceAll("ASCDESC", sortDescending ? "desc" : "asc");
+    
     switch (offsetLimitType) {
       case limitOffset -> sql = sql + " limit " + maxRows + " offset " + skipRows + " ";
       case offsetFetch -> sql = sql + " offset " + skipRows + " rows fetch next " + maxRows + " rows only ";

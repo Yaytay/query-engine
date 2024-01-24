@@ -78,8 +78,8 @@ public class AuditHistoryRow {
     this.responseCode = responseCode;
     this.responseRows = responseRows;
     this.responseSize = responseSize;
-    this.responseStreamStart = responseStreamStartMillis / 1000.0;
-    this.responseDuration = responseDurationMillis / 1000.0;
+    this.responseStreamStart = responseStreamStartMillis == null ? null : responseStreamStartMillis / 1000.0;
+    this.responseDuration = responseDurationMillis == null ? null : responseDurationMillis / 1000.0;
   }
 
   /**

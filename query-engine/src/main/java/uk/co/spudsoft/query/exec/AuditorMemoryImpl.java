@@ -32,9 +32,12 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +51,9 @@ import static uk.co.spudsoft.query.defn.RateLimitScopeType.issuer;
 import static uk.co.spudsoft.query.defn.RateLimitScopeType.path;
 import static uk.co.spudsoft.query.defn.RateLimitScopeType.subject;
 import static uk.co.spudsoft.query.defn.RateLimitScopeType.username;
+import static uk.co.spudsoft.query.exec.AuditHistorySortOrder.id;
+import static uk.co.spudsoft.query.exec.AuditHistorySortOrder.responseStreamStart;
+import static uk.co.spudsoft.query.exec.AuditHistorySortOrder.timestamp;
 import static uk.co.spudsoft.query.exec.AuditorPersistenceImpl.multiMapToJson;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.main.ExceptionToString;
@@ -332,52 +338,111 @@ public class AuditorMemoryImpl implements Auditor {
       row.responseHeaders = JdbcHelper.toString(headers);
     }
   }
+  
+  static <T extends Comparable<T>> Comparator<T> buildComparator(boolean sortDescending) {
+    Comparator<T> comparator = Comparator.nullsLast(Comparator.naturalOrder());
+    if (sortDescending) {
+      comparator = Collections.reverseOrder(comparator);
+    }
+    return comparator;
+  }
+  
+  static Comparator<AuditHistoryRow> createComparator(AuditHistorySortOrder sortOrder, boolean sortDescending) {
+
+    switch (sortOrder) {
+      case timestamp -> {
+        return Comparator.comparing(ahr -> ahr.getTimestamp(), buildComparator(sortDescending));
+      }
+      case id -> {
+        return Comparator.comparing(ahr -> ahr.getId(), buildComparator(sortDescending));
+      }
+      case path -> {
+        return Comparator.comparing(ahr -> ahr.getPath(), buildComparator(sortDescending));
+      }
+      case host -> {
+        return Comparator.comparing(ahr -> ahr.getHost(), buildComparator(sortDescending));
+      }
+      case issuer -> {
+        return Comparator.comparing(ahr -> ahr.getIssuer(), buildComparator(sortDescending));
+      }
+      case subject -> {
+        return Comparator.comparing(ahr -> ahr.getSubject(), buildComparator(sortDescending));
+      }
+      case username -> {
+        return Comparator.comparing(ahr -> ahr.getUsername(), buildComparator(sortDescending));
+      }
+      case name -> {
+        return Comparator.comparing(ahr -> ahr.getName(), buildComparator(sortDescending));
+      }
+      case responseCode -> {
+        return Comparator.comparing(ahr -> ahr.getResponseCode(), buildComparator(sortDescending));
+      }
+      case responseRows -> {
+        return Comparator.comparing(ahr -> ahr.getResponseRows(), buildComparator(sortDescending));
+      }
+      case responseSize -> {
+        return Comparator.comparing(ahr -> ahr.getResponseSize(), buildComparator(sortDescending));
+      }
+      case responseStreamStart -> {
+        return Comparator.comparing(ahr -> ahr.getResponseStreamStart(), buildComparator(sortDescending));
+      }
+      case responseDuration -> {
+        return Comparator.comparing(ahr -> ahr.getResponseDuration(), buildComparator(sortDescending));
+      }
+      default ->
+        throw new IllegalStateException("Unable to sort by " + sortOrder + ".");
+    }
+  }
 
   @Override
-  public Future<AuditHistory> getHistory(String issuer, String subject, int skipRows, int maxRows) {
+  public Future<AuditHistory> getHistory(String issuer, String subject, int skipRows, int maxRows, AuditHistorySortOrder sortOrder, boolean sortDescending) {
     
-    long count = 0;
-    List<AuditHistoryRow> output = new ArrayList<>();
-    for (AuditRow row : this.auditRows) {
-      if (issuer.equals(row.issuer) && subject.equals(row.subject)) {
-        ++count;
-        if (count > skipRows && count < skipRows + maxRows) {
-          ObjectNode arguments = null;
-          try {
-            if (!Strings.isNullOrEmpty(row.arguments)) {
-              arguments = mapper.readValue(row.arguments, ObjectNode.class);
-            }
-          } catch (Throwable ex) {
-            logger.warn("Arguments from database ({}) for id {} failed to parse: ", row.arguments.replaceAll("[\r\n]", ""), row.id, ex);
-          }
-
-          AuditHistoryRow ah = new AuditHistoryRow(
-                  row.timestamp
-                  , row.id
-                  , row.path
-                  , arguments
-                  , row.host
-                  , row.issuer
-                  , row.subject
-                  , row.username
-                  , row.name
-                  , row.responseCode
-                  , row.responseRows
-                  , row.responseSize
-                  , row.responseStreamStartMillis
-                  , row.responseDurationMillis
-          );
-          output.add(ah);
-        }
-      }
-    }
+    long count[] = {0};
+    List<AuditHistoryRow> output = this.auditRows.stream()
+            .filter(ar -> Objects.equals(issuer, ar.issuer) && Objects.equals(subject, ar.subject))
+            .map(row -> mapAuditHistoryRow(row))
+            .sorted(createComparator(sortOrder, sortDescending))
+            .filter(ar -> {
+              count[0]++;
+              return (count[0] > skipRows && count[0] < skipRows + maxRows);
+            })
+            .collect(Collectors.toList())
+            ;
     
     return Future.succeededFuture(
               new AuditHistory(
                       skipRows
-                      , count
+                      , count[0]
                       , output
                       )
+    );
+  }
+
+  private AuditHistoryRow mapAuditHistoryRow(AuditRow row) {
+    ObjectNode arguments = null;
+    try {
+      if (!Strings.isNullOrEmpty(row.arguments)) {
+        arguments = mapper.readValue(row.arguments, ObjectNode.class);
+      }
+    } catch (Throwable ex) {
+      logger.warn("Arguments from database ({}) for id {} failed to parse: ", row.arguments.replaceAll("[\r\n]", ""), row.id, ex);
+    }
+    
+    return new AuditHistoryRow(
+            row.timestamp
+            , row.id
+            , row.path
+            , arguments
+            , row.host
+            , row.issuer
+            , row.subject
+            , row.username
+            , row.name
+            , row.responseCode
+            , row.responseRows
+            , row.responseSize
+            , row.responseStreamStartMillis
+            , row.responseDurationMillis
     );
   }
   

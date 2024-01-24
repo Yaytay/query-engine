@@ -35,6 +35,7 @@ import jakarta.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.AuditHistory;
+import uk.co.spudsoft.query.exec.AuditHistorySortOrder;
 import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import static uk.co.spudsoft.query.web.rest.InfoHandler.reportError;
@@ -74,14 +75,22 @@ public class HistoryHandler {
           , @Context HttpServerRequest request
           , @QueryParam("skipRows") Integer skipRows
           , @QueryParam("maxRows") Integer maxRows
+          , @QueryParam("sort") AuditHistorySortOrder sortOrder
+          , @QueryParam("desc") Boolean sortDescending
   ) {
     try {
       RequestContext requestContext = HandlerAuthHelper.getRequestContext(Vertx.currentContext(), true);
       
       skipRows = boundInt(skipRows, 0, 0, 1000000);
       maxRows = boundInt(maxRows, 1000000, 0, 1000000);
+      if (sortOrder == null) {
+        sortOrder = AuditHistorySortOrder.timestamp;
+      }
+      if (sortDescending == null) {
+        sortDescending = Boolean.TRUE;
+      }
 
-      auditor.getHistory(requestContext.getIssuer(), requestContext.getSubject(), skipRows, maxRows)
+      auditor.getHistory(requestContext.getIssuer(), requestContext.getSubject(), skipRows, maxRows, sortOrder, sortDescending)
               .onSuccess(history -> {
                 response.resume(Response.ok(history, MediaType.APPLICATION_JSON).build());
               })

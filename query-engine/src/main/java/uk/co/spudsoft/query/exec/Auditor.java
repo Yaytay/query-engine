@@ -35,7 +35,7 @@ import uk.co.spudsoft.query.exec.conditions.RequestContext;
  * @author jtalbut
  */
 public interface Auditor {
-
+  
   /**
    * Prepare the Auditor.
    * <P>
@@ -60,7 +60,7 @@ public interface Auditor {
 
   void recordResponse(RequestContext context, HttpServerResponse response);
   
-  Future<AuditHistory> getHistory(String issuer, String subject, int skipRows, int maxRows);
+  Future<AuditHistory> getHistory(String issuer, String subject, int skipRows, int maxRows, AuditHistorySortOrder sortOrder, boolean sortDescending);
  
   static String localizeUsername(String username) {
     if (username == null) {

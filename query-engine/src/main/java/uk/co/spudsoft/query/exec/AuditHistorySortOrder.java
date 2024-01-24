@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 jtalbut
+ * Copyright (C) 2024 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,20 +14,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-package uk.co.spudsoft.query.main;
+package uk.co.spudsoft.query.exec;
 
 /**
- * Set the version from the pom.
- * 
- * @author njt
+ *
+ * @author jtalbut
  */
-public final class Version {
-
-  public static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-  public static final String MAVEN_PROJECT_VERSION = "0.0.22-77-main";
-
-  private Version() {
-  }
+public enum AuditHistorySortOrder {
+  
+  timestamp,
+  id,
+  path,
+  host,
+  issuer,
+  subject,
+  username,
+  name,
+  responseCode,
+  responseRows,
+  responseSize,
+  responseStreamStart,
+  responseDuration,
   
 }
