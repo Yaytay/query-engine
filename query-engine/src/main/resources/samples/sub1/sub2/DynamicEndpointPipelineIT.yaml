@@ -12,7 +12,7 @@ arguments:
 sourceEndpoints:
   - name: db
     type: SQL
-    urlTemplate: "mysql://localhost:<port>/test"
+    urlTemplate: "mysql://localhost:<args.port>/test"
     secret: cred
     condition: true
 dynamicEndpoints:

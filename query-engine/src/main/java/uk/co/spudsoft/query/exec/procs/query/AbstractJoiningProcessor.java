@@ -117,7 +117,7 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
   protected Future<Void> initializeChildStream(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, SourcePipeline sourcePipeline) {
     SourceInstance sourceInstance = sourcePipeline.getSource().createInstance(vertx, context, executor, parentSource + "-" + processorIndex);
     PipelineInstance childPipeline = new PipelineInstance(
-            pipeline.getArguments()
+            pipeline.getArgumentInstances()
             , pipeline.getSourceEndpoints()
             , null
             , sourceInstance

@@ -100,7 +100,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
       } else {
         ConditionInstance cond = new ConditionInstance(condition.getExpression());
         RequestContext requestContext = RequestContextHandler.getRequestContext(context);
-        if (cond.evaluate(requestContext)) {
+        if (cond.evaluate(requestContext, null)) {
           result.add(processor.createInstance(vertx, sourceNameTracker, context));
         }
       }

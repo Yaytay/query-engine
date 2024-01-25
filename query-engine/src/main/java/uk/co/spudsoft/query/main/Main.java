@@ -552,6 +552,7 @@ public class Main extends Application {
       extractSampleFile(baseConfigFile, "samples/args/Args16.yaml", sampleDataLoads);
       extractSampleFile(baseConfigFile, "samples/demo/FeatureRichExample.yaml", sampleDataLoads);
       extractSampleFile(baseConfigFile, "samples/demo/LookupValues.yaml", sampleDataLoads);
+      extractSampleFile(baseConfigFile, "samples/sub1/sub2/AllDynamicIT.yaml", sampleDataLoads);
       extractSampleFile(baseConfigFile, "samples/sub1/sub2/ConcurrentRulesIT.yaml", sampleDataLoads);
       extractSampleFile(baseConfigFile, "samples/sub1/sub2/DynamicEndpointPipelineIT.yaml", sampleDataLoads);
       extractSampleFile(baseConfigFile, "samples/sub1/sub2/EmptyDataIT.yaml", sampleDataLoads);

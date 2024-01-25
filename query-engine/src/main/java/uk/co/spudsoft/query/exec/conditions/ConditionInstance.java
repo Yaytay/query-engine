@@ -25,6 +25,7 @@ import org.apache.commons.jexl3.introspection.JexlPermissions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Condition;
+import uk.co.spudsoft.query.exec.DataRow;
 
 /**
  *
@@ -66,9 +67,18 @@ public class ConditionInstance {
     return expression.getParsedText();
   }
   
-  public boolean evaluate(RequestContext request) {
+  // Compare the bindings with PipelineInstance#renderTemplate and ProcessorScriptInstance#runSource
+  public boolean evaluate(RequestContext request, DataRow row) {
     JexlContext context = new MapContext();
-    context.set("req", request);
+    context.set("request", request);
+    if (request != null) {
+      context.set("args", request.getArguments());
+    }
+    if (row != null) {
+      context.set("row", row);
+    } else {
+      context.set("row", DataRow.EMPTY_ROW);
+    }
     
     Object result = expression.evaluate(context);
     if (result instanceof Boolean b) {

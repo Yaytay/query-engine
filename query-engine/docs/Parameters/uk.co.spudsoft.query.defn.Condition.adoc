@@ -60,19 +60,19 @@ Some examples Conditions are
  * 
 [source]
 ----
-req != null
+requestContext != null
 ----
 Checks that the request context is not null, pretty useless in a live environment.
  * 
 [source]
 ----
-req.clientIpIsIn('127.0.0.1/32','172.17.0.1/16','0:0:0:0:0:0:0:1')
+requestContext.clientIpIsIn('127.0.0.1/32','172.17.0.1/16','0:0:0:0:0:0:0:1')
 ----
 Checks that the client IP address is either localhost or in "172.17.0.0/16".
  * 
 [source]
 ----
-req.host == 'localhost'
+requestContext.host == 'localhost'
 ----
 Checks that the host on the request is localhost.
  

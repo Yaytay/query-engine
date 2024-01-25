@@ -180,7 +180,7 @@ public class DesignHandlerIT {
             .extract().body().asString();
 
     // Can also fail to validate a JSON pipeline
-    json = json.replaceAll("sqlserver://localhost:<port>/test", "");
+    json = json.replaceAll("sqlserver://localhost:<args.port>/test", "");
     given().contentType(ContentType.JSON).log().all()
             .body(json)
             .post("/api/design/validate")

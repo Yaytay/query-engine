@@ -54,6 +54,7 @@ public final class SourceSql implements Source {
   private final String endpoint;
   private final String endpointTemplate;
   private final String query;
+  private final String queryTemplate;
   private final int streamingFetchSize;
   
   private final Integer maxPoolSize;
@@ -68,8 +69,11 @@ public final class SourceSql implements Source {
     if (Strings.isNullOrEmpty(endpoint) && Strings.isNullOrEmpty(endpointTemplate)) {
       throw new IllegalArgumentException("Neither endpoint nor endpointTemplate specified in SQL source");
     }
-    if (Strings.isNullOrEmpty(query)) {
+    if (Strings.isNullOrEmpty(query) && Strings.isNullOrEmpty(queryTemplate)) {
       throw new IllegalArgumentException("Query not specified in SQL source");
+    }
+    if (!Strings.isNullOrEmpty(query) && !Strings.isNullOrEmpty(queryTemplate)) {
+      throw new IllegalArgumentException("Both query and quueryTemplate specified in SQL source");
     }
     if (maxPoolSize != null) {
       if (maxPoolSize <= 0) {
@@ -147,6 +151,18 @@ public final class SourceSql implements Source {
     return query;
   }
   
+  @Schema(description = """
+                        <P>The query to run against the Endpoint, as a <A href="https://github.com/antlr/stringtemplate4/blob/master/doc/introduction.md">StringTemplate</A> that will be rendered first.</P>
+                        <P>
+                        A StringTemplate that results in a SQL statement.
+                        </P>
+                        """
+          , maxLength = 1000000
+  )
+  public String getQueryTemplate() {
+    return queryTemplate;
+  }
+
   @Schema(description = """
                         <P>The number of rows to get from the Source at a time.</P>
                         <P>
@@ -264,6 +280,7 @@ public final class SourceSql implements Source {
     private String endpoint;
     private String endpointTemplate;
     private String query;
+    private String queryTemplate;
     private int streamingFetchSize = 1000;
     private Integer maxPoolSize;
     private Integer maxPoolWaitQueueSize;
@@ -299,6 +316,11 @@ public final class SourceSql implements Source {
       return this;
     }
 
+    public Builder queryTemplate(final String value) {
+      this.queryTemplate = value;
+      return this;
+    }
+
     public Builder streamingFetchSize(final int value) {
       this.streamingFetchSize = value;
       return this;
@@ -330,10 +352,11 @@ public final class SourceSql implements Source {
     }
 
     public SourceSql build() {
-      return new SourceSql(type, name, endpoint, endpointTemplate, query
-          , streamingFetchSize
-          , maxPoolSize, maxPoolWaitQueueSize, idleTimeout, connectionTimeout
-          , replaceDoubleQuotes
+      return new SourceSql(type, name, endpoint, endpointTemplate
+            , query, queryTemplate
+            , streamingFetchSize
+            , maxPoolSize, maxPoolWaitQueueSize, idleTimeout, connectionTimeout
+            , replaceDoubleQuotes
       );
     }
   }
@@ -347,6 +370,7 @@ public final class SourceSql implements Source {
           , final String endpoint
           , final String endpointTemplate
           , final String query
+          , final String queryTemplate
           , final int streamingFetchSize
           , final Integer maxPoolSize
           , final Integer maxPoolWaitQueueSize
@@ -360,6 +384,7 @@ public final class SourceSql implements Source {
     this.endpoint = endpoint;
     this.endpointTemplate = endpointTemplate;
     this.query = query;
+    this.queryTemplate = queryTemplate;
     this.streamingFetchSize = streamingFetchSize;
     this.maxPoolSize = maxPoolSize;
     this.maxPoolWaitQueueSize = maxPoolWaitQueueSize;

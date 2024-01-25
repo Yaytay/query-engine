@@ -16,22 +16,22 @@ arguments:
 sourceEndpoints:
   - name: MS SQL Server
     type: SQL
-    urlTemplate: "sqlserver://localhost:<port>/test"
+    urlTemplate: "sqlserver://localhost:<args.port>/test"
     username: sa
     password: T0p-Secret
   - name: MySQL
     type: SQL
-    urlTemplate: "mysql://localhost:<port>/test"
+    urlTemplate: "mysql://localhost:<args.port>/test"
     username: user
     password: T0p-Secret
   - name: PostgreSQL
     type: SQL
-    urlTemplate: "postgresql://localhost:<port>/test"
+    urlTemplate: "postgresql://localhost:<args.port>/test"
     username: postgres
     password: T0p-Secret
 source:
   type: SQL
-  endpointTemplate: "<key>"
+  endpointTemplate: "<args.key>"
   streamingFetchSize: 7
   replaceDoubleQuotes: true
   query: select d."dataId", d.instant, c.name as colour, d.value from "Data" d join "Colours" c on d."colourId" = c."colourId" where d."dataId" < :maxId order by d."dataId"
@@ -46,7 +46,7 @@ processors:
   input:
     source:
       type: SQL
-      endpointTemplate: "<key>"
+      endpointTemplate: "<args.key>"
       streamingFetchSize: 10
       replaceDoubleQuotes: true
       query: select "dataId", value from "ManyData" m join "RefData" r on r."refId" = m."refId" where "dataId" < :maxId order by "dataId", sort

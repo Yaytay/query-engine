@@ -1,0 +1,37 @@
+description: | 
+    Test pipeline to demonstrate usage of requestContext, args and row in JEXL (conditions), StringTemplates (templates) and JavaScript (processor).
+    The JavaScript process is the only one with the ability to change the data.
+    
+    It's worth noting the performance of these things, my most recent benchmarks have them at:
+      * JEXL: Over a million evaluations per second
+      * StringTemplate: Tens of thousands of evaluations per second
+      * JavaScript: Around one thousand evaluations per second
+    
+arguments:
+  - name: port
+    type: Integer
+    optional: true
+    defaultValue: 2001
+    permittedValuesRegex: '[0-9]+'
+  - name: maxId
+    type: Integer
+    optional: true
+    defaultValue: 1000
+sourceEndpoints:
+  - name: db
+    type: SQL
+    urlTemplate: "mysql://localhost:<args.port>/test"
+    secret: cred
+    condition: true
+source:
+  type: SQL
+  endpoint: db
+  replaceDoubleQuotes: true  
+  query: select d."dataId", d.instant, c.name as ref, d.value from "Data" d join "Colours" c on d."colourId" = c."colourId" where d."dataId" < :maxId order by d."dataId"
+processors:
+  
+- type: LIMIT
+  limit: 13
+formats:
+- type: HTML
+  name: table

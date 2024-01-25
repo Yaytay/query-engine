@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.web.LoginDaoMemoryImpl;
 
 /**
@@ -41,13 +42,13 @@ public class ConditionInstanceTest {
   
   @Test
   public void testEvaluate() {
-    assertFalse(new ConditionInstance("").evaluate(null));
-    assertFalse(new ConditionInstance("7").evaluate(null));
-    assertTrue(new ConditionInstance("true").evaluate(null));
-    assertTrue(new ConditionInstance("true || false").evaluate(null));
-    assertFalse(new ConditionInstance("true && false").evaluate(null));
-    assertFalse(new ConditionInstance("false && false").evaluate(null));
-    assertTrue(new ConditionInstance("true || true").evaluate(null));
+    assertFalse(new ConditionInstance("").evaluate(null, null));
+    assertFalse(new ConditionInstance("7").evaluate(null, null));
+    assertTrue(new ConditionInstance("true").evaluate(null, null));
+    assertTrue(new ConditionInstance("true || false").evaluate(null, null));
+    assertFalse(new ConditionInstance("true && false").evaluate(null, null));
+    assertFalse(new ConditionInstance("false && false").evaluate(null, null));
+    assertTrue(new ConditionInstance("true || true").evaluate(null, null));
   }
   
   
@@ -75,15 +76,15 @@ public class ConditionInstanceTest {
     RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
     
-    assertFalse(new ConditionInstance("req").evaluate(ctx));
-    assertTrue(new ConditionInstance("req.jwt.hasGroup('group1')").evaluate(ctx));
-    assertFalse(new ConditionInstance("req.jwt.hasGroup(\"group7\")").evaluate(ctx));
-    assertTrue(new ConditionInstance("req.jwt.getClaimAsList(\"aud\").contains('security-admin-console')").evaluate(ctx));
-    assertTrue(new ConditionInstance("req.jwt.audience.contains('security-admin-console')").evaluate(ctx));
-    assertTrue(new ConditionInstance("req.jwt.getClaim(\"scope\") =~ '.*[^q]?qe2[^2]?.*'").evaluate(ctx));
-    assertFalse(new ConditionInstance("req.jwt.getClaim(\"scope\") =~ '.*[^q]?qe3[^3]?.*'").evaluate(ctx));
-    assertTrue(new ConditionInstance("req.jwt.scope.contains(\"qe2\")").evaluate(ctx));
-    assertFalse(new ConditionInstance("req.jwt.scope.contains(\"qe1\")").evaluate(ctx));
+    assertFalse(new ConditionInstance("request").evaluate(ctx, DataRow.EMPTY_ROW));
+    assertTrue(new ConditionInstance("request.jwt.hasGroup('group1')").evaluate(ctx, DataRow.EMPTY_ROW));
+    assertFalse(new ConditionInstance("request.jwt.hasGroup(\"group7\")").evaluate(ctx, DataRow.EMPTY_ROW));
+    assertTrue(new ConditionInstance("request.jwt.getClaimAsList(\"aud\").contains('security-admin-console')").evaluate(ctx, DataRow.EMPTY_ROW));
+    assertTrue(new ConditionInstance("request.jwt.audience.contains('security-admin-console')").evaluate(ctx, DataRow.EMPTY_ROW));
+    assertTrue(new ConditionInstance("request.jwt.getClaim(\"scope\") =~ '.*[^q]?qe2[^2]?.*'").evaluate(ctx, DataRow.EMPTY_ROW));
+    assertFalse(new ConditionInstance("request.jwt.getClaim(\"scope\") =~ '.*[^q]?qe3[^3]?.*'").evaluate(ctx, DataRow.EMPTY_ROW));
+    assertTrue(new ConditionInstance("request.jwt.scope.contains(\"qe2\")").evaluate(ctx, DataRow.EMPTY_ROW));
+    assertFalse(new ConditionInstance("request.jwt.scope.contains(\"qe1\")").evaluate(ctx, DataRow.EMPTY_ROW));
     
   }
   

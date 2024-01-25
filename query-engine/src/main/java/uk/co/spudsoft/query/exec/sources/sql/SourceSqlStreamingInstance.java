@@ -124,7 +124,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     }
     if (!ConditionInstance.isNullOrBlank(endpoint.getCondition())) {
       ConditionInstance cond = endpoint.getCondition().createInstance();
-      if (!cond.evaluate(requestContext)) {
+      if (!cond.evaluate(requestContext, null)) {
         String message = String.format("Endpoint %s (%s) rejected by condition (%s)", definition.getEndpoint(), endpoint.getUrl(), endpoint.getCondition());
         logger.warn(message);
         return Future.failedFuture(new ServiceException(503, "Endpoint \"" + definition.getEndpoint() + "\" not accessible", new IllegalStateException(message)));
@@ -147,7 +147,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     logger.trace("Outer context: {}", context);
     
     AbstractSqlPreparer preparer = getPreparer(url);
-    AbstractSqlPreparer.QueryAndArgs queryAndArgs = preparer.prepareSqlStatement(definition.getQuery(), definition.getReplaceDoubleQuotes(), pipeline.getArguments());
+    AbstractSqlPreparer.QueryAndArgs queryAndArgs = preparer.prepareSqlStatement(definition.getQuery(), definition.getReplaceDoubleQuotes(), pipeline.getArgumentInstances());
     String sql = queryAndArgs.query;
     Tuple args = Tuple.from(queryAndArgs.args);
     
@@ -214,7 +214,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
       }
       if (!ConditionInstance.isNullOrBlank(credentials.getCondition())) {
         ConditionInstance cond = credentials.getCondition().createInstance();
-        if (!cond.evaluate(requestContext)) {
+        if (!cond.evaluate(requestContext, null)) {
           String message = String.format("Endpoint %s (%s) prevented from accessing secret %s by condition (%s)", definition.getEndpoint(), coalesce(endpoint.getUrl(), endpoint.getUrlTemplate()), endpoint.getSecret(), endpoint.getCondition());
           logger.warn(message);
           throw new ServiceException(503, "Endpoint \"" + definition.getEndpoint() + "\" not accessible", new IllegalStateException(message));

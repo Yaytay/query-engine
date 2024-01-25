@@ -13,18 +13,18 @@
   "sourceEndpoints": [
     
     { "name": "MS SQL Server",
-      "urlTemplate": "sqlserver://localhost:<port>/test",
+      "urlTemplate": "sqlserver://localhost:<args.port>/test",
       "username": "sa",
       "password": "T0p-Secret"
     },
     { "name": "MySQL",
-      "urlTemplate": "mysql://localhost:<port>/test",
+      "urlTemplate": "mysql://localhost:<args.port>/test",
       "username": "user",
       "password": "T0p-Secret"
     }
     ,
     { "name": "PostgreSQL",
-      "urlTemplate": "postgresql://localhost:<port>/test",
+      "urlTemplate": "postgresql://localhost:<args.port>/test",
       "username": "postgres",
       "password": "T0p-Secret"
     }
@@ -32,7 +32,7 @@
   ,
   "source": {    
     "type": "SQL",
-    "endpointTemplate": "<key>",
+    "endpointTemplate": "<args.key>",
     "streamingFetchSize": 7,
     "query": "select d.id, d.instant, l.value as ref, d.value from testData d join RefData l on d.lookup = l.id where d.id < 20 order by d.id"
   }
@@ -49,7 +49,7 @@
       "input": {
         "source": {    
           "type": "SQL",
-          "endpointTemplate": "<key>",
+          "endpointTemplate": "<args.key>",
           "streamingFetchSize": 10,
           "query": "select dataId, value from ManyData m join RefData r on r.id = m.refId where dataId < 20 order by dataId, sort"
         }

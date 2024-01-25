@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.exec.procs.script;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -24,9 +25,7 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.streams.WriteStream;
 import java.time.ZoneId;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.BiFunction;
 import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.Source;
@@ -34,6 +33,7 @@ import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.proxy.ProxyObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.defn.ProcessorScript;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
@@ -72,7 +72,8 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
   private Source processSource;
   
   private final RequestContext requestContext;
-  private final Map<String, Object> arguments;
+  private final Pipeline pipeline;
+  private final ImmutableMap<String, Object> arguments;
   
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
   public ProcessorScriptInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorScript definition) {
@@ -86,22 +87,27 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
       }
     });
     this.requestContext = RequestContextHandler.getRequestContext(context);
-    this.arguments = new HashMap<>();
+    this.pipeline = PipelineInstance.getPipelineDefinition(context);
+    this.arguments = buildArgumentMap(requestContext);
+  }
+  
+  private static ImmutableMap<String, Object> buildArgumentMap(RequestContext requestContext) {
+    ImmutableMap.Builder<String, Object> builder = ImmutableMap.<String, Object>builder();
     if (requestContext != null) {
       MultiMap args = requestContext.getArguments();
       if (args != null) {
         for (String key : args.names()) {
           List<String> values = args.getAll(key);
           if (values.size() == 1) {
-            this.arguments.put(key, values.get(0));
+            builder.put(key, values.get(0));
           } else {
-            this.arguments.put(key, values);
+            builder.put(key, values);
           }
         }      
       }
     }
-    
-  }  
+    return builder.build();
+  }
 
   private Future<Void> passthroughStreamProcessor(DataRow data, AsyncHandler<DataRow> chain) {
     sourceNameTracker.addNameToContextLocalData(context);
@@ -142,10 +148,12 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
     });
   }
   
+  // Compare the bindings with PipelineInstance#renderTemplate and ConditionInstance#evaluate
   <T> T runSource(Engine engine, String name, String language, Source source, DataRow data, BiFunction<Value, DataRow, T> postProcess) {
     try (org.graalvm.polyglot.Context graalContext = org.graalvm.polyglot.Context.newBuilder(language).engine(engine).build()) {
       Value bindings = graalContext.getBindings(language);
-      bindings.putMember("requestContext", requestContext);
+      bindings.putMember("request", requestContext);
+      bindings.putMember("pipeline", pipeline);
       bindings.putMember("args", ProxyObject.fromMap(arguments));
       bindings.putMember("row", ProxyObject.fromMap(data.getMap()));
       Value outputValue = graalContext.eval(source);    

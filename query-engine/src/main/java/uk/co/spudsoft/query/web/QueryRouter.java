@@ -144,6 +144,9 @@ public class QueryRouter implements Handler<RoutingContext> {
                       response.headers().set("content-type", chosenFormat.getMediaType().toString());
                       FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), response);
                       SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), pipelineExecutor, ROOT_SOURCE_DEFAULT_NAME);
+
+                      Vertx.currentContext().putLocal("pipeline", pipeline);
+                      
                       instance = new PipelineInstance(
                               pipelineExecutor.prepareArguments(pipeline.getArguments(), routingContext.request().params())
                               , pipeline.getSourceEndpointsMap()

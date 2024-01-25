@@ -59,7 +59,7 @@ public class RequestContextHandler implements Handler<RoutingContext> {
   }
   
   public static RequestContext getRequestContext(Context context) {
-    return context.getLocal(KEY);
+    return context == null ? null : context.getLocal(KEY);
   }
 
 }

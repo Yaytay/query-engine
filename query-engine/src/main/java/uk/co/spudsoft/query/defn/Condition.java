@@ -83,11 +83,11 @@ import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
  * <P>
  * Some examples Conditions are
  * <UL>
- * <LI><pre>req != null</pre>
+ * <LI><pre>requestContext != null</pre>
  * Checks that the request context is not null, pretty useless in a live environment.
- * <LI><PRE>req.clientIpIsIn('127.0.0.1/32','172.17.0.1/16','0:0:0:0:0:0:0:1')</PRE>
+ * <LI><PRE>requestContext.clientIpIsIn('127.0.0.1/32','172.17.0.1/16','0:0:0:0:0:0:0:1')</PRE>
  * Checks that the client IP address is either localhost or in "172.17.0.0/16".
- * <LI><PRE>req.host == 'localhost'</PRE>
+ * <LI><PRE>requestContext.host == 'localhost'</PRE>
  * Checks that the host on the request is localhost.
  * </UL>
  * 
@@ -134,11 +134,11 @@ import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
                       <P>
                       Some examples Conditions are
                       <UL>
-                      <LI><pre>req != null</pre>
+                      <LI><pre>requestContext != null</pre>
                       Checks that the request context is not null, pretty useless in a live environment.
-                      <LI><PRE>req.clientIpIsIn('127.0.0.1/32','172.17.0.1/16','0:0:0:0:0:0:0:1')</PRE>
+                      <LI><PRE>requestContext.clientIpIsIn('127.0.0.1/32','172.17.0.1/16','0:0:0:0:0:0:0:1')</PRE>
                       Checks that the client IP address is either localhost or in "172.17.0.0/16".
-                      <LI><PRE>req.host == 'localhost'</PRE>
+                      <LI><PRE>requestContext.host == 'localhost'</PRE>
                       Checks that the host on the request is localhost.
                       </UL>
                       """)

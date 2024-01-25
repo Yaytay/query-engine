@@ -1,1 +1,1 @@
-req.host == 'localhost'
+request.host == 'localhost'

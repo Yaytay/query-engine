@@ -62,7 +62,7 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
     SourceInstance sourceInstance = definition.getInput().getSource().createInstance(vertx, context, executor, "Dynamic Endpoint Source");
     FormatCaptureInstance format = new FormatCaptureInstance();
     PipelineInstance dePipeline = new PipelineInstance(
-            pipeline.getArguments()
+            pipeline.getArgumentInstances()
             , pipeline.getSourceEndpoints()
             , null
             , sourceInstance
@@ -136,7 +136,7 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
     if (!Strings.isNullOrEmpty(condition)) {
       RequestContext requestContext = RequestContextHandler.getRequestContext(context);
       ConditionInstance cond = new ConditionInstance(condition);
-      if (cond.evaluate(requestContext)) {
+      if (cond.evaluate(requestContext, data)) {
         pipeline.getSourceEndpoints().put(key, endpoint);      
       } else {
         logger.debug("Endpoint {} ({}) rejected by condition ({})", key, url, condition);

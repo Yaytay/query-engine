@@ -79,7 +79,7 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
             }
     );
     PipelineInstance childPipeline = new PipelineInstance(
-            pipeline.getArguments()
+            pipeline.getArgumentInstances()
             , pipeline.getSourceEndpoints()
             , null
             , sourceInstance
