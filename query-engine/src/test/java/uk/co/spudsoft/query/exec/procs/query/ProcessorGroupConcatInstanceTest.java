@@ -210,8 +210,8 @@ public class ProcessorGroupConcatInstanceTest {
                     Arrays.asList(
                             ProcessorScript.builder()
                                     .language("js")
-                                    .predicate("data.value % 2 == 0")
-                                    .process("data.count = data.count == null ? 1 : data.count + 1")
+                                    .predicate("row.value % 2 == 0")
+                                    .process("const result = {count: row.count == null ? 1 : row.count + 1}; result")
                                     .build()
                             , ProcessorGroupConcat.builder()
                                     .input(
@@ -221,7 +221,7 @@ public class ProcessorGroupConcatInstanceTest {
                                                             Arrays.asList(
                                                                     ProcessorScript.builder()
                                                                             .language("js")
-                                                                            .process("data.count = data.count == null ? 1 : data.count + 1")
+                                                                            .process("const result = {count: row.count == null ? 1 : row.count + 1}; result")
                                                                             .build()
                                                             )
                                                     )

@@ -124,7 +124,7 @@ public class QueryRouter implements Handler<RoutingContext> {
                     }
                   })
                   .onComplete(ar -> {
-                    RequestContext requestContext = Vertx.currentContext().getLocal("req");
+                    RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
                     response.headersEndHandler(v -> {
                       requestContext.setHeadersSentTime(System.currentTimeMillis());
                     });
@@ -134,8 +134,8 @@ public class QueryRouter implements Handler<RoutingContext> {
                   })
                   .compose(pipeline -> pipelineExecutor.validatePipeline(pipeline))
                   .compose(pipeline -> {
-                    RequestContext requestContext = (RequestContext) Vertx.currentContext().getLocal("req");
-                    return auditor.runRateLimitRules(requestContext, pipeline);
+                     RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
+                   return auditor.runRateLimitRules(requestContext, pipeline);
                   })
                   .compose(pipeline -> {
                     PipelineInstance instance;
@@ -163,7 +163,7 @@ public class QueryRouter implements Handler<RoutingContext> {
                     return instance.getFinalPromise().future();
                   })
                   .onFailure(ex -> {
-                    RequestContext requestContext = Vertx.currentContext().getLocal("req");
+                    RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
                     auditor.recordException(requestContext, ex);
                     internalError(ex, routingContext, outputAllErrorMessages);
                   })

@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Argument;
+import uk.co.spudsoft.query.defn.Condition;
 import uk.co.spudsoft.query.defn.DynamicEndpoint;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.defn.Processor;
@@ -43,6 +44,9 @@ import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 import uk.co.spudsoft.query.main.ProtectedCredentials;
 import uk.co.spudsoft.query.defn.Format;
+import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
+import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.web.RequestContextHandler;
 
 /**
  *
@@ -90,7 +94,16 @@ public class PipelineExecutorImpl implements PipelineExecutor {
   public List<ProcessorInstance> createProcessors(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, SourcePipeline definition) {
     List<ProcessorInstance> result = new ArrayList<>();
     for (Processor processor : definition.getProcessors()) {
-      result.add(processor.createInstance(vertx, sourceNameTracker, context));
+      Condition condition = processor.getCondition();
+      if (condition == null) {
+        result.add(processor.createInstance(vertx, sourceNameTracker, context));
+      } else {
+        ConditionInstance cond = new ConditionInstance(condition.getExpression());
+        RequestContext requestContext = RequestContextHandler.getRequestContext(context);
+        if (cond.evaluate(requestContext)) {
+          result.add(processor.createInstance(vertx, sourceNameTracker, context));
+        }
+      }
     }
     return result;
   }

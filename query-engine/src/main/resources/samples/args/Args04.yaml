@@ -27,7 +27,7 @@ arguments:
     type: String
 source:
   type: Test
-  rowCount: 7
+  rowCount: 4
 formats:
 - type: HTML
 - type: XLSX

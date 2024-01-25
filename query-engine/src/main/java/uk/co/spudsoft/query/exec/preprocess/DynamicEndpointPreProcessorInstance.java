@@ -35,6 +35,7 @@ import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
+import uk.co.spudsoft.query.web.RequestContextHandler;
 import uk.co.spudsoft.query.web.ServiceException;
 
 /**
@@ -133,7 +134,7 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
             .build();
         
     if (!Strings.isNullOrEmpty(condition)) {
-      RequestContext requestContext = context.getLocal("ctx");
+      RequestContext requestContext = RequestContextHandler.getRequestContext(context);
       ConditionInstance cond = new ConditionInstance(condition);
       if (cond.evaluate(requestContext)) {
         pipeline.getSourceEndpoints().put(key, endpoint);      

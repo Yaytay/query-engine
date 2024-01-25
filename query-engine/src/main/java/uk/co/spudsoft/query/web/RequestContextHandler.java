@@ -16,11 +16,13 @@
  */
 package uk.co.spudsoft.query.web;
 
+import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 
 /**
@@ -30,6 +32,7 @@ import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 public class RequestContextHandler implements Handler<RoutingContext> {
   
   private static final Logger logger = LoggerFactory.getLogger(RequestContextHandler.class);
+  private static final String KEY = "req";
   
   private final Vertx vertx;
   private final RequestContextBuilder requestContextBuilder;
@@ -46,13 +49,17 @@ public class RequestContextHandler implements Handler<RoutingContext> {
     requestContextBuilder
             .buildRequestContext(event.request())
             .onSuccess(requestContext -> {
-              Vertx.currentContext().putLocal("req", requestContext);
+              Vertx.currentContext().putLocal(KEY, requestContext);
               logger.debug("Context found for request to {}", event.request().absoluteURI());
               event.next();
             })
             .onFailure(ex -> {
               QueryRouter.internalError(ex, event, outputAllErrorMessages);
             });
+  }
+  
+  public static RequestContext getRequestContext(Context context) {
+    return context.getLocal(KEY);
   }
 
 }

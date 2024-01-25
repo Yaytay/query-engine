@@ -12,7 +12,7 @@ arguments:
     - value: Third
 source:
   type: Test
-  rowCount: 7
+  rowCount: 1
 formats:
 - type: HTML
 - type: XLSX

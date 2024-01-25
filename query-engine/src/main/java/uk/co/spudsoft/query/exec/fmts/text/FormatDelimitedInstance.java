@@ -32,6 +32,7 @@ import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormattingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
+import uk.co.spudsoft.query.web.RequestContextHandler;
 
 /**
  *
@@ -67,7 +68,7 @@ public class FormatDelimitedInstance implements FormatInstance {
             , rowCount -> {
               Context vertxContext = Vertx.currentContext();
               if (vertxContext != null) {
-                RequestContext requestContext = Vertx.currentContext().getLocal("req");
+                RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
                 if (requestContext != null) {
                   requestContext.setRowsWritten(rowCount);
                 }

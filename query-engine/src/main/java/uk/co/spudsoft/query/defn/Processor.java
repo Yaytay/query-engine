@@ -74,6 +74,13 @@ public interface Processor {
   )
   ProcessorType getType();
   
+  @Schema(description = """
+                        <P>Optional condition that controls whether the processor will be run.</P>
+                        """
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  Condition getCondition();
+  
   default void validateType(ProcessorType required, ProcessorType actual) {
     if (required != actual) {
       throw new IllegalArgumentException("Processor of type " + required + " configured with type " + actual);

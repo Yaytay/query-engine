@@ -57,7 +57,7 @@ arguments:
     type: String
 source:
   type: Test
-  rowCount: 7
+  rowCount: 10
 formats:
 - type: HTML
 - type: XLSX

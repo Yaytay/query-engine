@@ -41,6 +41,7 @@ import uk.co.spudsoft.xlsx.FontDefinition;
 import uk.co.spudsoft.xlsx.TableDefinition;
 import uk.co.spudsoft.xlsx.XlsxWriter;
 import uk.co.spudsoft.query.exec.FormatInstance;
+import uk.co.spudsoft.query.web.RequestContextHandler;
 
 /**
  *
@@ -95,7 +96,7 @@ public class FormatXlsxInstance implements FormatInstance {
             , rows -> {
               Context vertxContext = Vertx.currentContext();
               if (vertxContext != null) {
-                RequestContext requestContext = Vertx.currentContext().getLocal("req");
+                RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
                 if (requestContext != null) {
                   requestContext.setRowsWritten(rows);
                 }
@@ -131,7 +132,7 @@ public class FormatXlsxInstance implements FormatInstance {
   private String getUsernameFromContext() {
     Context vertxContext = Vertx.currentContext();
     if (vertxContext != null) {
-      RequestContext requestContext = vertxContext.getLocal("req");
+      RequestContext requestContext = RequestContextHandler.getRequestContext(vertxContext);
       if (requestContext != null) {
         return requestContext.getUsername();
       }      

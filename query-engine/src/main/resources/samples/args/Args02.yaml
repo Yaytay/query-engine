@@ -17,7 +17,12 @@ arguments:
     type: String
 source:
   type: Test
-  rowCount: 7
+  rowCount: 2
+processors:
+- type: SCRIPT
+  process: |-
+    result = {arg1: args['arg1'], arg2: args['arg2']}
+    result
 formats:
 - type: HTML
 - type: XLSX

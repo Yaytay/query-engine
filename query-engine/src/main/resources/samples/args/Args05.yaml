@@ -32,7 +32,7 @@ arguments:
     type: String
 source:
   type: Test
-  rowCount: 7
+  rowCount: 5
 formats:
 - type: HTML
 - type: XLSX

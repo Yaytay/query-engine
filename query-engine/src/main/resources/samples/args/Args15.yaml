@@ -82,7 +82,7 @@ arguments:
     type: String
 source:
   type: Test
-  rowCount: 7
+  rowCount: 15
 formats:
 - type: HTML
 - type: XLSX

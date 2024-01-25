@@ -28,6 +28,7 @@ import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Transaction;
 import io.vertx.sqlclient.Tuple;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Endpoint;
@@ -41,6 +42,7 @@ import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.exec.sources.AbstractSource;
 import uk.co.spudsoft.query.main.ProtectedCredentials;
+import uk.co.spudsoft.query.web.RequestContextHandler;
 import uk.co.spudsoft.query.web.ServiceException;
 
 /**
@@ -96,14 +98,21 @@ public class SourceSqlStreamingInstance extends AbstractSource {
   
   private PoolOptions poolOptions(SourceSql definition) {
     PoolOptions po = new PoolOptions();
-
+    if (definition.getConnectionTimeout() != null) {
+      long millis = definition.getConnectionTimeout().toMillis();
+      if (millis > Integer.MAX_VALUE) {
+        millis = Integer.MAX_VALUE;
+      }
+      po.setConnectionTimeout((int) millis);
+      po.setConnectionTimeoutUnit(TimeUnit.MILLISECONDS);
+    }
     return po;
   }
   
   @Override
   public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
 
-    RequestContext requestContext = vertx.getOrCreateContext().getLocal("ctx");
+    RequestContext requestContext = RequestContextHandler.getRequestContext(vertx.getOrCreateContext());
     
     String endpointName = definition.getEndpoint();
     if (Strings.isNullOrEmpty(endpointName)) {

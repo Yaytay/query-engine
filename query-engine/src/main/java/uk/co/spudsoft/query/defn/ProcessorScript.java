@@ -30,7 +30,7 @@ import uk.co.spudsoft.query.exec.procs.script.ProcessorScriptInstance;
  * 
  * @author jtalbut
  */
-@JsonDeserialize(builder = ProcessorLimit.Builder.class)
+@JsonDeserialize(builder = ProcessorScript.Builder.class)
 @Schema(description = """
                       Run a custom script on each row of the output.
                       """
@@ -38,6 +38,7 @@ import uk.co.spudsoft.query.exec.procs.script.ProcessorScriptInstance;
 public class ProcessorScript implements Processor {
   
   private final ProcessorType type;
+  private final Condition condition;
   private final String language;
   private final String predicate;
   private final String process;
@@ -55,6 +56,11 @@ public class ProcessorScript implements Processor {
   @Override
   public ProcessorType getType() {
     return type;
+  }
+
+  @Override
+  public Condition getCondition() {
+    return condition;
   }
 
   @Schema(description = """
@@ -93,6 +99,7 @@ public class ProcessorScript implements Processor {
   public static class Builder {
 
     private ProcessorType type = ProcessorType.SCRIPT;
+    private Condition condition;
     private String language = "js";
     private String predicate;
     private String process;
@@ -105,6 +112,16 @@ public class ProcessorScript implements Processor {
       return this;
     }
 
+    /**
+     * Set the condition on the Pipeline in the builder.
+     * @param value the condition on the Endpoint.
+     * @return this, so that the builder may be used fluently.
+     */
+    public Builder condition(final Condition value) {
+      this.condition = value;
+      return this;
+    }
+    
     public Builder language(final String value) {
       this.language = value;
       return this;
@@ -121,7 +138,7 @@ public class ProcessorScript implements Processor {
     }
 
     public ProcessorScript build() {
-      return new uk.co.spudsoft.query.defn.ProcessorScript(type, language, predicate, process);
+      return new ProcessorScript(type, condition, language, predicate, process);
     }
   }
 
@@ -129,9 +146,10 @@ public class ProcessorScript implements Processor {
     return new ProcessorScript.Builder();
   }
 
-  private ProcessorScript(final ProcessorType type, final String language, final String predicate, final String process) {
+  private ProcessorScript(final ProcessorType type, final Condition condition, final String language, final String predicate, final String process) {
     validateType(ProcessorType.SCRIPT, type);
     this.type = type;
+    this.condition = condition;
     this.language = language;
     this.predicate = predicate;
     this.process = process;

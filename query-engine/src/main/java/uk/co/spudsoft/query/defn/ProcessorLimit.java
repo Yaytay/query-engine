@@ -37,6 +37,7 @@ import uk.co.spudsoft.query.exec.procs.limit.ProcessorLimitInstance;
 public class ProcessorLimit implements Processor {
   
   private final ProcessorType type;
+  private final Condition condition;
   private final int limit;
 
   @Override
@@ -53,6 +54,11 @@ public class ProcessorLimit implements Processor {
   public ProcessorType getType() {
     return type;
   }
+  
+  @Override
+  public Condition getCondition() {
+    return condition;
+  }  
 
   @Schema(description = """
                         The limit on the number of rows that will be output by this processor.
@@ -66,6 +72,7 @@ public class ProcessorLimit implements Processor {
   public static class Builder {
 
     private ProcessorType type = ProcessorType.LIMIT;
+    private Condition condition;
     private int limit;
 
     private Builder() {
@@ -75,6 +82,16 @@ public class ProcessorLimit implements Processor {
       this.type = value;
       return this;
     }
+    
+    /**
+     * Set the condition on the Pipeline in the builder.
+     * @param value the condition on the Endpoint.
+     * @return this, so that the builder may be used fluently.
+     */
+    public Builder condition(final Condition value) {
+      this.condition = value;
+      return this;
+    }
 
     public Builder limit(final int value) {
       this.limit = value;
@@ -82,7 +99,7 @@ public class ProcessorLimit implements Processor {
     }
 
     public ProcessorLimit build() {
-      return new ProcessorLimit(type, limit);
+      return new ProcessorLimit(type, condition, limit);
     }
   }
 
@@ -90,9 +107,10 @@ public class ProcessorLimit implements Processor {
     return new ProcessorLimit.Builder();
   }
 
-  private ProcessorLimit(final ProcessorType type, final int limit) {
+  private ProcessorLimit(final ProcessorType type, final Condition condition, final int limit) {
     validateType(ProcessorType.LIMIT, type);
     this.type = type;
+    this.condition = condition;
     this.limit = limit;
   }
   

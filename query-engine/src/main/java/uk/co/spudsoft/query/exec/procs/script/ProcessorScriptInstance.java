@@ -20,9 +20,13 @@ import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.streams.WriteStream;
 import java.time.ZoneId;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.Source;
@@ -37,8 +41,10 @@ import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.DataRowStream;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
+import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.exec.procs.AsyncHandler;
 import uk.co.spudsoft.query.exec.procs.PassthroughStream;
+import uk.co.spudsoft.query.web.RequestContextHandler;
 
 
 /**
@@ -65,6 +71,9 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
   private Source predicateSource;
   private Source processSource;
   
+  private final RequestContext requestContext;
+  private final Map<String, Object> arguments;
+  
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
   public ProcessorScriptInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorScript definition) {
     this.sourceNameTracker = sourceNameTracker;
@@ -76,6 +85,22 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
         engine.close();
       }
     });
+    this.requestContext = RequestContextHandler.getRequestContext(context);
+    this.arguments = new HashMap<>();
+    if (requestContext != null) {
+      MultiMap args = requestContext.getArguments();
+      if (args != null) {
+        for (String key : args.names()) {
+          List<String> values = args.getAll(key);
+          if (values.size() == 1) {
+            this.arguments.put(key, values.get(0));
+          } else {
+            this.arguments.put(key, values);
+          }
+        }      
+      }
+    }
+    
   }  
 
   private Future<Void> passthroughStreamProcessor(DataRow data, AsyncHandler<DataRow> chain) {
@@ -104,23 +129,28 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
   }
 
   private void runProcess(DataRow data) {
-    runSource(engine, "process", definition.getLanguage(), processSource, data, (v, jo) -> {
-      jo.forEach(e -> {
-        if (e.getValue() instanceof Value) {
-          e.setValue(mapToNativeObject((Value) e.getValue()));
+    runSource(engine, "process", definition.getLanguage(), processSource, data, (returnValue, row) -> {
+      logger.debug("returnValue ({}): {}", returnValue == null ? "" : returnValue.getClass(), returnValue);
+      logger.debug("row ({}): {}", row == null ? "" : row.getClass(), row);
+      // Anything in the return value is added to the row
+      if (returnValue != null) {
+        for (String key : returnValue.getMemberKeys()) {
+          row.put(key, mapToNativeObject(returnValue.getMember(key)));
         }
-      });
-      return null;
+      }
+      return row;
     });
   }
   
-  static <T> T runSource(Engine engine, String name, String language, Source source, DataRow data, BiFunction<Value, DataRow, T> postProcess) {
-    try (org.graalvm.polyglot.Context context = org.graalvm.polyglot.Context.newBuilder(language).engine(engine).build()) {
-      Value bindings = context.getBindings(language);
-      bindings.putMember("data", ProxyObject.fromMap(data.getMap()));
-      Value outputValue = context.eval(source);    
+  <T> T runSource(Engine engine, String name, String language, Source source, DataRow data, BiFunction<Value, DataRow, T> postProcess) {
+    try (org.graalvm.polyglot.Context graalContext = org.graalvm.polyglot.Context.newBuilder(language).engine(engine).build()) {
+      Value bindings = graalContext.getBindings(language);
+      bindings.putMember("requestContext", requestContext);
+      bindings.putMember("args", ProxyObject.fromMap(arguments));
+      bindings.putMember("row", ProxyObject.fromMap(data.getMap()));
+      Value outputValue = graalContext.eval(source);    
       T result = postProcess.apply(outputValue, data);
-      logger.trace("Running {} {} gave {}", name, source.getCharacters(), result);
+      logger.debug("Running {} {} gave {}", name, source.getCharacters(), result);
       return result;
     } catch (Throwable ex) {
       logger.warn("Failed to evaluate {}: ", name, ex);

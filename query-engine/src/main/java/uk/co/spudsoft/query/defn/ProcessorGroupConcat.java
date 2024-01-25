@@ -36,6 +36,7 @@ import uk.co.spudsoft.query.exec.procs.query.ProcessorGroupConcatInstance;
 public class ProcessorGroupConcat implements Processor {
 
   private final ProcessorType type;
+  private final Condition condition;
   private final SourcePipeline input;
   private final boolean innerJoin;
   private final String parentIdColumn;
@@ -57,6 +58,11 @@ public class ProcessorGroupConcat implements Processor {
   @Override
   public ProcessorType getType() {
     return type;
+  }
+  
+  @Override
+  public Condition getCondition() {
+    return condition;
   }
   
   /**
@@ -190,6 +196,7 @@ public class ProcessorGroupConcat implements Processor {
   public static class Builder {
 
     private ProcessorType type = ProcessorType.GROUP_CONCAT;
+    private Condition condition;
     private SourcePipeline input;
     private boolean innerJoin;
     private String parentIdColumn;
@@ -201,7 +208,7 @@ public class ProcessorGroupConcat implements Processor {
     private Builder() {
     }
     public ProcessorGroupConcat build() {
-      return new ProcessorGroupConcat(type, input, innerJoin, parentIdColumn, childIdColumn, childValueColumn, parentValueColumn, delimiter);
+      return new ProcessorGroupConcat(type, condition, input, innerJoin, parentIdColumn, childIdColumn, childValueColumn, parentValueColumn, delimiter);
     }
 
     public Builder type(final ProcessorType value) {
@@ -209,6 +216,16 @@ public class ProcessorGroupConcat implements Processor {
       return this;
     }
 
+    /**
+     * Set the condition on the Pipeline in the builder.
+     * @param value the condition on the Endpoint.
+     * @return this, so that the builder may be used fluently.
+     */
+    public Builder condition(final Condition value) {
+      this.condition = value;
+      return this;
+    }
+    
     public Builder input(final SourcePipeline value) {
       this.input = value;
       return this;
@@ -250,6 +267,7 @@ public class ProcessorGroupConcat implements Processor {
   }
 
   private ProcessorGroupConcat(ProcessorType type
+          , final Condition condition
           , SourcePipeline input
           , boolean innerJoin
           , String parentIdColumn
@@ -260,6 +278,7 @@ public class ProcessorGroupConcat implements Processor {
   ) {
     validateType(ProcessorType.GROUP_CONCAT, type);
     this.type = type;
+    this.condition = condition;
     this.input = input;
     this.innerJoin = innerJoin;
     this.parentIdColumn = parentIdColumn;

@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.web.rest;
 import io.vertx.core.Context;
 import jakarta.ws.rs.core.Response;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.web.RequestContextHandler;
 import uk.co.spudsoft.query.web.ServiceException;
 
 /**
@@ -31,7 +32,7 @@ public class HandlerAuthHelper {
 
 
   public static RequestContext getRequestContext(Context context, boolean required) throws ServiceException {
-    RequestContext requestContext = context.getLocal("req");
+    RequestContext requestContext = RequestContextHandler.getRequestContext(context);
     if (required) {
       if (requestContext == null) {
         throw new ServiceException(Response.Status.UNAUTHORIZED.getStatusCode(), "");

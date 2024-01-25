@@ -175,7 +175,7 @@ public class AuthQueryMsIT {
             .extract().body().asString();
     
     String token = tokenBuilder.buildToken(JsonWebAlgorithm.RS512
-            , "AuthQueryIT-" + UUID.randomUUID().toString()
+            , "AuthQueryMSIT-" + UUID.randomUUID().toString()
             , jwks.getBaseUrl()
             , "sub" + System.currentTimeMillis()
             , Arrays.asList("query-engine")
