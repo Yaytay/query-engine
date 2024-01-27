@@ -358,9 +358,12 @@
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
       <version>42.7.1</version>
-    </dependency>
-    
-    
+    </dependency>    
+    <dependency>
+      <groupId>io.github.nstdio</groupId>
+      <artifactId>rsql-parser</artifactId>
+      <version>2.2.1</version>
+    </dependency>   
     
     <!-- Testing -->
     <dependency>

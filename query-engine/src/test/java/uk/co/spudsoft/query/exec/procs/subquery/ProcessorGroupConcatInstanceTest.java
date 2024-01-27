@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package uk.co.spudsoft.query.exec.procs.query;
+package uk.co.spudsoft.query.exec.procs.subquery;
 
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
@@ -24,7 +24,6 @@ import io.vertx.junit5.VertxTestContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -37,7 +36,6 @@ import uk.co.spudsoft.query.defn.ProcessorScript;
 import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.defn.SourceTest;
 import uk.co.spudsoft.query.exec.DataRow;
-import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineExecutorImpl;
 import uk.co.spudsoft.query.exec.PipelineInstance;

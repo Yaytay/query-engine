@@ -14,9 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package uk.co.spudsoft.query.exec.procs.query;
+package uk.co.spudsoft.query.exec.procs.subquery;
 
-import uk.co.spudsoft.query.exec.procs.query.CollatingDestinationInstance;
+import uk.co.spudsoft.query.exec.procs.subquery.CollatingDestinationInstance;
 import io.vertx.core.streams.WriteStream;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
