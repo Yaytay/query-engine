@@ -16,11 +16,13 @@
  */
 package uk.co.spudsoft.query.exec;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import uk.co.spudsoft.query.exec.filters.Filter;
 
 /**
@@ -30,11 +32,17 @@ import uk.co.spudsoft.query.exec.filters.Filter;
 public class FilterFactory {
   
   private final Map<String, Filter> filters;
+  private final List<String> sortedKeys;
 
   public FilterFactory(List<Filter> filters) {
     ImmutableMap.Builder<String, Filter> builder = ImmutableMap.<String, Filter>builder();
     filters.forEach(f -> builder.put(f.getKey(), f));
     this.filters = builder.build();
+    sortedKeys = ImmutableList.copyOf(this.filters.keySet().stream().sorted().collect(Collectors.toList()));
+  }
+  
+  public List<String> getSortedKeys() {
+    return sortedKeys;
   }
   
   public ProcessorInstance createFilter(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String arg, String value) {

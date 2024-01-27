@@ -35,6 +35,7 @@ import uk.co.spudsoft.query.defn.Argument;
 import uk.co.spudsoft.query.defn.ArgumentType;
 import uk.co.spudsoft.query.defn.ArgumentValue;
 import uk.co.spudsoft.query.defn.Format;
+import uk.co.spudsoft.query.exec.FilterFactory;
 import uk.co.spudsoft.query.pipeline.PipelineNodesTree.PipelineFile;
 import uk.co.spudsoft.query.web.formio.DateTime.DatePicker;
 
@@ -46,14 +47,16 @@ import uk.co.spudsoft.query.web.formio.DateTime.DatePicker;
 public class FormBuilder {
   
   private static final Logger logger = LoggerFactory.getLogger(FormBuilder.class);
-  
+    
   private final JsonFactory factory;
   private final int columns;
+  private final FilterFactory filterFactory;
   
   @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
-  public FormBuilder(int columns) {
+  public FormBuilder(int columns, FilterFactory filterFactory) {
     this.factory = new JsonFactory();
     this.columns = columns;
+    this.filterFactory = filterFactory;
   }
   
   static boolean isNullOrEmpty(Collection<?> collection) {
@@ -72,6 +75,7 @@ public class FormBuilder {
         try (ComponentArray a = f.addComponents()) {
           buildDescription(generator, pipeline);
           buildArguments(generator, pipeline);
+          buildFilters(generator, pipeline);
           buildOutput(generator, pipeline);
           buildButtons(generator, pipeline);
         }
@@ -145,6 +149,74 @@ public class FormBuilder {
         break;
       default:
         throw new IllegalStateException("New types added to ArgumentType and not implemented here");
+    }
+  }
+  
+  void buildFilters(JsonGenerator generator, PipelineFile pipeline) throws IOException {
+    if (filterFactory != null && !filterFactory.getSortedKeys().isEmpty()) {
+      try (FieldSet output = new FieldSet(generator)) {
+        output
+                .withCustomClass("qe-filters")
+                .withLegend("Filters");
+        try (ComponentArray a = output.addComponents()) {
+          buildFiltersDataGrid(generator, pipeline);
+        }
+      }
+    }
+  }
+  
+  void buildFiltersDataGrid(JsonGenerator generator, PipelineFile pipeline) throws IOException {
+    try (DataGrid output = new DataGrid(generator)) {
+      output.withCustomClass("qe-filters-datagrid")
+              .withKey("_filters")
+              .withHideLabel(Boolean.TRUE)
+              .withInitEmpty(Boolean.TRUE)
+              .withAddAnother("Add Filter")
+              ;
+      try (ComponentArray a = output.addComponents()) {
+        buildFiltersFilterSelect(generator, pipeline);
+        buildFiltersValue(generator, pipeline);
+      }
+    }
+  }
+  
+  void buildFiltersFilterSelect(JsonGenerator generator, PipelineFile pipeline) throws IOException {
+    try (Select select = new Select(generator)) {
+      select 
+            .withDescription(null)
+            .withKey("filter")
+            .withCustomClass("qe-filter-select")
+            .withHideLabel(Boolean.TRUE)
+            .withClearOnHide(false)
+            .withDefaultValue(filterFactory.getSortedKeys().get(0))
+            .withSearchEnabled(Boolean.FALSE)
+      ;
+      
+      try (Select.SelectValidation v = select.addValidate()) {
+        v.withOnlyAvailableItems(Boolean.TRUE);
+      }
+
+      try (Select.DataValues dv = select.addDataValues()) {        
+        try (ComponentArray a = dv.addValues()) {
+          for (String filter : filterFactory.getSortedKeys()) {
+            try (Select.DataValue value = new Select.DataValue(generator)) {
+              value
+                      .withLabel(filter)
+                      .withValue(filter)
+                       ;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  void buildFiltersValue(JsonGenerator generator, PipelineFile pipeline) throws IOException {
+    try (TextField textField = new TextField(generator)) {
+      textField
+              .withHideLabel(Boolean.TRUE)
+              .withKey("value")
+              ;
     }
   }
   

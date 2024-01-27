@@ -43,6 +43,7 @@ import java.io.OutputStream;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.exec.FilterFactory;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 import uk.co.spudsoft.query.pipeline.PipelineNodesTree.PipelineDir;
@@ -63,6 +64,7 @@ public class FormIoHandler {
   private static final Logger logger = LoggerFactory.getLogger(FormIoHandler.class);
 
   private final PipelineDefnLoader loader;
+  private final FilterFactory filterFactory;
   private final boolean outputAllErrorMessages;
   private final boolean requireSession;
 
@@ -71,9 +73,9 @@ public class FormIoHandler {
     private final PipelineFile pipeline;
     private final FormBuilder builder;
 
-    PipelineStreamer(PipelineFile pipeline, int columns) {
+    PipelineStreamer(PipelineFile pipeline, int columns, FilterFactory filterFactory) {
       this.pipeline = pipeline;
-      this.builder = new FormBuilder(columns);
+      this.builder = new FormBuilder(columns, filterFactory);
     }
 
     @Override
@@ -84,8 +86,9 @@ public class FormIoHandler {
   }
   
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The PipelineDefnLoader is mutable because it changes the filesystem")
-  public FormIoHandler(PipelineDefnLoader loader, boolean outputAllErrorMessages, boolean requireSession) {
+  public FormIoHandler(PipelineDefnLoader loader, FilterFactory filterFactory, boolean outputAllErrorMessages, boolean requireSession) {
     this.loader = loader;
+    this.filterFactory = filterFactory;
     this.outputAllErrorMessages = outputAllErrorMessages;
     this.requireSession = requireSession;
   }
@@ -127,7 +130,7 @@ public class FormIoHandler {
               .compose(root -> {
                 try {
                   PipelineFile file = findFile(root, path);
-                  return Future.succeededFuture(new PipelineStreamer(file, colCount));
+                  return Future.succeededFuture(new PipelineStreamer(file, colCount, filterFactory));
                 } catch (Throwable ex) {
                   return Future.failedFuture(ex);
                 }

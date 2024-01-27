@@ -14,20 +14,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package uk.co.spudsoft.query.web.formio;
 
-package uk.co.spudsoft.query.main;
+import com.fasterxml.jackson.core.JsonGenerator;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.IOException;
 
 /**
- * Set the version from the pom.
- * 
- * @author njt
+ *
+ * @author jtalbut
  */
-public final class Version {
+public class DataGrid extends AbstractContainer<DataGrid> {
 
-  public static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-  public static final String MAVEN_PROJECT_VERSION = "0.0.22-82-main";
-
-  private Version() {
+  @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
+  public DataGrid(JsonGenerator generator) throws IOException {
+    super(generator, "datagrid");
   }
+
+  public final DataGrid withInitEmpty(final Boolean value) throws IOException {
+    return with("initEmpty", value);
+  }  
   
+  public final DataGrid withAddAnother(final String value) throws IOException {
+    return with("addAnother", value);
+  }
 }

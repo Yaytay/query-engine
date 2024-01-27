@@ -165,6 +165,10 @@ public class Select extends Component<Select> {
   public Select withTemplate(final String value) throws IOException {
     return with("template", value);
   }
+  
+  public Select withSearchEnabled(final Boolean value) throws IOException {
+    return with("searchEnabled", value);
+  }
 
   @Override
   public SelectValidation addValidate() throws IOException {

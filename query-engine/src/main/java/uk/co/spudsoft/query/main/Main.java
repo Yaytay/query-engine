@@ -415,11 +415,18 @@ public class Main extends Application {
       return Future.succeededFuture(-2);
     }
     
+    FilterFactory filterFactory = new FilterFactory(
+            Arrays.asList(
+                    new LimitFilter()
+                    , new WithoutFilter()
+            )
+    );
+    
     List<Object> controllers = new ArrayList<>();
     boolean requireSession = params.getSession() != null && params.getSession().isRequireSession();
     controllers.add(new InfoHandler(defnLoader, outputAllErrorMessages(), requireSession));
     controllers.add(new DocHandler(outputAllErrorMessages(), requireSession));
-    controllers.add(new FormIoHandler(defnLoader, outputAllErrorMessages(), requireSession));
+    controllers.add(new FormIoHandler(defnLoader, filterFactory, outputAllErrorMessages(), requireSession));
     controllers.add(new AuthConfigHandler(params.getSession() == null ? null : params.getSession().getOauth()));
     controllers.add(new SessionHandler(outputAllErrorMessages(), requireSession));
     
@@ -432,13 +439,6 @@ public class Main extends Application {
     OpenAPIConfiguration openApiConfig = createOpenapiConfiguration(controllers);
     OpenApiHandler openApiHandler = new OpenApiHandler(this, openApiConfig, "/api");
     ModelConverters.getInstance(true).addConverter(new OpenApiModelConverter());
-    
-    FilterFactory filterFactory = new FilterFactory(
-            Arrays.asList(
-                    new LimitFilter()
-                    , new WithoutFilter()
-            )
-    );
     
     PipelineExecutor pipelineExecutor = new PipelineExecutorImpl(filterFactory, params.getSecrets());
     router.route(QueryRouter.PATH_ROOT + "/*").handler(new QueryRouter(vertx, auditor, rcb, defnLoader, pipelineExecutor, outputAllErrorMessages()));

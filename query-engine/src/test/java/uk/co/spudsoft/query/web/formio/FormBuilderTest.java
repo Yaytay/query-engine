@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.web.formio;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
@@ -34,6 +35,7 @@ import uk.co.spudsoft.query.defn.ArgumentType;
 import uk.co.spudsoft.query.defn.ArgumentValue;
 import uk.co.spudsoft.query.defn.FormatJson;
 import uk.co.spudsoft.query.defn.FormatXlsx;
+import uk.co.spudsoft.query.exec.FilterFactory;
 import uk.co.spudsoft.query.pipeline.PipelineNodesTree;
 import uk.co.spudsoft.query.pipeline.PipelineNodesTree.PipelineFile;
 
@@ -163,7 +165,7 @@ public class FormBuilderTest {
             )
     );
     
-    FormBuilder fb = new FormBuilder(3);
+    FormBuilder fb = new FormBuilder(3, new FilterFactory(Collections.emptyList()));
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     fb.buildForm(file, baos);
     baos.close();

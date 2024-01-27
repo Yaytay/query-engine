@@ -54,6 +54,10 @@ public abstract class Component<T extends Component<T>> extends AbstractComponen
     return with("input", value);
   }
 
+  public final T withHideLabel(final Boolean value) throws IOException {
+    return with("hideLabel", value);
+  }
+
   public final T withTableView(final Boolean value) throws IOException {
     return with("tableView", value);
   }
@@ -80,6 +84,10 @@ public abstract class Component<T extends Component<T>> extends AbstractComponen
 
   public final T withDefaultValue(final String value) throws IOException {
     return with("defaultValue", value);
+  }
+
+  public final T withWidget(final String value) throws IOException {
+    return with("widget", value);
   }
 
   public final T withClearOnHide(final Boolean value) throws IOException {
