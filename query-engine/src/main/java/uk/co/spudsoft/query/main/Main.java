@@ -91,9 +91,12 @@ import uk.co.spudsoft.params4j.Params4J;
 import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.AuditorMemoryImpl;
 import uk.co.spudsoft.query.exec.AuditorPersistenceImpl;
+import uk.co.spudsoft.query.exec.FilterFactory;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineExecutorImpl;
 import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
+import uk.co.spudsoft.query.exec.filters.LimitFilter;
+import uk.co.spudsoft.query.exec.filters.WithoutFilter;
 import uk.co.spudsoft.query.json.ObjectMapperConfiguration;
 import uk.co.spudsoft.query.json.TracingOptionsMixin;
 import uk.co.spudsoft.query.main.sample.SampleDataLoader;
@@ -430,7 +433,14 @@ public class Main extends Application {
     OpenApiHandler openApiHandler = new OpenApiHandler(this, openApiConfig, "/api");
     ModelConverters.getInstance(true).addConverter(new OpenApiModelConverter());
     
-    PipelineExecutor pipelineExecutor = new PipelineExecutorImpl(params.getSecrets());
+    FilterFactory filterFactory = new FilterFactory(
+            Arrays.asList(
+                    new LimitFilter()
+                    , new WithoutFilter()
+            )
+    );
+    
+    PipelineExecutor pipelineExecutor = new PipelineExecutorImpl(filterFactory, params.getSecrets());
     router.route(QueryRouter.PATH_ROOT + "/*").handler(new QueryRouter(vertx, auditor, rcb, defnLoader, pipelineExecutor, outputAllErrorMessages()));
     
     ManagementRoute.createAndDeploy(vertx

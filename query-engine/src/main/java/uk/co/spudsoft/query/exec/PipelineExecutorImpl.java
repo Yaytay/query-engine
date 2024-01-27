@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -57,10 +58,12 @@ public class PipelineExecutorImpl implements PipelineExecutor {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(PipelineExecutorImpl.class);
 
+  private final FilterFactory filterFactory;
   private final Map<String, ProtectedCredentials> secrets;
   private final Map<String, Object> sharedMap;
 
-  public PipelineExecutorImpl(Map<String, ProtectedCredentials> secrets) {
+  public PipelineExecutorImpl(FilterFactory filterFactory, Map<String, ProtectedCredentials> secrets) {
+    this.filterFactory = filterFactory;
     this.secrets = ImmutableCollectionTools.copy(secrets);
     this.sharedMap = new HashMap<>();
   }
@@ -91,7 +94,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
   }
     
   @Override
-  public List<ProcessorInstance> createProcessors(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, SourcePipeline definition) {
+  public List<ProcessorInstance> createProcessors(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, SourcePipeline definition, MultiMap params) {
     List<ProcessorInstance> result = new ArrayList<>();
     for (Processor processor : definition.getProcessors()) {
       Condition condition = processor.getCondition();
@@ -105,6 +108,15 @@ public class PipelineExecutorImpl implements PipelineExecutor {
         }
       }
     }
+    if (params != null) {
+      for (Entry<String, String> entry : params.entries()) {
+        ProcessorInstance processor = filterFactory.createFilter(vertx, sourceNameTracker, context, entry.getKey(), entry.getValue());
+        if (processor != null) {
+          result.add(processor);
+        }
+      }
+    }
+    
     return result;
   }
 

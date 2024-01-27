@@ -66,7 +66,7 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
             , pipeline.getSourceEndpoints()
             , null
             , sourceInstance
-            , executor.createProcessors(vertx, sourceInstance, context, definition.getInput())
+            , executor.createProcessors(vertx, sourceInstance, context, definition.getInput(), null)
             , format
     );
     return executor.initializePipeline(dePipeline)

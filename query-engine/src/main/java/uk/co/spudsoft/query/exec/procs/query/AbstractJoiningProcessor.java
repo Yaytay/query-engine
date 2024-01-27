@@ -121,7 +121,7 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
             , pipeline.getSourceEndpoints()
             , null
             , sourceInstance
-            , executor.createProcessors(vertx, sourceInstance, context, sourcePipeline)
+            , executor.createProcessors(vertx, sourceInstance, context, sourcePipeline, null)
             , new ProcessorFormat(childStream.writeStream())
     );
     return executor.initializePipeline(childPipeline);

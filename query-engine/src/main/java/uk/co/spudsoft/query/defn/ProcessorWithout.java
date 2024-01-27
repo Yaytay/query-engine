@@ -18,36 +18,40 @@ package uk.co.spudsoft.query.defn;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.google.common.collect.ImmutableList;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
+import java.util.List;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
-import uk.co.spudsoft.query.exec.procs.filters.ProcessorLimitInstance;
+import uk.co.spudsoft.query.exec.procs.filters.ProcessorWithoutInstance;
+import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
  * Processor that curtails the output after the configured number of rows.
  * @author jtalbut
  */
-@JsonDeserialize(builder = ProcessorLimit.Builder.class)
+@JsonDeserialize(builder = ProcessorWithout.Builder.class)
 @Schema(description = """
-                      Processor that curtails the output after the configured number of rows.
+                      Processor that removes fields from the output.
                       """
 )
-public class ProcessorLimit implements Processor {
+public class ProcessorWithout implements Processor {
   
   private final ProcessorType type;
   private final Condition condition;
-  private final int limit;
+  private final ImmutableList<String> fields;
 
   @Override
   public ProcessorInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
-    return new ProcessorLimitInstance(vertx, sourceNameTracker, context, this);
+    return new ProcessorWithoutInstance(vertx, sourceNameTracker, context, this);
   }
 
   @Override
   public void validate() {
-    validateType(ProcessorType.LIMIT, type);
+    validateType(ProcessorType.WITHOUT, type);
   }
   
   @Override
@@ -61,19 +65,20 @@ public class ProcessorLimit implements Processor {
   }  
 
   @Schema(description = """
-                        The limit on the number of rows that will be output by this processor.
+                        The fields that will be removed by this processor.
                         """
   )
-  public int getLimit() {
-    return limit;
+  public List<String> getFields() {
+    return fields;
   }
   
+  @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "Builder class should result in all instances being immutable when object is built")
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
-    private ProcessorType type = ProcessorType.LIMIT;
+    private ProcessorType type = ProcessorType.WITHOUT;
     private Condition condition;
-    private int limit;
+    private List<String> fields;
 
     private Builder() {
     }
@@ -93,25 +98,25 @@ public class ProcessorLimit implements Processor {
       return this;
     }
 
-    public Builder limit(final int value) {
-      this.limit = value;
+    public Builder fields(final List<String> value) {
+      this.fields = value;
       return this;
     }
 
-    public ProcessorLimit build() {
-      return new ProcessorLimit(type, condition, limit);
+    public ProcessorWithout build() {
+      return new ProcessorWithout(type, condition, fields);
     }
   }
 
-  public static ProcessorLimit.Builder builder() {
-    return new ProcessorLimit.Builder();
+  public static ProcessorWithout.Builder builder() {
+    return new ProcessorWithout.Builder();
   }
 
-  private ProcessorLimit(final ProcessorType type, final Condition condition, final int limit) {
-    validateType(ProcessorType.LIMIT, type);
+  private ProcessorWithout(final ProcessorType type, final Condition condition, final List<String> fields) {
+    validateType(ProcessorType.WITHOUT, type);
     this.type = type;
     this.condition = condition;
-    this.limit = limit;
+    this.fields = ImmutableCollectionTools.copy(fields);
   }
   
   

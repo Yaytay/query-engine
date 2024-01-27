@@ -34,6 +34,7 @@ import io.vertx.sqlclient.Tuple;
 import java.io.File;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -82,7 +83,9 @@ public class DynamicEndpointPipelineIT {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     CacheConfig cacheConfig = new CacheConfig().setMaxItems(1).setMaxDurationMs(0).setPurgePeriodMs(0);
     PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*")));
-    PipelineExecutorImpl executor = new PipelineExecutorImpl(ImmutableMap.<String, ProtectedCredentials>builder().put("cred", new ProtectedCredentials(serverProviderMy.getUser(), serverProviderMy.getPassword(), null)).build());
+    PipelineExecutorImpl executor = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList())
+            , ImmutableMap.<String, ProtectedCredentials>builder().put("cred", new ProtectedCredentials(serverProviderMy.getUser(), serverProviderMy.getPassword(), null)).build()
+    );
 
     MultiMap args = MultiMap.caseInsensitiveMultiMap();
     args.set("maxId", "14");
@@ -154,7 +157,7 @@ public class DynamicEndpointPipelineIT {
                       , pipeline.getSourceEndpointsMap()
                       , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                       , sourceInstance
-                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline)
+                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline, null)
                       , formatInstance
               );
       
@@ -183,7 +186,9 @@ public class DynamicEndpointPipelineIT {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     CacheConfig cacheConfig = new CacheConfig().setMaxItems(1).setMaxDurationMs(0).setPurgePeriodMs(0);
     PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*")));
-    PipelineExecutorImpl executor = new PipelineExecutorImpl(ImmutableMap.<String, ProtectedCredentials>builder().put("cred", new ProtectedCredentials(serverProviderMy.getUser(), serverProviderMy.getPassword(), null)).build());
+    PipelineExecutorImpl executor = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList())
+            , ImmutableMap.<String, ProtectedCredentials>builder().put("cred", new ProtectedCredentials(serverProviderMy.getUser(), serverProviderMy.getPassword(), null)).build()
+    );
 
     MultiMap args = MultiMap.caseInsensitiveMultiMap();
     args.set("maxId", "14");
@@ -246,7 +251,7 @@ public class DynamicEndpointPipelineIT {
                       , pipeline.getSourceEndpointsMap()
                       , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                       , sourceInstance
-                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline)
+                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline, null)
                       , formatInstance
               );
       
@@ -279,7 +284,9 @@ public class DynamicEndpointPipelineIT {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     CacheConfig cacheConfig = new CacheConfig().setMaxItems(1).setMaxDurationMs(0).setPurgePeriodMs(0);
     PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*")));
-    PipelineExecutorImpl executor = new PipelineExecutorImpl(ImmutableMap.<String, ProtectedCredentials>builder().put("cred", new ProtectedCredentials(serverProviderMy.getUser(), serverProviderMy.getPassword(), null)).build());
+    PipelineExecutorImpl executor = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList())
+            , ImmutableMap.<String, ProtectedCredentials>builder().put("cred", new ProtectedCredentials(serverProviderMy.getUser(), serverProviderMy.getPassword(), null)).build()
+    );
 
     MultiMap args = MultiMap.caseInsensitiveMultiMap();
     args.set("maxId", "7");
@@ -341,7 +348,7 @@ public class DynamicEndpointPipelineIT {
                       , pipeline.getSourceEndpointsMap()
                       , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                       , sourceInstance
-                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline)
+                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline, null)
                       , formatInstance
               );
       
@@ -374,7 +381,7 @@ public class DynamicEndpointPipelineIT {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     CacheConfig cacheConfig = new CacheConfig().setMaxItems(1).setMaxDurationMs(0).setPurgePeriodMs(0);
     PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*")));
-    PipelineExecutorImpl executor = new PipelineExecutorImpl(null);
+    PipelineExecutorImpl executor = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
 
     MultiMap args = MultiMap.caseInsensitiveMultiMap();
     args.set("maxId", "14");
@@ -446,7 +453,7 @@ public class DynamicEndpointPipelineIT {
                       , pipeline.getSourceEndpointsMap()
                       , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                       , sourceInstance
-                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline)
+                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline, null)
                       , formatInstance
               );
       

@@ -28,6 +28,7 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.io.File;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
@@ -67,7 +68,7 @@ public class TemplatedYamlToPipelineIT {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     CacheConfig cacheConfig = new CacheConfig().setMaxItems(1).setMaxDurationMs(0).setPurgePeriodMs(0);
     PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*")));
-    PipelineExecutorImpl executor = new PipelineExecutorImpl(null);
+    PipelineExecutorImpl executor = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
 
     MultiMap args = MultiMap.caseInsensitiveMultiMap();
 
@@ -107,7 +108,7 @@ public class TemplatedYamlToPipelineIT {
                       , pipeline.getSourceEndpointsMap()
                       , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                       , sourceInstance
-                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline)
+                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline, null)
                       , formatInstance
               );
       

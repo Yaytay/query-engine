@@ -40,7 +40,7 @@ public interface PipelineExecutor extends SharedMap {
   
   Future<Pipeline> validatePipeline(Pipeline definition);
   
-  List<ProcessorInstance> createProcessors(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, SourcePipeline definition);
+  List<ProcessorInstance> createProcessors(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, SourcePipeline definition, MultiMap params);
   
   List<PreProcessorInstance> createPreProcessors(Vertx vertx, Context context, Pipeline definition);
 

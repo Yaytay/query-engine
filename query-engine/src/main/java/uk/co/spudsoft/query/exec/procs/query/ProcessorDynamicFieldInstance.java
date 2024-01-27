@@ -83,7 +83,7 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
             , pipeline.getSourceEndpoints()
             , null
             , sourceInstance
-            , executor.createProcessors(vertx, sourceInstance, context, definition.getFieldDefns())
+            , executor.createProcessors(vertx, sourceInstance, context, definition.getFieldDefns(), null)
             , fieldCollator
     );
     return executor.initializePipeline(childPipeline)

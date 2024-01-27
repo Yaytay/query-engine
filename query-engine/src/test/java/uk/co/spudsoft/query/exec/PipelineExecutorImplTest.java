@@ -24,6 +24,7 @@ import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -35,7 +36,7 @@ import uk.co.spudsoft.query.defn.ArgumentType;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.defn.ProcessorLimit;
 import uk.co.spudsoft.query.defn.SourceTest;
-import uk.co.spudsoft.query.exec.procs.limit.ProcessorLimitInstance;
+import uk.co.spudsoft.query.exec.procs.filters.ProcessorLimitInstance;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
@@ -66,7 +67,7 @@ public class PipelineExecutorImplTest {
             .source(SourceTest.builder().name("test").build())
             .formats(Arrays.asList(FormatDelimited.builder().build()))
             .build();
-    PipelineExecutorImpl instance = new PipelineExecutorImpl(null);
+    PipelineExecutorImpl instance = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
     instance.validatePipeline(definition).onComplete(testContext.succeedingThenComplete());
   }
 
@@ -81,8 +82,8 @@ public class PipelineExecutorImplTest {
                     )
             )
             .build();
-    PipelineExecutorImpl instance = new PipelineExecutorImpl(null);
-    List<ProcessorInstance> results = instance.createProcessors(vertx, ctx -> {}, vertx.getOrCreateContext(), definition);
+    PipelineExecutorImpl instance = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
+    List<ProcessorInstance> results = instance.createProcessors(vertx, ctx -> {}, vertx.getOrCreateContext(), definition, null);
     assertThat(results, hasSize(2));
     assertEquals(1, ((ProcessorLimitInstance) results.get(0)).getLimit());
     assertEquals(2, ((ProcessorLimitInstance) results.get(1)).getLimit());
@@ -90,7 +91,7 @@ public class PipelineExecutorImplTest {
 
   @Test
   public void testPrepareArguments() {
-    PipelineExecutorImpl instance = new PipelineExecutorImpl(null);
+    PipelineExecutorImpl instance = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
     Map<String, ArgumentInstance> result = instance.prepareArguments(
             Arrays.asList(
                     Argument.builder().type(ArgumentType.Long).name("arg1").optional(true).defaultValue("12").build()
@@ -136,8 +137,8 @@ public class PipelineExecutorImplTest {
                     )
             )
             .build();
-    PipelineExecutorImpl instance = new PipelineExecutorImpl(null);
-    List<ProcessorInstance> processors = instance.createProcessors(vertx, ctx -> {}, vertx.getOrCreateContext(), definition);
+    PipelineExecutorImpl instance = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
+    List<ProcessorInstance> processors = instance.createProcessors(vertx, ctx -> {}, vertx.getOrCreateContext(), definition, null);
     
     Map<String, ArgumentInstance> arguments = instance.prepareArguments(
             Arrays.asList(
@@ -239,7 +240,7 @@ public class PipelineExecutorImplTest {
             , FormatXlsx.builder().build()
     );
     
-    PipelineExecutorImpl instance = new PipelineExecutorImpl(null);
+    PipelineExecutorImpl instance = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
     
     assertEquals(FormatType.JSON, instance.getFormat(formats, drBlank).getType());
     assertEquals(FormatType.XLSX, instance.getFormat(formats, drFormat).getType());

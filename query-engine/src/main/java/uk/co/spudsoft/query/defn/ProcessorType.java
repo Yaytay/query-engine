@@ -31,5 +31,6 @@ public enum ProcessorType {
   , GROUP_CONCAT
   , DYNAMIC_FIELD
   , SCRIPT
+  , WITHOUT
   
 }

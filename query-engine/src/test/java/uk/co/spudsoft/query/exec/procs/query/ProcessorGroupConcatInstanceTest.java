@@ -23,6 +23,7 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -47,6 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import uk.co.spudsoft.query.defn.FormatDelimited;
 import uk.co.spudsoft.query.exec.ColumnDefn;
+import uk.co.spudsoft.query.exec.FilterFactory;
 import uk.co.spudsoft.query.exec.fmts.logger.LoggingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
 
@@ -125,7 +127,7 @@ public class ProcessorGroupConcatInstanceTest {
             .formats(Arrays.asList(FormatDelimited.builder().build()))
             .build();
     
-    PipelineExecutor executor = new PipelineExecutorImpl(null);
+    PipelineExecutor executor = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
     
     AtomicLong rowCount = new AtomicLong();
     FormatInstance dest = pipeline.getFormats().get(0).createInstance(vertx, vertx.getOrCreateContext(), new LoggingWriteStream<>(rows -> {rowCount.set(rows);}));
@@ -135,7 +137,7 @@ public class ProcessorGroupConcatInstanceTest {
             , pipeline.getSourceEndpointsMap()
             , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
             , sourceInstance
-            , executor.createProcessors(vertx, sourceInstance, vertx.getOrCreateContext(), pipeline)
+            , executor.createProcessors(vertx, sourceInstance, vertx.getOrCreateContext(), pipeline, null)
             , dest
     );
     
@@ -175,7 +177,7 @@ public class ProcessorGroupConcatInstanceTest {
             .formats(Arrays.asList(FormatDelimited.builder().build()))
             .build();
     
-    PipelineExecutor executor = new PipelineExecutorImpl(null);
+    PipelineExecutor executor = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
     
     AtomicLong rowCount = new AtomicLong();
     FormatInstance dest = pipeline.getFormats().get(0).createInstance(vertx, vertx.getOrCreateContext(), new LoggingWriteStream<>(rows -> {rowCount.set(rows);}));
@@ -185,7 +187,7 @@ public class ProcessorGroupConcatInstanceTest {
             , pipeline.getSourceEndpointsMap()
             , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
             , sourceInstance
-            , executor.createProcessors(vertx, sourceInstance, vertx.getOrCreateContext(), pipeline)
+            , executor.createProcessors(vertx, sourceInstance, vertx.getOrCreateContext(), pipeline, null)
             , dest
     );
     
@@ -238,7 +240,7 @@ public class ProcessorGroupConcatInstanceTest {
             .formats(Arrays.asList(FormatDelimited.builder().build()))
             .build();
     
-    PipelineExecutor executor = new PipelineExecutorImpl(null);
+    PipelineExecutor executor = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
     
     AtomicLong rowCount = new AtomicLong();
     FormatInstance dest = pipeline.getFormats().get(0).createInstance(vertx, vertx.getOrCreateContext(), new LoggingWriteStream<>(rows -> {rowCount.set(rows);}));
@@ -248,7 +250,7 @@ public class ProcessorGroupConcatInstanceTest {
             , pipeline.getSourceEndpointsMap()
             , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
             , sourceInstance
-            , executor.createProcessors(vertx, sourceInstance, vertx.getOrCreateContext(), pipeline)
+            , executor.createProcessors(vertx, sourceInstance, vertx.getOrCreateContext(), pipeline, null)
             , dest
     );
     
@@ -296,7 +298,7 @@ public class ProcessorGroupConcatInstanceTest {
             .formats(Arrays.asList(FormatDelimited.builder().build()))
             .build();
     
-    PipelineExecutor executor = new PipelineExecutorImpl(null);
+    PipelineExecutor executor = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
     
     AtomicLong rowCount = new AtomicLong();
     FormatInstance dest = pipeline.getFormats().get(0).createInstance(vertx, vertx.getOrCreateContext(), new LoggingWriteStream<>(rows -> {rowCount.set(rows);}));
@@ -306,7 +308,7 @@ public class ProcessorGroupConcatInstanceTest {
             , pipeline.getSourceEndpointsMap()
             , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
             , sourceInstance
-            , executor.createProcessors(vertx, sourceInstance, vertx.getOrCreateContext(), pipeline)
+            , executor.createProcessors(vertx, sourceInstance, vertx.getOrCreateContext(), pipeline, null)
             , dest
     );
     

@@ -134,8 +134,8 @@ public class QueryRouter implements Handler<RoutingContext> {
                   })
                   .compose(pipeline -> pipelineExecutor.validatePipeline(pipeline))
                   .compose(pipeline -> {
-                     RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
-                   return auditor.runRateLimitRules(requestContext, pipeline);
+                    RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
+                    return auditor.runRateLimitRules(requestContext, pipeline);
                   })
                   .compose(pipeline -> {
                     PipelineInstance instance;
@@ -144,7 +144,7 @@ public class QueryRouter implements Handler<RoutingContext> {
                       response.headers().set("content-type", chosenFormat.getMediaType().toString());
                       FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), response);
                       SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), pipelineExecutor, ROOT_SOURCE_DEFAULT_NAME);
-
+                      
                       Vertx.currentContext().putLocal("pipeline", pipeline);
                       
                       instance = new PipelineInstance(
@@ -152,7 +152,7 @@ public class QueryRouter implements Handler<RoutingContext> {
                               , pipeline.getSourceEndpointsMap()
                               , pipelineExecutor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                               , sourceInstance
-                              , pipelineExecutor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline)
+                              , pipelineExecutor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline, routingContext.request().params())
                               , formatInstance
                       );
                     } catch (Throwable ex) {

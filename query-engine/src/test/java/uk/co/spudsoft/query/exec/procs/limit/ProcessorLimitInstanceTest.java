@@ -16,7 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.procs.limit;
 
-import uk.co.spudsoft.query.exec.procs.limit.ProcessorLimitInstance;
+import uk.co.spudsoft.query.exec.procs.filters.ProcessorLimitInstance;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.streams.ReadStream;
