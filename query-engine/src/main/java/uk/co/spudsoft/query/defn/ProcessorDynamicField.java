@@ -23,7 +23,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
-import uk.co.spudsoft.query.exec.procs.query.ProcessorDynamicFieldInstance;
+import uk.co.spudsoft.query.exec.procs.subquery.ProcessorDynamicFieldInstance;
 
 /**
  * Processor that takes in multiple streams and uses them to dynamically add fields to the primary stream.

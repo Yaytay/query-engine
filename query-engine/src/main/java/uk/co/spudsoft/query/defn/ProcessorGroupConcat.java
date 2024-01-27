@@ -23,7 +23,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
-import uk.co.spudsoft.query.exec.procs.query.ProcessorGroupConcatInstance;
+import uk.co.spudsoft.query.exec.procs.subquery.ProcessorGroupConcatInstance;
 
 /**
  * Processor that combines multiple values from a child query into a single concatenated string value.

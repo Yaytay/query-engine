@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package uk.co.spudsoft.query.exec.procs.query;
+package uk.co.spudsoft.query.exec.procs.subquery;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
