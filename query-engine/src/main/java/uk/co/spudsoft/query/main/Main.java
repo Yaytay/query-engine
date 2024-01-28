@@ -96,6 +96,7 @@ import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineExecutorImpl;
 import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 import uk.co.spudsoft.query.exec.filters.LimitFilter;
+import uk.co.spudsoft.query.exec.filters.QueryFilter;
 import uk.co.spudsoft.query.exec.filters.WithoutFilter;
 import uk.co.spudsoft.query.json.ObjectMapperConfiguration;
 import uk.co.spudsoft.query.json.TracingOptionsMixin;
@@ -418,6 +419,7 @@ public class Main extends Application {
     FilterFactory filterFactory = new FilterFactory(
             Arrays.asList(
                     new LimitFilter()
+                    , new QueryFilter()
                     , new WithoutFilter()
             )
     );

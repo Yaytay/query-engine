@@ -18,40 +18,41 @@ package uk.co.spudsoft.query.defn;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
-import uk.co.spudsoft.query.exec.procs.filters.ProcessorLimitInstance;
+import uk.co.spudsoft.query.exec.procs.query.ProcessorQueryInstance;
 
 /**
  * Processor that curtails the output after the configured number of rows.
  * @author jtalbut
  */
-@JsonDeserialize(builder = ProcessorLimit.Builder.class)
+@JsonDeserialize(builder = ProcessorQuery.Builder.class)
 @Schema(description = """
-                      Processor that curtails the output after the configured number of rows.
+                      Processor that filters output rows.
                       """
 )
-public class ProcessorLimit implements Processor {
-  
+public class ProcessorQuery implements Processor {
+    
   private final ProcessorType type;
   private final Condition condition;
-  private final int limit;
+  private final String expression;
 
   @Override
   public ProcessorInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
-    return new ProcessorLimitInstance(vertx, sourceNameTracker, context, this);
+    return new ProcessorQueryInstance(vertx, sourceNameTracker, context, this);
   }
 
   @Override
   public void validate() {
-    validateType(ProcessorType.LIMIT, type);
-    if (limit < 0) {
-      throw new IllegalArgumentException("Negative limit provided");
-    } else if (limit == 0) {
-      throw new IllegalArgumentException("Zero limit provided");
+    validateType(ProcessorType.QUERY, type);
+    try {
+      ProcessorQueryInstance.RSQL_PARSER.parse(expression);
+    } catch (Throwable ex) {
+      throw new IllegalArgumentException("Unable to parse FIQL query expression: " + ex.getMessage(), ex);
     }
   }
   
@@ -66,19 +67,20 @@ public class ProcessorLimit implements Processor {
   }  
 
   @Schema(description = """
-                        The limit on the number of rows that will be output by this processor.
+                        A valid FIQL expression that will be evaluated on each row.
                         """
   )
-  public int getLimit() {
-    return limit;
+  public String getExpression() {
+    return expression;
   }
   
+  @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "Builder class should result in all instances being immutable when object is built")
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
-    private ProcessorType type = ProcessorType.LIMIT;
+    private ProcessorType type = ProcessorType.QUERY;
     private Condition condition;
-    private int limit;
+    private String expression;
 
     private Builder() {
     }
@@ -98,25 +100,25 @@ public class ProcessorLimit implements Processor {
       return this;
     }
 
-    public Builder limit(final int value) {
-      this.limit = value;
+    public Builder expression(final String value) {
+      this.expression = value;
       return this;
     }
 
-    public ProcessorLimit build() {
-      return new ProcessorLimit(type, condition, limit);
+    public ProcessorQuery build() {
+      return new ProcessorQuery(type, condition, expression);
     }
   }
 
-  public static ProcessorLimit.Builder builder() {
-    return new ProcessorLimit.Builder();
+  public static ProcessorQuery.Builder builder() {
+    return new ProcessorQuery.Builder();
   }
 
-  private ProcessorLimit(final ProcessorType type, final Condition condition, final int limit) {
-    validateType(ProcessorType.LIMIT, type);
+  private ProcessorQuery(final ProcessorType type, final Condition condition, final String expression) {
+    validateType(ProcessorType.QUERY, type);
     this.type = type;
     this.condition = condition;
-    this.limit = limit;
+    this.expression = expression;
   }
   
   

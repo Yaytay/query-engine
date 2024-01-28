@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 jtalbut
+ * Copyright (C) 2024 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,24 +14,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package uk.co.spudsoft.query.defn;
+package uk.co.spudsoft.query.exec.procs.query;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDate;
+import java.time.chrono.ChronoLocalDate;
 
 /**
- * The type of Processor.
+ *
  * @author jtalbut
  */
-@Schema(description = """
-                      The type of Processor.
-                      """)
-public enum ProcessorType {
+public class RsqlComparatorDate extends AbstractRsqlComparator<ChronoLocalDate> {
   
-  LIMIT
-  , GROUP_CONCAT
-  , DYNAMIC_FIELD
-  , SCRIPT
-  , WITHOUT
-  , QUERY
-  
+  @Override
+  public LocalDate validateType(String field, Object value) {
+    if (value instanceof LocalDate boolValue) {
+      return boolValue;
+    } else {
+      throw new IllegalStateException("Type of field " + field + " should be LocalDate, but was actually " + value.getClass());
+    }
+  }
+
+  @Override
+  public LocalDate parseType(String field, String value) {
+    return LocalDate.parse(value);
+  }
+
 }

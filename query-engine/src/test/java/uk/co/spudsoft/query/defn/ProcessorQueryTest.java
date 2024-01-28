@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 jtalbut
+ * Copyright (C) 2024 njt
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,50 +16,44 @@
  */
 package uk.co.spudsoft.query.defn;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.api.Test;
 
 /**
  *
- * @author jtalbut
+ * @author njt
  */
-public class ProcessorLimitTest {
+public class ProcessorQueryTest {
   
   @Test
   public void testGetType() {
-    ProcessorLimit instance = ProcessorLimit.builder().build();
-    assertEquals(ProcessorType.LIMIT, instance.getType());
+    ProcessorQuery instance = ProcessorQuery.builder().build();
+    assertEquals(ProcessorType.QUERY, instance.getType());
   }
 
   @Test
   public void testSetType() {
-    ProcessorLimit instance = ProcessorLimit.builder().type(ProcessorType.LIMIT).build();
-    assertEquals(ProcessorType.LIMIT, instance.getType());
-    try {
-      ProcessorLimit.builder().type(ProcessorType.SCRIPT).build();
-      fail("Expected IllegalArgumentException");
-    } catch (IllegalArgumentException ex) {
-    }
+    ProcessorQuery instance = ProcessorQuery.builder().type(ProcessorType.QUERY).build();
+    assertEquals(ProcessorType.QUERY, instance.getType());
+    assertThrows(IllegalArgumentException.class, () -> {
+      ProcessorQuery.builder().type(ProcessorType.SCRIPT).build();
+    });
   }
 
   @Test
-  public void testGetLimit() {
-    ProcessorLimit instance = ProcessorLimit.builder().limit(17).build();
-    assertEquals(17, instance.getLimit());
+  public void testGetQuery() {
+    ProcessorQuery instance = ProcessorQuery.builder().expression("x==4").build();
+    assertEquals("x==4", instance.getExpression());
   }
 
   @Test
   public void testValidate() {
     assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorLimit.builder().limit(0).build().validate();
+      ProcessorQuery.builder().expression("bob").build().validate();
     }, "Zero limit provided");
-    assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorLimit.builder().limit(-1).build().validate();
-    }, "Negative limit provided");
-    ProcessorLimit.builder().limit(1).build().validate();
+    ProcessorQuery.builder().expression("x==7").build().validate();
   }
+  
   
 }

@@ -182,6 +182,38 @@ public class AllDynamicIT {
     
     assertThat(body, equalTo("Invalid argument to _limit filter, should be an integer"));
 
+    body = given()
+            .queryParam("minDate", "1971-05-06")
+            .queryParam("maxId", "20")
+            .queryParam("_query", "dataId==4")
+            .log().all()
+            .get("/query/sub1/sub2/AllDynamicIT.tsv")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .extract().body().asString();
+    
+    assertThat(body, startsWith("\"dataId\"\t\"instant\""));
+    assertThat(body, not(containsString("\t\t\t\t\t\t\t")));
+    assertThat(body, containsString("BoolField"));
+    assertThat(body, containsString("TextField"));
+    assertThat(body, containsString("4\t\"1971-05-10T12:00\""));
+    int rows5 = body.split("\n").length;
+    assertEquals(2, rows5);
+
+    body = given()
+            .queryParam("minDate", "1971-05-06")
+            .queryParam("maxId", "20")
+            .queryParam("_query", "bob")
+            .log().all()
+            .get("/query/sub1/sub2/AllDynamicIT.tsv")
+            .then()
+            .log().all()
+            .statusCode(400)
+            .extract().body().asString();
+    
+    assertThat(body, equalTo("Invalid argument to _query filter, should be a valid RSQL expression"));
+
     main.shutdown();
   }
   

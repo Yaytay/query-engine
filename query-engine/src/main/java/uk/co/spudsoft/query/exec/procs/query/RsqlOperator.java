@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 jtalbut
+ * Copyright (C) 2024 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,24 +14,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package uk.co.spudsoft.query.defn;
+package uk.co.spudsoft.query.exec.procs.query;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.List;
 
 /**
- * The type of Processor.
+ *
  * @author jtalbut
  */
-@Schema(description = """
-                      The type of Processor.
-                      """)
-public enum ProcessorType {
+public interface RsqlOperator {
   
-  LIMIT
-  , GROUP_CONCAT
-  , DYNAMIC_FIELD
-  , SCRIPT
-  , WITHOUT
-  , QUERY
+  <T> boolean operate(String field, RsqlComparator<T> rsqlComparator, Object rowValue, List<String> arguments);
   
 }

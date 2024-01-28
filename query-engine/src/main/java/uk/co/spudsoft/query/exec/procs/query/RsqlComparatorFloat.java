@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 jtalbut
+ * Copyright (C) 2024 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,24 +14,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package uk.co.spudsoft.query.defn;
-
-import io.swagger.v3.oas.annotations.media.Schema;
+package uk.co.spudsoft.query.exec.procs.query;
 
 /**
- * The type of Processor.
+ *
  * @author jtalbut
  */
-@Schema(description = """
-                      The type of Processor.
-                      """)
-public enum ProcessorType {
+public class RsqlComparatorFloat extends AbstractRsqlComparator<Float> {
   
-  LIMIT
-  , GROUP_CONCAT
-  , DYNAMIC_FIELD
-  , SCRIPT
-  , WITHOUT
-  , QUERY
-  
+  @Override
+  public Float validateType(String field, Object value) {
+    if (value instanceof Float boolValue) {
+      return boolValue;
+    } else {
+      throw new IllegalStateException("Type of field " + field + " should be Float, but was actually " + value.getClass());
+    }
+  }
+
+  @Override
+  public Float parseType(String field, String value) {
+    return Float.valueOf(value);
+  }
+
 }

@@ -49,7 +49,12 @@ public class Types {
   }
   
   public DataType get(String key) {
-    return defns.get(indices.get(key)).type();
+    Integer idx = indices.get(key);
+    if (idx == null) {
+      return null;
+    } else {
+      return defns.get(idx).type();
+    }
   }
   
   /**
