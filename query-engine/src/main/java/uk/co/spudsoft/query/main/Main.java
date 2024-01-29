@@ -98,6 +98,7 @@ import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 import uk.co.spudsoft.query.exec.filters.LimitFilter;
 import uk.co.spudsoft.query.exec.filters.OffsetFilter;
 import uk.co.spudsoft.query.exec.filters.QueryFilter;
+import uk.co.spudsoft.query.exec.filters.RelabelFilter;
 import uk.co.spudsoft.query.exec.filters.WithoutFilter;
 import uk.co.spudsoft.query.json.ObjectMapperConfiguration;
 import uk.co.spudsoft.query.json.TracingOptionsMixin;
@@ -417,14 +418,7 @@ public class Main extends Application {
       return Future.succeededFuture(-2);
     }
     
-    FilterFactory filterFactory = new FilterFactory(
-            Arrays.asList(
-                    new LimitFilter()
-                    , new OffsetFilter()
-                    , new QueryFilter()
-                    , new WithoutFilter()
-            )
-    );
+    FilterFactory filterFactory = createFilterFactory();
     
     List<Object> controllers = new ArrayList<>();
     boolean requireSession = params.getSession() != null && params.getSession().isRequireSession();
@@ -497,6 +491,19 @@ public class Main extends Application {
             ;
     
   }  
+
+  FilterFactory createFilterFactory() {
+    FilterFactory filterFactory = new FilterFactory(
+            Arrays.asList(
+                    new LimitFilter()
+                    , new OffsetFilter()
+                    , new QueryFilter()
+                    , new RelabelFilter()
+                    , new WithoutFilter()
+            )
+    );
+    return filterFactory;
+  }
 
   private Future<Void> performSampleDataLoads(Iterator<DataSourceConfig> iter) {
     if (iter.hasNext()) {

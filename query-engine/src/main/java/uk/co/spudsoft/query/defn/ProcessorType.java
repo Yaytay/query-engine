@@ -34,5 +34,6 @@ public enum ProcessorType {
   , SCRIPT
   , WITHOUT
   , QUERY
+  , RELABEL
   
 }

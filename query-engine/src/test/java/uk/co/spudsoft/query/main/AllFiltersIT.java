@@ -50,13 +50,13 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
  * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
-public class AllDynamicIT {
+public class AllFiltersIT {
   
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
   private static final ServerProviderMySQL mysql = new ServerProviderMySQL().init();
   
   @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(AllDynamicIT.class);
+  private static final Logger logger = LoggerFactory.getLogger(AllFiltersIT.class);
   
   @BeforeAll
   public static void createDirs(Vertx vertx) {
@@ -290,6 +290,50 @@ public class AllDynamicIT {
     assertThat(body, containsString("\"second\"\t\"two,four\""));
     int rows8 = body.split("\n").length;
     assertEquals(12, rows8);
+    
+    body = given()
+            .queryParam("minDate", "1971-05-06")
+            .queryParam("maxId", "20")
+            .queryParam("_relabel", "")
+            .log().all()
+            .get("/query/sub1/sub2/AllDynamicIT.tsv")
+            .then()
+            .log().all()
+            .statusCode(400)
+            .extract().body().asString();
+    
+    assertThat(body, equalTo("Invalid argument to _relabel filter, should be a space delimited list of relabels, each of which should be SourceLabel:NewLabel.  The new label cannot contain a colon and neith label can be zero characters in length."));
+    
+    body = given()
+            .queryParam("minDate", "1971-05-06")
+            .queryParam("maxId", "20")
+            .queryParam("_relabel", "bob")
+            .log().all()
+            .get("/query/sub1/sub2/AllDynamicIT.tsv")
+            .then()
+            .log().all()
+            .statusCode(400)
+            .extract().body().asString();
+    
+    assertThat(body, equalTo("Invalid argument to _relabel filter, should be a space delimited list of relabels, each of which should be SourceLabel:NewLabel.  The new label cannot contain a colon and neith label can be zero characters in length."));
+    
+    body = given()
+            .queryParam("minDate", "1971-05-06")
+            .queryParam("maxId", "20")
+            .queryParam("_relabel", "BoolField:YesNo TimeField:When")
+            .log().all()
+            .get("/query/sub1/sub2/AllDynamicIT.tsv")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .extract().body().asString();
+    
+    assertThat(body, startsWith("\"dataId\"\t\"instant\"\t\"colour\"\t\"value\"\t\"children\"\t\"DateField\"\t\"When\"\t\"DateTimeField\"\t\"LongField\"\t\"DoubleField\"\t\"YesNo\"\t\"TextField\""));
+    assertThat(body, not(containsString("\t\t\t\t\t\t\t")));
+    assertThat(body, containsString("YesNo"));
+    assertThat(body, containsString("TextField"));
+    assertThat(body, containsString("\"first\"\t\"one\""));
+    assertThat(body, containsString("\"second\"\t\"two,four\""));
     
     main.shutdown();
   }
