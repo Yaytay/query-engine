@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package uk.co.spudsoft.query.exec.procs.limit;
+package uk.co.spudsoft.query.exec.procs.filter;
 
 import uk.co.spudsoft.query.exec.procs.filters.ProcessorLimitInstance;
 import io.vertx.core.Future;

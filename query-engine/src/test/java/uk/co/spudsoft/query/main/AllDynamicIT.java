@@ -214,6 +214,83 @@ public class AllDynamicIT {
     
     assertThat(body, equalTo("Invalid argument to _query filter, should be a valid RSQL expression"));
 
+    body = given()
+            .queryParam("minDate", "1971-05-06")
+            .queryParam("maxId", "20")
+            .queryParam("_offset", "bob")
+            .log().all()
+            .get("/query/sub1/sub2/AllDynamicIT.tsv")
+            .then()
+            .log().all()
+            .statusCode(400)
+            .extract().body().asString();
+    
+    assertThat(body, equalTo("Invalid argument to _offset filter, should be an integer"));
+    
+    body = given()
+            .queryParam("minDate", "1971-05-06")
+            .queryParam("maxId", "20")
+            .queryParam("_offset", "0")
+            .queryParam("_limit", "12")
+            .log().all()
+            .get("/query/sub1/sub2/AllDynamicIT.tsv")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .extract().body().asString();
+    
+    assertThat(body, startsWith("\"dataId\"\t\"instant\""));
+    assertThat(body, not(containsString("\t\t\t\t\t\t\t")));
+    assertThat(body, containsString("BoolField"));
+    assertThat(body, containsString("TextField"));
+    assertThat(body, containsString("\"first\"\t\"one\""));
+    assertThat(body, containsString("\"second\"\t\"two,four\""));
+    int rows6 = body.split("\n").length;
+    assertEquals(13, rows6);
+
+
+    body = given()
+            .queryParam("minDate", "1971-05-06")
+            .queryParam("maxId", "20")
+            .queryParam("_offset", "1")
+            .queryParam("_limit", "12")
+            .log().all()
+            .get("/query/sub1/sub2/AllDynamicIT.tsv")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .extract().body().asString();
+    
+    assertThat(body, startsWith("\"dataId\"\t\"instant\""));
+    assertThat(body, not(containsString("\t\t\t\t\t\t\t")));
+    assertThat(body, containsString("BoolField"));
+    assertThat(body, containsString("TextField"));
+    assertThat(body, not(containsString("\"first\"\t\"one\"")));
+    assertThat(body, containsString("\"second\"\t\"two,four\""));
+    int rows7 = body.split("\n").length;
+    assertEquals(13, rows7);
+    
+    body = given()
+            .queryParam("minDate", "1971-05-06")
+            .queryParam("maxId", "20")
+            .queryParam("_limit", "12")
+            .queryParam("_offset", "1")
+            .log().all()
+            .get("/query/sub1/sub2/AllDynamicIT.tsv")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .extract().body().asString();
+    
+    assertThat(body, startsWith("\"dataId\"\t\"instant\""));
+    assertThat(body, not(containsString("\t\t\t\t\t\t\t")));
+    assertThat(body, containsString("BoolField"));
+    assertThat(body, containsString("TextField"));
+    assertThat(body, not(containsString("\"first\"\t\"one\"")));
+    assertThat(body, containsString("\"second\"\t\"two,four\""));
+    int rows8 = body.split("\n").length;
+    assertEquals(12, rows8);
+    
     main.shutdown();
   }
   
