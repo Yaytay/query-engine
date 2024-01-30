@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 njt
+ * Copyright (C) 2024 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,11 +24,10 @@ import uk.co.spudsoft.query.defn.ProcessorRelabel;
 import uk.co.spudsoft.query.defn.ProcessorRelabelLabel;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
-import uk.co.spudsoft.query.exec.procs.filters.ProcessorRelabelInstance;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class RelabelFilter implements Filter {
 
@@ -55,7 +54,7 @@ public class RelabelFilter implements Filter {
       }
       
       ProcessorRelabel definition = ProcessorRelabel.builder().relabels(relabels).build();
-      return new ProcessorRelabelInstance(vertx, sourceNameTracker, context, definition);
+      return definition.createInstance(vertx, sourceNameTracker, context);
     }
   }
   

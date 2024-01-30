@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 njt
+ * Copyright (C) 2024 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,11 +17,12 @@
 package uk.co.spudsoft.query.defn;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.base.Strings;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 @JsonDeserialize(builder = ProcessorRelabelLabel.Builder.class)
 @Schema(description = """
@@ -33,6 +34,15 @@ public class ProcessorRelabelLabel {
   private final String sourceLabel;
   private final String newLabel;
 
+  public void validate() {
+    if (Strings.isNullOrEmpty(sourceLabel)) {
+      throw new IllegalArgumentException("No source field name provided for relabel");
+    }
+    if (Strings.isNullOrEmpty(newLabel)) {
+      throw new IllegalArgumentException("No new field name provided for relabel");
+    }
+  }
+  
   public String getSourceLabel() {
     return sourceLabel;
   }

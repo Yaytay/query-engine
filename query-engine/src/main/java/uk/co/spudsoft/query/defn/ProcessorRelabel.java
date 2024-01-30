@@ -52,6 +52,12 @@ public class ProcessorRelabel implements Processor {
   @Override
   public void validate() {
     validateType(ProcessorType.RELABEL, type);
+    if (relabels.isEmpty()) {
+      throw new IllegalArgumentException("No relabels provided");
+    }
+    for (ProcessorRelabelLabel relabel : relabels) {
+      relabel.validate();
+    }
   }
   
   @Override
