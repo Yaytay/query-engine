@@ -166,7 +166,7 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
     }
   }
   
-  static Object mapToNativeObject(Value value) {
+  static Comparable<?> mapToNativeObject(Value value) {
     if (value.isNull()) {
       return null;
     } else if (value.isNumber()) {
@@ -196,8 +196,6 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
       }
     } else if (value.isTime()) {
       return value.asTime();
-    } else if (value.isTimeZone()) {
-      return value.asTimeZone();
     } else if (value.isDuration()) {
       return value.asDuration();
     } else if (value.isHostObject()) {
@@ -205,7 +203,7 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
     } else if (value.isNativePointer()) {
       return value.asNativePointer();
     } else if (value.isException()) {
-      return value.throwException();
+      value.throwException();
     } 
     logger.warn("Unknown value type: {}", value);
     return null;

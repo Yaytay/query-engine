@@ -48,9 +48,9 @@ public class ProcessorQueryInstanceTest {
     assertTrue(initFuture.succeeded());
   }
   
-  private record Entry(String key, Object value){};
+  private record Entry(String key, Comparable<?> value){};
   
-  private static Entry e(String key, Object value){
+  private static Entry e(String key, Comparable<?> value){
     return new Entry(key, value);
   };
   

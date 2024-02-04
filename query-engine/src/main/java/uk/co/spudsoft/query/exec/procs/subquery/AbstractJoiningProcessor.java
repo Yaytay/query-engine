@@ -24,7 +24,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.streams.WriteStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import org.slf4j.Logger;
 import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.DataRow;
@@ -132,15 +131,11 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
     if (row == null) {
       return null;
     }
-    Object parentIdObject = row.get(idField);
-    if (parentIdObject instanceof Comparable comparable) {
-      return comparable;
+    Comparable<?> parentIdObject = row.get(idField);
+    if (parentIdObject == null && row.getType(idField) == null) {
+      logger.warn("The row does not contain the ID field {}, is the configuration wrong?  The known fields are {}", idField, row.keySet());
     }
-    Map<String, Object> rowAsMap = row.getMap();
-    if (rowAsMap != null && !rowAsMap.containsKey(idField)) {
-      logger.warn("The row does not contain the ID field {}, is the configuration wrong?  The known fields are {}", idField, rowAsMap.keySet());
-    }
-    return null;    
+    return (Comparable<Object>) parentIdObject;
   }
   
   private Future<Void> parentStreamProcess(DataRow data, AsyncHandler<DataRow> chain) {

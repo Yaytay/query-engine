@@ -33,22 +33,24 @@ import java.time.LocalTime;
 )
 public enum DataType {
 
-  Integer(JDBCType.INTEGER)
-  , Long(JDBCType.BIGINT)
-  , Float(JDBCType.FLOAT)
-  , Double(JDBCType.DOUBLE)
-  , String(JDBCType.NVARCHAR)
-  , Boolean(JDBCType.BOOLEAN)
-  , Date(JDBCType.DATE)
-  , DateTime(JDBCType.TIMESTAMP)
-  , Time(JDBCType.TIME)
-  , Null(JDBCType.NULL)
+  Integer(JDBCType.INTEGER, 16)
+  , Long(JDBCType.BIGINT, 24)
+  , Float(JDBCType.FLOAT, 16)
+  , Double(JDBCType.DOUBLE, 24)
+  , String(JDBCType.NVARCHAR, -1)
+  , Boolean(JDBCType.BOOLEAN, 16)
+  , Date(JDBCType.DATE, 24)
+  , DateTime(JDBCType.TIMESTAMP, 24)
+  , Time(JDBCType.TIME, 24)
+  , Null(JDBCType.NULL, 0)
   ;
   
   private final JDBCType jdbcType;
+  private final int bytes;
 
-  DataType(JDBCType jdbcType) {
+  DataType(JDBCType jdbcType, int bytes) {
     this.jdbcType = jdbcType;
+    this.bytes = bytes;
   }
   
   public static DataType fromObject(Object value) {
@@ -79,6 +81,10 @@ public enum DataType {
 
   public JDBCType jdbcType() {
     return jdbcType;
+  }
+
+  public int bytes() {
+    return bytes;
   }
   
   public static DataType fromJdbcType(JDBCType jdbcType) {

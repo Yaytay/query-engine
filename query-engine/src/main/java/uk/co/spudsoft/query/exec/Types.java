@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +56,10 @@ public class Types {
     } else {
       return defns.get(idx).type();
     }
+  }
+  
+  public Set<String> keySet() {
+    return indices.keySet();
   }
   
   /**

@@ -64,7 +64,6 @@ public class ProcessorScriptInstanceTest {
       assertEquals(LocalDate.of(1971, 05, 06), ProcessorScriptInstance.mapToNativeObject(bindings.getMember("date")));      
       assertEquals(LocalTime.of(01, 23, 45), ProcessorScriptInstance.mapToNativeObject(bindings.getMember("time")));
       assertEquals(Instant.ofEpochSecond(42340980), ProcessorScriptInstance.mapToNativeObject(bindings.getMember("instant")));
-      assertEquals(ZoneId.of("Europe/London"), ProcessorScriptInstance.mapToNativeObject(bindings.getMember("zoneid")));
       assertEquals(Duration.ofHours(7), ProcessorScriptInstance.mapToNativeObject(bindings.getMember("duration")));
     }
     

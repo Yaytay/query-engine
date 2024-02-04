@@ -16,13 +16,11 @@
  */
 package uk.co.spudsoft.query.exec;
 
-import uk.co.spudsoft.query.defn.DataType;
 import com.google.common.collect.ImmutableMap;
 import io.vertx.core.json.JsonObject;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.LinkedHashMap;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -52,6 +50,7 @@ public class DataRowTest {
   @Test
   public void testToJson() {
     DataRow row = create();
+    row.bytesSize();
     JsonObject jo = row.toJson();
     assertEquals(10, jo.size());
     assertEquals(null, jo.getValue("nullValue"));
@@ -72,7 +71,6 @@ public class DataRowTest {
     assertThrows(IllegalArgumentException.class, () -> row.put("sqlDate", new java.sql.Date(42336000000L)));
     assertThrows(IllegalArgumentException.class, () -> row.put("sqlTime", new java.sql.Time(45296000L)));
     assertThrows(IllegalArgumentException.class, () -> row.put("javaDate", new java.util.Date(42381240000L)));
-    assertThrows(IllegalArgumentException.class, () -> row.put("convertedStringValue", ImmutableMap.<String, String>builder().put("text", "hello").build()));
   }
 
   @Test
@@ -141,6 +139,46 @@ public class DataRowTest {
 
   @Test
   public void testGetMap() {
+  }
+
+  @org.junit.Test
+  public void testCreate_Types() {
+  }
+
+  @org.junit.Test
+  public void testPutTypeIfAbsent() {
+  }
+
+  @org.junit.Test
+  public void testCreate_List() {
+  }
+
+  @org.junit.Test
+  public void testIsEmpty() {
+  }
+
+  @org.junit.Test
+  public void testToString() {
+  }
+
+  @org.junit.Test
+  public void testGetType() {
+  }
+
+  @org.junit.Test
+  public void testSize() {
+  }
+
+  @org.junit.Test
+  public void testPut_String_Object() {
+  }
+
+  @org.junit.Test
+  public void testPut_3args() {
+  }
+
+  @org.junit.Test
+  public void testContainsKey() {
   }
   
 }

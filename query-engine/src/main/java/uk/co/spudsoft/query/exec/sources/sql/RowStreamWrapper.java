@@ -112,8 +112,8 @@ public class RowStreamWrapper implements DataRowStream<DataRow> {
     for (int col = 0; col < size; col++) {
       String name = row.getColumnName(col);
       Object value = row.getValue(col);
-      value = DataRow.convert(value);
-      result.put(name, value);
+      Comparable<?> compValue = DataRow.convert(value);
+      result.put(name, compValue);
     }
     return result;
   }

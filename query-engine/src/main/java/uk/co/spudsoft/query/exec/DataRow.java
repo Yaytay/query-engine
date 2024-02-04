@@ -31,8 +31,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -42,12 +45,12 @@ import java.util.function.Consumer;
 public class DataRow {
   
   private final Types types;
-  private final LinkedHashMap<String, Object> data;
+  private final LinkedHashMap<String, Comparable<?>> data;
 
   public static final DataRow EMPTY_ROW = new DataRow(new Types(), new LinkedHashMap<>());
   
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "It is expected that the types map change between instances of the DataRow")
-  private DataRow(Types types, LinkedHashMap<String, Object> data) {
+  private DataRow(Types types, LinkedHashMap<String, Comparable<?>> data) {
     Objects.requireNonNull(types);
     Objects.requireNonNull(data);
     this.types = types;
@@ -85,7 +88,7 @@ public class DataRow {
     return toJson().toString();
   }
 
-  public Object get(String key) {
+  public Comparable<?> get(String key) {
     return data.get(key);
   }
   
@@ -97,42 +100,70 @@ public class DataRow {
     return data == null ? 0 : data.size();
   }
   
-  public void forEach(BiConsumer<ColumnDefn, ? super Object> action) {
+  private static final Logger logger = LoggerFactory.getLogger(DataRow.class);
+  
+  public int bytesSize() {
+    int total[] = {0};
+    types.forEach(cd -> {
+      Object value = get(cd.name());
+      // logger.info("{} ({}): {} @ {} bytes or {} bytes", cd.name(), value, cd.type(), SizeOfAgent.fullSizeOf(value), value == null ? 0 : SizeOfAgent.sizeOf(value));
+      if (value != null) {
+        if (cd.type() == DataType.String) {
+          if (value instanceof String str) {
+            total[0] += str.length();
+          }
+        } else {
+          total[0] += cd.type().bytes();
+        }
+      }
+    });
+    return total[0];
+  }
+  
+  public void forEach(BiConsumer<ColumnDefn, ? super Comparable<?>> action) {
     types.forEach(cd -> {
       action.accept(cd, data.get(cd.name()));
     });
   }
 
-  public void forEach(Consumer<Entry<? super String, ? super Object>> action) {
+  public void forEach(Consumer<Entry<? super String, ? super Comparable<?>>> action) {
     data.entrySet().forEach(action);
   }
 
-  public DataRow put(String key, Object value) {
+  public DataRow put(String key, Comparable<?> value) {
     DataType type = DataType.fromObject(value);
     types.putIfAbsent(key, type);
     data.put(key, value);
     return this;
   }
   
-  public DataRow put(String key, DataType type, Object value) {
+  public DataRow put(String key, DataType type, Comparable<?> value) {
     types.putIfAbsent(key, type);
     data.put(key, value);
     return this;
   }
   
   public DataRow convertPut(String key, Object value) {
-    if (value == null 
-            || value instanceof Integer
-            || value instanceof Long
-            || value instanceof Float
-            || value instanceof Double
-            || value instanceof String
-            || value instanceof Boolean
-            || value instanceof LocalDate
-            || value instanceof LocalDateTime
-            || value instanceof LocalTime
-            ) {
-      put(key, value);
+    if (value == null) {
+      put(key, null);
+    } else if (value instanceof Integer v) {
+      put(key, v);
+    } else if (value instanceof Long v) {
+      put(key, v);
+    } else if (value instanceof Float v) {
+      put(key, v);
+    } else if (value instanceof Double v) {
+      put(key, v);
+    } else if (value instanceof String v) {
+      put(key, v);
+    } else if (value instanceof Boolean v) {
+      put(key, v);
+    } else if (value instanceof LocalDate v) {
+      put(key, v);
+    } else if (value instanceof LocalDateTime v) {
+      put(key, v);
+    } else if (value instanceof LocalTime v) {
+      put(key, v);    
     } else if (value instanceof java.sql.Date d) {
       put(key, d.toLocalDate());
     } else if (value instanceof java.sql.Time d) {
@@ -148,7 +179,7 @@ public class DataRow {
     return this;
   }
   
-  public static Object convert(Object value) {
+  public static Comparable<?> convert(Object value) {
     if (value == null 
             || value instanceof Integer
             || value instanceof Long
@@ -160,7 +191,7 @@ public class DataRow {
             || value instanceof LocalDateTime
             || value instanceof LocalTime
             ) {
-      return value;
+      return (Comparable<?>) value;
     } else if (value instanceof java.sql.Date d) {
       return d.toLocalDate();
     } else if (value instanceof java.sql.Time d) {
@@ -185,4 +216,8 @@ public class DataRow {
     return data.containsKey(key);
   }
 
+  public Set<String> keySet() {
+    return types.keySet();
+  }
+  
 }
