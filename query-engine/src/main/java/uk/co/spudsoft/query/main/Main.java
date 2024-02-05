@@ -23,7 +23,6 @@ import brave.http.HttpTracing;
 import brave.sampler.Sampler;
 import ch.qos.logback.classic.LoggerContext;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.jakarta.rs.json.JacksonJsonProvider;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -309,7 +308,6 @@ public class Main extends Application {
     java.util.logging.Logger.getLogger("").setLevel(Level.FINEST);
 
     ObjectMapperConfiguration.configureObjectMapper(DatabindCodec.mapper());
-    ObjectMapperConfiguration.configureObjectMapper(DatabindCodec.prettyMapper().enable(SerializationFeature.INDENT_OUTPUT));
 
     try {
       logger.info("Params: {}", DatabindCodec.mapper().writeValueAsString(params));    

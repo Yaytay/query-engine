@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.ProcessorOffset;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
-import uk.co.spudsoft.query.exec.procs.filters.ProcessorOffsetInstance;
 
 /**
  *

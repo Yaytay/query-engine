@@ -22,7 +22,6 @@ import java.util.List;
 import uk.co.spudsoft.query.defn.ProcessorWithout;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
-import uk.co.spudsoft.query.exec.procs.filters.ProcessorWithoutInstance;
 
 /**
  *
