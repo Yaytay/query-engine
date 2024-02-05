@@ -47,7 +47,7 @@ public class QueryFilter implements Filter {
       throw new IllegalArgumentException("Invalid argument to _query filter, should be a valid RSQL expression");
     }
     ProcessorQuery definition = ProcessorQuery.builder().expression(argument).build();
-    return new ProcessorQueryInstance(vertx, sourceNameTracker, context, definition);
+    return definition.createInstance(vertx, sourceNameTracker, context);
   }
   
 }

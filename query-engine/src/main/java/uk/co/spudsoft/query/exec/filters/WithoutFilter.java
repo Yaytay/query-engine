@@ -42,7 +42,7 @@ public class WithoutFilter implements Filter {
       throw new IllegalArgumentException("Invalid argument to _without filter, should be a space delimited list of fields");
     } else {
       ProcessorWithout definition = ProcessorWithout.builder().fields(fields).build();
-      return new ProcessorWithoutInstance(vertx, sourceNameTracker, context, definition);
+      return definition.createInstance(vertx, sourceNameTracker, context);
     }
   }
   

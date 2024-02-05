@@ -35,5 +35,6 @@ public enum ProcessorType {
   , WITHOUT
   , QUERY
   , RELABEL
+  , SORT
   
 }

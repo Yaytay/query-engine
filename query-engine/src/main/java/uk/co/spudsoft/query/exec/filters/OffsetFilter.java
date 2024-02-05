@@ -48,7 +48,7 @@ public class OffsetFilter implements Filter {
       throw new IllegalArgumentException("Invalid argument to _offset filter, should be an integer");
     }
     ProcessorOffset definition = ProcessorOffset.builder().offset(value).build();
-    return new ProcessorOffsetInstance(vertx, sourceNameTracker, context, definition);
+    return definition.createInstance(vertx, sourceNameTracker, context);
   }
   
 }

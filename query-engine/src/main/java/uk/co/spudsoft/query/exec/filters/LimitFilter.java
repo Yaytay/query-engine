@@ -48,7 +48,7 @@ public class LimitFilter implements Filter {
       throw new IllegalArgumentException("Invalid argument to _limit filter, should be an integer");
     }
     ProcessorLimit definition = ProcessorLimit.builder().limit(value).build();
-    return new ProcessorLimitInstance(vertx, sourceNameTracker, context, definition);
+    return definition.createInstance(vertx, sourceNameTracker, context);
   }
   
 }
