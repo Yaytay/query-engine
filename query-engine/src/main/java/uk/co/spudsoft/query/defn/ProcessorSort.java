@@ -58,7 +58,10 @@ public class ProcessorSort implements Processor {
 
   @Override
   public void validate() {
-    validateType(ProcessorType.WITHOUT, type);
+    validateType(ProcessorType.SORT, type);
+    if (fields == null || fields.isEmpty()) {
+      throw new IllegalArgumentException("No fields provided for sorting");
+    }
   }
   
   @Override
@@ -83,7 +86,7 @@ public class ProcessorSort implements Processor {
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
-    private ProcessorType type = ProcessorType.WITHOUT;
+    private ProcessorType type = ProcessorType.SORT;
     private Condition condition;
     private List<String> fields;
 
@@ -120,7 +123,7 @@ public class ProcessorSort implements Processor {
   }
 
   private ProcessorSort(final ProcessorType type, final Condition condition, final List<String> fields) {
-    validateType(ProcessorType.WITHOUT, type);
+    validateType(ProcessorType.SORT, type);
     this.type = type;
     this.condition = condition;
     this.fields = ImmutableCollectionTools.copy(fields);

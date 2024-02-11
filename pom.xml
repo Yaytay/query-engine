@@ -36,11 +36,11 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <argLine></argLine>
-    <vertx.version>4.5.2</vertx.version>
+    <vertx.version>4.5.3</vertx.version>
     <slf4j.version>2.0.10</slf4j.version>
     <junit-jupiter.version>5.10.2</junit-jupiter.version>
     <junit-platform.version>1.10.0</junit-platform.version>
-    <testcontainers.version>1.19.4</testcontainers.version>
+    <testcontainers.version>1.19.5</testcontainers.version>
     <graalvm.version>23.1.2</graalvm.version>
     <jackson.version>2.16.1</jackson.version>
     
@@ -198,7 +198,7 @@
         <plugin>
           <groupId>com.github.spotbugs</groupId>
           <artifactId>spotbugs-maven-plugin</artifactId>
-          <version>4.8.2.0</version>
+          <version>4.8.3.1</version>
           <configuration>
             <fork>true</fork>
             <effort>Max</effort>

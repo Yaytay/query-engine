@@ -219,5 +219,9 @@ public class DataRow {
   public Set<String> keySet() {
     return types.keySet();
   }
+
+  public Types types() {
+    return types;
+  }
   
 }

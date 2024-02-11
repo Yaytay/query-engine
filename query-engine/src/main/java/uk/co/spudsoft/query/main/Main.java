@@ -98,6 +98,7 @@ import uk.co.spudsoft.query.exec.filters.LimitFilter;
 import uk.co.spudsoft.query.exec.filters.OffsetFilter;
 import uk.co.spudsoft.query.exec.filters.QueryFilter;
 import uk.co.spudsoft.query.exec.filters.RelabelFilter;
+import uk.co.spudsoft.query.exec.filters.SortFilter;
 import uk.co.spudsoft.query.exec.filters.WithoutFilter;
 import uk.co.spudsoft.query.json.ObjectMapperConfiguration;
 import uk.co.spudsoft.query.json.TracingOptionsMixin;
@@ -498,6 +499,7 @@ public class Main extends Application {
                     , new QueryFilter()
                     , new RelabelFilter()
                     , new WithoutFilter()
+                    , new SortFilter()
             )
     );
     return filterFactory;

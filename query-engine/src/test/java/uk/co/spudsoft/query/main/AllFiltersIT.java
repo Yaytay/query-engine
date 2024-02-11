@@ -335,6 +335,21 @@ public class AllFiltersIT {
     assertThat(body, containsString("\"first\"\t\"one\""));
     assertThat(body, containsString("\"second\"\t\"two,four\""));
     
+    body = given()
+            .queryParam("minDate", "1971-05-06")
+            .queryParam("maxId", "20")
+            .queryParam("_sort", "-value")
+            .log().all()
+            .get("/query/sub1/sub2/AllDynamicIT.tsv")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .extract().body().asString();
+    
+    assertThat(body, startsWith("\"dataId\"\t\"instant\"\t\"colour\"\t\"value\"\t\"children\"\t\"DateField\"\t\"TimeField\"\t\"DateTimeField\"\t\"LongField\"\t\"DoubleField\"\t\"BoolField\"\t\"TextField\""));
+    assertThat(body, not(containsString("\t\t\t\t\t\t\t")));
+    logger.debug("Output: {}", body);
+    
     main.shutdown();
   }
   

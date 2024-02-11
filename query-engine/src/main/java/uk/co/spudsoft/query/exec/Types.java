@@ -72,7 +72,7 @@ public class Types {
    * @return this.
    * @throws IllegalStateException if they type is already set to a non-null value and an attempt is made to set it to a different non-null value.
    */
-  public final Types putIfAbsent(String key, DataType type) throws IllegalStateException {
+  public final Types putIfAbsent(String key, DataType type) {
     if (type == null) {
       type = DataType.Null;
     }
@@ -85,9 +85,6 @@ public class Types {
         ColumnDefn current = defns.get(idx);
         if (current.type() == DataType.Null && type != DataType.Null) {
           defns.set(idx, new ColumnDefn(key, type));
-//      } else if (current != type && type != DataType.Null) {
-//        logger.warn("Attempt to change type of {} from {} to {}", key, current, type);
-//        throw new IllegalStateException("Cannot change type (" + key + ")");
         }
       }
     }

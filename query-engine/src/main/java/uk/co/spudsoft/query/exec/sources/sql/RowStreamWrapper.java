@@ -190,6 +190,7 @@ public class RowStreamWrapper implements DataRowStream<DataRow> {
   private void ensureTypesReflectRowStream() throws IllegalStateException {
     if (types.isEmpty()) {
       for (ColumnDescriptor cd : rowStream.getColumnDescriptors()) {
+        logger.info("Field {} is of JDBC type {} (aka {})", cd.name(), cd.jdbcType(), cd.typeName());
         types.putIfAbsent(cd.name(), DataType.fromJdbcType(cd.jdbcType()));
       }
     }
