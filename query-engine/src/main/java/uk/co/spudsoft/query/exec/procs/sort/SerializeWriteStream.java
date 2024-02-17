@@ -57,6 +57,15 @@ public class SerializeWriteStream<T> implements WriteStream<T> {
     this.serializer = serializer;
   }
 
+  static byte[] byteArrayFromInt(int value) {
+    return new byte[] {
+              (byte) (value >> 24)
+            , (byte) (value >> 16)
+            , (byte) (value >> 8)
+            , (byte) value
+    };
+  }
+  
   @Override
   public WriteStream<T> exceptionHandler(Handler<Throwable> hndlr) {
     file.exceptionHandler(hndlr);
@@ -73,7 +82,7 @@ public class SerializeWriteStream<T> implements WriteStream<T> {
     }
     logger.debug("Serialized size: {}", serialized.length);
     Buffer buff = Buffer.buffer(4 + serialized.length);
-    buff.appendInt(serialized.length);
+    buff.appendBytes(byteArrayFromInt(serialized.length));
     buff.appendBytes(serialized);
     return file.write(buff);    
   }
@@ -81,7 +90,7 @@ public class SerializeWriteStream<T> implements WriteStream<T> {
   @Override
   public void write(T t, Handler<AsyncResult<Void>> hndlr) {
     Future<Void> f = write(t);
-    hndlr.handle(f);
+    f.onComplete(hndlr);
   }
 
   @Override
@@ -89,11 +98,19 @@ public class SerializeWriteStream<T> implements WriteStream<T> {
     file.end(hndlr);
   }
 
+  /**
+   * Set the maximum size of the write queue to {@code maxSize}. You will still be able to write to the stream even
+   * if there is more than {@code maxSize} items in the write queue. This is used as an indicator to provide flow control.
+   * <p/>
+   * The value is defined by the implementation of the stream, in this case it is measured in bytes, not items.
+   *
+   * @param maxSize  the max size of the write stream in bytes
+   * @return a reference to this, so the API can be used fluently
+   */
   @Override
-  public WriteStream<T> setWriteQueueMaxSize(int i) {
-    file.setWriteQueueMaxSize(i);
+  public WriteStream<T> setWriteQueueMaxSize(int maxSize) {
+    file.setWriteQueueMaxSize(maxSize);
     return this;
-    
   }
 
   @Override

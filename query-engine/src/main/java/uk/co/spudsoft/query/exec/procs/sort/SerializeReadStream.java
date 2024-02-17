@@ -50,7 +50,7 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
   private long demand;
 
   // Buffers handled from the AsyncFile
-  private Deque<Buffer> buffers = new ArrayDeque<>();
+  private final Deque<Buffer> buffers = new ArrayDeque<>();
   
   // Bytes read from current head Buffer
   private int readPos;

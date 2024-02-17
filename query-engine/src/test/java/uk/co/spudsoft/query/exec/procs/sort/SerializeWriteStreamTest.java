@@ -21,7 +21,6 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.file.FileSystem;
 import io.vertx.core.file.OpenOptions;
-import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.io.ByteArrayInputStream;
@@ -31,6 +30,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -82,6 +82,9 @@ public class SerializeWriteStreamTest {
       assertEquals(4, bytes.length);
       assertEquals(0x12345678, SerializeReadStream.intFromByteArray(bytes));
     }
+    
+    assertArrayEquals(new byte[]{1, 2, 3, 4}, SerializeWriteStream.byteArrayFromInt(0x01020304));
+    assertEquals(0x12345678, SerializeReadStream.intFromByteArray(SerializeWriteStream.byteArrayFromInt(0x12345678)));
   }
   
   private byte[] serialize(Integer i) {
@@ -119,21 +122,24 @@ public class SerializeWriteStreamTest {
     }
   }
   
-  private Future<Void> write() {
-    if (written >= limit) {
-      done.complete();
-      return sws.end();
+  // Write untilt he write queue is full
+  private void write() {
+    while (true) {
+      if (written >= limit) {
+        sws.end();
+        done.complete();
+        return ;
+      }
+      if (sws.writeQueueFull()) {
+        logger.debug("Write queue full after {}", written);
+        return ;
+      } else {
+        ++written;
+        // Silly way to call it just to increase the coverage
+        Promise<Void> promise = Promise.promise();
+        sws.write(written, promise);
+      }    
     }
-    if (sws.writeQueueFull()) {
-      logger.debug("Write queue full after {}", written);
-      return done.future();
-    } else {
-      ++written;
-      // Silly way to call it just to increase the coverage
-      Promise<Void> promise = Promise.promise();
-      sws.write(written, promise);
-      return promise.future();
-    }    
   }
   
   @Test
@@ -141,35 +147,39 @@ public class SerializeWriteStreamTest {
   public void testWrite(Vertx vertx, VertxTestContext testContext) {
     FileSystem fs = vertx.fileSystem();
     fs.open(OUTPUT_FILE, new OpenOptions().setCreate(true).setTruncateExisting(true))
-            .compose(af -> {
+            .onSuccess(af -> {
               sws = new SerializeWriteStream<>(af, this::serialize);
               sws.exceptionHandler(ex -> {
                 logger.error("Exception writing stream: ", ex);
                 testContext.failNow(ex);
               });
-              sws.setWriteQueueMaxSize(2);
+              sws.setWriteQueueMaxSize(50000);
               startWriteTime = System.currentTimeMillis();
               sws.drainHandler(v -> {
-                logger.debug("Draining after {}", written);
+                logger.debug("Drained after {}", written);
                 ++drains;
                 write();
               });
-              return write();
+              write();
             })
             .onFailure(ex -> {
-              logger.debug("Failed after {}ms (including {} drain cycles): ", System.currentTimeMillis() - startWriteTime, drains, ex);
+              logger.debug("Write failed after {}ms (including {} drain cycles): ", System.currentTimeMillis() - startWriteTime, drains, ex);
+              testContext.failNow(ex);
+            });
+    done.future()
+            .onFailure(ex -> {
+              logger.debug("Write failed after {}ms (including {} drain cycles): ", System.currentTimeMillis() - startWriteTime, drains, ex);
               testContext.failNow(ex);
             })
             .onSuccess(v -> {
               logger.debug("Succeeded after {}ms (including {} drain cycles)", System.currentTimeMillis() - startWriteTime, drains);
-              testContext.completeNow();;
+              testContext.completeNow();
             })
             ;
   }
   
   @Test
   @Order(2)
-  @Timeout(90000)
   public void testReadOnly(Vertx vertx, VertxTestContext testContext) {
     AtomicLong bytesReceived = new AtomicLong();
     FileSystem fs = vertx.fileSystem();
@@ -199,7 +209,6 @@ public class SerializeWriteStreamTest {
   
   @Test
   @Order(3)
-  @Timeout(240000)
   public void testRead(Vertx vertx, VertxTestContext testContext) {
     FileSystem fs = vertx.fileSystem();
     read = 0;
@@ -240,7 +249,6 @@ public class SerializeWriteStreamTest {
   
   @Test
   @Order(4)
-  @Timeout(240000)
   public void testReadWithDelays(Vertx vertx, VertxTestContext testContext) {
     FileSystem fs = vertx.fileSystem();
     read = 0;
@@ -277,7 +285,6 @@ public class SerializeWriteStreamTest {
 
   @ParameterizedTest
   @Order(5)
-  @Timeout(240000)
   @ValueSource(ints = {4096, 4096, 8192, 16384, 32000, 32768, 33000, 65000, 65536, 70000, 1000000})
   public void testQuickRead(int bufferSize, Vertx vertx, VertxTestContext testContext) {
     FileSystem fs = vertx.fileSystem();
