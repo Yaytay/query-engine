@@ -23,9 +23,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.AsyncFile;
 import io.vertx.core.streams.ReadStream;
-import java.time.LocalDateTime;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
 import java.util.function.Function;
 import org.slf4j.Logger;
@@ -61,34 +59,6 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
   private boolean ended;
   private boolean endHandlerCalled;
 
-  private long totalBytesReceived = 0;
-  private enum Action { Enter, Exit, Throw };
-  public record Call (LocalDateTime timestamp, String thread, String indent, String action, String method, int line, String comment) {};
-  private final Object trackLock = new Object();
-  public ArrayList<Call> tracking = new ArrayList<>();
-  private final StringBuilder indent = new StringBuilder();
-  private void track(Action action, String comment) {
-    StackTraceElement caller = Thread.currentThread().getStackTrace()[2];    
-    if (action == Action.Enter) {
-      indent.append("  ");
-    }
-    Call call = new Call(
-            LocalDateTime.now()
-            , Thread.currentThread().getName()
-            , indent.toString()
-            , action.name()
-            , caller.getMethodName()
-            , caller.getLineNumber()
-            , comment
-    );
-    if (action != Action.Enter) {
-      indent.delete(0, 2);
-    }
-    synchronized(trackLock) {
-      tracking.add(call);
-    }
-  }
-  
   static int intFromByteArray(byte[] bytes) {
     return 
             ((bytes[0] & 0xFF) << 24)
@@ -103,14 +73,12 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
     synchronized (lock) {
       if (!buffers.isEmpty()) {
         Buffer headBuffer = buffers.getFirst();
-        track(Action.Enter, "readPos: " + readPos + "; headBuffer: " + headBuffer.length());
         boolean removed = false;
         if (readPos >= headBuffer.length()) {
           buffers.removeFirst();
           readPos = 0;
           removed = true;
         }
-        track(Action.Exit, removed ? "removed" : null);
       }
       bufferCount = buffers.size();
     }
@@ -135,7 +103,6 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
    */
   @SuppressFBWarnings("EI_EXPOSE_REP2")
   public SerializeReadStream(AsyncFile file, Function<byte[], T> deserializer) {
-    track(Action.Enter, null);
     this.file = file;
     this.deserializer = deserializer;
     this.context = Vertx.currentContext();
@@ -152,16 +119,12 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
     currentRequirement = 4;
     currentByteArray = new byte[4];
     gettingSize = true;
-    
-    track(Action.Exit, null);
   }
   
   private void handleException(Throwable ex) {
-    track(Action.Enter, null);
     if (exceptionHandler != null) {
       exceptionHandler.handle(ex);
     }
-    track(Action.Exit, null);
   }
   
   // Array of bytes currently being filled, never gets smaller
@@ -176,8 +139,6 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
    * Loops until no more work is possible.
    */
   private void process(Void v) {
-    track(Action.Enter, null);
-    
     int iterations = 0;
     while (true) {
       Buffer headBuffer = null;
@@ -199,20 +160,15 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
       if (endHandlerCaptured != null) {
         if (!endHandlerCalledCaptured) {
           endHandlerCaptured.handle(null);
-          track(Action.Exit, "Ended");
-        } else {
-          track(Action.Exit, "Ended already");
         }
         return ;
       }
       if (headBuffer == null) {
         // Not at the end, and got no data to process
-        track(Action.Exit, "Out of buffers after " + iterations + " iterations; demand: " + demandCaptured);
         return ;
       }
       if (demandCaptured <= 0) {
         // Currently suspended
-        track(Action.Exit, "Demand is zero after " + iterations + " iterations; demand: " + demandCaptured);
         return ;
       }
       processOneCycle(headBuffer);
@@ -221,7 +177,6 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
   }
 
   private boolean processOneCycle(Buffer headBuffer) {
-    track(Action.Enter, null);
     int remaining = currentRequirement - bytesWrittenToCurrentByteArray;
     int toRead = remaining; // Assume that the entire (or remaining) requirement can be satisfied from the head buffer
     if (headBuffer.length() - readPos < remaining) {
@@ -248,32 +203,26 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
         bytesWrittenToCurrentByteArray = 0;
       }
     }
-    track(Action.Exit, null);
     return true;
   }
   
   private void passToReader(byte[] bytes) {
-    track(Action.Enter, null);
     T item = null;
     try {
       item = deserializer.apply(bytes);
       itemHandler.handle(item);
     } catch (Throwable ex) {
-      track(Action.Throw, ex.toString());
       handleException(ex);
     }        
     synchronized (lock) {
       if (demand < Long.MAX_VALUE) {
         --demand;
       }
-      track(Action.Exit, item == null ? null : item.toString());
     }
   }
   
   private void handle(Buffer buffer) {
     logger.trace("Handler {} bytes", buffer.length());
-    totalBytesReceived += buffer.length();
-    track(Action.Enter, "Buffers: " + buffers.size() + "; ReadPos: " + readPos + "; "  + "; bytesWrittenToCurrentByteArray: " + bytesWrittenToCurrentByteArray + "; currentRequirement: " + currentRequirement + "; totalBytesReceived: " + totalBytesReceived);
     int bufferCount;
     synchronized (lock) {
       buffers.add(buffer);
@@ -288,7 +237,6 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
     context.runOnContext(v -> {
       process(null);
     });
-    track(Action.Exit, "Buffers: " + buffers.size() + "; ReadPos: " + readPos + "; "  + "; bytesWrittenToCurrentByteArray: " + bytesWrittenToCurrentByteArray + "; currentRequirement: " + currentRequirement);
   }
   
   @Override
@@ -312,17 +260,14 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
   
   @Override
   public ReadStream<T> pause() {
-    track(Action.Enter, null);    
     synchronized (lock) {
       this.demand = 0;
     }
-    track(Action.Exit, null);    
     return this;
   }
 
   @Override
   public ReadStream<T> resume() {
-    track(Action.Enter, null);    
     synchronized (lock) {
       this.demand = Integer.MAX_VALUE;
     }
@@ -330,15 +275,12 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
     context.runOnContext(v -> {
       process(null);
     });
-    track(Action.Exit, null);    
     return this;
   }
 
   @Override
   public ReadStream<T> fetch(long amount) {
-    track(Action.Enter, Long.toString(amount));
     if (amount < 0L) {
-      track(Action.Throw, null);    
       throw new IllegalArgumentException();
     }
     synchronized (lock) {
@@ -351,7 +293,6 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
       process(null);
     });
     file.fetch(2);
-    track(Action.Exit, Long.toString(demand));    
     return this;
   }
 

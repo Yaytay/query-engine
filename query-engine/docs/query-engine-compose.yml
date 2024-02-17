@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   mysql:
-    image: mysql:8.1
+    image: mysql:8.3
     command: mysqld --default-authentication-plugin=mysql_native_password --skip-log-bin
     ports:
     - 2001:3306
@@ -22,7 +22,7 @@ services:
       SA_PASSWORD: T0p-Secret
 
   postgresql:
-    image: postgres:16.0-alpine
+    image: postgres:16.2-alpine
     ports:
     - 2003:5432
     command: postgres -c log_min_duration_statement=0
@@ -32,7 +32,7 @@ services:
       POSTGRES_DB: test
       
   query-engine:
-    image: ghcr.io/yaytay/query-engine-design-mode:0.0.22-94-main
+    image: ghcr.io/yaytay/query-engine-design-mode:0.0.22-95-main
     ports:
     - 2000:8080
     environment:

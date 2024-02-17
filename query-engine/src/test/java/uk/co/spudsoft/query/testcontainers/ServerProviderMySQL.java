@@ -39,7 +39,7 @@ public class ServerProviderMySQL extends AbstractServerProvider implements Serve
 
   private static final Logger logger = LoggerFactory.getLogger(ServerProviderMySQL.class);
   
-  public static final String MYSQL_IMAGE_NAME = "mysql:8.1";
+  public static final String MYSQL_IMAGE_NAME = "mysql:8.3";
 
   private static final Object lock = new Object();
   private static MySQLContainer<?> mysqlserver;

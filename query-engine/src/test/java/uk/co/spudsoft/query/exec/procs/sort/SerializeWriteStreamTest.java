@@ -28,11 +28,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,6 +38,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +56,7 @@ public class SerializeWriteStreamTest {
   
   private static final String OUTPUT_FILE = "target/temp/SerializeWriteStreamTest1.dat";
   
-  private final int limit = 200;
+  private final int limit = 100;
   private final int byteMultiplier = 1000;
   private final int smallReadBufferSize = 17;
   private final int largeReadBufferSize = 10000;
@@ -127,14 +125,14 @@ public class SerializeWriteStreamTest {
       return sws.end();
     }
     if (sws.writeQueueFull()) {
-      // logger.debug("Write queue full after {}", written);
+      logger.debug("Write queue full after {}", written);
       return done.future();
     } else {
       ++written;
-      return sws.write(written)
-              .compose(v -> {
-                return write();
-              });
+      // Silly way to call it just to increase the coverage
+      Promise<Void> promise = Promise.promise();
+      sws.write(written, promise);
+      return promise.future();
     }    
   }
   
@@ -145,9 +143,14 @@ public class SerializeWriteStreamTest {
     fs.open(OUTPUT_FILE, new OpenOptions().setCreate(true).setTruncateExisting(true))
             .compose(af -> {
               sws = new SerializeWriteStream<>(af, this::serialize);
+              sws.exceptionHandler(ex -> {
+                logger.error("Exception writing stream: ", ex);
+                testContext.failNow(ex);
+              });
+              sws.setWriteQueueMaxSize(2);
               startWriteTime = System.currentTimeMillis();
               sws.drainHandler(v -> {
-                // logger.debug("Draining after {}", written);
+                logger.debug("Draining after {}", written);
                 ++drains;
                 write();
               });
@@ -260,7 +263,6 @@ public class SerializeWriteStreamTest {
               });
               srs.endHandler(v -> {
                 logger.debug("Delayed read succeeded after {}ms", System.currentTimeMillis() - startReadTime);
-                dumpTracking();
                 testContext.verify(() -> {
                   assertEquals(written, read);
                 });
@@ -273,20 +275,19 @@ public class SerializeWriteStreamTest {
     
   }
 
-  
-  @Test
+  @ParameterizedTest
   @Order(5)
   @Timeout(240000)
-  public void testQuickRead(Vertx vertx, VertxTestContext testContext) {
+  @ValueSource(ints = {4096, 4096, 8192, 16384, 32000, 32768, 33000, 65000, 65536, 70000, 1000000})
+  public void testQuickRead(int bufferSize, Vertx vertx, VertxTestContext testContext) {
     FileSystem fs = vertx.fileSystem();
     read = 0;
     fs.open(OUTPUT_FILE, new OpenOptions().setRead(true))
             .compose(af -> {
-              af.setReadBufferSize(8192);
+              af.setReadBufferSize(bufferSize);
               srs = new SerializeReadStream<>(af, this::deserialize);
               startReadTime = System.currentTimeMillis();
               srs.handler(i -> {
-                logger.debug("Read {}", i);
                 ++read;
               });
               srs.exceptionHandler(ex -> {
@@ -294,8 +295,7 @@ public class SerializeWriteStreamTest {
                 testContext.failNow(ex);
               });
               srs.endHandler(v -> {
-                logger.debug("Quick read succeeded after {}ms", System.currentTimeMillis() - startReadTime);
-                dumpTracking();
+                logger.debug("Quick read with {} bytes succeeded after {}ms", bufferSize, System.currentTimeMillis() - startReadTime);
                 testContext.verify(() -> {
                   assertEquals(written, read);
                 });
@@ -305,36 +305,6 @@ public class SerializeWriteStreamTest {
               return Future.succeededFuture();
             })
             ;
-    
   }
   
-  void dumpTracking() {
-    try (FileOutputStream strm = new FileOutputStream("target/temp/log.log")) {
-      for (int i = 0; i < srs.tracking.size(); ++i) {
-        SerializeReadStream.Call call = srs.tracking.get(i);
-        StringBuilder sb = new StringBuilder();
-        sb.append(call.timestamp().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
-                .append("\t")
-                .append(call.thread())
-                .append("\t")
-                .append(call.action())
-                .append("\t")
-                .append(call.indent())
-                .append(call.method())
-                .append("@")
-                .append(call.line())
-                .append("\t")
-                .append(call.comment() == null ? "" : call.comment())
-                .append("\n")
-                ;
-        strm.write(sb.toString().getBytes(StandardCharsets.UTF_8));
-      }
-      StringBuilder sb = new StringBuilder();
-      sb.append(LocalDateTime.now());
-      sb.append("\tBored\n");
-      strm.write(sb.toString().getBytes(StandardCharsets.UTF_8));
-    } catch (IOException ex) {
-      logger.warn("Failed to dump log: ", ex);
-    }
-  }
 }
