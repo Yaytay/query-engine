@@ -30,6 +30,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import org.junit.AfterClass;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.MethodOrderer;
@@ -54,13 +55,14 @@ public class SerializeWriteStreamTest {
   
   private static final Logger logger = LoggerFactory.getLogger(SerializeWriteStreamTest.class);
   
-  private static final String OUTPUT_FILE = "target/temp/SerializeWriteStreamTest1.dat";
-  
   private final int limit = 100;
   private final int byteMultiplier = 1000;
   private final int smallReadBufferSize = 17;
   private final int largeReadBufferSize = 10000;
   private final Promise<Void> done = Promise.promise();
+  
+  private String outputFile;
+  
   private int written = 0;
   private int read = 0;
   private SerializeWriteStream<Integer> sws;
@@ -142,11 +144,27 @@ public class SerializeWriteStreamTest {
     }
   }
   
+  @AfterClass
+  public void cleanup(Vertx vertx) {
+    vertx.fileSystem().delete(outputFile)
+            .onFailure(ex -> {
+              logger.error("Failed to delete {}: ", outputFile, ex);
+            })
+            .onSuccess(v -> {
+              logger.debug("Deleted {}", outputFile);
+            });
+  }
+  
   @Test
   @Order(1)
   public void testWrite(Vertx vertx, VertxTestContext testContext) {
     FileSystem fs = vertx.fileSystem();
-    fs.open(OUTPUT_FILE, new OpenOptions().setCreate(true).setTruncateExisting(true))
+    fs.createTempFile("", ".dat")
+            .compose(filename -> {
+              logger.debug("Test file: {}", filename);
+              this.outputFile = filename;
+              return fs.open(filename, new OpenOptions().setCreate(true).setTruncateExisting(true));
+            })
             .onSuccess(af -> {
               sws = new SerializeWriteStream<>(af, this::serialize);
               sws.exceptionHandler(ex -> {
@@ -183,7 +201,7 @@ public class SerializeWriteStreamTest {
   public void testReadOnly(Vertx vertx, VertxTestContext testContext) {
     AtomicLong bytesReceived = new AtomicLong();
     FileSystem fs = vertx.fileSystem();
-    fs.open(OUTPUT_FILE, new OpenOptions().setRead(true))
+    fs.open(outputFile, new OpenOptions().setRead(true))
             .compose(af -> {
               af.setReadBufferSize(smallReadBufferSize);
               af.handler(i -> {
@@ -212,7 +230,7 @@ public class SerializeWriteStreamTest {
   public void testRead(Vertx vertx, VertxTestContext testContext) {
     FileSystem fs = vertx.fileSystem();
     read = 0;
-    fs.open(OUTPUT_FILE, new OpenOptions().setRead(true))
+    fs.open(outputFile, new OpenOptions().setRead(true))
             .compose(af -> {
               af.setReadBufferSize(smallReadBufferSize);
               srs = new SerializeReadStream<>(af, this::deserialize);
@@ -253,7 +271,7 @@ public class SerializeWriteStreamTest {
     FileSystem fs = vertx.fileSystem();
     read = 0;
     AtomicInteger nextFetchSize = new AtomicInteger(0);
-    fs.open(OUTPUT_FILE, new OpenOptions().setRead(true))
+    fs.open(outputFile, new OpenOptions().setRead(true))
             .compose(af -> {
               af.setReadBufferSize(largeReadBufferSize);
               srs = new SerializeReadStream<>(af, this::deserialize);
@@ -280,7 +298,6 @@ public class SerializeWriteStreamTest {
               return Future.succeededFuture();
             })
             ;
-    
   }
 
   @ParameterizedTest
@@ -289,7 +306,7 @@ public class SerializeWriteStreamTest {
   public void testQuickRead(int bufferSize, Vertx vertx, VertxTestContext testContext) {
     FileSystem fs = vertx.fileSystem();
     read = 0;
-    fs.open(OUTPUT_FILE, new OpenOptions().setRead(true))
+    fs.open(outputFile, new OpenOptions().setRead(true))
             .compose(af -> {
               af.setReadBufferSize(bufferSize);
               srs = new SerializeReadStream<>(af, this::deserialize);
