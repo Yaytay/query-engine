@@ -60,9 +60,9 @@ jobs:
         cache: maven
 
     - name: Set up Maven
-      uses: stCarolas/setup-maven@v4.5
+      uses: stCarolas/setup-maven@v5
       with:
-        maven-version: 3.9.2
+        maven-version: 3.9.6
         
     # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)

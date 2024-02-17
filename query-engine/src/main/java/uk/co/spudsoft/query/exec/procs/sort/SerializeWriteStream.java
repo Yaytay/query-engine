@@ -101,9 +101,10 @@ public class SerializeWriteStream<T> implements WriteStream<T> {
   /**
    * Set the maximum size of the write queue to {@code maxSize}. You will still be able to write to the stream even
    * if there is more than {@code maxSize} items in the write queue. This is used as an indicator to provide flow control.
-   * <p/>
+   * <p>
    * The value is defined by the implementation of the stream, in this case it is measured in bytes, not items.
-   *
+   * </p>
+   * 
    * @param maxSize  the max size of the write stream in bytes
    * @return a reference to this, so the API can be used fluently
    */
