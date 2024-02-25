@@ -143,7 +143,7 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
     while (true) {
       Buffer headBuffer = null;
       Handler<Void> endHandlerCaptured = null;
-      boolean endHandlerCalledCaptured = false;
+      boolean endHandlerCalledCaptured;
       long demandCaptured;
       synchronized (lock) {
         demandCaptured = demand;
@@ -156,6 +156,7 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
         } else {
           headBuffer = buffers.getFirst();
         }
+        
       }
       if (endHandlerCaptured != null) {
         if (!endHandlerCalledCaptured) {
@@ -210,7 +211,6 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
     T item = null;
     try {
       item = deserializer.apply(bytes);
-      itemHandler.handle(item);
     } catch (Throwable ex) {
       handleException(ex);
     }        
@@ -219,6 +219,11 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
         --demand;
       }
     }
+    try {
+      itemHandler.handle(item);
+    } catch (Throwable ex) {
+      handleException(ex);
+    }        
   }
   
   private void handle(Buffer buffer) {
@@ -261,6 +266,9 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
   @Override
   public ReadStream<T> pause() {
     synchronized (lock) {
+      if (endHandlerCalled) {
+        throw new IllegalStateException("Already ended");
+      }
       this.demand = 0;
     }
     return this;
@@ -269,6 +277,9 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
   @Override
   public ReadStream<T> resume() {
     synchronized (lock) {
+      if (endHandlerCalled) {
+        throw new IllegalStateException("Already ended");
+      }
       this.demand = Integer.MAX_VALUE;
     }
     file.resume();
@@ -284,6 +295,9 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
       throw new IllegalArgumentException();
     }
     synchronized (lock) {
+      if (endHandlerCalled) {
+        throw new IllegalStateException("Already ended");
+      }
       demand += amount;
       if (demand < 0L) {
         demand = Long.MAX_VALUE;

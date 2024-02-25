@@ -20,6 +20,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.AsyncFile;
 import io.vertx.core.streams.WriteStream;
@@ -36,8 +37,16 @@ public class SerializeWriteStream<T> implements WriteStream<T> {
 
   private static final Logger logger = LoggerFactory.getLogger(SerializeWriteStream.class);
   
+  private static final int DEFAULT_BUFFER_SIZE = 1 << 20;
+  
   private final AsyncFile file;
   private final Function<T, byte[]> serializer;
+  
+  private int bufferSize = DEFAULT_BUFFER_SIZE;
+  
+  private Buffer writeBuffer;
+  private int writePos;
+  private Promise<Void> writePromise;
 
   /**
    * Constructor.
@@ -57,6 +66,26 @@ public class SerializeWriteStream<T> implements WriteStream<T> {
     this.serializer = serializer;
   }
 
+  /**
+   * Constructor.
+   * 
+   * The AsyncFile should have been opened with one of the writable OpenOptions.
+   * 
+   * The serializer will always be called with a single T object and should convert that to a byte array (that will be read by the deserailizer 
+   * passed in to a SerializeReadStream).
+   * 
+   * @param file The AsyncFile that is going to be read.
+   * @param serializer Function to convert a single T object into a byte buffer.
+   * @param bufferSize The amount of data (bytes) to buffer before writing to the file WriteStream.
+   * 
+   */
+  @SuppressFBWarnings("EI_EXPOSE_REP2")
+  public SerializeWriteStream(AsyncFile file, Function<T, byte[]> serializer, int bufferSize) {
+    this.file = file;
+    this.serializer = serializer;
+    this.bufferSize = bufferSize;
+  }
+
   static byte[] byteArrayFromInt(int value) {
     return new byte[] {
               (byte) (value >> 24)
@@ -65,11 +94,30 @@ public class SerializeWriteStream<T> implements WriteStream<T> {
             , (byte) value
     };
   }
-  
+
   @Override
-  public WriteStream<T> exceptionHandler(Handler<Throwable> hndlr) {
+  public SerializeWriteStream<T> exceptionHandler(Handler<Throwable> hndlr) {
     file.exceptionHandler(hndlr);
     return this;
+  }
+  
+  private Future<Void> writeWriteBuffer(boolean recreate) {
+    Buffer buffer = writeBuffer;
+    int pos = writePos;
+    Promise<Void> promise = writePromise;
+
+    if (recreate) {
+      writeBuffer = Buffer.buffer(bufferSize);
+      writePos = 0;
+      writePromise = Promise.promise();
+    } else {
+      writeBuffer = null;
+      writePos = 0;
+      writePromise = null;
+    }
+
+    file.write(buffer.slice(0, pos), promise);
+    return promise.future();
   }
 
   @Override
@@ -80,11 +128,32 @@ public class SerializeWriteStream<T> implements WriteStream<T> {
     } catch (Throwable ex) {
       return Future.failedFuture(ex);
     }
-    logger.debug("Serialized size: {}", serialized.length);
-    Buffer buff = Buffer.buffer(4 + serialized.length);
-    buff.appendBytes(byteArrayFromInt(serialized.length));
-    buff.appendBytes(serialized);
-    return file.write(buff);    
+    if (writeBuffer == null) {
+      writeBuffer = Buffer.buffer(bufferSize);
+      writePos = 0;
+      writePromise = Promise.promise();
+    } 
+    int spaceRequired = 4 + serialized.length;
+    if (spaceRequired > bufferSize) {
+      Buffer buff = Buffer.buffer(4 + spaceRequired);
+      buff.appendBytes(byteArrayFromInt(serialized.length));
+      buff.appendBytes(serialized);
+      if (writePos > 0) {
+        writeWriteBuffer(true);
+      }
+      return file.write(buff);
+     } else if (writePos + spaceRequired > bufferSize) {
+      writeWriteBuffer(true);
+      writeBuffer.appendBytes(byteArrayFromInt(serialized.length));
+      writeBuffer.appendBytes(serialized);
+      writePos += spaceRequired;
+      return writePromise.future();
+    } else {
+      writeBuffer.appendBytes(byteArrayFromInt(serialized.length));
+      writeBuffer.appendBytes(serialized);
+      writePos += spaceRequired;
+      return writePromise.future();
+    }
   }
 
   @Override
@@ -95,7 +164,19 @@ public class SerializeWriteStream<T> implements WriteStream<T> {
 
   @Override
   public void end(Handler<AsyncResult<Void>> hndlr) {
-    file.end(hndlr);
+    logger.debug("endHandler");
+    if (writePos > 0) {
+      writeWriteBuffer(false)
+              .andThen(ar -> {
+                if (ar.succeeded()) {
+                  file.end(hndlr);
+                } else {
+                  hndlr.handle(ar);
+                }
+              });
+    } else {
+      file.end(hndlr);
+    }
   }
 
   /**
@@ -109,7 +190,7 @@ public class SerializeWriteStream<T> implements WriteStream<T> {
    * @return a reference to this, so the API can be used fluently
    */
   @Override
-  public WriteStream<T> setWriteQueueMaxSize(int maxSize) {
+  public SerializeWriteStream<T> setWriteQueueMaxSize(int maxSize) {
     file.setWriteQueueMaxSize(maxSize);
     return this;
   }
@@ -120,7 +201,7 @@ public class SerializeWriteStream<T> implements WriteStream<T> {
   }
 
   @Override
-  public WriteStream<T> drainHandler(Handler<Void> hndlr) {
+  public SerializeWriteStream<T> drainHandler(Handler<Void> hndlr) {
     file.drainHandler(hndlr);
     return this;
   }

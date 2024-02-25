@@ -59,7 +59,7 @@ public class SerializeWriteStreamTest {
   private final int byteMultiplier = 1000;
   private final int smallReadBufferSize = 17;
   private final int largeReadBufferSize = 10000;
-  private final Promise<Void> done = Promise.promise();
+  private Promise<Void> done = Promise.promise();
   
   private String outputFile;
   
@@ -124,12 +124,14 @@ public class SerializeWriteStreamTest {
     }
   }
   
-  // Write untilt he write queue is full
+  // Write until the write queue is full
   private void write() {
     while (true) {
       if (written >= limit) {
-        sws.end();
-        done.complete();
+        if (!done.future().isComplete()) {
+          sws.end();
+          done.complete();
+        }
         return ;
       }
       if (sws.writeQueueFull()) {
@@ -331,4 +333,47 @@ public class SerializeWriteStreamTest {
             ;
   }
   
+  
+  @Test
+  @Order(6)
+  public void testWriteBiggerThanBuffer(Vertx vertx, VertxTestContext testContext) {
+    FileSystem fs = vertx.fileSystem();
+    written = 0;
+    done = Promise.promise();
+    fs.createTempFile("", ".dat")
+            .compose(filename -> {
+              logger.debug("Test file: {}", filename);
+              this.outputFile = filename;
+              return fs.open(filename, new OpenOptions().setCreate(true).setTruncateExisting(true));
+            })
+            .onSuccess(af -> {
+              sws = new SerializeWriteStream<>(af, this::serialize, 10000);
+              sws.exceptionHandler(ex -> {
+                logger.error("Exception writing stream: ", ex);
+                testContext.failNow(ex);
+              });
+              sws.setWriteQueueMaxSize(50000);
+              startWriteTime = System.currentTimeMillis();
+              sws.drainHandler(v -> {
+                logger.debug("Drained after {}", written);
+                ++drains;
+                write();
+              });
+              write();
+            })
+            .onFailure(ex -> {
+              logger.debug("Write failed after {}ms (including {} drain cycles): ", System.currentTimeMillis() - startWriteTime, drains, ex);
+              testContext.failNow(ex);
+            });
+    done.future()
+            .onFailure(ex -> {
+              logger.debug("Write failed after {}ms (including {} drain cycles): ", System.currentTimeMillis() - startWriteTime, drains, ex);
+              testContext.failNow(ex);
+            })
+            .onSuccess(v -> {
+              logger.debug("Succeeded after {}ms (including {} drain cycles)", System.currentTimeMillis() - startWriteTime, drains);
+              testContext.completeNow();
+            })
+            ;
+  }
 }
