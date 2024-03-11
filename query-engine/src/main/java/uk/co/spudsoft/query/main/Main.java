@@ -95,11 +95,11 @@ import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineExecutorImpl;
 import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 import uk.co.spudsoft.query.exec.filters.LimitFilter;
+import uk.co.spudsoft.query.exec.filters.MapFilter;
 import uk.co.spudsoft.query.exec.filters.OffsetFilter;
 import uk.co.spudsoft.query.exec.filters.QueryFilter;
-import uk.co.spudsoft.query.exec.filters.RelabelFilter;
 import uk.co.spudsoft.query.exec.filters.SortFilter;
-import uk.co.spudsoft.query.exec.filters.WithoutFilter;
+import uk.co.spudsoft.query.exec.procs.sort.ProcessorSortInstance;
 import uk.co.spudsoft.query.json.ObjectMapperConfiguration;
 import uk.co.spudsoft.query.json.TracingOptionsMixin;
 import uk.co.spudsoft.query.main.sample.SampleDataLoader;
@@ -316,6 +316,9 @@ public class Main extends Application {
       logger.error("Failed to convert params to json: ", ex);
     }
 
+    ProcessorSortInstance.setMemoryLimit(params.getProcessors().getInMemorySortLimitBytes());
+    ProcessorSortInstance.setTempDir(params.getProcessors().getTempDir());
+    
     this.port = params.getHttpServerOptions().getPort();
     
     VertxOptions vertxOptions = params.getVertxOptions();
@@ -497,8 +500,7 @@ public class Main extends Application {
                     new LimitFilter()
                     , new OffsetFilter()
                     , new QueryFilter()
-                    , new RelabelFilter()
-                    , new WithoutFilter()
+                    , new MapFilter()
                     , new SortFilter()
             )
     );
@@ -518,7 +520,7 @@ public class Main extends Application {
       } else if (url.startsWith("sqlserver")) {
         loader = new SampleDataLoaderMsSQL();
       } else if (url.startsWith("postgresql")) {
-        loader = new SampleDataLoaderPostgreSQL();        
+        loader = new SampleDataLoaderPostgreSQL();
       } else {
         logger.warn("No sample data loader found for {}", url);
         return performSampleDataLoads(iter);

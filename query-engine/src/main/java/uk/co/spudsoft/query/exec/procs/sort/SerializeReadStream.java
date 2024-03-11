@@ -23,9 +23,9 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.AsyncFile;
 import io.vertx.core.streams.ReadStream;
+import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,8 +38,12 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
   
   private static final Logger logger = LoggerFactory.getLogger(SerializeReadStream.class);
   
+  public interface Deserializer<T> {
+    T deserialize(byte[] data) throws IOException;
+  }
+      
   private final AsyncFile file;
-  private final Function<byte[], T> deserializer;
+  private final Deserializer<T> deserializer;
   private final Object lock = new Object();
   private final Context context;
   
@@ -102,7 +106,7 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
    * 
    */
   @SuppressFBWarnings("EI_EXPOSE_REP2")
-  public SerializeReadStream(AsyncFile file, Function<byte[], T> deserializer) {
+  public SerializeReadStream(AsyncFile file, Deserializer<T> deserializer) {
     this.file = file;
     this.deserializer = deserializer;
     this.context = Vertx.currentContext();
@@ -210,7 +214,7 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
   private void passToReader(byte[] bytes) {
     T item = null;
     try {
-      item = deserializer.apply(bytes);
+      item = deserializer.deserialize(bytes);
     } catch (Throwable ex) {
       handleException(ex);
     }        

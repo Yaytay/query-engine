@@ -16,8 +16,7 @@
  */
 package uk.co.spudsoft.query.defn;
 
-import uk.co.spudsoft.query.defn.ProcessorGroupConcat;
-import uk.co.spudsoft.query.defn.ProcessorType;
+import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -54,14 +53,14 @@ public class ProcessorGroupConcatTest {
 
   @Test
   public void testGetParentIdColumn() {
-    ProcessorGroupConcat instance = ProcessorGroupConcat.builder().parentIdColumn("parentId").build();
-    assertEquals("parentId", instance.getParentIdColumn());
+    ProcessorGroupConcat instance = ProcessorGroupConcat.builder().parentIdColumns(Arrays.asList("parentId")).build();
+    assertEquals(Arrays.asList("parentId"), instance.getParentIdColumns());
   }
 
   @Test
   public void testGetChildIdColumn() {
-    ProcessorGroupConcat instance = ProcessorGroupConcat.builder().childIdColumn("childId").build();
-    assertEquals("childId", instance.getChildIdColumn());
+    ProcessorGroupConcat instance = ProcessorGroupConcat.builder().childIdColumns(Arrays.asList("childId")).build();
+    assertEquals(Arrays.asList("childId"), instance.getChildIdColumns());
   }
 
   @Test

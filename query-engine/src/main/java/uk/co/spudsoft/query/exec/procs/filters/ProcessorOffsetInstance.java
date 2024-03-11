@@ -17,10 +17,11 @@
 package uk.co.spudsoft.query.exec.procs.filters;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.github.tsegismont.streamutils.impl.SkippingStream;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.streams.WriteStream;
+import io.vertx.core.streams.ReadStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.ProcessorOffset;
@@ -28,10 +29,7 @@ import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.DataRow;
-import uk.co.spudsoft.query.exec.DataRowStream;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
-import uk.co.spudsoft.query.exec.procs.AsyncHandler;
-import uk.co.spudsoft.query.exec.procs.PassthroughStream;
 
 /**
  *
@@ -45,16 +43,13 @@ public class ProcessorOffsetInstance implements ProcessorInstance {
   private final SourceNameTracker sourceNameTracker;
   private final Context context;
   private final ProcessorOffset definition;
-  private final PassthroughStream stream;
+  private SkippingStream<DataRow> stream;
   
-  private int count;
-
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
   public ProcessorOffsetInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorOffset definition) {
     this.sourceNameTracker = sourceNameTracker;
     this.context = context;
     this.definition = definition;
-    this.stream = new PassthroughStream(sourceNameTracker, this::passthroughStreamProcessor, context);
   }  
 
   /**
@@ -64,35 +59,21 @@ public class ProcessorOffsetInstance implements ProcessorInstance {
   public int getOffset() {
     return definition.getOffset();
   }
-  
-  private Future<Void> passthroughStreamProcessor(DataRow data, AsyncHandler<DataRow> chain) {
-    sourceNameTracker.addNameToContextLocalData(context);
-    try {
-      logger.trace("process {}", data);
-      if (++count > definition.getOffset()) {
-        return chain.handle(data);
-      } else {
-        return Future.succeededFuture();
-      }
-    } catch (Throwable ex) {
-      logger.error("Failed to process {}: ", data, ex);
-      return Future.failedFuture(ex);
-    }
+
+  @Override
+  public String getId() {
+    return definition.getId();
   }
 
   @Override
-  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex) {
+  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStream<DataRow> input) {
+    this.stream = new SkippingStream<>(input, definition.getOffset());
     return Future.succeededFuture();
   }
 
   @Override
-  public DataRowStream<DataRow> getReadStream() {
-    return stream.readStream();
+  public ReadStream<DataRow> getReadStream() {
+    return stream;
   }
-
-  @Override
-  public WriteStream<DataRow> getWriteStream() {
-    return stream.writeStream();
-  }  
   
 }

@@ -18,12 +18,14 @@ package uk.co.spudsoft.query.defn;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.google.common.collect.ImmutableList;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
-import uk.co.spudsoft.query.exec.ProcessorInstance;
+import java.util.List;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.procs.subquery.ProcessorGroupConcatInstance;
+import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
  * Processor that combines multiple values from a child query into a single concatenated string value.
@@ -37,16 +39,17 @@ public class ProcessorGroupConcat implements Processor {
 
   private final ProcessorType type;
   private final Condition condition;
+  private final String id;
   private final SourcePipeline input;
   private final boolean innerJoin;
-  private final String parentIdColumn;
-  private final String childIdColumn;
+  private final ImmutableList<String> parentIdColumns;
+  private final ImmutableList<String> childIdColumns;
   private final String childValueColumn;
   private final String parentValueColumn;
   private final String delimiter;
   
   @Override
-  public ProcessorInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
+  public ProcessorGroupConcatInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
     return new ProcessorGroupConcatInstance(vertx, sourceNameTracker, context, this);
   }
 
@@ -63,6 +66,11 @@ public class ProcessorGroupConcat implements Processor {
   @Override
   public Condition getCondition() {
     return condition;
+  }
+  
+  @Override
+  public String getId() {
+    return id;
   }
   
   /**
@@ -119,8 +127,8 @@ public class ProcessorGroupConcat implements Processor {
                         """
           , maxLength = 100
   )
-  public String getParentIdColumn() {
-    return parentIdColumn;
+  public List<String> getParentIdColumns() {
+    return parentIdColumns;
   }
 
   /**
@@ -139,8 +147,8 @@ public class ProcessorGroupConcat implements Processor {
                         """
           , maxLength = 100
   )
-  public String getChildIdColumn() {
-    return childIdColumn;
+  public List<String> getChildIdColumns() {
+    return childIdColumns;
   }
 
   /**
@@ -197,10 +205,11 @@ public class ProcessorGroupConcat implements Processor {
 
     private ProcessorType type = ProcessorType.GROUP_CONCAT;
     private Condition condition;
+    private String id;
     private SourcePipeline input;
     private boolean innerJoin;
-    private String parentIdColumn;
-    private String childIdColumn;
+    private List<String> parentIdColumns;
+    private List<String> childIdColumns;
     private String childValueColumn;
     private String parentValueColumn;
     private String delimiter;
@@ -208,7 +217,7 @@ public class ProcessorGroupConcat implements Processor {
     private Builder() {
     }
     public ProcessorGroupConcat build() {
-      return new ProcessorGroupConcat(type, condition, input, innerJoin, parentIdColumn, childIdColumn, childValueColumn, parentValueColumn, delimiter);
+      return new ProcessorGroupConcat(type, condition, id, input, innerJoin, parentIdColumns, childIdColumns, childValueColumn, parentValueColumn, delimiter);
     }
 
     public Builder type(final ProcessorType value) {
@@ -226,6 +235,11 @@ public class ProcessorGroupConcat implements Processor {
       return this;
     }
     
+    public Builder id(final String value) {
+      this.id = value;
+      return this;
+    }
+
     public Builder input(final SourcePipeline value) {
       this.input = value;
       return this;
@@ -236,13 +250,13 @@ public class ProcessorGroupConcat implements Processor {
       return this;
     }
 
-    public Builder parentIdColumn(final String value) {
-      this.parentIdColumn = value;
+    public Builder parentIdColumns(final List<String> value) {
+      this.parentIdColumns = value;
       return this;
     }
 
-    public Builder childIdColumn(final String value) {
-      this.childIdColumn = value;
+    public Builder childIdColumns(final List<String> value) {
+      this.childIdColumns = value;
       return this;
     }
 
@@ -268,10 +282,11 @@ public class ProcessorGroupConcat implements Processor {
 
   private ProcessorGroupConcat(ProcessorType type
           , final Condition condition
+          , final String id
           , SourcePipeline input
           , boolean innerJoin
-          , String parentIdColumn
-          , String childIdColumn
+          , List<String> parentIdColumns
+          , List<String> childIdColumns
           , String childValueColumn
           , String parentValueColumn
           , String delimiter
@@ -279,10 +294,11 @@ public class ProcessorGroupConcat implements Processor {
     validateType(ProcessorType.GROUP_CONCAT, type);
     this.type = type;
     this.condition = condition;
+    this.id = id;
     this.input = input;
     this.innerJoin = innerJoin;
-    this.parentIdColumn = parentIdColumn;
-    this.childIdColumn = childIdColumn;
+    this.parentIdColumns = ImmutableCollectionTools.copy(parentIdColumns);
+    this.childIdColumns = ImmutableCollectionTools.copy(childIdColumns);
     this.childValueColumn = childValueColumn;
     this.parentValueColumn = parentValueColumn;
     this.delimiter = delimiter == null ? ", " : delimiter;

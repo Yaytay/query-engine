@@ -22,6 +22,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.streams.ReadStream;
 import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.SqlConnection;
@@ -32,7 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.exec.DataRow;
-import uk.co.spudsoft.query.exec.DataRowStream;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
 
@@ -41,13 +41,13 @@ import uk.co.spudsoft.query.exec.Types;
  *
  * @author jtalbut
  */
-public class RowStreamWrapper implements DataRowStream<DataRow> {
+public class RowStreamWrapper implements ReadStream<DataRow> {
   
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(RowStreamWrapper.class);
   
   private final SourceNameTracker sourceNameTracker;
-  private final DataRowStream<Row> rowStream;
+  private final MetadataRowStreamImpl rowStream;
   private final SqlConnection connection;
   private final Transaction transaction;
   private final PreparedStatement preparedStatement;
@@ -68,7 +68,7 @@ public class RowStreamWrapper implements DataRowStream<DataRow> {
   }
 
   @Override
-  public DataRowStream<DataRow> exceptionHandler(Handler<Throwable> handler) {
+  public RowStreamWrapper exceptionHandler(Handler<Throwable> handler) {
     this.exceptionHandler = handler;
     rowStream.exceptionHandler(ex -> {
       sourceNameTracker.addNameToContextLocalData(Vertx.currentContext());
@@ -79,7 +79,7 @@ public class RowStreamWrapper implements DataRowStream<DataRow> {
   }
   
   @Override
-  public DataRowStream<DataRow> handler(Handler<DataRow> handler) {
+  public RowStreamWrapper handler(Handler<DataRow> handler) {
     sourceNameTracker.addNameToContextLocalData(Vertx.currentContext());
     logger.trace("handler({})", handler);
     this.handler = handler;
@@ -119,7 +119,7 @@ public class RowStreamWrapper implements DataRowStream<DataRow> {
   }
   
   @Override
-  public DataRowStream<DataRow> pause() {
+  public RowStreamWrapper pause() {
     sourceNameTracker.addNameToContextLocalData(Vertx.currentContext());
     logger.trace("{} paused", this);
     rowStream.pause();
@@ -127,7 +127,7 @@ public class RowStreamWrapper implements DataRowStream<DataRow> {
   }
 
   @Override
-  public DataRowStream<DataRow> resume() {
+  public RowStreamWrapper resume() {
     sourceNameTracker.addNameToContextLocalData(Vertx.currentContext());
     logger.trace("{} resumed", this);
     rowStream.resume();
@@ -135,13 +135,13 @@ public class RowStreamWrapper implements DataRowStream<DataRow> {
   }
 
   @Override
-  public DataRowStream<DataRow> fetch(long amount) {
+  public RowStreamWrapper fetch(long amount) {
     rowStream.fetch(amount);
     return this;
   }
 
   @Override
-  public DataRowStream<DataRow> endHandler(Handler<Void> endHandler) {    
+  public RowStreamWrapper endHandler(Handler<Void> endHandler) {    
     rowStream.endHandler(ehv -> {
       if (handledRows) {
         logger.info("Finished row stream after handling some rows");
@@ -180,7 +180,6 @@ public class RowStreamWrapper implements DataRowStream<DataRow> {
     return this;
   }
 
-  @Override
   public List<ColumnDescriptor> getColumnDescriptors() {
     ensureTypesReflectRowStream();
     
@@ -196,12 +195,10 @@ public class RowStreamWrapper implements DataRowStream<DataRow> {
     }
   }
 
-  @Override
   public Future<Void> close() {
     return rowStream.close();
   }
 
-  @Override
   public void close(Handler<AsyncResult<Void>> completionHandler) {
     rowStream.close(completionHandler);
   }

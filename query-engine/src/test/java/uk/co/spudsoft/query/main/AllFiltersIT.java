@@ -294,7 +294,7 @@ public class AllFiltersIT {
     body = given()
             .queryParam("minDate", "1971-05-06")
             .queryParam("maxId", "20")
-            .queryParam("_relabel", "")
+            .queryParam("_map", "")
             .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
             .then()
@@ -302,12 +302,12 @@ public class AllFiltersIT {
             .statusCode(400)
             .extract().body().asString();
     
-    assertThat(body, equalTo("Invalid argument to _relabel filter, should be a space delimited list of relabels, each of which should be SourceLabel:NewLabel.  The new label cannot contain a colon and neith label can be zero characters in length."));
+    assertThat(body, equalTo("Invalid argument to _map filter, should be a space delimited list of relabels, each of which should be SourceLabel:NewLabel.  The new label cannot contain a colon and neith label can be zero characters in length."));
     
     body = given()
             .queryParam("minDate", "1971-05-06")
             .queryParam("maxId", "20")
-            .queryParam("_relabel", "bob")
+            .queryParam("_map", "bob")
             .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
             .then()
@@ -315,12 +315,12 @@ public class AllFiltersIT {
             .statusCode(400)
             .extract().body().asString();
     
-    assertThat(body, equalTo("Invalid argument to _relabel filter, should be a space delimited list of relabels, each of which should be SourceLabel:NewLabel.  The new label cannot contain a colon and neith label can be zero characters in length."));
+    assertThat(body, equalTo("Invalid argument to _map filter, should be a space delimited list of relabels, each of which should be SourceLabel:NewLabel.  The new label cannot contain a colon and neith label can be zero characters in length."));
     
     body = given()
             .queryParam("minDate", "1971-05-06")
             .queryParam("maxId", "20")
-            .queryParam("_relabel", "BoolField:YesNo TimeField:When")
+            .queryParam("_map", "BoolField:YesNo TimeField:When")
             .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
             .then()

@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.procs.sort;
 
+import uk.co.spudsoft.query.exec.procs.ListReadStream;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -30,7 +31,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,13 +50,18 @@ public class SortingStream<T> implements ReadStream<T> {
   private final Context context;
   private final FileSystem fileSystem;
   private final Supplier<Comparator<T>> comparatorFactory;
-  private final Function<T, byte[]> serializer;
-  private final Function<byte[], T> deserializer;
+  private final SerializeWriteStream.Serializer<T> serializer;
+  private final SerializeReadStream.Deserializer<T> deserializer;
   
   private final String tempDir;
   private final String baseFileName;
   private final long memoryLimit;
-  private final Function<T, Long> memoryEvaluator;
+  
+  public static interface MemoryEvaluator<T> {
+    public int sizeof(T data);
+  }
+  
+  private final MemoryEvaluator<T> memoryEvaluator;
 
   private final Object lock = new Object();
   
@@ -176,12 +181,12 @@ public class SortingStream<T> implements ReadStream<T> {
   public SortingStream(Context context
           , FileSystem fileSystem
           , Supplier<Comparator<T>> comparatorFactory
-          , Function<T, byte[]> serializer
-          , Function<byte[], T> deserializer
+          , SerializeWriteStream.Serializer<T> serializer
+          , SerializeReadStream.Deserializer<T> deserializer
           , String tempDir
           , String baseFileName
           , long memoryLimit
-          , Function<T, Long> memoryEvaluator
+          , MemoryEvaluator<T> memoryEvaluator
   ) {
     this.context = context;
     this.fileSystem = fileSystem;
@@ -325,7 +330,7 @@ public class SortingStream<T> implements ReadStream<T> {
   }
   
   private void inputHandler(T item) {
-    long sizeofData = memoryEvaluator.apply(item);
+    int sizeofData = memoryEvaluator.sizeof(item);
     
     List<T> itemsToWrite = null;
     

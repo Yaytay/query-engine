@@ -18,12 +18,14 @@ package uk.co.spudsoft.query.defn;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.google.common.collect.ImmutableList;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
-import uk.co.spudsoft.query.exec.ProcessorInstance;
+import java.util.List;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.procs.subquery.ProcessorDynamicFieldInstance;
+import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
  * Processor that takes in multiple streams and uses them to dynamically add fields to the primary stream.
@@ -114,6 +116,8 @@ public class ProcessorDynamicField implements Processor {
 
   private final ProcessorType type;
   private final Condition condition;
+  private final String id;
+  
   private final boolean innerJoin;
   
   private final String fieldIdColumn;
@@ -121,16 +125,15 @@ public class ProcessorDynamicField implements Processor {
   private final String fieldTypeColumn;
   private final String fieldColumnColumn;
   
-  private final String parentIdColumn;
-
-  private final String valuesParentIdColumn;
+  private final ImmutableList<String> parentIdColumns;
+  private final ImmutableList<String> valuesParentIdColumns;
   private final String valuesFieldIdColumn;
   
   private final SourcePipeline fieldDefns;
   private final SourcePipeline fieldValues;
   
   @Override
-  public ProcessorInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
+  public ProcessorDynamicFieldInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
     return new ProcessorDynamicFieldInstance(vertx, sourceNameTracker, context, this);
   }
 
@@ -143,6 +146,15 @@ public class ProcessorDynamicField implements Processor {
     fieldDefns.validate();
     if (fieldValues == null) {
       throw new IllegalArgumentException("Field values (fieldValues) pipeline not provided");
+    }
+    if (parentIdColumns == null || parentIdColumns.isEmpty()) {
+      throw new IllegalArgumentException("ID column(s) not specified for parent stream");      
+    }
+    if (valuesParentIdColumns == null || valuesParentIdColumns.isEmpty()) {
+      throw new IllegalArgumentException("ID column(s) not specified for values stream");      
+    }
+    if (parentIdColumns.size() != valuesParentIdColumns.size()) {
+      throw new IllegalArgumentException("ID column(s) specified for parent stream does not have the same number of fields as those specified for values stream");      
     }
     fieldValues.validate();
   }
@@ -157,6 +169,11 @@ public class ProcessorDynamicField implements Processor {
     return condition;
   }  
 
+  @Override
+  public String getId() {
+    return id;
+  }
+  
   /**
    * Get the feed for the field definitions.
    * 
@@ -229,7 +246,7 @@ public class ProcessorDynamicField implements Processor {
   }
 
   /**
-   * Get the parent ID column.
+   * Get the parent ID columns.
    * 
    * This is the name of the field in the main stream that is to be used to match against child rows.
    * The main stream must be sorted by this field.
@@ -244,8 +261,8 @@ public class ProcessorDynamicField implements Processor {
                         """
           , maxLength = 100
   )
-  public String getParentIdColumn() {
-    return parentIdColumn;
+  public List<String> getParentIdColumns() {
+    return parentIdColumns;
   }
 
   /**
@@ -301,8 +318,8 @@ public class ProcessorDynamicField implements Processor {
   }
 
   /**
-   * Get the name of the column in the values feed that contains the ID to match to the parent feed.
-   * The values feed must be sorted by this column.
+   * Get the names of the columns in the values feed that contains the ID to match to the parent feed.
+   * The values feed must be sorted by these columns.
    * @return the name of the column in the values feed that contains the ID to match to the parent feed.
    */
   @Schema(description = """
@@ -312,8 +329,8 @@ public class ProcessorDynamicField implements Processor {
                         """
           , maxLength = 100
   )
-  public String getValuesParentIdColumn() {
-    return valuesParentIdColumn;
+  public List<String> getValuesParentIdColumns() {
+    return valuesParentIdColumns;
   }
 
   /**
@@ -334,13 +351,14 @@ public class ProcessorDynamicField implements Processor {
 
     private ProcessorType type = ProcessorType.DYNAMIC_FIELD;
     private Condition condition;
+    private String id;
     private boolean innerJoin;
     private String fieldIdColumn = "id";
     private String fieldNameColumn = "name";
     private String fieldTypeColumn = "type";
     private String fieldColumnColumn = "column";
-    private String parentIdColumn;
-    private String valuesParentIdColumn;
+    private List<String> parentIdColumns;
+    private List<String> valuesParentIdColumns;
     private String valuesFieldIdColumn;
     private SourcePipeline fieldDefns;
     private SourcePipeline fieldValues;
@@ -363,6 +381,11 @@ public class ProcessorDynamicField implements Processor {
       return this;
     }
     
+    public Builder id(final String value) {
+      this.id = value;
+      return this;
+    }
+
     public Builder innerJoin(final boolean value) {
       this.innerJoin = value;
       return this;
@@ -388,13 +411,13 @@ public class ProcessorDynamicField implements Processor {
       return this;
     }
 
-    public Builder parentIdColumn(final String value) {
-      this.parentIdColumn = value;
+    public Builder parentIdColumns(final List<String> value) {
+      this.parentIdColumns = value;
       return this;
     }
 
-    public Builder valuesParentIdColumn(final String value) {
-      this.valuesParentIdColumn = value;
+    public Builder valuesParentIdColumns(final List<String> value) {
+      this.valuesParentIdColumns = value;
       return this;
     }
 
@@ -414,7 +437,7 @@ public class ProcessorDynamicField implements Processor {
     }
 
     public ProcessorDynamicField build() {
-      return new uk.co.spudsoft.query.defn.ProcessorDynamicField(type, condition, innerJoin, fieldIdColumn, fieldNameColumn, fieldTypeColumn, fieldColumnColumn, parentIdColumn, valuesParentIdColumn, valuesFieldIdColumn, fieldDefns, fieldValues);
+      return new uk.co.spudsoft.query.defn.ProcessorDynamicField(type, condition, id, innerJoin, fieldIdColumn, fieldNameColumn, fieldTypeColumn, fieldColumnColumn, parentIdColumns, valuesParentIdColumns, valuesFieldIdColumn, fieldDefns, fieldValues);
     }
   }
 
@@ -422,17 +445,18 @@ public class ProcessorDynamicField implements Processor {
     return new ProcessorDynamicField.Builder();
   }
 
-  private ProcessorDynamicField(final ProcessorType type, final Condition condition, final boolean innerJoin, final String fieldIdColumn, final String fieldNameColumn, final String fieldTypeColumn, final String fieldColumnColumn, final String parentIdColumn, final String valuesParentIdColumn, final String valuesFieldIdColumn, final SourcePipeline fieldDefns, final SourcePipeline fieldValues) {
+  private ProcessorDynamicField(final ProcessorType type, final Condition condition, final String id, final boolean innerJoin, final String fieldIdColumn, final String fieldNameColumn, final String fieldTypeColumn, final String fieldColumnColumn, final List<String> parentIdColumns, final List<String> valuesParentIdColumns, final String valuesFieldIdColumn, final SourcePipeline fieldDefns, final SourcePipeline fieldValues) {
     validateType(ProcessorType.DYNAMIC_FIELD, type);
     this.type = type;
     this.condition = condition;
+    this.id = id;
     this.innerJoin = innerJoin;
     this.fieldIdColumn = fieldIdColumn;
     this.fieldNameColumn = fieldNameColumn;
     this.fieldTypeColumn = fieldTypeColumn;
     this.fieldColumnColumn = fieldColumnColumn;
-    this.parentIdColumn = parentIdColumn;
-    this.valuesParentIdColumn = valuesParentIdColumn;
+    this.parentIdColumns = ImmutableCollectionTools.copy(parentIdColumns);
+    this.valuesParentIdColumns = ImmutableCollectionTools.copy(valuesParentIdColumns);
     this.valuesFieldIdColumn = valuesFieldIdColumn;
     this.fieldDefns = fieldDefns;
     this.fieldValues = fieldValues;

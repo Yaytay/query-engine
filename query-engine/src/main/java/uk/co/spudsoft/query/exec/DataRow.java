@@ -60,7 +60,25 @@ public class DataRow {
   public static DataRow create(Types types) {
     return new DataRow(types, new LinkedHashMap<>());
   }
-
+  
+  /**
+   * Factory method for test cases.
+   * 
+   * @param types The Types that must be created externally to be shared amongst different instances.
+   * @param entries Array of pairs made up of a string key followed by an Object value.
+   * @return A newly created DataRow.
+   */
+  public static DataRow create(Types types, Object... entries) {
+    assert(entries.length % 2 == 0);
+    DataRow result = new DataRow(types, new LinkedHashMap<>());
+    for (int i = 0; i < entries.length; i += 2) {
+      String key = (String) entries[i];
+      Comparable<?> value = (Comparable) entries[i + 1];
+      result.put(key, value);
+    }
+    return result;
+  }
+  
   public final void putTypeIfAbsent(String key, DataType type) throws IllegalStateException {
     types.putIfAbsent(key, type);
   }

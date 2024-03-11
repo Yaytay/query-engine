@@ -88,6 +88,11 @@ public class Parameters {
   private CacheConfig pipelineCache = new CacheConfig();
   
   /**
+   * Configuration of specific processors.
+   */
+  private ProcessorConfig processors = new ProcessorConfig();
+  
+  /**
    * The Query Engine maintains an internal model of the files under the baseConfigPath.
    * <p>
    * When files under the baseConfigPath change this model gets updated.
@@ -690,6 +695,23 @@ public class Parameters {
     this.session = session;
   }
 
-  
+  /**
+   * Get the configuration for individual processors.
+   * Some processors have specific configuration options that are not appropriate for configuration in pipeline definitions, they are  controlled here.
+   * @return the configuration for individual processors.
+   */
+  public ProcessorConfig getProcessors() {
+    return processors;
+  }
+
+  /**
+   * Set the configuration for individual processors.
+   * Some processors have specific configuration options that are not appropriate for configuration in pipeline definitions, they are  controlled here.
+   * @param processors set the configuration for individual processors.
+   */
+  public void setProcessors(ProcessorConfig processors) {
+    this.processors = processors;
+  }
+
 }
 

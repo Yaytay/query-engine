@@ -18,63 +18,63 @@ package uk.co.spudsoft.query.exec.procs.filters;
 
 import com.google.common.collect.ImmutableMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.github.tsegismont.streamutils.impl.MappingStream;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.streams.WriteStream;
+import io.vertx.core.streams.ReadStream;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.defn.ProcessorRelabel;
-import uk.co.spudsoft.query.defn.ProcessorRelabelLabel;
+import uk.co.spudsoft.query.defn.ProcessorMap;
+import uk.co.spudsoft.query.defn.ProcessorMapLabel;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.DataRow;
-import uk.co.spudsoft.query.exec.DataRowStream;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
-import uk.co.spudsoft.query.exec.procs.AsyncHandler;
-import uk.co.spudsoft.query.exec.procs.PassthroughStream;
 
 /**
  *
  * @author jtalbut
  */
-public class ProcessorRelabelInstance implements ProcessorInstance {
+public class ProcessorMapInstance implements ProcessorInstance {
   
   @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(ProcessorRelabelInstance.class);
+  private static final Logger logger = LoggerFactory.getLogger(ProcessorMapInstance.class);
   
   private final SourceNameTracker sourceNameTracker;
   private final Context context;
-  private final ProcessorRelabel definition;
-  private final PassthroughStream stream;
+  private final ProcessorMap definition;
+  private MappingStream<DataRow, DataRow> stream;
   
   private final Map<String, String> relabels;
   
   private final Types types = new Types();
   
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
-  public ProcessorRelabelInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorRelabel definition) {
+  public ProcessorMapInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorMap definition) {
     this.sourceNameTracker = sourceNameTracker;
     this.context = context;
     this.definition = definition;
-    this.stream = new PassthroughStream(sourceNameTracker, this::passthroughStreamProcessor, context);
     ImmutableMap.Builder<String, String> builder = ImmutableMap.<String, String>builder();
-    for (ProcessorRelabelLabel relabel : definition.getRelabels()) {
+    for (ProcessorMapLabel relabel : definition.getRelabels()) {
       builder.put(relabel.getSourceLabel(), relabel.getNewLabel());
     }
     this.relabels = builder.build();
-  }  
+  }
 
-  private Future<Void> passthroughStreamProcessor(DataRow data, AsyncHandler<DataRow> chain) {
-    sourceNameTracker.addNameToContextLocalData(context);
-    try {
-      logger.trace("process {}", data);
-      
+  @Override
+  public String getId() {
+    return definition.getId();
+  }
+
+  @Override
+  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStream<DataRow> input) {
+    this.stream = new MappingStream<>(input, (oldData) -> {
       DataRow newData = DataRow.create(types);
-      data.forEach((defn, value) -> {
+      oldData.forEach((defn, value) -> {
         String newLabel = relabels.get(defn.name());
         if (newLabel == null) {
           newData.put(defn.name(), defn.type(), value);
@@ -82,26 +82,13 @@ public class ProcessorRelabelInstance implements ProcessorInstance {
           newData.put(newLabel, defn.type(), value);
         }
       });
-      return chain.handle(newData);
-    } catch (Throwable ex) {
-      logger.error("Failed to process {}: ", data, ex);
-      return Future.failedFuture(ex);
-    }
-  }
-
-  @Override
-  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex) {
+      return newData;
+    });
     return Future.succeededFuture();
   }
 
   @Override
-  public DataRowStream<DataRow> getReadStream() {
-    return stream.readStream();
+  public ReadStream<DataRow> getReadStream() {
+    return stream;
   }
-
-  @Override
-  public WriteStream<DataRow> getWriteStream() {
-    return stream.writeStream();
-  }  
-  
 }

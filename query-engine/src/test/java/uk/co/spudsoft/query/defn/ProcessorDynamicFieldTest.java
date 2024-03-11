@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.defn;
 
+import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -92,10 +93,10 @@ public class ProcessorDynamicFieldTest {
     assertEquals("name", instance.getFieldNameColumn());
     assertEquals("type", instance.getFieldTypeColumn());
     assertEquals(null, instance.getFieldValues());
-    assertEquals(null, instance.getParentIdColumn());
+    assertEquals(null, instance.getParentIdColumns());
     assertEquals(ProcessorType.DYNAMIC_FIELD, instance.getType());
     assertEquals(null, instance.getValuesFieldIdColumn());
-    assertEquals(null, instance.getValuesParentIdColumn());
+    assertEquals(null, instance.getValuesParentIdColumns());
   }
 
   @Test
@@ -106,8 +107,8 @@ public class ProcessorDynamicFieldTest {
 
   @Test
   public void testGetParentIdColumn() {
-    ProcessorDynamicField instance = ProcessorDynamicField.builder().parentIdColumn("parentId").build();
-    assertEquals("parentId", instance.getParentIdColumn());
+    ProcessorDynamicField instance = ProcessorDynamicField.builder().parentIdColumns(Arrays.asList("parentId")).build();
+    assertEquals(Arrays.asList("parentId"), instance.getParentIdColumns());
   }
 
   @Test
@@ -136,8 +137,8 @@ public class ProcessorDynamicFieldTest {
 
   @Test
   public void testGetValuesParentIdColumn() {
-    ProcessorDynamicField instance = ProcessorDynamicField.builder().valuesParentIdColumn("valuesParentIdColumn").build();
-    assertEquals("valuesParentIdColumn", instance.getValuesParentIdColumn());
+    ProcessorDynamicField instance = ProcessorDynamicField.builder().valuesParentIdColumns(Arrays.asList("valuesParentIdColumns")).build();
+    assertEquals(Arrays.asList("valuesParentIdColumns"), instance.getValuesParentIdColumns());
   }
 
   @Test

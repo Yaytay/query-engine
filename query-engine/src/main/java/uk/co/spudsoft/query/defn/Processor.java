@@ -74,6 +74,8 @@ public interface Processor {
   )
   ProcessorType getType();
   
+  String getId();
+  
   @Schema(description = """
                         <P>Optional condition that controls whether the processor will be run.</P>
                         """

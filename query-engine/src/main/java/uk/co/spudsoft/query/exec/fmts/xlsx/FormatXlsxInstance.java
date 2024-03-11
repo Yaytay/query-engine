@@ -23,11 +23,14 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.streams.ReadStream;
 import io.vertx.core.streams.WriteStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.FormatXlsx;
 import uk.co.spudsoft.query.defn.FormatXlsxColumn;
 import uk.co.spudsoft.query.exec.DataRow;
@@ -49,6 +52,8 @@ import uk.co.spudsoft.query.web.RequestContextHandler;
  */
 public class FormatXlsxInstance implements FormatInstance {
  
+  private static final Logger logger = LoggerFactory.getLogger(FormatXlsxInstance.class);
+  
   private final FormatXlsx definition;
   private final OutputWriteStreamWrapper streamWrapper;
   private final FormattingWriteStream formattingStream;
@@ -68,6 +73,7 @@ public class FormatXlsxInstance implements FormatInstance {
     this.formattingStream = new FormattingWriteStream(outputStream
             , v -> Future.succeededFuture()
             , row -> {
+              logger.info("Got row {}", row);
               if (!started.get()) {
                 started.set(true);
                 TableDefinition tableDefintion = tableDefinitionFromRow(row);
@@ -189,8 +195,8 @@ public class FormatXlsxInstance implements FormatInstance {
   }
   
   @Override
-  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
-    return Future.succeededFuture();
+  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStream<DataRow> input) {
+    return input.pipeTo(formattingStream);
   }
 
   @Override

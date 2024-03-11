@@ -19,16 +19,17 @@ package uk.co.spudsoft.query.exec.sources.test;
 import com.google.common.base.Strings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.streams.ReadStream;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.SourceTest;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.defn.DataType;
-import uk.co.spudsoft.query.exec.DataRowStream;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.procs.QueueReadStream;
 import uk.co.spudsoft.query.exec.sources.AbstractSource;
 
 /**
@@ -43,7 +44,7 @@ public class SourceTestInstance extends AbstractSource {
   private final int rowCount;
   private final int delayMs;
   private final Types types;
-  private final BlockingReadStream<DataRow> stream;
+  private final QueueReadStream<DataRow> stream;
 
   public SourceTestInstance(Context context, SourceTest definition, String defaultName) {
     super(Strings.isNullOrEmpty(definition.getName()) ? defaultName : definition.getName());
@@ -55,7 +56,7 @@ public class SourceTestInstance extends AbstractSource {
     if (!Strings.isNullOrEmpty(definition.getName()) && Strings.isNullOrEmpty(defaultName)) {
       types.putIfAbsent("name", DataType.String);
     }
-    this.stream = new BlockingReadStream<>(context, rowCount, types);
+    this.stream = new QueueReadStream<>(context, types);
   }    
  
   @Override
@@ -69,7 +70,7 @@ public class SourceTestInstance extends AbstractSource {
           data.put("name", getName());
           stream.add(data);
         }
-        stream.end();
+        stream.complete();
       } catch (Throwable ex) {
         return Future.failedFuture(ex);
       }
@@ -82,13 +83,9 @@ public class SourceTestInstance extends AbstractSource {
           DataRow data = DataRow.create(types);
           data.put("value", i);
           data.put("name", getName());
-          try {
-            stream.add(data);
-          } catch (InterruptedException ex) {
-            logger.error("Exception from test stream: {}", ex);
-          }
+          stream.add(data);
         } else {
-          stream.end();
+          stream.complete();
           context.owner().cancelTimer(id);
         }
       });
@@ -97,7 +94,7 @@ public class SourceTestInstance extends AbstractSource {
   }
 
   @Override
-  public DataRowStream<DataRow> getReadStream() {
+  public ReadStream<DataRow> getReadStream() {
     return stream;
   }
 }

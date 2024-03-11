@@ -24,6 +24,7 @@ import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.AsyncFile;
 import io.vertx.core.streams.WriteStream;
+import java.io.IOException;
 import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,10 +38,14 @@ public class SerializeWriteStream<T> implements WriteStream<T> {
 
   private static final Logger logger = LoggerFactory.getLogger(SerializeWriteStream.class);
   
+  public interface Serializer<T> {
+    byte[] serialize(T item) throws IOException;
+  }
+      
   private static final int DEFAULT_BUFFER_SIZE = 1 << 20;
   
   private final AsyncFile file;
-  private final Function<T, byte[]> serializer;
+  private final Serializer<T> serializer;
   
   private int bufferSize = DEFAULT_BUFFER_SIZE;
   
@@ -61,7 +66,7 @@ public class SerializeWriteStream<T> implements WriteStream<T> {
    * 
    */
   @SuppressFBWarnings("EI_EXPOSE_REP2")
-  public SerializeWriteStream(AsyncFile file, Function<T, byte[]> serializer) {
+  public SerializeWriteStream(AsyncFile file, Serializer<T> serializer) {
     this.file = file;
     this.serializer = serializer;
   }
@@ -80,7 +85,7 @@ public class SerializeWriteStream<T> implements WriteStream<T> {
    * 
    */
   @SuppressFBWarnings("EI_EXPOSE_REP2")
-  public SerializeWriteStream(AsyncFile file, Function<T, byte[]> serializer, int bufferSize) {
+  public SerializeWriteStream(AsyncFile file, Serializer<T> serializer, int bufferSize) {
     this.file = file;
     this.serializer = serializer;
     this.bufferSize = bufferSize;
@@ -124,7 +129,7 @@ public class SerializeWriteStream<T> implements WriteStream<T> {
   public Future<Void> write(T t) {
     byte[] serialized;
     try {
-      serialized = serializer.apply(t);
+      serialized = serializer.serialize(t);
     } catch (Throwable ex) {
       return Future.failedFuture(ex);
     }

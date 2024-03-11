@@ -20,11 +20,11 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import java.util.List;
+import io.vertx.core.streams.ReadStream;
+import java.util.Collection;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.ProcessorGroupConcat;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
@@ -52,17 +52,22 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
 
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
   public ProcessorGroupConcatInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorGroupConcat definition) {
-    super(logger, vertx, sourceNameTracker, context, definition.getParentIdColumn(), definition.getChildIdColumn(), definition.isInnerJoin());
+    super(logger, vertx, sourceNameTracker, context, definition.getParentIdColumns(), definition.getChildIdColumns(), definition.isInnerJoin());
     this.definition = definition;
   }
-    
+
   @Override
-  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex) {
+  Future<ReadStream<DataRow>> initializeChild(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStream<DataRow> input) {
     return initializeChildStream(executor, pipeline, parentSource, processorIndex, definition.getInput());
   }  
+
+  @Override
+  public String getId() {
+    return definition.getId();
+  }
   
   @Override
-  protected void processChildren(DataRow parentRow, List<DataRow> childRows) {
+  protected DataRow processChildren(DataRow parentRow, Collection<DataRow> childRows) {
     logger.trace("Got child rows: {}", childRows);
     String result = childRows.stream()
             .map(r -> r.get(definition.getChildValueColumn()))
@@ -70,12 +75,7 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
             .map(o -> o.toString())
             .collect(Collectors.joining(definition.getDelimiter()));
     parentRow.put(definition.getParentValueColumn(), result);
+    return parentRow;
   }
  
-
-  @Override
-  protected void addChildMetadata(DataRow parentRow, DataRow childRow) {
-    parentRow.putTypeIfAbsent(definition.getParentValueColumn(), DataType.String);
-  }
-  
 }

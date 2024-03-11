@@ -14,29 +14,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package uk.co.spudsoft.query.exec.procs.sort;
+package uk.co.spudsoft.query.exec.procs;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.core.streams.ReadStream;
-import java.util.Iterator;
-import java.util.List;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.exec.Types;
 
 /**
  *
  * @param <T> The type of item being streamed.
  * @author jtalbut
  */
-public class ListReadStream<T> implements ReadStream<T> {
+public class QueueReadStream<T> implements ReadStream<T> {
   
-  private static final Logger logger = LoggerFactory.getLogger(ListReadStream.class);
+  private static final Logger logger = LoggerFactory.getLogger(QueueReadStream.class);
   
   private final Context context;
-  private final List<T> items;
-  private final Iterator<T> iter;
+  private final Deque<T> items;
+  private final Types types;
   
   private final Object lock = new Object();
 
@@ -47,12 +48,40 @@ public class ListReadStream<T> implements ReadStream<T> {
   private long demand;
   private boolean emitting;
   private boolean ended;
+  private boolean completed;
   
   @SuppressFBWarnings("EI_EXPOSE_REP2")
-  public ListReadStream(Context context, List<T> items) {
+  public QueueReadStream(Context context, Types types) {
     this.context = context;
-    this.items = items;
-    this.iter = items.iterator();
+    this.items = new ArrayDeque<>();
+    this.types = types;
+  }
+  
+  public QueueReadStream<T> add(T item) {
+    if (completed) {
+      throw new IllegalStateException("Last item has already been sent");
+    }
+    synchronized (lock) {
+      items.add(item);
+      if (emitting) {
+        return this;
+      }
+      emitting = true;
+    }
+    context.runOnContext(v -> process());
+    return this;
+  }
+
+  public QueueReadStream<T> complete() {
+    synchronized (lock) {
+      this.completed = true;
+      if (emitting) {
+        return this;
+      }
+      emitting = true;
+    }
+    context.runOnContext(v -> process());
+    return this;
   }
   
   private void process() {
@@ -69,13 +98,15 @@ public class ListReadStream<T> implements ReadStream<T> {
           --demand;
         }
         exceptionHandlerCaptured = exceptionHandler;
-        if (iter.hasNext()) {
-          item =  iter.next();
+        if (!items.isEmpty()) {
+          item =  items.pop();
           handlerCaptured = handler;
         } else {
           emitting = false;
-          ended = true;
-          endHandlerCaptured = endHandler;
+          if (completed) {
+            ended = true;
+            endHandlerCaptured = endHandler;
+          }
         }
       }
       if (item != null && handlerCaptured != null) {
@@ -97,7 +128,7 @@ public class ListReadStream<T> implements ReadStream<T> {
   }
   
   @Override
-  public ListReadStream<T> exceptionHandler(Handler<Throwable> handler) {
+  public QueueReadStream<T> exceptionHandler(Handler<Throwable> handler) {
     synchronized (lock) {
       this.exceptionHandler = handler;
     }
@@ -105,7 +136,7 @@ public class ListReadStream<T> implements ReadStream<T> {
   }
 
   @Override
-  public ListReadStream<T> handler(Handler<T> handler) {
+  public QueueReadStream<T> handler(Handler<T> handler) {
     synchronized (lock) {
       this.handler = handler;
     }
@@ -113,7 +144,7 @@ public class ListReadStream<T> implements ReadStream<T> {
   }
 
   @Override
-  public ListReadStream<T> endHandler(Handler<Void> endHandler) {
+  public QueueReadStream<T> endHandler(Handler<Void> endHandler) {
     synchronized (lock) {
       this.endHandler = endHandler;
     }
@@ -121,7 +152,7 @@ public class ListReadStream<T> implements ReadStream<T> {
   }
   
   @Override
-  public ListReadStream<T> pause() {
+  public QueueReadStream<T> pause() {
     synchronized (lock) {
       demand = 0;
     }
@@ -129,7 +160,7 @@ public class ListReadStream<T> implements ReadStream<T> {
   }
 
   @Override
-  public ListReadStream<T> resume() {
+  public QueueReadStream<T> resume() {
     synchronized (lock) {
       demand = Long.MAX_VALUE;
       if (emitting) {
@@ -142,7 +173,7 @@ public class ListReadStream<T> implements ReadStream<T> {
   }
 
   @Override
-  public ListReadStream<T> fetch(long amount) {
+  public QueueReadStream<T> fetch(long amount) {
     if (amount < 0L) {
       throw new IllegalArgumentException();
     }

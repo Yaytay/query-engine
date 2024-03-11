@@ -20,6 +20,7 @@ import io.vertx.sqlclient.desc.ColumnDescriptor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -97,6 +98,10 @@ public class Types {
 
   public void forEach(Consumer<? super ColumnDefn> action) {
     defns.forEach(action);
+  }
+  
+  public Iterator<ColumnDefn> iterator() {
+    return defns.iterator();
   }
   
   public boolean isEmpty() {

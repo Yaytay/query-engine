@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Endpoint;
 import uk.co.spudsoft.query.defn.SourceSql;
 import uk.co.spudsoft.query.exec.DataRow;
-import uk.co.spudsoft.query.exec.DataRowStream;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.SharedMap;
@@ -230,7 +229,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
   }
 
   @Override
-  public DataRowStream<DataRow> getReadStream() {
+  public RowStreamWrapper getReadStream() {
     return rowStreamWrapper;
   }
   

@@ -1,0 +1,285 @@
+/*
+ * Copyright (C) 2024 njt
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package uk.co.spudsoft.query.exec.procs.subquery;
+
+import io.vertx.core.Context;
+import io.vertx.core.Handler;
+import io.vertx.core.streams.ReadStream;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Deque;
+import java.util.List;
+import java.util.function.BiFunction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
+/**
+ *
+ * @author njt
+ * @param<T> the type of object in the primary stream.
+ * @param<U> the type of object in the secondary stream.
+ * @param<V> the type of object in the output stream.
+ */
+public class MergeStream<T, U, V> implements ReadStream<V> {
+  
+  private static final Logger logger = LoggerFactory.getLogger(MergeStream.class);
+  
+  private static final int MAX_ROWS_TO_BUFFER = 100;
+  
+  private final Object lock = new Object();
+  
+  private Handler<V> handler;
+  private Handler<Throwable> exceptionHandler;
+  private Handler<Void> endHandler;
+  
+  public interface BiComparator<T, U> {
+    int compare(T p, U s);
+  }
+  
+  private final Context context;
+  private final ReadStream<T> primaryStream;
+  private final ReadStream<U> secondaryStream;
+  private final BiFunction<T, Collection<U>, V> merger;
+  private final BiComparator<T, U> comparator;
+  private final boolean innerJoin;
+
+  private final int primaryStreamBufferHighThreshold;
+  private final int primaryStreamBufferLowThreshold;
+  private final int secondaryStreamBufferHighThreshold;
+  private final int secondaryStreamBufferLowThreshold;
+  
+  private boolean secondaryEnded = false;
+  private boolean primaryEnded = false;
+  private T currentPrimary;
+  private List<U> currentSecondaryRows;
+  private final Deque<T> primaryRows = new ArrayDeque<>(MAX_ROWS_TO_BUFFER);
+  private final Deque<U> secondaryRows = new ArrayDeque<>(MAX_ROWS_TO_BUFFER);
+  
+  private boolean emitting = false;
+  
+  public MergeStream(Context context
+          , ReadStream<T> primaryStream
+          , ReadStream<U> secondaryStream
+          , BiFunction<T, Collection<U>, V> merger
+          , BiComparator<T, U> comparator
+          , boolean innerJoin
+          , int primaryStreamBufferHighThreshold
+          , int primaryStreamBufferLowThreshold
+          , int secondaryStreamBufferHighThreshold
+          , int secondaryStreamBufferLowThreshold
+  ) {
+    this.context = context;
+    this.primaryStream = primaryStream;
+    this.secondaryStream = secondaryStream;
+    this.merger = merger;
+    this.comparator = comparator;
+    this.innerJoin = innerJoin;
+    this.primaryStreamBufferHighThreshold = primaryStreamBufferHighThreshold;
+    this.primaryStreamBufferLowThreshold = primaryStreamBufferLowThreshold;
+    this.secondaryStreamBufferHighThreshold = secondaryStreamBufferHighThreshold;
+    this.secondaryStreamBufferLowThreshold = secondaryStreamBufferLowThreshold;
+  }
+  
+  @Override
+  public MergeStream<T, U, V> exceptionHandler(Handler<Throwable> handler) {
+    this.exceptionHandler = handler;
+    primaryStream.exceptionHandler(handler);
+    secondaryStream.exceptionHandler(handler);
+    return  this;
+  }
+
+  @Override
+  public MergeStream<T, U, V> handler(Handler<V> handler) {
+    this.handler = handler;
+    primaryStream.endHandler(v -> {
+      logger.debug("Ending primary stream");
+      primaryEnded = true;
+      doEmit();
+    });
+    secondaryStream.endHandler(v -> {
+      logger.debug("Ending secondary stream");
+      secondaryEnded = true;
+      doEmit();
+    });
+    primaryStream.handler(this::handlePrimaryItem);
+    secondaryStream.handler(this::handleSecondaryItem);
+    
+    return this;
+  }
+  
+  private void handlePrimaryItem(T item) {
+    logger.debug("Handling primary {}", item);
+    synchronized (lock) {
+      if (currentPrimary == null) {
+        currentPrimary = item;
+        currentSecondaryRows = new ArrayList<>();
+      } else {
+        primaryRows.add(item);
+        if (primaryRows.size() > this.primaryStreamBufferHighThreshold) {
+          logger.debug("Pausing primary stream at {}", primaryRows.size());
+          primaryStream.pause();
+        }
+      }
+    }
+  }
+
+  private void handleSecondaryItem(U item) {
+    synchronized (lock) {
+      if (currentPrimary == null) {
+        secondaryRows.add(item);
+      } else {
+        if (0 == comparator.compare(currentPrimary, item)) {
+          currentSecondaryRows.add(item);
+        } else {
+          secondaryRows.add(item);
+          doEmit();
+        }
+      }
+      if (secondaryRows.size() > this.secondaryStreamBufferHighThreshold) {
+        logger.debug("Pausing secondary stream at {}", secondaryRows.size());
+        secondaryStream.pause();
+      }
+    }
+  }
+
+  private void doEmit() {
+    if (!emitting) {
+      emitting = true;
+      context.runOnContext(this::emit);
+    }
+  }
+  
+  private void bringInSecondaries() {
+    while (!secondaryRows.isEmpty()) {
+      U curSec = secondaryRows.peek();
+      int compare = this.comparator.compare(currentPrimary, curSec);
+      if (compare > 0) {
+        logger.debug("Skipping secondary row {} because it is before {}", curSec, currentPrimary);
+        secondaryRows.pop();
+      } else if (compare == 0) {
+        currentSecondaryRows.add(secondaryRows.pop());
+      } else {
+        break;
+      }
+    }
+  }
+  
+  private void emit(Void v) {
+    boolean moreToDo = true;
+    while (moreToDo) {
+      Handler<V> capturedHandler = null;
+      Handler<Void> capturedEndHandler = null;
+      T mergePrimary = null;
+      List<U> mergeSecondary = null;
+
+      boolean resumePrimary;
+      boolean resumeSecondary;
+      logger.debug("Current: {} and {}, got {} primary rows{} and {} secondary rows{}"
+              , currentPrimary
+              , currentSecondaryRows
+              , primaryRows.size()
+              , primaryEnded ? " (ended)" : ""
+              , secondaryRows.size()
+              , secondaryEnded ? " (ended)" : ""
+      );
+      synchronized (lock) {
+        if (!secondaryRows.isEmpty() && currentSecondaryRows.isEmpty()) {
+            bringInSecondaries();
+        }
+        if (!secondaryRows.isEmpty()) {
+          mergePrimary = currentPrimary;
+          mergeSecondary = currentSecondaryRows;
+          capturedHandler = handler;
+          currentSecondaryRows = new ArrayList<>();
+          if (!primaryRows.isEmpty()) {
+            currentPrimary = primaryRows.pop();
+            bringInSecondaries();
+          } else {
+            currentPrimary = null;
+            emitting = false;
+            moreToDo = false;
+          }
+        } else if (!secondaryEnded) {
+          emitting = false;
+          moreToDo = false;
+        }
+        if (secondaryRows.isEmpty() && secondaryEnded && primaryRows.isEmpty() && primaryEnded) {
+          emitting = false;
+          moreToDo = false;
+          capturedEndHandler = endHandler;
+          if (capturedHandler == null && (currentPrimary != null || !currentSecondaryRows.isEmpty())) {
+            mergePrimary = currentPrimary;
+            mergeSecondary = currentSecondaryRows;
+            capturedHandler = this.handler;
+          }
+        }
+        resumePrimary = !primaryEnded && primaryRows.size() < primaryStreamBufferLowThreshold;
+        resumeSecondary = !secondaryEnded && secondaryRows.size() < secondaryStreamBufferLowThreshold;
+      }
+      
+      if (capturedHandler != null) {
+        if (!innerJoin || !mergeSecondary.isEmpty()) {
+          V result = merger.apply(mergePrimary, mergeSecondary);
+          logger.debug("Outputting {}", result);
+          capturedHandler.handle(result);
+        }
+      }
+      if (capturedEndHandler != null) {
+        capturedEndHandler.handle(null);
+      }
+      if (resumePrimary) {
+        logger.debug("Resuming primary stream at {} rows", primaryRows.size());
+        primaryStream.resume();
+      }
+      if (resumeSecondary) {
+        logger.debug("Resuming secondary stream at {} rows", secondaryRows.size());
+        secondaryStream.resume();
+      }
+    }
+  }
+  
+  @Override
+  public MergeStream<T, U, V> pause() {
+    primaryStream.pause();
+    secondaryStream.pause();
+    return this;
+  }
+
+  @Override
+  public MergeStream<T, U, V> resume() {
+    primaryStream.resume();
+    secondaryStream.resume();
+    return this;
+  }
+
+  @Override
+  public MergeStream<T, U, V> fetch(long amount) {
+    primaryStream.fetch(amount);
+    secondaryStream.resume();
+    return this;
+  }
+
+  @Override
+  public MergeStream<T, U, V> endHandler(Handler<Void> endHandler) {
+    this.endHandler = endHandler;
+    return this;
+  }
+  
+  
+}

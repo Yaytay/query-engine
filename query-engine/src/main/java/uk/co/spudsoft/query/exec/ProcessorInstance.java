@@ -17,13 +17,20 @@
 package uk.co.spudsoft.query.exec;
 
 import io.vertx.core.Future;
+import io.vertx.core.streams.ReadStream;
 
 /**
  *
  * @author jtalbut
  */
-public interface ProcessorInstance extends Writable, Readable {
+public interface ProcessorInstance extends Readable {
     
+  /**
+   * Return an ID for this processor, unique within the pipeline.
+   * @return an ID for this processor, unique within the pipeline. 
+   */
+  String getId();
+  
   /**
    * Take whatever steps are necessary to start reading or writing the streams.
    * 
@@ -33,7 +40,8 @@ public interface ProcessorInstance extends Writable, Readable {
    * @param pipeline Definition of the pipeline, primarily for access to arguments and sourceEndpoints.
    * @param parentSource The name of the Source feeding this processor.
    * @param processorIndex The index of this processor.
+   * @param input The ReadStream that is the input to the processor.
    * @return a Future that will be completed when the initialization is complete.
    */
-  Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex);
+  Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStream<DataRow> input);
 }

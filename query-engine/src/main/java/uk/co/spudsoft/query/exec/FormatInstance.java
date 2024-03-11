@@ -16,12 +16,27 @@
  */
 package uk.co.spudsoft.query.exec;
 
+import io.vertx.core.Future;
+import io.vertx.core.streams.ReadStream;
+
 /**
  *
  * A FormatInstance is created from a Format (based on FormatType).
  * 
  * @author jtalbut
  */
-public interface FormatInstance extends Initializable, Writable {
+public interface FormatInstance extends Writable {
+  
+  /**
+   * Take whatever steps are necessary to start the output.
+   * 
+   * At the time of the call the arguments in the {@link PipelineInstance} will have been set and can be used in the evaluation of any "template" values in the definition.
+   * 
+   * @param executor The executor that can be used by the class to initialize (and run) any sub pipelines.
+   * @param pipeline Definition of the pipeline, primarily for access to arguments and sourceEndpoints.
+   * @param input The ReadStream that is the input to the processor.
+   * @return a Future that will be completed when the initialization is complete.
+   */
+  Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStream<DataRow> input);
   
 }

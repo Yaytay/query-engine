@@ -16,11 +16,9 @@
  */
 package uk.co.spudsoft.query.exec.fmts;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
+import io.vertx.core.streams.ReadStream;
 import io.vertx.core.streams.WriteStream;
-import java.util.List;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
@@ -37,32 +35,24 @@ import uk.co.spudsoft.query.exec.FormatInstance;
  */
 public class FormatCaptureInstance implements FormatInstance {
   
-  private final CapturingWriteStream capturingStream;
-  private final Promise<List<DataRow>> finalPromise = Promise.promise();
+  private ReadStream<DataRow> stream;
 
   public FormatCaptureInstance() {
-    this.capturingStream = new CapturingWriteStream(
-            rows -> {
-              finalPromise.tryComplete(rows);
-            }
-    );
   }
 
-  public Future<List<DataRow>> getFuture() {
-    return finalPromise.future();
-  }
-  
   @Override
-  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
+  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStream<DataRow> input) {
+    this.stream = input;
     return Future.succeededFuture();
   }
 
-  @Override
-  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "The write stream must be accessible.  This is different from FormattingWriteStream because CapturingWriteStream manages its own ExceptionHandler")
-  public WriteStream<DataRow> getWriteStream() {
-    return capturingStream;
+  public ReadStream<DataRow> getReadStream() {
+    return stream;
   }
-  
-  
+
+  @Override
+  public WriteStream<DataRow> getWriteStream() {
+    throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+  }
   
 }

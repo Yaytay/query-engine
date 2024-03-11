@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
-import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.procs.filters.ProcessorLimitInstance;
 
@@ -38,10 +37,11 @@ public class ProcessorLimit implements Processor {
   
   private final ProcessorType type;
   private final Condition condition;
+  private final String id;
   private final int limit;
 
   @Override
-  public ProcessorInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
+  public ProcessorLimitInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
     return new ProcessorLimitInstance(vertx, sourceNameTracker, context, this);
   }
 
@@ -65,6 +65,11 @@ public class ProcessorLimit implements Processor {
     return condition;
   }  
 
+  @Override
+  public String getId() {
+    return id;
+  }
+  
   @Schema(description = """
                         The limit on the number of rows that will be output by this processor.
                         """
@@ -78,6 +83,7 @@ public class ProcessorLimit implements Processor {
 
     private ProcessorType type = ProcessorType.LIMIT;
     private Condition condition;
+    private String id;
     private int limit;
 
     private Builder() {
@@ -98,13 +104,18 @@ public class ProcessorLimit implements Processor {
       return this;
     }
 
+    public Builder id(final String value) {
+      this.id = value;
+      return this;
+    }
+
     public Builder limit(final int value) {
       this.limit = value;
       return this;
     }
 
     public ProcessorLimit build() {
-      return new ProcessorLimit(type, condition, limit);
+      return new ProcessorLimit(type, condition, id, limit);
     }
   }
 
@@ -112,10 +123,11 @@ public class ProcessorLimit implements Processor {
     return new ProcessorLimit.Builder();
   }
 
-  private ProcessorLimit(final ProcessorType type, final Condition condition, final int limit) {
+  private ProcessorLimit(final ProcessorType type, final Condition condition, final String id, final int limit) {
     validateType(ProcessorType.LIMIT, type);
     this.type = type;
     this.condition = condition;
+    this.id = id;
     this.limit = limit;
   }
   

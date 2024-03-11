@@ -19,11 +19,13 @@ package uk.co.spudsoft.query.exec.procs.script;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.github.tsegismont.streamutils.impl.FilteringStream;
+import io.github.tsegismont.streamutils.impl.MappingStream;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
-import io.vertx.core.streams.WriteStream;
+import io.vertx.core.streams.ReadStream;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -39,11 +41,10 @@ import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.DataRow;
-import uk.co.spudsoft.query.exec.DataRowStream;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
+import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.exec.procs.AsyncHandler;
-import uk.co.spudsoft.query.exec.procs.PassthroughStream;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
 
@@ -64,7 +65,7 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
   private final SourceNameTracker sourceNameTracker;
   private final Context context;
   private final ProcessorScript definition;
-  private final PassthroughStream stream;
+  private ReadStream<DataRow> stream;
   
   private Engine engine;
   
@@ -75,22 +76,24 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
   private final Pipeline pipeline;
   private final ImmutableMap<String, Object> arguments;
   
+  private final Types types = new Types();
+  
+  
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
   public ProcessorScriptInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorScript definition) {
     this.sourceNameTracker = sourceNameTracker;
     this.context = context;
     this.definition = definition;
-    this.stream = new PassthroughStream(sourceNameTracker, this::passthroughStreamProcessor, context);    
-    stream.endHandler(v -> {
-      if (engine != null) {
-        engine.close();
-      }
-    });
     this.requestContext = RequestContextHandler.getRequestContext(context);
     this.pipeline = PipelineInstance.getPipelineDefinition(context);
     this.arguments = buildArgumentMap(requestContext);
   }
   
+  @Override
+  public String getId() {
+    return definition.getId();
+  }
+
   private static ImmutableMap<String, Object> buildArgumentMap(RequestContext requestContext) {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.<String, Object>builder();
     if (requestContext != null) {
@@ -109,24 +112,6 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
     return builder.build();
   }
 
-  private Future<Void> passthroughStreamProcessor(DataRow data, AsyncHandler<DataRow> chain) {
-    sourceNameTracker.addNameToContextLocalData(context);
-    try {
-      logger.trace("{}@{}: process {}", this.getClass().getSimpleName(), this.hashCode(), data);
-      if (predicateSource == null || runPredicate(data)) {
-        if (processSource != null) {
-          runProcess(data);
-        }
-        return chain.handle(data);
-      } else {
-        return Future.succeededFuture();
-      }
-    } catch (Throwable ex) {
-      logger.error("Failed to process {}: ", data, ex);
-      return Future.failedFuture(ex);
-    }
-  }
-  
   private boolean runPredicate(DataRow data) {
     sourceNameTracker.addNameToContextLocalData(context);
     return runSource(engine, "predicate", definition.getLanguage(), predicateSource, data, (v, jo) -> {
@@ -134,17 +119,20 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
     });
   }
 
-  private void runProcess(DataRow data) {
-    runSource(engine, "process", definition.getLanguage(), processSource, data, (returnValue, row) -> {
+  private DataRow runProcess(DataRow data) {
+    return runSource(engine, "process", definition.getLanguage(), processSource, data, (returnValue, row) -> {
       logger.debug("returnValue ({}): {}", returnValue == null ? "" : returnValue.getClass(), returnValue);
       logger.debug("row ({}): {}", row == null ? "" : row.getClass(), row);
       // Anything in the return value is added to the row
-      if (returnValue != null) {
+      if (returnValue == null) {
+        return row;
+      } else {
+        DataRow newData = DataRow.create(types);
         for (String key : returnValue.getMemberKeys()) {
-          row.put(key, mapToNativeObject(returnValue.getMember(key)));
+          newData.put(key, mapToNativeObject(returnValue.getMember(key)));
         }
+        return newData;
       }
-      return row;
     });
   }
   
@@ -208,9 +196,9 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
     logger.warn("Unknown value type: {}", value);
     return null;
   }
-  
+
   @Override
-  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex) {
+  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStream<DataRow> input) {
     try {
       engine = Engine.newBuilder()
               .option("engine.WarnInterpreterOnly", "false")
@@ -221,23 +209,24 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
               .build();
     }
     
-    if (!Strings.isNullOrEmpty(definition.getPredicate())) {
-      predicateSource = Source.newBuilder(definition.getLanguage(), definition.getPredicate(), Integer.toString(hashCode()) + ":predicate").cached(true).buildLiteral();
-    }
+    this.stream = input;
     if (!Strings.isNullOrEmpty(definition.getProcess())) {
-      processSource = Source.newBuilder(definition.getLanguage(), definition.getProcess(), Integer.toString(hashCode()) + ":process").cached(true).buildLiteral();
-    }    
+      stream = new MappingStream<>(stream, this::runProcess);
+    }
+    if (!Strings.isNullOrEmpty(definition.getPredicate())) {
+      stream = new FilteringStream<>(input, this::runPredicate);
+    }
+    this.stream.endHandler(v -> {
+      if (engine != null) {
+        engine.close();
+      }
+    });
     return Future.succeededFuture();
   }
 
   @Override
-  public DataRowStream<DataRow> getReadStream() {
-    return stream.readStream();
+  public ReadStream<DataRow> getReadStream() {
+    return stream;
   }
 
-  @Override
-  public WriteStream<DataRow> getWriteStream() {
-    return stream.writeStream();
-  }  
-    
 }

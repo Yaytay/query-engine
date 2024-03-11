@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.exec.procs;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Future;
+import io.vertx.core.streams.ReadStream;
 import io.vertx.core.streams.WriteStream;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
@@ -31,28 +32,26 @@ import uk.co.spudsoft.query.exec.FormatInstance;
  */
 public class ProcessorFormat implements FormatInstance {
 
-  private final WriteStream<DataRow> writeStream;
-
+  private ReadStream<DataRow> readStream;
+  
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "ProcessorFormat exists to pass around the WriteStream")
-  public ProcessorFormat(WriteStream<DataRow> writeStream) {
-    this.writeStream = writeStream;
+  public ProcessorFormat() {
   }
   
-  /**
-   * Do nothing, the Processor is assumed to have initialized itself in the call to {@link uk.co.spudsoft.query.exec.ProcessorInstance#initialize(uk.co.spudsoft.query.exec.PipelineExecutor, uk.co.spudsoft.query.exec.PipelineInstance, java.lang.String, int)  }.
-   * @param executor
-   * @param pipeline
-   * @return 
-   */
   @Override
-  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
+  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStream<DataRow> input) {
+    this.readStream = input;
     return Future.succeededFuture();
   }
-
+  
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "ProcessorFormat exists to pass around the WriteStream")
   @Override
   public WriteStream<DataRow> getWriteStream() {
-    return writeStream;
+    throw new UnsupportedOperationException("Not supported.");
   }
-  
+
+  public ReadStream<DataRow> getReadStream() {
+    return readStream;
+  }
+
 }

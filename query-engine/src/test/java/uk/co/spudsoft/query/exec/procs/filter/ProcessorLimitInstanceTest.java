@@ -16,28 +16,27 @@
  */
 package uk.co.spudsoft.query.exec.procs.filter;
 
+import io.vertx.core.Context;
 import uk.co.spudsoft.query.exec.procs.filters.ProcessorLimitInstance;
-import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.streams.ReadStream;
-import io.vertx.core.streams.WriteStream;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.defn.ProcessorLimit;
 import uk.co.spudsoft.query.exec.DataRow;
-import uk.co.spudsoft.query.exec.procs.PassthroughStreamTest;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import uk.co.spudsoft.query.defn.ProcessorLimit;
+import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
+import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
 /**
  *
@@ -52,39 +51,54 @@ public class ProcessorLimitInstanceTest {
   
   @Test
   public void testInitialize(Vertx vertx) {
-    ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, ctx -> {}, vertx.getOrCreateContext(), null);
-    assertEquals(Future.succeededFuture(), instance.initialize(null, null, "source", 1));
+    Types types = new Types();
+    List<DataRow> rowsList = Arrays.asList(
+              DataRow.create(types, "id", 1, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 1), "value", "one")
+            , DataRow.create(types, "id", 2, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 2), "value", "two")
+            , DataRow.create(types, "id", 3, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 3), "value", "three")
+            , DataRow.create(types, "id", 4, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 4), "value", "four")
+    );
+    
+    Context context = vertx.getOrCreateContext();
+    
+    ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, ctx -> {}, context
+            , ProcessorLimit.builder().limit(17).build()
+    );
+    assertTrue(instance.initialize(null, null, "source", 1, new ListReadStream<>(context, rowsList)).isComplete());
   }
-  
-  
   
   @Test
-  public void testStream(Vertx vertx, VertxTestContext testContext) {
-    
-    ProcessorLimit definition = ProcessorLimit.builder()
-            .limit(3)
-            .build();
-    ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, ctx -> {}, vertx.getOrCreateContext(), definition);
-    WriteStream<DataRow> write = instance.getWriteStream();
-    ReadStream<DataRow> read = instance.getReadStream();
-    List<DataRow> received = new ArrayList<>();
-    read.fetch(12);
-    read.handler(jo -> {
-      received.add(jo);
-    });
-    read.exceptionHandler(ex -> {
-      logger.debug("Exception: ", ex);
-    });
-    read.endHandler(v -> {
-      testContext.verify(() -> {
-        assertThat(received, hasSize(3));
-        assertThat(received.get(0).get("value"), equalTo(6));
-        assertThat(received.get(1).get("value"), equalTo(5));
-        assertThat(received.get(2).get("value"), equalTo(4));
-      });
-      testContext.completeNow();
-    });
-    PassthroughStreamTest.writeData(vertx, write, 6);
-  }
+  public void testRun(Vertx vertx, VertxTestContext testContext) {
 
+    Types types = new Types();
+    List<DataRow> rowsList = Arrays.asList(
+              DataRow.create(types, "id", 1, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 1), "value", "one")
+            , DataRow.create(types, "id", 2, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 2), "value", "two")
+            , DataRow.create(types, "id", 3, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 3), "value", "three")
+            , DataRow.create(types, "id", 4, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 4), "value", "four")
+    );
+    
+    Context context = vertx.getOrCreateContext();
+    
+    ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, ctx -> {}, context
+            , ProcessorLimit.builder().limit(3).build()
+    );
+    instance.initialize(null, null, "source", 1, new ListReadStream<>(context, rowsList))
+            .compose(v -> {
+              return ReadStreamToList.capture(instance.getReadStream());
+            })
+            .onFailure(ex -> {
+              testContext.failNow(ex);
+            })
+            .onSuccess(rows -> {
+              testContext.verify(() -> {
+                assertEquals(3, rows.size());
+                assertEquals(1, rows.get(0).get("id"));
+                assertEquals(2, rows.get(1).get("id"));
+                assertEquals(3, rows.get(2).get("id"));
+              });
+              testContext.completeNow();
+            });
+  }
+  
 }

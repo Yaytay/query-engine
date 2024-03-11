@@ -16,28 +16,27 @@
  */
 package uk.co.spudsoft.query.exec.procs.filter;
 
-import uk.co.spudsoft.query.exec.procs.filters.ProcessorOffsetInstance;
+import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.streams.ReadStream;
-import io.vertx.core.streams.WriteStream;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.util.Arrays;
 import java.util.List;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.defn.ProcessorOffset;
 import uk.co.spudsoft.query.exec.DataRow;
-import uk.co.spudsoft.query.exec.procs.PassthroughStreamTest;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import uk.co.spudsoft.query.defn.ProcessorOffset;
+import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
+import uk.co.spudsoft.query.exec.procs.ListReadStream;
+import uk.co.spudsoft.query.exec.procs.filters.ProcessorOffsetInstance;
 
 /**
  *
@@ -52,40 +51,54 @@ public class ProcessorOffsetInstanceTest {
   
   @Test
   public void testInitialize(Vertx vertx) {
-    ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, ctx -> {}, vertx.getOrCreateContext(), null);
-    assertEquals(Future.succeededFuture(), instance.initialize(null, null, "source", 1));
+    Types types = new Types();
+    List<DataRow> rowsList = Arrays.asList(
+              DataRow.create(types, "id", 1, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 1), "value", "one")
+            , DataRow.create(types, "id", 2, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 2), "value", "two")
+            , DataRow.create(types, "id", 3, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 3), "value", "three")
+            , DataRow.create(types, "id", 4, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 4), "value", "four")
+    );
+    
+    Context context = vertx.getOrCreateContext();
+        
+    ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, ctx -> {}, context
+            , ProcessorOffset.builder().offset(17).build()
+    );
+    assertEquals(Future.succeededFuture(), instance.initialize(null, null, "source", 1, new ListReadStream<>(context, rowsList)));
   }
-  
-  
+
   
   @Test
-  public void testStream(Vertx vertx, VertxTestContext testContext) {
+  public void testRun(Vertx vertx, VertxTestContext testContext) {
+
+    Types types = new Types();
+    List<DataRow> rowsList = Arrays.asList(
+              DataRow.create(types, "id", 1, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 1), "value", "one")
+            , DataRow.create(types, "id", 2, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 2), "value", "two")
+            , DataRow.create(types, "id", 3, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 3), "value", "three")
+            , DataRow.create(types, "id", 4, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 4), "value", "four")
+    );
     
-    ProcessorOffset definition = ProcessorOffset.builder()
-            .offset(3)
-            .build();
-    ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, ctx -> {}, vertx.getOrCreateContext(), definition);
-    WriteStream<DataRow> write = instance.getWriteStream();
-    ReadStream<DataRow> read = instance.getReadStream();
-    List<DataRow> received = new ArrayList<>();
-    read.fetch(12);
-    read.handler(jo -> {
-      received.add(jo);
-    });
-    read.exceptionHandler(ex -> {
-      logger.debug("Exception: ", ex);
-    });
-    read.endHandler(v -> {
-      testContext.verify(() -> {
-        logger.debug("received: {}", received);
-        assertThat(received, hasSize(4));
-        assertThat(received.get(0).get("value"), equalTo(3));
-        assertThat(received.get(1).get("value"), equalTo(2));
-        assertThat(received.get(2).get("value"), equalTo(1));
-        assertThat(received.get(3).get("value"), equalTo(0));
-      });
-      testContext.completeNow();
-    });
-    PassthroughStreamTest.writeData(vertx, write, 6);
+    Context context = vertx.getOrCreateContext();
+    
+    ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, ctx -> {}, context
+            , ProcessorOffset.builder().offset(2).build()
+    );
+    instance.initialize(null, null, "source", 1, new ListReadStream<>(context, rowsList))
+            .compose(v -> {
+              return ReadStreamToList.capture(instance.getReadStream());
+            })
+            .onFailure(ex -> {
+              testContext.failNow(ex);
+            })
+            .onSuccess(rows -> {
+              testContext.verify(() -> {
+                assertEquals(2, rows.size());
+                assertEquals(3, rows.get(0).get("id"));
+                assertEquals(4, rows.get(1).get("id"));
+              });
+              testContext.completeNow();
+            });
   }
+    
 }

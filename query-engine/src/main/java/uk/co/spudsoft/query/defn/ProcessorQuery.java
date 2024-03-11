@@ -22,7 +22,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
-import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.procs.query.ProcessorQueryInstance;
 
@@ -39,10 +38,11 @@ public class ProcessorQuery implements Processor {
     
   private final ProcessorType type;
   private final Condition condition;
+  private final String id;
   private final String expression;
 
   @Override
-  public ProcessorInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
+  public ProcessorQueryInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
     return new ProcessorQueryInstance(vertx, sourceNameTracker, context, this);
   }
 
@@ -66,6 +66,11 @@ public class ProcessorQuery implements Processor {
     return condition;
   }  
 
+  @Override
+  public String getId() {
+    return id;
+  }
+
   @Schema(description = """
                         A valid FIQL expression that will be evaluated on each row.
                         """
@@ -80,6 +85,7 @@ public class ProcessorQuery implements Processor {
 
     private ProcessorType type = ProcessorType.QUERY;
     private Condition condition;
+    private String id;
     private String expression;
 
     private Builder() {
@@ -100,13 +106,18 @@ public class ProcessorQuery implements Processor {
       return this;
     }
 
+    public Builder id(final String value) {
+      this.id = value;
+      return this;
+    }
+
     public Builder expression(final String value) {
       this.expression = value;
       return this;
     }
 
     public ProcessorQuery build() {
-      return new ProcessorQuery(type, condition, expression);
+      return new ProcessorQuery(type, condition, id, expression);
     }
   }
 
@@ -114,10 +125,11 @@ public class ProcessorQuery implements Processor {
     return new ProcessorQuery.Builder();
   }
 
-  private ProcessorQuery(final ProcessorType type, final Condition condition, final String expression) {
+  private ProcessorQuery(final ProcessorType type, final Condition condition, final String id, final String expression) {
     validateType(ProcessorType.QUERY, type);
     this.type = type;
     this.condition = condition;
+    this.id = id;
     this.expression = expression;
   }
   

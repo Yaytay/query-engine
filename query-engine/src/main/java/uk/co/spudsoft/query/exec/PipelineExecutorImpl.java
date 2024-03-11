@@ -22,10 +22,9 @@ import com.google.common.net.MediaType;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.impl.headers.HeadersMultiMap;
-import io.vertx.core.streams.WriteStream;
+import io.vertx.core.streams.ReadStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -173,23 +172,13 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     return result;
   }  
   
-  private Future<Void> initializeProcessors(PipelineInstance pipeline, String parentSource, Iterator<ProcessorInstance> iter, int index) {
+  private Future<ReadStream<DataRow>> initializeProcessors(PipelineInstance pipeline, String parentSource, Iterator<ProcessorInstance> iter, int index, ReadStream<DataRow> input) {
     if (!iter.hasNext()) {
-      return Future.succeededFuture();
+      return Future.succeededFuture(input);
     } else {
       return iter.next()
-              .initialize(this, pipeline, parentSource, index)
-              .compose(v -> initializeProcessors(pipeline, parentSource, iter, index + 1));
-    }
-  }
-  
-  private void buildPipes(Promise<Void> finalPromise, DataRowStream<DataRow> previousReadStream, Iterator<ProcessorInstance> iter, WriteStream<DataRow> finalWriteStream) {
-    if (iter.hasNext()) {
-      ProcessorInstance processor = iter.next();
-      previousReadStream.pipeTo(processor.getWriteStream());
-      buildPipes(finalPromise, processor.getReadStream(), iter, finalWriteStream);
-    } else {
-      previousReadStream.pipeTo(finalWriteStream, finalPromise);
+              .initialize(this, pipeline, parentSource, index, input)
+              .compose(v -> initializeProcessors(pipeline, parentSource, iter, index + 1, input));
     }
   }
   
@@ -220,16 +209,8 @@ public class PipelineExecutorImpl implements PipelineExecutor {
             .onSuccess(v -> {
               logger.debug("Source {} initialized", pipeline.getSource().getName());
             })
-            .compose(v -> initializeProcessors(pipeline, pipeline.getSource().getName(), pipeline.getProcessors().iterator(), 1))
-            .compose(v -> pipeline.getSink().initialize(this, pipeline))
-            .compose(v -> {
-              try {
-                buildPipes(pipeline.getFinalPromise(), pipeline.getSource().getReadStream(), pipeline.getProcessors().iterator(), pipeline.getSink().getWriteStream());
-                return Future.succeededFuture();
-              } catch (Throwable ex) {
-                return Future.failedFuture(ex);
-              }
-            })
+            .compose(v -> initializeProcessors(pipeline, pipeline.getSource().getName(), pipeline.getProcessors().iterator(), 1, pipeline.getSource().getReadStream()))
+            .compose(stream -> pipeline.getSink().initialize(this, pipeline, stream))
             ;
   }
   

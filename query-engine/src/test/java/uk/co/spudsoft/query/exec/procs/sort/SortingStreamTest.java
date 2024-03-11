@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.procs.sort;
 
+import uk.co.spudsoft.query.exec.procs.ListReadStream;
 import io.vertx.core.Vertx;
 import io.vertx.core.streams.ReadStream;
 import io.vertx.junit5.Timeout;
@@ -82,7 +83,7 @@ public class SortingStreamTest {
             , null
             , "SortingStreamTest_testSimpleSort"
             , 1000
-            , i -> 16L
+            , i -> 16
     );
     ss.endHandler(v -> {
       logger.debug("Ended");
@@ -126,7 +127,7 @@ public class SortingStreamTest {
             , tempDir
             , "SortingStreamTest_testSmallFileSort"
             , 10000 // 1 << 20 // 1MB
-            , i -> 16L
+            , i -> 16
     );
     ss.endHandler(v -> {
       logger.debug("Ended with {}", count.get());
@@ -179,7 +180,7 @@ public class SortingStreamTest {
             , tempDir
             , "SortingStreamTest_testBigFileSort"
             , 1 << 20 // 1MB
-            , i -> 16L
+            , i -> 16
     );
     ss.endHandler(v -> {
       logger.debug("Ended with {}", count.get());

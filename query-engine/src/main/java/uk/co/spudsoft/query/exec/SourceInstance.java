@@ -16,15 +16,27 @@
  */
 package uk.co.spudsoft.query.exec;
 
+import io.vertx.core.Future;
+
 /**
  * A SourceInstance is simply a stream of JsonObjects (rows).
  * 
  * @author jtalbut
  */
-public interface SourceInstance extends Initializable, Readable, SourceNameTracker {
+public interface SourceInstance extends Readable, SourceNameTracker {
   
   String SOURCE_CONTEXT_KEY = "uk.co.spudsoft.query.exec.source.name";
   
   String getName();
-  
+      
+  /**
+   * Take whatever steps are necessary to start the streams.
+   * 
+   * At the time of the call the arguments in the {@link PipelineInstance} will have been set and can be used in the evaluation of any "template" values in the definition.
+   * 
+   * @param executor The executor that can be used by the class to initialize (and run) any sub pipelines.
+   * @param pipeline Definition of the pipeline, primarily for access to arguments and sourceEndpoints.
+   * @return a Future that will be completed when the initialization is complete.
+   */
+  Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline);
 }

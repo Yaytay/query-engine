@@ -22,6 +22,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.impl.ContextInternal;
+import io.vertx.core.streams.ReadStream;
 import io.vertx.sqlclient.Cursor;
 import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.Row;
@@ -34,13 +35,12 @@ import io.vertx.sqlclient.impl.RowStreamInternal;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import uk.co.spudsoft.query.exec.DataRowStream;
 
 /**
  *
  * @author njt
  */
-public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncResult<RowSet<Row>>>, DataRowStream<Row> {
+public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncResult<RowSet<Row>>>, ReadStream<Row> {
 
   private final PreparedStatement ps;
   private final ContextInternal context;
@@ -66,7 +66,6 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
     this.demand = Long.MAX_VALUE;
   }
 
-  @Override
   public synchronized List<ColumnDescriptor> getColumnDescriptors() {
     return Collections.unmodifiableList(columnDescriptors);
   }

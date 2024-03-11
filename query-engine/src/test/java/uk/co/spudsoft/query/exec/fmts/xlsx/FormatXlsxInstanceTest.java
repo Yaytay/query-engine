@@ -16,7 +16,6 @@
  */
 package uk.co.spudsoft.query.exec.fmts.xlsx;
 
-import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.FileSystem;
@@ -28,8 +27,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,6 +37,8 @@ import uk.co.spudsoft.query.defn.FormatXlsx;
 import uk.co.spudsoft.query.defn.FormatXlsxColours;
 import uk.co.spudsoft.query.exec.ColumnDefn;
 import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
 /**
  *
@@ -78,24 +79,17 @@ public class FormatXlsxInstanceTest {
     
     FormatXlsxInstance instance = (FormatXlsxInstance) defn.createInstance(vertx, null, writeStream);
     
-    List<ColumnDefn> types = buildTypes();
-    instance.initialize(null, null)
-            .compose(v -> addRow(types, 0, instance.getWriteStream()))
-            .compose(v -> instance.getWriteStream().end())
+    Types types = new Types(buildTypes());
+    List<DataRow> rowsList = new ArrayList<>();
+    for (int i = 0; i < 10; ++i) {
+      rowsList.add(createDataRow(types, i));
+    }
+    
+    instance.initialize(null, null, new ListReadStream<>(vertx.getOrCreateContext(), rowsList))
             .onComplete(testContext.succeedingThenComplete());
   }
   
-  private Future<Void> addRow(List<ColumnDefn> types, int rowNum, WriteStream<DataRow> stream) {
-    if (rowNum > 10) {
-      return Future.succeededFuture();
-    } else {
-      DataRow row = createDataRow(types, rowNum);
-      return stream.write(row)
-              .compose(v -> addRow(types, rowNum + 1, stream));
-    }
-  }
-
-  private DataRow createDataRow(List<ColumnDefn> types, int rowNum) {
+  private DataRow createDataRow(Types types, int rowNum) {
     DataRow row = DataRow.create(types);
     row.put("Boolean", rowNum % 9 == 0 ? null : (rowNum % 2 == 0 ? Boolean.TRUE : Boolean.FALSE));
     row.put("Date", rowNum % 9 == 1 ? null : LocalDate.of(1971, Month.MAY, 1 + rowNum));

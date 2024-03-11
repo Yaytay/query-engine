@@ -19,32 +19,55 @@ package uk.co.spudsoft.query.exec.procs.query;
 import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.RSQLParserException;
 import cz.jirutka.rsql.parser.ast.Node;
+import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.Month;
+import java.util.Arrays;
+import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
 import uk.co.spudsoft.query.defn.ProcessorQuery;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
+import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
 /**
  *
  * @author njt
  */
+@ExtendWith(VertxExtension.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ProcessorQueryInstanceTest {
   
   public static final RSQLParser RSQL_PARSER = new RSQLParser();
   
   @Test
-  public void testInitialize() {
-    ProcessorQueryInstance instance = (ProcessorQueryInstance) ProcessorQuery.builder().expression("x==4").build().createInstance(null, null, null);
+  public void testInitialize(Vertx vertx) {
+    Types types = new Types();
+    List<DataRow> rowsList = Arrays.asList(
+              DataRow.create(types, "id", 1, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 1), "value", "one")
+            , DataRow.create(types, "id", 2, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 2), "value", "two")
+            , DataRow.create(types, "id", 3, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 3), "value", "three")
+            , DataRow.create(types, "id", 4, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 4), "value", "four")
+    );
     
-    Future<?> initFuture = instance.initialize(null, null, null, 0);
+    Context context = vertx.getOrCreateContext();
+        
+    ProcessorQueryInstance instance = ProcessorQuery.builder().expression("value!=three").build().createInstance(vertx, ctx -> {}, context);
+    
+    Future<?> initFuture = instance.initialize(null, null, "source", 1, new ListReadStream<>(context, rowsList));
     assertTrue(initFuture.succeeded());
   }
   
@@ -160,4 +183,38 @@ public class ProcessorQueryInstanceTest {
     
   }
 
+  
+  @Test
+  public void testRun(Vertx vertx, VertxTestContext testContext) {
+
+    Types types = new Types();
+    List<DataRow> rowsList = Arrays.asList(
+              DataRow.create(types, "id", 1, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 1), "value", "one")
+            , DataRow.create(types, "id", 2, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 2), "value", "two")
+            , DataRow.create(types, "id", 3, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 3), "value", "three")
+            , DataRow.create(types, "id", 4, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 4), "value", "four")
+    );
+    
+    Context context = vertx.getOrCreateContext();
+    
+    ProcessorQueryInstance instance = new ProcessorQueryInstance(vertx, ctx -> {}, context
+            , ProcessorQuery.builder().expression("value!=three").build()
+    );
+    instance.initialize(null, null, "source", 1, new ListReadStream<>(context, rowsList))
+            .compose(v -> {
+              return ReadStreamToList.capture(instance.getReadStream());
+            })
+            .onFailure(ex -> {
+              testContext.failNow(ex);
+            })
+            .onSuccess(rows -> {
+              testContext.verify(() -> {
+                assertEquals(3, rows.size());
+                assertEquals(1, rows.get(0).get("id"));
+                assertEquals(2, rows.get(1).get("id"));
+                assertEquals(4, rows.get(2).get("id"));
+              });
+              testContext.completeNow();
+            });
+  }
 }

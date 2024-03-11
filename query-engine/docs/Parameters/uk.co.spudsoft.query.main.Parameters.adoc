@@ -185,4 +185,7 @@ If not set, and managementEndpointPort is positive, users will have no way to di
 | session
 | uk.co.spudsoft.query.main.SessionConfig
 | Set the authentication configuration of the UI and REST API.
+| processors
+| uk.co.spudsoft.query.main.ProcessorConfig
+| Set the configuration for individual processors.Some processors have specific configuration options that are not appropriate for configuration in pipeline definitions, they are  controlled here.
 |===

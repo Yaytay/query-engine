@@ -21,6 +21,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.streams.ReadStream;
 import io.vertx.core.streams.WriteStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
@@ -83,8 +84,8 @@ public class FormatJsonInstance implements FormatInstance {
   }
 
   @Override
-  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
-    return Future.succeededFuture();
+  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStream<DataRow> input) {
+    return input.pipeTo(formattingStream);
   }
   
   @Override

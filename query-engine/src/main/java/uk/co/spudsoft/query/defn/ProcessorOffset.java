@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
-import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.procs.filters.ProcessorOffsetInstance;
 
@@ -38,10 +37,11 @@ public class ProcessorOffset implements Processor {
   
   private final ProcessorType type;
   private final Condition condition;
+  private final String id;
   private final int offset;
 
   @Override
-  public ProcessorInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
+  public ProcessorOffsetInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
     return new ProcessorOffsetInstance(vertx, sourceNameTracker, context, this);
   }
 
@@ -65,6 +65,11 @@ public class ProcessorOffset implements Processor {
     return condition;
   }  
 
+  @Override
+  public String getId() {
+    return id;
+  }
+
   @Schema(description = """
                         The offset on the number of rows that will be output by this processor.
                         """
@@ -78,6 +83,7 @@ public class ProcessorOffset implements Processor {
 
     private ProcessorType type = ProcessorType.OFFSET;
     private Condition condition;
+    private String id;
     private int offset;
 
     private Builder() {
@@ -98,13 +104,18 @@ public class ProcessorOffset implements Processor {
       return this;
     }
 
+    public Builder id(final String value) {
+      this.id = value;
+      return this;
+    }
+
     public Builder offset(final int value) {
       this.offset = value;
       return this;
     }
 
     public ProcessorOffset build() {
-      return new ProcessorOffset(type, condition, offset);
+      return new ProcessorOffset(type, condition, id, offset);
     }
   }
 
@@ -112,10 +123,11 @@ public class ProcessorOffset implements Processor {
     return new ProcessorOffset.Builder();
   }
 
-  private ProcessorOffset(final ProcessorType type, final Condition condition, final int offset) {
+  private ProcessorOffset(final ProcessorType type, final Condition condition, final String id, final int offset) {
     validateType(ProcessorType.OFFSET, type);
     this.type = type;
     this.condition = condition;
+    this.id = id;
     this.offset = offset;
   }
   

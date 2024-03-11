@@ -35,6 +35,7 @@ import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
+import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 import uk.co.spudsoft.query.web.ServiceException;
 
@@ -75,7 +76,7 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
             })
             .compose(v -> {
               logger.debug("de pipeline initialized, getting future");
-              return format.getFuture();
+              return ReadStreamToList.capture(format.getReadStream());
             })
             .compose(rows -> {
               logger.debug("de pipeline completed, processing {} rows", rows.size());

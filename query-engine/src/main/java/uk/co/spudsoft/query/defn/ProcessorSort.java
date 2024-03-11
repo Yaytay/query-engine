@@ -24,7 +24,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import java.util.List;
-import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.procs.sort.ProcessorSortInstance;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
@@ -49,10 +48,11 @@ public class ProcessorSort implements Processor {
   
   private final ProcessorType type;
   private final Condition condition;
+  private final String id;
   private final ImmutableList<String> fields;
 
   @Override
-  public ProcessorInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
+  public ProcessorSortInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
     return new ProcessorSortInstance(vertx, sourceNameTracker, context, this);
   }
 
@@ -74,6 +74,11 @@ public class ProcessorSort implements Processor {
     return condition;
   }  
 
+  @Override
+  public String getId() {
+    return id;
+  }
+
   @Schema(description = """
                         The fields this processor will use to sort the data.
                         """
@@ -88,6 +93,7 @@ public class ProcessorSort implements Processor {
 
     private ProcessorType type = ProcessorType.SORT;
     private Condition condition;
+    private String id;
     private List<String> fields;
 
     private Builder() {
@@ -108,13 +114,18 @@ public class ProcessorSort implements Processor {
       return this;
     }
 
+    public Builder id(final String value) {
+      this.id = value;
+      return this;
+    }
+
     public Builder fields(final List<String> value) {
       this.fields = value;
       return this;
     }
 
     public ProcessorSort build() {
-      return new ProcessorSort(type, condition, fields);
+      return new ProcessorSort(type, condition, id, fields);
     }
   }
 
@@ -122,10 +133,11 @@ public class ProcessorSort implements Processor {
     return new ProcessorSort.Builder();
   }
 
-  private ProcessorSort(final ProcessorType type, final Condition condition, final List<String> fields) {
+  private ProcessorSort(final ProcessorType type, final Condition condition, final String id, final List<String> fields) {
     validateType(ProcessorType.SORT, type);
     this.type = type;
     this.condition = condition;
+    this.id = id;
     this.fields = ImmutableCollectionTools.copy(fields);
   }
   

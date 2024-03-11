@@ -27,20 +27,20 @@ import static org.junit.jupiter.api.Assertions.fail;
  *
  * @author jtalbut
  */
-public class ProcessorRelabelTest {
+public class ProcessorMapTest {
   
   @Test
   public void testGetType() {
-    ProcessorRelabel instance = ProcessorRelabel.builder().build();
+    ProcessorMap instance = ProcessorMap.builder().build();
     assertEquals(ProcessorType.RELABEL, instance.getType());
   }
 
   @Test
   public void testSetType() {
-    ProcessorRelabel instance = ProcessorRelabel.builder().type(ProcessorType.RELABEL).build();
+    ProcessorMap instance = ProcessorMap.builder().type(ProcessorType.RELABEL).build();
     assertEquals(ProcessorType.RELABEL, instance.getType());
     try {
-      ProcessorRelabel.builder().type(ProcessorType.SCRIPT).build();
+      ProcessorMap.builder().type(ProcessorType.SCRIPT).build();
       fail("Expected IllegalArgumentException");
     } catch (IllegalArgumentException ex) {
     }
@@ -48,22 +48,22 @@ public class ProcessorRelabelTest {
 
   @Test
   public void testGetRelabel() {
-    ProcessorRelabel instance = ProcessorRelabel.builder().relabels(Arrays.asList()).build();
+    ProcessorMap instance = ProcessorMap.builder().relabels(Arrays.asList()).build();
     assertEquals(0, instance.getRelabels().size());
   }
 
   @Test
   public void testValidate() {
     assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorRelabel.builder().relabels(Arrays.asList()).build().validate();
+      ProcessorMap.builder().relabels(Arrays.asList()).build().validate();
     }, "Zero relabels provided");
     assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorRelabel.builder().relabels(Arrays.asList(ProcessorRelabelLabel.builder().build())).build().validate();
+      ProcessorMap.builder().relabels(Arrays.asList(ProcessorMapLabel.builder().build())).build().validate();
     }, "Zero relabels provided");
     assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorRelabel.builder().relabels(Arrays.asList(ProcessorRelabelLabel.builder().sourceLabel("source").build())).build().validate();
+      ProcessorMap.builder().relabels(Arrays.asList(ProcessorMapLabel.builder().sourceLabel("source").build())).build().validate();
     }, "Zero relabels provided");
-    ProcessorRelabel.builder().relabels(Arrays.asList(ProcessorRelabelLabel.builder().sourceLabel("source").newLabel("new").build())).build().validate();
+    ProcessorMap.builder().relabels(Arrays.asList(ProcessorMapLabel.builder().sourceLabel("source").newLabel("new").build())).build().validate();
   }
   
 }

@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
-import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.procs.script.ProcessorScriptInstance;
 
@@ -39,12 +38,13 @@ public class ProcessorScript implements Processor {
   
   private final ProcessorType type;
   private final Condition condition;
+  private final String id;
   private final String language;
   private final String predicate;
   private final String process;
 
   @Override
-  public ProcessorInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
+  public ProcessorScriptInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
     return new ProcessorScriptInstance(vertx, sourceNameTracker, context, this);
   }
   
@@ -61,6 +61,11 @@ public class ProcessorScript implements Processor {
   @Override
   public Condition getCondition() {
     return condition;
+  }
+
+  @Override
+  public String getId() {
+    return id;
   }
 
   @Schema(description = """
@@ -100,6 +105,7 @@ public class ProcessorScript implements Processor {
 
     private ProcessorType type = ProcessorType.SCRIPT;
     private Condition condition;
+    private String id;
     private String language = "js";
     private String predicate;
     private String process;
@@ -122,6 +128,11 @@ public class ProcessorScript implements Processor {
       return this;
     }
     
+    public Builder id(final String value) {
+      this.id = value;
+      return this;
+    }
+
     public Builder language(final String value) {
       this.language = value;
       return this;
@@ -138,7 +149,7 @@ public class ProcessorScript implements Processor {
     }
 
     public ProcessorScript build() {
-      return new ProcessorScript(type, condition, language, predicate, process);
+      return new ProcessorScript(type, condition, id, language, predicate, process);
     }
   }
 
@@ -146,10 +157,11 @@ public class ProcessorScript implements Processor {
     return new ProcessorScript.Builder();
   }
 
-  private ProcessorScript(final ProcessorType type, final Condition condition, final String language, final String predicate, final String process) {
+  private ProcessorScript(final ProcessorType type, final Condition condition, final String id, final String language, final String predicate, final String process) {
     validateType(ProcessorType.SCRIPT, type);
     this.type = type;
     this.condition = condition;
+    this.id = id;
     this.language = language;
     this.predicate = predicate;
     this.process = process;

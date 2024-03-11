@@ -24,12 +24,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
  *
  * @author jtalbut
  */
-@JsonDeserialize(builder = ProcessorRelabelLabel.Builder.class)
+@JsonDeserialize(builder = ProcessorMapLabel.Builder.class)
 @Schema(description = """
-                      Processor that removes fields from the output.
+                      Argument to the MapProcessor that renames or removes fields in the output.
                       """
 )
-public class ProcessorRelabelLabel {
+public class ProcessorMapLabel {
   
   private final String sourceLabel;
   private final String newLabel;
@@ -38,8 +38,8 @@ public class ProcessorRelabelLabel {
     if (Strings.isNullOrEmpty(sourceLabel)) {
       throw new IllegalArgumentException("No source field name provided for relabel");
     }
-    if (Strings.isNullOrEmpty(newLabel)) {
-      throw new IllegalArgumentException("No new field name provided for relabel");
+    if (newLabel == null) {
+      throw new IllegalArgumentException("No new field name provided for relabel - the new field name may be an empty string but cannot be null");
     }
   }
   
@@ -69,16 +69,16 @@ public class ProcessorRelabelLabel {
       return this;
     }
 
-    public ProcessorRelabelLabel build() {
-      return new uk.co.spudsoft.query.defn.ProcessorRelabelLabel(sourceLabel, newLabel);
+    public ProcessorMapLabel build() {
+      return new uk.co.spudsoft.query.defn.ProcessorMapLabel(sourceLabel, newLabel);
     }
   }
 
-  public static ProcessorRelabelLabel.Builder builder() {
-    return new ProcessorRelabelLabel.Builder();
+  public static ProcessorMapLabel.Builder builder() {
+    return new ProcessorMapLabel.Builder();
   }
 
-  private ProcessorRelabelLabel(final String sourceLabel, final String newLabel) {
+  private ProcessorMapLabel(final String sourceLabel, final String newLabel) {
     this.sourceLabel = sourceLabel;
     this.newLabel = newLabel;
   }

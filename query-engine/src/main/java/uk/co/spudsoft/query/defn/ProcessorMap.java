@@ -24,29 +24,29 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import java.util.List;
-import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
-import uk.co.spudsoft.query.exec.procs.filters.ProcessorRelabelInstance;
+import uk.co.spudsoft.query.exec.procs.filters.ProcessorMapInstance;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
  * Processor that curtails the output after the configured number of rows.
  * @author jtalbut
  */
-@JsonDeserialize(builder = ProcessorRelabel.Builder.class)
+@JsonDeserialize(builder = ProcessorMap.Builder.class)
 @Schema(description = """
-                      Processor that renames fields in the output.
+                      Processor that renames or removes fields in the output.
                       """
 )
-public class ProcessorRelabel implements Processor {
+public class ProcessorMap implements Processor {
   
   private final ProcessorType type;
   private final Condition condition;
-  private final ImmutableList<ProcessorRelabelLabel> relabels;
+  private final String id;
+  private final ImmutableList<ProcessorMapLabel> relabels;
 
   @Override
-  public ProcessorInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
-    return new ProcessorRelabelInstance(vertx, sourceNameTracker, context, this);
+  public ProcessorMapInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
+    return new ProcessorMapInstance(vertx, sourceNameTracker, context, this);
   }
 
   @Override
@@ -55,7 +55,7 @@ public class ProcessorRelabel implements Processor {
     if (relabels.isEmpty()) {
       throw new IllegalArgumentException("No relabels provided");
     }
-    for (ProcessorRelabelLabel relabel : relabels) {
+    for (ProcessorMapLabel relabel : relabels) {
       relabel.validate();
     }
   }
@@ -70,11 +70,16 @@ public class ProcessorRelabel implements Processor {
     return condition;
   }  
 
+  @Override
+  public String getId() {
+    return id;
+  }
+
   @Schema(description = """
                         The fields that will be removed by this processor.
                         """
   )
-  public ImmutableList<ProcessorRelabelLabel> getRelabels() {
+  public ImmutableList<ProcessorMapLabel> getRelabels() {
     return relabels;
   }
   
@@ -84,7 +89,8 @@ public class ProcessorRelabel implements Processor {
 
     private ProcessorType type = ProcessorType.RELABEL;
     private Condition condition;
-    private List<ProcessorRelabelLabel> relabels;
+    private String id;
+    private List<ProcessorMapLabel> relabels;
 
     private Builder() {
     }
@@ -104,24 +110,30 @@ public class ProcessorRelabel implements Processor {
       return this;
     }
 
-    public Builder relabels(final List<ProcessorRelabelLabel> value) {
+    public Builder id(final String value) {
+      this.id = value;
+      return this;
+    }
+
+    public Builder relabels(final List<ProcessorMapLabel> value) {
       this.relabels = value;
       return this;
     }
 
-    public ProcessorRelabel build() {
-      return new ProcessorRelabel(type, condition, relabels);
+    public ProcessorMap build() {
+      return new ProcessorMap(type, condition, id, relabels);
     }
   }
 
-  public static ProcessorRelabel.Builder builder() {
-    return new ProcessorRelabel.Builder();
+  public static ProcessorMap.Builder builder() {
+    return new ProcessorMap.Builder();
   }
 
-  private ProcessorRelabel(final ProcessorType type, final Condition condition, final List<ProcessorRelabelLabel> relabels) {
+  private ProcessorMap(final ProcessorType type, final Condition condition, final String id, final List<ProcessorMapLabel> relabels) {
     validateType(ProcessorType.RELABEL, type);
     this.type = type;
     this.condition = condition;
+    this.id = id;
     this.relabels = ImmutableCollectionTools.copy(relabels);
   }
   
