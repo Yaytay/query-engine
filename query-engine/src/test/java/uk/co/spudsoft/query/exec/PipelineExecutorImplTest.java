@@ -16,7 +16,6 @@
  */
 package uk.co.spudsoft.query.exec;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.net.MediaType;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;

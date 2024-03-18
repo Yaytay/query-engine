@@ -28,7 +28,9 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.defn.ProcessorSort;
 import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
@@ -53,8 +55,10 @@ public class ProcessorSortInstanceTest {
             , DataRow.create(types, "id", 4, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 4), "value", "one")
     );
 
-    ProcessorSortInstance instance = new ProcessorSortInstance(vertx, ctx -> {}, vertx.getOrCreateContext(), null);
-    instance.initialize(null, null, "source", 1, new ListReadStream<>(null, rowsList))
+    ProcessorSortInstance instance = new ProcessorSortInstance(vertx, ctx -> {}, vertx.getOrCreateContext()
+            , ProcessorSort.builder().fields(Arrays.asList("timestamp")).build()
+    );
+    instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(null, rowsList), types))
             .andThen(testContext.succeedingThenComplete());
             
   }

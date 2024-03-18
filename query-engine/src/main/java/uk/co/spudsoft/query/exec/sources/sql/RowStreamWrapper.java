@@ -21,6 +21,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.streams.ReadStream;
 import io.vertx.sqlclient.PreparedStatement;
@@ -28,7 +29,6 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Transaction;
 import io.vertx.sqlclient.desc.ColumnDescriptor;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.DataType;
@@ -41,7 +41,7 @@ import uk.co.spudsoft.query.exec.Types;
  *
  * @author jtalbut
  */
-public class RowStreamWrapper implements ReadStream<DataRow> {
+public final class RowStreamWrapper implements ReadStream<DataRow> {
   
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(RowStreamWrapper.class);
@@ -57,6 +57,8 @@ public class RowStreamWrapper implements ReadStream<DataRow> {
   private Handler<DataRow> handler;
   private boolean handledRows;
   
+  private final Promise<Void> readyPromise = Promise.promise();
+  
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
   public RowStreamWrapper(SourceNameTracker sourceNameTracker, SqlConnection connection, Transaction transaction, PreparedStatement preparedStatement, MetadataRowStreamImpl rowStream) {
     this.sourceNameTracker = sourceNameTracker;
@@ -65,8 +67,38 @@ public class RowStreamWrapper implements ReadStream<DataRow> {
     this.preparedStatement = preparedStatement;
     this.rowStream = rowStream;
     this.types = new Types();
+    rowStream.coloumnDescriptorHandler(columnDescriptors -> {
+      for (ColumnDescriptor cd : columnDescriptors) {
+        logger.info("Field {} is of JDBC type {} (aka {})", cd.name(), cd.jdbcType(), cd.typeName());
+        types.putIfAbsent(cd.name(), DataType.fromJdbcType(cd.jdbcType()));
+      }
+      readyPromise.complete();
+    });
+    rowStream.pause();
+    rowStream.handler(row -> {
+      try {
+        handledRows = true;
+        Context context = Vertx.currentContext();
+        logger.trace("RowStream context: {}", context);
+        DataRow dataRow = sqlRowToDataRow(row);
+        logger.trace("{} Received row: {}", this, dataRow);
+        handler.handle(dataRow);
+      } catch (Throwable ex) {
+        if (exceptionHandler != null) {
+          exceptionHandler.handle(ex);
+        }
+      }
+    });
   }
-
+ 
+  public Types getTypes() {
+    return types;
+  }
+  
+  public Future<Void> ready() {
+    return readyPromise.future();
+  }
+  
   @Override
   public RowStreamWrapper exceptionHandler(Handler<Throwable> handler) {
     this.exceptionHandler = handler;
@@ -87,21 +119,6 @@ public class RowStreamWrapper implements ReadStream<DataRow> {
       // When rowStream.handler is called with a non-null handler it will always handle the currently in-memory rows
       // So must not pass in a 'debug' handler here.
       rowStream.handler(null);
-    } else {      
-      rowStream.handler(row -> {
-        try {
-          handledRows = true;
-          Context context = Vertx.currentContext();
-          logger.trace("RowStream context: {}", context);
-          DataRow dataRow = sqlRowToDataRow(row);
-          logger.trace("{} Received row: {}", this, dataRow);
-          handler.handle(dataRow);
-        } catch (Throwable ex) {
-          if (exceptionHandler != null) {
-            exceptionHandler.handle(ex);
-          }
-        }
-      });
     }
     return this;
   }
@@ -147,13 +164,12 @@ public class RowStreamWrapper implements ReadStream<DataRow> {
         logger.info("Finished row stream after handling some rows");
       } else {
         logger.info("Finished row stream without handling any rows");
-        Handler<DataRow> localHandler = this.handler;
-        if (localHandler != null) {
-          ensureTypesReflectRowStream();
-          DataRow dataRow = DataRow.create(types);
-          logger.trace("{} Passing on empty row: {}", this, dataRow);
-          localHandler.handle(dataRow);
-        }
+//        Handler<DataRow> localHandler = this.handler;
+//        if (localHandler != null) {
+//          DataRow dataRow = DataRow.create(types);
+//          logger.trace("{} Passing on empty row: {}", this, dataRow);
+//          localHandler.handle(dataRow);
+//        }
       }
       rowStream.close()
               .compose(v -> {
@@ -178,21 +194,6 @@ public class RowStreamWrapper implements ReadStream<DataRow> {
               });
     });
     return this;
-  }
-
-  public List<ColumnDescriptor> getColumnDescriptors() {
-    ensureTypesReflectRowStream();
-    
-    return types.getColumnDescriptors();
-  }
-
-  private void ensureTypesReflectRowStream() throws IllegalStateException {
-    if (types.isEmpty()) {
-      for (ColumnDescriptor cd : rowStream.getColumnDescriptors()) {
-        logger.info("Field {} is of JDBC type {} (aka {})", cd.name(), cd.jdbcType(), cd.typeName());
-        types.putIfAbsent(cd.name(), DataType.fromJdbcType(cd.jdbcType()));
-      }
-    }
   }
 
   public Future<Void> close() {

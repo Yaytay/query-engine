@@ -49,7 +49,7 @@ public class FormatDelimited implements Format {
   private final String newline;
 
   @Override
-  public FormatInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
+  public FormatDelimitedInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
     return new FormatDelimitedInstance(this, writeStream);
   }
 

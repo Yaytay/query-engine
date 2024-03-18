@@ -17,7 +17,6 @@
 package uk.co.spudsoft.query.exec;
 
 import io.vertx.core.Future;
-import io.vertx.core.streams.ReadStream;
 
 /**
  *
@@ -43,5 +42,6 @@ public interface ProcessorInstance extends Readable {
    * @param input The ReadStream that is the input to the processor.
    * @return a Future that will be completed when the initialization is complete.
    */
-  Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStream<DataRow> input);
+  Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStreamWithTypes input);
+  
 }

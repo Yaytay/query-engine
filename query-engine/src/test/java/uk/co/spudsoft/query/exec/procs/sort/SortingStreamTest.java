@@ -56,7 +56,7 @@ public class SortingStreamTest {
   
   @Test
   public void testSourceStreamEquals(Vertx vertx) {
-    SortingStream<Integer> ss = new SortingStream<>(null, null, null, null, null, null, null, 1, null);
+    SortingStream<Integer> ss = new SortingStream<>(null, null, null, null, null, null, null, 1, null, new ListReadStream<>(vertx.getOrCreateContext(), Arrays.asList(2)));
     SortingStream<Integer>.SourceStream strm1 = ss.new SourceStream(null, 1, new ListReadStream<>(vertx.getOrCreateContext(), Arrays.asList(2)));
     SortingStream<Integer>.SourceStream strm2 = ss.new SourceStream(null, 2, new ListReadStream<>(vertx.getOrCreateContext(), Arrays.asList(2)));
     assertTrue(strm1.equals(strm1));
@@ -66,7 +66,7 @@ public class SortingStreamTest {
   }
   
   @Test
-  public void testSimpleSort(Vertx vertx, VertxTestContext testContext) {
+  public void testSimpleSort(Vertx vertx, VertxTestContext testContext) {    
     List<Integer> input = Arrays.asList(151, 892, 849, 786, 912, 714, 455, 27, 516, 789, 560, 62, 550, 351, 317, 661, 11, 125, 53, 131, 429, 735, 591, 663, 760, 795, 173, 91, 499, 445);
     List<Integer> expected = new ArrayList<>(input);
     expected.sort(Comparator.naturalOrder());
@@ -74,16 +74,17 @@ public class SortingStreamTest {
     List<Integer> captured = new ArrayList<>();
     ListReadStream<Integer> lrs = new ListReadStream<>(vertx.getOrCreateContext(), input);
     
-    SortingStream<Integer> ss = new SortingStream<Integer>(
+    SortingStream<Integer> ss = new SortingStream<>(
             vertx.getOrCreateContext()
             , vertx.fileSystem()
-            , () -> Comparator.naturalOrder()
+            , Comparator.naturalOrder()
             , i -> SerializeWriteStream.byteArrayFromInt(i)
             , b -> SerializeReadStream.intFromByteArray(b)
             , null
             , "SortingStreamTest_testSimpleSort"
             , 1000
             , i -> 16
+            , lrs
     );
     ss.endHandler(v -> {
       logger.debug("Ended");
@@ -100,9 +101,11 @@ public class SortingStreamTest {
       logger.debug("Received {}", item);
       captured.add(item);
     });
-    ss.setInput(lrs);
+    logger.debug("Fetching 1");
     ss.fetch(1);
+    logger.debug("Pausing");
     ss.pause();
+    logger.debug("Resuming");
     ss.resume();
   }
 
@@ -118,16 +121,17 @@ public class SortingStreamTest {
     
     String tempDir = vertx.fileSystem().createTempDirectoryBlocking("SortingStreamTest_testSmallFileSort");
     
-    SortingStream<Integer> ss = new SortingStream<Integer>(
+    SortingStream<Integer> ss = new SortingStream<>(
             vertx.getOrCreateContext()
             , vertx.fileSystem()
-            , () -> Comparator.naturalOrder()
+            , Comparator.naturalOrder()
             , i -> SerializeWriteStream.byteArrayFromInt(i)
             , b -> SerializeReadStream.intFromByteArray(b)
             , tempDir
             , "SortingStreamTest_testSmallFileSort"
             , 10000 // 1 << 20 // 1MB
             , i -> 16
+            , rs
     );
     ss.endHandler(v -> {
       logger.debug("Ended with {}", count.get());
@@ -152,10 +156,10 @@ public class SortingStreamTest {
         assertThat(item, Matchers.greaterThanOrEqualTo(lastValue));
       });
     });    
-    ss.setInput(rs);
     assertThrows(IllegalArgumentException.class, () -> {
       ss.fetch(-1);
     });
+    logger.debug("Fetching {}", total + 10);
     ss.fetch(total + 10);
   }
 
@@ -171,16 +175,17 @@ public class SortingStreamTest {
     
     String tempDir = vertx.fileSystem().createTempDirectoryBlocking("SortingStreamTest_testBigFileSort");
     
-    SortingStream<Integer> ss = new SortingStream<Integer>(
+    SortingStream<Integer> ss = new SortingStream<>(
             vertx.getOrCreateContext()
             , vertx.fileSystem()
-            , () -> Comparator.naturalOrder()
+            , Comparator.naturalOrder()
             , i -> SerializeWriteStream.byteArrayFromInt(i)
             , b -> SerializeReadStream.intFromByteArray(b)
             , tempDir
             , "SortingStreamTest_testBigFileSort"
             , 1 << 20 // 1MB
             , i -> 16
+            , rs
     );
     ss.endHandler(v -> {
       logger.debug("Ended with {}", count.get());
@@ -205,7 +210,7 @@ public class SortingStreamTest {
         assertThat(item, Matchers.greaterThanOrEqualTo(lastValue));
       });
     });
-    ss.setInput(rs);
+    logger.debug("Fetching {}", Long.MAX_VALUE);
     ss.fetch(Long.MAX_VALUE);
     ss.fetch(Long.MAX_VALUE);
   }

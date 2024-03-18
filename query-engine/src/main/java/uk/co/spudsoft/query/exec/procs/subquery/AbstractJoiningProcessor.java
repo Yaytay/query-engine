@@ -29,9 +29,11 @@ import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
+import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
-import uk.co.spudsoft.query.exec.procs.ProcessorFormat;
+import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
 
 /**
  *
@@ -47,8 +49,10 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
   private final List<String> parentIdColumns;
   private final List<String> childIdColumns;
   private final boolean innerJoin;
-
+  
   private MergeStream<DataRow, DataRow, DataRow> stream;
+  
+  protected Types types;
   
   /**
    * Constructor.
@@ -77,10 +81,11 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
       throw new IllegalArgumentException("Incompatible parent ID columns (" + parentIdColumns.size() + ") and child ID columns (" + childIdColumns.size() + ")");
     }
   }
-  
+
   protected Future<ReadStream<DataRow>> initializeChildStream(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, SourcePipeline sourcePipeline) {
     SourceInstance sourceInstance = sourcePipeline.getSource().createInstance(vertx, context, executor, parentSource + "-" + processorIndex);
-    ProcessorFormat sinkInstance = new ProcessorFormat();
+    FormatCaptureInstance sinkInstance = new FormatCaptureInstance();
+    
     PipelineInstance childPipeline = new PipelineInstance(
             pipeline.getArgumentInstances()
             , pipeline.getSourceEndpoints()
@@ -89,7 +94,8 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
             , executor.createProcessors(vertx, sourceInstance, context, sourcePipeline, null)
             , sinkInstance
     );
-    return executor.initializePipeline(childPipeline).map(sinkInstance.getReadStream());
+    return executor.initializePipeline(childPipeline)
+            .map(v -> sinkInstance.getReadStream());
   }
 
   abstract DataRow processChildren(DataRow parentRow, Collection<DataRow> childRows);
@@ -107,15 +113,16 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
     return 0;
   }
 
-  abstract Future<ReadStream<DataRow>> initializeChild(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStream<DataRow> input);
+  abstract Future<ReadStream<DataRow>> initializeChild(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex);
   
   @Override
-  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStream<DataRow> input) {
-    return initializeChild(executor, pipeline, parentSource, processorIndex, input)
-            .onSuccess(childStream -> {
+  public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStreamWithTypes input) {
+    this.types = input.getTypes();
+    return initializeChild(executor, pipeline, parentSource, processorIndex)
+            .compose(childStream -> {
               this.stream = new MergeStream<>(
                       context 
-                      , input
+                      , input.getStream()
                       , childStream
                       , this::processChildren
                       , this::compare
@@ -125,9 +132,9 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
                       , 100
                       , 50
               );
+              return Future.succeededFuture(new ReadStreamWithTypes(stream, types));
             })
-            .mapEmpty();
-            
+            ;            
   }
   
   @Override

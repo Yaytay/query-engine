@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.ProcessorGroupConcat;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
@@ -35,8 +36,8 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
  * A QueryEngine Processor that acts similarly to the MySQL <a href="https://dev.mysql.com/doc/refman/8.0/en/aggregate-functions.html#function_group-concat">GROUP_CONCAT</A> aggregate function.
  * 
  * A sub query is run and merged with the primary query.
- * The join is always a merge join, so the primary query must be sorted by the {@link uk.co.spudsoft.query.defn.ProcessorGroupConcat#parentIdColumn} column and the sub query 
- * must be sorted by the {@link uk.co.spudsoft.query.defn.ProcessorGroupConcat#childIdColumn} column.
+ * The join is always a merge join, so the primary query must be sorted by the {@link uk.co.spudsoft.query.defn.ProcessorGroupConcat#parentIdColumns} and the sub query 
+ * must be sorted by the {@link uk.co.spudsoft.query.defn.ProcessorGroupConcat#childIdColumns}.
  * The values from the {@link uk.co.spudsoft.query.defn.ProcessorGroupConcat#childValueColumn} column are joined to form a single string, using
  * {@link uk.co.spudsoft.query.defn.ProcessorGroupConcat#delimiter} as a delimiter.
  * 
@@ -57,7 +58,8 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
   }
 
   @Override
-  Future<ReadStream<DataRow>> initializeChild(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStream<DataRow> input) {
+  Future<ReadStream<DataRow>> initializeChild(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex) {
+    types.putIfAbsent(definition.getParentValueColumn(), DataType.String);
     return initializeChildStream(executor, pipeline, parentSource, processorIndex, definition.getInput());
   }  
 
@@ -68,7 +70,7 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
   
   @Override
   protected DataRow processChildren(DataRow parentRow, Collection<DataRow> childRows) {
-    logger.trace("Got child rows: {}", childRows);
+    logger.debug("Got child rows: {}", childRows);
     String result = childRows.stream()
             .map(r -> r.get(definition.getChildValueColumn()))
             .filter(o -> o != null)

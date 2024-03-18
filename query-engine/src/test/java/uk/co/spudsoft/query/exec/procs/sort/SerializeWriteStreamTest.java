@@ -57,7 +57,7 @@ public class SerializeWriteStreamTest {
   
   private final int limit = 100;
   private final int byteMultiplier = 1000;
-  private final int smallReadBufferSize = 17;
+  private final int smallReadBufferSize = 170;
   private final int largeReadBufferSize = 10000;
   private Promise<Void> done = Promise.promise();
   

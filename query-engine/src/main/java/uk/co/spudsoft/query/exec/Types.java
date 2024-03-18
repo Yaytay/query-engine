@@ -107,5 +107,8 @@ public class Types {
   public boolean isEmpty() {
     return defns.isEmpty();
   }
-  
+
+  public int size() {
+    return defns.size();
+  }
 }

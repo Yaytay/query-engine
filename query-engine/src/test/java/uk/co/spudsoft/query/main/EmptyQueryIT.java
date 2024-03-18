@@ -109,6 +109,7 @@ public class EmptyQueryIT {
     RestAssured.port = main.getPort();
     
     String body;
+    byte[] bodyBytes;
 
     body = given()
             .config(RestAssuredConfig.config().httpClient(HttpClientConfig.httpClientConfig().setParam("http.socket.timeout",10000)))
@@ -140,7 +141,7 @@ public class EmptyQueryIT {
     assertThat(body, equalTo("<table class=\"qetable\"><thead>\n<tr class=\"header\"><th class=\"header evenCol\" >colourId</th><th class=\"header oddCol\" >name</th><th class=\"header evenCol\" >hex</th></tr>\n</thead><tbody>\n</tbody></table>"));
     assertThat(body, not(containsString("\t\t\t\t\t\t\t")));
 
-    byte[] bodyBytes = given()
+    bodyBytes = given()
             .config(RestAssuredConfig.config().httpClient(HttpClientConfig.httpClientConfig().setParam("http.socket.timeout",10000)))
             .queryParam("key", "PostgreSQL")
             .queryParam("port", postgres.getPort())

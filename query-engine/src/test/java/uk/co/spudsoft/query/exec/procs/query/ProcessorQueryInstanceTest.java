@@ -39,6 +39,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import uk.co.spudsoft.query.defn.ProcessorQuery;
 import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
@@ -67,7 +68,7 @@ public class ProcessorQueryInstanceTest {
         
     ProcessorQueryInstance instance = ProcessorQuery.builder().expression("value!=three").build().createInstance(vertx, ctx -> {}, context);
     
-    Future<?> initFuture = instance.initialize(null, null, "source", 1, new ListReadStream<>(context, rowsList));
+    Future<?> initFuture = instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(context, rowsList), types));
     assertTrue(initFuture.succeeded());
   }
   
@@ -200,7 +201,7 @@ public class ProcessorQueryInstanceTest {
     ProcessorQueryInstance instance = new ProcessorQueryInstance(vertx, ctx -> {}, context
             , ProcessorQuery.builder().expression("value!=three").build()
     );
-    instance.initialize(null, null, "source", 1, new ListReadStream<>(context, rowsList))
+    instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(context, rowsList), types))
             .compose(v -> {
               return ReadStreamToList.capture(instance.getReadStream());
             })

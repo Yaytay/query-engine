@@ -30,7 +30,9 @@ import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
+import uk.co.spudsoft.query.exec.Types;
 
 /**
  *
@@ -49,6 +51,7 @@ public class ProcessorQueryInstance implements ProcessorInstance {
   private FilteringStream<DataRow> stream;
   
   private final String expression;
+  private Types types;
   
   private Node rootNode;
   
@@ -70,16 +73,17 @@ public class ProcessorQueryInstance implements ProcessorInstance {
   }
 
   @Override
-  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStream<DataRow> input) {
+  public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStreamWithTypes input) {
     try {
       rootNode = RSQL_PARSER.parse(expression);
     } catch (Throwable ex) {
       return Future.failedFuture(ex);
     }
-    this.stream = new FilteringStream<>(input, (data) -> {
+    this.stream = new FilteringStream<>(input.getStream(), (data) -> {
       return evaluate(rootNode, data);
     });
-    return Future.succeededFuture();
+    this.types = input.getTypes();
+    return Future.succeededFuture(new ReadStreamWithTypes(stream, types));
   }
 
   @Override

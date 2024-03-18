@@ -16,7 +16,6 @@
  */
 package uk.co.spudsoft.query.exec.sources.sql;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -32,7 +31,6 @@ import io.vertx.sqlclient.RowStream;
 import io.vertx.sqlclient.Tuple;
 import io.vertx.sqlclient.desc.ColumnDescriptor;
 import io.vertx.sqlclient.impl.RowStreamInternal;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -50,14 +48,13 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
   private Handler<Void> endHandler;
   private Handler<Row> rowHandler;
   private Handler<Throwable> exceptionHandler;
+  private Handler<List<ColumnDescriptor>> columnDescriptorHandler;
   private long demand;
   private boolean emitting;
   private Cursor cursor;
   private boolean readInProgress;
-  private List<ColumnDescriptor> columnDescriptors;
   private Iterator<Row> result;
-
-  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "It is expected that these members may change externally")
+  
   public MetadataRowStreamImpl(PreparedStatement ps, Context context, int fetch, Tuple params) {
     this.ps = ps;
     this.context = (ContextInternal) context;
@@ -66,10 +63,6 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
     this.demand = Long.MAX_VALUE;
   }
 
-  public synchronized List<ColumnDescriptor> getColumnDescriptors() {
-    return Collections.unmodifiableList(columnDescriptors);
-  }
-  
   @Override
   public synchronized Cursor cursor() {
     return cursor;
@@ -81,6 +74,11 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
     return this;
   }
 
+  public RowStream<Row> coloumnDescriptorHandler(Handler<List<ColumnDescriptor>> handler) {
+    columnDescriptorHandler = handler;
+    return this;
+  }
+  
   @Override
   public RowStream<Row> handler(Handler<Row> handler) {
     Cursor c;
@@ -157,14 +155,21 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
         handler.handle(ar.cause());
       }
     } else {
-      RowSet<Row> rowset = ar.result();
+      RowSet<Row> rowSet = ar.result();
+      Handler<List<ColumnDescriptor>> colDescHandler = null;
       synchronized (this) {
         readInProgress = false;
-        RowIterator<Row> it = rowset.iterator();
-        this.columnDescriptors = rowset.columnDescriptors();
+        colDescHandler = columnDescriptorHandler;
+        if (columnDescriptorHandler != null) {
+          columnDescriptorHandler = null;
+        }
+        RowIterator<Row> it = rowSet.iterator();
         if (it.hasNext()) {
           result = it;
         }
+      }
+      if (colDescHandler != null) {
+        colDescHandler.handle(rowSet.columnDescriptors());
       }
       checkPending();
     }
@@ -191,17 +196,17 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
       fut.onComplete(completionHandler);
     }
   }
-  
+
   @SuppressWarnings({"unchecked", "rawtypes"})
   private void checkPending() {
-    synchronized (MetadataRowStreamImpl.this) {
+    synchronized (this) {
       if (emitting) {
         return;
       }
       emitting = true;
     }
     while (true) {
-      synchronized (MetadataRowStreamImpl.this) {
+      synchronized (this) {
         if (demand == 0L) {
           emitting = false;
           break;

@@ -172,13 +172,16 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     return result;
   }  
   
-  private Future<ReadStream<DataRow>> initializeProcessors(PipelineInstance pipeline, String parentSource, Iterator<ProcessorInstance> iter, int index, ReadStream<DataRow> input) {
+  private Future<ReadStreamWithTypes> initializeProcessors(PipelineInstance pipeline, String parentSource, Iterator<ProcessorInstance> iter, int index, ReadStreamWithTypes input) {
+    logger.debug("initializeProcessors({}, {}, {}, {}, {})", pipeline, parentSource, iter, index, input);
     if (!iter.hasNext()) {
       return Future.succeededFuture(input);
     } else {
-      return iter.next()
-              .initialize(this, pipeline, parentSource, index, input)
-              .compose(v -> initializeProcessors(pipeline, parentSource, iter, index + 1, input));
+      ProcessorInstance processor = iter.next();
+      return processor.initialize(this, pipeline, parentSource, index, input)
+              .compose(streamWithTypes -> {
+                return initializeProcessors(pipeline, parentSource, iter, index + 1, streamWithTypes);
+              });
     }
   }
   
@@ -205,12 +208,18 @@ public class PipelineExecutorImpl implements PipelineExecutor {
   @Override
   public Future<Void> initializePipeline(PipelineInstance pipeline) {    
     return runPreProcessors(pipeline)
-            .compose(v -> pipeline.getSource().initialize(this, pipeline))
-            .onSuccess(v -> {
-              logger.debug("Source {} initialized", pipeline.getSource().getName());
+            .compose(v -> {
+              return pipeline.getSource().initialize(this, pipeline);
             })
-            .compose(v -> initializeProcessors(pipeline, pipeline.getSource().getName(), pipeline.getProcessors().iterator(), 1, pipeline.getSource().getReadStream()))
-            .compose(stream -> pipeline.getSink().initialize(this, pipeline, stream))
+            .compose(sourceStreamWithTypes -> {
+              logger.debug("Source {} initialized", pipeline.getSource().getName());
+              return initializeProcessors(pipeline, pipeline.getSource().getName(), pipeline.getProcessors().iterator(), 1, sourceStreamWithTypes);
+            })
+            .compose(streamWithTypes -> {
+              logger.debug("Processors ({}) initialized", pipeline.getProcessors().size());
+              return pipeline.getSink().initialize(this, pipeline, streamWithTypes);
+            })
+            .andThen(ar -> pipeline.getFinalPromise().handle(ar))
             ;
   }
   

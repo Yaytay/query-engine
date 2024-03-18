@@ -28,6 +28,7 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.io.File;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -100,7 +101,7 @@ public class JsonToPipelineIT {
               args.add("key", serverProvider.getName());
               args.add("port", Integer.toString(serverProvider.getPort()));
               Format chosenFormat = executor.getFormat(pipeline.getFormats(), null);
-              FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), null);
+              FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), new WriteStreamToList<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), executor, "source");
               PipelineInstance instance = new PipelineInstance(
                       executor.prepareArguments(pipeline.getArguments(), args)

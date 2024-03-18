@@ -37,6 +37,6 @@ public interface FormatInstance extends Writable {
    * @param input The ReadStream that is the input to the processor.
    * @return a Future that will be completed when the initialization is complete.
    */
-  Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStream<DataRow> input);
+  Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStreamWithTypes input);
   
 }

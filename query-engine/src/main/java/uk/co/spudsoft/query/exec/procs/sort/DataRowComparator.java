@@ -17,213 +17,204 @@
 package uk.co.spudsoft.query.exec.procs.sort;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.chrono.ChronoLocalDate;
-import java.time.chrono.ChronoLocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.DataType;
+import static uk.co.spudsoft.query.defn.DataType.Boolean;
+import static uk.co.spudsoft.query.defn.DataType.Date;
+import static uk.co.spudsoft.query.defn.DataType.DateTime;
+import static uk.co.spudsoft.query.defn.DataType.Double;
+import static uk.co.spudsoft.query.defn.DataType.Float;
+import static uk.co.spudsoft.query.defn.DataType.Integer;
+import static uk.co.spudsoft.query.defn.DataType.Long;
+import static uk.co.spudsoft.query.defn.DataType.String;
+import static uk.co.spudsoft.query.defn.DataType.Time;
 import uk.co.spudsoft.query.exec.DataRow;
-import uk.co.spudsoft.query.exec.Types;
 
 /**
  *
  * @author jtalbut
  */
-public class DataRowComparator {
+public class DataRowComparator implements Comparator<DataRow> {
   
   private static final Logger logger = LoggerFactory.getLogger(DataRowComparator.class);
+
+  private final List<String> fields;
   
-  public static Comparator<DataRow> createChain(Types types, List<String> fields) {
-    Comparator<DataRow> result = null;
+  public DataRowComparator(List<String> fields) {
+    this.fields = fields;
+  }
+
+  @Override
+  public int compare(DataRow o1, DataRow o2) {
     for (String field : fields) {
-      boolean descending = false;
+      int descending = 1;
       if (field.startsWith("-")) {
-        descending = true;
+        descending = -1;
         field = field.substring(1);
       }
-      DataType type = types.get(field);
-      if (type == null) {
-        logger.warn("Field {} not found in fields {}", field, types.keySet());
-        throw new IllegalArgumentException("Unrecognised field in sort");
+      int result = compareField(o1, o2, field) * descending;
+      if (result != 0) {
+        return result;
       }
-      Comparator<DataRow> comparator = switch (type) {
+    }
+    return 0;    
+  }
+  
+  private static int compareField(DataRow o1, DataRow o2, String field) {
+    if (o1 == null) {
+      return (o2 == null) ? 0 : -1;
+    }
+    
+    DataType type = o1.getType(field);
+    if (type == null) {
+      logger.warn("Field {} not found in fields {}", field, o1.types().keySet());
+      throw new IllegalArgumentException("Unrecognised field in sort");
+    }
+    
+    return switch (type) {
         case Boolean -> { 
-          yield new BooleanKey(field, descending); 
+          yield compareBooleanFields(o1, o2, field); 
         }
         case Date -> { 
-          yield new LocalDateKey(field, descending); 
+          yield compareDateFields(o1, o2, field); 
         }
         case DateTime -> { 
-          yield new LocalDateTimeKey(field, descending); 
+          yield compareDateTimeFields(o1, o2, field); 
         }
         case Double -> { 
-          yield new DoubleKey(field, descending); 
+          yield compareDoubleFields(o1, o2, field); 
         }
         case Float -> { 
-          yield new FloatKey(field, descending); 
+          yield compareFloatFields(o1, o2, field); 
         }
         case Integer -> { 
-          yield new IntegerKey(field, descending); 
+          yield compareIntegerFields(o1, o2, field); 
         }
         case Long -> { 
-          yield new LongKey(field, descending); 
+          yield compareLongFields(o1, o2, field); 
         }
         case String -> { 
-          yield new StringKey(field, descending); 
+          yield compareStringFields(o1, o2, field); 
         }
         case Time -> { 
-          yield new LocalTimeKey(field, descending); 
+          yield compareTimeFields(o1, o2, field); 
         }
         default -> { 
-          throw new IllegalStateException("Unable to create comparator for field of type " + type); 
+          throw new IllegalStateException("Unable to compare fields of type " + type); 
         }
       };
-      if (result == null) {
-        result = comparator;
-      } else {
-        result = result.thenComparing(comparator);
-      }
-    }
-    return result;
   }
-
   
-  public static class BooleanKey extends AbstractDataRowFieldComparator<Boolean> {
-
-    private static final long serialVersionUID = 1L;
-
-    public BooleanKey(String field, boolean descending) {
-      super(field, descending);
-    }
-
-    @Override
-    protected int internalCompare(Boolean v1, Boolean v2) {
+  private static int compareBooleanFields(DataRow o1, DataRow o2, String field) {
+    Boolean v1 = (Boolean) o1.get(field);
+    Boolean v2 = (Boolean) o2.get(field);
+    if (v1 == null) {
+      return (v2 == null) ? 0 : -1;
+    } else if (v2 == null) {
+      return 1;
+    } else {
       return v1.compareTo(v2);
     }
-
   }
   
-  public static class IntegerKey extends AbstractDataRowFieldComparator<Integer> {
-
-    private static final long serialVersionUID = 1L;
-
-    public IntegerKey(String field, boolean descending) {
-      super(field, descending);
-    }
-
-    @Override
-    protected int internalCompare(Integer v1, Integer v2) {
+  private static int compareDateFields(DataRow o1, DataRow o2, String field) {
+    LocalDate v1 = (LocalDate) o1.get(field);
+    LocalDate v2 = (LocalDate) o2.get(field);
+    if (v1 == null) {
+      return (v2 == null) ? 0 : -1;
+    } else if (v2 == null) {
+      return 1;
+    } else {
       return v1.compareTo(v2);
     }
-
   }
   
-  public static class LongKey extends AbstractDataRowFieldComparator<Long> {
-
-    private static final long serialVersionUID = 1L;
-
-    public LongKey(String field, boolean descending) {
-      super(field, descending);
-    }
-
-    @Override
-    protected int internalCompare(Long v1, Long v2) {
+  private static int compareDateTimeFields(DataRow o1, DataRow o2, String field) {
+    LocalDateTime v1 = (LocalDateTime) o1.get(field);
+    LocalDateTime v2 = (LocalDateTime) o2.get(field);
+    if (v1 == null) {
+      return (v2 == null) ? 0 : -1;
+    } else if (v2 == null) {
+      return 1;
+    } else {
       return v1.compareTo(v2);
     }
-
   }
   
-  public static class FloatKey extends AbstractDataRowFieldComparator<Float> {
-
-    private static final long serialVersionUID = 1L;
-
-    public FloatKey(String field, boolean descending) {
-      super(field, descending);
-    }
-
-    @Override
-    protected int internalCompare(Float v1, Float v2) {
+  private static int compareDoubleFields(DataRow o1, DataRow o2, String field) {
+    Double v1 = (Double) o1.get(field);
+    Double v2 = (Double) o2.get(field);
+    if (v1 == null) {
+      return (v2 == null) ? 0 : -1;
+    } else if (v2 == null) {
+      return 1;
+    } else {
       return v1.compareTo(v2);
     }
-
   }
   
-  public static class DoubleKey extends AbstractDataRowFieldComparator<Double> {
-
-    private static final long serialVersionUID = 1L;
-
-    public DoubleKey(String field, boolean descending) {
-      super(field, descending);
-    }
-
-    @Override
-    protected int internalCompare(Double v1, Double v2) {
+  private static int compareFloatFields(DataRow o1, DataRow o2, String field) {
+    Float v1 = (Float) o1.get(field);
+    Float v2 = (Float) o2.get(field);
+    if (v1 == null) {
+      return (v2 == null) ? 0 : -1;
+    } else if (v2 == null) {
+      return 1;
+    } else {
       return v1.compareTo(v2);
     }
-
   }
   
-  public static class StringKey extends AbstractDataRowFieldComparator<String> {
-
-    private static final long serialVersionUID = 1L;
-
-    public StringKey(String field, boolean descending) {
-      super(field, descending);
-    }
-
-    @Override
-    protected int internalCompare(String v1, String v2) {
+  private static int compareIntegerFields(DataRow o1, DataRow o2, String field) {
+    Integer v1 = (Integer) o1.get(field);
+    Integer v2 = (Integer) o2.get(field);
+    if (v1 == null) {
+      return (v2 == null) ? 0 : -1;
+    } else if (v2 == null) {
+      return 1;
+    } else {
       return v1.compareTo(v2);
     }
-
   }
   
-  public static class LocalDateKey extends AbstractDataRowFieldComparator<ChronoLocalDate> {
-
-    private static final long serialVersionUID = 1L;
-
-    public LocalDateKey(String field, boolean descending) {
-      super(field, descending);
-    }
-
-    @Override
-    protected int internalCompare(ChronoLocalDate v1, ChronoLocalDate v2) {
+  private static int compareLongFields(DataRow o1, DataRow o2, String field) {
+    Long v1 = (Long) o1.get(field);
+    Long v2 = (Long) o2.get(field);
+    if (v1 == null) {
+      return (v2 == null) ? 0 : -1;
+    } else if (v2 == null) {
+      return 1;
+    } else {
       return v1.compareTo(v2);
     }
-
   }
   
-  public static class LocalDateTimeKey extends AbstractDataRowFieldComparator<ChronoLocalDateTime<LocalDate>> {
-
-    private static final long serialVersionUID = 1L;
-
-    public LocalDateTimeKey(String field, boolean descending) {
-      super(field, descending);
-    }
-
-    @Override
-    protected int internalCompare(ChronoLocalDateTime<LocalDate> v1, ChronoLocalDateTime<LocalDate> v2) {
+  private static int compareStringFields(DataRow o1, DataRow o2, String field) {
+    String v1 = (String) o1.get(field);
+    String v2 = (String) o2.get(field);
+    if (v1 == null) {
+      return (v2 == null) ? 0 : -1;
+    } else if (v2 == null) {
+      return 1;
+    } else {
       return v1.compareTo(v2);
     }
-
   }
   
-  public static class LocalTimeKey extends AbstractDataRowFieldComparator<LocalTime> {
-
-    private static final long serialVersionUID = 1L;
-
-    public LocalTimeKey(String field, boolean descending) {
-      super(field, descending);
-    }
-
-    @Override
-    protected int internalCompare(LocalTime v1, LocalTime v2) {
+  private static int compareTimeFields(DataRow o1, DataRow o2, String field) {
+    LocalTime v1 = (LocalTime) o1.get(field);
+    LocalTime v2 = (LocalTime) o2.get(field);
+    if (v1 == null) {
+      return (v2 == null) ? 0 : -1;
+    } else if (v2 == null) {
+      return 1;
+    } else {
       return v1.compareTo(v2);
     }
-
   }
-  
 }

@@ -34,16 +34,16 @@
     "type": "SQL",
     "endpointTemplate": "<args.key>",
     "streamingFetchSize": 7,
-    "query": "select d.id, d.instant, l.value as ref, d.value from testData d join RefData l on d.lookup = l.id where d.id < 20 order by d.id"
-  }
+    "query": "select d.id, d.instant, c.name as ref, d.value from Data d join Colours c on d.colourId = c.id where d.id < 20 order by d.id"
+  } 
   ,
   "processors": [
     {
       "type":"GROUP_CONCAT",
       "delimiter":",",
-      "parentIdColumn":"id",
+      "parentIdColumns":["id"],
       "innerJoin":false,
-      "childIdColumn":"dataid",      
+      "childIdColumns":["dataid"],
       "parentValueColumn":"children",      
       "childValueColumn":"value",
       "input": {

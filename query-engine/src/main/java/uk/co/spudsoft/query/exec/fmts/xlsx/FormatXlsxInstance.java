@@ -23,7 +23,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.streams.ReadStream;
 import io.vertx.core.streams.WriteStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,6 +43,8 @@ import uk.co.spudsoft.xlsx.FontDefinition;
 import uk.co.spudsoft.xlsx.TableDefinition;
 import uk.co.spudsoft.xlsx.XlsxWriter;
 import uk.co.spudsoft.query.exec.FormatInstance;
+import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
+import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
 /**
@@ -61,6 +62,8 @@ public class FormatXlsxInstance implements FormatInstance {
   private final AtomicBoolean started = new AtomicBoolean();
   private XlsxWriter writer;
   
+  private Types types;
+  
   /**
    * Constructor.
    * @param definition The formatting definition for the output.
@@ -76,7 +79,7 @@ public class FormatXlsxInstance implements FormatInstance {
               logger.info("Got row {}", row);
               if (!started.get()) {
                 started.set(true);
-                TableDefinition tableDefintion = tableDefinitionFromRow(row);
+                TableDefinition tableDefintion = tableDefinition();
                 writer = new XlsxWriter(tableDefintion);
                 try {
                   writer.startFile(streamWrapper);
@@ -109,7 +112,7 @@ public class FormatXlsxInstance implements FormatInstance {
               }
               if (!started.get()) {
                 started.set(true);
-                TableDefinition tableDefintion = tableDefinitionFromRow(DataRow.EMPTY_ROW);
+                TableDefinition tableDefintion = tableDefinition();
                 writer = new XlsxWriter(tableDefintion);
                 try {
                   writer.startFile(streamWrapper);
@@ -154,10 +157,10 @@ public class FormatXlsxInstance implements FormatInstance {
     return new ColourDefinition("000000", "FFFFFF");
   }
   
-  private TableDefinition tableDefinitionFromRow(DataRow row) {
-    List<ColumnDefinition> columns = new ArrayList<>(row.size());
+  private TableDefinition tableDefinition() {
+    List<ColumnDefinition> columns = new ArrayList<>(types.size());
     FormatXlsxColumn nonFormat = FormatXlsxColumn.builder().build();
-    row.forEach((cd, v) -> {
+    types.forEach((cd) -> {
       ColumnDefinition defn = null;
       if (definition.getColumns() != null) {
         FormatXlsxColumn formatColumn = definition.getColumnsMap().get(cd.name());
@@ -195,8 +198,9 @@ public class FormatXlsxInstance implements FormatInstance {
   }
   
   @Override
-  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStream<DataRow> input) {
-    return input.pipeTo(formattingStream);
+  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStreamWithTypes input) {
+    this.types = input.getTypes();
+    return input.getStream().pipeTo(formattingStream);
   }
 
   @Override

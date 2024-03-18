@@ -78,11 +78,14 @@ source:
     order by 
         d."dataId"
 processors:
+  
 - type: GROUP_CONCAT
   delimiter: ","
-  parentIdColumn: dataId
+  parentIdColumns:
+  - dataId
   innerJoin: false
-  childIdColumn: dataId
+  childIdColumns: 
+  - dataId
   parentValueColumn: children
   childValueColumn: value
   input:
@@ -91,11 +94,14 @@ processors:
       streamingFetchSize: 10
       replaceDoubleQuotes: true  
       query: select "dataId", value from "ManyData" m join "RefData" r on r."refId" = m."refId" where "dataId" < :maxId order by "dataId", sort
+      
 - type: DYNAMIC_FIELD
   innerJoin: false
-  parentIdColumn: dataId
+  parentIdColumns:
+  - dataId
   fieldColumnColumn: valueField
-  valuesParentIdColumn: dataId
+  valuesParentIdColumns:
+  - dataId
   valuesFieldIdColumn: fieldId
   fieldDefns: 
     source:

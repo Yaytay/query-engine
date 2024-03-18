@@ -33,8 +33,8 @@ import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
+import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
-import uk.co.spudsoft.query.exec.procs.ProcessorFormat;
 
 /**
  *
@@ -75,10 +75,10 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
   }
 
   @Override
-  Future<ReadStream<DataRow>> initializeChild(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStream<DataRow> input) {
+  Future<ReadStream<DataRow>> initializeChild(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex) {
     
     SourceInstance sourceInstance = definition.getFieldDefns().getSource().createInstance(vertx, context, executor, parentSource + "-" + processorIndex + "-defns");
-    ProcessorFormat fieldDefnStreamCapture = new ProcessorFormat();
+    FormatCaptureInstance fieldDefnStreamCapture = new FormatCaptureInstance();
     PipelineInstance childPipeline = new PipelineInstance(
             pipeline.getArgumentInstances()
             , pipeline.getSourceEndpoints()
@@ -93,22 +93,29 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
               return ReadStreamToList.map(
                       fieldDefnStreamCapture.getReadStream()
                       , row -> {
-                        Object id = row.get(definition.getFieldIdColumn());
-                        String name = Objects.toString(row.get(definition.getFieldNameColumn()));
-                        DataType type = DataType.valueOf(Objects.toString(row.get(definition.getFieldTypeColumn())));
-                        String column = Objects.toString(row.get(definition.getFieldColumnColumn()));              
-                        return new FieldDefn(id, name, type, column);
+                        if (row.isEmpty()) {
+                          return null;
+                        } else {
+                          Object id = row.get(definition.getFieldIdColumn());
+                          String name = Objects.toString(row.get(definition.getFieldNameColumn()));
+                          DataType type = DataType.valueOf(Objects.toString(row.get(definition.getFieldTypeColumn())));
+                          String column = Objects.toString(row.get(definition.getFieldColumnColumn()));              
+                          return new FieldDefn(id, name, type, column);
+                        }
                       });
             })
             .compose(collated -> {
               fields = collated;
+              for (FieldDefn field : fields) {
+                types.putIfAbsent(field.name, field.type);
+              }
               return initializeChildStream(executor, pipeline, parentSource, processorIndex, definition.getFieldValues());
             });
   }
   
   @Override
   DataRow processChildren(DataRow parentRow, Collection<DataRow> childRows) {
-    logger.trace("Got child rows: {}", childRows);
+    logger.debug("Got child rows: {}", childRows);
     for (FieldDefn fieldDefn : fields) {
       boolean added = false;
       parentRow.putTypeIfAbsent(fieldDefn.name, fieldDefn.type);

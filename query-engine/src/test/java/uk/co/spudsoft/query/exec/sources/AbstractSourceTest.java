@@ -28,6 +28,7 @@ import uk.co.spudsoft.query.exec.SourceInstance;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 
 /**
  *
@@ -52,7 +53,7 @@ public class AbstractSourceTest {
     }
 
     @Override
-    public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
+    public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
       throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 

@@ -21,7 +21,6 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.streams.ReadStream;
 import io.vertx.core.streams.WriteStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
@@ -33,6 +32,8 @@ import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormattingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
+import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
+import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
 /**
@@ -47,6 +48,8 @@ public class FormatDelimitedInstance implements FormatInstance {
   private final WriteStream<Buffer> outputStream;
   private final FormattingWriteStream formattingStream;
   private final AtomicBoolean started = new AtomicBoolean();
+  
+  private Types types;
 
   /**
    * Constructor.
@@ -61,12 +64,15 @@ public class FormatDelimitedInstance implements FormatInstance {
             , v -> Future.succeededFuture()
             , row -> {
               if (started.compareAndSet(false, true)) {
-                return outputHeader(row).compose(v -> outputRow(row));
+                return outputHeader().compose(v -> outputRow(row));
               } else {
                 return outputRow(row);
               }
             }
             , rowCount -> {
+              if (!started.get()) {
+                outputHeader();
+              }
               Context vertxContext = Vertx.currentContext();
               if (vertxContext != null) {
                 RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
@@ -79,12 +85,12 @@ public class FormatDelimitedInstance implements FormatInstance {
     );
   }
 
-  private Future<Void> outputHeader(DataRow row) {
+  private Future<Void> outputHeader() {
     if (defn.hasHeaderRow()) {
       StringBuilder headerRow = new StringBuilder();
       
       AtomicBoolean first = new AtomicBoolean(true);
-      row.forEach((cd, v) -> {
+      types.forEach(cd-> {
         if (!first.compareAndSet(true, false)) {
           headerRow.append(defn.getDelimiter());
         }
@@ -100,6 +106,7 @@ public class FormatDelimitedInstance implements FormatInstance {
   }
 
   private Future<Void> outputRow(DataRow row) {
+    logger.debug("Outputting row: {}", row);
     if (row.isEmpty()) {
       return Future.succeededFuture();
     }
@@ -140,8 +147,9 @@ public class FormatDelimitedInstance implements FormatInstance {
   }
   
   @Override
-  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStream<DataRow> input) {
-    return input.pipeTo(formattingStream);
+  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStreamWithTypes input) {
+    this.types = input.getTypes();
+    return input.getStream().pipeTo(formattingStream);
   }
   
   @Override

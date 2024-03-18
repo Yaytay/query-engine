@@ -56,7 +56,7 @@ public class RowStreamWrapperTest {
     MetadataRowStreamImpl target = mock(MetadataRowStreamImpl.class);
     RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, null, null, null, target);
     instance.pause();
-    verify(target).pause();
+    verify(target, times(2)).pause();
   }
 
   @Test
@@ -162,26 +162,4 @@ public class RowStreamWrapperTest {
     verify(rowStream, times(1)).close();
   }
   
-  @Test
-  public void testGetColumnDescriptors() {
-    MetadataRowStreamImpl target = mock(MetadataRowStreamImpl.class);    
-    Transaction transaction = mock(Transaction.class);
-    SqlConnection connection = mock(SqlConnection.class);
-    List<ColumnDescriptor> inputs = Arrays.asList(
-            new ColumnDefn("one", DataType.Boolean)
-            , new ColumnDefn("two", DataType.String)
-            , new ColumnDefn("three", DataType.Double)
-    );
-    when (target.getColumnDescriptors()).thenReturn(inputs);
-    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, connection, transaction, null, target);
-
-    List<ColumnDescriptor> columnDescriptors = instance.getColumnDescriptors();
-    assertEquals(3, columnDescriptors.size());
-    assertEquals("one", columnDescriptors.get(0).name());
-    assertEquals("two", columnDescriptors.get(1).name());
-    assertEquals("three", columnDescriptors.get(2).name());
-    assertEquals(JDBCType.BOOLEAN, columnDescriptors.get(0).jdbcType());
-    assertEquals(JDBCType.NVARCHAR, columnDescriptors.get(1).jdbcType());
-    assertEquals(JDBCType.DOUBLE, columnDescriptors.get(2).jdbcType());
-  }
 }

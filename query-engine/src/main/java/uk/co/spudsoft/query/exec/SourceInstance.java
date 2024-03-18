@@ -38,5 +38,5 @@ public interface SourceInstance extends Readable, SourceNameTracker {
    * @param pipeline Definition of the pipeline, primarily for access to arguments and sourceEndpoints.
    * @return a Future that will be completed when the initialization is complete.
    */
-  Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline);
+  Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline);
 }

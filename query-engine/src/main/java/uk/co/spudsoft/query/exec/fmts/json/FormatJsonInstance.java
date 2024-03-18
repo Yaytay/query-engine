@@ -30,6 +30,7 @@ import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormattingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
+import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
 
@@ -84,8 +85,8 @@ public class FormatJsonInstance implements FormatInstance {
   }
 
   @Override
-  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStream<DataRow> input) {
-    return input.pipeTo(formattingStream);
+  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStreamWithTypes input) {
+    return input.getStream().pipeTo(formattingStream);
   }
   
   @Override

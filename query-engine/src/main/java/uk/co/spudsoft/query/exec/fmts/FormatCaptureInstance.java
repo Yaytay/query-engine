@@ -23,6 +23,7 @@ import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.FormatInstance;
+import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 
 /**
  *
@@ -35,19 +36,19 @@ import uk.co.spudsoft.query.exec.FormatInstance;
  */
 public class FormatCaptureInstance implements FormatInstance {
   
-  private ReadStream<DataRow> stream;
+  private ReadStreamWithTypes streamWithTypes;
 
   public FormatCaptureInstance() {
   }
 
   @Override
-  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStream<DataRow> input) {
-    this.stream = input;
+  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStreamWithTypes input) {
+    this.streamWithTypes = input;
     return Future.succeededFuture();
   }
 
   public ReadStream<DataRow> getReadStream() {
-    return stream;
+    return streamWithTypes.getStream();
   }
 
   @Override

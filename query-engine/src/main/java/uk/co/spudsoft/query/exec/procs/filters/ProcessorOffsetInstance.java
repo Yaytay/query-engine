@@ -29,7 +29,9 @@ import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
+import uk.co.spudsoft.query.exec.Types;
 
 /**
  *
@@ -44,6 +46,7 @@ public class ProcessorOffsetInstance implements ProcessorInstance {
   private final Context context;
   private final ProcessorOffset definition;
   private SkippingStream<DataRow> stream;
+  private Types types;
   
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
   public ProcessorOffsetInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorOffset definition) {
@@ -66,9 +69,10 @@ public class ProcessorOffsetInstance implements ProcessorInstance {
   }
 
   @Override
-  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStream<DataRow> input) {
-    this.stream = new SkippingStream<>(input, definition.getOffset());
-    return Future.succeededFuture();
+  public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStreamWithTypes input) {
+    this.stream = new SkippingStream<>(input.getStream(), definition.getOffset());
+    this.types = input.getTypes();
+    return Future.succeededFuture(new ReadStreamWithTypes(stream, types));
   }
 
   @Override

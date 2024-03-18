@@ -33,10 +33,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Endpoint;
 import uk.co.spudsoft.query.defn.SourceSql;
-import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
+import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.SharedMap;
+import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.exec.sources.AbstractSource;
@@ -62,7 +63,6 @@ public class SourceSqlStreamingInstance extends AbstractSource {
   private PreparedStatement preparedStatement;
   private Transaction transaction;
 
-  
   public SourceSqlStreamingInstance(Vertx vertx, Context context, SharedMap sharedMap, SourceSql definition, String defaultName) {
     super(Strings.isNullOrEmpty(definition.getName()) ? defaultName : definition.getName());
     this.vertx = vertx;
@@ -109,7 +109,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
   }
   
   @Override
-  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
+  public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
 
     RequestContext requestContext = RequestContextHandler.getRequestContext(vertx.getOrCreateContext());
     
@@ -167,10 +167,9 @@ public class SourceSqlStreamingInstance extends AbstractSource {
             }).compose(tran -> {
               transaction = tran;
               logger.trace("Creating SQL stream on {}", connection);
-              // RowStream<Row> stream = preparedStatement.createStream(definition.getStreamingFetchSize(), args);
-              MetadataRowStreamImpl stream = new MetadataRowStreamImpl(preparedStatement, context, definition.getStreamingFetchSize(), args);
-              rowStreamWrapper = new RowStreamWrapper(this, connection, transaction, preparedStatement, stream);
-              return Future.succeededFuture();
+              MetadataRowStreamImpl rowStream = new MetadataRowStreamImpl(preparedStatement, context, definition.getStreamingFetchSize(), args);
+              rowStreamWrapper = new RowStreamWrapper(this, connection, transaction, preparedStatement, rowStream);
+              return rowStreamWrapper.ready();
             })
             .recover(ex -> {
               if (ex instanceof ServiceException) {
@@ -179,12 +178,13 @@ public class SourceSqlStreamingInstance extends AbstractSource {
                 return Future.failedFuture(new ServiceException(500, "Failed to execute query", ex));
               }
             })
-            .onFailure(ar -> {
+            .onFailure(ex -> {
+              logger.warn("SQL source failed: ", ex);
               if (connection != null) {
                 connection.close();
               }
             })
-            .mapEmpty()
+            .map(v -> new ReadStreamWithTypes(rowStreamWrapper, rowStreamWrapper.getTypes()))
             ;
   }
   

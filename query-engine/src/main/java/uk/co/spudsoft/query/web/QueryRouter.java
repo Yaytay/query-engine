@@ -112,7 +112,7 @@ public class QueryRouter implements Handler<RoutingContext> {
                   .build();
           requestContextBuilder.buildRequestContext(request)
                   .compose(requestContext -> {
-                    return auditor.recordRequest(requestContext).map(requestContext);
+                    return auditor.recordRequest(requestContext).map(v -> requestContext);
                   })
                   .compose(requestContext -> {
                     try {
@@ -159,7 +159,7 @@ public class QueryRouter implements Handler<RoutingContext> {
                       return Future.failedFuture(ex);
                     } 
                     
-                    return pipelineExecutor.initializePipeline(instance).map(instance);
+                    return pipelineExecutor.initializePipeline(instance).map(v -> instance);
                   })
                   .compose(instance -> {
                     logger.info("Pipeline initiated");

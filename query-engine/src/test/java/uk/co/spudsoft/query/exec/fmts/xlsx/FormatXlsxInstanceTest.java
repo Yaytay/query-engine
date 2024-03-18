@@ -37,6 +37,7 @@ import uk.co.spudsoft.query.defn.FormatXlsx;
 import uk.co.spudsoft.query.defn.FormatXlsxColours;
 import uk.co.spudsoft.query.exec.ColumnDefn;
 import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
@@ -85,7 +86,7 @@ public class FormatXlsxInstanceTest {
       rowsList.add(createDataRow(types, i));
     }
     
-    instance.initialize(null, null, new ListReadStream<>(vertx.getOrCreateContext(), rowsList))
+    instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
             .onComplete(testContext.succeedingThenComplete());
   }
   

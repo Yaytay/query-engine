@@ -119,7 +119,7 @@ public class SourceTest implements Source {
   }
   
   @Override
-  public SourceInstance createInstance(Vertx vertx, Context context, SharedMap sharedMap, String defaultName) {
+  public SourceTestInstance createInstance(Vertx vertx, Context context, SharedMap sharedMap, String defaultName) {
     return new SourceTestInstance(context, this, defaultName);
   }
   

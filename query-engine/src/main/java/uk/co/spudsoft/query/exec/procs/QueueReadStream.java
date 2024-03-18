@@ -37,7 +37,6 @@ public class QueueReadStream<T> implements ReadStream<T> {
   
   private final Context context;
   private final Deque<T> items;
-  private final Types types;
   
   private final Object lock = new Object();
 
@@ -51,10 +50,9 @@ public class QueueReadStream<T> implements ReadStream<T> {
   private boolean completed;
   
   @SuppressFBWarnings("EI_EXPOSE_REP2")
-  public QueueReadStream(Context context, Types types) {
+  public QueueReadStream(Context context) {
     this.context = context;
     this.items = new ArrayDeque<>();
-    this.types = types;
   }
   
   public QueueReadStream<T> add(T item) {
@@ -85,7 +83,7 @@ public class QueueReadStream<T> implements ReadStream<T> {
   }
   
   private void process() {
-    while (!ended) {
+    while (!ended && emitting) {
       Handler<Throwable> exceptionHandlerCaptured;
       Handler<Void> endHandlerCaptured = null;
       Handler<T> handlerCaptured = null;
@@ -111,6 +109,7 @@ public class QueueReadStream<T> implements ReadStream<T> {
       }
       if (item != null && handlerCaptured != null) {
         try {
+          logger.debug("Handling {}", item);
           handlerCaptured.handle(item);
         } catch (Throwable ex) {
           if (exceptionHandlerCaptured != null) {
@@ -121,6 +120,7 @@ public class QueueReadStream<T> implements ReadStream<T> {
         }
       }
       if (ended && endHandlerCaptured != null) {
+        logger.debug("Calling endHandler"); 
         endHandlerCaptured.handle(null);
         return ;
       }

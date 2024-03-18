@@ -17,6 +17,8 @@
 package uk.co.spudsoft.query.defn;
 
 import java.util.Arrays;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -62,6 +64,8 @@ public class ProcessorDynamicFieldTest {
                             )
                             .build()
             )
+            .parentIdColumns(Arrays.asList("id"))
+            .valuesParentIdColumns(Arrays.asList("id"))
             .build();
     instance3.validate();
   }
@@ -93,10 +97,10 @@ public class ProcessorDynamicFieldTest {
     assertEquals("name", instance.getFieldNameColumn());
     assertEquals("type", instance.getFieldTypeColumn());
     assertEquals(null, instance.getFieldValues());
-    assertEquals(null, instance.getParentIdColumns());
+    assertThat(instance.getParentIdColumns(), hasSize(0));
     assertEquals(ProcessorType.DYNAMIC_FIELD, instance.getType());
     assertEquals(null, instance.getValuesFieldIdColumn());
-    assertEquals(null, instance.getValuesParentIdColumns());
+    assertThat(instance.getValuesParentIdColumns(), hasSize(0));
   }
 
   @Test

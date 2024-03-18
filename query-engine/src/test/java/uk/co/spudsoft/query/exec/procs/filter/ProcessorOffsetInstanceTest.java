@@ -17,7 +17,6 @@
 package uk.co.spudsoft.query.exec.procs.filter;
 
 import io.vertx.core.Context;
-import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -26,6 +25,7 @@ import java.time.Month;
 import java.util.Arrays;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.defn.ProcessorOffset;
+import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
@@ -64,7 +65,7 @@ public class ProcessorOffsetInstanceTest {
     ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, ctx -> {}, context
             , ProcessorOffset.builder().offset(17).build()
     );
-    assertEquals(Future.succeededFuture(), instance.initialize(null, null, "source", 1, new ListReadStream<>(context, rowsList)));
+    assertTrue(instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(context, rowsList), types)).succeeded());
   }
 
   
@@ -84,7 +85,7 @@ public class ProcessorOffsetInstanceTest {
     ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, ctx -> {}, context
             , ProcessorOffset.builder().offset(2).build()
     );
-    instance.initialize(null, null, "source", 1, new ListReadStream<>(context, rowsList))
+    instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(context, rowsList), types))
             .compose(v -> {
               return ReadStreamToList.capture(instance.getReadStream());
             })

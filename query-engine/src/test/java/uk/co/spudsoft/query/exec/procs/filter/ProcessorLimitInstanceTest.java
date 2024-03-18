@@ -34,6 +34,7 @@ import uk.co.spudsoft.query.exec.DataRow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import uk.co.spudsoft.query.defn.ProcessorLimit;
+import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
@@ -64,7 +65,7 @@ public class ProcessorLimitInstanceTest {
     ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, ctx -> {}, context
             , ProcessorLimit.builder().limit(17).build()
     );
-    assertTrue(instance.initialize(null, null, "source", 1, new ListReadStream<>(context, rowsList)).isComplete());
+    assertTrue(instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(context, rowsList), types)).isComplete());
   }
   
   @Test
@@ -83,7 +84,7 @@ public class ProcessorLimitInstanceTest {
     ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, ctx -> {}, context
             , ProcessorLimit.builder().limit(3).build()
     );
-    instance.initialize(null, null, "source", 1, new ListReadStream<>(context, rowsList))
+    instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(context, rowsList), types))
             .compose(v -> {
               return ReadStreamToList.capture(instance.getReadStream());
             })

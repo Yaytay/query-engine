@@ -28,6 +28,7 @@ import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
+import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.procs.QueueReadStream;
 import uk.co.spudsoft.query.exec.sources.AbstractSource;
@@ -56,41 +57,43 @@ public class SourceTestInstance extends AbstractSource {
     if (!Strings.isNullOrEmpty(definition.getName()) && Strings.isNullOrEmpty(defaultName)) {
       types.putIfAbsent("name", DataType.String);
     }
-    this.stream = new QueueReadStream<>(context, types);
-  }    
- 
+    this.stream = new QueueReadStream<>(context);
+  }
+
   @Override
-  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
+  public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
     stream.pause();
     if (delayMs == 0) {
       try {
         for (int i = 0; i < rowCount; ++i) {
-          DataRow data = DataRow.create(types);
-          data.put("value", i);
-          data.put("name", getName());
-          stream.add(data);
+          addNewRow(i);
         }
         stream.complete();
       } catch (Throwable ex) {
         return Future.failedFuture(ex);
       }
-      return Future.succeededFuture();
+      return Future.succeededFuture(new ReadStreamWithTypes(stream, types));
     } else {
       AtomicInteger iteration = new AtomicInteger(rowCount);
       context.owner().setPeriodic(delayMs, delayMs, id -> {
         int i = iteration.decrementAndGet();
         if (i > 0) {
-          DataRow data = DataRow.create(types);
-          data.put("value", i);
-          data.put("name", getName());
-          stream.add(data);
+          addNewRow(i);
         } else {
           stream.complete();
           context.owner().cancelTimer(id);
         }
       });
-      return Future.succeededFuture();
+      return Future.succeededFuture(new ReadStreamWithTypes(stream, types));
     }
+  }
+
+  void addNewRow(int i) {
+    logger.debug("Creating row {}", i);
+    DataRow data = DataRow.create(types);
+    data.put("value", i);
+    data.put("name", getName());
+    stream.add(data);
   }
 
   @Override

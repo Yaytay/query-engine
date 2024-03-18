@@ -48,9 +48,9 @@
     {
       "type":"GROUP_CONCAT",
       "innerJoin":false,
-      "parentIdColumn":"dataId",
+      "parentIdColumns":["dataId"],
       "delimiter":",",
-      "childIdColumn":"dataId",      
+      "childIdColumns":["dataId"],      
       "parentValueColumn":"children",      
       "childValueColumn":"value",
       "input": {
@@ -67,9 +67,9 @@
     {
       "type":"DYNAMIC_FIELD",
       "innerJoin":false,
-      "parentIdColumn":"dataId",
+      "parentIdColumns":["dataId"],
       "fieldColumnColumn":"valuefield",
-      "valuesParentIdColumn":"dataId",
+      "valuesParentIdColumns":["dataId"],
       "valuesFieldIdColumn":"fieldId",
       "fieldDefns": {
         "source": {    

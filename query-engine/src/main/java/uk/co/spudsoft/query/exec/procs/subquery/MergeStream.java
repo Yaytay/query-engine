@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +72,8 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
   private final Deque<T> primaryRows = new ArrayDeque<>(MAX_ROWS_TO_BUFFER);
   private final Deque<U> secondaryRows = new ArrayDeque<>(MAX_ROWS_TO_BUFFER);
   
-  private boolean emitting = false;
+  private final AtomicBoolean emitting = new AtomicBoolean();
+  private long demand;
   
   public MergeStream(Context context
           , ReadStream<T> primaryStream
@@ -84,6 +86,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
           , int secondaryStreamBufferHighThreshold
           , int secondaryStreamBufferLowThreshold
   ) {
+    logger.debug("Constructor {} and {}", primaryStream, secondaryStream);
     this.context = context;
     this.primaryStream = primaryStream;
     this.secondaryStream = secondaryStream;
@@ -107,19 +110,29 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
   @Override
   public MergeStream<T, U, V> handler(Handler<V> handler) {
     this.handler = handler;
-    primaryStream.endHandler(v -> {
-      logger.debug("Ending primary stream");
-      primaryEnded = true;
-      doEmit();
-    });
-    secondaryStream.endHandler(v -> {
-      logger.debug("Ending secondary stream");
-      secondaryEnded = true;
-      doEmit();
-    });
-    primaryStream.handler(this::handlePrimaryItem);
-    secondaryStream.handler(this::handleSecondaryItem);
-    
+    if (handler == null) {
+      primaryStream
+              .exceptionHandler(null)
+              .endHandler(null)
+              .handler(null);
+      secondaryStream
+              .exceptionHandler(null)
+              .endHandler(null)
+              .handler(null);
+    } else {
+      primaryStream.endHandler(v -> {
+        logger.debug("Ending primary stream");
+        primaryEnded = true;
+        doEmit();
+      });
+      secondaryStream.endHandler(v -> {
+        logger.debug("Ending secondary stream");
+        secondaryEnded = true;
+        doEmit();
+      });
+      primaryStream.handler(this::handlePrimaryItem);
+      secondaryStream.handler(this::handleSecondaryItem);
+    }    
     return this;
   }
   
@@ -140,9 +153,14 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
   }
 
   private void handleSecondaryItem(U item) {
+    logger.debug("Handling secondary {}", item);
     synchronized (lock) {
       if (currentPrimary == null) {
-        secondaryRows.add(item);
+        if (primaryEnded) {
+          doEmit();
+        } else {
+          secondaryRows.add(item);
+        }
       } else {
         if (0 == comparator.compare(currentPrimary, item)) {
           currentSecondaryRows.add(item);
@@ -159,23 +177,26 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
   }
 
   private void doEmit() {
-    if (!emitting) {
-      emitting = true;
+    if (emitting.compareAndSet(false, true)) {
       context.runOnContext(this::emit);
+    } else {
+      logger.debug("Already emitting");
     }
   }
   
   private void bringInSecondaries() {
-    while (!secondaryRows.isEmpty()) {
-      U curSec = secondaryRows.peek();
-      int compare = this.comparator.compare(currentPrimary, curSec);
-      if (compare > 0) {
-        logger.debug("Skipping secondary row {} because it is before {}", curSec, currentPrimary);
-        secondaryRows.pop();
-      } else if (compare == 0) {
-        currentSecondaryRows.add(secondaryRows.pop());
-      } else {
-        break;
+    if (currentPrimary != null) {
+      while (!secondaryRows.isEmpty()) {
+        U curSec = secondaryRows.peek();
+        int compare = this.comparator.compare(currentPrimary, curSec);
+        if (compare > 0) {
+          logger.debug("Skipping secondary row {} because it is before {}", curSec, currentPrimary);
+          secondaryRows.pop();
+        } else if (compare == 0) {
+          currentSecondaryRows.add(secondaryRows.pop());
+        } else {
+          break;
+        }
       }
     }
   }
@@ -188,8 +209,8 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
       T mergePrimary = null;
       List<U> mergeSecondary = null;
 
-      boolean resumePrimary;
-      boolean resumeSecondary;
+      boolean resumePrimary = false;
+      boolean resumeSecondary = false;
       logger.debug("Current: {} and {}, got {} primary rows{} and {} secondary rows{}"
               , currentPrimary
               , currentSecondaryRows
@@ -199,38 +220,55 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
               , secondaryEnded ? " (ended)" : ""
       );
       synchronized (lock) {
-        if (!secondaryRows.isEmpty() && currentSecondaryRows.isEmpty()) {
-            bringInSecondaries();
-        }
-        if (!secondaryRows.isEmpty()) {
-          mergePrimary = currentPrimary;
-          mergeSecondary = currentSecondaryRows;
-          capturedHandler = handler;
-          currentSecondaryRows = new ArrayList<>();
-          if (!primaryRows.isEmpty()) {
-            currentPrimary = primaryRows.pop();
-            bringInSecondaries();
-          } else {
-            currentPrimary = null;
-            emitting = false;
-            moreToDo = false;
+        if (demand  != Long.MAX_VALUE) {
+          if (demand <= 0) {
+            emitting.set(false);
+            return ;
           }
-        } else if (!secondaryEnded) {
-          emitting = false;
-          moreToDo = false;
         }
-        if (secondaryRows.isEmpty() && secondaryEnded && primaryRows.isEmpty() && primaryEnded) {
-          emitting = false;
+        if (primaryRows.isEmpty() && primaryEnded 
+                && currentPrimary == null && ( currentSecondaryRows == null || currentSecondaryRows.isEmpty() ) ) {
+          emitting.set(false);
           moreToDo = false;
           capturedEndHandler = endHandler;
-          if (capturedHandler == null && (currentPrimary != null || !currentSecondaryRows.isEmpty())) {
+          endHandler = null;
+        } else {
+          if (!secondaryRows.isEmpty() && ( currentSecondaryRows == null || currentSecondaryRows.isEmpty() ) ) {
+            bringInSecondaries();
+          }
+          if (!secondaryRows.isEmpty() || secondaryEnded) {
             mergePrimary = currentPrimary;
             mergeSecondary = currentSecondaryRows;
-            capturedHandler = this.handler;
+            capturedHandler = handler;
+            currentSecondaryRows = new ArrayList<>();
+            if (!primaryRows.isEmpty()) {
+              currentPrimary = primaryRows.pop();
+              bringInSecondaries();
+            } else if (primaryEnded) {
+              emitting.set(false);
+              moreToDo = false;
+              capturedEndHandler = endHandler;
+              endHandler = null;
+            } else {
+              currentPrimary = null;
+              emitting.set(false);
+              moreToDo = false;
+            }
+          } else if (!secondaryEnded) {
+            emitting.set(false);
+            moreToDo = false;
+          }
+          resumePrimary = !primaryEnded && primaryRows.size() < primaryStreamBufferLowThreshold;
+          resumeSecondary = !secondaryEnded && secondaryRows.size() < secondaryStreamBufferLowThreshold;
+
+          if (capturedHandler != null) {
+            if (!innerJoin || !mergeSecondary.isEmpty()) {
+              if (demand != Long.MAX_VALUE) {
+                --demand;
+              }
+            }
           }
         }
-        resumePrimary = !primaryEnded && primaryRows.size() < primaryStreamBufferLowThreshold;
-        resumeSecondary = !secondaryEnded && secondaryRows.size() < secondaryStreamBufferLowThreshold;
       }
       
       if (capturedHandler != null) {
@@ -241,15 +279,19 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
         }
       }
       if (capturedEndHandler != null) {
+        logger.debug("Ending");
         capturedEndHandler.handle(null);
-      }
-      if (resumePrimary) {
-        logger.debug("Resuming primary stream at {} rows", primaryRows.size());
-        primaryStream.resume();
-      }
-      if (resumeSecondary) {
-        logger.debug("Resuming secondary stream at {} rows", secondaryRows.size());
-        secondaryStream.resume();
+        primaryStream.handler(null);
+        secondaryStream.handler(null);
+      } else {
+        if (resumePrimary) {
+          logger.debug("Resuming primary stream at {} rows", primaryRows.size());
+          primaryStream.resume();
+        }
+        if (resumeSecondary) {
+          logger.debug("Resuming secondary stream at {} rows", secondaryRows.size());
+          secondaryStream.resume();
+        }
       }
     }
   }
@@ -258,6 +300,9 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
   public MergeStream<T, U, V> pause() {
     primaryStream.pause();
     secondaryStream.pause();
+    synchronized (lock) {
+      demand = 0;
+    }
     return this;
   }
 
@@ -265,13 +310,27 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
   public MergeStream<T, U, V> resume() {
     primaryStream.resume();
     secondaryStream.resume();
+    synchronized (lock) {
+      demand = Long.MAX_VALUE;
+    }
+    doEmit();
     return this;
   }
 
   @Override
   public MergeStream<T, U, V> fetch(long amount) {
-    primaryStream.fetch(amount);
+    if (amount < 0L) {
+      throw new IllegalArgumentException();
+    }
+    primaryStream.resume();
     secondaryStream.resume();
+    synchronized (lock) {
+      demand += amount;
+      if (demand < 0L) {
+        demand = Long.MAX_VALUE;
+      }
+    }
+    doEmit();
     return this;
   }
 

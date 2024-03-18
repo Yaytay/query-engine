@@ -31,7 +31,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Set;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +49,7 @@ public class SortingStream<T> implements ReadStream<T> {
   
   private final Context context;
   private final FileSystem fileSystem;
-  private final Supplier<Comparator<T>> comparatorFactory;
+  private final Comparator<T> comparator;
   private final SerializeWriteStream.Serializer<T> serializer;
   private final SerializeReadStream.Deserializer<T> deserializer;
   
@@ -65,7 +65,7 @@ public class SortingStream<T> implements ReadStream<T> {
 
   private final Object lock = new Object();
   
-  private ReadStream<T> input;
+  private final ReadStream<T> input;
   private int inputCount = 0;
   
   private Handler<Throwable> exceptionHandler;
@@ -180,23 +180,29 @@ public class SortingStream<T> implements ReadStream<T> {
   @SuppressFBWarnings("EI_EXPOSE_REP2")
   public SortingStream(Context context
           , FileSystem fileSystem
-          , Supplier<Comparator<T>> comparatorFactory
+          , Comparator<T> comparator
           , SerializeWriteStream.Serializer<T> serializer
           , SerializeReadStream.Deserializer<T> deserializer
           , String tempDir
           , String baseFileName
           , long memoryLimit
           , MemoryEvaluator<T> memoryEvaluator
+          , ReadStream<T> input
   ) {
     this.context = context;
     this.fileSystem = fileSystem;
-    this.comparatorFactory = comparatorFactory;
+    this.comparator = comparator;
     this.serializer = serializer;
     this.deserializer = deserializer;
     this.tempDir = tempDir;
     this.baseFileName = baseFileName;
     this.memoryLimit = memoryLimit;
     this.memoryEvaluator = memoryEvaluator;
+    
+    this.input = input;
+    input.endHandler(this::inputEndHandler);
+    input.exceptionHandler(this::inputExceptionHandler);
+    input.handler(this::inputHandler);
   }
 
   private void postException(Throwable ex) {
@@ -218,8 +224,7 @@ public class SortingStream<T> implements ReadStream<T> {
       Handler<Void> endHandlerCaptured = null;
 
       synchronized (lock) {
-//        logger.debug("processOutputs ({}): demand: {}, outputs: {} with {} pending, files: {}"
-//                , processCount.incrementAndGet()
+//        logger.debug("processOutputs: demand: {}, outputs: {} with {} pending, files: {}"
 //                , demand
 //                , outputs.size()
 //                , pending.size()
@@ -277,7 +282,6 @@ public class SortingStream<T> implements ReadStream<T> {
     synchronized (lock) {
       // logger.debug("inputEndHandler with {} remaining", items.size());
       sortItemsList(items);
-      Comparator<T> comparator = comparatorFactory.get();
       outputs = new PriorityQueue<>(files.size() + 1, (a, b) -> {
         return comparator.compare(a.head, b.head);
       });
@@ -330,6 +334,7 @@ public class SortingStream<T> implements ReadStream<T> {
   }
   
   private void inputHandler(T item) {
+    // logger.debug("inputHandler {}", item);
     int sizeofData = memoryEvaluator.sizeof(item);
     
     List<T> itemsToWrite = null;
@@ -358,17 +363,6 @@ public class SortingStream<T> implements ReadStream<T> {
     }
   }
   
-  public SortingStream<T> setInput(ReadStream<T> input) {
-    synchronized (lock) {
-      this.input = input;
-    }
-    input.endHandler(this::inputEndHandler);
-    input.exceptionHandler(this::inputExceptionHandler);
-    input.handler(this::inputHandler);
-    input.resume();
-    return this;
-  }
-
   @Override
   public ReadStream<T> handler(Handler<T> handler) {
     this.handler = handler;
@@ -378,6 +372,7 @@ public class SortingStream<T> implements ReadStream<T> {
   
   @Override
   public SortingStream<T> pause() {
+    input.pause();
     synchronized (lock) {
       demand = 0;
     }
@@ -386,11 +381,13 @@ public class SortingStream<T> implements ReadStream<T> {
 
   @Override
   public SortingStream<T> resume() {
+    input.resume();
     return fetch(Long.MAX_VALUE);
   }
 
   @Override
   public SortingStream<T> fetch(long amount) {
+    input.resume();
     if (amount < 0L) {
       throw new IllegalArgumentException();
     }
@@ -427,7 +424,7 @@ public class SortingStream<T> implements ReadStream<T> {
   }
 
   private void sortItemsList(List<T> items) {
-    items.sort(comparatorFactory.get());
+    items.sort(comparator);
   }
   
   private Future<Void> writeAll(WriteStream<T> stream, List<T> items) {

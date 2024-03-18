@@ -41,9 +41,11 @@ source:
 processors:
 - type: GROUP_CONCAT
   delimiter: ","
-  parentIdColumn: dataId
+  parentIdColumns:
+  - dataId
   innerJoin: false
-  childIdColumn: dataId
+  childIdColumns:
+  - dataId
   parentValueColumn: children
   childValueColumn: value
   input:

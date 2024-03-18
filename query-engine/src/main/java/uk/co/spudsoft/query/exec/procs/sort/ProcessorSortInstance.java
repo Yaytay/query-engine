@@ -50,6 +50,7 @@ import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
+import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
 
@@ -248,25 +249,27 @@ public class ProcessorSortInstance implements ProcessorInstance {
   }
   
   @Override
-  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStream<DataRow> input) {
+  public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStreamWithTypes input) {
     
     FileSystem fileSystem = vertx.fileSystem();
     String tempDir = TEMP_DIR;
+    this.types = input.getTypes();
     
     return fileSystem.mkdirs(tempDir)
-            .onSuccess(v -> {
+            .compose(v -> {
               this.stream = new SortingStream<>(context
                     , fileSystem
-                    , () -> DataRowComparator.createChain(types, definition.getFields())
+                    , new DataRowComparator(definition.getFields())
                     , this::dataRowSerializer
                     , this::dataRowDeserializer
                     , tempDir
                     , "ProcessSort_" + sanitiseSourceName(sourceNameTracker.toString()) + "_"
                     , MEMORY_LIMIT
                     , DataRow::bytesSize
-              );
+                    , input.getStream()
+              );              
+              return Future.succeededFuture(new ReadStreamWithTypes(stream, types));
             });
-    
   }
   
 }

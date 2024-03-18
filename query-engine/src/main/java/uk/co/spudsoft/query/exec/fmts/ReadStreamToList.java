@@ -30,20 +30,7 @@ import java.util.function.Function;
 public class ReadStreamToList {
   
   public static <T> Future<List<T>> capture(ReadStream<T> input) {
-    Promise<List<T>> promise = Promise.promise();
-    List<T> collected = new ArrayList<>();
-    
-    input.endHandler(v -> {
-      promise.complete(collected);
-    }).exceptionHandler(ex -> {
-      promise.fail(ex);
-    }).handler(item -> {
-      collected.add(item);
-    });
-    
-    input.resume();
-    
-    return promise.future();
+    return captureByBatch(input, 0, 0);
   }
   
   public static <T, U> Future<List<U>> map(ReadStream<T> input, Function<T, U> mapper) {
@@ -60,6 +47,30 @@ public class ReadStreamToList {
     
     input.resume();
 
+    return promise.future();
+  }
+  
+  public static <T> Future<List<T>> captureByBatch(ReadStream<T> input, int initialFetch, int subsequentFetch) {
+    Promise<List<T>> promise = Promise.promise();
+    List<T> collected = new ArrayList<>();
+    
+    input.endHandler(v -> {
+      promise.complete(collected);
+    }).exceptionHandler(ex -> {
+      promise.fail(ex);
+    }).handler(item -> {
+      collected.add(item);
+      if (subsequentFetch > 0 && (collected.size() % subsequentFetch == 0)) {
+        input.fetch(subsequentFetch);
+      }
+    });
+    
+    if (initialFetch > 0) {
+      input.fetch(initialFetch);
+    } else {
+      input.resume();
+    }
+    
     return promise.future();
   }
   

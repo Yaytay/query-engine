@@ -21,7 +21,6 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.streams.ReadStream;
 import io.vertx.core.streams.WriteStream;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -31,6 +30,8 @@ import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormattingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
+import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
+import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
 
@@ -48,6 +49,8 @@ public class FormatHtmlInstance implements FormatInstance {
   private static final Buffer CLOSE = Buffer.buffer("</tbody></table>");
   private final AtomicBoolean started = new AtomicBoolean();
   
+  private Types types;
+  
   private int rowNum = 0;
   
   /**
@@ -62,7 +65,7 @@ public class FormatHtmlInstance implements FormatInstance {
             , row -> {
               if (!started.get()) {
                 started.set(true);
-                return outputStream.write(Buffer.buffer(headerFromRow(row)))
+                return outputStream.write(Buffer.buffer(headerFromRow()))
                         .compose(v -> outputStream.write(ENDHEAD))
                         .compose(v -> outputStream.write(Buffer.buffer(rowFromRow(row))))
                         ;
@@ -80,7 +83,7 @@ public class FormatHtmlInstance implements FormatInstance {
               }
               if (!started.get()) {
                 started.set(true);                
-                return outputStream.write(Buffer.buffer(headerFromRow(DataRow.EMPTY_ROW)))
+                return outputStream.write(Buffer.buffer(headerFromRow()))
                         .compose(v -> outputStream.write(ENDHEAD))
                         .compose(v -> outputStream.write(CLOSE))
                         .compose(v2 -> outputStream.end())
@@ -94,11 +97,11 @@ public class FormatHtmlInstance implements FormatInstance {
     );
   }
   
-  private String headerFromRow(DataRow row) {
+  private String headerFromRow() {
     StringBuilder header = new StringBuilder();
     header.append("<tr class=\"header\">");
     int colNum[] = {0};
-    row.forEach((cd, v) -> {
+    types.forEach((cd) -> {
       String evenCol = ((colNum[0]++ % 2 == 0) ? "evenCol" : "oddCol");
       header.append("<th class=\"header ").append(evenCol).append("\" >").append(cd.name()).append("</th>");
     });
@@ -128,8 +131,9 @@ public class FormatHtmlInstance implements FormatInstance {
   }
 
   @Override
-  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStream<DataRow> input) {
-    return input.pipeTo(formattingStream);
+  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStreamWithTypes input) {
+    types = input.getTypes();
+    return input.getStream().pipeTo(formattingStream);
   }
   
   @Override

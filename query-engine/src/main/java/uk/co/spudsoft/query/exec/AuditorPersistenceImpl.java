@@ -577,7 +577,7 @@ public class AuditorPersistenceImpl implements Auditor {
           }
         }
         return null;
-      }).map(pipeline);
+      }).map(v -> pipeline);
   }
   
   static void evaluateRateLimitRule(RateLimitRule rule, Instant now, int index, int outstanding, int runs, long bytes, LocalDateTime timestamp) throws ServiceException {

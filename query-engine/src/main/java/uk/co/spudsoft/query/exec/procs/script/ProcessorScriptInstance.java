@@ -41,10 +41,10 @@ import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
-import uk.co.spudsoft.query.exec.procs.AsyncHandler;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
 
@@ -76,7 +76,7 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
   private final Pipeline pipeline;
   private final ImmutableMap<String, Object> arguments;
   
-  private final Types types = new Types();
+  private Types types;
   
   
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
@@ -198,7 +198,7 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
   }
 
   @Override
-  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStream<DataRow> input) {
+  public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStreamWithTypes input) {
     try {
       engine = Engine.newBuilder()
               .option("engine.WarnInterpreterOnly", "false")
@@ -209,19 +209,20 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
               .build();
     }
     
-    this.stream = input;
+    this.types = input.getTypes();
+    this.stream = input.getStream();
     if (!Strings.isNullOrEmpty(definition.getProcess())) {
       stream = new MappingStream<>(stream, this::runProcess);
     }
     if (!Strings.isNullOrEmpty(definition.getPredicate())) {
-      stream = new FilteringStream<>(input, this::runPredicate);
+      stream = new FilteringStream<>(input.getStream(), this::runPredicate);
     }
     this.stream.endHandler(v -> {
       if (engine != null) {
         engine.close();
       }
     });
-    return Future.succeededFuture();
+    return Future.succeededFuture(new ReadStreamWithTypes(stream, types));
   }
 
   @Override

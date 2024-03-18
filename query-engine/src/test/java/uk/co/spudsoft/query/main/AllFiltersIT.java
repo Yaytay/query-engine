@@ -123,7 +123,7 @@ public class AllFiltersIT {
     body = given()
             .queryParam("minDate", "1971-05-06")
             .queryParam("maxId", "20")
-            .queryParam("_without", "BoolField TextField")
+            .queryParam("_map", "BoolField: TextField:")
             .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
             .then()
@@ -137,19 +137,6 @@ public class AllFiltersIT {
     assertThat(body, not(containsString("TextField")));
     int rows2 = body.split("\n").length;
     assertEquals(21, rows2);
-
-    body = given()
-            .queryParam("minDate", "1971-05-06")
-            .queryParam("maxId", "20")
-            .queryParam("_without", "")
-            .log().all()
-            .get("/query/sub1/sub2/AllDynamicIT.tsv")
-            .then()
-            .log().all()
-            .statusCode(400)
-            .extract().body().asString();
-    
-    assertThat(body, equalTo("Invalid argument to _without filter, should be a space delimited list of fields"));
 
     body = given()
             .queryParam("minDate", "1971-05-06")
@@ -302,8 +289,8 @@ public class AllFiltersIT {
             .statusCode(400)
             .extract().body().asString();
     
-    assertThat(body, equalTo("Invalid argument to _map filter, should be a space delimited list of relabels, each of which should be SourceLabel:NewLabel.  The new label cannot contain a colon and neith label can be zero characters in length."));
-    
+    assertThat(body, equalTo("Invalid argument to _map filter, should be a space delimited list of relabels, each of which should be SourceLabel:NewLabel.  The new label cannot contain a colon or a space, if the new label is blank the field will be dropped - the source label may not be blank."));
+
     body = given()
             .queryParam("minDate", "1971-05-06")
             .queryParam("maxId", "20")
@@ -315,7 +302,7 @@ public class AllFiltersIT {
             .statusCode(400)
             .extract().body().asString();
     
-    assertThat(body, equalTo("Invalid argument to _map filter, should be a space delimited list of relabels, each of which should be SourceLabel:NewLabel.  The new label cannot contain a colon and neith label can be zero characters in length."));
+    assertThat(body, equalTo("Invalid argument to _map filter, should be a space delimited list of relabels, each of which should be SourceLabel:NewLabel.  The new label cannot contain a colon or a space, if the new label is blank the field will be dropped - the source label may not be blank."));
     
     body = given()
             .queryParam("minDate", "1971-05-06")

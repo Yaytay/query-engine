@@ -137,32 +137,32 @@ public class DataRowComparatorTest {
 //    t =new java.sql.Time(12, 35, 00);
 //    System.out.println("Number: " + t.toString() + " = " + t.getTime());
     
-    Comparator<DataRow> comp = DataRowComparator.createChain(types, Arrays.asList("intValue"));
+    Comparator<DataRow> comp = new DataRowComparator(Arrays.asList("intValue"));
     assertEquals(-1, comp.compare(row1, row2));
     assertEquals(0, comp.compare(rowN, rowN));
     assertEquals(-1, comp.compare(rowN, row1));
     assertEquals(1, comp.compare(row1, rowN));
     
-    comp = DataRowComparator.createChain(types, Arrays.asList("-intValue"));
+    comp = new DataRowComparator(Arrays.asList("-intValue"));
     assertEquals(1, comp.compare(row1, row2));
     assertEquals(0, comp.compare(rowN, rowN));
     assertEquals(1, comp.compare(rowN, row1));
     assertEquals(-1, comp.compare(row1, rowN));
     
-    comp = DataRowComparator.createChain(types, Arrays.asList("intValue", "longValue"));
+    comp = new DataRowComparator(Arrays.asList("intValue", "longValue"));
     assertEquals(0, comp.compare(row1, row12));
     assertEquals(0, comp.compare(row1, row10));
-    comp = DataRowComparator.createChain(types, Arrays.asList("intValue", "longValue", "floatValue"));
+    comp = new DataRowComparator(Arrays.asList("intValue", "longValue", "floatValue"));
     assertEquals(-1, comp.compare(row1, row12));
     assertEquals(1, comp.compare(row1, row10));
-    comp = DataRowComparator.createChain(types, Arrays.asList("intValue", "-longValue", "floatValue"));
+    comp = new DataRowComparator(Arrays.asList("intValue", "-longValue", "floatValue"));
     assertEquals(-1, comp.compare(row1, row12));
     assertEquals(1, comp.compare(row1, row10));
-    comp = DataRowComparator.createChain(types, Arrays.asList("intValue", "longValue", "-floatValue"));
+    comp = new DataRowComparator(Arrays.asList("intValue", "longValue", "-floatValue"));
     assertEquals(1, comp.compare(row1, row12));
     assertEquals(-1, comp.compare(row1, row10));
     
-    comp = DataRowComparator.createChain(types, Arrays.asList("doubleValue"));
+    comp = new DataRowComparator(Arrays.asList("doubleValue"));
     assertThat(comp.compare(row1, row2), lessThan(0));
     assertThat(comp.compare(row2, row1), greaterThan(0));
     assertEquals(0, comp.compare(rowN, rowN));
@@ -171,7 +171,7 @@ public class DataRowComparatorTest {
     assertThat(comp.compare(rowN, row2), lessThan(0));
     assertThat(comp.compare(row2, rowN), greaterThan(0));
     
-    comp = DataRowComparator.createChain(types, Arrays.asList("stringValue"));
+    comp = new DataRowComparator(Arrays.asList("stringValue"));
     assertThat(comp.compare(row1, row2), lessThan(0));
     assertThat(comp.compare(row2, row1), greaterThan(0));
     assertEquals(0, comp.compare(rowN, rowN));
@@ -180,7 +180,7 @@ public class DataRowComparatorTest {
     assertThat(comp.compare(rowN, row2), lessThan(0));
     assertThat(comp.compare(row2, rowN), greaterThan(0));
     
-    comp = DataRowComparator.createChain(types, Arrays.asList("timeValue"));
+    comp = new DataRowComparator(Arrays.asList("timeValue"));
     assertThat(comp.compare(row1, row2), lessThan(0));
     assertThat(comp.compare(row2, row1), greaterThan(0));
     assertEquals(0, comp.compare(rowN, rowN));
@@ -189,7 +189,7 @@ public class DataRowComparatorTest {
     assertThat(comp.compare(rowN, row2), lessThan(0));
     assertThat(comp.compare(row2, rowN), greaterThan(0));
     
-    comp = DataRowComparator.createChain(types, Arrays.asList("dateValue"));
+    comp = new DataRowComparator(Arrays.asList("dateValue"));
     assertThat(comp.compare(row1, row2), lessThan(0));
     assertThat(comp.compare(row2, row1), greaterThan(0));
     assertEquals(0, comp.compare(rowN, rowN));
@@ -198,7 +198,7 @@ public class DataRowComparatorTest {
     assertThat(comp.compare(rowN, row2), lessThan(0));
     assertThat(comp.compare(row2, rowN), greaterThan(0));
     
-    comp = DataRowComparator.createChain(types, Arrays.asList("dateTimeValue"));
+    comp = new DataRowComparator(Arrays.asList("dateTimeValue"));
     assertThat(comp.compare(row1, row2), lessThan(0));
     assertThat(comp.compare(row2, row1), greaterThan(0));
     assertEquals(0, comp.compare(rowN, rowN));
@@ -207,7 +207,7 @@ public class DataRowComparatorTest {
     assertThat(comp.compare(rowN, row2), lessThan(0));
     assertThat(comp.compare(row2, rowN), greaterThan(0));
     
-    comp = DataRowComparator.createChain(types, Arrays.asList("sqlDate"));
+    comp = new DataRowComparator(Arrays.asList("sqlDate"));
     assertThat(comp.compare(row1, row2), lessThan(0));
     assertThat(comp.compare(row2, row1), greaterThan(0));
     assertEquals(0, comp.compare(rowN, rowN));
@@ -216,7 +216,7 @@ public class DataRowComparatorTest {
     assertThat(comp.compare(rowN, row2), lessThan(0));
     assertThat(comp.compare(row2, rowN), greaterThan(0));
     
-    comp = DataRowComparator.createChain(types, Arrays.asList("sqlTime"));
+    comp = new DataRowComparator(Arrays.asList("sqlTime"));
     assertThat(comp.compare(row1, row2), lessThan(0));
     assertThat(comp.compare(row2, row1), greaterThan(0));
     assertEquals(0, comp.compare(rowN, rowN));
@@ -225,7 +225,7 @@ public class DataRowComparatorTest {
     assertThat(comp.compare(rowN, row2), lessThan(0));
     assertThat(comp.compare(row2, rowN), greaterThan(0));
     
-    comp = DataRowComparator.createChain(types, Arrays.asList("javaDate"));
+    comp = new DataRowComparator(Arrays.asList("javaDate"));
     assertThat(comp.compare(row1, row2), lessThan(0));
     assertThat(comp.compare(row2, row1), greaterThan(0));
     assertEquals(0, comp.compare(rowN, rowN));
@@ -235,7 +235,7 @@ public class DataRowComparatorTest {
     assertThat(comp.compare(row2, rowN), greaterThan(0));
     
     
-    comp = DataRowComparator.createChain(types, Arrays.asList("boolValue"));
+    comp = new DataRowComparator(Arrays.asList("boolValue"));
     assertThat(comp.compare(row1, row2), lessThan(0));
     assertThat(comp.compare(row2, row1), greaterThan(0));
     assertEquals(0, comp.compare(rowN, rowN));

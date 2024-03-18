@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.defn;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
@@ -155,6 +156,9 @@ public class ProcessorDynamicField implements Processor {
     }
     if (parentIdColumns.size() != valuesParentIdColumns.size()) {
       throw new IllegalArgumentException("ID column(s) specified for parent stream does not have the same number of fields as those specified for values stream");      
+    }
+    if (Strings.isNullOrEmpty(fieldTypeColumn)) {
+      throw new IllegalArgumentException("Type column not set (fieldTypeColumn)");
     }
     fieldValues.validate();
   }

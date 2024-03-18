@@ -123,7 +123,7 @@ public class MergeStreamTest {
             , 4
     );
     
-    ReadStreamToList.capture(ms)
+    ReadStreamToList.captureByBatch(ms, 2, 2)
             .onFailure(testContext::failNow)
             .onSuccess(rows -> {
               logger.debug("Left join rows: {}", rows);

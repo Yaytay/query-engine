@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.procs.filters;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.tsegismont.streamutils.impl.MappingStream;
@@ -32,6 +33,7 @@ import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
 
@@ -51,7 +53,7 @@ public class ProcessorMapInstance implements ProcessorInstance {
   
   private final Map<String, String> relabels;
   
-  private final Types types = new Types();
+  private final Types types;
   
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
   public ProcessorMapInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorMap definition) {
@@ -63,6 +65,7 @@ public class ProcessorMapInstance implements ProcessorInstance {
       builder.put(relabel.getSourceLabel(), relabel.getNewLabel());
     }
     this.relabels = builder.build();
+    this.types = new Types();
   }
 
   @Override
@@ -71,20 +74,28 @@ public class ProcessorMapInstance implements ProcessorInstance {
   }
 
   @Override
-  public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStream<DataRow> input) {
-    this.stream = new MappingStream<>(input, (oldData) -> {
+  public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStreamWithTypes input) {
+    this.stream = new MappingStream<>(input.getStream(), (oldData) -> {
       DataRow newData = DataRow.create(types);
       oldData.forEach((defn, value) -> {
         String newLabel = relabels.get(defn.name());
         if (newLabel == null) {
           newData.put(defn.name(), defn.type(), value);
-        } else {
+        } else if (!Strings.isNullOrEmpty(newLabel)) {
           newData.put(newLabel, defn.type(), value);
         }
       });
       return newData;
     });
-    return Future.succeededFuture();
+     input.getTypes().forEach(cd -> {
+        String newLabel = relabels.get(cd.name());
+        if (newLabel == null) {
+          types.putIfAbsent(cd.name(), cd.type());
+        } else if (!Strings.isNullOrEmpty(newLabel)) {
+          types.putIfAbsent(newLabel, cd.type());
+        }
+     });
+    return Future.succeededFuture(new ReadStreamWithTypes(stream, types));
   }
 
   @Override
