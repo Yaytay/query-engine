@@ -21,7 +21,7 @@ jobs:
         git config --global core.eol lf
         
     - name: Checkout completely
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
         
@@ -30,7 +30,7 @@ jobs:
         ! egrep '<qe-version>([^<]+)<\/qe-version>' query-engine-design-mode/pom.xml
         
     - name: Cache Maven packages
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.m2
         key: ${{ runner.os }}-m2
