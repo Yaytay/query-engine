@@ -45,8 +45,8 @@ import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import uk.co.spudsoft.dircache.DirCache;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.defn.Format;
+import uk.co.spudsoft.query.exec.conditions.RequestContext;
 
 
 /**

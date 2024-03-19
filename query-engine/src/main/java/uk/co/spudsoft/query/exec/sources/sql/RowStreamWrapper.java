@@ -75,6 +75,18 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
       readyPromise.complete();
     });
     rowStream.pause();
+    rowStream.exceptionHandler(ex -> {
+      sourceNameTracker.addNameToContextLocalData(Vertx.currentContext());
+      logger.warn("Exception in RowStream: ", ex);
+      readyPromise.tryFail(ex);
+      Handler<Throwable> capturedExceptionHandler;
+      synchronized (this) {
+        capturedExceptionHandler = exceptionHandler;
+      }
+      if (capturedExceptionHandler != null) {
+        capturedExceptionHandler.handle(ex);
+      }
+    });
     rowStream.handler(row -> {
       try {
         handledRows = true;
@@ -102,11 +114,6 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
   @Override
   public RowStreamWrapper exceptionHandler(Handler<Throwable> handler) {
     this.exceptionHandler = handler;
-    rowStream.exceptionHandler(ex -> {
-      sourceNameTracker.addNameToContextLocalData(Vertx.currentContext());
-      logger.warn("Exception in RowStream: ", ex);
-      this.exceptionHandler.handle(ex);
-    });
     return this;            
   }
   

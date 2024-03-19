@@ -39,10 +39,10 @@ processors:
 - type: GROUP_CONCAT
   delimiter: ","
   parentIdColumns:
-  - id
+  - dataId
   innerJoin: false
   childIdColumns:
-  - dataid
+  - dataId
   parentValueColumn: children
   childValueColumn: value
   input:
