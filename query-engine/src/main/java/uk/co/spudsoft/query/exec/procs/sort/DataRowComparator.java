@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.procs.sort;
 
+import com.google.common.collect.ImmutableList;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -34,6 +35,7 @@ import static uk.co.spudsoft.query.defn.DataType.Long;
 import static uk.co.spudsoft.query.defn.DataType.String;
 import static uk.co.spudsoft.query.defn.DataType.Time;
 import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
  *
@@ -43,10 +45,10 @@ public class DataRowComparator implements Comparator<DataRow> {
   
   private static final Logger logger = LoggerFactory.getLogger(DataRowComparator.class);
 
-  private final List<String> fields;
+  private final ImmutableList<String> fields;
   
   public DataRowComparator(List<String> fields) {
-    this.fields = fields;
+    this.fields = ImmutableCollectionTools.copy(fields);
   }
 
   @Override

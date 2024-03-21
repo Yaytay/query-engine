@@ -700,6 +700,7 @@ public class Parameters {
    * Some processors have specific configuration options that are not appropriate for configuration in pipeline definitions, they are  controlled here.
    * @return the configuration for individual processors.
    */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public ProcessorConfig getProcessors() {
     return processors;
   }
@@ -709,6 +710,7 @@ public class Parameters {
    * Some processors have specific configuration options that are not appropriate for configuration in pipeline definitions, they are  controlled here.
    * @param processors set the configuration for individual processors.
    */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public void setProcessors(ProcessorConfig processors) {
     this.processors = processors;
   }

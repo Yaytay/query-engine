@@ -31,7 +31,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Set;
-import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,8 +56,8 @@ public class SortingStream<T> implements ReadStream<T> {
   private final String baseFileName;
   private final long memoryLimit;
   
-  public static interface MemoryEvaluator<T> {
-    public int sizeof(T data);
+  interface MemoryEvaluator<T> {
+    int sizeof(T data);
   }
   
   private final MemoryEvaluator<T> memoryEvaluator;
@@ -177,7 +176,7 @@ public class SortingStream<T> implements ReadStream<T> {
   private Set<SourceStream> pending;
   private PriorityQueue<SourceStream> outputs;
 
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
+  @SuppressFBWarnings(value = {"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"}, justification = "CT_CONSTRUCTOR_THROW is false positive")
   public SortingStream(Context context
           , FileSystem fileSystem
           , Comparator<T> comparator

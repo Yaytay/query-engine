@@ -21,8 +21,8 @@ source:
 processors:
 - type: SCRIPT
   process: |-
-    result = {arg1: args['arg1'], arg2: args['arg2']}
-    result
+    row['arg1'] = args['arg1'];
+    row.arg2 = args['arg2'];
 formats:
 - type: HTML
 - type: XLSX

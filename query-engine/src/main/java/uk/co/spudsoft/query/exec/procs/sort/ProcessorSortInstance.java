@@ -64,8 +64,8 @@ public class ProcessorSortInstance implements ProcessorInstance {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ProcessorSortInstance.class);
   
-  private static String TEMP_DIR = System.getProperty("java.io.tmpdir");
-  private static int MEMORY_LIMIT = 1 << 22; // 4MB
+  private static String tempDir = System.getProperty("java.io.tmpdir");
+  private static int memoryLimit = 1 << 22; // 4MB
   
   private final Vertx vertx;
   private final SourceNameTracker sourceNameTracker;
@@ -89,12 +89,12 @@ public class ProcessorSortInstance implements ProcessorInstance {
     return definition.getId();
   }
 
-  public static void setTempDir(String TEMP_DIR) {
-    ProcessorSortInstance.TEMP_DIR = TEMP_DIR;
+  public static void setTempDir(String tempDir) {
+    ProcessorSortInstance.tempDir = tempDir;
   }
 
-  public static void setMemoryLimit(int MEMORY_LIMIT) {
-    ProcessorSortInstance.MEMORY_LIMIT = MEMORY_LIMIT;
+  public static void setMemoryLimit(int memoryLimit) {
+    ProcessorSortInstance.memoryLimit = memoryLimit;
   }
 
   /**
@@ -118,14 +118,14 @@ public class ProcessorSortInstance implements ProcessorInstance {
     int sizeGuess = row.bytesSize() + 4 * row.size();
     try (ByteArrayOutputStream baos = new ByteArrayOutputStream(sizeGuess)) {
       try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-        for (Iterator<ColumnDefn> iter = types.iterator(); iter.hasNext(); ) {
+        for (Iterator<ColumnDefn> iter = types.iterator(); iter.hasNext();) {
           ColumnDefn cd = iter.next();
           Object value = row.get(cd.name());
           if (value == null) {
             oos.writeByte(~cd.type().ordinal());
           } else {
             oos.writeByte(cd.type().ordinal());
-            switch(cd.type()) {
+            switch (cd.type()) {
               case Boolean:
                 oos.writeBoolean((Boolean) value);
                 break;
@@ -159,6 +159,8 @@ public class ProcessorSortInstance implements ProcessorInstance {
               case Time:
                 oos.writeObject((LocalTime) value);
                 break;
+              default:
+                throw new IllegalArgumentException("Unknown value type: " + cd.typeName());
             }
           }
         }
@@ -177,11 +179,12 @@ public class ProcessorSortInstance implements ProcessorInstance {
    * @param bytes
    * @return 
    */
+  @SuppressFBWarnings(value = {"OBJECT_DESERIALIZATION"}, justification = "Source of bytes is trusted")
   private DataRow dataRowDeserializer(byte[] bytes) throws IOException  {
     DataRow result = DataRow.create(types);
     try (ByteArrayInputStream baos = new ByteArrayInputStream(bytes)) {
       try (ObjectInputStream ois = new ObjectInputStream(baos)) {
-        for (Iterator<ColumnDefn> iter = types.iterator(); iter.hasNext(); ) {
+        for (Iterator<ColumnDefn> iter = types.iterator(); iter.hasNext();) {
           ColumnDefn cd = iter.next();
           if (ois.available() < 1) {
             return result;
@@ -191,7 +194,7 @@ public class ProcessorSortInstance implements ProcessorInstance {
             result.put(cd.name(), cd.type(), null);
           } else {
             DataType type = DataType.fromOrdinal(typeOrd);
-            switch(type) {
+            switch (type) {
               case DataType.Boolean:
                 assert(cd.type() == DataType.Boolean);
                 result.put(cd.name(), cd.type(), ois.readBoolean());
@@ -225,14 +228,15 @@ public class ProcessorSortInstance implements ProcessorInstance {
               case DataType.String:
                 assert(cd.type() == DataType.String);
                 int length = ois.readInt();
-                byte[] stringBytes = new byte[length];
-                ois.read(stringBytes);
+                byte[] stringBytes = ois.readNBytes(length);
                 result.put(cd.name(), cd.type(), new String(stringBytes, StandardCharsets.UTF_8));
                 break;
               case DataType.Time:
                 assert(cd.type() == DataType.Time);
                 result.put(cd.name(), cd.type(), (LocalTime) ois.readObject());
                 break;
+              default:
+                throw new IllegalArgumentException("Unknown value type: " + cd.typeName());
             }
           }
         }
@@ -252,19 +256,19 @@ public class ProcessorSortInstance implements ProcessorInstance {
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStreamWithTypes input) {
     
     FileSystem fileSystem = vertx.fileSystem();
-    String tempDir = TEMP_DIR;
+    String dir = tempDir;
     this.types = input.getTypes();
     
-    return fileSystem.mkdirs(tempDir)
+    return fileSystem.mkdirs(dir)
             .compose(v -> {
               this.stream = new SortingStream<>(context
                     , fileSystem
                     , new DataRowComparator(definition.getFields())
                     , this::dataRowSerializer
                     , this::dataRowDeserializer
-                    , tempDir
+                    , dir
                     , "ProcessSort_" + sanitiseSourceName(sourceNameTracker.toString()) + "_"
-                    , MEMORY_LIMIT
+                    , memoryLimit
                     , DataRow::bytesSize
                     , input.getStream()
               );              

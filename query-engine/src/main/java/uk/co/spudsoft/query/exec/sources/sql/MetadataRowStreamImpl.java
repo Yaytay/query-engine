@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.sources.sql;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -55,6 +56,7 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
   private boolean readInProgress;
   private Iterator<Row> result;
   
+  @SuppressFBWarnings("EI_EXPOSE_REP2")
   public MetadataRowStreamImpl(PreparedStatement ps, Context context, int fetch, Tuple params) {
     this.ps = ps;
     this.context = (ContextInternal) context;
@@ -75,7 +77,9 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
   }
 
   public RowStream<Row> coloumnDescriptorHandler(Handler<List<ColumnDescriptor>> handler) {
-    columnDescriptorHandler = handler;
+    synchronized (this) {
+      columnDescriptorHandler = handler;
+    }
     return this;
   }
   

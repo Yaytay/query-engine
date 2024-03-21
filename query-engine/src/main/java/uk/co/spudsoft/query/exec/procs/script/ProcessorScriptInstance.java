@@ -124,16 +124,8 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
       logger.debug("returnValue ({}): {}", returnValue == null ? "" : returnValue.getClass(), returnValue);
       logger.debug("row ({}): {}", row == null ? "" : row.getClass(), row);
       // Anything in the return value is added to the row
-      if (returnValue == null) {
-        return row;
-      } else {
-        DataRow newData = DataRow.create(types);
-        for (String key : returnValue.getMemberKeys()) {
-          newData.put(key, mapToNativeObject(returnValue.getMember(key)));
-        }
-        return newData;
-      }
-    });
+      return row;
+     });
   }
   
   // Compare the bindings with PipelineInstance#renderTemplate and ConditionInstance#evaluate
@@ -143,7 +135,7 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
       bindings.putMember("request", requestContext);
       bindings.putMember("pipeline", pipeline);
       bindings.putMember("args", ProxyObject.fromMap(arguments));
-      bindings.putMember("row", ProxyObject.fromMap(data.getMap()));
+      bindings.putMember("row", new ProxyDataRow(data)); // ProxyObject.fromMap(data.getMap()));
       Value outputValue = graalContext.eval(source);    
       T result = postProcess.apply(outputValue, data);
       logger.debug("Running {} {} gave {}", name, source.getCharacters(), result);
@@ -211,12 +203,15 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
     
     this.types = input.getTypes();
     this.stream = input.getStream();
-    if (!Strings.isNullOrEmpty(definition.getProcess())) {
-      stream = new MappingStream<>(stream, this::runProcess);
-    }
     if (!Strings.isNullOrEmpty(definition.getPredicate())) {
+      predicateSource = Source.newBuilder(definition.getLanguage(), definition.getPredicate(), Integer.toString(hashCode()) + ":predicate").cached(true).buildLiteral();
       stream = new FilteringStream<>(input.getStream(), this::runPredicate);
     }
+    if (!Strings.isNullOrEmpty(definition.getProcess())) {
+      processSource = Source.newBuilder(definition.getLanguage(), definition.getProcess(), Integer.toString(hashCode()) + ":process").cached(true).buildLiteral();
+      stream = new MappingStream<>(stream, this::runProcess);
+    }
+ 
     this.stream.endHandler(v -> {
       if (engine != null) {
         engine.close();

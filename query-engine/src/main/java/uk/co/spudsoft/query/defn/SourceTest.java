@@ -23,7 +23,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import uk.co.spudsoft.query.exec.SharedMap;
-import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.sources.test.SourceTestInstance;
 
 /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 njt
+ * Copyright (C) 2024 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,10 +32,10 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * @author njt
- * @param<T> the type of object in the primary stream.
- * @param<U> the type of object in the secondary stream.
- * @param<V> the type of object in the output stream.
+ * @author jtalbut
+ * @param <T> the type of object in the primary stream.
+ * @param <U> the type of object in the secondary stream.
+ * @param <V> the type of object in the output stream.
  */
 public class MergeStream<T, U, V> implements ReadStream<V> {
   
@@ -227,13 +227,13 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
           }
         }
         if (primaryRows.isEmpty() && primaryEnded 
-                && currentPrimary == null && ( currentSecondaryRows == null || currentSecondaryRows.isEmpty() ) ) {
+                && currentPrimary == null && (currentSecondaryRows == null || currentSecondaryRows.isEmpty())) {
           emitting.set(false);
           moreToDo = false;
           capturedEndHandler = endHandler;
           endHandler = null;
         } else {
-          if (!secondaryRows.isEmpty() && ( currentSecondaryRows == null || currentSecondaryRows.isEmpty() ) ) {
+          if (!secondaryRows.isEmpty() && (currentSecondaryRows == null || currentSecondaryRows.isEmpty())) {
             bringInSecondaries();
           }
           if (!secondaryRows.isEmpty() || secondaryEnded) {

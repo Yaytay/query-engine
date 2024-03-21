@@ -17,7 +17,6 @@
 package uk.co.spudsoft.query.exec;
 
 import io.vertx.core.Future;
-import io.vertx.core.streams.ReadStream;
 
 /**
  *

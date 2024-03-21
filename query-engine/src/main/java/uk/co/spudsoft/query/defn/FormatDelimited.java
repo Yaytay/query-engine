@@ -26,7 +26,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import uk.co.spudsoft.query.exec.fmts.text.FormatDelimitedInstance;
-import uk.co.spudsoft.query.exec.FormatInstance;
 
 /**
  * Configuration for an output format of delimited text.

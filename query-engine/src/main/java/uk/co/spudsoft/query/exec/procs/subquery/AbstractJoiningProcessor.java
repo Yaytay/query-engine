@@ -76,10 +76,6 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
     this.parentIdColumns = parentIdColumns;
     this.childIdColumns = childIdColumns;
     this.innerJoin = innerJoin;
-    
-    if (parentIdColumns.size() != childIdColumns.size()) {
-      throw new IllegalArgumentException("Incompatible parent ID columns (" + parentIdColumns.size() + ") and child ID columns (" + childIdColumns.size() + ")");
-    }
   }
 
   protected Future<ReadStream<DataRow>> initializeChildStream(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, SourcePipeline sourcePipeline) {
@@ -100,7 +96,7 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
 
   abstract DataRow processChildren(DataRow parentRow, Collection<DataRow> childRows);
 
-  @SuppressWarnings({"unchecked","rawtypes"})
+  @SuppressWarnings({"unchecked", "rawtypes"})
   protected int compare(DataRow parentRow, DataRow childRow) {
     for (int i = 0; i < parentIdColumns.size(); ++i) {
       Comparable parentKeyItem = parentRow.get(parentIdColumns.get(i));
@@ -117,6 +113,10 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
   
   @Override
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStreamWithTypes input) {
+    
+    if (parentIdColumns.size() != childIdColumns.size()) {
+      return Future.failedFuture(new IllegalArgumentException("Incompatible parent ID columns (" + parentIdColumns.size() + ") and child ID columns (" + childIdColumns.size() + ")"));
+    }
     this.types = input.getTypes();
     return initializeChild(executor, pipeline, parentSource, processorIndex)
             .compose(childStream -> {

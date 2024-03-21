@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
@@ -351,6 +352,7 @@ public class ProcessorDynamicField implements Processor {
   }
 
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
+  @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "Builder class should result in all instances being immutable when object is built")
   public static class Builder {
 
     private ProcessorType type = ProcessorType.DYNAMIC_FIELD;

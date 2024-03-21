@@ -24,7 +24,6 @@ import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.impl.headers.HeadersMultiMap;
-import io.vertx.core.streams.ReadStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;

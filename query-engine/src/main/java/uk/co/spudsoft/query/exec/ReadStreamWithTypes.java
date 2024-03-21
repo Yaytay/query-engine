@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 njt
+ * Copyright (C) 2024 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ import io.vertx.core.streams.ReadStream;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class ReadStreamWithTypes {
   
@@ -40,7 +40,7 @@ public class ReadStreamWithTypes {
    * Get the Types as understood by this ReadStream.
    * 
    * Note that the types may change as the read stream progresses (those only by the addition of new fields and fields changing from null to a specific type).
-   * 
+   * @return the Types as understood by this ReadStream.
    */
   public Types getTypes() {
     return types;
