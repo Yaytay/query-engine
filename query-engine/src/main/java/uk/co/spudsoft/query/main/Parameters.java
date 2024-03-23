@@ -18,11 +18,11 @@ package uk.co.spudsoft.query.main;
 
 import com.google.common.collect.ImmutableList;
 import uk.co.spudsoft.query.logging.LogbackOptions;
-import com.google.common.collect.ImmutableMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import uk.co.spudsoft.params4j.JavadocCapture;
@@ -106,7 +106,7 @@ public class Parameters {
    * Externalising credentials is much more secure - the credentials do not need to be committed to the query definition repository
    * and developers do not need access to live credentials.
    */
-  private ImmutableMap<String, ProtectedCredentials> secrets = ImmutableMap.<String, ProtectedCredentials>builder().build();
+  private Map<String, ProtectedCredentials> secrets = new HashMap<>();
     
   /**
    * The name of the header that will contain the payload from a token as Json (that may be base64 encoded or not).
@@ -438,6 +438,7 @@ public class Parameters {
    * 
    * @return the externalized credentials map.
    */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public Map<String, ProtectedCredentials> getSecrets() {
     return secrets;
   }
@@ -454,8 +455,9 @@ public class Parameters {
    * @param secrets the externalized credentials map.
    * @return this, so that the method may be called in a fluent manner.
    */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public Parameters setSecrets(Map<String, ProtectedCredentials> secrets) {
-    this.secrets = ImmutableMap.copyOf(secrets);
+    this.secrets = secrets;
     return this;
   }
 

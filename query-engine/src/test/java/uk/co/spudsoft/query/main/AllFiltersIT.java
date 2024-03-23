@@ -99,6 +99,9 @@ public class AllFiltersIT {
       , "--sampleDataLoads[2].adminUser.username=sa"
       , "--sampleDataLoads[2].adminUser.password=unknown"
       , "--sampleDataLoads[3].url=wibble"
+      , "--secrets.AllFiltersProtectedCredentials.username=" + mysql.getUser()
+      , "--secrets.AllFiltersProtectedCredentials.password=" + mysql.getPassword()
+      , "--secrets.AllFiltersProtectedCredentials.condition=true"            
     }, stdout);
     
     RestAssured.port = main.getPort();

@@ -27,6 +27,12 @@ import org.junit.jupiter.api.Test;
 public class ProcessorQueryTest {
   
   @Test
+  public void testGetId() {
+    ProcessorQuery instance = ProcessorQuery.builder().id("id").build();
+    assertEquals("id", instance.getId());
+  }
+  
+  @Test
   public void testGetType() {
     ProcessorQuery instance = ProcessorQuery.builder().build();
     assertEquals(ProcessorType.QUERY, instance.getType());

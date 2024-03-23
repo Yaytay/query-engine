@@ -22,7 +22,14 @@ import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 
 /**
- *
+ * Definition of a Filter.
+ * 
+ * Filters are classes for converting from command line arguments to {@link uk.co.spudsoft.query.exec.ProcessorInstance}s.
+ * 
+ * The createProcessor method will only be called if the command line argument matches the key, with the value of the command line argument 
+ * being passed in.
+ * Filters are created in the order they appear in the query string.
+ * 
  * @author jtalbut
  */
 public interface Filter {

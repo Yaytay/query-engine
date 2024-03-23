@@ -25,7 +25,11 @@ import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 
 /**
- *
+ * Filter for converting _limit command line arguments into {@link uk.co.spudsoft.query.exec.procs.filters.ProcessorLimitInstance}s.
+ * 
+ * The value of the argument should be a positive integer, that will be the maximum number of rows returned.
+ * If at all possible limit instructions should be implemented in the query, rather than using this filter.
+ * 
  * @author jtalbut
  */
 public class LimitFilter implements Filter {

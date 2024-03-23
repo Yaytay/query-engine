@@ -29,6 +29,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class ProcessorLimitTest {
   
   @Test
+  public void testGetId() {
+    ProcessorLimit instance = ProcessorLimit.builder().id("id").build();
+    assertEquals("id", instance.getId());
+  }
+  
+  @Test
   public void testGetType() {
     ProcessorLimit instance = ProcessorLimit.builder().build();
     assertEquals(ProcessorType.LIMIT, instance.getType());

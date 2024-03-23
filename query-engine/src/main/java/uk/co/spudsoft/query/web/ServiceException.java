@@ -39,4 +39,13 @@ public class ServiceException extends Exception {
   public int getStatusCode() {
     return statusCode;
   }  
+  
+  public static ServiceException rethrowOrWrap(Throwable ex) {
+    if (ex instanceof ServiceException se) {
+      return se;
+    } else {
+      return new ServiceException(500, "Failed to execute query", ex);
+    }
+    
+  }
 }

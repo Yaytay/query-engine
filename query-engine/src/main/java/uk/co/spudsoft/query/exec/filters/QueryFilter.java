@@ -26,6 +26,10 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.procs.query.ProcessorQueryInstance;
 
 /**
+ * Filter for converting _query command line arguments into {@link uk.co.spudsoft.query.exec.procs.query.ProcessorQueryInstance}s.
+ * 
+ * The value of the argument should be a positive integer, that will be the maximum number of rows returned.
+ * If at all possible query instructions should be implemented in the query, rather than using this filter.
  *
  * @author jtalbut
  */

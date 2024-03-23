@@ -82,7 +82,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     return conn.prepare(sql);
   }
   
-  private AbstractSqlPreparer getPreparer(String url) {
+  static AbstractSqlPreparer getPreparer(String url) {
     if (url.startsWith("sqlserver")) {
       return new MsSqlPreparer();
     } else if (url.startsWith("postgresql")) {
@@ -94,7 +94,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     }
   }
   
-  private PoolOptions poolOptions(SourceSql definition) {
+  static PoolOptions poolOptions(SourceSql definition) {
     PoolOptions po = new PoolOptions();
     if (definition.getConnectionTimeout() != null) {
       long millis = definition.getConnectionTimeout().toMillis();
@@ -151,11 +151,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     
     return pool.getConnection()
             .recover(ex -> {
-              if (ex instanceof ServiceException) {
-                return Future.failedFuture(ex);
-              } else {
-                return Future.failedFuture(new ServiceException(500, "Failed to connect to data source", ex));
-              }
+              return Future.failedFuture(new ServiceException(500, "Failed to connect to data source", ex));
             })
             .compose(conn -> {
               connection = conn;
@@ -171,11 +167,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
               return rowStreamWrapper.ready();
             })
             .recover(ex -> {
-              if (ex instanceof ServiceException) {
-                return Future.failedFuture(ex);
-              } else {
-                return Future.failedFuture(new ServiceException(500, "Failed to execute query", ex));
-              }
+              return Future.failedFuture(ServiceException.rethrowOrWrap(ex));
             })
             .onFailure(ex -> {
               logger.warn("SQL source failed: ", ex);
@@ -187,7 +179,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
             ;
   }
   
-  private String coalesce(String one, String two) {
+  static String coalesce(String one, String two) {
     if (one == null) {
       return two;
     } else {

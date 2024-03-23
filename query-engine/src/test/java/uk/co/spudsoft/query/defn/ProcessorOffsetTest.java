@@ -29,6 +29,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class ProcessorOffsetTest {
   
   @Test
+  public void testGetId() {
+    ProcessorOffset instance = ProcessorOffset.builder().id("id").build();
+    assertEquals("id", instance.getId());
+  }
+
+  @Test
   public void testGetType() {
     ProcessorOffset instance = ProcessorOffset.builder().build();
     assertEquals(ProcessorType.OFFSET, instance.getType());

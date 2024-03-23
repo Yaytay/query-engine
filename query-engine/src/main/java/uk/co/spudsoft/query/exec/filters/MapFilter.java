@@ -26,7 +26,11 @@ import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 
 /**
- *
+ * Filter for converting _map command line arguments into {@link uk.co.spudsoft.query.exec.procs.filters.ProcessorMapInstance}s.
+ * 
+ * The argument should be a space delimited list of relabels, each of which should be SourceLabel:NewLabel.  
+ * The new label cannot contain a colon or a space, if the new label is blank the field will be dropped - the source label may not be blank.
+ * 
  * @author jtalbut
  */
 public class MapFilter implements Filter {

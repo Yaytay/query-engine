@@ -30,14 +30,16 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class ProcessorMapTest {
   
   @Test
-  public void testGetType() {
-    ProcessorMap instance = ProcessorMap.builder().build();
-    assertEquals(ProcessorType.RELABEL, instance.getType());
+  public void testGetId() {
+    ProcessorMap instance = ProcessorMap.builder().id("id").build();
+    assertEquals("id", instance.getId());
   }
 
   @Test
   public void testSetType() {
-    ProcessorMap instance = ProcessorMap.builder().type(ProcessorType.RELABEL).build();
+    ProcessorMap instance = ProcessorMap.builder().build();
+    assertEquals(ProcessorType.RELABEL, instance.getType());
+    instance = ProcessorMap.builder().type(ProcessorType.RELABEL).build();
     assertEquals(ProcessorType.RELABEL, instance.getType());
     try {
       ProcessorMap.builder().type(ProcessorType.SCRIPT).build();

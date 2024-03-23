@@ -41,7 +41,8 @@ import uk.co.spudsoft.query.web.LoginDao;
 
 
 /**
- *
+ * Factory object for constructing filled-in {@link RequestContext} objects.
+ * 
  * @author jtalbut
  */
 public class RequestContextBuilder {

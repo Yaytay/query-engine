@@ -41,7 +41,8 @@ import static uk.co.spudsoft.query.logging.VertxZipkinLogbackConverter.ACTIVE_SP
 
 
 /**
- *
+ * Contextual information about the request used to provide this data to {@link uk.co.spudsoft.query.defn.Condition}s and script processors.
+ * 
  * @author jtalbut
  */
 public class RequestContext {

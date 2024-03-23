@@ -32,6 +32,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class ProcessorDynamicFieldTest {
   
   @Test
+  public void testGetId() {
+    ProcessorDynamicField instance = ProcessorDynamicField.builder().id("id").build();
+    assertEquals("id", instance.getId());
+  }
+  
+  @Test
   public void testValidate() {
     ProcessorDynamicField instance = ProcessorDynamicField.builder().build();
     assertThrows(IllegalArgumentException.class, () -> {
