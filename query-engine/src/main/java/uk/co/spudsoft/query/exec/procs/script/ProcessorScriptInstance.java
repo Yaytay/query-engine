@@ -19,7 +19,6 @@ package uk.co.spudsoft.query.exec.procs.script;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.github.tsegismont.streamutils.impl.FilteringStream;
 import io.github.tsegismont.streamutils.impl.MappingStream;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -45,6 +44,7 @@ import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.procs.query.FilteringStream;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
 
@@ -114,16 +114,26 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
 
   private boolean runPredicate(DataRow data) {
     sourceNameTracker.addNameToContextLocalData(context);
-    return runSource(engine, "predicate", definition.getLanguage(), predicateSource, data, (v, jo) -> {
-      return v.asBoolean();
+    return runSource(engine, "predicate", definition.getLanguage(), predicateSource, data, (returnValue, row) -> {
+      logger.debug("returnValue ({}): {}", nullableClass(returnValue), returnValue);
+      logger.debug("row ({}): {}", nullableClass(row), row);
+      return returnValue.asBoolean();
     });
+  }
+  
+  static Class<?> nullableClass(Object o) {
+    if (o == null) {
+      return null;
+    } else {
+      return o.getClass();
+    }
   }
 
   private DataRow runProcess(DataRow data) {
+    sourceNameTracker.addNameToContextLocalData(context);
     return runSource(engine, "process", definition.getLanguage(), processSource, data, (returnValue, row) -> {
-      logger.debug("returnValue ({}): {}", returnValue == null ? "" : returnValue.getClass(), returnValue);
-      logger.debug("row ({}): {}", row == null ? "" : row.getClass(), row);
-      // Anything in the return value is added to the row
+      logger.debug("returnValue ({}): {}", nullableClass(returnValue), returnValue);
+      logger.debug("row ({}): {}", nullableClass(row), row);
       return row;
      });
   }
@@ -178,10 +188,10 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
       return value.asTime();
     } else if (value.isDuration()) {
       return value.asDuration();
-    } else if (value.isHostObject()) {
-      return value.asHostObject();
-    } else if (value.isNativePointer()) {
-      return value.asNativePointer();
+//    } else if (value.isHostObject()) {
+//      return value.asHostObject();
+//    } else if (value.isNativePointer()) {
+//      return value.asNativePointer();
     } else if (value.isException()) {
       value.throwException();
     } 
@@ -205,7 +215,7 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
     this.stream = input.getStream();
     if (!Strings.isNullOrEmpty(definition.getPredicate())) {
       predicateSource = Source.newBuilder(definition.getLanguage(), definition.getPredicate(), Integer.toString(hashCode()) + ":predicate").cached(true).buildLiteral();
-      stream = new FilteringStream<>(input.getStream(), this::runPredicate);
+      stream = new FilteringStream<>(stream, this::runPredicate);
     }
     if (!Strings.isNullOrEmpty(definition.getProcess())) {
       processSource = Source.newBuilder(definition.getLanguage(), definition.getProcess(), Integer.toString(hashCode()) + ":process").cached(true).buildLiteral();

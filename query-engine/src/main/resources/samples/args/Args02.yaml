@@ -20,6 +20,8 @@ source:
   rowCount: 2
 processors:
 - type: SCRIPT
+  predicate: |-
+    args['arg1'] != null;
   process: |-
     row['arg1'] = args['arg1'];
     row.arg2 = args['arg2'];
