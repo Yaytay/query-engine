@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.sources.sql;
 
+import com.google.common.collect.ImmutableSet;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -29,6 +30,7 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Transaction;
 import io.vertx.sqlclient.desc.ColumnDescriptor;
+import java.sql.JDBCType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.DataType;
@@ -59,6 +61,10 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
   
   private final Promise<Void> readyPromise = Promise.promise();
   
+  private static final ImmutableSet<String> OTHER_TYPES_TO_TREAT_AS_STRING = ImmutableSet.<String>builder()
+          .add("UUID")
+          .build();
+  
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
   public RowStreamWrapper(SourceNameTracker sourceNameTracker, SqlConnection connection, Transaction transaction, PreparedStatement preparedStatement, MetadataRowStreamImpl rowStream) {
     this.sourceNameTracker = sourceNameTracker;
@@ -70,7 +76,11 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
     rowStream.coloumnDescriptorHandler(columnDescriptors -> {
       for (ColumnDescriptor cd : columnDescriptors) {
         logger.info("Field {} is of JDBC type {} (aka {})", cd.name(), cd.jdbcType(), cd.typeName());
-        types.putIfAbsent(cd.name(), DataType.fromJdbcType(cd.jdbcType()));
+        if (cd.jdbcType() == JDBCType.OTHER && OTHER_TYPES_TO_TREAT_AS_STRING.contains(cd.typeName())) {
+          types.putIfAbsent(cd.name(), DataType.String);
+        } else {
+          types.putIfAbsent(cd.name(), DataType.fromJdbcType(cd.jdbcType()));
+        }
       }
       readyPromise.complete();
     });

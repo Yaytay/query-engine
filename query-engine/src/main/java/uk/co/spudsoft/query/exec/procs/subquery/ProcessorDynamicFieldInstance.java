@@ -65,13 +65,8 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
   
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
   public ProcessorDynamicFieldInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorDynamicField definition) {
-    super(logger, vertx, sourceNameTracker, context, definition.getParentIdColumns(), definition.getValuesParentIdColumns(), definition.isInnerJoin());
+    super(logger, vertx, sourceNameTracker, context, definition.getId(), definition.getParentIdColumns(), definition.getValuesParentIdColumns(), definition.isInnerJoin());
     this.definition = definition;    
-  }
-
-  @Override
-  public String getId() {
-    return definition.getId();
   }
 
   @Override

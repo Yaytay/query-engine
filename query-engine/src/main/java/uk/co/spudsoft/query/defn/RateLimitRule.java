@@ -139,7 +139,7 @@ public class RateLimitRule {
                           """
                   , requiredMode = Schema.RequiredMode.REQUIRED
           )
-          , items = @Schema(
+          , schema = @Schema(
                   implementation = RateLimitScopeType.class
           )
           , minItems = 1

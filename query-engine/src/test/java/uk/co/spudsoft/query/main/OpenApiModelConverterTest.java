@@ -120,7 +120,7 @@ public class OpenApiModelConverterTest {
     }
 
     @ArraySchema(
-            items = @io.swagger.v3.oas.annotations.media.Schema(implementation = Processor.class)
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = Processor.class)
             , arraySchema = @io.swagger.v3.oas.annotations.media.Schema(type = "array", description = "It's the processors")
             , minItems = 0
     )
@@ -157,7 +157,7 @@ public class OpenApiModelConverterTest {
     }
 
     @ArraySchema(
-            items = @io.swagger.v3.oas.annotations.media.Schema(implementation = Processor.class, description = "It's the processors")
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = Processor.class, description = "It's the processors")
             , arraySchema = @io.swagger.v3.oas.annotations.media.Schema(type = "array")
             , minItems = 0
     )
@@ -229,7 +229,7 @@ public class OpenApiModelConverterTest {
     }
 
     @ArraySchema(
-            items = @io.swagger.v3.oas.annotations.media.Schema(implementation = Processor.class, description = "It's the processors")
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = Processor.class, description = "It's the processors")
             , arraySchema = @io.swagger.v3.oas.annotations.media.Schema(type = "array", requiredMode = io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED)
             , minItems = 1
     )

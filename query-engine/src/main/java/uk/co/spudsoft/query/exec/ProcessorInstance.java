@@ -19,10 +19,13 @@ package uk.co.spudsoft.query.exec;
 import io.vertx.core.Future;
 
 /**
- *
+ * An Instance of a {@link uk.co.spudsoft.query.defn.Processor}.
+ * 
+ * Usually created by called {@link uk.co.spudsoft.query.defn.Processor#createInstance(io.vertx.core.Vertx, uk.co.spudsoft.query.exec.SourceNameTracker, io.vertx.core.Context)}.
+ * 
  * @author jtalbut
  */
-public interface ProcessorInstance extends Readable {
+public interface ProcessorInstance {
     
   /**
    * Return an ID for this processor, unique within the pipeline.

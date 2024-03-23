@@ -28,7 +28,20 @@ import uk.co.spudsoft.query.defn.Condition;
 import uk.co.spudsoft.query.exec.DataRow;
 
 /**
- *
+ * An instance of a {@link uk.co.spudsoft.query.defn.Condition} to be evaluated before doing something else.
+ * 
+ * The context of a condition may include the following variables:
+ * <ul>
+ * <li>request
+ * Details of the HTTP request, a {@link RequestContext} object.
+ * <li>args
+ * Query string arguments to the HTTP request, a {@link io.vertx.core.MultiMap} object.
+ * <li>row
+ * If the condition is per-row it will include the {@link uk.co.spudsoft.query.exec.DataRow} object.
+ * </ul>
+ * 
+ * Conditions are <a href="uk.co.spudsoft.query.defn.Condition">JEXL</a> expressions.
+ * 
  * @author jtalbut
  */
 public class ConditionInstance {

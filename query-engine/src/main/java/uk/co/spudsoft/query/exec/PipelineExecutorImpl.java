@@ -48,7 +48,7 @@ import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
 /**
- *
+ * Concrete implementation of PipelineExecutor interface.
  * @author jtalbut
  */
 public class PipelineExecutorImpl implements PipelineExecutor {
@@ -245,7 +245,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
         }
       }
       logger.info("The extension {} was requested, but the supported extensions are: {}"
-              , requested.getName()
+              , requested.getExtension()
               , formats.stream().map(d -> d.getExtension()).filter(f -> f != null).collect(Collectors.toList()));
       throw new IllegalArgumentException("The requested extension is not supported for this request");
     }

@@ -16,10 +16,17 @@
  */
 package uk.co.spudsoft.query.exec;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
- *
+ * Field that an audit request can be sorted by.
  * @author jtalbut
  */
+@Schema(
+        description = """
+                      Field that an audit request can be sorted by.
+                      """
+)
 public enum AuditHistorySortOrder {
   
   timestamp,

@@ -22,7 +22,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.streams.ReadStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.ProcessorQuery;
@@ -86,8 +85,4 @@ public class ProcessorQueryInstance implements ProcessorInstance {
     return Future.succeededFuture(new ReadStreamWithTypes(stream, types));
   }
 
-  @Override
-  public ReadStream<DataRow> getReadStream() {
-    return stream;
-  }
 }

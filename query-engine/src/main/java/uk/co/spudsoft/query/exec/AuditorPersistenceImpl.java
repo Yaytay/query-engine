@@ -79,7 +79,8 @@ import uk.co.spudsoft.query.main.ExceptionToString;
 import uk.co.spudsoft.query.web.ServiceException;
 
 /**
- *
+ * Audit implementation that is based on a database.
+ * Tested with MS SQL Server; PostgreSQL and MySQL.
  * @author jtalbut
  */
 public class AuditorPersistenceImpl implements Auditor {

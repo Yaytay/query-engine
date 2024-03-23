@@ -189,7 +189,7 @@ public final class Pipeline extends SourcePipeline {
                           </P>
                           """
           )
-          , items = @Schema(
+          , schema = @Schema(
                   implementation = Argument.class
           )
           , minItems = 0
@@ -244,7 +244,7 @@ public final class Pipeline extends SourcePipeline {
                                   </P>
                                   """
           )
-          , items = @Schema(
+          , schema = @Schema(
                   implementation = DynamicEndpoint.class
           )
           , minItems = 0
@@ -289,7 +289,7 @@ public final class Pipeline extends SourcePipeline {
                                   <p>
                                   """
           )
-          , items = @Schema(
+          , schema = @Schema(
                   implementation = Format.class
           )
           , minItems = 1

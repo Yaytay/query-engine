@@ -59,7 +59,8 @@ import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.main.ExceptionToString;
 
 /**
- *
+ * Audit implementation that is based on a size-constrained list in memory.
+ * This is not intended for production use, but can be a good choice for design mode.
  * @author jtalbut
  */
 public class AuditorMemoryImpl implements Auditor {

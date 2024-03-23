@@ -45,6 +45,7 @@ public class FormatDelimited implements Format {
   private final String delimiter;
   private final String openQuote;
   private final String closeQuote;
+  private final String escapeCloseQuote;
   private final String newline;
 
   @Override
@@ -175,6 +176,16 @@ public class FormatDelimited implements Format {
   }
 
   @Schema(description = """
+                        If a string value contains the close quote string it will be prefixed by this string.
+                        """
+          , defaultValue = "\""
+          , maxLength = 10
+  )
+  public String getEscapeCloseQuote() {
+    return escapeCloseQuote;
+  }
+  
+  @Schema(description = """
                         Each row in the output will be suffixed by this value.
                         """
           , defaultValue = "\r\n"
@@ -198,6 +209,7 @@ public class FormatDelimited implements Format {
     private String delimiter = ",";
     private String openQuote = "\"";
     private String closeQuote = "\"";
+    private String escapeCloseQuote = "\"";
     private String newline = "\r\n";
 
     private Builder() {
@@ -248,6 +260,11 @@ public class FormatDelimited implements Format {
       return this;
     }
 
+    public Builder escapeCloseQuote(final String value) {
+      this.escapeCloseQuote = value;
+      return this;
+    }
+
     public Builder newline(final String value) {
       this.newline = value;
       return this;
@@ -258,7 +275,7 @@ public class FormatDelimited implements Format {
      * @return a new instance of the FormatJson class.
      */
     public FormatDelimited build() {
-      return new FormatDelimited(type, name, extension, mediaType, headerRow, delimiter, openQuote, closeQuote, newline);
+      return new FormatDelimited(type, name, extension, mediaType, headerRow, delimiter, openQuote, closeQuote, escapeCloseQuote, newline);
     }
   }
 
@@ -278,6 +295,7 @@ public class FormatDelimited implements Format {
           , final String delimiter
           , final String openQuote
           , final String closeQuote
+          , final String escapeCloseQuote
           , final String newline          
   ) {
     validateType(FormatType.Delimited, type);
@@ -289,6 +307,7 @@ public class FormatDelimited implements Format {
     this.delimiter = delimiter;
     this.openQuote = openQuote;
     this.closeQuote = closeQuote;
+    this.escapeCloseQuote = escapeCloseQuote;
     this.newline = newline;
   }
     

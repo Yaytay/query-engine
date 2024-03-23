@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 import uk.co.spudsoft.query.exec.filters.Filter;
 
 /**
- *
+ * Factory for creating Processors from command line arguments.
  * @author jtalbut
  */
 public class FilterFactory {

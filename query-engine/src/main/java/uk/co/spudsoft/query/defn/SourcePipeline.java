@@ -69,7 +69,7 @@ public class SourcePipeline {
   }
 
   @ArraySchema(
-          items = @Schema(
+          schema = @Schema(
                   implementation = Processor.class
           )
           , arraySchema = @Schema(

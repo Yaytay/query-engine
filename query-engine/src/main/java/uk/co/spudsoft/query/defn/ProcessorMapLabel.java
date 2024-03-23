@@ -21,7 +21,7 @@ import com.google.common.base.Strings;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
- *
+ * Argument to the MapProcessor that renames or removes fields in the output.
  * @author jtalbut
  */
 @JsonDeserialize(builder = ProcessorMapLabel.Builder.class)

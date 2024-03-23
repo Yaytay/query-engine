@@ -23,7 +23,6 @@ import io.github.tsegismont.streamutils.impl.MappingStream;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.streams.ReadStream;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,8 +97,4 @@ public class ProcessorMapInstance implements ProcessorInstance {
     return Future.succeededFuture(new ReadStreamWithTypes(stream, types));
   }
 
-  @Override
-  public ReadStream<DataRow> getReadStream() {
-    return stream;
-  }
 }

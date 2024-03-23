@@ -29,7 +29,12 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.DataType;
 
 /**
- *
+ * Details of the fields types in a stream.
+ * 
+ * All the rows in a given stream should use the same Types object, but Processors can replace the Types object as they generate a new ReadStream.
+ * 
+ * Fields cannot be removed from the Types structure, nor can they change type (other than going from Null to not Null).
+ * 
  * @author njt
  */
 public class Types {

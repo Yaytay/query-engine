@@ -17,7 +17,7 @@
 package uk.co.spudsoft.query.exec;
 
 /**
- *
+ * A very simple Map interface to enable pooling between {@link SourceInstance} objects.
  * @author jtalbut
  */
 public interface SharedMap {

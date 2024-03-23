@@ -33,7 +33,8 @@ import uk.co.spudsoft.query.main.Credentials;
 import uk.co.spudsoft.query.main.DataSourceConfig;
 
 /**
- *
+ * Helper class for working with JDBC within Vertx.
+ * 
  * @author njt
  */
 public class JdbcHelper {

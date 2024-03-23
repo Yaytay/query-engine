@@ -220,9 +220,4 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
     return Future.succeededFuture(new ReadStreamWithTypes(stream, types));
   }
 
-  @Override
-  public ReadStream<DataRow> getReadStream() {
-    return stream;
-  }
-
 }

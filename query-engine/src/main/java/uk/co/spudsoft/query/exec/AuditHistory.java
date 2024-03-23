@@ -22,7 +22,7 @@ import java.util.List;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
- *
+ * Information about requests made to the query engine by a single user.
  * @author njt
  */
 @Schema(

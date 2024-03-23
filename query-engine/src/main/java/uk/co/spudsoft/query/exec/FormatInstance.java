@@ -24,7 +24,7 @@ import io.vertx.core.Future;
  * 
  * @author jtalbut
  */
-public interface FormatInstance extends Writable {
+public interface FormatInstance {
   
   /**
    * Take whatever steps are necessary to start the output.

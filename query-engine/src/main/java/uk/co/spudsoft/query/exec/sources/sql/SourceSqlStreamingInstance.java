@@ -227,9 +227,4 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     }
   }
 
-  @Override
-  public RowStreamWrapper getReadStream() {
-    return rowStreamWrapper;
-  }
-  
 }

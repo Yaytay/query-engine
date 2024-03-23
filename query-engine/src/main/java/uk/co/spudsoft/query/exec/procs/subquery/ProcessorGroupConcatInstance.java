@@ -53,7 +53,7 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
 
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
   public ProcessorGroupConcatInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorGroupConcat definition) {
-    super(logger, vertx, sourceNameTracker, context, definition.getParentIdColumns(), definition.getChildIdColumns(), definition.isInnerJoin());
+    super(logger, vertx, sourceNameTracker, context, definition.getId(), definition.getParentIdColumns(), definition.getChildIdColumns(), definition.isInnerJoin());
     this.definition = definition;
   }
 
@@ -63,11 +63,6 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
     return initializeChildStream(executor, pipeline, parentSource, processorIndex, definition.getInput());
   }  
 
-  @Override
-  public String getId() {
-    return definition.getId();
-  }
-  
   @Override
   protected DataRow processChildren(DataRow parentRow, Collection<DataRow> childRows) {
     logger.debug("Got child rows: {}", childRows);

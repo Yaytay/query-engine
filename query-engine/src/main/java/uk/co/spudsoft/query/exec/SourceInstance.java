@@ -23,7 +23,7 @@ import io.vertx.core.Future;
  * 
  * @author jtalbut
  */
-public interface SourceInstance extends Readable, SourceNameTracker {
+public interface SourceInstance extends SourceNameTracker {
   
   String SOURCE_CONTEXT_KEY = "uk.co.spudsoft.query.exec.source.name";
   

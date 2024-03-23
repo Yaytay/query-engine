@@ -85,8 +85,8 @@ public class ProcessorLimitInstanceTest {
             , ProcessorLimit.builder().limit(3).build()
     );
     instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(context, rowsList), types))
-            .compose(v -> {
-              return ReadStreamToList.capture(instance.getReadStream());
+            .compose(rswt -> {
+              return ReadStreamToList.capture(rswt.getStream());
             })
             .onFailure(ex -> {
               testContext.failNow(ex);

@@ -209,7 +209,7 @@ public class PipelineNodesTree extends AbstractTree {
                             </P>
                             """
             )
-            , items = @Schema(
+            , schema = @Schema(
                     implementation = Argument.class
             )
             , minItems = 0
@@ -254,7 +254,7 @@ public class PipelineNodesTree extends AbstractTree {
                                     <p>
                                     """
             )
-            , items = @Schema(
+            , schema = @Schema(
                     implementation = Format.class
             )
             , minItems = 1

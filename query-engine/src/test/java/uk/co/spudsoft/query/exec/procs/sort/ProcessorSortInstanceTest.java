@@ -19,15 +19,24 @@ package uk.co.spudsoft.query.exec.procs.sort;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.Month;
 import java.util.Arrays;
 import java.util.List;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.ProcessorSort;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
@@ -62,4 +71,91 @@ public class ProcessorSortInstanceTest {
             .andThen(testContext.succeedingThenComplete());
             
   }
+
+  @Test
+  public void testGetId() {
+    ProcessorSort defn = ProcessorSort.builder().id("id").build();
+    ProcessorSortInstance instance = new ProcessorSortInstance(null, null, null, defn);
+    assertEquals("id", instance.getId());
+  }
+  
+  @Test
+  public void testSerialize(Vertx vertx) throws IOException {
+    Types types = new Types();
+    DataRow row = DataRow.create(types
+            , "integer", 1
+            , "datetime", LocalDateTime.of(1971, Month.MARCH, 3, 5, 1)
+            , "string", "one"
+            , "null", null
+            , "boolean", Boolean.FALSE
+            , "date", LocalDate.of(1971, Month.MARCH, 3)
+            , "time", LocalTime.of(5, 1)
+            , "double", (Double) 3.141
+            , "float", (Float) (float) 6.282
+            , "long", Long.MAX_VALUE
+    );
+
+    ProcessorSortInstance instance = new ProcessorSortInstance(vertx, ctx -> {}, vertx.getOrCreateContext()
+            , ProcessorSort.builder().fields(Arrays.asList("timestamp")).build()
+    );
+    // This will fail, but its only purpose here is to set the types
+    instance.initialize(null, null, null, 0, new ReadStreamWithTypes(null, types));
+    
+    byte[] serialized = instance.dataRowSerializer(row);
+    assertNotNull(serialized);
+    assertThat(serialized.length, equalTo(124));
+    
+    DataRow deserialized = instance.dataRowDeserializer(serialized);
+    assertNotNull(deserialized);
+    
+    assertEquals(row.size(), deserialized.size());
+    assertEquals(row.get("integer"), deserialized.get("integer"));
+    assertEquals(row.get("datetime"), deserialized.get("datetime"));
+    assertEquals(row.get("string"), deserialized.get("string"));
+    assertEquals(row.get("null"), deserialized.get("null"));
+    assertEquals(row.get("boolean"), deserialized.get("boolean"));
+    assertEquals(row.get("date"), deserialized.get("date"));
+    assertEquals(row.get("time"), deserialized.get("time"));
+    assertEquals(row.get("double"), deserialized.get("double"));
+    assertEquals(row.get("float"), deserialized.get("float"));
+    assertEquals(row.get("long"), deserialized.get("long"));
+  }
+
+  
+  @Test
+  public void testSerializeNotNull(Vertx vertx) throws IOException {
+    Types types = new Types();
+    DataRow row = DataRow.create(types
+            , "integer", 1
+            , "wasnull", null
+    );
+    assertEquals(DataType.Null, row.getType("wasnull"));
+
+    ProcessorSortInstance instance = new ProcessorSortInstance(vertx, ctx -> {}, vertx.getOrCreateContext()
+            , ProcessorSort.builder().fields(Arrays.asList("timestamp")).build()
+    );
+    // This will fail, but its only purpose here is to set the types
+    instance.initialize(null, null, null, 0, new ReadStreamWithTypes(null, types));
+    
+    byte[] serialized = instance.dataRowSerializer(row);
+    assertNotNull(serialized);
+    assertThat(serialized.length, equalTo(12));
+    
+    // To change the type of wasnull
+    DataRow.create(types
+            , "integer", 1
+            , "wasnull", "Not null any more"
+    );
+
+    DataRow deserialized = instance.dataRowDeserializer(serialized);
+    assertNotNull(deserialized);
+    
+    assertEquals(row.size(), deserialized.size());
+    assertEquals(row.get("integer"), deserialized.get("integer"));
+    assertEquals(row.get("wasnull"), deserialized.get("wasnull"));
+    
+    assertNull(row.get("wasnull"));
+    assertEquals(DataType.String, row.getType("wasnull"));
+  }
+  
 }

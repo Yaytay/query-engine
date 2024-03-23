@@ -114,8 +114,8 @@ public class OpenApiModelConverter implements ModelConverter {
               schema.addRequiredItem(k);
             }
           }
-          if (arraySchema.items() != null) {
-            io.swagger.v3.oas.annotations.media.Schema itemSchemaAnnotation = arraySchema.items();
+          if (arraySchema.schema() != null) {
+            io.swagger.v3.oas.annotations.media.Schema itemSchemaAnnotation = arraySchema.schema();
             Schema itemSchema = s.getItems();
             if (itemSchema == null) {
               itemSchema = new JsonSchema();

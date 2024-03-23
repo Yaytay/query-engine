@@ -18,7 +18,6 @@ package uk.co.spudsoft.query.exec.fmts;
 
 import io.vertx.core.Future;
 import io.vertx.core.streams.ReadStream;
-import io.vertx.core.streams.WriteStream;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
@@ -51,9 +50,4 @@ public class FormatCaptureInstance implements FormatInstance {
     return streamWithTypes.getStream();
   }
 
-  @Override
-  public WriteStream<DataRow> getWriteStream() {
-    throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-  }
-  
 }

@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.fmts.text;
 
+import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -23,6 +24,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.FormatDelimited;
@@ -133,7 +135,11 @@ public class FormatDelimitedInstance implements FormatInstance {
             case String:
             default:
               outputRow.append(defn.getOpenQuote());
-              outputRow.append(v);
+              String string = v.toString();
+              if (!Strings.isNullOrEmpty(defn.getCloseQuote()) && !Strings.isNullOrEmpty(defn.getEscapeCloseQuote())) {
+                string = string.replaceAll(Pattern.quote(defn.getCloseQuote()), defn.getEscapeCloseQuote() + defn.getCloseQuote());
+              }
+              outputRow.append(string);
               outputRow.append(defn.getCloseQuote());
               break;
           }
@@ -150,12 +156,6 @@ public class FormatDelimitedInstance implements FormatInstance {
   public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStreamWithTypes input) {
     this.types = input.getTypes();
     return input.getStream().pipeTo(formattingStream);
-  }
-  
-  @Override
-  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "The caller WILL modify the state of the returned WriteStream.")
-  public WriteStream<DataRow> getWriteStream() {
-    return formattingStream;
   }
   
 }

@@ -37,7 +37,10 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
 /**
- *
+ * An Instance of a Pipeline.
+ * 
+ * A pipeline starts as a definition ({@link uk.co.spudsoft.query.defn.Pipeline}) that must be converted into a PipelineInstance in order to be executed.
+ * 
  * @author jtalbut
  */
 public class PipelineInstance {

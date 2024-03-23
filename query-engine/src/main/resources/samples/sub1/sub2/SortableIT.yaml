@@ -1,0 +1,46 @@
+description: Test pipeline that returns a lot of rows in a silly order
+arguments:
+  - name: key
+    title: DataSource Key
+    prompt: key
+    description: The DataSource to use.
+    type: String
+    possibleValues: 
+    - value: MS SQL Server
+    - value: MySQL
+    - value: PostgreSQL
+  - name: port
+    type: Integer
+sourceEndpoints:
+  - name: MS SQL Server
+    type: SQL
+    urlTemplate: "sqlserver://localhost:<args.port>/test"
+    username: sa
+    password: T0p-Secret
+  - name: MySQL
+    type: SQL
+    urlTemplate: "mysql://localhost:<args.port>/test"
+    username: user
+    password: T0p-Secret
+  - name: PostgreSQL
+    type: SQL
+    urlTemplate: "postgresql://localhost:<args.port>/test"
+    username: postgres
+    password: T0p-Secret
+source:
+  type: SQL
+  endpointTemplate: "<args.key>"
+  streamingFetchSize: 7
+  replaceDoubleQuotes: true
+  query: |
+    select "sort", "dataId", "refId" from "ManyData" order by "refId"
+formats:
+- type: HTML
+- type: XLSX
+- type: Delimited
+  name: tab
+  delimiter: "\t"
+  newline: "\n"
+  extension: tsv
+  headerRow: true
+  mediaType: text/tsv

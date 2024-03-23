@@ -19,7 +19,6 @@ package uk.co.spudsoft.query.exec.sources.test;
 import com.google.common.base.Strings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.streams.ReadStream;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,9 +95,5 @@ public class SourceTestInstance extends AbstractSource {
     stream.add(data);
   }
 
-  @Override
-  public ReadStream<DataRow> getReadStream() {
-    return stream;
-  }
 }
 

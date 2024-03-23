@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- *
+ * Representation of a single row in the stream.
  * @author jtalbut
  */
 public class DataRow {

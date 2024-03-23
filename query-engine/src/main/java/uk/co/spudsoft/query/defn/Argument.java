@@ -279,7 +279,7 @@ public class Argument {
                           """,
                    requiredMode = Schema.RequiredMode.NOT_REQUIRED
           )
-          , items = @Schema(
+          , schema = @Schema(
                   types = "string"
                   , maxLength = 100
           )
@@ -379,7 +379,7 @@ public class Argument {
                         """
                   , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           ),
-          items = @Schema(
+          schema = @Schema(
                   implementation = ArgumentValue.class
                    , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           )

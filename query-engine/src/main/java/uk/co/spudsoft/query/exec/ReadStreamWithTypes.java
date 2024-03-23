@@ -19,7 +19,10 @@ package uk.co.spudsoft.query.exec;
 import io.vertx.core.streams.ReadStream;
 
 /**
- *
+ * Tuple of a ReadStream and the Types that represented the fields of the rows it will contain.
+ * 
+ * Used as the (Future) return value from creators of ReadStreams ({@link SourceInstance} and {@link ProcessorInstance}.
+ * 
  * @author jtalbut
  */
 public class ReadStreamWithTypes {

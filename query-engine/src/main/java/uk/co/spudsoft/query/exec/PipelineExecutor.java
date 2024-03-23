@@ -29,7 +29,7 @@ import uk.co.spudsoft.query.main.ProtectedCredentials;
 import uk.co.spudsoft.query.defn.Format;
 
 /**
- *
+ * Public interface to execute a pipeline.
  * @author jtalbut
  */
 public interface PipelineExecutor extends SharedMap {

@@ -25,7 +25,6 @@ import io.vertx.core.streams.WriteStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
-import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormattingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
@@ -86,12 +85,6 @@ public class FormatJsonInstance implements FormatInstance {
   @Override
   public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStreamWithTypes input) {
     return input.getStream().pipeTo(formattingStream);
-  }
-  
-  @Override
-  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "The caller WILL modify the state of the returned WriteStream.")
-  public WriteStream<DataRow> getWriteStream() {
-    return formattingStream;
   }
   
 }

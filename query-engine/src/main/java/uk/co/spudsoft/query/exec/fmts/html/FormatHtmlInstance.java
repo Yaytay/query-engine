@@ -136,10 +136,4 @@ public class FormatHtmlInstance implements FormatInstance {
     return input.getStream().pipeTo(formattingStream);
   }
   
-  @Override
-  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "The caller WILL modify the state of the returned WriteStream.")
-  public WriteStream<DataRow> getWriteStream() {
-    return formattingStream;
-  }
-  
 }

@@ -21,7 +21,6 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.file.FileSystem;
-import io.vertx.core.streams.ReadStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -32,7 +31,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Iterator;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.DataType;
@@ -42,7 +40,6 @@ import static uk.co.spudsoft.query.defn.DataType.DateTime;
 import static uk.co.spudsoft.query.defn.DataType.Double;
 import static uk.co.spudsoft.query.defn.DataType.Float;
 import static uk.co.spudsoft.query.defn.DataType.Integer;
-import static uk.co.spudsoft.query.defn.DataType.Null;
 import static uk.co.spudsoft.query.defn.DataType.Time;
 import uk.co.spudsoft.query.defn.ProcessorSort;
 import uk.co.spudsoft.query.exec.ColumnDefn;
@@ -98,23 +95,10 @@ public class ProcessorSortInstance implements ProcessorInstance {
   }
 
   /**
-   * Purely for test purposes.
-   * @return The configured limit for this processor instance.
-   */
-  public List<String> getSort() {
-    return definition.getFields();
-  }
-
-  @Override
-  public ReadStream<DataRow> getReadStream() {
-    return stream;
-  }
-
-  /**
    * This serializer, and its associated deserializer, are only aimed at serving the needs of the SortingStream and are not suitable for general purpose serialization.
    * Specifically, they require the Types to be known by the deserializer in advance.
   */
-  private byte[] dataRowSerializer(DataRow row) throws IOException {
+  byte[] dataRowSerializer(DataRow row) throws IOException {
     int sizeGuess = row.bytesSize() + 4 * row.size();
     try (ByteArrayOutputStream baos = new ByteArrayOutputStream(sizeGuess)) {
       try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
@@ -147,8 +131,6 @@ public class ProcessorSortInstance implements ProcessorInstance {
               case Long:
                 oos.writeLong((Long) value);
                 break;
-              case Null:
-                break;
               case String:
                 String stringValue = (String) value;
                 byte[] bytes = stringValue.getBytes(StandardCharsets.UTF_8);
@@ -180,7 +162,7 @@ public class ProcessorSortInstance implements ProcessorInstance {
    * @return 
    */
   @SuppressFBWarnings(value = {"OBJECT_DESERIALIZATION"}, justification = "Source of bytes is trusted")
-  private DataRow dataRowDeserializer(byte[] bytes) throws IOException  {
+  DataRow dataRowDeserializer(byte[] bytes) throws IOException  {
     DataRow result = DataRow.create(types);
     try (ByteArrayInputStream baos = new ByteArrayInputStream(bytes)) {
       try (ObjectInputStream ois = new ObjectInputStream(baos)) {
@@ -194,45 +176,35 @@ public class ProcessorSortInstance implements ProcessorInstance {
             result.put(cd.name(), cd.type(), null);
           } else {
             DataType type = DataType.fromOrdinal(typeOrd);
+            assert(cd.type() == type);
             switch (type) {
               case DataType.Boolean:
-                assert(cd.type() == DataType.Boolean);
                 result.put(cd.name(), cd.type(), ois.readBoolean());
                 break;
               case DataType.Date:
-                assert(cd.type() == DataType.Date);
                 result.put(cd.name(), cd.type(), (LocalDate) ois.readObject());
                 break;
               case DataType.DateTime:
-                assert(cd.type() == DataType.DateTime);
                 result.put(cd.name(), cd.type(), (LocalDateTime) ois.readObject());
                 break;
               case DataType.Double:
-                assert(cd.type() == DataType.Double);
                 result.put(cd.name(), cd.type(), ois.readDouble());
                 break;
               case DataType.Float:
-                assert(cd.type() == DataType.Float);
                 result.put(cd.name(), cd.type(), ois.readFloat());
                 break;
               case DataType.Integer:
-                assert(cd.type() == DataType.Integer);
                 result.put(cd.name(), cd.type(), ois.readInt());
                 break;
               case DataType.Long:
-                assert(cd.type() == DataType.Long);
                 result.put(cd.name(), cd.type(), ois.readLong());
                 break;
-              case DataType.Null:
-                break;
               case DataType.String:
-                assert(cd.type() == DataType.String);
                 int length = ois.readInt();
                 byte[] stringBytes = ois.readNBytes(length);
                 result.put(cd.name(), cd.type(), new String(stringBytes, StandardCharsets.UTF_8));
                 break;
               case DataType.Time:
-                assert(cd.type() == DataType.Time);
                 result.put(cd.name(), cd.type(), (LocalTime) ois.readObject());
                 break;
               default:
