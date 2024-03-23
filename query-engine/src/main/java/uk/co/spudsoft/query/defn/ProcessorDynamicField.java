@@ -156,7 +156,7 @@ public class ProcessorDynamicField implements Processor {
       throw new IllegalArgumentException("ID column(s) not specified for values stream");      
     }
     if (parentIdColumns.size() != valuesParentIdColumns.size()) {
-      throw new IllegalArgumentException("ID column(s) specified for parent stream does not have the same number of fields as those specified for values stream");      
+      throw new IllegalArgumentException("ID column(s) specified for parent stream does not have the same number of fields as those specified for values stream");
     }
     if (Strings.isNullOrEmpty(fieldTypeColumn)) {
       throw new IllegalArgumentException("Type column not set (fieldTypeColumn)");

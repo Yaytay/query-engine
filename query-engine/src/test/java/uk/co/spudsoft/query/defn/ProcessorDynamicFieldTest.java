@@ -82,7 +82,88 @@ public class ProcessorDynamicFieldTest {
                             .build()
             )
             .build();
-    assertEquals("Field values (fieldValues) pipeline not provided"
+    assertEquals("ID column(s) not specified for parent stream"
+            , assertThrows(IllegalArgumentException.class, () -> {
+              instance.validate();
+            }).getMessage()
+    );
+  }
+    
+  @Test
+  public void testValidateNoChildIdColumns() {    
+    ProcessorDynamicField instance = ProcessorDynamicField.builder()
+            .fieldDefns(
+                    SourcePipeline.builder()
+                            .source(
+                                    SourceTest.builder().name("test").build()
+                            )
+                            .build()
+            )
+            .fieldValues(
+                    SourcePipeline.builder()
+                            .source(
+                                    SourceTest.builder().name("test").build()
+                            )
+                            .build()
+            )
+            .parentIdColumns(Arrays.asList("id"))
+            .build();
+    assertEquals("ID column(s) not specified for values stream"
+            , assertThrows(IllegalArgumentException.class, () -> {
+              instance.validate();
+            }).getMessage()
+    );
+  }
+    
+  @Test
+  public void testValidateMismatchedIdColumns() {    
+    ProcessorDynamicField instance = ProcessorDynamicField.builder()
+            .fieldDefns(
+                    SourcePipeline.builder()
+                            .source(
+                                    SourceTest.builder().name("test").build()
+                            )
+                            .build()
+            )
+            .fieldValues(
+                    SourcePipeline.builder()
+                            .source(
+                                    SourceTest.builder().name("test").build()
+                            )
+                            .build()
+            )
+            .parentIdColumns(Arrays.asList("id"))
+            .valuesParentIdColumns(Arrays.asList("id1", "id2"))
+            .build();
+    assertEquals("ID column(s) specified for parent stream does not have the same number of fields as those specified for values stream"
+            , assertThrows(IllegalArgumentException.class, () -> {
+              instance.validate();
+            }).getMessage()
+    );
+  }
+    
+  @Test
+  public void testValidateTypeIdColumnNotSet() {    
+    ProcessorDynamicField instance = ProcessorDynamicField.builder()
+            .fieldDefns(
+                    SourcePipeline.builder()
+                            .source(
+                                    SourceTest.builder().name("test").build()
+                            )
+                            .build()
+            )
+            .fieldValues(
+                    SourcePipeline.builder()
+                            .source(
+                                    SourceTest.builder().name("test").build()
+                            )
+                            .build()
+            )
+            .parentIdColumns(Arrays.asList("id"))
+            .valuesParentIdColumns(Arrays.asList("id1"))
+            .fieldTypeColumn(null)
+            .build();
+    assertEquals("Type column not set (fieldTypeColumn)"
             , assertThrows(IllegalArgumentException.class, () -> {
               instance.validate();
             }).getMessage()

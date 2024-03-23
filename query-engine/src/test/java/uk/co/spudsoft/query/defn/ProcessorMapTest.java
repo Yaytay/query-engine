@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  *
  * @author jtalbut
  */
-public class ProcessorMapTesasdft {
+public class ProcessorMapTest {
   
   @Test
   public void testGetId() {

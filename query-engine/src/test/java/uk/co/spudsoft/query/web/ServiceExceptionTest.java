@@ -19,8 +19,8 @@ package uk.co.spudsoft.query.web;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.nullValue;
 import org.junit.jupiter.api.Test;
-import static org.mockito.ArgumentMatchers.isNull;
 
 
 /**
@@ -33,7 +33,7 @@ public class ServiceExceptionTest {
   public void testRethrowOrWrapSimple() {
     ServiceException simple = ServiceException.rethrowOrWrap(new ServiceException(400, "bob"));
     assertThat(simple, instanceOf(ServiceException.class));
-    assertThat(simple.getCause(), isNull());
+    assertThat(simple.getCause(), nullValue());
     assertThat(simple.getStatusCode(), equalTo(400));
     assertThat(simple.getMessage(), equalTo("bob"));
   }
@@ -47,7 +47,7 @@ public class ServiceExceptionTest {
     
     Throwable wrapped = wrapper.getCause();
     assertThat(wrapped, instanceOf(IllegalArgumentException.class));
-    assertThat(wrapped.getCause(), isNull());
+    assertThat(wrapped.getCause(), nullValue());
     assertThat(wrapped.getMessage(), equalTo("bob"));
   }
   
