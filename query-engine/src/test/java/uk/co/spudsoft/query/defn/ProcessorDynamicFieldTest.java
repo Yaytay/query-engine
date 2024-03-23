@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.defn;
 
 import java.util.Arrays;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import org.junit.jupiter.api.Test;
 
@@ -43,7 +44,11 @@ public class ProcessorDynamicFieldTest {
     assertThrows(IllegalArgumentException.class, () -> {
       instance.validate();
     });
-    ProcessorDynamicField instance2 = ProcessorDynamicField.builder()
+  }
+    
+  @Test
+  public void testValidateNoFieldValues() {
+    ProcessorDynamicField instance = ProcessorDynamicField.builder()
             .fieldDefns(
                     SourcePipeline.builder()
                             .source(
@@ -52,10 +57,41 @@ public class ProcessorDynamicFieldTest {
                             .build()
             )
             .build();
-    assertThrows(IllegalArgumentException.class, () -> {
-      instance2.validate();
-    });
-    ProcessorDynamicField instance3 = ProcessorDynamicField.builder()
+    assertEquals("Field values (fieldValues) pipeline not provided"
+            , assertThrows(IllegalArgumentException.class, () -> {
+              instance.validate();
+            }).getMessage()
+    );
+  }
+    
+  @Test
+  public void testValidateNoParentIdColumns() {    
+    ProcessorDynamicField instance = ProcessorDynamicField.builder()
+            .fieldDefns(
+                    SourcePipeline.builder()
+                            .source(
+                                    SourceTest.builder().name("test").build()
+                            )
+                            .build()
+            )
+            .fieldValues(
+                    SourcePipeline.builder()
+                            .source(
+                                    SourceTest.builder().name("test").build()
+                            )
+                            .build()
+            )
+            .build();
+    assertEquals("Field values (fieldValues) pipeline not provided"
+            , assertThrows(IllegalArgumentException.class, () -> {
+              instance.validate();
+            }).getMessage()
+    );
+  }
+    
+  @Test
+  public void testValidateGood() {
+    ProcessorDynamicField instance = ProcessorDynamicField.builder()
             .fieldDefns(
                     SourcePipeline.builder()
                             .source(
@@ -73,7 +109,7 @@ public class ProcessorDynamicFieldTest {
             .parentIdColumns(Arrays.asList("id"))
             .valuesParentIdColumns(Arrays.asList("id"))
             .build();
-    instance3.validate();
+    instance.validate();
   }
 
   @Test
