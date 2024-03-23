@@ -31,7 +31,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.FormatXlsx;
+import uk.co.spudsoft.query.defn.FormatXlsxColours;
 import uk.co.spudsoft.query.defn.FormatXlsxColumn;
+import uk.co.spudsoft.query.defn.FormatXlsxFont;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
@@ -130,12 +132,22 @@ public class FormatXlsxInstance implements FormatInstance {
             }
     );
   }
-
+  
   private String coalesce(String one, String two) {
-    if (Strings.isNullOrEmpty(one)) {
+    if (!Strings.isNullOrEmpty(one)) {
+      return one;
+    }
+    return two;
+  }
+  
+  private String coalesce(String one, String two, String three) {
+    if (!Strings.isNullOrEmpty(one)) {
+      return one;
+    }
+    if (!Strings.isNullOrEmpty(two)) {
       return two;
     }
-    return one;
+    return three;
   }
   
   private String getUsernameFromContext() {
@@ -149,12 +161,20 @@ public class FormatXlsxInstance implements FormatInstance {
     return "Unknown";
   }
   
-  private FontDefinition getDefaultFont() {
-    return new FontDefinition("Calibri", 11);
+  static FontDefinition getFontDefinition(FormatXlsxFont defn) {
+    if (defn != null) {
+      return defn.toFontDefinition();
+    } else {
+      return new FontDefinition("Calibri", 11);
+    }
   }
   
-  private ColourDefinition getDefaultColours() {
-    return new ColourDefinition("000000", "FFFFFF");
+  static ColourDefinition getColourDefinition(FormatXlsxColours defn) {
+    if (defn != null) {
+      return defn.toColourDefinition();
+    } else {
+      return new ColourDefinition("000000", "FFFFFF");
+    }
   }
   
   private TableDefinition tableDefinition() {
@@ -162,13 +182,10 @@ public class FormatXlsxInstance implements FormatInstance {
     FormatXlsxColumn nonFormat = FormatXlsxColumn.builder().build();
     types.forEach((cd) -> {
       ColumnDefinition defn = null;
-      if (definition.getColumns() != null) {
-        FormatXlsxColumn formatColumn = definition.getColumnsMap().get(cd.name());
-        if (formatColumn != null) {
-          defn = formatColumn.toColumnDefinition(cd.name(), cd.type());
-        }
-      } 
-      if (defn == null) {
+      FormatXlsxColumn formatColumn = definition.getColumnsMap().get(cd.name());
+      if (formatColumn != null) {
+        defn = formatColumn.toColumnDefinition(cd.name(), cd.type());
+      } else {
         defn = nonFormat.toColumnDefinition(cd.name(), cd.type());
       }
       columns.add(defn);
@@ -177,14 +194,14 @@ public class FormatXlsxInstance implements FormatInstance {
     TableDefinition defn = new TableDefinition(
             "SpudSoft Query Engine"
             , coalesce(definition.getSheetName(), "Data")
-            , coalesce(Strings.isNullOrEmpty(definition.getCreator()) ? getUsernameFromContext() : definition.getCreator(), "Data")
+            , coalesce(definition.getCreator(), getUsernameFromContext(), "Data")
             , definition.isGridLines()
             , definition.isHeaders()
-            , definition.getHeaderFont() == null ? getDefaultFont() : definition.getHeaderFont().toFontDefinition()
-            , definition.getBodyFont() == null ? getDefaultFont() : definition.getBodyFont().toFontDefinition()
-            , definition.getHeaderColours() == null ? getDefaultColours() : definition.getHeaderColours().toColourDefinition()
-            , definition.getEvenColours() == null ? getDefaultColours() : definition.getEvenColours().toColourDefinition()
-            , definition.getOddColours() == null ? getDefaultColours() : definition.getOddColours().toColourDefinition()
+            , getFontDefinition(definition.getHeaderFont())
+            , getFontDefinition(definition.getBodyFont())
+            , getColourDefinition(definition.getHeaderColours())
+            , getColourDefinition(definition.getEvenColours())
+            , getColourDefinition(definition.getOddColours())
             , columns
     );
     

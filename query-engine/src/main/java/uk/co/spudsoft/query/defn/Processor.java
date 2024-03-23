@@ -74,6 +74,13 @@ public interface Processor {
   )
   ProcessorType getType();
   
+  @Schema(description = """
+                        <P>ID that uniquely idenfities this processor within the pipeline.</P>
+                        """
+          , minLength = 1
+          , maxLength = 60
+          , requiredMode = Schema.RequiredMode.REQUIRED
+  )
   String getId();
   
   @Schema(description = """

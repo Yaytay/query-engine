@@ -117,7 +117,7 @@ public class OpenApiSchemaIT {
     validateRefs(validationFailures, body);
     for (String current : schemas.fieldNames()) {
       JsonObject schema = schemas.getJsonObject(current);
-      logger.debug("{}: {}", current, describe(schema));
+      // logger.debug("{}: {}", current, describe(schema));
       String validationMessage = validate(current, schema, true);
       if (validationMessage != null) {
         validationFailures.add(validationMessage + " " + schema.encode());
@@ -131,7 +131,7 @@ public class OpenApiSchemaIT {
           Entry<String,Object> propSchemaEntry = iter.next();
           String qualName = current + "." + propSchemaEntry.getKey();
           if (propSchemaEntry.getValue() instanceof JsonObject propSchema) {
-            logger.debug("{}: {}", qualName, describe(propSchema)); 
+            // logger.debug("{}: {}", qualName, describe(propSchema)); 
 
             validationMessage = validate(qualName, propSchema, false);
             if (validationMessage != null) {

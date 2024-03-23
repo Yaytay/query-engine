@@ -22,6 +22,7 @@ import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.PrintStream;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeAll;
@@ -141,7 +142,7 @@ public class FeatureRichQueryIT {
     
     assertThat(body, equalTo("[]"));
     
-    body = given()
+    byte[] bodyBytes = given()
             .queryParam("minDate", "1971-05-06")
             .queryParam("_fmt", "xlsx")
             .accept("text/html")
@@ -150,10 +151,15 @@ public class FeatureRichQueryIT {
             .then()
             .log().ifError()
             .statusCode(200)
-            .extract().body().asString();
+            .extract().body().asByteArray();
     
-    assertThat(body, startsWith("PK"));
+    assertThat(bodyBytes[0], equalTo((byte) 80));
+    assertThat(bodyBytes[1], equalTo((byte) 75));
         
+    try (FileOutputStream fos = new FileOutputStream("target/temp/FeatureRichQueryIT.xlsx")) {
+      fos.write(bodyBytes);
+    }
+    
     main.shutdown();
   }
   

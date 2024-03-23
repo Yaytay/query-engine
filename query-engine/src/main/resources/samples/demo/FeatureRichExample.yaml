@@ -123,10 +123,18 @@ formats:
 - type: JSON
 - type: XLSX
   headerColours:
-    fgColour: "800000"
+    fgColour: "FFFFFF"
     bgColour: "3E1379"
   oddColours:
     bgColour: "D9EAD3"
+  columns:
+    - name: TestField
+      header: "Words"
+      width: 200
+    - name: DoubleField
+      header: "DOUBLE"
+      format: "0.00"
+      width: 50
 - type: Delimited
   name: tab
   delimiter: "\t"

@@ -90,10 +90,8 @@ public class FormatXlsx implements Format {
     if (oddColours != null) {
       oddColours.validate();
     }
-    if (columns != null) {
-      for (FormatXlsxColumn column : columns) {
-        column.validate();
-      }
+    for (FormatXlsxColumn column : columns) {
+      column.validate();
     }
   }
   
