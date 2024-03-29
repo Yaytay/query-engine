@@ -65,7 +65,7 @@ jobs:
         docker push ghcr.io/yaytay/${PARTS[0]}:${PARTS[1]}
         
     - name: Upload site reports on success
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: success()
       with:
         name: reports
