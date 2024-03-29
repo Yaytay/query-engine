@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.main;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
 import io.vertx.core.Vertx;
@@ -70,6 +71,7 @@ public class MainQueryWithoutPersistenceIT {
     String baseConfigDir = "target/query-engine/samples-mainqueryit";
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
+    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--baseConfigPath=" + baseConfigDir
       , "--vertxOptions.eventLoopPoolSize=5"

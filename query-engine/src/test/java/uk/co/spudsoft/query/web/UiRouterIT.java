@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.web;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
@@ -57,6 +58,7 @@ public class UiRouterIT {
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
+    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
         "--baseConfigPath=target/classes/samples"
       , "--vertxOptions.tracingOptions.serviceName=Query-Engine"

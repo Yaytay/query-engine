@@ -23,12 +23,14 @@ import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 
 import static ch.qos.logback.core.util.OptionHelper.extractDefaultReplacement;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 
 /**
  *
  * @author njt
  */
-public class VertxZipkinLogbackConverter extends ClassicConverter {
+public class VertxTracingLogbackConverter extends ClassicConverter {
   
   /**
    * 
@@ -66,7 +68,7 @@ public class VertxZipkinLogbackConverter extends ClassicConverter {
     super.start();
   }  
   
-  private static KeyType keyTypeFromKey(String key) {
+  static KeyType keyTypeFromKey(String key) {
     if (Strings.isNullOrEmpty(key)) {
       return KeyType.trace;
     } else if ("trace".equalsIgnoreCase(key)) {
@@ -82,42 +84,21 @@ public class VertxZipkinLogbackConverter extends ClassicConverter {
   public String convert(ILoggingEvent event) {
     Context context = Vertx.currentContext();
     if (context != null) {
-      Object value = context.getLocal(ACTIVE_SPAN);
-      if (value instanceof zipkin2.Span) {
-        zipkin2.Span span = (zipkin2.Span) value;
-        String id;
-        switch (keyType) {
-          case all:
-            id = span.traceId() + "/" + span.id();
-            break;
-          case span:
-            id = span.id();
-            break;
-          case trace:
-          default:
-            id = span.traceId();
-            break;
-        }
-        return id;
-      } else if (value instanceof brave.Span) {
-        brave.Span span = (brave.Span) value;
-        String id;
-        switch (keyType) {
-          case all:
-            id = span.context().traceIdString() + "/" + span.context().spanIdString();
-            break;
-          case span:
-            id = span.context().spanIdString();
-            break;
-          case trace:
-          default:
-            id = span.context().traceIdString();
-            break;
-        }
-        return id;
+      Span span = Span.current();
+      if (span != null) {
+        return idFromSpan(span);
       }
     }
     return defaultValue;
+  }
+
+  String idFromSpan(Span span) {
+    SpanContext spanContext = span.getSpanContext();
+    return switch (keyType) {
+      case all -> spanContext.getTraceId() + "/" + spanContext.getSpanId();
+      case span -> spanContext.getSpanId();
+      case trace -> spanContext.getTraceId();
+    };
   }
 
   @Override

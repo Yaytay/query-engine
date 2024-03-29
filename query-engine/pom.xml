@@ -50,36 +50,36 @@
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>dir-cache</artifactId>
-      <version>0.0.20</version>
+      <version>0.0.23</version>
     </dependency>
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>jwt-validator-vertx</artifactId>
-      <version>0.0.28</version>
+      <version>0.0.31</version>
     </dependency>
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>params4j</artifactId>
-      <version>0.0.19</version>
+      <version>0.0.22</version>
       <exclusions>
       </exclusions>
     </dependency>
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>xlsx-writer</artifactId>
-      <version>0.0.18</version>
+      <version>0.0.21</version>
     </dependency>
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>vertx-management-endpoints</artifactId>
-      <version>0.0.16</version>
+      <version>0.0.18</version>
       <exclusions>
       </exclusions>
     </dependency>
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>vertx-resteasy-helpers</artifactId>
-      <version>0.0.20</version>
+      <version>0.0.22</version>
       <exclusions>
         <exclusion>
           <groupId>jakarta.activation</groupId>
@@ -166,20 +166,40 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-zipkin</artifactId>
-      <version>${vertx.version}</version>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-exporter-otlp</artifactId>
+      <version>1.36.0</version>
       <exclusions>
         <exclusion>
-          <groupId>io.zipkin.zipkin2</groupId>
-          <artifactId>zipkin</artifactId>
+          <groupId>io.opentelemetry</groupId>
+          <artifactId>opentelemetry-exporter-sender-okhttp</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>io.zipkin.reporter2</groupId>
-      <artifactId>zipkin-sender-urlconnection</artifactId>
-      <version>2.17.2</version>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-exporter-sender-jdk</artifactId>
+      <version>1.36.0-alpha</version>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-api-logs</artifactId>
+      <version>1.26.0-alpha</version>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-exporter-zipkin</artifactId>
+      <version>1.36.0</version>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-extension-trace-propagators</artifactId>
+      <version>1.36.0</version>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-opentelemetry</artifactId>
+      <version>${vertx.version}</version>
     </dependency>
     <dependency>
       <groupId>io.github.tsegismont</groupId>
@@ -322,7 +342,7 @@
     <dependency>
       <groupId>org.liquibase</groupId>
       <artifactId>liquibase-core</artifactId>
-      <version>4.26.0</version>
+      <version>4.27.0</version>
       <exclusions>
         <exclusion>
           <groupId>javax.activation</groupId>
@@ -495,7 +515,7 @@
               <doclet>uk.co.spudsoft.params4j.doclet.AsciiDocDoclet</doclet>
               <additionalOptions>
                 <additionalOption>-link</additionalOption>
-                <additionalOption>https://docs.oracle.com/en/java/javase/20/docs/api/</additionalOption>
+                <additionalOption>https://docs.oracle.com/en/java/javase/21/docs/api/</additionalOption>
                 <additionalOption>-link</additionalOption>
                 <additionalOption>https://vertx.io/docs/apidocs/</additionalOption>
                 <additionalOption>-link</additionalOption>
@@ -529,7 +549,7 @@
                 <docletArtifact>
                   <groupId>uk.co.spudsoft</groupId>
                   <artifactId>params4j</artifactId>
-                  <version>0.0.17</version>
+                  <version>0.0.22</version>
                   <classifier>doclet</classifier>
                 </docletArtifact>
               </docletArtifacts>

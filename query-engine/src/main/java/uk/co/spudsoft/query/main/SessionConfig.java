@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.main;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -34,7 +35,7 @@ public class SessionConfig {
   private int nonceLength = 120;
   private CookieConfig sessionCookie = new CookieConfig("qe-session");
   
-  private Map<String, AuthEndpoint> oauth;
+  private Map<String, AuthEndpoint> oauth = new HashMap<>();
 
   /**
    * Get the flag to indicate that a session is required for all REST API calls.

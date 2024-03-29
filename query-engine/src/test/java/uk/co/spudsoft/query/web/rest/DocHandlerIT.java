@@ -19,11 +19,11 @@ package uk.co.spudsoft.query.web.rest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
 import io.restassured.http.ContentType;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -49,6 +49,7 @@ public class DocHandlerIT {
     String baseConfigDir = "target/query-engine/samples-dochandlerit";
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
+    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
         "--baseConfigPath=" + baseConfigDir
       , "--vertxOptions.tracingOptions.serviceName=Query-Engine"

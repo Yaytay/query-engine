@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.main;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
 import io.vertx.core.Vertx;
@@ -70,6 +71,7 @@ public class MainQueryIT {
     String baseConfigDir = "target/query-engine/samples-mainqueryit";
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
+    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--persistence.datasource.url=" + mysql.getJdbcUrl()
       , "--persistence.datasource.adminUser.username=" + mysql.getUser()
@@ -84,11 +86,12 @@ public class MainQueryIT {
       , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--httpServerOptions.tracingPolicy=ALWAYS"
       , "--pipelineCache.maxDurationMs=60000"
-      , "--logging.jsonFormat=false"
+      , "--logging.jsonFormat=true"
       , "--zipkin.baseUrl=http://localhost/wontwork"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.jwksEndpoints[0]=http://localhost/"
       , "--jwt.defaultJwksCacheDuration=PT1M"
+      , "--managementEndpoints[0]=health"
       , "--sampleDataLoads[0].url=" + postgres.getVertxUrl()
       , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()
       , "--sampleDataLoads[0].adminUser.password=" + postgres.getPassword()
@@ -99,6 +102,9 @@ public class MainQueryIT {
       , "--sampleDataLoads[2].adminUser.username=sa"
       , "--sampleDataLoads[2].adminUser.password=unknown"
       , "--sampleDataLoads[3].url=wibble"
+      , "--tracing.protocol=otlphttp"
+      , "--tracing.sampler=alwaysOn"
+      , "--tracing.url=http://nonexistent/otlphttp"
     }, stdout);
     
     RestAssured.port = main.getPort();

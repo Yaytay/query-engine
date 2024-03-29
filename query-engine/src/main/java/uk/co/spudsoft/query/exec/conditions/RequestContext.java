@@ -16,10 +16,10 @@
  */
 package uk.co.spudsoft.query.exec.conditions;
 
-import brave.propagation.TraceContext;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import inet.ipaddr.IPAddressString;
+import io.opentelemetry.api.trace.SpanContext;
 import io.vertx.core.Context;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
@@ -37,7 +37,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
-import static uk.co.spudsoft.query.logging.VertxZipkinLogbackConverter.ACTIVE_SPAN;
+import static uk.co.spudsoft.query.logging.VertxTracingLogbackConverter.ACTIVE_SPAN;
 
 
 /**
@@ -220,12 +220,12 @@ public class RequestContext {
         } else {
           return span.traceId() + "/" + span.id();
         }
-      } else if (value instanceof brave.Span span) {
-        TraceContext traceContext = span.context();
-        if (traceContext.traceIdString().equals(traceContext.spanIdString())) {
-          return traceContext.spanIdString();
+      } else if (value instanceof io.opentelemetry.api.trace.Span span) {
+        SpanContext spanContext = span.getSpanContext();
+        if (spanContext.getTraceId().equals(spanContext.getSpanId())) {
+          return spanContext.getSpanId();
         } else {
-          return traceContext.traceIdString() + "/" + traceContext.spanIdString();
+          return spanContext.getTraceId() + "/" + spanContext.getSpanId();
         }
       }
     }

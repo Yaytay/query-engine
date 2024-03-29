@@ -16,7 +16,7 @@
  */
 package uk.co.spudsoft.query.main;
 
-import brave.http.HttpTracing;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -27,8 +27,6 @@ import java.nio.file.attribute.FileTime;
 import java.util.Comparator;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -55,6 +53,7 @@ public class MainTest {
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
+    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
             "--exitOnRun"
             , "--baseConfigPath=target/query-engine/samples-maintest"
@@ -63,6 +62,7 @@ public class MainTest {
             , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
     }, stdout);
     logger.info("testMainExitOnRun - exit");
+    GlobalOpenTelemetry.resetForTest();
   }
   
   @Test
@@ -74,25 +74,14 @@ public class MainTest {
             , "--jwt.defaultJwksCacheDuration=PT1M"
     });
     logger.info("testMain - exit");
+    GlobalOpenTelemetry.resetForTest();
   }
   
   @Test
-  public void testZipkinConfig() {
-    logger.info("testZipkinConfig");
-    
-    ZipkinConfig config = new ZipkinConfig();
-    assertNull(Main.buildZipkinTrace(null));
-    assertNull(Main.buildZipkinTrace(config));
-    config.setBaseUrl("http://baseurl/");
-    config.setServiceName(null);
-    HttpTracing tracing = Main.buildZipkinTrace(config);
-    assertNotNull(tracing);
-    config.setBaseUrl("http://baseurl");
-    config.setServiceName("wibble");
-    tracing = Main.buildZipkinTrace(config);
-    assertNotNull(tracing);
-
-    logger.info("testZipkinConfig - exit");
+  public void testFileType() {
+    assertEquals("directory", Main.fileType(new File("target/classes")));
+    assertEquals("does not exist", Main.fileType(new File("target/nonexistant")));
+    assertEquals("file", Main.fileType(new File("target/classes/logback.xml")));
   }
   
   /**
@@ -107,6 +96,8 @@ public class MainTest {
     }
     assertFalse(testDir.exists());
     
+    Main.prepareBaseConfigPath(new File("target/classes/logback.xml"), null);
+    
     Main.prepareBaseConfigPath(testDir, null);
     assertTrue(testDir.exists());
     assertEquals(31, countFilesInDir(testDir));
@@ -119,6 +110,7 @@ public class MainTest {
     FileTime lastMod2 = Files.getLastModifiedTime(testDir.toPath());
     assertEquals(lastMod1, lastMod2);
     logger.info("testPrepareBaseConfigPath - exit");
+    GlobalOpenTelemetry.resetForTest();
   }
 
   private void deleteDir(File testDir) throws IOException {

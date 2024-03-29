@@ -31,7 +31,6 @@ import jakarta.ws.rs.container.Suspended;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -48,9 +47,7 @@ public class AuthConfigHandler {
   private final List<AuthConfig> config;
 
   public AuthConfigHandler(Map<String, AuthEndpoint> config) {
-    this.config = config == null
-            ? new ArrayList<>()
-            : config.entrySet().stream().map(e -> new AuthConfig(e.getKey(), e.getValue().getLogoUrl())).collect(Collectors.toList());
+    this.config = config.entrySet().stream().map(e -> new AuthConfig(e.getKey(), e.getValue().getLogoUrl())).collect(Collectors.toList());
   }
   
   @GET

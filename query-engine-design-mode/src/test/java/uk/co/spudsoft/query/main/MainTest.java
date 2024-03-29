@@ -16,12 +16,10 @@
  */
 package uk.co.spudsoft.query.main;
 
-import brave.http.HttpTracing;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +38,7 @@ public class MainTest {
     Main main = new DesignMain();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
+    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
               "--exitOnRun"
             , "--baseConfigPath=target/query-engine/samples-maintest"
@@ -51,26 +50,11 @@ public class MainTest {
   
   @Test
   public void testMain() throws IOException {
+    GlobalOpenTelemetry.resetForTest();
     Main.main(new String[]{
               "--baseConfigPath=target/query-engine/samples-maintest"
             , "--jwt.acceptableIssuerRegexes[0]=.*"
             , "--jwt.defaultJwksCacheDuration=PT1M"
     });
   }
-  
-  @Test
-  public void testZipkinConfig() {
-    ZipkinConfig config = new ZipkinConfig();
-    assertNull(Main.buildZipkinTrace(null));
-    assertNull(Main.buildZipkinTrace(config));
-    config.setBaseUrl("http://baseurl/");
-    config.setServiceName(null);
-    HttpTracing tracing = Main.buildZipkinTrace(config);
-    assertNotNull(tracing);
-    config.setBaseUrl("http://baseurl");
-    config.setServiceName("wibble");
-    tracing = Main.buildZipkinTrace(config);
-    assertNotNull(tracing);
-  }
-  
 }

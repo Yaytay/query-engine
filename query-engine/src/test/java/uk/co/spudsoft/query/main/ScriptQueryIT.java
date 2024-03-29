@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.main;
 
 import com.google.common.cache.Cache;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
 import io.vertx.core.Vertx;
@@ -88,6 +89,7 @@ public class ScriptQueryIT {
     String baseConfigDir = "target/query-engine/samples-scriptqueryit";
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
+    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--persistence.datasource.url=" + mysql.getJdbcUrl()
       , "--persistence.datasource.adminUser.username=" + mysql.getUser()

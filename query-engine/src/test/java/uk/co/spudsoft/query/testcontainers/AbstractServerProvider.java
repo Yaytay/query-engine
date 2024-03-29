@@ -39,7 +39,7 @@ public abstract class AbstractServerProvider {
   
   protected abstract String getName();
   
-  protected Container findContainer(String containerName) {
+  static Container findContainer(String containerName) {
     DockerClient dockerClient = DockerClientFactory.lazyClient();
     Container createdContainer = dockerClient.listContainersCmd().withShowAll(true).exec().stream().filter(container -> {
       return Arrays.asList(container.getNames()).contains(containerName);

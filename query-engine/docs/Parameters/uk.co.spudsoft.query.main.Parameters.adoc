@@ -29,9 +29,9 @@ These values do not usually need to be altered.
 | The HttpServerOptions that will be used when creating the HTTP server.
 
 The link:https://vertx.io/docs/apidocs/io/vertx/core/http/HttpServerOptions.html#setMaxHeaderSize(int)[HttpServerOptions#setMaxHeaderSize(int)]  method should be particularly useful when running behind a proxy that passes large JSON headers.
-| zipkin
-| xref:uk.co.spudsoft.query.main.ZipkinConfig.adoc[ZipkinConfig]
-| The configuration to use for Zipkin tracing.
+| tracing
+| uk.co.spudsoft.query.main.TracingConfig
+| The configuration to use for distributed tracing.
 
 
 | exitOnRun
@@ -40,7 +40,7 @@ The link:https://vertx.io/docs/apidocs/io/vertx/core/http/HttpServerOptions.html
 
 This is useful for things such as JIT compilers or CDS preparation.
 | baseConfigPath
-| link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/String.html[String]
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | The path to the root of the configuration files.
 
 
@@ -55,12 +55,12 @@ This is useful for things such as JIT compilers or CDS preparation.
 
 
 | corsAllowedOrigins
-| link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/util/List.html[List]<link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/String.html[String]>
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html[List]<link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]>
 | The Allowed-Origin-Regex to use for CORS.
 
 
 | secrets
-| link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/util/Map.html[Map]<link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/String.html[String], xref:uk.co.spudsoft.query.main.ProtectedCredentials.adoc[ProtectedCredentials]>
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Map.html[Map]<link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String], xref:uk.co.spudsoft.query.main.ProtectedCredentials.adoc[ProtectedCredentials]>
 | The externalized credentials map.
 
 Credentials that can be used in Source definitions.
@@ -70,13 +70,13 @@ Credentials that can be used in Source definitions.
 
 Kubernetes secrets can be mounted as volumes directly into the externalized credentials map, keeping them out of all configuration.
 | openIdIntrospectionHeaderName
-| link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/String.html[String]
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | The name of the header that will contain the payload from a token as Json (that may be base64 encoded or not).
 
 If this is used the query engine will not attempt to validate tokens itself, the header will be trusted implicitly.
  This clearly has security implications and should only be used in a secure environment.
 | sampleDataLoads
-| link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/util/List.html[List]<xref:uk.co.spudsoft.query.main.DataSourceConfig.adoc[DataSourceConfig]>
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html[List]<xref:uk.co.spudsoft.query.main.DataSourceConfig.adoc[DataSourceConfig]>
 | The data sources to use attempt to initialize with the sample data.
 
 The query engine is provided with some example queries that will be deployed to the baseConfigPath on startup if the directory is empty.
@@ -104,7 +104,7 @@ This is unlikely to be useful unless the example compose file is used to start t
 | xref:uk.co.spudsoft.query.main.JwtValidationConfig.adoc[JwtValidationConfig]
 | The configuration of the JWT validator.
 | managementEndpoints
-| link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/util/List.html[List]<link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/String.html[String]>
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html[List]<link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]>
 | Set the management endpoints (all under /manage) that should be enabled.
 
 Some of the management endpoints provide internal information and should absolutely not be accessible to end-users.
@@ -147,7 +147,7 @@ Unless you are sure that you have secured your /manage endpoint adequately it is
 
 See: 
 | managementEndpointPort
-| link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/Integer.html[Integer]
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Integer.html[Integer]
 | Set the port that the /manage endpoints should listen on.
 
 In order to help secure the management endpoints they can be run on a secondary port.
@@ -164,7 +164,7 @@ It the managementEndpointPort is negative the entire management endpoint setup w
 
 See: 
 | managementEndpointUrl
-| link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/String.html[String]
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | Set the URL that clients should be using to access the management endpoints.
 
 If set (and managementEndpointPort is positive), requests to /manage will return a JSON object containing a single "location" value with this URL.

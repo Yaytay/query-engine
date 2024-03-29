@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 jtalbut
+ * Copyright (C) 2024 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,29 +16,31 @@
  */
 package uk.co.spudsoft.query.main;
 
-import static org.junit.Assert.*;
-import org.junit.jupiter.api.Test;
-
 /**
- *
+ * Specify the type of sampling to use for traces.
  * @author jtalbut
  */
-public class ZipkinConfigTest {
+public enum TracingSampler {
+
+  /**
+   * Include every trace in the data sent to the tracing server.
+   */
+  alwaysOn
+  , 
+  /**
+   * Don't include any traces in the data sent to the tracing server.
+   */
+  alwaysOff
+  , 
+  /**
+   * If the trace has already been selected for reporting include it here.
+   * If this is the first trace use the rootSampler.
+   */
+  parent
+  , 
+  /**
+   * Include a percentage of the trace in the sample.
+   */
+  ratio
   
-  @Test
-  public void testGetServiceName() {
-    ZipkinConfig instance = new ZipkinConfig();
-    assertNull(instance.getServiceName());
-    instance.setServiceName("bob");
-    assertEquals("bob", instance.getServiceName());
-  }
-
-  @Test
-  public void testGetBaseUrl() {
-    ZipkinConfig instance = new ZipkinConfig();
-    assertNull(instance.getBaseUrl());
-    instance.setBaseUrl("bob");
-    assertEquals("bob", instance.getBaseUrl());
-  }
-
 }

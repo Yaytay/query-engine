@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.main;
 
 import com.google.common.cache.Cache;
 import com.google.common.collect.ImmutableMap;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
 import io.restassured.http.Header;
@@ -93,10 +94,12 @@ public class AuthQueryIT {
   
   @Test
   public void testQuery() throws Exception {
+    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     String baseConfigDir = "target/query-engine/samples-authqueryit";
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
+    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--persistence.datasource.url=" + mysql.getJdbcUrl()
       , "--persistence.datasource.adminUser.username=" + mysql.getUser()
@@ -336,6 +339,7 @@ public class AuthQueryIT {
     assertEquals(history2.getJsonArray("rows").getJsonObject(2).getString("id"), history1.getJsonArray("rows").getJsonObject(4).getString("id"));
 
     main.shutdown();
+    GlobalOpenTelemetry.resetForTest();
   }
   
 }

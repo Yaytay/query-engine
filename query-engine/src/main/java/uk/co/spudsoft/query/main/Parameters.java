@@ -55,10 +55,10 @@ public class Parameters {
   private List<String> corsAllowedOrigins = new ArrayList<>();
   
   /**
-   * The configuration to use for Zipkin tracing.
-   * If the base URL is not set zipkin tracing will be disabled.
+   * The configuration to use for distributed tracing.
+   * If the base URL is not set tracing will be disabled.
    */
-  private ZipkinConfig zipkin = new ZipkinConfig();
+  private TracingConfig tracing = new TracingConfig();
   
   /**
    * if true the process will end rather than waiting for requests.
@@ -255,13 +255,13 @@ public class Parameters {
   }
 
   /**
-   * Get the configuration to use for Zipkin tracing.
+   * Get the configuration to use for distributed tracing.
    * <p>
-   * @return the configuration to use for Zipkin tracing.
+   * @return the configuration to use for distributed tracing.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
-  public ZipkinConfig getZipkin() {
-    return zipkin;
+  public TracingConfig getTracing() {
+    return tracing;
   }
 
   /**
@@ -349,14 +349,14 @@ public class Parameters {
   }
 
   /**
-   * The configuration to use for Zipkin tracing.
+   * The configuration to use for distributed tracing.
    * <p>
-   * @param zipkin the configuration to use for Zipkin tracing.
+   * @param tracing the configuration to use for distributed tracing.
    * @return this, so that the method may be called in a fluent manner.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
-  public Parameters setZipkin(ZipkinConfig zipkin) {
-    this.zipkin = zipkin;
+  public Parameters setTracing(TracingConfig tracing) {
+    this.tracing = tracing;
     return this;
   }
   

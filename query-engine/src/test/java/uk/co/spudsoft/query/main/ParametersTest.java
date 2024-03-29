@@ -19,9 +19,7 @@ package uk.co.spudsoft.query.main;
 import com.google.common.collect.ImmutableMap;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
-import io.vertx.core.tracing.TracingOptions;
 import io.vertx.core.tracing.TracingPolicy;
-import io.vertx.tracing.zipkin.ZipkinTracingOptions;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -34,7 +32,6 @@ import static org.hamcrest.Matchers.is;
 import org.junit.jupiter.api.Test;
 import uk.co.spudsoft.params4j.FileType;
 import uk.co.spudsoft.params4j.Params4J;
-import uk.co.spudsoft.query.json.TracingOptionsMixin;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -148,7 +145,7 @@ public class ParametersTest {
   @Test
   public void testGetAcceptableIssuerRegexes() {
     Parameters instance = new Parameters();
-    assertEquals(null, instance.getJwt().getAcceptableIssuerRegexes());
+    assertEquals(Arrays.asList(), instance.getJwt().getAcceptableIssuerRegexes());
     instance.getJwt().setAcceptableIssuerRegexes(Arrays.asList(".*"));
     assertEquals(Arrays.asList(".*"), instance.getJwt().getAcceptableIssuerRegexes());
   }
@@ -219,7 +216,6 @@ public class ParametersTest {
     Params4J<Parameters> p4j = Params4J.<Parameters>factory()
             .withConstructor(() -> new Parameters())
             .withCommandLineArgumentsGatherer(args, null)
-            .withMixIn(TracingOptions.class, TracingOptionsMixin.class)
             .create();
 
     Parameters p = p4j.gatherParameters();
@@ -227,7 +223,6 @@ public class ParametersTest {
     assertEquals("target/classes/samples", p.getBaseConfigPath());
     assertEquals(5, p.getVertxOptions().getEventLoopPoolSize());
     assertEquals(5, p.getVertxOptions().getWorkerPoolSize());
-    assertEquals("Query-Engine", ((ZipkinTracingOptions) p.getVertxOptions().getTracingOptions()).getServiceName());
     assertEquals(TracingPolicy.ALWAYS, p.getHttpServerOptions().getTracingPolicy());
     
   }
@@ -265,7 +260,6 @@ public class ParametersTest {
     Params4J<Parameters> p4j = Params4J.<Parameters>factory()
             .withConstructor(() -> new Parameters())
             .withDirGatherer(outputDir, FileType.Json)
-            .withMixIn(TracingOptions.class, TracingOptionsMixin.class)
             .create();
 
     Parameters p = p4j.gatherParameters();
@@ -273,7 +267,6 @@ public class ParametersTest {
     assertEquals("target/classes/samples", p.getBaseConfigPath());
     assertEquals(5, p.getVertxOptions().getEventLoopPoolSize());
     assertEquals(8, p.getVertxOptions().getWorkerPoolSize());
-    assertEquals("Query-Engine", ((ZipkinTracingOptions) p.getVertxOptions().getTracingOptions()).getServiceName());
     assertEquals(TracingPolicy.ALWAYS, p.getHttpServerOptions().getTracingPolicy());
     
   }

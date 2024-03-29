@@ -60,7 +60,7 @@ public class JwtValidationConfig {
    * <P>
    * Regardless of how the JWKS endpoints are found, the acceptable issuers must be configured as tightly as possible.
    */
-  private List<String> jwksEndpoints;
+  private List<String> jwksEndpoints = new ArrayList<>();
   
   /**
    * Path to a file that may contain acceptable issuers to validate token issuers.
@@ -95,7 +95,7 @@ public class JwtValidationConfig {
    * <p>
    * For the security of the system only https endpoints should match these regular expressions.
    */
-  private List<String> acceptableIssuerRegexes;
+  private List<String> acceptableIssuerRegexes = new ArrayList<>();
 
   /**
    * The set of audience values, any one of which must be included in any token for the query engine to accept it.

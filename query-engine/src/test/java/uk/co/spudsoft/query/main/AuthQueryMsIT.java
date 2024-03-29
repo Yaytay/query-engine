@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.main;
 
 import com.google.common.cache.Cache;
 import com.google.common.collect.ImmutableMap;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
 import io.restassured.http.Header;
@@ -99,6 +100,7 @@ public class AuthQueryMsIT {
     String baseConfigDir = "target/query-engine/samples-authquerymsit";
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
+    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--persistence.datasource.url=" + mssql.getJdbcUrl()
       , "--persistence.datasource.adminUser.username=" + mssql.getUser()

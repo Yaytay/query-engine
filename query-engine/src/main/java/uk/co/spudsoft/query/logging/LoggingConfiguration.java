@@ -118,7 +118,7 @@ public class LoggingConfiguration {
   }
 
   private static void registerConverters(Map<String, String> ruleRegistry) {
-    ruleRegistry.put("vz", VertxZipkinLogbackConverter.class.getName());
+    ruleRegistry.put("vz", VertxTracingLogbackConverter.class.getName());
     ruleRegistry.put("vc", VertxContextLogbackConverter.class.getName());
   }
 
@@ -138,7 +138,7 @@ public class LoggingConfiguration {
     encoder.setIncludeMdc(true);
     encoder.setIncludeCallerData(true);
     encoder.setIncludeContext(true);
-    LogstashVertxContextJsonProvider<ILoggingEvent> provider = new LogstashVertxContextJsonProvider<>();
+    LogstashOpenTelemetrySpanProvider<ILoggingEvent> provider = new LogstashOpenTelemetrySpanProvider<>();
     provider.setFieldName("context");
     encoder.addProvider(provider);
     encoder.start();

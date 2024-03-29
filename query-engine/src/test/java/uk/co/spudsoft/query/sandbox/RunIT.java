@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.sandbox;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import uk.co.spudsoft.query.main.*;
 import io.vertx.junit5.VertxExtension;
 import java.io.ByteArrayOutputStream;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
+import uk.co.spudsoft.query.testcontainers.ServerProviderDistributedTracing;
 import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
 import uk.co.spudsoft.query.testcontainers.ServerProviderMsSQL;
@@ -44,6 +46,7 @@ public class RunIT {
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
   private static final ServerProviderMySQL mysql = new ServerProviderMySQL().init();
   private static final ServerProviderMsSQL mssql = new ServerProviderMsSQL().init();
+  private static final ServerProviderDistributedTracing tracing = new ServerProviderDistributedTracing().init();
   
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(RunIT.class);
@@ -63,6 +66,7 @@ public class RunIT {
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
+    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
             "--baseConfigPath=target/query-engine/samples-runit"
 //            , "--persistence.datasource.url=jdbc:" + postgres.getUrl()
@@ -98,6 +102,8 @@ public class RunIT {
             , "--session.oauth.Microsoft.credentials.id=" + System.getProperty("queryEngineEntraId")
             , "--session.oauth.Microsoft.credentials.secret=" + System.getProperty("queryEngineEntraSecret")
             , "--session.oauth.Microsoft.scope=openid profile api://341fde39-b5d8-4ee7-807f-813ec7bfff77/query-engine"
+            , "--tracing.protocol=" + tracing.getProtocol()
+            , "--tracing.url=" + tracing.getUrl()
             
     }, stdout);
     

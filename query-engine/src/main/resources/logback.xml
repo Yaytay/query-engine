@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="false" scan="true" scanPeriod="10 minutes">
-  <conversionRule conversionWord="vz" converterClass="uk.co.spudsoft.query.logging.VertxZipkinLogbackConverter"/>
+  <conversionRule conversionWord="vz" converterClass="uk.co.spudsoft.query.logging.VertxTracingLogbackConverter"/>
   <conversionRule conversionWord="vc" converterClass="uk.co.spudsoft.query.logging.VertxContextLogbackConverter"/>
   <appender name="STDOUTPUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>

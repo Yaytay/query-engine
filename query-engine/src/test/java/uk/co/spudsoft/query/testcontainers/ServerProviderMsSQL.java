@@ -16,21 +16,15 @@
  */
 package uk.co.spudsoft.query.testcontainers;
 
-import uk.co.spudsoft.query.testhelpers.RowSetHelper;
 import com.github.dockerjava.api.model.Container;
 import com.zaxxer.hikari.HikariDataSource;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.mssqlclient.MSSQLBuilder;
 import io.vertx.mssqlclient.MSSQLConnectOptions;
-import io.vertx.sqlclient.Pool;
-import io.vertx.sqlclient.PoolOptions;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.Arrays;
 import java.util.stream.Collectors;
-import static liquibase.util.JdbcUtil.closeStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.MSSQLServerContainer;

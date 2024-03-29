@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.main;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
@@ -66,6 +67,7 @@ public class MainIT {
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
+    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--help"
     }, stdout);
@@ -80,6 +82,7 @@ public class MainIT {
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
+    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--helpenv"
     }, stdout);
@@ -94,6 +97,7 @@ public class MainIT {
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
+    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--persistence.datasource.url=wibble"
       , "--baseConfigPath=target/query-engine/samples-mainit"
@@ -103,9 +107,6 @@ public class MainIT {
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--pipelineCache.maxDurationMs=0"
       , "--pipelineCache.purgePeriodMs=10"
-      , "--managementEndpoints[0]=up"
-      , "--managementEndpoints[2]=prometheus"
-      , "--managementEndpoints[3]=threads"
       , "--session.requireSession=false"
       , "--session.oauth.GitHub.logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
       , "--session.oauth.GitHub.authorizationEndpoint=https://github.com/login/oauth/authorize"
@@ -113,6 +114,10 @@ public class MainIT {
       , "--session.oauth.GitHub.credentials.id=bdab017f4732085a51f9"
       , "--session.oauth.GitHub.credentials.secret=" + System.getProperty("queryEngineGithubSecret")
       , "--session.oauth.GitHub.pkce=false"
+      , "--tracing.protocol=zipkin"
+      , "--tracing.sampler=ratio"
+      , "--tracing.sampleRatio=0.5"
+      , "--tracing.url=http://nonexistent/zipkin"
     }, stdout);
     assertEquals(0, stdoutStream.size());
     
@@ -125,6 +130,7 @@ public class MainIT {
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
+    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--persistence.datasource.url=" + postgres.getJdbcUrl()
       , "--persistence.datasource.adminUser.username=" + postgres.getUser()
@@ -150,6 +156,9 @@ public class MainIT {
       , "--session.oauth.GitHub.credentials.id=bdab017f4732085a51f9"
       , "--session.oauth.GitHub.credentials.secret=" + System.getProperty("queryEngineGithubSecret")
       , "--session.oauth.GitHub.pkce=false"
+      , "--tracing.protocol=otlphttp"
+      , "--tracing.sampler=alwaysOn"
+      , "--tracing.url=http://nonexistent/otlphttp"
     }, stdout);
     assertEquals(0, stdoutStream.size());
     
@@ -234,6 +243,17 @@ public class MainIT {
     ArrayNode manageEndpointsJson = Json.decodeValue(manageEndpointsString, ArrayNode.class);
     assertEquals(3, manageEndpointsJson.size());
     
+    given()
+            .config(RestAssuredConfig.config().redirect(redirectConfig().followRedirects(false)))
+            .log().all()
+            .get("/api")
+            .then()
+            .statusCode(301)
+            .log().all()
+            .header("Location", equalTo("/openapi"))
+            .extract().body().asString()
+            ;
+
     String nonProfile = given()
             .log().all()
             .get("/api/session/profile")
@@ -264,6 +284,7 @@ public class MainIT {
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
+    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--persistence.datasource.url=" + postgres.getJdbcUrl()
       , "--persistence.datasource.adminUser.username=" + postgres.getUser()
@@ -290,6 +311,10 @@ public class MainIT {
       , "--session.oauth.GitHub.credentials.id=bdab017f4732085a51f9"
       , "--session.oauth.GitHub.credentials.secret=" + System.getProperty("queryEngineGithubSecret")
       , "--session.oauth.GitHub.pkce=false"
+      , "--tracing.protocol=otlphttp"
+      , "--tracing.sampler=parent"
+      , "--tracing.parentSampler=alwaysOn"
+      , "--tracing.url=http://nonexistent/otlphttp"
     }, stdout);
     assertEquals(0, stdoutStream.size());
     

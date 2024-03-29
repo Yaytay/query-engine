@@ -33,7 +33,7 @@ A link:https://vertx.io/docs/apidocs/io/vertx/core/MultiMap.html[io.vertx.core.M
  * cookies
  
 
-A link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/util/Map.html[java.util.Map]  map of request cookies.
+A link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Map.html[java.util.Map]  map of request cookies.
  * clientIp
  
 
@@ -90,7 +90,7 @@ Checks that the host on the request is localhost.
 | 
 
 | expression
-| link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/String.html[String]
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | 
 
 |===

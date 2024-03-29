@@ -10,13 +10,13 @@
 
 
 | configFile
-| link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/String.html[String]
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | The location of a standard logback configuration file.This value should only be set if the built-in configuration options are inadequate for your purposes.
 | jsonFormat
 | boolean
 | When true for the logs output to stdout to be in JSON format.This value is ignored if the config file is specified.
 | level
-| link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/util/Map.html[Map]<link:https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/String.html[String], link:https://www.slf4j.org/api/org/slf4j/event/Level.html[Level]>
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Map.html[Map]<link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String], link:https://www.slf4j.org/api/org/slf4j/event/Level.html[Level]>
 | Override the level of individual link:https://www.slf4j.org/api/org/slf4j/Logger.html[org.slf4j.Logger] s.This enables configuration like:
  logging.level.uk.co.spudsoft.query.main=DEBUG
 |===

@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.main;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
@@ -59,6 +60,7 @@ public class MainIT {
     Main main = new DesignMain();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
+    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--persistence.datasource.url=wibble"
       , "--baseConfigPath=target/query-engine/samples-mainit"
@@ -90,6 +92,7 @@ public class MainIT {
     Main main = new DesignMain();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
+    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--persistence.datasource.url=" + postgres.getJdbcUrl()
       , "--persistence.datasource.adminUser.username=" + postgres.getUser()

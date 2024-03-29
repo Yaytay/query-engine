@@ -17,10 +17,6 @@
 
 package uk.co.spudsoft.query.main;
 
-import brave.Tracing;
-import brave.http.HttpServerParser;
-import brave.http.HttpTracing;
-import brave.sampler.Sampler;
 import ch.qos.logback.classic.LoggerContext;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.jakarta.rs.json.JacksonJsonProvider;
@@ -30,6 +26,22 @@ import uk.co.spudsoft.query.logging.LoggingConfiguration;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
+import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.exporter.zipkin.ZipkinSpanExporter;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.OpenTelemetrySdkBuilder;
+import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.sdk.resources.ResourceBuilder;
+import io.opentelemetry.sdk.trace.SdkTracerProvider;
+import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
+import io.opentelemetry.sdk.trace.samplers.Sampler;
+import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
+import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
+import io.opentelemetry.extension.trace.propagation.B3Propagator;
+import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.swagger.v3.core.converter.ModelConverters;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.integration.SwaggerConfiguration;
@@ -43,9 +55,7 @@ import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.jackson.DatabindCodec;
-import io.vertx.core.tracing.TracingOptions;
 import io.vertx.ext.healthchecks.HealthCheckHandler;
-import io.vertx.ext.healthchecks.Status;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.handler.CorsHandler;
@@ -53,7 +63,7 @@ import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import io.vertx.micrometer.impl.PrometheusScrapingHandlerImpl;
-import io.vertx.tracing.zipkin.ZipkinTracingOptions;
+import io.vertx.tracing.opentelemetry.OpenTelemetryOptions;
 import jakarta.ws.rs.core.Application;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -101,7 +111,11 @@ import uk.co.spudsoft.query.exec.filters.QueryFilter;
 import uk.co.spudsoft.query.exec.filters.SortFilter;
 import uk.co.spudsoft.query.exec.procs.sort.ProcessorSortInstance;
 import uk.co.spudsoft.query.json.ObjectMapperConfiguration;
-import uk.co.spudsoft.query.json.TracingOptionsMixin;
+import static uk.co.spudsoft.query.main.TracingProtocol.otlpgrpc;
+import static uk.co.spudsoft.query.main.TracingSampler.alwaysOff;
+import static uk.co.spudsoft.query.main.TracingSampler.alwaysOn;
+import static uk.co.spudsoft.query.main.TracingSampler.parent;
+import static uk.co.spudsoft.query.main.TracingSampler.ratio;
 import uk.co.spudsoft.query.main.sample.SampleDataLoader;
 import uk.co.spudsoft.query.main.sample.SampleDataLoaderMsSQL;
 import uk.co.spudsoft.query.main.sample.SampleDataLoaderMySQL;
@@ -122,13 +136,14 @@ import uk.co.spudsoft.query.web.rest.InfoHandler;
 import uk.co.spudsoft.query.web.rest.SessionHandler;
 import uk.co.spudsoft.vertx.rest.JaxRsHandler;
 import uk.co.spudsoft.vertx.rest.OpenApiHandler;
-import zipkin2.Span;
-import zipkin2.reporter.AsyncReporter;
-import zipkin2.reporter.Reporter;
-import zipkin2.reporter.urlconnection.URLConnectionSender;
 
 /**
- *
+ * The main entry point for the Query Engine.
+ * 
+ * The Query Engine uses dependency inversion as much as it can, but does not use any third party libraries for wiring everything together
+ * (because wiring based on reflection is magic and slow).
+ * So this class is mainly concerned with connecting all the components together.
+ * 
  * @author jtalbut
  */
 @OpenAPIDefinition
@@ -148,7 +163,7 @@ public class Main extends Application {
   
   private HealthCheckHandler healthCheckHandler;
   private HealthCheckHandler upCheckHandler;
-  private AtomicBoolean up = new AtomicBoolean();
+  private final AtomicBoolean up = new AtomicBoolean();
   
   private OpenIdDiscoveryHandler openIdDiscoveryHandler;
   private JwtValidator jwtValidator;
@@ -168,7 +183,18 @@ public class Main extends Application {
       shutdown(-1);
     }
   }
-  
+
+  protected Vertx getVertx() {
+    return vertx;
+  }
+
+  protected DirCache getDirCache() {
+    return dirCache;
+  }
+
+  protected PipelineDefnLoader getDefnLoader() {
+    return defnLoader;
+  }
   
   /**
    * Main method.
@@ -238,7 +264,6 @@ public class Main extends Application {
             .withEnvironmentVariablesGatherer(NAME, false)
             .withSystemPropertiesGatherer(NAME)
             .withCommandLineArgumentsGatherer(args, "--")
-            .withMixIn(TracingOptions.class, TracingOptionsMixin.class)
             .create();
     
     logger.trace("Args: {}", (Object) args);
@@ -332,10 +357,9 @@ public class Main extends Application {
                     )
                     .setEnabled(true)
     );
-    
-    HttpTracing zipkinTracing = buildZipkinTrace(params.getZipkin());
-    if (zipkinTracing != null) {
-      vertxOptions.setTracingOptions(new ZipkinTracingOptions(zipkinTracing));
+    OpenTelemetry openTelemetry = buildOpenTelemetry(params.getTracing());
+    if (openTelemetry != null) {
+      vertxOptions.setTracingOptions(new OpenTelemetryOptions(openTelemetry));
     }
     vertx = Vertx.vertx(vertxOptions);
     meterRegistry = (PrometheusMeterRegistry) BackendRegistries.getDefaultNow();
@@ -376,11 +400,12 @@ public class Main extends Application {
       return Future.succeededFuture(2);
     }
 
+    UpCheckHandler upCheck = new UpCheckHandler(up);
     healthCheckHandler = HealthCheckHandler.create(vertx);
-    healthCheckHandler.register("Up", promise -> promise.complete(this.up.get() ? Status.OK() : Status.KO()));
+    healthCheckHandler.register("Up", upCheck);
     healthCheckHandler.register("Auditor", auditor::healthCheck);
     upCheckHandler = HealthCheckHandler.create(vertx);
-    upCheckHandler.register("Up", promise -> promise.complete(this.up.get() ? Status.OK() : Status.KO()));
+    upCheckHandler.register("Up", upCheck);
     
     Router router = Router.router(vertx);
     Router mgmtRouter = Router.router(vertx);
@@ -397,7 +422,7 @@ public class Main extends Application {
     }
     
     CorsHandler corsHandler = CorsHandler.create();
-    if (params.getCorsAllowedOrigins() != null) {
+    if (!params.getCorsAllowedOrigins().isEmpty()) {
       corsHandler.addOrigins(params.getCorsAllowedOrigins());
     }
     corsHandler.allowedMethods(
@@ -423,11 +448,11 @@ public class Main extends Application {
     FilterFactory filterFactory = createFilterFactory();
     
     List<Object> controllers = new ArrayList<>();
-    boolean requireSession = params.getSession() != null && params.getSession().isRequireSession();
+    boolean requireSession = params.getSession().isRequireSession();
     controllers.add(new InfoHandler(defnLoader, outputAllErrorMessages(), requireSession));
     controllers.add(new DocHandler(outputAllErrorMessages(), requireSession));
     controllers.add(new FormIoHandler(defnLoader, filterFactory, outputAllErrorMessages(), requireSession));
-    controllers.add(new AuthConfigHandler(params.getSession() == null ? null : params.getSession().getOauth()));
+    controllers.add(new AuthConfigHandler(params.getSession().getOauth()));
     controllers.add(new SessionHandler(outputAllErrorMessages(), requireSession));
     
     controllers.add(new HistoryHandler(auditor, outputAllErrorMessages()));
@@ -460,7 +485,7 @@ public class Main extends Application {
     router.route("/ui/*").handler(UiRouter.create(vertx, "/ui", "/www", "/www/index.html"));
     router.getWithRegex("/openapi\\..*").blockingHandler(openApiHandler);
     router.get("/openapi").handler(openApiHandler.getUiHandler());
-    if (params.getSession().getOauth() != null && !params.getSession().getOauth().isEmpty()) {
+    if (!params.getSession().getOauth().isEmpty()) {
       LoginRouter loginRouter = LoginRouter.create(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, rcb, params.getSession(), params.getJwt().getRequiredAudiences(), outputAllErrorMessages(), params.getSession().getSessionCookie());
       router.get("/login").handler(loginRouter);
       router.get("/login/return").handler(loginRouter);
@@ -476,7 +501,7 @@ public class Main extends Application {
             .listen()            
             .compose(svr -> {
               port = svr.actualPort();
-              if (params.getSampleDataLoads() != null && !params.getSampleDataLoads().isEmpty()) {
+              if (!params.getSampleDataLoads().isEmpty()) {
                 return performSampleDataLoads(params.getSampleDataLoads().iterator());
               } else {
                 return Future.succeededFuture();
@@ -544,51 +569,64 @@ public class Main extends Application {
     }
   }
 
+  public static String fileType(File file) {
+    if (file.exists()) {
+      if (file.isDirectory()) {
+        return "directory";
+      } else {
+        return "file";
+      }
+    } else {
+      return "does not exist";
+    }
+  }
+  
   @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_BAD_PRACTICE")
   public static void prepareBaseConfigPath(File baseConfigFile, List<DataSourceConfig> sampleDataLoads) {
     if (!baseConfigFile.exists()) {
       logger.info("Creating base config dir at {}", baseConfigFile);
       baseConfigFile.mkdirs();
     }
-    if (!baseConfigFile.isDirectory()) {
-      logger.warn("Base config dir ({}) is not a directory", baseConfigFile);
-    }
     String[] children = baseConfigFile.list();
-    if (children != null && children.length == 0) {
-      logger.info("Creating sample configs");
-      extractSampleFile(baseConfigFile, "samples/args/Args00.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/args/Args01.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/args/Args02.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/args/Args03.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/args/Args04.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/args/Args05.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/args/Args06.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/args/Args07.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/args/Args08.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/args/Args09.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/args/Args10.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/args/Args11.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/args/Args12.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/args/Args13.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/args/Args14.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/args/Args15.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/args/Args16.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/demo/FeatureRichExample.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/demo/LookupValues.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/sub1/sub2/AllDynamicIT.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/sub1/sub2/ConcurrentRulesIT.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/sub1/sub2/DynamicEndpointPipelineIT.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/sub1/sub2/EmptyDataIT.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/sub1/sub2/JsonToPipelineIT.json", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/sub1/sub2/SortableIT.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/sub1/sub2/TemplatedJsonToPipelineIT.json.vm", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/sub1/sub2/TemplatedYamlToPipelineIT.yaml.vm", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/sub1/sub2/YamlToPipelineIT.yaml", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/sub1/sub2/permissions.jexl", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/sub1/permissions.jexl", sampleDataLoads);
-      extractSampleFile(baseConfigFile, "samples/permissions.jexl", sampleDataLoads);
+    if (children == null) {
+      logger.warn("Base config dir ({}) is not a directory ({})", baseConfigFile, fileType(baseConfigFile));
     } else {
-      logger.info("Not creating sample configs because {} already contains {} files", baseConfigFile, children == null ? null : children.length);
+      if (children.length == 0) {
+        logger.info("Creating sample configs");
+        extractSampleFile(baseConfigFile, "samples/args/Args00.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/args/Args01.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/args/Args02.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/args/Args03.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/args/Args04.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/args/Args05.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/args/Args06.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/args/Args07.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/args/Args08.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/args/Args09.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/args/Args10.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/args/Args11.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/args/Args12.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/args/Args13.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/args/Args14.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/args/Args15.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/args/Args16.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/demo/FeatureRichExample.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/demo/LookupValues.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/sub1/sub2/AllDynamicIT.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/sub1/sub2/ConcurrentRulesIT.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/sub1/sub2/DynamicEndpointPipelineIT.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/sub1/sub2/EmptyDataIT.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/sub1/sub2/JsonToPipelineIT.json", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/sub1/sub2/SortableIT.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/sub1/sub2/TemplatedJsonToPipelineIT.json.vm", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/sub1/sub2/TemplatedYamlToPipelineIT.yaml.vm", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/sub1/sub2/YamlToPipelineIT.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/sub1/sub2/permissions.jexl", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/sub1/permissions.jexl", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/permissions.jexl", sampleDataLoads);
+      } else {
+        logger.info("Not creating sample configs because {} already contains {} files", baseConfigFile, children.length);
+      }
     }
   }
   
@@ -644,7 +682,7 @@ public class Main extends Application {
             );
     
     WebClient webClient = WebClient.create(vertx);
-    if (jwtConfig.getJwksEndpoints() != null && !jwtConfig.getJwksEndpoints().isEmpty()) {
+    if (!jwtConfig.getJwksEndpoints().isEmpty()) {
       openIdDiscoveryHandler = JsonWebKeySetOpenIdDiscoveryHandler.create(webClient, iah, jwtConfig.getDefaultJwksCacheDuration());
       jwtValidator = JwtValidator.createStatic(webClient, jwtConfig.getJwksEndpoints(), jwtConfig.getDefaultJwksCacheDuration(), iah);
     } else {
@@ -683,42 +721,62 @@ public class Main extends Application {
             );
   }
 
-  static HttpTracing buildZipkinTrace(ZipkinConfig config) {
+  static OpenTelemetry buildOpenTelemetry(TracingConfig config) {
 
-    Reporter<Span> spanReporter;
-
-    if ((config == null) || Strings.isNullOrEmpty(config.getBaseUrl())) {
-      return null;
-    } else {
-      if (!config.getBaseUrl().endsWith("/")) {
-        config.setBaseUrl(config.getBaseUrl() + "/");
-      }
-      spanReporter = AsyncReporter.create(URLConnectionSender.create(config.getBaseUrl() + "api/v2/spans"));
+    ResourceBuilder resourceBuilder = Resource.getDefault().toBuilder()
+            .put("service.name", config.getServiceName())
+            .put("service.version", Version.MAVEN_PROJECT_VERSION)
+            ;
+    SdkTracerProvider sdkTracerProvider = null;
+    
+    if (config.getProtocol() != TracingProtocol.none && !Strings.isNullOrEmpty(config.getUrl())) {
+      SpanExporter spanExporter = switch (config.getProtocol()) {
+        case none -> null;
+        case otlpgrpc -> OtlpGrpcSpanExporter.builder().setEndpoint(config.getUrl()).build();
+        case otlphttp -> OtlpHttpSpanExporter.builder().setEndpoint(config.getUrl()).build();
+        case zipkin -> ZipkinSpanExporter.builder().setEndpoint(config.getUrl()).build();
+      };
+      Sampler sampler = switch (config.getSampler()) {
+        case alwaysOff ->
+          Sampler.alwaysOff();
+        case alwaysOn ->
+          Sampler.alwaysOn();
+        case parent ->
+          Sampler.parentBased(switch (config.getSampler()) {
+            case alwaysOff ->
+              Sampler.alwaysOff();
+            case alwaysOn ->
+              Sampler.alwaysOn();
+            case parent ->
+              Sampler.alwaysOff();
+            case ratio ->
+              Sampler.traceIdRatioBased(config.getSampleRatio());
+          });
+        case ratio ->
+          Sampler.traceIdRatioBased(config.getSampleRatio());
+      };
+      
+      sdkTracerProvider = SdkTracerProvider.builder()
+              .addSpanProcessor(
+                      BatchSpanProcessor.builder(spanExporter).build()
+              )
+              .setResource(resourceBuilder.build())
+              .setSampler(sampler)
+              .build();
     }
-            
-    Tracing tracing = Tracing.newBuilder()
-            .localServiceName(config.getServiceName() == null ? "query-engine" : config.getServiceName())
-            .spanReporter(spanReporter)
-            .sampler(Sampler.ALWAYS_SAMPLE)
-            .build();
-    HttpTracing httpTracing = HttpTracing.newBuilder(tracing)
-            .serverParser(new HttpServerParser())
-            .build();
-    return httpTracing;
+    TextMapPropagator propagator = switch (config.getPropagator()) {
+      case b3 -> B3Propagator.injectingSingleHeader();
+      case b3multi -> B3Propagator.injectingMultiHeaders();
+      case w3c -> W3CTraceContextPropagator.getInstance();
+    };
+    OpenTelemetrySdkBuilder openTelemetryBuilder = OpenTelemetrySdk.builder()
+            .setTracerProvider(sdkTracerProvider)
+            .setPropagators(ContextPropagators.create(propagator))
+            ;
+    
+    return openTelemetryBuilder.buildAndRegisterGlobal();
   }
 
-  protected Vertx getVertx() {
-    return vertx;
-  }
-
-  protected DirCache getDirCache() {
-    return dirCache;
-  }
-
-  protected PipelineDefnLoader getDefnLoader() {
-    return defnLoader;
-  }
-  
   protected boolean outputAllErrorMessages() {
     return false;
   }

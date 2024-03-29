@@ -21,6 +21,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import io.netty.handler.codec.http.QueryStringDecoder;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
 import io.vertx.core.json.JsonArray;
@@ -153,6 +154,7 @@ public class LoginRouterWithDiscoveryWithoutPersistenceIT {
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
+    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--baseConfigPath=target/query-engine/samples-loginrouterwithdiscoverywithoutpersistenceit"
       , "--vertxOptions.tracingOptions.serviceName=Query-Engine"

@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.web;
 
 import io.netty.handler.codec.http.QueryStringDecoder;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
 import java.io.ByteArrayOutputStream;
@@ -51,6 +52,7 @@ public class LoginRouterWithoutDiscoveryIT {
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
+    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--persistence.datasource.url=" + postgres.getJdbcUrl()
       , "--persistence.datasource.adminUser.username=" + postgres.getUser()
