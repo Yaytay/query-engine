@@ -62,7 +62,7 @@ jobs:
         verbose: true 
 
     - name: Tidy up old query-engine package versions
-      uses: actions/delete-package-versions@v4
+      uses: actions/delete-package-versions@v5
       continue-on-error: true
       with: 
         package-name: 'query-engine'
@@ -71,7 +71,7 @@ jobs:
         delete-only-pre-release-versions: "true" 
                 
     - name: Tidy up old query-engine-design-mode package versions
-      uses: actions/delete-package-versions@v4
+      uses: actions/delete-package-versions@v5
       continue-on-error: true
       with: 
         package-name: 'query-engine-design-mode'
