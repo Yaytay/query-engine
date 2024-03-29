@@ -36,7 +36,7 @@ jobs:
         maven-version: 3.9.2
 
     - name: Generate settings.xml for Maven Builds
-      uses: whelk-io/maven-settings-xml-action@v21
+      uses: whelk-io/maven-settings-xml-action@v22
       with:
         servers: '[{ "id": "github", "username": "yaytay", "password": "${{ secrets.GITHUB_TOKEN }}" }]'
         repositories: '[{"id":"central", "url":"https://repo1.maven.org/maven2"}]'
