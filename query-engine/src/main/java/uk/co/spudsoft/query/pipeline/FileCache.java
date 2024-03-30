@@ -65,7 +65,9 @@ public class FileCache<T> {
     }
 
     this.cache = cacheBuilder.build();
-    GuavaCacheMetrics.monitor(meterRegistry, cache, name);
+    if (meterRegistry != null) {
+      GuavaCacheMetrics.monitor(meterRegistry, cache, name);
+    }
   }
   
   public Future<T> get(DirCacheTree.File file, Function<Buffer, T> mapper) {

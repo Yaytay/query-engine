@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.web.rest;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import uk.co.spudsoft.query.main.*;
 import io.restassured.RestAssured;
 import io.vertx.core.Vertx;
@@ -81,6 +82,7 @@ public class DesignHandlerIT {
     Main main = new DesignMain();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
+    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--audit.datasource.url=" + postgres.getJdbcUrl()
       , "--audit.datasource.adminUser.username=" + postgres.getUser()

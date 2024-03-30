@@ -38,7 +38,7 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
  * <p>
  * Provides a simple way to do demos, manual testing or UI development.
  * <p>
- * If you try to run this from DesignMode you may run into issues with the version numbers of DesignMode and the base project not mathing.
+ * If you try to run this from DesignMode you may run into issues with the version numbers of DesignMode and the base project not matching.
  * To work around this you will need to either:
  * <ul>
  * <li>Have done a build of the base project since the last git commit.

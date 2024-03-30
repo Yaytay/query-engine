@@ -36,7 +36,7 @@ jobs:
         maven-version: 3.9.2
 
     - name: Generate settings.xml for Maven Builds
-      uses: whelk-io/maven-settings-xml-action@v21
+      uses: whelk-io/maven-settings-xml-action@v22
       with:
         servers: '[{ "id": "github", "username": "yaytay", "password": "${{ secrets.GITHUB_TOKEN }}" }]'
         repositories: '[{"id":"central", "url":"https://repo1.maven.org/maven2"}]'
@@ -49,7 +49,7 @@ jobs:
       run: mvn -P ui -B clean install site
 
     - name: Login to GitHub Container Registry
-      uses: docker/login-action@v2
+      uses: docker/login-action@v3
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
@@ -65,7 +65,7 @@ jobs:
         docker push ghcr.io/yaytay/${PARTS[0]}:${PARTS[1]}
         
     - name: Upload site reports on success
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: success()
       with:
         name: reports

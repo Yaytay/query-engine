@@ -56,7 +56,6 @@ public class DocHandlerIT {
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--logging.jsonFormat=true"
-      , "--designMode=true"
     }, stdout);
 
     RestAssured.port = main.getPort();
