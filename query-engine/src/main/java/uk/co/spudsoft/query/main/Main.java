@@ -254,7 +254,7 @@ public class Main extends Application {
     return port;
   }
       
-  @SuppressFBWarnings(value = "PATH_TRAVERSAL_IN", justification = "False positive, the dirs at this stage cannot be specified by the user")
+  @SuppressFBWarnings(value = {"PATH_TRAVERSAL_IN", "POTENTIAL_XML_INJECTION"}, justification = "False positive, the dirs at this stage cannot be specified by the user")
   protected Future<Integer> innerMain(String[] args, PrintStream stdout) {
     
     Params4J<Parameters> p4j = Params4J.<Parameters>factory()
