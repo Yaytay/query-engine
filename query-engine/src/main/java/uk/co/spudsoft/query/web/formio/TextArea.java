@@ -21,6 +21,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 
 /**
+ * Output a formio TextArea component.
  *
  * @author jtalbut
  */

@@ -25,6 +25,12 @@ import io.vertx.core.Vertx;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Calendar;
+import java.util.TimeZone;
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
@@ -41,6 +47,8 @@ public class JdbcHelper {
   
   private static final Logger logger = LoggerFactory.getLogger(JdbcHelper.class);
   
+  private static final Calendar TZ_CAL = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+    
   private final Vertx vertx;
   private final DataSource dataSource;
 
@@ -107,13 +115,21 @@ public class JdbcHelper {
     R accept(T t) throws Throwable;
   }
 
+  public static void setLocalDateTimeUTC(PreparedStatement ps, int index, LocalDateTime utc) throws SQLException {
+    if (utc == null) {
+      ps.setTimestamp(index, null);
+    } else {
+      ps.setTimestamp(index, Timestamp.from(utc.toInstant(ZoneOffset.UTC)), TZ_CAL);
+    }
+  }
+  
   public Future<Integer> runSqlUpdate(String sql, SqlConsumer<PreparedStatement> prepareStatement) {
     return vertx.executeBlocking(() -> runSqlUpdateSynchronously(sql, prepareStatement));
   }
 
   @SuppressFBWarnings(value = "SQL_INJECTION_JDBC", justification = "SQL is generated from static strings")
-  private int runSqlUpdateSynchronously(String sql, SqlConsumer<PreparedStatement> prepareStatement) throws Exception {
-    logger.debug("Executing update: {}", sql);
+  public int runSqlUpdateSynchronously(String sql, SqlConsumer<PreparedStatement> prepareStatement) throws Exception {
+    logger.trace("Executing update: {}", sql);
     String logMessage = null;
     try {
       logMessage = "Failed to get connection: ";
@@ -151,11 +167,11 @@ public class JdbcHelper {
   }
 
   @SuppressFBWarnings(value = "SQL_INJECTION_JDBC", justification = "SQL is generated from static strings")
-  private <R> R runSqlSelectSynchronously(String sql
+  public <R> R runSqlSelectSynchronously(String sql
           , SqlConsumer<PreparedStatement> prepareStatement
           , SqlFunction<ResultSet, R> resultSetHandler
   ) throws Exception {
-    logger.debug("Executing select: {}", sql);
+    logger.trace("Executing select: {}", sql);
     String logMessage = null;
     try {
       logMessage = "Failed to get connection: ";

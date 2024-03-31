@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.main;
 
 import com.google.common.base.Strings;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import uk.co.spudsoft.jwtvalidatorvertx.DiscoveryData;
 
 /**
@@ -61,7 +62,7 @@ public class AuthEndpoint {
     if (tempAuthorizationEndpoint != null) {
       this.authorizationEndpoint = tempAuthorizationEndpoint;
     }
-    this.invalidDate = LocalDateTime.now().plusDays(1);
+    this.invalidDate = LocalDateTime.now(ZoneOffset.UTC).plusDays(1);
   }
   
   public void validate() {

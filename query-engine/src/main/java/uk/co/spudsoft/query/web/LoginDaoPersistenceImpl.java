@@ -22,16 +22,17 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.sql.DataSource;
@@ -223,6 +224,9 @@ public class LoginDaoPersistenceImpl implements LoginDao {
         deleteToken = deleteToken.replaceAll("#", quote);
         expireTokens = expireTokens.replaceAll("#", quote);
       }
+      
+      timezoneHandlingTest();
+      
       prepared.set(true);
     }
     
@@ -230,15 +234,66 @@ public class LoginDaoPersistenceImpl implements LoginDao {
       logger.debug("Scheduled purge of token cache at {}", purgeDelay);
       int cacheSize;
       synchronized (tokenCache) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         tokenCache.entrySet().removeIf(entry -> entry.getValue().expiry.isBefore(now));
         cacheSize = tokenCache.size();        
         jdbcHelper.runSqlUpdate(purgeLogins, ps -> {
-          ps.setTimestamp(1, Timestamp.from(now.toInstant(ZoneOffset.UTC)));
+          JdbcHelper.setLocalDateTimeUTC(ps, 1, LocalDateTime.now(ZoneOffset.UTC));
         });
       }
       logger.debug("Scheduled purge of token cache resulted in cache size of {}", cacheSize);
     });
+  }
+
+  @SuppressFBWarnings(value = "SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING", justification = "Generated SQL is safe")
+  void timezoneHandlingTest() throws Exception {
+    
+    int purgedTokens = jdbcHelper.runSqlUpdateSynchronously(purgeLogins, ps -> {
+      JdbcHelper.setLocalDateTimeUTC(ps, 1, LocalDateTime.now(ZoneOffset.UTC));
+    });
+    logger.info("Purged {} expired tokens on startup", purgedTokens);
+    
+    String startupTestSessionId = UUID.randomUUID().toString();
+    LocalDateTime expiry = LocalDateTime.now(ZoneOffset.UTC).plusMinutes(1);
+    String token = "Startup test " + ManagementFactory.getRuntimeMXBean().getName();
+    int rows;
+    try {
+      rows = jdbcHelper.runSqlUpdateSynchronously(storeToken, ps -> {
+        int param = 1;
+        ps.setString(param++, startupTestSessionId);
+        JdbcHelper.setLocalDateTimeUTC(ps, param++, expiry);
+        ps.setString(param++, token);
+      });
+    } catch (Throwable ex) {
+      throw new IllegalStateException("Startup test for timezone handling failed.  The tuple (" + startupTestSessionId + ", " + expiry + ", \"" + token + "\") could not be written to the session table: ", ex);
+    }
+    if (rows == 0) {
+      throw new IllegalStateException("Startup test for timezone handling failed.  The tuple (" + startupTestSessionId + ", " + expiry + ", \"" + token + "\") was written to the session table but did not affect any rows");
+    }
+    TimestampedToken testToken;
+    try {
+      testToken = jdbcHelper.runSqlSelectSynchronously(getToken, ps -> {
+        ps.setString(1, startupTestSessionId);
+      }, rs -> {
+        TimestampedToken result = null;
+        while (rs.next()) {
+          logger.debug("rs.getTimestamp(1): {}", rs.getTimestamp(1));
+          logger.debug("rs.getTimestamp(1).toLocalDateTime(): {}", rs.getTimestamp(1).toLocalDateTime());
+          result = new TimestampedToken(rs.getTimestamp(1).toLocalDateTime(), rs.getString(2));
+          break ;
+        }
+        return result;
+      });
+    } catch (Throwable ex) {
+      throw new IllegalStateException("Startup test for timezone handling failed.  The tuple (" + startupTestSessionId + ", " + expiry + ", \"" + token + "\"}) was written to the session table but could not be read: ", ex);
+    }
+    if (testToken == null) {
+      throw new IllegalStateException("Startup test for timezone handling failed.  The tuple (" + startupTestSessionId + ", " + expiry + ", \"" + token + "\") was written to the session table but could not be found in it.");
+    }
+    long difference = expiry.until(testToken.expiry, ChronoUnit.SECONDS);
+    if (Math.abs(difference) > 1) {
+      throw new IllegalStateException("The tuple (" + startupTestSessionId + ", " + expiry + ", \"" + token + "\") was written to the session table but on output it was (" + startupTestSessionId + ", " + expiry + ", \"" + token + "\").  Please check your database/connection details for correct handling of timezones.");
+    }
   }
   
   @Override
@@ -256,7 +311,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
                     int param = 1; 
                     ps.setString(param++, JdbcHelper.limitLength(state, 300));
                     ps.setString(param++, JdbcHelper.limitLength(provider, 300));
-                    ps.setTimestamp(param++, Timestamp.from(Instant.now()));
+                    JdbcHelper.setLocalDateTimeUTC(ps, param++, LocalDateTime.now(ZoneOffset.UTC));
                     ps.setString(param++, JdbcHelper.limitLength(codeVerifier, 300));
                     ps.setString(param++, JdbcHelper.limitLength(nonce, 300));
                     ps.setString(param++, JdbcHelper.limitLength(redirectUri, 2000));
@@ -268,7 +323,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
   public Future<Void> markUsed(String state) {
     return jdbcHelper.runSqlUpdate(markUsed, ps -> {
                     int param = 1; 
-                    ps.setTimestamp(param++, Timestamp.from(Instant.now()));
+                    JdbcHelper.setLocalDateTimeUTC(ps, param++, LocalDateTime.now(ZoneOffset.UTC));
                     ps.setString(param++, JdbcHelper.limitLength(state, 300));
     })
             .compose(count -> {
@@ -306,7 +361,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
     return jdbcHelper.runSqlUpdate(storeToken, ps -> {
                     int param = 1; 
                     ps.setString(param++, id);
-                    ps.setTimestamp(param++, Timestamp.from(expiry.toInstant(ZoneOffset.UTC)));
+                    JdbcHelper.setLocalDateTimeUTC(ps, param++, expiry);
                     ps.setString(param++, token);
     })
             .mapEmpty();
@@ -314,10 +369,11 @@ public class LoginDaoPersistenceImpl implements LoginDao {
   
   @Override
   public Future<String> getToken(String id) {
+    LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
     synchronized (tokenCache) {
       TimestampedToken token = tokenCache.get(id);
       if (token != null) {
-        LocalDateTime now = LocalDateTime.now();
+        logger.debug("Now: {}, Expiry: {}", now, token.expiry);
         if (token.expiry.isBefore(now)) {
           tokenCache.remove(id);
           tokenCache.entrySet().removeIf(entry -> entry.getValue().expiry.isBefore(now));
@@ -331,16 +387,19 @@ public class LoginDaoPersistenceImpl implements LoginDao {
         ps.setString(1, id);
       }, rs -> {
         while (rs.next()) {
-          return new TimestampedToken(rs.getTimestamp(1).toLocalDateTime(), rs.getString(2));
+          logger.debug("rs.getTimestamp(1): {}", rs.getTimestamp(1));
+          logger.debug("rs.getTimestamp(1).toLocalDateTime(): {}", rs.getTimestamp(1).toLocalDateTime());
+          LocalDateTime expiry = rs.getTimestamp(1).toLocalDateTime();
+          return new TimestampedToken(expiry, rs.getString(2));
         }
         return null;
       })
       .compose(tt -> {
         if (tt != null) {
-          LocalDateTime now = LocalDateTime.now();
+          logger.debug("Now: {}, Expiry: {}", now, tt.expiry);
           if (now.isAfter(tt.expiry)) {
             jdbcHelper.runSqlUpdate(deleteToken, ps -> ps.setString(1, id));
-            jdbcHelper.runSqlUpdate(expireTokens, ps -> ps.setTimestamp(1, Timestamp.from(now.toInstant(ZoneOffset.UTC))));
+            jdbcHelper.runSqlUpdate(expireTokens, ps -> JdbcHelper.setLocalDateTimeUTC(ps, 1, now));
             return Future.succeededFuture(null);
           } else {
             cacheToken(id, tt);

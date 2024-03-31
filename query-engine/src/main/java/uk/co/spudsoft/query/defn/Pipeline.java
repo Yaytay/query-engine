@@ -26,6 +26,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -64,6 +65,7 @@ public final class Pipeline extends SourcePipeline {
   private final String title;
   private final String description;
   private final Condition condition;
+  private final Duration cacheDuration;
   private final ImmutableList<RateLimitRule> rateLimitRules;
   private final ImmutableList<Argument> arguments;
   private final ImmutableList<Endpoint> sourceEndpoints;
@@ -77,9 +79,14 @@ public final class Pipeline extends SourcePipeline {
     if (condition != null) {
       condition.validate();
     }
+    if (cacheDuration != null) {
+      if (cacheDuration.isNegative()) {
+        throw new IllegalArgumentException("Negative cache duration (" + cacheDuration.toString() + ")does not make sense");
+      }
+    }
     for (RateLimitRule rule : rateLimitRules) {
       rule.validate();
-    }
+    }    
     if (formats.isEmpty()) {
       throw new IllegalArgumentException("No formats specified in pipeline");
     } else {
@@ -159,6 +166,27 @@ public final class Pipeline extends SourcePipeline {
     return condition;
   }
 
+  @Schema(description = """
+                        <P>
+                        The time for which the results of this pipeline should be cached.
+                        </P>
+                        <P>
+                        The cache key is made of:
+                        <UL>
+                        <LI>the full URL (including query string)
+                        <LI>the issuer
+                        <LI>the subject
+                        <LI>the groups from the token (considered a Set, so order does not matter)
+                        <LI>the roles from the token (considered a Set, so order does not matter)
+                        </UL>
+                        </P>
+                        """
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  public Duration getCacheDuration() {
+    return cacheDuration;
+  }
+  
   @Schema(description = """
                         <P>
                         A rate limit rule constrains how frequently pipelines can be run.
@@ -306,6 +334,7 @@ public final class Pipeline extends SourcePipeline {
     private String title;
     private String description;
     private Condition condition;
+    private Duration cacheDuration;
     private List<RateLimitRule> rateLimitRules;
     private List<Argument> arguments;
     private List<Endpoint> sourceEndpoints;
@@ -316,7 +345,7 @@ public final class Pipeline extends SourcePipeline {
     }
     @Override
     public Pipeline build() {
-      return new Pipeline(title, description, condition, rateLimitRules, arguments, sourceEndpoints, source, dynamicEndpoints, processors, formats);
+      return new Pipeline(title, description, condition, cacheDuration, rateLimitRules, arguments, sourceEndpoints, source, dynamicEndpoints, processors, formats);
     }
 
     public Builder source(final Source value) {
@@ -350,6 +379,11 @@ public final class Pipeline extends SourcePipeline {
       return this;
     }
 
+    public Builder cacheDuration(final Duration value) {
+      this.cacheDuration = value;
+      return this;
+    }
+
     public Builder rateLimitRules(final List<RateLimitRule> value) {
       this.rateLimitRules = value;
       return this;
@@ -380,11 +414,12 @@ public final class Pipeline extends SourcePipeline {
     return new Pipeline.Builder();
   }
 
-  private Pipeline(String title, String description, Condition condition, List<RateLimitRule> rateLimitRules, List<Argument> arguments, List<Endpoint> sourceEndpoints, Source source, List<DynamicEndpoint> dynamicEndpoints, List<Processor> processors, List<Format> formats) {
+  private Pipeline(String title, String description, Condition condition, Duration cacheDuration, List<RateLimitRule> rateLimitRules, List<Argument> arguments, List<Endpoint> sourceEndpoints, Source source, List<DynamicEndpoint> dynamicEndpoints, List<Processor> processors, List<Format> formats) {
     super(source, processors);
     this.title = title;
     this.description = description;
     this.condition = condition;
+    this.cacheDuration = cacheDuration == null ? Duration.ZERO : cacheDuration;
     this.rateLimitRules = ImmutableCollectionTools.copy(rateLimitRules);
     this.arguments = ImmutableCollectionTools.copy(arguments);
     Set<String> usedNames = new HashSet<>();

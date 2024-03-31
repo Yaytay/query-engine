@@ -430,6 +430,13 @@ public class RequestContext {
     return response.toString();
   }
   
+  public List<String> getAudience() {
+    if (jwt != null) {
+      return jwt.getAudience();
+    } 
+    return null;
+  }
+  
   public String getIssuer() {
     if (jwt != null) {
       return jwt.getIssuer();
@@ -447,6 +454,13 @@ public class RequestContext {
   public List<String> getGroups() {
     if (jwt != null) {
       return jwt.getGroups();
+    } 
+    return null;
+  }
+  
+  public List<String> getRoles() {
+    if (jwt != null) {
+      return jwt.getRoles();
     } 
     return null;
   }

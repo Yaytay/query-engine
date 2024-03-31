@@ -17,11 +17,13 @@ databaseChangeLog:
         - {column: {name: arguments, type: clob, constraints: {nullable: fal se}}}
         - {column: {name: headers, type: clob, constraints: {nullable: false}}}
         - {column: {name: openIdDetails, type: clob, constraints: {nullable: true}}}
+        - {column: {name: audience, type: varchar(1000), constraints: {nullable: true}}}
         - {column: {name: issuer, type: varchar(1000), constraints: {nullable: true}}}
         - {column: {name: subject, type: varchar(1000), constraints: {nullable: true}}}
         - {column: {name: username, type: varchar(500), constraints: {nullable: true}}}
         - {column: {name: name, type: varchar(500), constraints: {nullable: true}}}
         - {column: {name: groups, type: clob, constraints: {nullable: true}}}
+        - {column: {name: roles, type: clob, constraints: {nullable: true}}}
         - {column: {name: filePath, type: varchar(500), constraints: {nullable: true}}}
         - {column: {name: fileSize, type: bigint, constraints: {nullable: true}}}
         - {column: {name: fileModified, type: timestamp, constraints: {nullable: true}}}
@@ -36,6 +38,9 @@ databaseChangeLog:
         - {column: {name: responseRows, type: bigint, constraints: {nullable: true}}}
         - {column: {name: responseSize, type: bigint, constraints: {nullable: true}}}
         - {column: {name: responseHeaders, type: clob, constraints: {nullable: true}}}
+        - {column: {name: cacheKey, type: char(64), constraints: {nullable: true}}}
+        - {column: {name: cacheFile, type: varchar(500), constraints: {nullable: true}}}
+        - {column: {name: cacheExpiry, type: timestamp, constraints: {nullable: true}}}
     - modifySql: 
        dbms: mysql
        append: 
@@ -94,4 +99,12 @@ databaseChangeLog:
           name:  path
        - column:
           name:  timestamp
+       unique:  false
+
+    - createIndex:   
+       indexName:  idx_request_cache_key
+       tableName:  request
+       columns:  
+       - column:
+          name:  cacheKey
        unique:  false

@@ -275,13 +275,17 @@ public class AuditorPersistenceImpl implements Auditor {
                     , #arguments#
                     , #headers#
                     , #openIdDetails#
+                    , #audience#
                     , #issuer#
                     , #subject#
                     , #username#
                     , #name#
                     , #groups#
+                    , #roles#
                   ) values (
                     ?
+                    , ?
+                    , ?
                     , ?
                     , ?
                     , ?
@@ -382,27 +386,31 @@ public class AuditorPersistenceImpl implements Auditor {
     
     JsonObject headers = multiMapToJson(context.getHeaders());
     JsonObject arguments = multiMapToJson(context.getArguments());
+    JsonArray audience = Auditor.listToJson(context.getAudience());
     JsonArray groups = Auditor.listToJson(context.getGroups());
+    JsonArray roles = Auditor.listToJson(context.getRoles());
     String openIdDetails = context.getJwt() == null ? null : context.getJwt().getPayloadAsString();
     
-    logger.info("Request: {} {} {} {} {} {} {} {} {} {} {}",
+    logger.info("Request: {} {} {} {} {} {} {} {} {} {} {} {} {}",
              context.getUrl(),
              context.getClientIp(),
              context.getHost(),
              context.getPath(),
              arguments,
              headers,
+             context.getAudience(),
              context.getIssuer(),
              context.getSubject(),
              context.getUsername(),
              context.getNameFromJwt(),
-             context.getGroups()
+             context.getGroups(),
+             context.getRoles()
     );
     
     return jdbcHelper.runSqlUpdate(recordRequest, ps -> {
                     int param = 1; 
                     ps.setString(param++, JdbcHelper.limitLength(context.getRequestId(), 100));
-                    ps.setTimestamp(param++, Timestamp.from(Instant.now()));
+                   JdbcHelper.setLocalDateTimeUTC(ps, param++, LocalDateTime.now(ZoneOffset.UTC));
                     ps.setString(param++, JdbcHelper.limitLength(PROCESS_ID, 1000));
                     ps.setString(param++, JdbcHelper.limitLength(context.getUrl(), 1000));
                     ps.setString(param++, JdbcHelper.limitLength(context.getClientIp().toNormalizedString(), 40));
@@ -411,11 +419,13 @@ public class AuditorPersistenceImpl implements Auditor {
                     ps.setString(param++, JdbcHelper.toString(arguments));
                     ps.setString(param++, JdbcHelper.toString(headers));
                     ps.setString(param++, openIdDetails);
+                    ps.setString(param++, JdbcHelper.toString(audience));
                     ps.setString(param++, JdbcHelper.limitLength(context.getIssuer(), 1000));
                     ps.setString(param++, JdbcHelper.limitLength(context.getSubject(), 1000));
                     ps.setString(param++, JdbcHelper.limitLength(context.getUsername(), 1000));
                     ps.setString(param++, JdbcHelper.limitLength(context.getNameFromJwt(), 1000));
                     ps.setString(param++, JdbcHelper.toString(groups));                    
+                    ps.setString(param++, JdbcHelper.toString(roles));
     })
             .recover(ex -> {
               logger.error("Audit record failed: ", ex);
@@ -430,11 +440,7 @@ public class AuditorPersistenceImpl implements Auditor {
     jdbcHelper.runSqlUpdate(recordFile, ps -> {
              ps.setString(1, JdbcHelper.limitLength(JdbcHelper.toString(file.getPath()), 1000));
              ps.setLong(2, file.getSize());
-             if (file.getModified() != null) {
-               ps.setTimestamp(3, Timestamp.from(file.getModified().toInstant(ZoneOffset.UTC)));
-             } else {
-               ps.setTimestamp(3, null);
-             }
+             JdbcHelper.setLocalDateTimeUTC(ps, 3, file.getModified());
              ps.setString(4, JdbcHelper.limitLength(context.getRequestId(), 100));
     });
   }
@@ -443,7 +449,7 @@ public class AuditorPersistenceImpl implements Auditor {
   public void recordException(RequestContext context, Throwable ex) {
     logger.info("Exception: {} {}", ex.getClass().getCanonicalName(), ex.getMessage());
     jdbcHelper.runSqlUpdate(recordException, ps -> {
-             ps.setTimestamp(1, Timestamp.from(Instant.now()));
+             JdbcHelper.setLocalDateTimeUTC(ps, 1, LocalDateTime.now(ZoneOffset.UTC));
              ps.setString(2, JdbcHelper.limitLength(ex.getClass().getCanonicalName(), 1000));
              ps.setString(3, JdbcHelper.limitLength(ex.getMessage(), 1000));
              ps.setString(4, ExceptionToString.convert(ex, "; "));
@@ -461,7 +467,7 @@ public class AuditorPersistenceImpl implements Auditor {
             , headers
     );
     jdbcHelper.runSqlUpdate(recordResponse, ps -> {
-             ps.setTimestamp(1, Timestamp.from(Instant.now()));
+             JdbcHelper.setLocalDateTimeUTC(ps, 1, LocalDateTime.now(ZoneOffset.UTC));
              if (context.getHeadersSentTime() > 0) {
                ps.setLong(2, context.getHeadersSentTime() - context.getStartTime());
              } else {
@@ -535,6 +541,7 @@ public class AuditorPersistenceImpl implements Auditor {
       }
     }
     boolean[] done = new boolean[rules.size()];
+
     return jdbcHelper.runSqlSelect(sql.toString(), ps -> {
         for (int i = 0; i < args.size(); ++i) {
           ps.setObject(i + 1, args.get(i));

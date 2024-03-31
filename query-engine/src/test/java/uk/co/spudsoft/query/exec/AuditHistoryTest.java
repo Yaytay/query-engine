@@ -19,7 +19,6 @@ package uk.co.spudsoft.query.exec;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.jackson.DatabindCodec;
 import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.assertEquals;

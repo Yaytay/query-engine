@@ -149,7 +149,7 @@ public class AuditorMemoryImpl implements Auditor {
     logger.info("Exception: {} {}", ex.getClass().getCanonicalName(), ex.getMessage());
     AuditRow row = find(context.getRequestId());
     if (row != null) {
-      row.exceptionTime = LocalDateTime.now();
+      row.exceptionTime = LocalDateTime.now(ZoneOffset.UTC);
       row.exceptionClass = JdbcHelper.limitLength(ex.getClass().getCanonicalName(), 1000);
       row.exceptionMessage = JdbcHelper.limitLength(ex.getMessage(), 1000);
       row.exceptionStackTrace = ExceptionToString.convert(ex, "; ");
@@ -192,7 +192,7 @@ public class AuditorMemoryImpl implements Auditor {
     
     AuditRow row = new AuditRow(
       JdbcHelper.limitLength(context.getRequestId(), 100)
-      , LocalDateTime.now()
+      , LocalDateTime.now(ZoneOffset.UTC)
       , JdbcHelper.limitLength(PROCESS_ID, 1000)
       , JdbcHelper.limitLength(context.getUrl(), 1000)
       , JdbcHelper.limitLength(context.getClientIp().toNormalizedString(), 40)
@@ -297,7 +297,7 @@ public class AuditorMemoryImpl implements Auditor {
         return Future.succeededFuture(pipeline);
       }
 
-      LocalDateTime now = LocalDateTime.now();
+      LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
       Instant nowInstant = now.toInstant(ZoneOffset.UTC);
 
       for (int i = 0; i < rules.size(); ++i) {
@@ -328,7 +328,7 @@ public class AuditorMemoryImpl implements Auditor {
     );
     AuditRow row = find(context.getRequestId());
     if (row != null) {
-      row.responseTime = LocalDateTime.now();
+      row.responseTime = LocalDateTime.now(ZoneOffset.UTC);
       if (context.getHeadersSentTime() > 0) {
         row.responseStreamStartMillis = context.getHeadersSentTime() - context.getStartTime();
       }

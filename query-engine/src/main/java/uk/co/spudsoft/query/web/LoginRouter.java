@@ -35,6 +35,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -448,7 +449,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
                Strings.isNullOrEmpty(authEndpoint.getAuthorizationEndpoint())
             || Strings.isNullOrEmpty(authEndpoint.getTokenEndpoint())
             || authEndpoint.getInvalidDate() == null
-            || authEndpoint.getInvalidDate().isBefore(LocalDateTime.now())
+            || authEndpoint.getInvalidDate().isBefore(LocalDateTime.now(ZoneOffset.UTC))
             );
   }
 
