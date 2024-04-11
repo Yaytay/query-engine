@@ -32,7 +32,7 @@ services:
       POSTGRES_DB: test
       
   query-engine:
-    image: ghcr.io/yaytay/query-engine-design-mode:0.0.23-1-caching
+    image: ghcr.io/yaytay/query-engine-design-mode:0.0.23-2-caching
     ports:
     - 2000:8080
     environment:

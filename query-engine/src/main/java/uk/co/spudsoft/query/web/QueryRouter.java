@@ -126,6 +126,13 @@ public class QueryRouter implements Handler<RoutingContext> {
                   .build();
           requestContextBuilder.buildRequestContext(request)
                   .compose(requestContext -> {
+                    response.headersEndHandler(v -> {
+                      requestContext.setHeadersSentTime(System.currentTimeMillis());
+                    });
+                    response.bodyEndHandler(v -> {
+                      auditor.recordResponse(requestContext, response);
+                    });
+
                     return auditor.recordRequest(requestContext).map(v -> requestContext);
                   })
                   .compose(requestContext -> {
@@ -140,13 +147,6 @@ public class QueryRouter implements Handler<RoutingContext> {
                   })
                   .compose(pipelineAndFile -> {
                     RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
-
-                    response.headersEndHandler(v -> {
-                      requestContext.setHeadersSentTime(System.currentTimeMillis());
-                    });
-                    response.bodyEndHandler(v -> {
-                      auditor.recordResponse(requestContext, response);
-                    });
                     
                     return auditor.recordFileDetails(requestContext, pipelineAndFile.file(), pipelineAndFile.pipeline())
                             .map(v -> pipelineAndFile.pipeline());
