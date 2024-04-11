@@ -11,7 +11,7 @@ arguments:
     - value: Second
     - value: Third
 source:
-  type: Test
+  type: TEST
   rowCount: 1
 formats:
 - type: HTML

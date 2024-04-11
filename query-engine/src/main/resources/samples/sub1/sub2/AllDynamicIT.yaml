@@ -1,6 +1,7 @@
 title: Dynamic queries demonstrating features.
 description: |
   See the AllDynamicIT integration test.
+cacheDuration: PT1M
 arguments:
   - name: minDate
     type: Date

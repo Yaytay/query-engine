@@ -38,7 +38,7 @@ import uk.co.spudsoft.query.exec.SourceInstance;
   defaultImpl = SourceSql.class)
 @JsonSubTypes({ 
   @Type(value = SourceSql.class, name = "SQL"), 
-  @Type(value = SourceTest.class, name = "Test") 
+  @Type(value = SourceTest.class, name = "TEST") 
 })
 @Schema(description = """
                       A Source is the source of data for a pipeline.

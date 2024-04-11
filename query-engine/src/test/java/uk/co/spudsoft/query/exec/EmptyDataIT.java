@@ -106,7 +106,7 @@ public class EmptyDataIT {
                 return Future.failedFuture(ex);
               }
             })
-            .compose(pipeline -> executor.validatePipeline(pipeline))
+            .compose(pipelineAndFile -> executor.validatePipeline(pipelineAndFile.pipeline()))
             .compose(pipeline -> {
               AsyncFile output = fs.openBlocking("target/temp/EmptyDataIT/output.html", new OpenOptions().setCreate(true));
               Format chosenFormat = executor.getFormat(pipeline.getFormats(), null);

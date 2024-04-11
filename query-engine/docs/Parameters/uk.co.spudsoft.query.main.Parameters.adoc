@@ -188,4 +188,28 @@ If not set, and managementEndpointPort is positive, users will have no way to di
 | processors
 | uk.co.spudsoft.query.main.ProcessorConfig
 | Set the configuration for individual processors.Some processors have specific configuration options that are not appropriate for configuration in pipeline definitions, they are  controlled here.
+| outputCacheDir
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
+| Set the directory to contain cached output.This is the on-disc caching of stream output, controlled by the cacheDuration value in individual pipelines.
+ 
+ The cache key is based on:
+ 
+ * The full request URL.
+ * Headers:
+ 
+ * Accept
+ * Accept-Encoding
+ 
+* Token fields:
+ 
+ * aud
+ * iss
+ * sub
+ * groups
+ * roles
+ 
+
+Note that the fileHash must also match, but isn't built into the key (should usually match because of the use of the inclusion of full URL).
+ 
+ Note that the default value for the outputCacheDir is probably a bad choice for anything other than the simplest setups.
 |===

@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.web.rest;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -53,6 +54,7 @@ public class HistoryHandler {
   private final Auditor auditor;
   private final boolean outputAllErrorMessages;
 
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Only method called on auditor is getHistory")
   public HistoryHandler(Auditor auditor, boolean outputAllErrorMessages) {
     this.auditor = auditor;
     this.outputAllErrorMessages = outputAllErrorMessages;

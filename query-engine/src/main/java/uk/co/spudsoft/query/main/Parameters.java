@@ -21,6 +21,7 @@ import uk.co.spudsoft.query.logging.LogbackOptions;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -84,8 +85,37 @@ public class Parameters {
   
   /**
    * Configuration of the pipeline cache.
+   * This is the in-memory cache of parsed pipelines.
    */
   private CacheConfig pipelineCache = new CacheConfig();
+  
+  /**
+   * The directory to contain cached output.
+   * This is the on-disc caching of stream output, controlled by the cacheDuration value in individual pipelines.
+   * 
+   * The cache key is based on:
+   * <UL>
+   * <LI>The full request URL.
+   * <LI>Headers:
+   * <UL>
+   * <LI>Accept
+   * <LI>Accept-Encoding
+   * </UL>
+   * <LI>Token fields:
+   * <UL>
+   * <LI>aud
+   * <LI>iss
+   * <LI>sub
+   * <LI>groups
+   * <LI>roles
+   * </UL>
+   * </UL>
+   * 
+   * Note that the fileHash must also match, but isn't built into the key (should usually match because of the use of the inclusion of full URL).
+   * 
+   * Note that the default value for the outputCacheDir is probably a bad choice for anything other than the simplest setups.
+   */
+  private String outputCacheDir = System.getProperty("java.io.tmpdir");
   
   /**
    * Configuration of specific processors.
@@ -717,5 +747,68 @@ public class Parameters {
     this.processors = processors;
   }
 
+  /**
+   * Get the directory to contain cached output.
+   * This is the on-disc caching of stream output, controlled by the cacheDuration value in individual pipelines.
+   * 
+   * The cache key is based on:
+   * <UL>
+   * <LI>The full request URL.
+   * <LI>Headers:
+   * <UL>
+   * <LI>Accept
+   * <LI>Accept-Encoding
+   * </UL>
+   * <LI>Token fields:
+   * <UL>
+   * <LI>aud
+   * <LI>iss
+   * <LI>sub
+   * <LI>groups
+   * <LI>roles
+   * </UL>
+   * </UL>
+   * 
+   * Note that the fileHash must also match, but isn't built into the key (should usually match because of the use of the inclusion of full URL).
+   * 
+   * Note that the default value for the outputCacheDir is probably a bad choice for anything other than the simplest setups.
+   * @return the directory to contain cached output.
+   */
+  public String getOutputCacheDir() {
+    return outputCacheDir;
+  }
+
+  /**
+   * Set the directory to contain cached output.
+   * This is the on-disc caching of stream output, controlled by the cacheDuration value in individual pipelines.
+   * 
+   * The cache key is based on:
+   * <UL>
+   * <LI>The full request URL.
+   * <LI>Headers:
+   * <UL>
+   * <LI>Accept
+   * <LI>Accept-Encoding
+   * </UL>
+   * <LI>Token fields:
+   * <UL>
+   * <LI>aud
+   * <LI>iss
+   * <LI>sub
+   * <LI>groups
+   * <LI>roles
+   * </UL>
+   * </UL>
+   * 
+   * Note that the fileHash must also match, but isn't built into the key (should usually match because of the use of the inclusion of full URL).
+   * 
+   * Note that the default value for the outputCacheDir is probably a bad choice for anything other than the simplest setups.
+   * @param outputCacheDir the directory to contain cached output.
+   */
+  public void setOutputCacheDir(String outputCacheDir) {
+    this.outputCacheDir = outputCacheDir.endsWith("/") || outputCacheDir.endsWith("\\") ? outputCacheDir : outputCacheDir + File.separator;
+  }
+
+  
 }
 

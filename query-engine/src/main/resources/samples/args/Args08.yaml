@@ -46,7 +46,7 @@ arguments:
     description: The Eighth Argument
     type: String
 source:
-  type: Test
+  type: TEST
   rowCount: 8
 formats:
 - type: HTML

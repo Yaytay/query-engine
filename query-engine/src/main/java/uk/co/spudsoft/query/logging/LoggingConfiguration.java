@@ -19,10 +19,10 @@ package uk.co.spudsoft.query.logging;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.PatternLayout;
+import ch.qos.logback.classic.encoder.JsonEncoder;
 import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
-import ch.qos.logback.core.CoreConstants;
 import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
 import ch.qos.logback.core.joran.spi.JoranException;
 import com.google.common.base.Strings;
@@ -31,10 +31,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import net.logstash.logback.encoder.LogstashEncoder;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
@@ -63,9 +61,6 @@ public class LoggingConfiguration {
       }
     }
 
-    Map<String, String> ruleRegistry = getRuleRegistry(loggerContext);
-    registerConverters(ruleRegistry);
-
     ConsoleAppender<ILoggingEvent> appender;
     if (options.isJsonFormat()) {
       appender = configureForJson(loggerContext);
@@ -89,16 +84,6 @@ public class LoggingConfiguration {
 
   }
 
-  @SuppressWarnings("unchecked")
-  private static Map<String, String> getRuleRegistry(LoggerContext loggerContext) {
-    Map<String, String> ruleRegistry = (Map<String, String>) loggerContext.getObject(CoreConstants.PATTERN_RULE_REGISTRY);
-    if (ruleRegistry == null) {
-      ruleRegistry = new HashMap<>();
-      loggerContext.putObject(CoreConstants.PATTERN_RULE_REGISTRY, ruleRegistry);
-    }
-    return ruleRegistry;
-  }
-
   @SuppressFBWarnings(value = "INFORMATION_EXPOSURE_THROUGH_AN_ERROR_MESSAGE", justification = "No other way to report the problem to user, the user should be a sysadmin")
   private static boolean configureFromFile(LoggerContext loggerContext, String filename) {
     JoranConfigurator configurator = new JoranConfigurator();
@@ -117,11 +102,6 @@ public class LoggingConfiguration {
     return new FileInputStream(filename);
   }
 
-  private static void registerConverters(Map<String, String> ruleRegistry) {
-    ruleRegistry.put("vz", VertxTracingLogbackConverter.class.getName());
-    ruleRegistry.put("vc", VertxContextLogbackConverter.class.getName());
-  }
-
   private static ConsoleAppender<ILoggingEvent> createConsoleAppender(LoggerContext lc) {
     ConsoleAppender<ILoggingEvent> ca = new ConsoleAppender<>();
     ca.setContext(lc);
@@ -132,15 +112,14 @@ public class LoggingConfiguration {
 
   private static ConsoleAppender<ILoggingEvent> configureForJson(LoggerContext loggerContext) {
     ConsoleAppender<ILoggingEvent> ca = createConsoleAppender(loggerContext);
-
-    LogstashEncoder encoder = new LogstashEncoder();
+    
+    JsonEncoder encoder = new JsonEncoder();
     encoder.setContext(loggerContext);
-    encoder.setIncludeMdc(true);
-    encoder.setIncludeCallerData(true);
-    encoder.setIncludeContext(true);
-    LogstashOpenTelemetrySpanProvider<ILoggingEvent> provider = new LogstashOpenTelemetrySpanProvider<>();
-    provider.setFieldName("context");
-    encoder.addProvider(provider);
+    encoder.setWithArguments(false);
+    encoder.setWithMessage(false);
+    encoder.setWithFormattedMessage(true);
+    encoder.setWithSequenceNumber(false);
+    encoder.setWithContext(false);
     encoder.start();
 
     ca.setEncoder(encoder);
@@ -152,7 +131,7 @@ public class LoggingConfiguration {
     ConsoleAppender<ILoggingEvent> ca = createConsoleAppender(loggerContext);
 
     PatternLayout layout = new PatternLayout();
-    layout.setPattern("%date{yyyy-MM-dd HH:mm:ss.SSS, UTC} [%thread] %-5level %logger{36} %vz{all:-#} %vc{uk.co.spudsoft.query.exec.source.name:-#} - %msg%n");
+    layout.setPattern("%date{yyyy-MM-dd HH:mm:ss.SSS, UTC} [%thread] %-5level %logger{36} %X{traceId:-#}:%X{spanId:-#} %X{source:-#} - %msg%n");
 
     LayoutWrappingEncoder<ILoggingEvent> encoder = new LayoutWrappingEncoder<>();
     encoder.setContext(loggerContext);

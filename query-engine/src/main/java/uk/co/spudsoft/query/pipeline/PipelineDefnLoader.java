@@ -23,10 +23,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.hash.Hashing;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.FileSystem;
@@ -34,6 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -41,6 +42,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.velocity.Template;
@@ -270,12 +272,12 @@ public final class PipelineDefnLoader {
       return Future.succeededFuture();
     } else {
       return readPipelineFromFile(file, req)
-              .map(pipeline -> new PipelineNodesTree.PipelineFile(
+              .map(pipelineAndFile -> new PipelineNodesTree.PipelineFile(
                       filePathToUrlPath(file)
-                      , pipeline.getTitle()
-                      , pipeline.getDescription()
-                      , pipeline.getArguments()
-                      , pipeline.getFormats()
+                      , pipelineAndFile.pipeline.getTitle()
+                      , pipelineAndFile.pipeline.getDescription()
+                      , pipelineAndFile.pipeline.getArguments()
+                      , pipelineAndFile.pipeline.getFormats()
               ))
               ;
     }
@@ -368,7 +370,10 @@ public final class PipelineDefnLoader {
   private Future<Pipeline> readPipeline(DirCacheTree.File file, ObjectMapper mapper) {
     return pipelineCache.get(file, buffer -> {
             try {
-              return mapper.readValue(buffer.getBytes(), Pipeline.class);
+              byte[] bytes = buffer.getBytes();
+              Pipeline pipeline = mapper.readValue(bytes, Pipeline.class);
+              pipeline.setSha256(Hashing.sha256().hashBytes(bytes).toString());
+              return pipeline;
             } catch (IOException ex) {
               throw new UncheckedIOException("IOException thrown mapping pipeline: ", ex);
             }
@@ -401,35 +406,44 @@ public final class PipelineDefnLoader {
       try {
         String config = sw.toString();
         logger.trace("Template evaluated as: {} using {}", config, context);
-        return Future.succeededFuture(mapper.readValue(config, Pipeline.class));
+        Pipeline pipeline = mapper.readValue(config, Pipeline.class);
+        pipeline.setSha256(Hashing.sha256().hashString(config, StandardCharsets.UTF_8).toString());
+        return Future.succeededFuture(pipeline);
       } catch (Throwable ex) {
         return Future.failedFuture(ex);
       }
     });
   }  
   
-  public Future<Pipeline> loadPipeline(String srcPath, RequestContext context, Handler<DirCacheTree.File> fileNotifier) throws IOException, ServiceException {
+  @SuppressFBWarnings(value = {"EI_EXPOSE_REP", "EI_EXPOSE_REP2"}, justification = "It's job is to container mutable objects")
+  public record PipelineAndFile(DirCacheTree.File file, Pipeline pipeline){};
+  
+  public Future<PipelineAndFile> loadPipeline(String srcPath, RequestContext context, BiConsumer<DirCacheTree.File, Throwable> parseErrorHandler) throws IOException, ServiceException {
     String path = validatePath(srcPath);
     
     return findSource(context, path)
             .compose(file -> {
-              if (fileNotifier != null) {
-                fileNotifier.handle(file);
+              try {
+                return readPipelineFromFile(file, context);
+              } catch (Throwable ex) {
+                if (parseErrorHandler != null) {
+                  parseErrorHandler.accept(file, ex);
+                }
+                return Future.failedFuture(ex);
               }
-              return readPipelineFromFile(file, context);
             });
   }
 
-  private Future<Pipeline> readPipelineFromFile(DirCacheTree.File file, RequestContext context) {
+  private Future<PipelineAndFile> readPipelineFromFile(DirCacheTree.File file, RequestContext context) {
     logger.trace("Reading pipeline {}", file);
     if (file.getName().endsWith(".json")) {
-      return readPipeline(file, JSON_OBJECT_MAPPER);
+      return readPipeline(file, JSON_OBJECT_MAPPER).map(pipeline -> new PipelineAndFile(file, pipeline));
     } else if (file.getName().endsWith(".yaml") || file.getName().endsWith(".yml")) {
-      return readPipeline(file, YAML_OBJECT_MAPPER);
+      return readPipeline(file, YAML_OBJECT_MAPPER).map(pipeline -> new PipelineAndFile(file, pipeline));
     } else if (file.getName().endsWith(".json.vm")) {
-      return readTemplate(file, JSON_OBJECT_MAPPER, context);
+      return readTemplate(file, JSON_OBJECT_MAPPER, context).map(pipeline -> new PipelineAndFile(file, pipeline));
     } else if (file.getName().endsWith(".yaml.vm") || file.getName().endsWith(".yml.vm")) {
-      return readTemplate(file, YAML_OBJECT_MAPPER, context);
+      return readTemplate(file, YAML_OBJECT_MAPPER, context).map(pipeline -> new PipelineAndFile(file, pipeline));
     }
     return Future.failedFuture("Failed to find valid pipeline " + file.getPath());
   }

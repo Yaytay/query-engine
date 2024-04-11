@@ -237,7 +237,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
         LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         tokenCache.entrySet().removeIf(entry -> entry.getValue().expiry.isBefore(now));
         cacheSize = tokenCache.size();        
-        jdbcHelper.runSqlUpdate(purgeLogins, ps -> {
+        jdbcHelper.runSqlUpdate("purgeLogins", purgeLogins, ps -> {
           JdbcHelper.setLocalDateTimeUTC(ps, 1, LocalDateTime.now(ZoneOffset.UTC));
         });
       }
@@ -248,7 +248,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
   @SuppressFBWarnings(value = "SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING", justification = "Generated SQL is safe")
   void timezoneHandlingTest() throws Exception {
     
-    int purgedTokens = jdbcHelper.runSqlUpdateSynchronously(purgeLogins, ps -> {
+    int purgedTokens = jdbcHelper.runSqlUpdateSynchronously("purgeLogins", purgeLogins, ps -> {
       JdbcHelper.setLocalDateTimeUTC(ps, 1, LocalDateTime.now(ZoneOffset.UTC));
     });
     logger.info("Purged {} expired tokens on startup", purgedTokens);
@@ -258,7 +258,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
     String token = "Startup test " + ManagementFactory.getRuntimeMXBean().getName();
     int rows;
     try {
-      rows = jdbcHelper.runSqlUpdateSynchronously(storeToken, ps -> {
+      rows = jdbcHelper.runSqlUpdateSynchronously("storeToken", storeToken, ps -> {
         int param = 1;
         ps.setString(param++, startupTestSessionId);
         JdbcHelper.setLocalDateTimeUTC(ps, param++, expiry);
@@ -307,7 +307,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
              targetUrl
     );
     
-    return jdbcHelper.runSqlUpdate(recordLogin, ps -> {
+    return jdbcHelper.runSqlUpdate("recordLogin", recordLogin, ps -> {
                     int param = 1; 
                     ps.setString(param++, JdbcHelper.limitLength(state, 300));
                     ps.setString(param++, JdbcHelper.limitLength(provider, 300));
@@ -321,7 +321,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
 
   @Override
   public Future<Void> markUsed(String state) {
-    return jdbcHelper.runSqlUpdate(markUsed, ps -> {
+    return jdbcHelper.runSqlUpdate("markUsed", markUsed, ps -> {
                     int param = 1; 
                     JdbcHelper.setLocalDateTimeUTC(ps, param++, LocalDateTime.now(ZoneOffset.UTC));
                     ps.setString(param++, JdbcHelper.limitLength(state, 300));
@@ -358,7 +358,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
   @Override
   public Future<Void> storeToken(String id, LocalDateTime expiry, String token) {
     cacheToken(id, new TimestampedToken(expiry, token));
-    return jdbcHelper.runSqlUpdate(storeToken, ps -> {
+    return jdbcHelper.runSqlUpdate("storeToken", storeToken, ps -> {
                     int param = 1; 
                     ps.setString(param++, id);
                     JdbcHelper.setLocalDateTimeUTC(ps, param++, expiry);
@@ -398,8 +398,8 @@ public class LoginDaoPersistenceImpl implements LoginDao {
         if (tt != null) {
           logger.debug("Now: {}, Expiry: {}", now, tt.expiry);
           if (now.isAfter(tt.expiry)) {
-            jdbcHelper.runSqlUpdate(deleteToken, ps -> ps.setString(1, id));
-            jdbcHelper.runSqlUpdate(expireTokens, ps -> JdbcHelper.setLocalDateTimeUTC(ps, 1, now));
+            jdbcHelper.runSqlUpdate("deleteToken", deleteToken, ps -> ps.setString(1, id));
+            jdbcHelper.runSqlUpdate("expireTokens", expireTokens, ps -> JdbcHelper.setLocalDateTimeUTC(ps, 1, now));
             return Future.succeededFuture(null);
           } else {
             cacheToken(id, tt);
@@ -439,7 +439,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
     synchronized (tokenCache) {
       tokenCache.remove(id);
     }
-    return jdbcHelper.runSqlUpdate(deleteToken, ps -> ps.setString(1, id)).mapEmpty();    
+    return jdbcHelper.runSqlUpdate("deleteToken", deleteToken, ps -> ps.setString(1, id)).mapEmpty();    
   }
   
   int getTokenCacheSize() {

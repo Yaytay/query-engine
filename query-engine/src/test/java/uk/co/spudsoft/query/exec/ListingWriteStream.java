@@ -26,11 +26,11 @@ import java.util.List;
  *
  * @author njt
  */
-public class WriteStreamToList<T> implements WriteStream<T> {
+public class ListingWriteStream<T> implements WriteStream<T> {
 
   private final List<T> list;
 
-  public WriteStreamToList(List<T> list) {
+  public ListingWriteStream(List<T> list) {
     this.list = list;
   }
 

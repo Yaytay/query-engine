@@ -102,8 +102,10 @@ public class PipelineDefnLoaderTest {
                   assertEquals("TemplatedJsonToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(6).getName());
                   assertEquals("sub1/sub2/TemplatedYamlToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(7).getPath());
                   assertEquals("TemplatedYamlToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(7).getName());
-                  assertEquals("sub1/sub2/YamlToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(8).getPath());
-                  assertEquals("YamlToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(8).getName());
+                  assertEquals("sub1/sub2/TestData", root.getChildren().get(2).getChildren().get(0).getChildren().get(8).getPath());
+                  assertEquals("TestData", root.getChildren().get(2).getChildren().get(0).getChildren().get(8).getName());
+                  assertEquals("sub1/sub2/YamlToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(9).getPath());
+                  assertEquals("YamlToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(9).getName());
                 });
                 testContext.completeNow();
               }

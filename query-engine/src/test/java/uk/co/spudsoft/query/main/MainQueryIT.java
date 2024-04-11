@@ -46,7 +46,7 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
  * 
  * @author jtalbut
  */
-@ExtendWith(VertxExtension.class)
+//@ExtendWith(VertxExtension.class)
 public class MainQueryIT {
   
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
@@ -55,15 +55,15 @@ public class MainQueryIT {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(MainQueryIT.class);
   
-  @BeforeAll
-  public static void createDirs(Vertx vertx) {
-    File paramsDir = new File("target/query-engine/samples-mainqueryit");
-    try {
-      FileUtils.deleteDirectory(paramsDir);
-    } catch (Throwable ex) {
-    }
-    paramsDir.mkdirs();
-  }
+//  @BeforeAll
+//  public static void createDirs(Vertx vertx) {
+//    File paramsDir = new File("target/query-engine/samples-mainqueryit");
+//    try {
+//      FileUtils.deleteDirectory(paramsDir);
+//    } catch (Throwable ex) {
+//    }
+//    paramsDir.mkdirs();
+//  }
   
   @Test
   public void testQuery() throws Exception {

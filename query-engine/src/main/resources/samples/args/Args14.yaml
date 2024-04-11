@@ -76,7 +76,7 @@ arguments:
     description: The Fourteenth Argument
     type: String
 source:
-  type: Test
+  type: TEST
   rowCount: 14
 formats:
 - type: HTML

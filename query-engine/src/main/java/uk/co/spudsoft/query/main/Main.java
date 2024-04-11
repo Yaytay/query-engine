@@ -111,6 +111,7 @@ import uk.co.spudsoft.query.exec.filters.QueryFilter;
 import uk.co.spudsoft.query.exec.filters.SortFilter;
 import uk.co.spudsoft.query.exec.procs.sort.ProcessorSortInstance;
 import uk.co.spudsoft.query.json.ObjectMapperConfiguration;
+import uk.co.spudsoft.query.logging.VertxMDCSpanProcessor;
 import static uk.co.spudsoft.query.main.TracingProtocol.otlpgrpc;
 import static uk.co.spudsoft.query.main.TracingSampler.alwaysOff;
 import static uk.co.spudsoft.query.main.TracingSampler.alwaysOn;
@@ -256,7 +257,7 @@ public class Main extends Application {
       
   @SuppressFBWarnings(value = {"PATH_TRAVERSAL_IN", "POTENTIAL_XML_INJECTION"}, justification = "False positive, the dirs at this stage cannot be specified by the user")
   protected Future<Integer> innerMain(String[] args, PrintStream stdout) {
-    
+        
     Params4J<Parameters> p4j = Params4J.<Parameters>factory()
             .withConstructor(() -> new Parameters())
             .withDirGatherer(new File(getBaseConfigDir()), FileType.Yaml)
@@ -466,7 +467,8 @@ public class Main extends Application {
     ModelConverters.getInstance(true).addConverter(new OpenApiModelConverter());
     
     PipelineExecutor pipelineExecutor = new PipelineExecutorImpl(filterFactory, params.getSecrets());
-    router.route(QueryRouter.PATH_ROOT + "/*").handler(new QueryRouter(vertx, auditor, rcb, defnLoader, pipelineExecutor, outputAllErrorMessages()));
+    vertx.fileSystem().mkdirs(params.getOutputCacheDir());
+    router.route(QueryRouter.PATH_ROOT + "/*").handler(new QueryRouter(vertx, auditor, rcb, defnLoader, pipelineExecutor, params.getOutputCacheDir(), outputAllErrorMessages()));
     
     ManagementRoute.createAndDeploy(vertx
             , router, params.getHttpServerOptions()
@@ -620,6 +622,7 @@ public class Main extends Application {
         extractSampleFile(baseConfigFile, "samples/sub1/sub2/SortableIT.yaml", sampleDataLoads);
         extractSampleFile(baseConfigFile, "samples/sub1/sub2/TemplatedJsonToPipelineIT.json.vm", sampleDataLoads);
         extractSampleFile(baseConfigFile, "samples/sub1/sub2/TemplatedYamlToPipelineIT.yaml.vm", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/sub1/sub2/TestData.yaml.vm", sampleDataLoads);
         extractSampleFile(baseConfigFile, "samples/sub1/sub2/YamlToPipelineIT.yaml", sampleDataLoads);
         extractSampleFile(baseConfigFile, "samples/sub1/sub2/permissions.jexl", sampleDataLoads);
         extractSampleFile(baseConfigFile, "samples/sub1/permissions.jexl", sampleDataLoads);
@@ -757,9 +760,8 @@ public class Main extends Application {
       };
       
       sdkTracerProvider = SdkTracerProvider.builder()
-              .addSpanProcessor(
-                      BatchSpanProcessor.builder(spanExporter).build()
-              )
+              .addSpanProcessor(BatchSpanProcessor.builder(spanExporter).build())
+              .addSpanProcessor(new VertxMDCSpanProcessor())
               .setResource(resourceBuilder.build())
               .setSampler(sampler)
               .build();

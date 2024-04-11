@@ -216,6 +216,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
             })
             .compose(streamWithTypes -> {
               logger.debug("Processors ({}) initialized", pipeline.getProcessors().size());
+
               return pipeline.getSink().initialize(this, pipeline, streamWithTypes);
             })
             .andThen(ar -> pipeline.getFinalPromise().handle(ar))

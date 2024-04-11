@@ -1,0 +1,26 @@
+description: Simple pipeline using the Test dat source.
+cacheDuration: PT10M
+arguments:
+  - name: delay
+    title: Delay (ms)
+    description: The delay between each row, in milliseconds
+    type: Integer
+    minimumValue: 0
+  - name: rows
+    title: Rows
+    description: The number of rows to return
+    type: Integer
+    minimumValue: 0
+source:
+  type: TEST
+  name: test
+  rowCount: $!{params.rows}
+  delayMs: $!{params.delay}
+formats:
+- type: Delimited
+  name: tab
+  delimiter: "\t"
+  newline: "\n"
+  extension: tsv
+  headerRow: true
+  mediaType: text/tsv

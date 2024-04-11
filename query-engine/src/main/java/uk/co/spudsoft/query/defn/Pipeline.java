@@ -73,6 +73,17 @@ public final class Pipeline extends SourcePipeline {
   private final ImmutableList<DynamicEndpoint> dynamicEndpoints;
   private final ImmutableList<Format> formats;  
 
+  @JsonIgnore
+  private String sha256;
+
+  public String getSha256() {
+    return sha256;
+  }
+
+  public void setSha256(String sha256) {
+    this.sha256 = sha256;
+  }
+
   @Override
   public void validate() {
     super.validate();
@@ -173,18 +184,35 @@ public final class Pipeline extends SourcePipeline {
                         <P>
                         The cache key is made of:
                         <UL>
-                        <LI>the full URL (including query string)
-                        <LI>the issuer
-                        <LI>the subject
-                        <LI>the groups from the token (considered a Set, so order does not matter)
-                        <LI>the roles from the token (considered a Set, so order does not matter)
+                        <LI>The full request URL.
+                        <LI>Headers:
+                        <UL>
+                        <LI>Accept
+                        <LI>Accept-Encoding
                         </UL>
+                        <LI>Token fields:
+                        <UL>
+                        <LI>aud
+                        <LI>iss
+                        <LI>sub
+                        <LI>groups
+                        <LI>roles
+                        </UL>
+                        </UL>
+                        Ordering of groups and roles is relevant.
                         </P>
+                        <P>
+                        Note that the fileHash must also match, but isn't built into the key (should usually match because of the use of the inclusion of full URL).
                         """
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
   public Duration getCacheDuration() {
     return cacheDuration;
+  }
+  
+  @JsonIgnore
+  public boolean supportsCaching() {
+    return cacheDuration != null && cacheDuration.isPositive();
   }
   
   @Schema(description = """

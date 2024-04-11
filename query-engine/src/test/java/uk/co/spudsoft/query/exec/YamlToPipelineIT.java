@@ -49,6 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import uk.co.spudsoft.dircache.DirCache;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.defn.Format;
+import uk.co.spudsoft.query.defn.Pipeline;
 
 
 /**
@@ -101,10 +102,10 @@ public class YamlToPipelineIT {
                 return Future.failedFuture(ex);
               }
             })
-            .compose(pipeline -> executor.validatePipeline(pipeline))
+            .compose(pipelineAndFile -> executor.validatePipeline(pipelineAndFile.pipeline()))
             .compose(pipeline -> {
               Format chosenFormat = executor.getFormat(pipeline.getFormats(), null);
-              FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), new WriteStreamToList<>(new ArrayList<>()));
+              FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), new ListingWriteStream<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), executor, "source");
               PipelineInstance instance = new PipelineInstance(
                       executor.prepareArguments(pipeline.getArguments(), args)
@@ -174,10 +175,11 @@ public class YamlToPipelineIT {
                 return Future.failedFuture(ex);
               }
             })
-            .compose(pipeline -> {
+            .compose(pipelineAndFile -> {
+              Pipeline pipeline = pipelineAndFile.pipeline();
               PipelineExecutorImpl executor = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
               Format chosenFormat = executor.getFormat(pipeline.getFormats(), null);
-              FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), new WriteStreamToList<>(new ArrayList<>()));
+              FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), new ListingWriteStream<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), executor, "source");
               PipelineInstance instance = new PipelineInstance(
                       executor.prepareArguments(pipeline.getArguments(), args)

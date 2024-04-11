@@ -21,7 +21,7 @@ arguments:
     description: The Third Argument
     type: String
 source:
-  type: Test
+  type: TEST
   rowCount: 3
 formats:
 - type: HTML

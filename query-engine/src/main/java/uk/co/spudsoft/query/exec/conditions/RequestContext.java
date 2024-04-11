@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.exec.conditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import inet.ipaddr.IPAddressString;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.vertx.core.Context;
 import io.vertx.core.MultiMap;
@@ -34,10 +35,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import static net.bytebuddy.implementation.FixedValue.value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
-import static uk.co.spudsoft.query.logging.VertxTracingLogbackConverter.ACTIVE_SPAN;
 
 
 /**
@@ -213,14 +214,8 @@ public class RequestContext {
   public static String extractRequestId() {
     Context context = Vertx.currentContext();
     if (context != null) {
-      Object value = context.getLocal(ACTIVE_SPAN);
-      if (value instanceof zipkin2.Span span) {
-        if (span.traceId().equals(span.id())) {
-          return span.id();
-        } else {
-          return span.traceId() + "/" + span.id();
-        }
-      } else if (value instanceof io.opentelemetry.api.trace.Span span) {
+      Span span = Span.current();
+      if (span != null) {
         SpanContext spanContext = span.getSpanContext();
         if (spanContext.getTraceId().equals(spanContext.getSpanId())) {
           return spanContext.getSpanId();

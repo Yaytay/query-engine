@@ -123,24 +123,23 @@ public class JdbcHelper {
     }
   }
   
-  public Future<Integer> runSqlUpdate(String sql, SqlConsumer<PreparedStatement> prepareStatement) {
-    return vertx.executeBlocking(() -> runSqlUpdateSynchronously(sql, prepareStatement));
+  public Future<Integer> runSqlUpdate(String name, String sql, SqlConsumer<PreparedStatement> prepareStatement) {
+    return vertx.executeBlocking(() -> runSqlUpdateSynchronously(name, sql, prepareStatement));
   }
 
   @SuppressFBWarnings(value = "SQL_INJECTION_JDBC", justification = "SQL is generated from static strings")
-  public int runSqlUpdateSynchronously(String sql, SqlConsumer<PreparedStatement> prepareStatement) throws Exception {
-    logger.trace("Executing update: {}", sql);
-    String logMessage = null;
+  public int runSqlUpdateSynchronously(String name, String sql, SqlConsumer<PreparedStatement> prepareStatement) throws Exception {
+    logger.trace("Executing update ({}): {}", sql);
+    String logMessage = "Failed to get connection ({}): ";
     try {
-      logMessage = "Failed to get connection: ";
       Connection conn = dataSource.getConnection();
       try {
-        logMessage = "Failed to create statement: ";
+        logMessage = "Failed to create statement ({}): ";
         PreparedStatement statement = conn.prepareStatement(sql);
         try {
-          logMessage = "Failed to prepare statement: ";
+          logMessage = "Failed to prepare statement ({}): ";
           prepareStatement.accept(statement);
-          logMessage = "Failed to execute query: ";
+          logMessage = "Failed to execute query ({}): ";
           return statement.executeUpdate();
         } finally {
           closeStatement(statement);
@@ -149,11 +148,11 @@ public class JdbcHelper {
         closeConnection(conn);
       }
     } catch (Exception ex) {
-      logger.error(logMessage, ex);
+      logger.error(logMessage, name, ex);
       throw ex;
     } catch (Throwable ex) {
-      logger.error(logMessage, ex);
-      throw new RuntimeException(logMessage, ex);
+      logger.error(logMessage, name, ex);
+      throw new RuntimeException(logMessage.replace("{}", name), ex);
     }
   }
 
