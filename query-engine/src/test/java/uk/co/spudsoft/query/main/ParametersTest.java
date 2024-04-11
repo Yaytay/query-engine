@@ -201,6 +201,18 @@ public class ParametersTest {
     assertEquals("two", instance.getManagementEndpoints().get(1));
   }
   
+  @Test
+  public void testGetOutputCacheDir() {
+    Parameters instance = new Parameters();
+    assertEquals(System.getProperty("java.io.tmpdir"), instance.getOutputCacheDir());
+    assertNotNull(instance.getOutputCacheDir());
+    instance.setOutputCacheDir("temp");
+    assertEquals("temp" + File.separator, instance.getOutputCacheDir());
+    instance.setOutputCacheDir("temp\\");
+    assertEquals("temp\\", instance.getOutputCacheDir());
+    instance.setOutputCacheDir("temp/");
+    assertEquals("temp/", instance.getOutputCacheDir());
+  }
   
   @Test
   public void testProps() {

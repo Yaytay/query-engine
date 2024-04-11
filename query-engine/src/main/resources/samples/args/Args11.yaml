@@ -61,7 +61,7 @@ arguments:
     description: The Eleventh Argument
     type: String
 source:
-  type: Test
+  type: TEST
   rowCount: 11
 formats:
 - type: HTML

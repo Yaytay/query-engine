@@ -22,6 +22,7 @@ import java.io.Closeable;
 import java.io.IOException;
 
 /**
+ * Output a formio ComponentArray.
  *
  * @author jtalbut
  */

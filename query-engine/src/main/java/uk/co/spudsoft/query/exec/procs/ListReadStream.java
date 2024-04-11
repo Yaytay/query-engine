@@ -89,7 +89,7 @@ public class ListReadStream<T> implements ReadStream<T> {
         }
       }
       if (ended && endHandlerCaptured != null) {
-        logger.trace("Ending");
+        logger.debug("Ending");
         endHandlerCaptured.handle(null);
         return ;
       }

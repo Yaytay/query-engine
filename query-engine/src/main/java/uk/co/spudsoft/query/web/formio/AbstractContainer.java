@@ -21,7 +21,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 
 /**
- *
+ * Base class for outputting a formio container.
+ * 
  * @author jtalbut
  * @param <T> The concrete class the derives from this base class.
  */

@@ -41,7 +41,7 @@ arguments:
     description: The Seventh Argument
     type: String
 source:
-  type: Test
+  type: TEST
   rowCount: 7
 formats:
 - type: HTML

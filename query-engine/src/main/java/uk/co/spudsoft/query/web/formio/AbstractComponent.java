@@ -25,7 +25,8 @@ import java.math.BigInteger;
 import java.time.LocalDateTime;
 
 /**
- *
+ * Base class for outputting a formio component.
+ * 
  * @author jtalbut
  * @param <T> The class that derives from this class in order for the with methods to return the appropriate type.
  */

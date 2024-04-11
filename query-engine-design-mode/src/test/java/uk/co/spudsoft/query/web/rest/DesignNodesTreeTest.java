@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.web.rest;
 import java.io.File;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Collections;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -57,11 +58,11 @@ public class DesignNodesTreeTest {
   @Test
   public void testRelativize() {
     if ("\\".equals(File.separator)) {
-      assertEquals("..\\..\\target", DesignNodesTree.relativize("/", Path.of("parent", "child"), new DirCacheTree.Directory(Path.of("target"), LocalDateTime.now(), Collections.emptyList())));
-      assertEquals("../../target", DesignNodesTree.relativize("\\", Path.of("parent", "child"), new DirCacheTree.Directory(Path.of("target"), LocalDateTime.now(), Collections.emptyList())));
+      assertEquals("..\\..\\target", DesignNodesTree.relativize("/", Path.of("parent", "child"), new DirCacheTree.Directory(Path.of("target"), LocalDateTime.now(ZoneOffset.UTC), Collections.emptyList())));
+      assertEquals("../../target", DesignNodesTree.relativize("\\", Path.of("parent", "child"), new DirCacheTree.Directory(Path.of("target"), LocalDateTime.now(ZoneOffset.UTC), Collections.emptyList())));
     } else {
-      assertEquals("../../target", DesignNodesTree.relativize("/", Path.of("parent", "child"), new DirCacheTree.Directory(Path.of("target"), LocalDateTime.now(), Collections.emptyList())));
-      assertEquals("../../target", DesignNodesTree.relativize("\\", Path.of("parent", "child"), new DirCacheTree.Directory(Path.of("target"), LocalDateTime.now(), Collections.emptyList())));
+      assertEquals("../../target", DesignNodesTree.relativize("/", Path.of("parent", "child"), new DirCacheTree.Directory(Path.of("target"), LocalDateTime.now(ZoneOffset.UTC), Collections.emptyList())));
+      assertEquals("../../target", DesignNodesTree.relativize("\\", Path.of("parent", "child"), new DirCacheTree.Directory(Path.of("target"), LocalDateTime.now(ZoneOffset.UTC), Collections.emptyList())));
     }
   }
   

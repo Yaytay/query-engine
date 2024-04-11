@@ -92,6 +92,7 @@ public class AuditorMemoryImpl implements Auditor {
     private String filePath;
     private Long fileSize;
     private LocalDateTime fileModified;
+    private String fileHash;
     private LocalDateTime exceptionTime;
     private String exceptionClass;
     private String exceptionMessage;
@@ -103,6 +104,10 @@ public class AuditorMemoryImpl implements Auditor {
     private Long responseRows;
     private Long responseSize;
     private String responseHeaders;
+    private String cacheKey;
+    private LocalDateTime cacheExpiry;
+    private LocalDateTime cacheDeleted;
+    private String cacheFile;
 
     AuditRow(String id, LocalDateTime timestamp, String processId, String url, String clientIp, String host, String path, String arguments, String headers, String openIdDetails, String issuer, String subject, String username, String name, String groups) {
       this.id = id;
@@ -145,11 +150,75 @@ public class AuditorMemoryImpl implements Auditor {
   }
 
   @Override
+  @SuppressFBWarnings(value = "UNSAFE_HASH_EQUALS", justification = "The user has no control over the hash and production instances should be using AuditorPersistenceImpl")
+  public Future<CacheDetails> getCacheFile(RequestContext context, Pipeline pipeline) {
+    
+    String cacheKey = AuditorPersistenceImpl.buildCacheKey(context);
+    LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+    synchronized (auditRows) {
+      for (AuditRow row : auditRows) {
+        if (cacheKey.equals(row.cacheKey)
+                && row.cacheExpiry != null
+                && row.cacheExpiry.isAfter(now)
+                && row.cacheDeleted == null
+                && row.fileHash != null
+                && row.fileHash.equals(pipeline.getSha256())
+                ) {
+          return Future.succeededFuture(new CacheDetails(row.id, row.cacheFile, row.cacheExpiry));
+        }
+      }
+    }
+    return Future.succeededFuture();
+  }
+
+  @Override
+  public Future<Void> recordCacheFile(RequestContext context, String fileName, LocalDateTime expiry) {
+    synchronized (auditRows) {
+      for (AuditRow row : auditRows) {
+        if (context.getRequestId().equals(row.id)) {
+          row.cacheKey = AuditorPersistenceImpl.buildCacheKey(context);
+          row.cacheFile = fileName;
+          row.cacheExpiry = expiry;
+          break ;
+        }
+      }
+      return Future.succeededFuture();
+    }
+  }
+
+  @Override
+  public Future<Void> recordCacheFileUsed(RequestContext context, String fileName) {
+    synchronized (auditRows) {
+      for (AuditRow row : auditRows) {
+        if (context.getRequestId().equals(row.id)) {
+          row.cacheFile = fileName;
+          break ;
+        }
+      }
+      return Future.succeededFuture();
+    }
+  }
+
+  @Override
+  public Future<Void> deleteCacheFile(String auditId) {
+
+    synchronized (auditRows) {
+      for (AuditRow row : auditRows) {
+        if (auditId.equals(row.id)) {
+          row.cacheDeleted = LocalDateTime.now(ZoneOffset.UTC);
+        }
+      }
+    }
+    return Future.succeededFuture();
+    
+  }
+  
+  @Override
   public void recordException(RequestContext context, Throwable ex) {
     logger.info("Exception: {} {}", ex.getClass().getCanonicalName(), ex.getMessage());
     AuditRow row = find(context.getRequestId());
     if (row != null) {
-      row.exceptionTime = LocalDateTime.now();
+      row.exceptionTime = LocalDateTime.now(ZoneOffset.UTC);
       row.exceptionClass = JdbcHelper.limitLength(ex.getClass().getCanonicalName(), 1000);
       row.exceptionMessage = JdbcHelper.limitLength(ex.getMessage(), 1000);
       row.exceptionStackTrace = ExceptionToString.convert(ex, "; ");
@@ -157,7 +226,7 @@ public class AuditorMemoryImpl implements Auditor {
   }
 
   @Override
-  public void recordFileDetails(RequestContext context, DirCacheTree.File file) {
+  public Future<Void> recordFileDetails(RequestContext context, DirCacheTree.File file, Pipeline pipeline) {
     logger.info("File: {} {} {}", file.getPath(), file.getSize(), file.getModified());
     AuditRow row = find(context.getRequestId());
     if (row != null) {
@@ -166,7 +235,11 @@ public class AuditorMemoryImpl implements Auditor {
       if (file.getModified() != null) {
         row.fileModified = file.getModified();
       }
+      if (pipeline != null) {
+        row.fileHash = pipeline.getSha256();
+      }
     }
+    return Future.succeededFuture();
   }
 
   @Override
@@ -192,7 +265,7 @@ public class AuditorMemoryImpl implements Auditor {
     
     AuditRow row = new AuditRow(
       JdbcHelper.limitLength(context.getRequestId(), 100)
-      , LocalDateTime.now()
+      , LocalDateTime.now(ZoneOffset.UTC)
       , JdbcHelper.limitLength(PROCESS_ID, 1000)
       , JdbcHelper.limitLength(context.getUrl(), 1000)
       , JdbcHelper.limitLength(context.getClientIp().toNormalizedString(), 40)
@@ -297,7 +370,7 @@ public class AuditorMemoryImpl implements Auditor {
         return Future.succeededFuture(pipeline);
       }
 
-      LocalDateTime now = LocalDateTime.now();
+      LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
       Instant nowInstant = now.toInstant(ZoneOffset.UTC);
 
       for (int i = 0; i < rules.size(); ++i) {
@@ -328,7 +401,7 @@ public class AuditorMemoryImpl implements Auditor {
     );
     AuditRow row = find(context.getRequestId());
     if (row != null) {
-      row.responseTime = LocalDateTime.now();
+      row.responseTime = LocalDateTime.now(ZoneOffset.UTC);
       if (context.getHeadersSentTime() > 0) {
         row.responseStreamStartMillis = context.getHeadersSentTime() - context.getStartTime();
       }

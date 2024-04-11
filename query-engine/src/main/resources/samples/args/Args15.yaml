@@ -81,7 +81,7 @@ arguments:
     description: The Fifteenth Argument
     type: String
 source:
-  type: Test
+  type: TEST
   rowCount: 15
 formats:
 - type: HTML

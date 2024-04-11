@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableSet;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -35,11 +36,11 @@ public class RsqlComparatorDateTimeTest {
 
   private RsqlComparatorDateTime instance = new RsqlComparatorDateTime();
   
-  private LocalDateTime now = LocalDateTime.now();
+  private LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
   
   @Test
   public void testValidateType() {
-    LocalDateTime valid = instance.validateType("field", LocalDateTime.now());
+    LocalDateTime valid = instance.validateType("field", LocalDateTime.now(ZoneOffset.UTC));
     assertThrows(IllegalStateException.class, () -> {
       instance.validateType("field", LocalDate.now());
     });

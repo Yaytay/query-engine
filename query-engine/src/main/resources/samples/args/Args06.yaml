@@ -36,7 +36,7 @@ arguments:
     description: The Sixth Argument
     type: String
 source:
-  type: Test
+  type: TEST
   rowCount: 6
 formats:
 - type: HTML

@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.exec;
 import inet.ipaddr.IPAddressString;
 import io.vertx.core.json.JsonObject;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Comparator;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -38,6 +39,24 @@ import uk.co.spudsoft.query.exec.conditions.RequestContext;
  * @author njt
  */
 public class AuditorMemoryImplTest {
+  
+  @Test
+  public void testDeleteCacheFile() {
+    RequestContext context = new RequestContext("id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    RequestContext context2 = new RequestContext("id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    AuditorMemoryImpl auditor = new AuditorMemoryImpl();
+    
+    LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+    auditor.recordRequest(context);
+    assertTrue(auditor.recordCacheFile(context, "fileName", now).succeeded());
+    // This won't do anything, but equally won't barf
+    assertTrue(auditor.recordCacheFile(context2, "fileName2", now).succeeded());
+    
+    assertTrue(auditor.deleteCacheFile(context.getRequestId()).succeeded());
+    // This won't do anything, but equally won't barf
+    assertTrue(auditor.deleteCacheFile(context2.getRequestId()).succeeded());
+    
+  }
   
   @Test
   public void testRowMatches() {

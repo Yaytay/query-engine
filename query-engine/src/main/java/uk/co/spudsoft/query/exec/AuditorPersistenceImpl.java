@@ -20,6 +20,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Future;
@@ -52,6 +54,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import liquibase.Scope;
 import liquibase.command.CommandScope;
 import liquibase.command.core.UpdateCommandStep;
@@ -155,6 +158,10 @@ public class AuditorPersistenceImpl implements Auditor {
       recordResponse = recordResponse.replaceAll("#SCHEMA#.", "");
       getHistory = getHistory.replaceAll("#SCHEMA#.", "");
       getHistoryCount = getHistoryCount.replaceAll("#SCHEMA#.", "");
+      getCacheFile = getCacheFile.replaceAll("#SCHEMA#.", "");
+      recordCacheFile = recordCacheFile.replaceAll("#SCHEMA#.", "");
+      recordCacheFileUsed = recordCacheFileUsed.replaceAll("#SCHEMA#.", "");
+      deleteCacheFile = deleteCacheFile.replaceAll("#SCHEMA#.", "");
     } else {
       recordRequest = recordRequest.replaceAll("SCHEMA", dataSourceConfig.getSchema());
       recordFile = recordFile.replaceAll("SCHEMA", dataSourceConfig.getSchema());
@@ -162,6 +169,10 @@ public class AuditorPersistenceImpl implements Auditor {
       recordResponse = recordResponse.replaceAll("SCHEMA", dataSourceConfig.getSchema());
       getHistory = getHistory.replaceAll("SCHEMA", dataSourceConfig.getSchema());
       getHistoryCount = getHistoryCount.replaceAll("SCHEMA", dataSourceConfig.getSchema());
+      getCacheFile = getCacheFile.replaceAll("#SCHEMA#.", dataSourceConfig.getSchema());
+      recordCacheFile = recordCacheFile.replaceAll("#SCHEMA#.", dataSourceConfig.getSchema());
+      recordCacheFileUsed = recordCacheFileUsed.replaceAll("#SCHEMA#.", dataSourceConfig.getSchema());
+      deleteCacheFile = deleteCacheFile.replaceAll("#SCHEMA#.", dataSourceConfig.getSchema());
     }
 
     for (int retry = 0; configuration.getRetryLimit() < 0 || retry <= configuration.getRetryLimit(); ++retry) {
@@ -177,6 +188,10 @@ public class AuditorPersistenceImpl implements Auditor {
         recordResponse = recordResponse.replaceAll("#", quote);
         getHistory = getHistory.replaceAll("#", quote);
         getHistoryCount = getHistoryCount.replaceAll("#", quote);
+        getCacheFile = getCacheFile.replaceAll("#", quote);
+        recordCacheFile = recordCacheFile.replaceAll("#", quote);
+        recordCacheFileUsed = recordCacheFileUsed.replaceAll("#", quote);
+        deleteCacheFile = deleteCacheFile.replaceAll("#", quote);
         
         String databaseProduct = dmd.getDatabaseProductName();
         logger.debug("Database product: {}", databaseProduct);
@@ -254,6 +269,7 @@ public class AuditorPersistenceImpl implements Auditor {
     prepared = true;
   }
   
+  @Override
   public void healthCheck(Promise<Status> promise) {
     if (!prepared) {
       logger.debug("Failing health check because audit is not prepared");
@@ -275,13 +291,17 @@ public class AuditorPersistenceImpl implements Auditor {
                     , #arguments#
                     , #headers#
                     , #openIdDetails#
+                    , #audience#
                     , #issuer#
                     , #subject#
                     , #username#
                     , #name#
                     , #groups#
+                    , #roles#
                   ) values (
                     ?
+                    , ?
+                    , ?
                     , ?
                     , ?
                     , ?
@@ -304,6 +324,7 @@ public class AuditorPersistenceImpl implements Auditor {
             #filePath# = ?
             , #fileSize# = ?
             , #fileModified# = ?
+            , #fileHash# = ?
            where
             #id# = ?""";
   private String recordException = """
@@ -360,6 +381,49 @@ public class AuditorPersistenceImpl implements Auditor {
              and #subject# = ?
            order by
              #ORDERBY# ASCDESC""";
+  private String getCacheFile = """
+          select
+            #id#
+            , #cacheFile#
+            , #cacheExpiry#
+          from
+            #SCHEMA#.#request#
+          where
+            #cacheKey# = ?
+            and #cacheExpiry# > ?
+            and #cacheDeleted# is null
+            and #responseDurationMillis# is not null
+            and #fileHash# = ?
+          order by
+            responseTime desc
+          """;
+  private String recordCacheFile = """
+          update
+            #SCHEMA#.#request#
+          set
+            #cacheKey# = ?
+            , #cacheFile# = ?
+            , #cacheExpiry# = ?
+            , #cacheDeleted# = null
+          where
+            #id# = ?
+          """;
+  private String recordCacheFileUsed = """
+          update
+            #SCHEMA#.#request#
+          set
+            #cacheFile# = ?
+          where
+            #id# = ?
+          """;
+  private String deleteCacheFile = """
+          update
+            #SCHEMA#.#request#
+          set
+            #cacheDeleted# = ?
+          where
+            #id# = ?
+          """;
   
   private boolean baseSqlExceptionIsNonexistantDriver(Throwable ex) {
     while (ex != null) {
@@ -377,32 +441,132 @@ public class AuditorPersistenceImpl implements Auditor {
     return false;
   }
 
+  private static void hashNullableString(Hasher hasher, String value) {
+    if (value != null) {
+      hasher.putString(value, StandardCharsets.UTF_8);
+    }
+  }
+  
+  /**
+   * The cache key is built of:
+   * <UL>
+   * <LI>The full request URL.
+   * <LI>Headers:
+   * <UL>
+   * <LI>Accept
+   * <LI>Accept-Encoding
+   * </UL>
+   * <LI>Token fields:
+   * <UL>
+   * <LI>aud
+   * <LI>iss
+   * <LI>sub
+   * <LI>groups
+   * <LI>roles
+   * </UL>
+   * </UL>
+   * 
+   * Note that the fileHash must also match, but isn't built into the key (should usually match because of the use of the inclusion of full URL).
+   * 
+   * @param context The request context.
+   * @return 
+   */
+  static String buildCacheKey(RequestContext context) {
+    
+    Hasher sha = Hashing.sha256().newHasher();
+    hashNullableString(sha, context.getUrl());
+    hashNullableString(sha, context.getHeaders().get("Accept"));
+    hashNullableString(sha, context.getHeaders().get("Accept-Encoding"));
+    hashNullableString(sha, Objects.toString(context.getAudience()));
+    hashNullableString(sha, context.getIssuer());
+    hashNullableString(sha, context.getSubject());
+    hashNullableString(sha, Objects.toString(context.getGroups()));
+    hashNullableString(sha, Objects.toString(context.getRoles()));
+    return sha.hash().toString();
+    
+  }
+  
+  @Override
+  public Future<CacheDetails> getCacheFile(RequestContext context, Pipeline pipeline) {
+    
+    String cacheKey = buildCacheKey(context);
+    
+    return jdbcHelper.runSqlSelect(getCacheFile, ps -> {
+        ps.setString(1, cacheKey);
+        JdbcHelper.setLocalDateTimeUTC(ps, 2, LocalDateTime.now(ZoneOffset.UTC));
+        ps.setString(3, pipeline.getSha256());
+      }, rs -> {
+        while (rs.next()) {
+          return new CacheDetails(rs.getString(1), rs.getString(2), rs.getTimestamp(3).toLocalDateTime());
+        }
+        return null;
+      });
+  }
+
+  @Override
+  public Future<Void> recordCacheFile(RequestContext context, String fileName, LocalDateTime expiry) {
+    return jdbcHelper.runSqlUpdate("recordCacheFile", recordCacheFile, ps -> {
+                    int param = 1; 
+                    ps.setString(param++, buildCacheKey(context));
+                    ps.setString(param++, fileName);
+                    JdbcHelper.setLocalDateTimeUTC(ps, param++, expiry);
+                    ps.setString(param++, context.getRequestId());
+    }).mapEmpty();
+  }
+  
+  @Override
+  public Future<Void> recordCacheFileUsed(RequestContext context, String fileName) {
+    return jdbcHelper.runSqlUpdate("recordCacheFileUsed", recordCacheFileUsed, ps -> {
+                    int param = 1; 
+                    ps.setString(param++, fileName);
+                    ps.setString(param++, context.getRequestId());
+    }).mapEmpty();
+  }
+  
+  @Override
+  public Future<Void> deleteCacheFile(String auditId) {
+    return jdbcHelper.runSqlUpdate("deleteCacheFile", deleteCacheFile, ps -> {
+                    int param = 1; 
+                    ps.setString(param++, auditId);
+                    JdbcHelper.setLocalDateTimeUTC(ps, param++, LocalDateTime.now(ZoneOffset.UTC));
+    })
+            .recover(ex -> {
+              logger.error("Failed to mark cache file deleted for {}: ", auditId, ex);
+              return Future.succeededFuture();
+            })
+            .mapEmpty();
+  }
+  
   @Override
   public Future<Void> recordRequest(RequestContext context) {
     
     JsonObject headers = multiMapToJson(context.getHeaders());
     JsonObject arguments = multiMapToJson(context.getArguments());
+    JsonArray audience = Auditor.listToJson(context.getAudience());
     JsonArray groups = Auditor.listToJson(context.getGroups());
+    JsonArray roles = Auditor.listToJson(context.getRoles());
     String openIdDetails = context.getJwt() == null ? null : context.getJwt().getPayloadAsString();
     
-    logger.info("Request: {} {} {} {} {} {} {} {} {} {} {}",
+    logger.info("Request: {} {} {} {} {} {} {} {} {} {} {} {} {}",
              context.getUrl(),
              context.getClientIp(),
              context.getHost(),
              context.getPath(),
              arguments,
              headers,
+             context.getAudience(),
              context.getIssuer(),
              context.getSubject(),
              context.getUsername(),
              context.getNameFromJwt(),
-             context.getGroups()
+             context.getGroups(),
+             context.getRoles()
     );
     
-    return jdbcHelper.runSqlUpdate(recordRequest, ps -> {
+    return jdbcHelper.runSqlUpdate("recordRequest", recordRequest, ps -> {
                     int param = 1; 
                     ps.setString(param++, JdbcHelper.limitLength(context.getRequestId(), 100));
-                    ps.setTimestamp(param++, Timestamp.from(Instant.now()));
+                    JdbcHelper.setLocalDateTimeUTC(ps, param++, LocalDateTime.now(ZoneOffset.UTC));
                     ps.setString(param++, JdbcHelper.limitLength(PROCESS_ID, 1000));
                     ps.setString(param++, JdbcHelper.limitLength(context.getUrl(), 1000));
                     ps.setString(param++, JdbcHelper.limitLength(context.getClientIp().toNormalizedString(), 40));
@@ -411,11 +575,13 @@ public class AuditorPersistenceImpl implements Auditor {
                     ps.setString(param++, JdbcHelper.toString(arguments));
                     ps.setString(param++, JdbcHelper.toString(headers));
                     ps.setString(param++, openIdDetails);
+                    ps.setString(param++, JdbcHelper.toString(audience));
                     ps.setString(param++, JdbcHelper.limitLength(context.getIssuer(), 1000));
                     ps.setString(param++, JdbcHelper.limitLength(context.getSubject(), 1000));
                     ps.setString(param++, JdbcHelper.limitLength(context.getUsername(), 1000));
                     ps.setString(param++, JdbcHelper.limitLength(context.getNameFromJwt(), 1000));
                     ps.setString(param++, JdbcHelper.toString(groups));                    
+                    ps.setString(param++, JdbcHelper.toString(roles));
     })
             .recover(ex -> {
               logger.error("Audit record failed: ", ex);
@@ -425,25 +591,22 @@ public class AuditorPersistenceImpl implements Auditor {
   }
 
   @Override
-  public void recordFileDetails(RequestContext context, DirCacheTree.File file) {
+  public Future<Void> recordFileDetails(RequestContext context, DirCacheTree.File file, Pipeline pipeline) {
     logger.info("File: {} {} {}", file.getPath(), file.getSize(), file.getModified());
-    jdbcHelper.runSqlUpdate(recordFile, ps -> {
+    return jdbcHelper.runSqlUpdate("recordFile", recordFile, ps -> {
              ps.setString(1, JdbcHelper.limitLength(JdbcHelper.toString(file.getPath()), 1000));
              ps.setLong(2, file.getSize());
-             if (file.getModified() != null) {
-               ps.setTimestamp(3, Timestamp.from(file.getModified().toInstant(ZoneOffset.UTC)));
-             } else {
-               ps.setTimestamp(3, null);
-             }
-             ps.setString(4, JdbcHelper.limitLength(context.getRequestId(), 100));
-    });
+             JdbcHelper.setLocalDateTimeUTC(ps, 3, file.getModified());
+             ps.setString(4, pipeline == null ? null : pipeline.getSha256());
+             ps.setString(5, JdbcHelper.limitLength(context.getRequestId(), 100));
+    }).mapEmpty();
   }
 
   @Override
   public void recordException(RequestContext context, Throwable ex) {
     logger.info("Exception: {} {}", ex.getClass().getCanonicalName(), ex.getMessage());
-    jdbcHelper.runSqlUpdate(recordException, ps -> {
-             ps.setTimestamp(1, Timestamp.from(Instant.now()));
+    jdbcHelper.runSqlUpdate("recordException", recordException, ps -> {
+             JdbcHelper.setLocalDateTimeUTC(ps, 1, LocalDateTime.now(ZoneOffset.UTC));
              ps.setString(2, JdbcHelper.limitLength(ex.getClass().getCanonicalName(), 1000));
              ps.setString(3, JdbcHelper.limitLength(ex.getMessage(), 1000));
              ps.setString(4, ExceptionToString.convert(ex, "; "));
@@ -460,8 +623,8 @@ public class AuditorPersistenceImpl implements Auditor {
             , (System.currentTimeMillis() - context.getStartTime()) / 1000.0
             , headers
     );
-    jdbcHelper.runSqlUpdate(recordResponse, ps -> {
-             ps.setTimestamp(1, Timestamp.from(Instant.now()));
+    jdbcHelper.runSqlUpdate("recordResponse", recordResponse, ps -> {
+             JdbcHelper.setLocalDateTimeUTC(ps, 1, LocalDateTime.now(ZoneOffset.UTC));
              if (context.getHeadersSentTime() > 0) {
                ps.setLong(2, context.getHeadersSentTime() - context.getStartTime());
              } else {
@@ -535,6 +698,7 @@ public class AuditorPersistenceImpl implements Auditor {
       }
     }
     boolean[] done = new boolean[rules.size()];
+
     return jdbcHelper.runSqlSelect(sql.toString(), ps -> {
         for (int i = 0; i < args.size(); ++i) {
           ps.setObject(i + 1, args.get(i));

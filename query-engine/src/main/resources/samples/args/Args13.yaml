@@ -71,7 +71,7 @@ arguments:
     description: The Thirteenth Argument
     type: String
 source:
-  type: Test
+  type: TEST
   rowCount: 13
 formats:
 - type: HTML

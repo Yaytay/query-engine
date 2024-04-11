@@ -21,10 +21,18 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.file.OpenOptions;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.streams.WriteStream;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.impl.Utils;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.Auditor;
@@ -36,6 +44,8 @@ import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 import uk.co.spudsoft.query.main.ExceptionToString;
 import uk.co.spudsoft.query.defn.Format;
+import uk.co.spudsoft.query.defn.Pipeline;
+import uk.co.spudsoft.query.exec.CachingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
 
 
@@ -56,6 +66,7 @@ public class QueryRouter implements Handler<RoutingContext> {
   private final RequestContextBuilder requestContextBuilder;
   private final PipelineDefnLoader loader;
   private final PipelineExecutor pipelineExecutor;
+  private final String outputCacheDir;
   private final boolean outputAllErrorMessages;
 
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The PipelineDefnLoader is mutable because it changes the filesystem")
@@ -64,6 +75,7 @@ public class QueryRouter implements Handler<RoutingContext> {
           , RequestContextBuilder requestContextBuilder
           , PipelineDefnLoader loader
           , PipelineExecutor pipelineExecutor
+          , String outputCacheDir
           , boolean outputAllErrorMessages
   ) {
     this.vertx = vertx;
@@ -71,7 +83,8 @@ public class QueryRouter implements Handler<RoutingContext> {
     this.requestContextBuilder = requestContextBuilder;
     this.loader = loader;
     this.pipelineExecutor = pipelineExecutor;
-    this.outputAllErrorMessages = outputAllErrorMessages;
+    this.outputCacheDir = outputCacheDir;
+    this.outputAllErrorMessages = outputAllErrorMessages;    
   }
   
   static int indexOfLastDotAfterLastSlash(String path) {
@@ -96,6 +109,7 @@ public class QueryRouter implements Handler<RoutingContext> {
           throw new ServiceException(400, "Invalid path");
         } else {
           HttpServerResponse response = routingContext.response();
+          WriteStream<Buffer> responseStream = response;
           response.setChunked(true);
           path = path.substring(PATH_ROOT.length() + 1);
           String extension = null;
@@ -112,25 +126,30 @@ public class QueryRouter implements Handler<RoutingContext> {
                   .build();
           requestContextBuilder.buildRequestContext(request)
                   .compose(requestContext -> {
-                    return auditor.recordRequest(requestContext).map(v -> requestContext);
-                  })
-                  .compose(requestContext -> {
-                    try {
-                      logger.trace("Request context: {}", requestContext);
-                      Vertx.currentContext().putLocal("req", requestContext);
-                      return loader.loadPipeline(query, requestContext, file -> auditor.recordFileDetails(requestContext, file));
-                    } catch (Throwable ex) {
-                      return Future.failedFuture(ex);
-                    }
-                  })
-                  .onComplete(ar -> {
-                    RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
                     response.headersEndHandler(v -> {
                       requestContext.setHeadersSentTime(System.currentTimeMillis());
                     });
                     response.bodyEndHandler(v -> {
                       auditor.recordResponse(requestContext, response);
                     });
+
+                    return auditor.recordRequest(requestContext).map(v -> requestContext);
+                  })
+                  .compose(requestContext -> {
+                    try {
+                      logger.trace("Request context: {}", requestContext);
+                      Vertx.currentContext().putLocal("req", requestContext);
+                      
+                      return loader.loadPipeline(query, requestContext, (file, ex) -> auditor.recordFileDetails(requestContext, file, null));
+                    } catch (Throwable ex) {
+                      return Future.failedFuture(ex);
+                    }
+                  })
+                  .compose(pipelineAndFile -> {
+                    RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
+                    
+                    return auditor.recordFileDetails(requestContext, pipelineAndFile.file(), pipelineAndFile.pipeline())
+                            .map(v -> pipelineAndFile.pipeline());
                   })
                   .compose(pipeline -> pipelineExecutor.validatePipeline(pipeline))
                   .compose(pipeline -> {
@@ -138,32 +157,19 @@ public class QueryRouter implements Handler<RoutingContext> {
                     return auditor.runRateLimitRules(requestContext, pipeline);
                   })
                   .compose(pipeline -> {
-                    PipelineInstance instance;
-                    try {
-                      Format chosenFormat = pipelineExecutor.getFormat(pipeline.getFormats(), formatRequest);
-                      response.headers().set("content-type", chosenFormat.getMediaType().toString());
-                      FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), response);
-                      SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), pipelineExecutor, ROOT_SOURCE_DEFAULT_NAME);
-                      
-                      Vertx.currentContext().putLocal("pipeline", pipeline);
-                      
-                      instance = new PipelineInstance(
-                              pipelineExecutor.prepareArguments(pipeline.getArguments(), routingContext.request().params())
-                              , pipeline.getSourceEndpointsMap()
-                              , pipelineExecutor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
-                              , sourceInstance
-                              , pipelineExecutor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline, routingContext.request().params())
-                              , formatInstance
-                      );
-                    } catch (Throwable ex) {
-                      return Future.failedFuture(ex);
-                    } 
-                    
-                    return pipelineExecutor.initializePipeline(instance).map(v -> instance);
-                  })
-                  .compose(instance -> {
-                    logger.info("Pipeline initiated");
-                    return instance.getFinalPromise().future();
+                    responseStream.exceptionHandler(ex -> {
+                      logger.warn("Exception in response stream: ", ex);
+                    });
+                    // Four options:
+                    // 1. No caching involved
+                    // 2. Valid cache file avavailable, If-Modified-Since is before cacheExpiry - return 304 with Last-Modified
+                    // 3. Valid cache file avavailable
+                    // 4. Generate cache file
+                    if (pipeline.supportsCaching()) {
+                      return runCachedPipeline(pipeline, formatRequest, response, responseStream, routingContext);
+                    } else {
+                      return runPipeline(pipeline, formatRequest, response, responseStream, routingContext);
+                    }
                   })
                   .onFailure(ex -> {
                     RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
@@ -185,6 +191,119 @@ public class QueryRouter implements Handler<RoutingContext> {
     } else {
       routingContext.next();
     }
+  }
+
+  private boolean notModifiedSince(RoutingContext routingContext, LocalDateTime cacheExpiry) {
+    final String modifiedSince = routingContext.request().getHeader(HttpHeaders.IF_MODIFIED_SINCE);
+    if (modifiedSince != null) {
+      long lastModified = Utils.parseRFC1123DateTime(modifiedSince);
+      if (lastModified < cacheExpiry.toInstant(ZoneOffset.UTC).toEpochMilli()) {
+        return true;
+      }
+    }
+    return false;
+  }
+  
+  private Future<Void> runCachedPipeline(Pipeline pipeline, FormatRequest formatRequest, HttpServerResponse response, WriteStream<Buffer> responseStream, RoutingContext routingContext) {
+
+    RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
+    
+    return auditor.getCacheFile(requestContext, pipeline)
+            .compose(cacheDetails -> {
+              if (cacheDetails == null) {
+                logger.debug("Caching pipeline {} with {} no previous run found.", requestContext.getPath(), pipeline.getCacheDuration());
+                return runPipelineToCache(pipeline, requestContext, formatRequest, response, responseStream, routingContext);
+              } else {
+                // Return from cache
+                logger.debug("Caching pipeline {} found file {} from run {}.", requestContext.getPath(), cacheDetails.cacheFile(), cacheDetails.auditId());
+                
+                if (notModifiedSince(routingContext, cacheDetails.expiry())) {
+                  response.setStatusCode(304);
+                  return response.end();
+                } else {
+                  return vertx.fileSystem().open(cacheDetails.cacheFile(), new OpenOptions().setRead(true).setCreate(false))
+                          .transform(ar -> {
+                            if (ar.succeeded()) {
+                              auditor.recordCacheFileUsed(requestContext, cacheDetails.cacheFile());
+                              routingContext.lastModified(cacheDetails.expiry().toInstant(ZoneOffset.UTC));
+                              return ar.result().pipeTo(responseStream);
+                            } else {
+                              logger.warn("Failed to open cache file {}: ", cacheDetails, ar.cause());
+                              // Failed to open cache file, so regenerate
+                              return auditor.deleteCacheFile(cacheDetails.auditId())
+                                      .transform(ar2 -> {
+                                        if (ar2.failed()) {
+                                          logger.error("Failed to delete cache for {}: {}", cacheDetails.auditId(), ar2.cause());
+                                        }
+                                        return runPipelineToCache(pipeline, requestContext, formatRequest, response, responseStream, routingContext);
+                                      });
+                            }
+                          });
+                }
+              }
+            });
+  }
+
+  private Future<Void> runPipelineToCache(Pipeline pipeline, RequestContext requestContext, FormatRequest formatRequest, HttpServerResponse response, WriteStream<Buffer> responseStream, RoutingContext routingContext) {
+    // No cache file found, so run pipeline to generate one
+    String cacheFile = outputCacheDir + requestContext.getRequestId().replace('/', '_');
+    return auditor.recordCacheFile(requestContext, cacheFile, LocalDateTime.now(ZoneOffset.UTC).plus(pipeline.getCacheDuration()))
+            .transform(ar -> {
+              if (ar.succeeded()) {
+                return CachingWriteStream.cacheStream(vertx, responseStream, cacheFile)
+                        .transform(ar2 -> {
+                          if (ar2.succeeded()) {
+                            return runPipeline(pipeline, formatRequest, response, ar2.result(), routingContext);
+                          } else {
+                            logger.error("Failed to open cache file ({}) for {}: {}", cacheFile, requestContext.getRequestId(), ar2.cause());
+                            return auditor.deleteCacheFile(requestContext.getRequestId())
+                                    .transform(ar3 -> {
+                                      if (ar3.failed()) {
+                                        logger.error("Failed to delete cache for {}: {}", cacheFile, requestContext.getRequestId(), ar3.cause());
+                                      }
+                                      return runPipeline(pipeline, formatRequest, response, responseStream, routingContext);
+                                    });
+                          }
+                        });
+              } else {
+                logger.error("Failed to record cache file ({}) for {} in database: {}", cacheFile, requestContext.getRequestId(), ar.cause());
+                return runPipeline(pipeline, formatRequest, response, responseStream, routingContext);
+              }
+            });
+  }
+  
+  private Future<Void> runPipeline(Pipeline pipeline, FormatRequest formatRequest, HttpServerResponse response, WriteStream<Buffer> responseStream, RoutingContext routingContext) {
+    PipelineInstance instance;
+    try {
+      Format chosenFormat = pipelineExecutor.getFormat(pipeline.getFormats(), formatRequest);
+      response.headers().set("content-type", chosenFormat.getMediaType().toString());
+      if (pipeline.supportsCaching()) {
+        RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
+        routingContext.lastModified(Instant.ofEpochMilli(requestContext.getStartTime()));
+      }
+      
+      FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), responseStream);
+      SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), pipelineExecutor, ROOT_SOURCE_DEFAULT_NAME);
+      
+      Vertx.currentContext().putLocal("pipeline", pipeline);
+      
+      instance = new PipelineInstance(
+              pipelineExecutor.prepareArguments(pipeline.getArguments(), routingContext.request().params())
+              , pipeline.getSourceEndpointsMap()
+              , pipelineExecutor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
+              , sourceInstance
+              , pipelineExecutor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline, routingContext.request().params())
+              , formatInstance
+      );
+    } catch (Throwable ex) {
+      return Future.failedFuture(ex);
+    }
+    
+    return pipelineExecutor.initializePipeline(instance).map(v -> instance)
+                  .compose(i -> {
+                    logger.info("Pipeline initiated");
+                    return instance.getFinalPromise().future();
+                  });
   }
 
   static void internalError(Throwable ex, RoutingContext routingContext, boolean outputAllErrorMessages) {

@@ -23,6 +23,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.ext.healthchecks.Status;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
 import liquibase.exception.LiquibaseException;
 import uk.co.spudsoft.dircache.DirCacheTree.File;
@@ -52,9 +53,19 @@ public interface Auditor {
   
   void recordException(RequestContext context, Throwable ex);
 
-  void recordFileDetails(RequestContext context, File file);
+  Future<Void> recordFileDetails(RequestContext context, File file, Pipeline pipeline);
 
   Future<Void> recordRequest(RequestContext context);
+
+  record CacheDetails(String auditId, String cacheFile, LocalDateTime expiry){};
+  
+  Future<CacheDetails> getCacheFile(RequestContext context, Pipeline pipeline);
+
+  Future<Void> recordCacheFile(RequestContext context, String fileName, LocalDateTime expiry);
+  
+  Future<Void> recordCacheFileUsed(RequestContext context, String fileName);
+  
+  Future<Void> deleteCacheFile(String auditId);
 
   Future<Pipeline> runRateLimitRules(RequestContext context, Pipeline pipeline);
 

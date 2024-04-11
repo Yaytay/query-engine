@@ -21,6 +21,7 @@ import io.vertx.core.http.CookieSameSite;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.net.HostAndPort;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -67,9 +68,9 @@ public class LoginRouterTest {
     assertTrue(LoginRouter.shouldDiscover(authEndpoint));
     authEndpoint.setTokenEndpoint("token");
     assertTrue(LoginRouter.shouldDiscover(authEndpoint));
-    authEndpoint.setInvalidDate(LocalDateTime.now().minusSeconds(1));
+    authEndpoint.setInvalidDate(LocalDateTime.now(ZoneOffset.UTC).minusSeconds(1));
     assertTrue(LoginRouter.shouldDiscover(authEndpoint));
-    authEndpoint.setInvalidDate(LocalDateTime.now().plusSeconds(10));
+    authEndpoint.setInvalidDate(LocalDateTime.now(ZoneOffset.UTC).plusSeconds(10));
     assertFalse(LoginRouter.shouldDiscover(authEndpoint));
   }
 

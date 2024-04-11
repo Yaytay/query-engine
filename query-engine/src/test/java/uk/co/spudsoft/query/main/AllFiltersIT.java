@@ -34,6 +34,8 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -103,7 +105,8 @@ public class AllFiltersIT {
       , "--sampleDataLoads[3].url=wibble"
       , "--secrets.AllFiltersProtectedCredentials.username=" + mysql.getUser()
       , "--secrets.AllFiltersProtectedCredentials.password=" + mysql.getPassword()
-      , "--secrets.AllFiltersProtectedCredentials.condition=true"            
+      , "--secrets.AllFiltersProtectedCredentials.condition=true"
+      , "--outputCacheDir=target/temp/" + this.getClass().getSimpleName() + "/cache"
     }, stdout);
     
     RestAssured.port = main.getPort();
@@ -262,13 +265,11 @@ public class AllFiltersIT {
     int rows7 = body.split("\n").length;
     assertEquals(13, rows7);
     
+    long start = System.currentTimeMillis();
+    
     body = given()
-            .queryParam("minDate", "1971-05-06")
-            .queryParam("maxId", "20")
-            .queryParam("_limit", "12")
-            .queryParam("_offset", "1")
             .log().all()
-            .get("/query/sub1/sub2/AllDynamicIT.tsv")
+            .get("/query/sub1/sub2/AllDynamicIT.tsv?minDate=1971-05-06&maxId=20&_limit=12&_offset=1")
             .then()
             .log().all()
             .statusCode(200)
@@ -282,6 +283,63 @@ public class AllFiltersIT {
     assertThat(body, containsString("\"second\"\t\"two,four\""));
     int rows8 = body.split("\n").length;
     assertEquals(12, rows8);
+    
+    long end = System.currentTimeMillis();
+    long duration1 = end - start;
+    
+    start = System.currentTimeMillis();
+    
+    String body2 = given()
+            .log().all()
+            .get("/query/sub1/sub2/AllDynamicIT.tsv?minDate=1971-05-06&maxId=20&_limit=12&_offset=1")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .extract().body().asString();
+    
+    assertEquals(body, body2);
+    
+    end = System.currentTimeMillis();
+    long duration2 = end - start;
+    assertThat(duration1, greaterThan(duration2));
+    
+    start = System.currentTimeMillis();
+    
+    body = given()
+            .log().all()
+            .get("/query/sub1/sub2/AllDynamicIT.tsv?minDate=1971-05-06&maxId=21")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .extract().body().asString();
+    
+    assertThat(body, startsWith("\"dataId\"\t\"instant\""));
+    assertThat(body, not(containsString("\t\t\t\t\t\t\t")));
+    assertThat(body, containsString("BoolField"));
+    assertThat(body, containsString("TextField"));
+    assertThat(body, containsString("\"first\"\t\"one\""));
+    assertThat(body, containsString("\"second\"\t\"two,four\""));
+    rows8 = body.split("\n").length;
+    assertEquals(22, rows8);
+    
+    end = System.currentTimeMillis();
+    duration1 = end - start;
+    
+    start = System.currentTimeMillis();
+    
+    body2 = given()
+            .log().all()
+            .get("/query/sub1/sub2/AllDynamicIT.tsv?minDate=1971-05-06&maxId=21")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .extract().body().asString();
+    
+    assertEquals(body, body2);
+    
+    end = System.currentTimeMillis();
+    duration2 = end - start;
+    assertThat(duration1, greaterThanOrEqualTo(duration2));
     
     body = given()
             .queryParam("minDate", "1971-05-06")

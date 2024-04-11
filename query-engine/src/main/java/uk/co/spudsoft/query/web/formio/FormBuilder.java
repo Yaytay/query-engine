@@ -40,7 +40,11 @@ import uk.co.spudsoft.query.pipeline.PipelineNodesTree.PipelineFile;
 import uk.co.spudsoft.query.web.formio.DateTime.DatePicker;
 
 /**
- *
+ * Builder class to output a formio representation of a pipeline definition.
+ * 
+ * The output is written directly to the OutputStream as it is generated.
+ * The helper classes in this package are all based on a try-with-resources model where the close() method outputs the closing HTML tag.
+ * 
  * @author jtalbut
  */
 @SuppressWarnings("try")

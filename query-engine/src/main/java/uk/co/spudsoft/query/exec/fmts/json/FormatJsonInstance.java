@@ -23,6 +23,8 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
@@ -37,6 +39,8 @@ import uk.co.spudsoft.query.web.RequestContextHandler;
  * @author jtalbut
  */
 public class FormatJsonInstance implements FormatInstance {
+  
+  private static final Logger logger = LoggerFactory.getLogger(FormatJsonInstance.class);
  
   private final WriteStream<Buffer> outputStream;
   private final FormattingWriteStream formattingStream;
@@ -56,6 +60,7 @@ public class FormatJsonInstance implements FormatInstance {
     this.formattingStream = new FormattingWriteStream(outputStream
             , v -> outputStream.write(OPEN)
             , row -> {
+              logger.debug("Outputting row: {}", row);
               if (row.isEmpty()) {
                 return Future.succeededFuture();
               } else if (started.get()) {

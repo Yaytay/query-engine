@@ -1,7 +1,7 @@
 description: Test pipeline that returns no rows
 source:
   name: TestData
-  type: Test
+  type: TEST
   rowCount: 100
   delayMs: 50
 rateLimitRules:

@@ -76,7 +76,7 @@ public class SourceTestInstance extends AbstractSource {
       AtomicInteger iteration = new AtomicInteger(rowCount);
       context.owner().setPeriodic(delayMs, delayMs, id -> {
         int i = iteration.decrementAndGet();
-        if (i > 0) {
+        if (i >= 0) {
           addNewRow(i);
         } else {
           stream.complete();

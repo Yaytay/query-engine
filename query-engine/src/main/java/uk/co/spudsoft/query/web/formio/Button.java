@@ -21,7 +21,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 
 /**
- *
+ * Output a formio Button.
+ * 
  * @author jtalbut
  */
 public class Button extends Component<Button> {

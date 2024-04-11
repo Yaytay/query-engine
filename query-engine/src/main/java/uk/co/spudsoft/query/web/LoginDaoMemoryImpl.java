@@ -20,6 +20,7 @@ import io.vertx.core.Future;
 import io.vertx.core.json.Json;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -40,7 +41,7 @@ public class LoginDaoMemoryImpl implements LoginDao {
     private final RequestData requestData;
 
     Data(RequestData requestData) {      
-      this.timestamp = LocalDateTime.now();
+      this.timestamp = LocalDateTime.now(ZoneOffset.UTC);
       this.requestData = requestData;
     }
 
@@ -96,7 +97,7 @@ public class LoginDaoMemoryImpl implements LoginDao {
       
       // Purge history
       int previousCount = data.size();
-      LocalDateTime limit = LocalDateTime.now().minus(purgeDelay);
+      LocalDateTime limit = LocalDateTime.now(ZoneOffset.UTC).minus(purgeDelay);
       data.entrySet().removeIf(e -> e.getValue().timestamp.isBefore(limit));
       if (data.size() < previousCount) {
         logger.debug("Size of login request store reduced from {} to {}", previousCount, data.size());
@@ -116,13 +117,13 @@ public class LoginDaoMemoryImpl implements LoginDao {
         logger.debug("State {} not found in {}", state, Json.encode(data.keySet()));
         return Future.failedFuture(new IllegalArgumentException("State does not exist"));
       }
-      LocalDateTime limit = LocalDateTime.now().minus(purgeDelay);
+      LocalDateTime limit = LocalDateTime.now(ZoneOffset.UTC).minus(purgeDelay);
       if (input.getTimestamp().isBefore(limit)) {
         data.remove(state);
         logger.debug("State {} expired at {}", state, input.getTimestamp());
         return Future.failedFuture(new IllegalArgumentException("State does not exist"));
       }
-      input.setCompleted(LocalDateTime.now());
+      input.setCompleted(LocalDateTime.now(ZoneOffset.UTC));
       return Future.succeededFuture();
     }    
   }
@@ -158,7 +159,7 @@ public class LoginDaoMemoryImpl implements LoginDao {
       if (token == null) {
         return Future.succeededFuture();
       }
-      LocalDateTime now = LocalDateTime.now();
+      LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
       if (token.expiry.isBefore(now)) {
         tokens.remove(id);        
         token = null;

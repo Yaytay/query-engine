@@ -51,7 +51,7 @@ arguments:
     description: The Ninth Argument
     type: String
 source:
-  type: Test
+  type: TEST
   rowCount: 9
 formats:
 - type: HTML

@@ -148,10 +148,10 @@ public class DynamicEndpointPipelineIT {
                 return Future.failedFuture(ex);
               }
             })
-            .compose(pipeline -> executor.validatePipeline(pipeline))
+            .compose(pipelineAndFile -> executor.validatePipeline(pipelineAndFile.pipeline()))
             .compose(pipeline -> {
               Format chosenFormat = executor.getFormat(pipeline.getFormats(), null);
-              FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), new WriteStreamToList<>(new ArrayList<>()));
+              FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), new ListingWriteStream<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), executor, "source");
               PipelineInstance instance = new PipelineInstance(
                       executor.prepareArguments(pipeline.getArguments(), args)
@@ -242,10 +242,10 @@ public class DynamicEndpointPipelineIT {
                 return Future.failedFuture(ex);
               }
             })
-            .compose(pipeline -> executor.validatePipeline(pipeline))
+            .compose(pipelineAndFile -> executor.validatePipeline(pipelineAndFile.pipeline()))
             .compose(pipeline -> {
               Format chosenFormat = executor.getFormat(pipeline.getFormats(), null);
-              FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), new WriteStreamToList<>(new ArrayList<>()));
+              FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), new ListingWriteStream<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), executor, "source");
               PipelineInstance instance = new PipelineInstance(
                       executor.prepareArguments(pipeline.getArguments(), args)
@@ -339,10 +339,10 @@ public class DynamicEndpointPipelineIT {
                 return Future.failedFuture(ex);
               }
             })
-            .compose(pipeline -> executor.validatePipeline(pipeline))
+            .compose(pipelineAndFile -> executor.validatePipeline(pipelineAndFile.pipeline()))
             .compose(pipeline -> {
               Format chosenFormat = executor.getFormat(pipeline.getFormats(), null);
-              FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), new WriteStreamToList<>(new ArrayList<>()));
+              FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), new ListingWriteStream<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), executor, "source");
               PipelineInstance instance = new PipelineInstance(
                       executor.prepareArguments(pipeline.getArguments(), args)
@@ -444,10 +444,10 @@ public class DynamicEndpointPipelineIT {
                 return Future.failedFuture(ex);
               }
             })
-            .compose(pipeline -> executor.validatePipeline(pipeline))
+            .compose(pipelineAndFile -> executor.validatePipeline(pipelineAndFile.pipeline()))
             .compose(pipeline -> {
               Format chosenFormat = executor.getFormat(pipeline.getFormats(), null);
-              FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), new WriteStreamToList<>(new ArrayList<>()));
+              FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), new ListingWriteStream<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), executor, "source");
               PipelineInstance instance = new PipelineInstance(
                       executor.prepareArguments(pipeline.getArguments(), args)

@@ -56,7 +56,7 @@ arguments:
     description: The Tenth Argument
     type: String
 source:
-  type: Test
+  type: TEST
   rowCount: 10
 formats:
 - type: HTML

@@ -26,7 +26,7 @@ arguments:
     description: The Fourth Argument
     type: String
 source:
-  type: Test
+  type: TEST
   rowCount: 4
 formats:
 - type: HTML
