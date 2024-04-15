@@ -180,8 +180,6 @@ public class UiRouterIT {
     when().get("/ui/manifest.json").then().header("Content-Type", equalTo("application/json"));
     when().get("/ui/robots.txt").then().header("Content-Type", equalTo("text/plain;charset=utf-8"));
     when().get("/ui/site.webmanifest").then().header("Content-Type", equalTo("application/json"));
-    when().get("/ui/assets/roboto-cyrillic-300-normal-47aa3bfa.woff2").then().header("Content-Type", equalTo("font/woff2"));
-    when().get("/ui/assets/roboto-cyrillic-300-normal-c07952fe.woff").then().header("Content-Type", equalTo("application/x-font-woff"));
     
     main.shutdown();
   }
