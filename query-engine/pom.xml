@@ -287,7 +287,7 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.5.4</version>
+      <version>1.5.5</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -673,7 +673,7 @@
           <plugin>
             <groupId>com.googlecode.maven-download-plugin</groupId>
             <artifactId>download-maven-plugin</artifactId>
-            <version>1.8.1</version>
+            <version>1.9.0</version>
             <executions>
               <execution>
                 <id>download-ui</id>
