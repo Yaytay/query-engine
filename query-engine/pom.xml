@@ -40,6 +40,19 @@
     <compiler.dir>target/compiler</compiler.dir>
     <mainClass>uk.co.spudsoft.query.main.Main</mainClass>
   </properties>
+  
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.opentelemetry</groupId>
+        <artifactId>opentelemetry-bom</artifactId>
+        <version>1.37.0</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>  
 
   <dependencies>
     <dependency>
@@ -168,7 +181,6 @@
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-exporter-otlp</artifactId>
-      <version>1.37.0</version>
       <exclusions>
         <exclusion>
           <groupId>io.opentelemetry</groupId>
@@ -179,33 +191,22 @@
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-exporter-common</artifactId>
-      <version>1.37.0</version>
-      <exclusions>
-        <exclusion>
-          <groupId>io.opentelemetry</groupId>
-          <artifactId>opentelemetry-exporter-sender-okhttp</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>
-      <artifactId>opentelemetry-exporter-sender-jdk</artifactId>
-      <version>1.37.0-alpha</version>
+      <artifactId>opentelemetry-exporter-otlp-common</artifactId>
     </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>
-      <artifactId>opentelemetry-api-logs</artifactId>
-      <version>1.26.0-alpha</version>
+      <artifactId>opentelemetry-api</artifactId>
     </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-exporter-zipkin</artifactId>
-      <version>1.37.0</version>
     </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-extension-trace-propagators</artifactId>
-      <version>1.37.0</version>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
