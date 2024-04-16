@@ -195,10 +195,13 @@ public class CachingWriteStreamTest {
               testContext.failNow("Pipe should not have succeeded");
             })
             .onFailure(ex -> {
-              testContext.verify(() -> {
-                assertFalse(vertx.fileSystem().existsBlocking(outputFile));
+              // Wait half a second to give it time to delete the file
+              vertx.timer(500).andThen(ar -> {
+                testContext.verify(() -> {
+                  assertFalse(vertx.fileSystem().existsBlocking(outputFile));
+                });
+                testContext.completeNow();
               });
-              testContext.completeNow();
             });
     
   }
@@ -238,12 +241,15 @@ public class CachingWriteStreamTest {
     cws.setWriteQueueMaxSize(2);
     input.pipeTo(cws)
             .onSuccess(v -> {
-              testContext.verify(() -> {
-                assertEquals(list.size(), out.size());
-                assertEquals(list, out);
-                assertFalse(vertx.fileSystem().existsBlocking(outputFile));
+              // Wait half a second to give it time to delete the file
+              vertx.timer(500).andThen(ar -> {
+                testContext.verify(() -> {
+                  assertEquals(list.size(), out.size());
+                  assertEquals(list, out);
+                  assertFalse(vertx.fileSystem().existsBlocking(outputFile));
+                });
+                testContext.completeNow();
               });
-              testContext.completeNow();
             })
             .onFailure(ex -> {
               testContext.failNow(ex);
