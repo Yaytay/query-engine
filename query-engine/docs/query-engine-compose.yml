@@ -31,7 +31,7 @@ services:
       POSTGRES_DB: test
   
   jaeger:
-    image: jaegertracing/all-in-one:1.55
+    image: jaegertracing/all-in-one:1.56
     environment:
       COLLECTOR_OTLP_ENABLED: true
     ports:
@@ -59,8 +59,9 @@ services:
     - query-engine.audit.retryLimit=100
     - query-engine.audit.retryIncrementMs=500
     - query-engine.jwt.acceptableIssuerRegexes[0]=.*
-    - query-engine.zipkin.serviceName=query-engine2
-    - query-engine.zipkin.baseUrl=http://nonexistent/
+    - query-engine.tracing.serviceName=query-engine2
+    - query-engine.tracing.protocol=otlphttp    
+    - query-engine.tracing.url=http://jaeger:4318/v1/traces
     - query-engine.sampleDataLoads[0].url=mysql://query-engine-mysql-1:3306/test
     - query-engine.sampleDataLoads[0].adminUser.username=user
     - query-engine.sampleDataLoads[0].adminUser.password=T0p-Secret
