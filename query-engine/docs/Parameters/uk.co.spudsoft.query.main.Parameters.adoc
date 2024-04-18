@@ -30,7 +30,7 @@ These values do not usually need to be altered.
 
 The link:https://vertx.io/docs/apidocs/io/vertx/core/http/HttpServerOptions.html#setMaxHeaderSize(int)[HttpServerOptions#setMaxHeaderSize(int)]  method should be particularly useful when running behind a proxy that passes large JSON headers.
 | tracing
-| uk.co.spudsoft.query.main.TracingConfig
+| xref:uk.co.spudsoft.query.main.TracingConfig.adoc[TracingConfig]
 | The configuration to use for distributed tracing.
 
 

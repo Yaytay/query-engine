@@ -181,10 +181,12 @@
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-exporter-otlp</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.opentelemetry</groupId>
-      <artifactId>opentelemetry-exporter-sender-okhttp</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>io.opentelemetry</groupId>
+          <artifactId>opentelemetry-exporter-sender-okhttp</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>
@@ -201,6 +203,22 @@
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-exporter-zipkin</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>io.zipkin.reporter2</groupId>
+          <artifactId>zipkin-sender-okhttp3</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>io.zipkin.reporter2</groupId>
+      <artifactId>zipkin-sender-urlconnection</artifactId>
+      <version>3.3.0</version>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-exporter-sender-jdk</artifactId>
+      <version>1.37.0-alpha</version>
     </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>
@@ -297,7 +315,7 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.5.5</version>
+      <version>1.5.6</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -436,6 +454,12 @@
       <artifactId>mockito-core</artifactId>
       <version>5.11.0</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>net.bytebuddy</groupId>
+          <artifactId>byte-buddy</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
@@ -479,6 +503,7 @@
       <version>${testcontainers.version}</version>
       <scope>test</scope>
     </dependency>
+    
   </dependencies>
 
   <build>
@@ -528,7 +553,7 @@
                 <additionalOption>--include-classes</additionalOption>
                 <additionalOption>uk.co.spudsoft.query.main.JwtValidationConfig</additionalOption>
                 <additionalOption>--include-classes</additionalOption>
-                <additionalOption>uk.co.spudsoft.query.main.ZipkinConfig</additionalOption>
+                <additionalOption>uk.co.spudsoft.query.main.TracingConfig</additionalOption>
                 <additionalOption>--include-classes</additionalOption>
                 <additionalOption>uk.co.spudsoft.query.main.ZipkinConfig</additionalOption>
                 <additionalOption>--include-classes</additionalOption>

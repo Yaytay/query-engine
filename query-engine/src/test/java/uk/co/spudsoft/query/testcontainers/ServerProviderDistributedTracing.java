@@ -18,6 +18,9 @@ package uk.co.spudsoft.query.testcontainers;
 
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.ContainerPort;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.GenericContainer;
 import uk.co.spudsoft.query.main.TracingProtocol;
 
 /**
@@ -26,6 +29,7 @@ import uk.co.spudsoft.query.main.TracingProtocol;
  */
 public class ServerProviderDistributedTracing {
   
+  private static final Logger logger = LoggerFactory.getLogger(ServerProviderDistributedTracing.class);
   
   private String url;
   private TracingProtocol protocol;
@@ -48,16 +52,32 @@ public class ServerProviderDistributedTracing {
   }
   
   public ServerProviderDistributedTracing init() {
-    Container zipkin = AbstractServerProvider.findContainer("zipkin-1");
-    if (zipkin != null) {
-      protocol = TracingProtocol.zipkin;
-      url = "http://localhost:" + findPort(zipkin.ports, 9411) + "/api/v2/spans";
-    }
-    Container jaeger = AbstractServerProvider.findContainer("jaeger-1");
-    if (jaeger != null) {
+    Container container;
+    container = AbstractServerProvider.findContainer("/query-engine-jaeger-1");
+    if (container != null) {
       protocol = TracingProtocol.otlphttp;
-      url = "http://localhost:" + findPort(jaeger.ports, 4318);
+      url = "http://localhost:" + findPort(container.ports, 4318) + "/v1/traces";
+      return this;
+    } 
+    container = AbstractServerProvider.findContainer("/query-engine-zipkin-1");
+    if (container != null) {
+      protocol = TracingProtocol.zipkin;
+      url = "http://localhost:" + findPort(container.ports, 9411) + "/api/v2/spans";
+      return this;
     }
+    GenericContainer<?> jc = new GenericContainer<>("jaegertracing/all-in-one:latest");
+    jc.addEnv("COLLECTOR_OTLP_ENABLED", "true");
+    jc.addExposedPorts(
+     5778, 
+     4317, 
+     4318, 
+     14268,
+     16686
+    );
+    jc.start();
+    protocol = TracingProtocol.otlphttp;
+    url = "http://localhost:" + jc.getMappedPort(4318) + "/v1/traces";
+    logger.debug("Jaeger URI: http://localhost:" + jc.getMappedPort(16686) + "/");
     return this;
   }
   

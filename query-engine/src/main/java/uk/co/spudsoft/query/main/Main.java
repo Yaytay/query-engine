@@ -39,7 +39,6 @@ import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
-import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
 import io.opentelemetry.extension.trace.propagation.B3Propagator;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.swagger.v3.core.converter.ModelConverters;
@@ -112,7 +111,6 @@ import uk.co.spudsoft.query.exec.filters.SortFilter;
 import uk.co.spudsoft.query.exec.procs.sort.ProcessorSortInstance;
 import uk.co.spudsoft.query.json.ObjectMapperConfiguration;
 import uk.co.spudsoft.query.logging.VertxMDCSpanProcessor;
-import static uk.co.spudsoft.query.main.TracingProtocol.otlpgrpc;
 import static uk.co.spudsoft.query.main.TracingSampler.alwaysOff;
 import static uk.co.spudsoft.query.main.TracingSampler.alwaysOn;
 import static uk.co.spudsoft.query.main.TracingSampler.parent;
@@ -137,6 +135,8 @@ import uk.co.spudsoft.query.web.rest.InfoHandler;
 import uk.co.spudsoft.query.web.rest.SessionHandler;
 import uk.co.spudsoft.vertx.rest.JaxRsHandler;
 import uk.co.spudsoft.vertx.rest.OpenApiHandler;
+import zipkin2.reporter.BytesMessageSender;
+import zipkin2.reporter.urlconnection.URLConnectionSender;
 
 /**
  * The main entry point for the Query Engine.
@@ -735,9 +735,14 @@ public class Main extends Application {
     if (config.getProtocol() != TracingProtocol.none && !Strings.isNullOrEmpty(config.getUrl())) {
       SpanExporter spanExporter = switch (config.getProtocol()) {
         case none -> null;
-        case otlpgrpc -> OtlpGrpcSpanExporter.builder().setEndpoint(config.getUrl()).build();
-        case otlphttp -> OtlpHttpSpanExporter.builder().setEndpoint(config.getUrl()).build();
-        case zipkin -> ZipkinSpanExporter.builder().setEndpoint(config.getUrl()).build();
+        // case otlpgrpc -> OtlpGrpcSpanExporter.builder().setEndpoint(config.getUrl()).build();
+        case otlphttp -> OtlpHttpSpanExporter.builder()
+                .setEndpoint(config.getUrl())
+                .build();
+        case zipkin -> ZipkinSpanExporter.builder()
+                .setSender((BytesMessageSender) URLConnectionSender.create(config.getUrl()))
+                .setEndpoint(config.getUrl())
+                .build();
       };
       Sampler sampler = switch (config.getSampler()) {
         case alwaysOff ->

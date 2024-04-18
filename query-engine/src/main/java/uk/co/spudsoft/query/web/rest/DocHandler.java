@@ -75,6 +75,7 @@ public class DocHandler {
                                   , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.logging.LogbackOptions.html", "LogbackOptions")
                                   , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.main.Parameters.html", "Parameters")
                                   , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.main.ProtectedCredentials.html", "ProtectedCredentials")
+                                  , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.main.TracingConfig.html", "TracingConfig")
                                   , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.main.ZipkinConfig.html", "ZipkinConfig")
                           )
                   )

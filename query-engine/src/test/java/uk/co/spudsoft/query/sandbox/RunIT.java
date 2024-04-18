@@ -69,28 +69,27 @@ public class RunIT {
     GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
             "--baseConfigPath=target/query-engine/samples-runit"
-//            , "--persistence.datasource.url=jdbc:" + postgres.getUrl()
-//            , "--persistence.datasource.adminUser.username=" + postgres.getUser()
-//            , "--persistence.datasource.adminUser.password=" + postgres.getPassword()
-//            , "--persistence.datasource.schema=public" 
-            , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
+            , "--persistence.datasource.url=" + postgres.getJdbcUrl()
+            , "--persistence.datasource.adminUser.username=" + postgres.getUser()
+            , "--persistence.datasource.adminUser.password=" + postgres.getPassword()
+            , "--persistence.datasource.schema=public" 
             , "--jwt.acceptableIssuerRegexes[0]=.*"
             , "--jwt.defaultJwksCacheDuration=PT1M"
             , "--jwt.jwksEndpoints[0]=" + System.getProperty("queryEngineEntraUrl").replace("v2.0", "discovery/v2.0/keys")
             , "--jwt.requiredAudiences[0]=query-engine"
             , "--jwt.requiredAudiences[1]=" + System.getProperty("queryEngineEntraId")
             , "--logging.jsonFormat=false"
-      //      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.pipeline=TRACE"
-      //      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec\\\\.procs\\\\.query=TRACE"
+            , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.pipeline=TRACE"
+            , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec\\\\.procs\\\\.query=TRACE"
             , "--sampleDataLoads[0].url=" + postgres.getVertxUrl()
             , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()
             , "--sampleDataLoads[0].adminUser.password=" + postgres.getPassword()
             , "--sampleDataLoads[1].url=" + mysql.getVertxUrl()
             , "--sampleDataLoads[1].user.username=" + mysql.getUser()
             , "--sampleDataLoads[1].user.password=" + mysql.getPassword()
-            , "--sampleDataLoads[2].url=sqlserver://localhost:1234/test"
-            , "--sampleDataLoads[2].adminUser.username=sa"
-            , "--sampleDataLoads[2].adminUser.password=unknown"
+            , "--sampleDataLoads[2].url=" + mssql.getVertxUrl()
+            , "--sampleDataLoads[2].adminUser.username=" + mssql.getUser()
+            , "--sampleDataLoads[2].adminUser.password=" + mssql.getPassword()
             , "--httpServerOptions.port=8000"
             , "--managementEndpointPort=8001"
             , "--managementEndpointUrl=http://localhost:8001/manage"
@@ -102,7 +101,7 @@ public class RunIT {
             , "--session.oauth.Microsoft.credentials.id=" + System.getProperty("queryEngineEntraId")
             , "--session.oauth.Microsoft.credentials.secret=" + System.getProperty("queryEngineEntraSecret")
             , "--session.oauth.Microsoft.scope=openid profile api://341fde39-b5d8-4ee7-807f-813ec7bfff77/query-engine"
-            , "--tracing.protocol=" + tracing.getProtocol()
+            , "--tracing.protocol=" + tracing.getProtocol().name()
             , "--tracing.url=" + tracing.getUrl()
             
     }, stdout);

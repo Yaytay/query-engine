@@ -42,11 +42,11 @@ public enum TracingProtocol {
    * See <a href="https://github.com/open-telemetry/oteps/blob/main/text/0035-opentelemetry-protocol.md">https://github.com/open-telemetry/oteps/blob/main/text/0035-opentelemetry-protocol.md</a>.
    */
   otlphttp
-  , 
+  //, 
   /**
    * Use to OTLP protocol over GRPC.
    * See <a href="https://github.com/open-telemetry/oteps/blob/main/text/0035-opentelemetry-protocol.md">https://github.com/open-telemetry/oteps/blob/main/text/0035-opentelemetry-protocol.md</a>.
    */
-  otlpgrpc
+  //otlpgrpc
   
 }

@@ -53,8 +53,8 @@ public class TracingConfigTest {
   public void testGetProtocol() {
     TracingConfig instance = new TracingConfig();
     assertEquals(TracingProtocol.none, instance.getProtocol());
-    instance.setProtocol(TracingProtocol.otlpgrpc);
-    assertEquals(TracingProtocol.otlpgrpc, instance.getProtocol());
+    instance.setProtocol(TracingProtocol.otlphttp);
+    assertEquals(TracingProtocol.otlphttp, instance.getProtocol());
   }
   
   @Test
