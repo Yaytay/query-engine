@@ -100,13 +100,13 @@ public class RunIT {
       // , "--managementEndpointPort=8001" 
       // , "--managementEndpointUrl=http://localhost:8001/manage"
       , "--corsAllowedOriginRegex=.*"
-      , "--session.requireSession=true"
-      , "--session.codeVerifierLength=30"
-      , "--session.oauth.Microsoft.logoUrl=https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg"
-      , "--session.oauth.Microsoft.issuer=" + System.getProperty("queryEngineEntraUrl")
-      , "--session.oauth.Microsoft.credentials.id=" + System.getProperty("queryEngineEntraId")
-      , "--session.oauth.Microsoft.credentials.secret=" + System.getProperty("queryEngineEntraSecret")
-      , "--session.oauth.Microsoft.scope=openid profile api://" + System.getProperty("queryEngineEntraId") + "/query-engine"
+//      , "--session.requireSession=true"
+//      , "--session.codeVerifierLength=30"
+//      , "--session.oauth.Microsoft.logoUrl=https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg"
+//      , "--session.oauth.Microsoft.issuer=" + System.getProperty("queryEngineEntraUrl")
+//      , "--session.oauth.Microsoft.credentials.id=" + System.getProperty("queryEngineEntraId")
+//      , "--session.oauth.Microsoft.credentials.secret=" + System.getProperty("queryEngineEntraSecret")
+//      , "--session.oauth.Microsoft.scope=openid profile api://" + System.getProperty("queryEngineEntraId") + "/query-engine"
     }, stdout);
     
     for (int i = 0; i < 14400; ++i) {
