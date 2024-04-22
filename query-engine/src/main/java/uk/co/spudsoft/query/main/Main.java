@@ -272,7 +272,7 @@ public class Main extends Application {
     for (String arg : args) {
       if ("-?".equals(arg) || "--help".equals(arg)) {
         StringBuilder usage = new StringBuilder();
-        buildUsage(usage, p4j);
+        buildUsage(usage, p4j, true);
         stdout.println(usage.toString());
         return Future.succeededFuture(1);
       }
@@ -314,7 +314,7 @@ public class Main extends Application {
       StringBuilder usage = new StringBuilder();
       usage.append("Invalid parameter:\n");
       usage.append(ex.getMessage()).append("\n");
-      buildUsage(usage, p4j);
+      buildUsage(usage, p4j, false);
       stdout.println(usage.toString());
       return Future.succeededFuture(1);
     } catch (Throwable ex) {
@@ -327,7 +327,7 @@ public class Main extends Application {
               .append(ex.getStackTrace()[0].getLineNumber())
               .append("\n");
       usage.append(ex.getMessage()).append("\n");
-      buildUsage(usage, p4j);
+      buildUsage(usage, p4j, false);
       stdout.println(usage.toString());
       return Future.succeededFuture(1);
     }
@@ -512,12 +512,13 @@ public class Main extends Application {
   }  
 
   @SuppressFBWarnings("POTENTIAL_XML_INJECTION")
-  void buildUsage(StringBuilder usage, Params4J<Parameters> p4j) {
+  void buildUsage(StringBuilder usage, Params4J<Parameters> p4j, boolean withProps) {
     List<ConfigurationProperty> propDocs = p4j.getDocumentation(
             new Parameters()
             , "--"
             , Arrays.asList(
                     Pattern.compile(".*Condition.*")
+                    , Pattern.compile("java.lang.Boolean")
             )
             , Arrays.asList(
                     Pattern.compile(".*VertxOptions.*")
@@ -541,7 +542,7 @@ public class Main extends Application {
             .append("The full set of parameters is logged at INFO level on startup and can be used to determine the loaded configuration\n")
             .append("\n")
             .append("    --help").append(" ".repeat(maxNameLen + 1 - 6)).append("display this help text\n")
-            .append("    --helpenv").append(" ".repeat(maxNameLen + 1 - 9)).append("display this environment variable form of this help\n")
+            .append("    --helpenv").append(" ".repeat(maxNameLen + 1 - 9)).append("display the environment variable form of this help\n")
             ;
     for (ConfigurationProperty prop : propDocs) {
       prop.appendUsage(usage, maxNameLen, "\n");

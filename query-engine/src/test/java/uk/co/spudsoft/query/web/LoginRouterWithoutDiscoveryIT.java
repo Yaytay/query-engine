@@ -62,6 +62,7 @@ public class LoginRouterWithoutDiscoveryIT {
       , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
+      , "--jwt.jwksEndpoints[0]=http://localhost/jwks"
       , "--logging.jsonFormat=false"
       , "--sampleDataLoads[0].url=" + postgres.getVertxUrl()
       , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()

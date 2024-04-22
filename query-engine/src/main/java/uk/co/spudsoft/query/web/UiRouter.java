@@ -37,7 +37,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * Vertx Web Router for handling UI requests.
+ * 
+ * The files are all loaded from resources.
+ * 
  * @author njt
  */
 public class UiRouter implements Handler<RoutingContext> {

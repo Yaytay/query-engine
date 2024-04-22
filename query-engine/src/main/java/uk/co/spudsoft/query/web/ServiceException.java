@@ -17,7 +17,10 @@
 package uk.co.spudsoft.query.web;
 
 /**
- *
+ * Exception thrown within a web service request that encapsulates the status code to be return to HTTP clients.
+ * 
+ * The message for this Exception (though not for the cause of this Exception) should be prepared for use as the body of the HTTP response.
+ * 
  * @author jtalbut
  */
 public class ServiceException extends Exception {

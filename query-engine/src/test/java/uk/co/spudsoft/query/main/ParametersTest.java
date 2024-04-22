@@ -29,6 +29,7 @@ import java.util.Collections;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThrows;
 import org.junit.jupiter.api.Test;
 import uk.co.spudsoft.params4j.FileType;
 import uk.co.spudsoft.params4j.Params4J;
@@ -280,6 +281,36 @@ public class ParametersTest {
     assertEquals(5, p.getVertxOptions().getEventLoopPoolSize());
     assertEquals(8, p.getVertxOptions().getWorkerPoolSize());
     assertEquals(TracingPolicy.ALWAYS, p.getHttpServerOptions().getTracingPolicy());
+    
+  }
+  
+  @Test
+  public void testValidate() throws Exception {
+    Parameters instance = new Parameters();
+    instance.validate();
+    
+    String msg = assertThrows(IllegalArgumentException.class, () -> {
+      Parameters config = new Parameters();
+      config.getSession().getOauth().put("one", new AuthEndpoint());
+      config.setJwt(null);
+      config.validate();
+    }).getMessage();
+    assertEquals("Sessions are configured with oauth without any acceptable jwt configuration.", msg);
+
+    msg = assertThrows(IllegalArgumentException.class, () -> {
+      Parameters config = new Parameters();
+      config.getSession().getOauth().put("one", new AuthEndpoint());
+      config.validate();
+    }).getMessage();
+    assertEquals("Sessions are configured with oauth without known JWKS endpoints being configured, please set jwt.jwksEndpoints.", msg);
+    
+    msg = assertThrows(IllegalArgumentException.class, () -> {
+      Parameters config = new Parameters();
+      config.getSession().getOauth().put("one", new AuthEndpoint());
+      config.getJwt().setJwksEndpoints(Collections.emptyList());
+      config.validate();
+    }).getMessage();
+    assertEquals("Sessions are configured with oauth without known JWKS endpoints being configured, please set jwt.jwksEndpoints.", msg);
     
   }
 

@@ -25,6 +25,7 @@ import io.vertx.core.http.CookieSameSite;
 public class CookieConfig {
   
   private String name;
+  
   private Boolean secure;
   private Boolean httpOnly;
   private String domain;

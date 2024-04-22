@@ -106,6 +106,7 @@ public class MainIT {
       , "- query-engine.tracing.url=http://jaeger:4318/v1/traces"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
+      , "--jwt.jwksEndpoints[0]=http://localhost/jwks"
       , "--pipelineCache.maxDurationMs=0"
       , "--pipelineCache.purgePeriodMs=10"
       , "--session.requireSession=false"
@@ -141,6 +142,7 @@ public class MainIT {
       , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
+      , "--jwt.jwksEndpoints[0]=http://localhost/jwks"
       , "--logging.jsonFormat=true"
       , "--sampleDataLoads[0].url=" + postgres.getVertxUrl()
       , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()
@@ -295,6 +297,7 @@ public class MainIT {
       , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
+      , "--jwt.jwksEndpoints[0]=http://localhost/jwks"
       , "--logging.jsonFormat=true"
       , "--sampleDataLoads[0].url=" + postgres.getVertxUrl()
       , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()

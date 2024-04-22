@@ -21,7 +21,6 @@ import java.util.Map;
 import static org.junit.Assert.*;
 import org.junit.jupiter.api.Test;
 import org.slf4j.event.Level;
-import uk.co.spudsoft.query.main.TracingConfig;
 
 /**
  *
