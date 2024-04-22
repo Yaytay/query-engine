@@ -34,7 +34,7 @@ public class RequestContextBuilderTest {
   
   @Test
   public void testBuildRequestContextAllNulls() {
-    RequestContextBuilder builder = new RequestContextBuilder(null, null, null, null, null, false, null, null, null);
+    RequestContextBuilder builder = new RequestContextBuilder(null, null, null, null, true, true, null, false, null, null, null);
     HttpServerRequest request = mock(HttpServerRequest.class);
     when(request.remoteAddress()).thenReturn(new SocketAddressImpl(0, "1.2.3.4"));
     RequestContext context = builder.buildRequestContext(request).result();

@@ -21,6 +21,7 @@ import java.util.Map;
 import static org.junit.Assert.*;
 import org.junit.jupiter.api.Test;
 import org.slf4j.event.Level;
+import uk.co.spudsoft.query.main.TracingConfig;
 
 /**
  *
@@ -54,6 +55,19 @@ public class LogbackOptionsTest {
     instance.setLevel(levels);
     assertEquals(Level.DEBUG, instance.getLevel().get("bob.fred"));
     assertEquals(Level.TRACE, instance.getLevel().get("bob.carol"));
+  }
+
+  @Test
+  public void testValidate() {
+    LogbackOptions instance = new LogbackOptions();
+    instance.validate("logging.");
+    
+    String msg = assertThrows(IllegalArgumentException.class, () -> {
+      LogbackOptions config = new LogbackOptions();
+      config.setConfigFile("target/tmp/nonexistant");
+      config.validate("bob");
+    }).getMessage();
+    assertEquals("The file specified as bob.configFile (target/tmp/nonexistant) does not exist", msg);
   }
   
 }

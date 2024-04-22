@@ -16,7 +16,9 @@
  */
 package uk.co.spudsoft.query.main;
 
+import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,11 +40,13 @@ import java.util.List;
  */
 public class JwtValidationConfig {
   
+  
+  
   /**
    * Path to be appended to the Host to derive the issuer.
    * <p>
    * Usually an issuer has an empty path, being just https://host[:port]/ however it is perfectly valid for an issuer
-   * to have a path as long as, when ".well-known/openid-configuration" is appended to it it results in a valid URL
+   * to have a path on the condition that, when ".well-known/openid-configuration" is appended to it it results in a valid URL
    * to the OpenID configuration for that issuer.
    * <p>
    * This value is used to signify that the issuer should be derived from the header.
@@ -315,4 +319,12 @@ public class JwtValidationConfig {
     return this;
   }
   
+  /**
+   * Validate the provided parameters.
+   * 
+   * @param fieldName The name of the parent parameter, to be used in exception messages.
+   * @throws IllegalArgumentException if anything in the parameters is invalid.
+   */
+  public void validate(String fieldName) throws IllegalArgumentException {
+  }  
 }

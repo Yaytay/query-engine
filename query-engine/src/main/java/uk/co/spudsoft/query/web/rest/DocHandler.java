@@ -63,6 +63,7 @@ public class DocHandler {
           , Arrays.asList(new DocNodesTree.DocFile("Introduction.html", "Introduction")
                   , new DocNodesTree.DocFile("Getting Started.html", "Getting Started")
                   , new DocNodesTree.DocFile("Configuration.html", "Configuration")
+                  , new DocNodesTree.DocFile("Authentication.html", "Authentication")
                   , new DocNodesTree.DocDir(
                           "Parameters"
                           , Arrays.asList(

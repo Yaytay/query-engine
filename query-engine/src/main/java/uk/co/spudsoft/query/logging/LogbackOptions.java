@@ -18,6 +18,8 @@ package uk.co.spudsoft.query.logging;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.File;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -109,4 +111,19 @@ public class LogbackOptions {
     return this;
   }  
   
+  /**
+   * Validate the provided parameters.
+   * 
+   * @param fieldName The name of the parent parameter, to be used in exception messages.
+   * @throws IllegalArgumentException if anything in the parameters is invalid.
+   */
+  @SuppressFBWarnings("PATH_TRAVERSAL_IN")
+  public void validate(String fieldName) throws IllegalArgumentException {
+    if (!Strings.isNullOrEmpty(configFile)) {
+      if (!new File(configFile).exists()) {
+        throw new IllegalArgumentException("The file specified as " + fieldName + ".configFile (" + configFile + ") does not exist");
+      }
+    }
+  }
+
 }

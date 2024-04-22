@@ -212,4 +212,10 @@ If not set, and managementEndpointPort is positive, users will have no way to di
 Note that the fileHash must also match, but isn't built into the key (should usually match because of the use of the inclusion of full URL).
  
  Note that the default value for the outputCacheDir is probably a bad choice for anything other than the simplest setups.
+| enableBasicAuth
+| boolean
+| If set to false any basic auth header will be ignored.
+| enableBearerAuth
+| boolean
+| If set to false any basic auth header will be ignored.
 |===

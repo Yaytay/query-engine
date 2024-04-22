@@ -98,7 +98,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
   }
   
   static final String createRandomSessionId() {
-    byte[] bytes = new byte[64];
+    byte[] bytes = new byte[100];
     RANDOM.nextBytes(bytes);
     return RAW_BASE64_URLENCODER.encodeToString(bytes);
   }

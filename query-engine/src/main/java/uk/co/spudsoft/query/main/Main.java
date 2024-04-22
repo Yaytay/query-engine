@@ -272,41 +272,7 @@ public class Main extends Application {
     for (String arg : args) {
       if ("-?".equals(arg) || "--help".equals(arg)) {
         StringBuilder usage = new StringBuilder();
-        List<ConfigurationProperty> propDocs = p4j.getDocumentation(
-                new Parameters()
-                , "--"
-                , Arrays.asList(
-                        Pattern.compile(".*Condition.*")
-                )
-                , Arrays.asList(
-                        Pattern.compile(".*VertxOptions.*")
-                        , Pattern.compile(".*HttpServerOptions.*")
-                )
-        );
-        int maxNameLen = propDocs.stream().map(p -> p.name.length()).max(Integer::compare).get();
-        
-        usage.append("Usage: query-engine [PROPERTIES]\n")
-                .append("The query-engine is intended to be used within a container, running outside of a container is only useful to output this usage\n")
-                .append("Configuration may be set by (in priority order):\n")
-                .append("  any yaml files in ").append(getBaseConfigDir()).append("\n")
-                .append("  a file per property in a dir hierarchy matching the property structure starting at at ").append(getBaseConfigDir()).append("/conf.d\n")
-                .append("  environment variables (call with --helpenv to see a list of the main environment variables)\n")
-                .append("  system properties (-D").append(NAME).append(".baseConfigPath is equivalent to --baseConfigPath\n")
-                .append("  command line arguments as listed below\n")
-                .append("Properties may be:\n")
-                .append("  simple values\n")
-                .append("  maps (in which case '<xxx>' should be replaced with the key value\n")
-                .append("  arrays (in which case '<n>' should be replaced with an integer (and they should start at zero and be contiguous!)\n")
-                .append("  undocumented arrays (in which case '<***>' should be replaced with the path to a property in the appropriate class\n")
-                .append("The full set of parameters is logged at INFO level on startup and can be used to determine the loaded configuration\n")
-                .append("\n")
-                .append("    --help").append(" ".repeat(maxNameLen + 1 - 6)).append("display this help text\n")
-                .append("    --helpenv").append(" ".repeat(maxNameLen + 1 - 9)).append("display this environment variable form of this help\n")
-                ;
-        
-        for (ConfigurationProperty prop : propDocs) {
-          prop.appendUsage(usage, maxNameLen, "\n");
-        }
+        buildUsage(usage, p4j);
         stdout.println(usage.toString());
         return Future.succeededFuture(1);
       }
@@ -342,6 +308,30 @@ public class Main extends Application {
       logger.error("Failed to convert params to json: ", ex);
     }
 
+    try {
+      params.validate();
+    } catch (IllegalArgumentException ex) {
+      StringBuilder usage = new StringBuilder();
+      usage.append("Invalid parameter:\n");
+      usage.append(ex.getMessage()).append("\n");
+      buildUsage(usage, p4j);
+      stdout.println(usage.toString());
+      return Future.succeededFuture(1);
+    } catch (Throwable ex) {
+      StringBuilder usage = new StringBuilder();
+      usage.append("Failed to validate parameters:\n");
+      usage.append(ex.getClass().getName())
+              .append("")
+              .append(ex.getStackTrace()[0].getClassName())
+              .append("@")
+              .append(ex.getStackTrace()[0].getLineNumber())
+              .append("\n");
+      usage.append(ex.getMessage()).append("\n");
+      buildUsage(usage, p4j);
+      stdout.println(usage.toString());
+      return Future.succeededFuture(1);
+    }
+    
     ProcessorSortInstance.setMemoryLimit(params.getProcessors().getInMemorySortLimitBytes());
     ProcessorSortInstance.setTempDir(params.getProcessors().getTempDir());
     
@@ -521,6 +511,43 @@ public class Main extends Application {
     
   }  
 
+  @SuppressFBWarnings("POTENTIAL_XML_INJECTION")
+  void buildUsage(StringBuilder usage, Params4J<Parameters> p4j) {
+    List<ConfigurationProperty> propDocs = p4j.getDocumentation(
+            new Parameters()
+            , "--"
+            , Arrays.asList(
+                    Pattern.compile(".*Condition.*")
+            )
+            , Arrays.asList(
+                    Pattern.compile(".*VertxOptions.*")
+                    , Pattern.compile(".*HttpServerOptions.*")
+            )
+    );
+    int maxNameLen = propDocs.stream().map(p -> p.name.length()).max(Integer::compare).get();
+    usage.append("Usage: query-engine [PROPERTIES]\n")
+            .append("The query-engine is intended to be used within a container, running outside of a container is only useful to output this usage\n")
+            .append("Configuration may be set by (in priority order):\n")
+            .append("  any yaml files in ").append(getBaseConfigDir()).append("\n")
+            .append("  a file per property in a dir hierarchy matching the property structure starting at at ").append(getBaseConfigDir()).append("/conf.d\n")
+            .append("  environment variables (call with --helpenv to see a list of the main environment variables)\n")
+            .append("  system properties (-D").append(NAME).append(".baseConfigPath is equivalent to --baseConfigPath\n")
+            .append("  command line arguments as listed below\n")
+            .append("Properties may be:\n")
+            .append("  simple values\n")
+            .append("  maps (in which case '<xxx>' should be replaced with the key value\n")
+            .append("  arrays (in which case '<n>' should be replaced with an integer (and they should start at zero and be contiguous!)\n")
+            .append("  undocumented arrays (in which case '<***>' should be replaced with the path to a property in the appropriate class\n")
+            .append("The full set of parameters is logged at INFO level on startup and can be used to determine the loaded configuration\n")
+            .append("\n")
+            .append("    --help").append(" ".repeat(maxNameLen + 1 - 6)).append("display this help text\n")
+            .append("    --helpenv").append(" ".repeat(maxNameLen + 1 - 9)).append("display this environment variable form of this help\n")
+            ;
+    for (ConfigurationProperty prop : propDocs) {
+      prop.appendUsage(usage, maxNameLen, "\n");
+    }
+  }
+
   FilterFactory createFilterFactory() {
     FilterFactory filterFactory = new FilterFactory(
             Arrays.asList(
@@ -698,6 +725,8 @@ public class Main extends Application {
             , jwtValidator
             , openIdDiscoveryHandler
             , loginDao
+            , params.isEnableBasicAuth()
+            , params.isEnableBearerAuth()
             , params.getOpenIdIntrospectionHeaderName()
             , jwtConfig.getJwksEndpoints() == null || jwtConfig.getJwksEndpoints().isEmpty()
             , jwtConfig.getIssuerHostPath()

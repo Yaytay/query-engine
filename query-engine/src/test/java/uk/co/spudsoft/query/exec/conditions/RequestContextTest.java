@@ -95,7 +95,7 @@ public class RequestContextTest {
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
     
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), true, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
 
     assertEquals("bob.fred", ctx.getJwt().getClaim("preferred_username"));
@@ -112,7 +112,7 @@ public class RequestContextTest {
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
     
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), true, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
 
     assertEquals("security-admin-console", ctx.getJwt().getClaim("aud"));
@@ -175,7 +175,7 @@ public class RequestContextTest {
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
     
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), true, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
 
     assertEquals("Bob Fred", ctx.getNameFromJwt());
@@ -190,7 +190,7 @@ public class RequestContextTest {
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_GIVENNAME_FAMILYNAME);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
     
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), true, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
 
     assertEquals("Bob Fred", ctx.getNameFromJwt());
@@ -205,7 +205,7 @@ public class RequestContextTest {
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_GIVENNAME);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
     
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), true, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
 
     assertEquals("Bob", ctx.getNameFromJwt());
@@ -220,7 +220,7 @@ public class RequestContextTest {
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_FAMILYNAME);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
     
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), true, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
 
     assertEquals("Fred", ctx.getNameFromJwt());
@@ -235,7 +235,7 @@ public class RequestContextTest {
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_PREFERREDUSERNAME);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
     
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), true, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
 
     assertEquals("bob.fred", ctx.getNameFromJwt());

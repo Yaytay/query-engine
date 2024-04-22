@@ -16,6 +16,9 @@
  */
 package uk.co.spudsoft.query.main;
 
+import com.google.common.base.Strings;
+import java.net.URI;
+
 /**
  *
  * @author jtalbut
@@ -188,6 +191,37 @@ public class TracingConfig {
     this.sampleRatio = sampleRatio;
   }
 
-  
+  /**
+   * Validate the provided parameters.
+   * 
+   * @param fieldName The name of the parent parameter, to be used in exception messages.
+   * @throws IllegalArgumentException if anything in the parameters is invalid.
+   */
+  public void validate(String fieldName) throws IllegalArgumentException {
+    if (protocol != null && Strings.isNullOrEmpty(serviceName)) {
+      throw new IllegalArgumentException("Tracing is enabled (" + fieldName + ".protocol != none) and " + fieldName + ".serviceName is not set");
+    }
+    if (sampler == TracingSampler.ratio) {
+      if (sampleRatio < 0.0) {
+        throw new IllegalArgumentException("Parameter " + fieldName + ".sampler is set to ratio and the " + fieldName + ".sampleRatio < 0.0");
+      } else if (sampleRatio > 1.0) {
+        throw new IllegalArgumentException("Parameter " + fieldName + ".sampler is set to ratio and the " + fieldName + ".sampleRatio > 1.0");
+      }
+    }
+    if (sampler == TracingSampler.parent && rootSampler == TracingSampler.ratio) {
+      if (sampleRatio < 0.0) {
+        throw new IllegalArgumentException("Parameter " + fieldName + ".sampler is set to parent, " + fieldName + ".rootSampler is set to ratio and the " + fieldName + ".sampleRatio < 0.0");
+      } else if (sampleRatio > 1.0) {
+        throw new IllegalArgumentException("Parameter " + fieldName + ".sampler is set to parent, " + fieldName + ".rootSampler is set to ratio and the " + fieldName + ".sampleRatio > 1.0");
+      }
+    }
+    if (!Strings.isNullOrEmpty(url)) {
+      try {      
+        new URI(url);
+      } catch (Throwable ex) {
+        throw new IllegalArgumentException("Parameter " + fieldName + ".url is not a valid URL: " + ex.getMessage());
+      }
+    }
+  }  
   
 }

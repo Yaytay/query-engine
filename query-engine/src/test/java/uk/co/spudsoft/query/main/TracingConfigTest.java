@@ -72,5 +72,60 @@ public class TracingConfigTest {
     instance.setSampleRatio(0.123);
     assertEquals(0.123, instance.getSampleRatio(), 0.001);
   }
+  
+  @Test
+  public void testValidate() {
+    TracingConfig instance = new TracingConfig();
+    instance.validate("tracing.");
+    
+    String msg = assertThrows(IllegalArgumentException.class, () -> {
+      TracingConfig config = new TracingConfig();
+      config.setServiceName(null);
+      config.validate("bob");
+    }).getMessage();
+    assertEquals("Tracing is enabled (bob.protocol != none) and bob.serviceName is not set", msg);
+    
+    msg = assertThrows(IllegalArgumentException.class, () -> {
+      TracingConfig config = new TracingConfig();
+      config.setSampler(TracingSampler.ratio);
+      config.setSampleRatio(-2);
+      config.validate("bob");
+    }).getMessage();
+    assertEquals("Parameter bob.sampler is set to ratio and the bob.sampleRatio < 0.0", msg);
+    
+    msg = assertThrows(IllegalArgumentException.class, () -> {
+      TracingConfig config = new TracingConfig();
+      config.setSampler(TracingSampler.ratio);
+      config.setSampleRatio(2);
+      config.validate("bob");
+    }).getMessage();
+    assertEquals("Parameter bob.sampler is set to ratio and the bob.sampleRatio > 1.0", msg);
+    
+    msg = assertThrows(IllegalArgumentException.class, () -> {
+      TracingConfig config = new TracingConfig();
+      config.setSampler(TracingSampler.parent);
+      config.setRootSampler(TracingSampler.ratio);
+      config.setSampleRatio(-2);
+      config.validate("bob");
+    }).getMessage();
+    assertEquals("Parameter bob.sampler is set to parent, bob.rootSampler is set to ratio and the bob.sampleRatio < 0.0", msg);
+    
+    msg = assertThrows(IllegalArgumentException.class, () -> {
+      TracingConfig config = new TracingConfig();
+      config.setSampler(TracingSampler.parent);
+      config.setRootSampler(TracingSampler.ratio);
+      config.setSampleRatio(2);
+      config.validate("bob");
+    }).getMessage();
+    assertEquals("Parameter bob.sampler is set to parent, bob.rootSampler is set to ratio and the bob.sampleRatio > 1.0", msg);
+    
+    msg = assertThrows(IllegalArgumentException.class, () -> {
+      TracingConfig config = new TracingConfig();
+      config.setUrl("not a url");
+      config.validate("fred");
+    }).getMessage();
+    assertEquals("Parameter fred.url is not a valid URL: Illegal character in path at index 3: not a url", msg);
+    
+  }
 
 }

@@ -56,6 +56,8 @@ public class RequestContextBuilder {
   private final JwtValidator validator;
   private final OpenIdDiscoveryHandler discoverer;
   private final LoginDao loginDao;
+  private final boolean enableBasicAuth;
+  private final boolean enableBearerAuth;
   private final String openIdIntrospectionHeaderName;
   private final boolean deriveIssuerFromHost;
   private final String issuerHostPath;
@@ -74,6 +76,8 @@ public class RequestContextBuilder {
    * @param discoverer The Open ID Discovery handler that will be used for locating the auth URL for the host.
    * This does not have to be the same discoverer as used by the validator, but it will be more efficient if it is (shared cache).
    * @param loginDao DAO for accessing tokens from cookies.
+   * @param enableBasicAuth When set to false no basic authentication (client credentials grant) will be attempted.
+   * @param enableBearerAuth When set to false no bearer authentication will be permitted.
    * @param openIdIntrospectionHeaderName The name of the header that will contain the payload from a token as Json (that may be base64 encoded or not).
    * @param deriveIssuerFromHost If true the issuer should be derived from the Host (or X-Forwarded-Host) header.
    * @param issuerHostPath  Path to be appended to the Host to derive the issuer.  See {@link uk.co.spudsoft.query.main.JwtValidationConfig#issuerHostPath}.
@@ -85,6 +89,8 @@ public class RequestContextBuilder {
           , JwtValidator validator
           , OpenIdDiscoveryHandler discoverer
           , LoginDao loginDao
+          , boolean enableBasicAuth
+          , boolean enableBearerAuth
           , String openIdIntrospectionHeaderName
           , boolean deriveIssuerFromHost
           , String issuerHostPath
@@ -95,6 +101,8 @@ public class RequestContextBuilder {
     this.validator = validator;
     this.discoverer = discoverer;
     this.loginDao = loginDao;
+    this.enableBasicAuth = enableBasicAuth;
+    this.enableBearerAuth = enableBearerAuth;
     this.openIdIntrospectionHeaderName = openIdIntrospectionHeaderName;
     this.deriveIssuerFromHost = deriveIssuerFromHost;
     this.issuerHostPath = Strings.isNullOrEmpty(issuerHostPath) ? "" : issuerHostPath.startsWith("/") ? issuerHostPath : ("/" + issuerHostPath);
@@ -203,6 +211,10 @@ public class RequestContextBuilder {
       
     } else if (authHeader.startsWith(BASIC)) {
       
+      if (!enableBasicAuth) {
+        return build(request, null);
+      }
+      
       String credentials = authHeader.substring(BASIC.length());
       credentials = new String(Base64.getUrlDecoder().decode(credentials), StandardCharsets.UTF_8);
       int colon = credentials.indexOf(":");
@@ -220,6 +232,10 @@ public class RequestContextBuilder {
               });
       
     } else if (authHeader.startsWith(BEARER)) {
+      
+      if (!enableBearerAuth) {
+        return build(request, null);
+      }
       
       String token = authHeader.substring(BEARER.length());
       request.pause();

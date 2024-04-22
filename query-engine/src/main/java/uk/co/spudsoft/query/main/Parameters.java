@@ -139,6 +139,16 @@ public class Parameters {
   private Map<String, ProtectedCredentials> secrets = new HashMap<>();
     
   /**
+   * If set to false any basic auth header will be ignored.
+   */
+  private boolean enableBasicAuth = true;
+    
+  /**
+   * If set to false any bearer auth header will be ignored.
+   */
+  private boolean enableBearerAuth = true;
+
+  /**
    * The name of the header that will contain the payload from a token as Json (that may be base64 encoded or not).
    * <p>
    * If this is used the query engine will not attempt to validate tokens itself, the header will be trusted implicitly.
@@ -809,6 +819,64 @@ public class Parameters {
     this.outputCacheDir = outputCacheDir.endsWith("/") || outputCacheDir.endsWith("\\") ? outputCacheDir : outputCacheDir + File.separator;
   }
 
-  
+  /**
+   * If set to false any basic auth header will be ignored.
+   * @return false if any basic auth header will be ignored.
+   */
+  public boolean isEnableBasicAuth() {
+    return enableBasicAuth;
+  }
+
+  /**
+   * If set to false any basic auth header will be ignored.
+   * @param enableBasicAuth  false if any basic auth header will be ignored.
+   */
+  public void setEnableBasicAuth(boolean enableBasicAuth) {
+    this.enableBasicAuth = enableBasicAuth;
+  }
+
+  /**
+   * If set to false any basic auth header will be ignored.
+   * @return false if any basic auth header will be ignored.
+   */
+  public boolean isEnableBearerAuth() {
+    return enableBearerAuth;
+  }
+
+  /**
+   * If set to false any basic auth header will be ignored.
+   * @param enableBearerAuth false if any basic auth header will be ignored.
+   */
+  public void setEnableBearerAuth(boolean enableBearerAuth) {
+    this.enableBearerAuth = enableBearerAuth;
+  }
+
+  /**
+   * Validate the provided parameters.
+   * 
+   * @throws IllegalArgumentException if anything in the parameters is invalid.
+   */
+  public void validate() throws IllegalArgumentException {
+    if (logging != null) {
+      logging.validate("logging");
+    }
+    if (tracing != null) {
+      tracing.validate("tracing");
+    }
+    if (jwt != null) {
+      jwt.validate("jwt");
+    }
+    if (session != null) {
+      if (jwt == null) {
+        throw new IllegalArgumentException("Sessions are configured without any acceptable jwt configuration.");
+      } else {
+        if (jwt.getJwksEndpoints() == null || jwt.getJwksEndpoints().isEmpty()) {
+          throw new IllegalArgumentException("Sessions are configured without known JWKS endpoints being configured, please set jwt.jwksEndpoints.");
+        }
+      }
+    }
+    
+  }
+
 }
 
