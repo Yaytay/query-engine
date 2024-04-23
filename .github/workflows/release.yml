@@ -72,3 +72,20 @@ jobs:
         path: |
           query-engine/target/site
           query-engine-design-mode/target/site
+
+    - name: Create release
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: "query-engine*/target/xlsx-writer*.jar*"
+        token: ${{ github.token }} 
+
+    - name: asciidoctor-ghpages
+      uses: manoelcampos/asciidoctor-ghpages-action@v2
+      with:
+        pdf_build: false
+        # asciidoctor_params: --attribute=nofooter
+        # adoc_file_ext: .ascii # default is .adoc
+        source_dir: query-engine/docs/
+        # slides_build: true
+        # pre_build:
+        # post_build:

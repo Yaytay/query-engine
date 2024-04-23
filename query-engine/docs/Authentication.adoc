@@ -32,14 +32,30 @@ This is easy to accomplish with most ingress proxies.
 == Basic Authentication
 
 When enableBasicAuth has not been set to false credentials provided in a Basic Authorisation header will be used to make a link:https://datatracker.ietf.org/doc/html/rfc6749#section-4.4[client credentials grant] to the host system.
-This will begin by performing link:https://openid.net/specs/openid-connect-discovery-1_0.html[OpenID Connect Discovery] starting at host on which the request was made (considering the X-Forwarded-Host header if it exists).
+This will begin by performing link:https://openid.net/specs/openid-connect-discovery-1_0.html[OpenID Connect Discovery] starting at host on which the request was made (considering the X-Forwarded-Host header if it exists, and the values supplied as jwt.issuerHostPath will be added to the host, enabling issuers that are not at the root path of the host).
 The query engine will then make the link:https://datatracker.ietf.org/doc/html/rfc6749#section-4.4[client credentials grant] request to the link:authorization_endpoint[authorization_endpoint] found in the metadata.
 
 == Validation of JWTs
 
 Every token will be validated before it is accepted by the query engine.
 This follows a fairly standard process, but there is some extra configuration of the query engine that governs it:
-* 
+. The JWT is parsed - split into three and each component base64 decoded.
+. The algorithm specified in the JWT header must match one of the permitted algorithms (RS256, RS384 and RS512 - this list could be extended if useful).
+. The public key must be found.
+There are two ways in which the query engine can find the public key:
+* If the parameter jwt.issuerHostPath is set or the parameter jwt.jwksEndpoints is empty the JWKS url will be sought by link:https://openid.net/specs/openid-connect-discovery-1_0.html[OpenID Connect Discovery] using the Host at which the request was made (considering the X-Forwarded-Host header if it exists, and the values supplied as jwt.issuerHostPath will be added to the host, enabling issuers that are not at the root path of the host).
+* Otherwise all the endpoints listed in jwt.jwksEndpoints will be queried for JWKs.
+However the public key is found it will be cached, obeying the cache-control(max-age) HTTP headers and used from the cache in future.
+If a JWT is received that references a JWK that is not found in the cache the discovery process will be run again.
+. The issuer must either match jwt.acceptableIssuerRegexes or be found in the file specified by jwt.acceptableIssuersFile.
+The regex approach is aimed at design mode and test environments, production environments should prefer jwt.acceptableIssuersFile
+(the jwt.filePollPeriodDuration can be used to control how frequently the query engine rechecks the file).
+. The nbf and exp claims in the JWT must indicate that the token is currently valid.
+. The audience must match any one of the values specified by jwt.requiredAudiences (which defaults to just "query-engine").
+. The JWT must specify a subject (it must have a non-blank "sub" claim).
+
+
+
 
 == OpenID Connect in the UI
 

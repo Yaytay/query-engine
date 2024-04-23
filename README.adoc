@@ -1,7 +1,6 @@
 = Query Engine II
 
-image:https://img.shields.io/badge/vert.x-4.4.4-purple.svg[link="https://vertx.io"]
-image:https://github.com/Yaytay/query-engine/actions/workflows/maven.yml/badge.svg[link="https://github.com/Yaytay/query-engine/actions/workflows/maven.yml"]
+image:https://img.shields.io/badge/vert.x-4.5.7-purple.svg[link="https://vertx.io"]
 image:https://img.shields.io/github/v/release/yaytay/query-engine.svg[Latest Release,link=https://github.com/yaytay/query-engine/latest]
 image:https://img.shields.io/github/license/yaytay/query-engine.svg[License,link=https://github.com/yaytay/query-engine/blob/master/LICENCE.md]
 image:https://img.shields.io/github/issues/yaytay/query-engine.svg[Issues,link=https://github.com/yaytay/query-engine/issues]
