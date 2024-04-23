@@ -278,7 +278,17 @@ public class Main extends Application {
       }
       if ("--helpenv".equals(arg)) {
         StringBuilder usage = new StringBuilder();
-        List<ConfigurationProperty> propDocs = p4j.getDocumentation(new Parameters(), "--", null, Arrays.asList(Pattern.compile(".*VertxOptions.*"), Pattern.compile(".*HttpServerOptions.*")));
+        List<ConfigurationProperty> propDocs = p4j.getDocumentation(
+                new Parameters()
+                , "--"
+                , Arrays.asList(
+                        Pattern.compile("java.lang.Boolean")
+                )
+                , Arrays.asList(
+                        Pattern.compile(".*VertxOptions.*")
+                        , Pattern.compile(".*HttpServerOptions.*")
+                )
+        );
         int maxNameLen = propDocs.stream().map(p -> p.name.length()).max(Integer::compare).get();
 
         usage.append("This is a list of environment variables understood by the query-engine.\n")
