@@ -76,10 +76,11 @@ public class ProcessorMap implements Processor {
   }
 
   @Schema(description = """
-                        The fields that will be removed by this processor.
+                        The fields that will be renamed by this processor.
                         """
+          , requiredMode = Schema.RequiredMode.REQUIRED
   )
-  public ImmutableList<ProcessorMapLabel> getRelabels() {
+  public List<ProcessorMapLabel> getRelabels() {
     return relabels;
   }
   

@@ -44,10 +44,22 @@ public class ProcessorMapLabel {
     }
   }
   
+  @Schema(description = """
+                        The name of the field to be renamed.
+                        """
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.REQUIRED
+  )
   public String getSourceLabel() {
     return sourceLabel;
   }
 
+  @Schema(description = """
+                        The new name of the field, may be blank to remove a field.
+                        """
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.REQUIRED
+  )
   public String getNewLabel() {
     return newLabel;
   }

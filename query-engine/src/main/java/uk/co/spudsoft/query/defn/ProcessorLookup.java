@@ -148,7 +148,10 @@ public class ProcessorLookup implements Processor {
    */
   @Schema(description = """
                         The name of the field in the lookupSource that provides the keys for the map.
-                        """)
+                        """
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.REQUIRED
+  )
   public String getLookupKeyField() {
     return lookupKeyField;
   }
@@ -160,8 +163,11 @@ public class ProcessorLookup implements Processor {
    */
   @Schema(description = """
                         The name of the field in the lookupSource that provides the values for the map.
-                        """)
-  public String getLookupValueField() {
+                        """
+            , maxLength = 100
+            , requiredMode = Schema.RequiredMode.REQUIRED
+    )
+    public String getLookupValueField() {
     return lookupValueField;
   }
 

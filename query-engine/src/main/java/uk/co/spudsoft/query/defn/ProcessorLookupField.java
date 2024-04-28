@@ -44,10 +44,22 @@ public class ProcessorLookupField {
     }
   }
   
+  @Schema(description = """
+                        The name of the field in the primary stream that is to be looked up in the map.
+                        """
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.REQUIRED
+  )
   public String getKeyField() {
     return keyField;
   }
 
+  @Schema(description = """
+                        The name of the field to be created in the stream that is to be set by the value from the map.
+                        """
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.REQUIRED
+  )
   public String getValueField() {
     return valueField;
   }

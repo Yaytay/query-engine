@@ -74,6 +74,8 @@ public class ProcessorQuery implements Processor {
   @Schema(description = """
                         A valid FIQL expression that will be evaluated on each row.
                         """
+          , maxLength = 1000000
+          , requiredMode = Schema.RequiredMode.REQUIRED
   )
   public String getExpression() {
     return expression;
