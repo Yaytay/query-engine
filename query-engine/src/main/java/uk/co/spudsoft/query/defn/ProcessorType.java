@@ -31,10 +31,11 @@ public enum ProcessorType {
   , OFFSET
   , GROUP_CONCAT
   , DYNAMIC_FIELD
+  , LOOKUP
   , SCRIPT
   , WITHOUT
   , QUERY
-  , RELABEL
+  , MAP
   , SORT
   
 }

@@ -76,6 +76,18 @@ public class YamlToPipelineIT {
 
     MultiMap args = MultiMap.caseInsensitiveMultiMap();
     
+    RequestContext req = new RequestContext(
+            null
+            , null
+            , "localhost"
+            , null
+            , null
+            , new HeadersMultiMap().add("Host", "localhost:123")
+            , null
+            , new IPAddressString("127.0.0.1")
+            , null
+    );
+    
     serverProvider
             .prepareContainer(vertx)
             .compose(v -> serverProvider.prepareTestDatabase(vertx))
@@ -86,17 +98,6 @@ public class YamlToPipelineIT {
             })
             .compose(v -> {
               try {
-                RequestContext req = new RequestContext(
-                        null
-                        , null
-                        , "localhost"
-                        , null
-                        , null
-                        , new HeadersMultiMap().add("Host", "localhost:123")
-                        , null
-                        , new IPAddressString("127.0.0.1")
-                        , null
-                );
                 return loader.loadPipeline("sub1/sub2/YamlToPipelineIT", req, null);
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);
@@ -108,7 +109,7 @@ public class YamlToPipelineIT {
               FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), new ListingWriteStream<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), executor, "source");
               PipelineInstance instance = new PipelineInstance(
-                      executor.prepareArguments(pipeline.getArguments(), args)
+                      executor.prepareArguments(req, pipeline.getArguments(), args)
                       , pipeline.getSourceEndpointsMap()
                       , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                       , sourceInstance
@@ -149,6 +150,18 @@ public class YamlToPipelineIT {
     MultiMap args = MultiMap.caseInsensitiveMultiMap();
     args.add("maxId", "20");
     
+    RequestContext req = new RequestContext(
+            null
+            , null
+            , "localhost"
+            , null
+            , null
+            , new HeadersMultiMap().add("Host", "localhost:123")
+            , null
+            , new IPAddressString("127.0.0.1")
+            , null
+    );
+
     serverProvider
             .prepareContainer(vertx)
             .compose(v -> serverProvider.prepareTestDatabase(vertx))
@@ -159,17 +172,6 @@ public class YamlToPipelineIT {
             })
             .compose(v -> {
               try {
-                RequestContext req = new RequestContext(
-                        null
-                        , null
-                        , "localhost"
-                        , null
-                        , null
-                        , new HeadersMultiMap().add("Host", "localhost:123")
-                        , null
-                        , new IPAddressString("127.0.0.1")
-                        , null
-                );
                 return loader.loadPipeline("sub1/sub2/YamlToPipelineIT", req, null);
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);
@@ -182,7 +184,7 @@ public class YamlToPipelineIT {
               FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), new ListingWriteStream<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), executor, "source");
               PipelineInstance instance = new PipelineInstance(
-                      executor.prepareArguments(pipeline.getArguments(), args)
+                      executor.prepareArguments(req, pipeline.getArguments(), args)
                       , pipeline.getSourceEndpointsMap()
                       , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                       , sourceInstance

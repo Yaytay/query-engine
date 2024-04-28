@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.exec.conditions;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import inet.ipaddr.IPAddressString;
 import io.opentelemetry.api.trace.Span;
@@ -28,17 +29,20 @@ import io.vertx.core.http.Cookie;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.core.net.HostAndPort;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import static net.bytebuddy.implementation.FixedValue.value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
+import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 
 /**
@@ -59,11 +63,15 @@ public class RequestContext {
   
   private final String url;
   
+  private final URI uri;
+  
   private final String host;
   
   private final String path;
   
-  private final MultiMap arguments;
+  private final MultiMap params;
+  
+  private ImmutableMap<String, Object> arguments;
   
   private final MultiMap headers;
   
@@ -88,10 +96,12 @@ public class RequestContext {
     this.startTime = System.currentTimeMillis();
     this.requestId = extractRequestId();
     this.url = request.absoluteURI();
+    this.uri = parseURI(request.absoluteURI());
     this.clientIp = extractRemoteIp(request);
     this.host = extractHost(request);
     this.path = request.path();
-    this.arguments = request.params();
+    this.params = request.params();
+    this.arguments = multiMapToMap(request.params());
     this.headers = request.headers();
     this.cookies = ImmutableSet.copyOf(request.cookies());
     this.jwt = jwt;
@@ -103,23 +113,56 @@ public class RequestContext {
    * @param url The absolute URL of the request.
    * @param host The value to use for the host.
    * @param path The path from the URL.
-   * @param arguments Arguments that should have been extracted from the request.
+   * @param params Arguments that should have been extracted from the request.
    * @param headers Headers that should have been extracted from the request.
    * @param cookies Cookies that should have been extracted from the request.
    * @param clientIp Client IP address that should have been extracted from the request.
    * @param jwt JWT that should have been extracted from the request.
    */
-  public RequestContext(String requestId, String url, String host, String path, MultiMap arguments, MultiMap headers, Set<Cookie> cookies, IPAddressString clientIp, Jwt jwt) {
+  public RequestContext(String requestId, String url, String host, String path, MultiMap params, MultiMap headers, Set<Cookie> cookies, IPAddressString clientIp, Jwt jwt) {
     this.startTime = System.currentTimeMillis();
     this.requestId = requestId;
     this.url = url;
+    this.uri = parseURI(url);
     this.host = host;
     this.path = path;
-    this.arguments = arguments == null ? new HeadersMultiMap() : arguments;
+    this.params = params;
+    this.arguments = multiMapToMap(params);
     this.headers = headers == null ? new HeadersMultiMap() : headers;
     this.cookies = ImmutableSet.copyOf(cookies == null ? Collections.emptySet() : cookies);
     this.clientIp = clientIp;
     this.jwt = jwt;
+  }
+  
+  private static URI parseURI(String url) {
+    if (url == null) {
+      return null;
+    } else {
+      return URI.create(url);
+    }
+  }
+  
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  private ImmutableMap<String, Object> multiMapToMap(MultiMap params) {
+    Map<String, Object> result = new HashMap<>();
+    if (params != null) {
+      params.forEach((k, v) -> {
+        if (result.containsKey(k)) {
+          Object current = result.get(k);
+          if (current instanceof List l) {
+            l.add(v);
+          } else {
+            List<Object> l = new ArrayList<>();
+            l.add(current);
+            l.add(v);
+            result.put(k, l);
+          }
+        } else {
+          result.put(k, v);
+        }
+      });
+    }
+    return ImmutableCollectionTools.copy(result);
   }
   
   /**
@@ -205,6 +248,14 @@ public class RequestContext {
    */
   public String getUrl() {
     return url;
+  }
+
+  /**
+   * Get the parsed absolute URL used for the request.
+   * @return Get the parsed absolute URL used for the request.
+   */
+  public URI getUri() {
+    return uri;
   }
   
   /**
@@ -329,11 +380,35 @@ public class RequestContext {
   }
 
   /**
-   * Get the arguments that have been extracted from the request context.
-   * @return the arguments that have been extracted from the request context.
+   * Get the original parameters that were provided on the query string.
+   * @return the original parameters that were provided on the query string.
    */
-  public MultiMap getArguments() {
+  public MultiMap getParams() {
+    return params;
+  }
+
+  /**
+   * Get the result of processing the arguments that were defined on the pipeline with the values provided in the query string.
+   * <P>
+   * The values here are set in {@link uk.co.spudsoft.query.exec.PipelineExecutor#prepareArguments(uk.co.spudsoft.query.exec.conditions.RequestContext, java.util.List, io.vertx.core.MultiMap)}
+   * until that has been called the values in this map will all be Strings (or Lists or Strings) reflecting the query string.
+   * 
+   * @return the result of processing the arguments that were defined on the pipeline with the values provided in the query string.
+   */
+  public Map<String, Object> getArguments() {
     return arguments;
+  }
+
+  /**
+   * Set the result of processing the arguments that were defined on the pipeline with the values provided in the query string.
+   * <P>
+   * The values here are set in {@link uk.co.spudsoft.query.exec.PipelineExecutor#prepareArguments(uk.co.spudsoft.query.exec.conditions.RequestContext, java.util.List, io.vertx.core.MultiMap)}
+   * until that has been called the values in this map will all be Strings (or Lists or Strings) reflecting the query string.
+   * 
+   * @param arguments the result of processing the arguments that were defined on the pipeline with the values provided in the query string.
+   */
+  public void setArguments(Map<String, Object> arguments) {
+    this.arguments = ImmutableCollectionTools.copy(arguments);
   }
 
   /**
@@ -460,10 +535,48 @@ public class RequestContext {
     return null;
   }
   
+  public void appendMultiMap(StringBuilder builder, Map<String, Object> map) {
+    boolean started = false;
+    builder.append("{");
+    for (Map.Entry<String, Object> entry : map.entrySet()) {
+      if (started) {
+        builder.append(", ");          
+      }
+      started = true;
+      builder.append('"').append(entry.getKey()).append("\":");
+      appendValue(builder, entry.getValue());
+    }
+    builder.append("}");
+  }
+
+  @SuppressWarnings("rawtypes")
+  public void appendValue(StringBuilder builder, Object value) {
+    if (value instanceof List list) {
+      builder.append("[");
+      boolean started = false;
+      for (Object entry : list) {
+        if (started) {
+          builder.append(", ");
+        }
+        started = true;
+        appendValue(builder, entry);
+      }
+      builder.append("]");
+    } else {
+      if (value instanceof Boolean bool) {
+        builder.append(bool);
+      } else if (value instanceof Number num) {
+        builder.append(num);
+      } else {
+        builder.append("\"").append(value).append("\"");
+      }
+    }
+  }
+  
   public void appendMultiMap(StringBuilder builder, MultiMap map) {
     boolean started = false;
     builder.append("{");
-    for (Map.Entry<String, String> entry : arguments.entries()) {
+    for (Map.Entry<String, String> entry : map.entries()) {
       if (started) {
         builder.append(", ");          
       }

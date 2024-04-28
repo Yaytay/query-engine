@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.defn;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.Strings;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -51,6 +52,7 @@ public class ProcessorMapLabel {
     return newLabel;
   }
 
+  @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
     private String sourceLabel;

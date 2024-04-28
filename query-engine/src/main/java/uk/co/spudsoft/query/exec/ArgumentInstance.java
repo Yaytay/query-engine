@@ -17,7 +17,12 @@
 package uk.co.spudsoft.query.exec;
 
 import com.google.common.collect.ImmutableList;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Argument;
 
 /**
@@ -26,14 +31,28 @@ import uk.co.spudsoft.query.defn.Argument;
  */
 public final class ArgumentInstance {
   
+  private static final Logger logger = LoggerFactory.getLogger(ArgumentInstance.class);
+  
   private final String name;
   private final Argument definition;
-  private final ImmutableList<String> values;
+  private final ImmutableList<Comparable<?>> values;
 
   public ArgumentInstance(String name, Argument definition, ImmutableList<String> values) {
     this.name = name;
     this.definition = definition;
-    this.values = values == null ? ImmutableList.of() : values;
+    
+    ImmutableList.Builder<Comparable<?>> valueBuilder = ImmutableList.builder();
+    if (values != null) {
+      for (int i = 0; i < values.size(); ++i) {
+        try {
+          Comparable<?> parsed = parseValue(values.get(i));
+          valueBuilder.add(parsed);
+        } catch (Throwable ex) {
+          logger.warn("Failed to parse argument {} value {} (\"{}\") as {}", name, i, values.get(i), definition.getType());
+        }
+      }
+    }
+    this.values = valueBuilder.build();
     if (!definition.isMultiValued() && this.values.size() > 1) {
       throw new IllegalArgumentException("Argument " + name + " is not multi valued but " + this.values.size() + " values supplied");
     }
@@ -41,7 +60,20 @@ public final class ArgumentInstance {
       throw new IllegalArgumentException("Argument " + name + " is not optional but has no value");
     }
   }
-
+  
+  public Comparable<?> parseValue(String value) {
+    return switch (definition.getType()) {
+      case Boolean -> Boolean.parseBoolean(value);
+      case Date -> LocalDate.parse(value);
+      case DateTime -> LocalDateTime.parse(value);
+      case Double -> Double.parseDouble(value);
+      case Integer -> Integer.parseInt(value);
+      case Long -> Long.parseLong(value);
+      case String -> value;
+      case Time -> LocalTime.parse(value);
+    };
+  } 
+  
   public String getName() {
     return name;
   }
@@ -50,7 +82,7 @@ public final class ArgumentInstance {
     return definition;
   }
 
-  public List<String> getValues() {
+  public List<Comparable<?>> getValues() {
     return values;
   }
     

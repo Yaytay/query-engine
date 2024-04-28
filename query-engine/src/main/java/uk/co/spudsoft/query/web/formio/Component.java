@@ -29,6 +29,12 @@ import java.io.IOException;
 @SuppressWarnings("unchecked")
 public abstract class Component<T extends Component<T>> extends AbstractComponent<T> {
 
+  /**
+   * Constructor.
+   * 
+   * @param generator The Jackson JsonGenerator for FormIO.
+   * @throws IOException if something goes wrong.
+   */
   @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
   protected Component(JsonGenerator generator, String type) throws IOException {
     super(generator);

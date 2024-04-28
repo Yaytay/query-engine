@@ -22,11 +22,9 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.tsegismont.streamutils.impl.MappingStream;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.streams.ReadStream;
 import java.time.ZoneId;
-import java.util.List;
 import java.util.function.BiFunction;
 import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.Source;
@@ -45,6 +43,7 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.exec.procs.query.FilteringStream;
+import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
 
@@ -86,30 +85,12 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
     this.definition = definition;
     this.requestContext = RequestContextHandler.getRequestContext(context);
     this.pipeline = PipelineInstance.getPipelineDefinition(context);
-    this.arguments = buildArgumentMap(requestContext);
+    this.arguments = ImmutableCollectionTools.copy(requestContext == null ? null : requestContext.getArguments());
   }
   
   @Override
   public String getId() {
     return definition.getId();
-  }
-
-  private static ImmutableMap<String, Object> buildArgumentMap(RequestContext requestContext) {
-    ImmutableMap.Builder<String, Object> builder = ImmutableMap.<String, Object>builder();
-    if (requestContext != null) {
-      MultiMap args = requestContext.getArguments();
-      if (args != null) {
-        for (String key : args.names()) {
-          List<String> values = args.getAll(key);
-          if (values.size() == 1) {
-            builder.put(key, values.get(0));
-          } else {
-            builder.put(key, values);
-          }
-        }      
-      }
-    }
-    return builder.build();
   }
 
   private boolean runPredicate(DataRow data) {

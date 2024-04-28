@@ -90,6 +90,9 @@ import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
  * <LI><PRE>requestContext.host == 'localhost'</PRE>
  * Checks that the host on the request is localhost.
  * </UL>
+ * When referencing optional arguments use "Map accesses" ({@code args['argName']}) rather than "JavaBean property access" ({@code args.argName}).
+ * The dotted approach will generate an error if the argument is not supplied.
+ * <P>
  * 
  * @author jtalbut
  */

@@ -48,6 +48,11 @@ public enum ArgumentType {
   @Schema(description = "The argument must be something that can be parsed from a String using java.lang.Double#parseDouble(java.lang.String).")
   Double,
   /**
+   * The argument must be something that can be parsed from a String using {@link java.lang.Integer#parseInt(java.lang.String)}.
+   */
+  @Schema(description = "The argument must be something that can be parsed from a String using java.lang.Boolean#parseBoolean(java.lang.String) - anything other than 'true' (case insensitive) is false.")
+  Boolean,
+  /**
    * The argument must be something that can be parsed from a String using {@link java.time.LocalDate#parse(java.lang.CharSequence)}.
    */
   @Schema(description = "The argument must be something that can be parsed from a String using java.time.LocalDate#parse(java.lang.CharSequence).")

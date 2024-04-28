@@ -30,6 +30,12 @@ public class ComponentArray implements Closeable {
 
   private final JsonGenerator generator;
 
+  /**
+   * Constructor.
+   * 
+   * @param generator The Jackson JsonGenerator for FormIO.
+   * @throws IOException if something goes wrong.
+   */
   @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
   public ComponentArray(JsonGenerator generator) throws IOException {
     this.generator = generator;

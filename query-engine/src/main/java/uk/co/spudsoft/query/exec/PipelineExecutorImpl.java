@@ -128,8 +128,9 @@ public class PipelineExecutorImpl implements PipelineExecutor {
   }
   
   @Override
-  public Map<String, ArgumentInstance> prepareArguments(List<Argument> definitions, MultiMap valuesMap) {
+  public Map<String, ArgumentInstance> prepareArguments(RequestContext requestContext, List<Argument> definitions, MultiMap valuesMap) {
     Map<String, ArgumentInstance> result = new HashMap<>();
+    Map<String, Object> arguments = new HashMap<>();
     if (valuesMap == null) {
       valuesMap = new HeadersMultiMap();
     }
@@ -144,6 +145,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
       } else if (!arg.isOptional()) {
         throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" is mandatory and was not provided.");
       } else if (!Strings.isNullOrEmpty(arg.getDefaultValue())) {
+        // Default values need to be JEXL expressions
         values = ImmutableList.of(arg.getDefaultValue());
       }
       
@@ -165,9 +167,16 @@ public class PipelineExecutorImpl implements PipelineExecutor {
         throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" has been provided " + values.size() + " times but is not multivalued.");
       }
       
+      if (values.size() == 1) {
+        arguments.put(arg.getName(), values.get(0));
+      } else {
+        arguments.put(arg.getName(), values);
+      }
+      
       ArgumentInstance instance = new ArgumentInstance(arg.getName(), arg, values);
       result.put(arg.getName(), instance);
     }
+    requestContext.setArguments(arguments);
     return result;
   }  
   

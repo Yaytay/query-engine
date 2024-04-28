@@ -34,6 +34,12 @@ public class Select extends Component<Select> {
   
   public static class DataValue extends AbstractComponent<DataValue> {
 
+    /**
+     * Constructor.
+     * 
+     * @param generator The Jackson JsonGenerator for FormIO.
+     * @throws IOException if something goes wrong.
+     */
     @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
     public DataValue(JsonGenerator generator) throws IOException {
       super(generator);
@@ -50,6 +56,12 @@ public class Select extends Component<Select> {
   
   public static class DataValues extends AbstractComponent<DataValues> {
 
+    /**
+     * Constructor.
+     * 
+     * @param generator The Jackson JsonGenerator for FormIO.
+     * @throws IOException if something goes wrong.
+     */
     @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
     public DataValues(JsonGenerator generator) throws IOException {
       super(generator);
@@ -63,6 +75,12 @@ public class Select extends Component<Select> {
   
   public static class DataUrlHeader extends AbstractComponent<DataUrlHeader> {
 
+    /**
+     * Constructor.
+     * 
+     * @param generator The Jackson JsonGenerator for FormIO.
+     * @throws IOException if something goes wrong.
+     */
     @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
     public DataUrlHeader(JsonGenerator generator) throws IOException {
       super(generator);
@@ -80,6 +98,12 @@ public class Select extends Component<Select> {
   
   public static class DataUrl extends AbstractComponent<DataUrl> {
 
+    /**
+     * Constructor.
+     * 
+     * @param generator The Jackson JsonGenerator for FormIO.
+     * @throws IOException if something goes wrong.
+     */
     @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
     public DataUrl(JsonGenerator generator) throws IOException {
       super(generator);
@@ -97,6 +121,12 @@ public class Select extends Component<Select> {
 
   public static class SelectValidation extends Validation {
 
+    /**
+     * Constructor.
+     * 
+     * @param generator The Jackson JsonGenerator for FormIO.
+     * @throws IOException if something goes wrong.
+     */
     @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
     public SelectValidation(JsonGenerator generator) throws IOException {
       super(generator);
@@ -109,6 +139,12 @@ public class Select extends Component<Select> {
 
   }
   
+  /**
+   * Constructor.
+   * 
+   * @param generator The Jackson JsonGenerator for FormIO.
+   * @throws IOException if something goes wrong.
+   */
   @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
   public Select(JsonGenerator generator) throws IOException {
     super(generator, "select");

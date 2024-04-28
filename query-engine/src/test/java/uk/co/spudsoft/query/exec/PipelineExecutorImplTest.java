@@ -17,8 +17,10 @@
 package uk.co.spudsoft.query.exec;
 
 import com.google.common.net.MediaType;
+import inet.ipaddr.IPAddressString;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -49,6 +51,7 @@ import uk.co.spudsoft.query.defn.FormatType;
 import uk.co.spudsoft.query.defn.FormatXlsx;
 import uk.co.spudsoft.query.exec.fmts.logger.LoggingWriteStream;
 import uk.co.spudsoft.query.defn.Format;
+import uk.co.spudsoft.query.exec.conditions.RequestContext;
 
 /**
  *
@@ -90,9 +93,22 @@ public class PipelineExecutorImplTest {
 
   @Test
   public void testPrepareArguments() {
+    RequestContext req = new RequestContext(
+            null
+            , null
+            , "localhost"
+            , null
+            , null
+            , new HeadersMultiMap().add("Host", "localhost:123")
+            , null
+            , new IPAddressString("127.0.0.1")
+            , null
+    );
+    
     PipelineExecutorImpl instance = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
     Map<String, ArgumentInstance> result = instance.prepareArguments(
-            Arrays.asList(
+            req
+            , Arrays.asList(
                     Argument.builder().type(ArgumentType.Long).name("arg1").optional(true).defaultValue("12").build()
                     , Argument.builder().type(ArgumentType.String).name("arg2").optional(true).defaultValue("message").build()
                     , Argument.builder().type(ArgumentType.String).name("arg3").optional(true).build()
@@ -101,12 +117,13 @@ public class PipelineExecutorImplTest {
             MultiMap.caseInsensitiveMultiMap()
             );
     assertEquals(3, result.size());
-    assertEquals("12", result.get("arg1").getValues().get(0));
+    assertEquals(12L, result.get("arg1").getValues().get(0));
     assertEquals("message", result.get("arg2").getValues().get(0));
     assertEquals(0, result.get("arg3").getValues().size());
     
     result = instance.prepareArguments(
-            Arrays.asList(
+            req
+            , Arrays.asList(
                     Argument.builder().type(ArgumentType.Long).name("arg1").defaultValue("12").build()
                     , Argument.builder().type(ArgumentType.String).name("arg2").defaultValue("message").build()
                     , Argument.builder().type(ArgumentType.String).name("arg3").optional(true).build()
@@ -118,7 +135,7 @@ public class PipelineExecutorImplTest {
                     .add("arg3", "third")
             );
     assertEquals(3, result.size());
-    assertEquals("17", result.get("arg1").getValues().get(0));
+    assertEquals(17L, result.get("arg1").getValues().get(0));
     assertEquals("second", result.get("arg2").getValues().get(0));
     assertEquals("third", result.get("arg3").getValues().get(0));
   }
@@ -139,7 +156,21 @@ public class PipelineExecutorImplTest {
     PipelineExecutorImpl instance = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
     List<ProcessorInstance> processors = instance.createProcessors(vertx, ctx -> {}, vertx.getOrCreateContext(), definition, null);
     
+    RequestContext req = new RequestContext(
+            null
+            , null
+            , "localhost"
+            , null
+            , null
+            , new HeadersMultiMap().add("Host", "localhost:123")
+            , null
+            , new IPAddressString("127.0.0.1")
+            , null
+    );
+    
     Map<String, ArgumentInstance> arguments = instance.prepareArguments(
+            req
+            , 
             Arrays.asList(
                     Argument.builder().type(ArgumentType.Long).name("arg1").optional(true).defaultValue("12").build()
                     , Argument.builder().type(ArgumentType.String).name("arg2").optional(true).defaultValue("message").build()

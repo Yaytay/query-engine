@@ -33,6 +33,7 @@ import io.vertx.ext.web.impl.Utils;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.Auditor;
@@ -45,6 +46,7 @@ import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 import uk.co.spudsoft.query.main.ExceptionToString;
 import uk.co.spudsoft.query.defn.Format;
 import uk.co.spudsoft.query.defn.Pipeline;
+import uk.co.spudsoft.query.exec.ArgumentInstance;
 import uk.co.spudsoft.query.exec.CachingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
 
@@ -275,10 +277,11 @@ public class QueryRouter implements Handler<RoutingContext> {
   private Future<Void> runPipeline(Pipeline pipeline, FormatRequest formatRequest, HttpServerResponse response, WriteStream<Buffer> responseStream, RoutingContext routingContext) {
     PipelineInstance instance;
     try {
+      RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
+      
       Format chosenFormat = pipelineExecutor.getFormat(pipeline.getFormats(), formatRequest);
       response.headers().set("content-type", chosenFormat.getMediaType().toString());
       if (pipeline.supportsCaching()) {
-        RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
         routingContext.lastModified(Instant.ofEpochMilli(requestContext.getStartTime()));
       }
       
@@ -287,8 +290,9 @@ public class QueryRouter implements Handler<RoutingContext> {
       
       Vertx.currentContext().putLocal("pipeline", pipeline);
       
+      Map<String, ArgumentInstance> arguments = pipelineExecutor.prepareArguments(requestContext, pipeline.getArguments(), routingContext.request().params());
       instance = new PipelineInstance(
-              pipelineExecutor.prepareArguments(pipeline.getArguments(), routingContext.request().params())
+              arguments
               , pipeline.getSourceEndpointsMap()
               , pipelineExecutor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
               , sourceInstance

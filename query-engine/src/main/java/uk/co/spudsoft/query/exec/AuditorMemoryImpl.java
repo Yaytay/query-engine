@@ -245,7 +245,7 @@ public class AuditorMemoryImpl implements Auditor {
   @Override
   public Future<Void> recordRequest(RequestContext context) {
     JsonObject headers = multiMapToJson(context.getHeaders());
-    JsonObject arguments = multiMapToJson(context.getArguments());
+    JsonObject arguments = multiMapToJson(context.getParams());
     JsonArray groups = Auditor.listToJson(context.getGroups());
     String openIdDetails = context.getJwt() == null ? null : context.getJwt().getPayloadAsString();
 

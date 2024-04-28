@@ -27,6 +27,7 @@ import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.main.ProtectedCredentials;
 import uk.co.spudsoft.query.defn.Format;
+import uk.co.spudsoft.query.exec.conditions.RequestContext;
 
 /**
  * Public interface to execute a pipeline.
@@ -36,7 +37,7 @@ public interface PipelineExecutor extends SharedMap {
 
   ProtectedCredentials getSecret(String name);
   
-  Map<String, ArgumentInstance> prepareArguments(List<Argument> definitions, MultiMap valuesMap);
+  Map<String, ArgumentInstance> prepareArguments(RequestContext requestContext, List<Argument> definitions, MultiMap valuesMap);
   
   Future<Pipeline> validatePipeline(Pipeline definition);
   

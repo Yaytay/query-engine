@@ -91,6 +91,18 @@ public class DynamicEndpointPipelineIT {
     MultiMap args = MultiMap.caseInsensitiveMultiMap();
     args.set("maxId", "14");
     
+    RequestContext req = new RequestContext(
+            null
+            , null
+            , "localhost"
+            , null
+            , null
+            , new HeadersMultiMap().add("Host", "localhost:123")
+            , null
+            , new IPAddressString("127.0.0.1")
+            , null
+    );
+    
     serverProviderMy
             .prepareContainer(vertx)
             .compose(v -> serverProviderMs.prepareContainer(vertx))
@@ -132,17 +144,6 @@ public class DynamicEndpointPipelineIT {
             })
             .compose(v -> {
               try {
-                RequestContext req = new RequestContext(
-                        null
-                        , null
-                        , "localhost"
-                        , null
-                        , null
-                        , new HeadersMultiMap().add("Host", "localhost:123")
-                        , null
-                        , new IPAddressString("127.0.0.1")
-                        , null
-                );
                 return loader.loadPipeline("sub1/sub2/DynamicEndpointPipelineIT", req, null);
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);
@@ -154,7 +155,7 @@ public class DynamicEndpointPipelineIT {
               FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), new ListingWriteStream<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), executor, "source");
               PipelineInstance instance = new PipelineInstance(
-                      executor.prepareArguments(pipeline.getArguments(), args)
+                      executor.prepareArguments(req, pipeline.getArguments(), args)
                       , pipeline.getSourceEndpointsMap()
                       , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                       , sourceInstance
@@ -194,6 +195,18 @@ public class DynamicEndpointPipelineIT {
     MultiMap args = MultiMap.caseInsensitiveMultiMap();
     args.set("maxId", "14");
     
+    RequestContext req = new RequestContext(
+            null
+            , null
+            , "localhost"
+            , null
+            , null
+            , new HeadersMultiMap().add("Host", "localhost:123")
+            , null
+            , new IPAddressString("127.0.0.1")
+            , null
+    );
+    
     serverProviderMy
             .prepareContainer(vertx)
             .compose(v -> serverProviderMs.prepareContainer(vertx))
@@ -226,17 +239,6 @@ public class DynamicEndpointPipelineIT {
             })
             .compose(v -> {
               try {
-                RequestContext req = new RequestContext(
-                        null
-                        , null
-                        , "localhost"
-                        , null
-                        , null
-                        , new HeadersMultiMap().add("Host", "localhost:123")
-                        , null
-                        , new IPAddressString("127.0.0.1")
-                        , null
-                );
                 return loader.loadPipeline("sub1/sub2/DynamicEndpointPipelineIT", req, null);
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);
@@ -248,7 +250,7 @@ public class DynamicEndpointPipelineIT {
               FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), new ListingWriteStream<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), executor, "source");
               PipelineInstance instance = new PipelineInstance(
-                      executor.prepareArguments(pipeline.getArguments(), args)
+                      executor.prepareArguments(req, pipeline.getArguments(), args)
                       , pipeline.getSourceEndpointsMap()
                       , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                       , sourceInstance
@@ -292,6 +294,18 @@ public class DynamicEndpointPipelineIT {
     MultiMap args = MultiMap.caseInsensitiveMultiMap();
     args.set("maxId", "7");
     
+    RequestContext req = new RequestContext(
+            null
+            , null
+            , "localhost"
+            , null
+            , null
+            , new HeadersMultiMap().add("Host", "localhost:123")
+            , null
+            , new IPAddressString("127.0.0.1")
+            , null
+    );
+    
     serverProviderMy
             .prepareContainer(vertx)
             .compose(v -> serverProviderMs.prepareContainer(vertx))
@@ -323,17 +337,6 @@ public class DynamicEndpointPipelineIT {
             })
             .compose(v -> {
               try {
-                RequestContext req = new RequestContext(
-                        null
-                        , null
-                        , "localhost"
-                        , null
-                        , null
-                        , new HeadersMultiMap().add("Host", "localhost:123")
-                        , null
-                        , new IPAddressString("127.0.0.1")
-                        , null
-                );
                 return loader.loadPipeline("sub1/sub2/DynamicEndpointPipelineIT", req, null);
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);
@@ -345,7 +348,7 @@ public class DynamicEndpointPipelineIT {
               FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), new ListingWriteStream<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), executor, "source");
               PipelineInstance instance = new PipelineInstance(
-                      executor.prepareArguments(pipeline.getArguments(), args)
+                      executor.prepareArguments(req, pipeline.getArguments(), args)
                       , pipeline.getSourceEndpointsMap()
                       , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                       , sourceInstance
@@ -386,6 +389,18 @@ public class DynamicEndpointPipelineIT {
 
     MultiMap args = MultiMap.caseInsensitiveMultiMap();
     args.set("maxId", "14");
+    
+    RequestContext req = new RequestContext(
+            null
+            , null
+            , "localhost"
+            , null
+            , null
+            , new HeadersMultiMap().add("Host", "localhost:123")
+            , null
+            , new IPAddressString("127.0.0.1")
+            , null
+    );
     
     serverProviderMy
             .prepareContainer(vertx)
@@ -428,17 +443,6 @@ public class DynamicEndpointPipelineIT {
             })
             .compose(v -> {
               try {
-                RequestContext req = new RequestContext(
-                        null
-                        , null
-                        , "localhost"
-                        , null
-                        , null
-                        , new HeadersMultiMap().add("Host", "localhost:123")
-                        , null
-                        , new IPAddressString("127.0.0.1")
-                        , null
-                );
                 return loader.loadPipeline("sub1/sub2/DynamicEndpointPipelineIT", req, null);
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);
@@ -450,7 +454,7 @@ public class DynamicEndpointPipelineIT {
               FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), new ListingWriteStream<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), executor, "source");
               PipelineInstance instance = new PipelineInstance(
-                      executor.prepareArguments(pipeline.getArguments(), args)
+                      executor.prepareArguments(req, pipeline.getArguments(), args)
                       , pipeline.getSourceEndpointsMap()
                       , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                       , sourceInstance

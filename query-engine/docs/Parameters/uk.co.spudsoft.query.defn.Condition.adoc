@@ -76,6 +76,10 @@ requestContext.host == 'localhost'
 ----
 Checks that the host on the request is localhost.
  
+When referencing optional arguments use "Map accesses" (`+args['argName']+`) rather than "JavaBean property access" (`+args.argName+`).
+ The dotted approach will generate an error if the argument is not supplied.
+ 
+
 
 
 [cols="1,1a,4a",stripes=even]

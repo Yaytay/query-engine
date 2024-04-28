@@ -27,6 +27,12 @@ import java.io.IOException;
  */
 public class Errors extends AbstractComponent<Errors> {
 
+  /**
+   * Constructor.
+   * 
+   * @param generator The Jackson JsonGenerator for FormIO.
+   * @throws IOException if something goes wrong.
+   */
   @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
   public Errors(JsonGenerator generator) throws IOException {
     super(generator);

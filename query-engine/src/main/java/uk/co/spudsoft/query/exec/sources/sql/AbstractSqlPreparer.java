@@ -18,9 +18,6 @@ package uk.co.spudsoft.query.exec.sources.sql;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -55,19 +52,7 @@ public abstract class AbstractSqlPreparer {
     if (instance == null || idx >= instance.getValues().size()) {
       return null;
     }
-    return convertValue(instance, instance.getValues().get(idx));
-  }
-  
-  protected Object convertValue(ArgumentInstance instance, String stringValue) {
-    return switch (instance.getDefinition().getType()) {
-      case String -> stringValue;
-      case DateTime -> LocalDateTime.parse(stringValue);
-      case Date -> LocalDate.parse(stringValue);
-      case Time -> LocalTime.parse(stringValue);
-      case Long -> Long.parseLong(stringValue);
-      case Double -> Double.parseDouble(stringValue);
-      case Integer -> Integer.parseInt(stringValue);
-    };
+    return instance.getValues().get(idx);
   }
   
   boolean hasNumberedParameters() {

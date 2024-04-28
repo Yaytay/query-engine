@@ -144,8 +144,13 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     Context context = vertx.getOrCreateContext();
     logger.trace("Outer context: {}", context);
     
+    String query = definition.getQuery();
+    if (!Strings.isNullOrEmpty(definition.getQueryTemplate())) {
+      query = pipeline.renderTemplate(definition.getQueryTemplate());
+    }
+    
     AbstractSqlPreparer preparer = getPreparer(url);
-    AbstractSqlPreparer.QueryAndArgs queryAndArgs = preparer.prepareSqlStatement(definition.getQuery(), definition.getReplaceDoubleQuotes(), pipeline.getArgumentInstances());
+    AbstractSqlPreparer.QueryAndArgs queryAndArgs = preparer.prepareSqlStatement(query, definition.getReplaceDoubleQuotes(), pipeline.getArgumentInstances());
     String sql = queryAndArgs.query;
     Tuple args = Tuple.from(queryAndArgs.args);
     

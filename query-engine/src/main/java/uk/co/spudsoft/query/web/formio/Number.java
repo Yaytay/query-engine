@@ -63,6 +63,12 @@ public class Number extends Component<Number> {
     }
   }
   
+  /**
+   * Constructor.
+   * 
+   * @param generator The Jackson JsonGenerator for FormIO.
+   * @throws IOException if something goes wrong.
+   */
   @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
   public Number(JsonGenerator generator) throws IOException {
     super(generator, "number");

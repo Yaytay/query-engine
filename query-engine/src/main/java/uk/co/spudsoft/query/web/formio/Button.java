@@ -31,6 +31,12 @@ public class Button extends Component<Button> {
     submit, reset, event, oauth
   }
   
+  /**
+   * Constructor.
+   * 
+   * @param generator The Jackson JsonGenerator for FormIO.
+   * @throws IOException if something goes wrong.
+   */  
   @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
   public Button(JsonGenerator generator) throws IOException {
     super(generator, "button");

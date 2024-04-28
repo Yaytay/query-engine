@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.exec.sources.sql;
 
 import com.google.common.collect.ImmutableMap;
+import inet.ipaddr.IPAddressString;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
@@ -45,6 +46,7 @@ import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineExecutorImpl;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
+import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
 import uk.co.spudsoft.query.main.ProtectedCredentials;
 
@@ -86,8 +88,20 @@ public class SourceSqlStreamingInstanceTest {
       
       MultiMap params = new HeadersMultiMap();
       
+      RequestContext req = new RequestContext(
+              null
+              , null
+              , "localhost"
+              , null
+              , null
+              , new HeadersMultiMap().add("Host", "localhost:123")
+              , null
+              , new IPAddressString("127.0.0.1")
+              , null
+      );
+      
       PipelineInstance pipelineInstance = new PipelineInstance(
-                        pipelineExecutor.prepareArguments(pipeline.getArguments(), params)
+                        pipelineExecutor.prepareArguments(req, pipeline.getArguments(), params)
                         , pipeline.getSourceEndpointsMap()
                         , pipelineExecutor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                         , instance
@@ -136,8 +150,20 @@ public class SourceSqlStreamingInstanceTest {
       
       MultiMap params = new HeadersMultiMap();
       
+      RequestContext req = new RequestContext(
+              null
+              , null
+              , "localhost"
+              , null
+              , null
+              , new HeadersMultiMap().add("Host", "localhost:123")
+              , null
+              , new IPAddressString("127.0.0.1")
+              , null
+      );
+      
       PipelineInstance pipelineInstance = new PipelineInstance(
-                        pipelineExecutor.prepareArguments(pipeline.getArguments(), params)
+                        pipelineExecutor.prepareArguments(req, pipeline.getArguments(), params)
                         , pipeline.getSourceEndpointsMap()
                         , pipelineExecutor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                         , instance

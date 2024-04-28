@@ -1,0 +1,109 @@
+description: Test pipeline that returns a lot of lookup values
+arguments:
+  - name: includeLookupsInQuery
+    title: Include Lookups In Query
+    description: If set to true the SQL query will include the results of the lookup.
+    type: Boolean
+    optional: true
+    defaultValue: false
+  - name: removeRefColumnsFromResults
+    title: Remove Reference ID Columns From Results
+    description: If set to true the map processor will be used to remove the ref* columns.
+    type: Boolean
+    optional: true
+    defaultValue: false
+  - name: port
+    type: Integer
+    optional: true
+    description: The port to use to connect to mysql.
+    defaultValue: 2001
+    permittedValuesRegex: '[0-9]+'
+sourceEndpoints:
+  - name: MySQL
+    type: SQL
+    urlTemplate: "mysql://localhost:<args.port>/test"
+    username: user
+    password: T0p-Secret
+source:
+  type: SQL
+  endpoint: MySQL
+  streamingFetchSize: 7
+  replaceDoubleQuotes: true
+  queryTemplate: |
+    select 
+        d."dataId"
+        , d."instant"
+        , min(case when md."sort" = 1 then cast(md."refId" as char) else null end) as "ref1"
+        , min(case when md."sort" = 2 then cast(md."refId" as char) else null end) as "ref2"
+        , min(case when md."sort" = 3 then cast(md."refId" as char) else null end) as "ref3"
+        , min(case when md."sort" = 4 then cast(md."refId" as char) else null end) as "ref4"
+        , min(case when md."sort" = 5 then cast(md."refId" as char) else null end) as "ref5"
+        , min(case when md."sort" = 6 then cast(md."refId" as char) else null end) as "ref6"
+    <if(args.includeLookupsInQuery)>
+        , (select value from "RefData" where refId = min(case when md."sort" = 1 then md."refId" else null end)) as "value1"
+        , (select value from "RefData" where refId = min(case when md."sort" = 2 then md."refId" else null end)) as "value2"
+        , (select value from "RefData" where refId = min(case when md."sort" = 3 then md."refId" else null end)) as "value3"
+        , (select value from "RefData" where refId = min(case when md."sort" = 4 then md."refId" else null end)) as "value4"
+        , (select value from "RefData" where refId = min(case when md."sort" = 5 then md."refId" else null end)) as "value5"
+        , (select value from "RefData" where refId = min(case when md."sort" = 6 then md."refId" else null end)) as "value6"
+    <endif>        
+    from 
+      "Data" d
+      left join "ManyData" md on md.dataId = d.dataId
+    group by
+        d."dataId"
+        , d."instant"
+    order by
+        d."dataId"
+        , d."instant"
+processors:
+- type: LOOKUP
+  condition: "!args['includeLookupsInQuery']"
+  map:
+    source:
+      type: SQL
+      endpoint: MySQL
+      streamingFetchSize: 7
+      replaceDoubleQuotes: true
+      query: |
+        select cast("refId" as char) as refId, "value" from "RefData"
+  lookupKeyField: refId
+  lookupValueField: value
+  lookupFields:
+  - keyField: ref1
+    valueField: value1
+  - keyField: ref2
+    valueField: value2
+  - keyField: ref3
+    valueField: value3
+  - keyField: ref4
+    valueField: value4
+  - keyField: ref5
+    valueField: value5
+  - keyField: ref6
+    valueField: value6
+- type: MAP
+  condition: args['removeRefColumnsFromResults']
+  relabels:
+  - sourceLabel: ref1
+    newLabel: ''
+  - sourceLabel: ref2
+    newLabel: ''
+  - sourceLabel: ref3
+    newLabel: ''
+  - sourceLabel: ref4
+    newLabel: ''
+  - sourceLabel: ref5
+    newLabel: ''
+  - sourceLabel: ref6
+    newLabel: ''
+formats:
+- type: HTML
+- type: XLSX
+- type: Delimited
+  name: tab
+  delimiter: "\t"
+  newline: "\n"
+  extension: tsv
+  headerRow: true
+  mediaType: text/tsv

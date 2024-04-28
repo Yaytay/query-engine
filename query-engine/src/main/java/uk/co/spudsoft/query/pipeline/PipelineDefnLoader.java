@@ -386,7 +386,7 @@ public final class PipelineDefnLoader {
     if (context.getCookies() != null) {
       vc.put("cookies", context.getCookies().stream().collect(Collectors.toMap(c -> c.getName(), c -> c)));
     }
-    vc.put("params", context.getArguments());
+    vc.put("params", context.getParams());
     return vc;
   }
   

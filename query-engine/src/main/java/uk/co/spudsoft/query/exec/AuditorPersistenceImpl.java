@@ -541,7 +541,7 @@ public class AuditorPersistenceImpl implements Auditor {
   public Future<Void> recordRequest(RequestContext context) {
     
     JsonObject headers = multiMapToJson(context.getHeaders());
-    JsonObject arguments = multiMapToJson(context.getArguments());
+    JsonObject arguments = multiMapToJson(context.getParams());
     JsonArray audience = Auditor.listToJson(context.getAudience());
     JsonArray groups = Auditor.listToJson(context.getGroups());
     JsonArray roles = Auditor.listToJson(context.getRoles());

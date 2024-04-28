@@ -40,17 +40,27 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
   property = "type")
 @JsonSubTypes({ 
   @JsonSubTypes.Type(value = ProcessorLimit.class, name = "LIMIT") 
-  , @JsonSubTypes.Type(value = ProcessorGroupConcat.class, name = "GROUP_CONCAT") 
   , @JsonSubTypes.Type(value = ProcessorDynamicField.class, name = "DYNAMIC_FIELD") 
+  , @JsonSubTypes.Type(value = ProcessorGroupConcat.class, name = "GROUP_CONCAT") 
+  , @JsonSubTypes.Type(value = ProcessorLookup.class, name = "LOOKUP") 
+  , @JsonSubTypes.Type(value = ProcessorMap.class, name = "MAP") 
+  , @JsonSubTypes.Type(value = ProcessorOffset.class, name = "OFFSET") 
+  , @JsonSubTypes.Type(value = ProcessorQuery.class, name = "QUERY") 
   , @JsonSubTypes.Type(value = ProcessorScript.class, name = "SCRIPT") 
+  , @JsonSubTypes.Type(value = ProcessorSort.class, name = "SORT") 
 })
 @Schema(
         discriminatorProperty = "type"
         , discriminatorMapping = {
-          @DiscriminatorMapping(schema = ProcessorLimit.class, value = "LIMIT")
-          , @DiscriminatorMapping(schema = ProcessorGroupConcat.class, value = "GROUP_CONCAT")
-          , @DiscriminatorMapping(schema = ProcessorDynamicField.class, value = "DYNAMIC_FIELD")
-          , @DiscriminatorMapping(schema = ProcessorScript.class, value = "SCRIPT")      
+          @DiscriminatorMapping(schema = ProcessorLimit.class, value = "LIMIT") 
+          , @DiscriminatorMapping(schema = ProcessorDynamicField.class, value = "DYNAMIC_FIELD") 
+          , @DiscriminatorMapping(schema = ProcessorGroupConcat.class, value = "GROUP_CONCAT") 
+          , @DiscriminatorMapping(schema = ProcessorLookup.class, value = "LOOKUP") 
+          , @DiscriminatorMapping(schema = ProcessorMap.class, value = "MAP") 
+          , @DiscriminatorMapping(schema = ProcessorOffset.class, value = "OFFSET") 
+          , @DiscriminatorMapping(schema = ProcessorQuery.class, value = "QUERY") 
+          , @DiscriminatorMapping(schema = ProcessorScript.class, value = "SCRIPT") 
+          , @DiscriminatorMapping(schema = ProcessorSort.class, value = "SORT") 
         }
         , description = """
                       Processors modify the data stream in flight.

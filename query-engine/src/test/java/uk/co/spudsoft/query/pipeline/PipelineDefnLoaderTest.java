@@ -96,16 +96,18 @@ public class PipelineDefnLoaderTest {
                   assertEquals("EmptyDataIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(3).getName());
                   assertEquals("sub1/sub2/JsonToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(4).getPath());
                   assertEquals("JsonToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(4).getName());
-                  assertEquals("sub1/sub2/SortableIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(5).getPath());
-                  assertEquals("SortableIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(5).getName());
-                  assertEquals("sub1/sub2/TemplatedJsonToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(6).getPath());
-                  assertEquals("TemplatedJsonToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(6).getName());
-                  assertEquals("sub1/sub2/TemplatedYamlToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(7).getPath());
-                  assertEquals("TemplatedYamlToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(7).getName());
-                  assertEquals("sub1/sub2/TestData", root.getChildren().get(2).getChildren().get(0).getChildren().get(8).getPath());
-                  assertEquals("TestData", root.getChildren().get(2).getChildren().get(0).getChildren().get(8).getName());
-                  assertEquals("sub1/sub2/YamlToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(9).getPath());
-                  assertEquals("YamlToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(9).getName());
+                  assertEquals("sub1/sub2/LookupIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(5).getPath());
+                  assertEquals("LookupIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(5).getName());
+                  assertEquals("sub1/sub2/SortableIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(6).getPath());
+                  assertEquals("SortableIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(6).getName());
+                  assertEquals("sub1/sub2/TemplatedJsonToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(7).getPath());
+                  assertEquals("TemplatedJsonToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(7).getName());
+                  assertEquals("sub1/sub2/TemplatedYamlToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(8).getPath());
+                  assertEquals("TemplatedYamlToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(8).getName());
+                  assertEquals("sub1/sub2/TestData", root.getChildren().get(2).getChildren().get(0).getChildren().get(9).getPath());
+                  assertEquals("TestData", root.getChildren().get(2).getChildren().get(0).getChildren().get(9).getName());
+                  assertEquals("sub1/sub2/YamlToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(10).getPath());
+                  assertEquals("YamlToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(10).getName());
                 });
                 testContext.completeNow();
               }

@@ -52,11 +52,15 @@ public class ConditionInstance {
   private static final JexlEngine JEXL = new JexlBuilder()
           .permissions(
                   JexlPermissions.RESTRICTED
-                  .compose(
-                          "uk.co.spudsoft.jwtvalidatorvertx.*"
-                          , "uk.co.spudsoft.query.exec.conditions.*"
-                  )
+                          .compose(
+                                  "io.vertx.core.http.impl.headers.*"
+                                  , "uk.co.spudsoft.jwtvalidatorvertx.*"
+                                  , "uk.co.spudsoft.query.exec.conditions.*"
+                                   
+                          )
           )
+          .strict(false)
+          .silent(true)
           .create();
   
   private final JexlExpression expression;
@@ -85,6 +89,8 @@ public class ConditionInstance {
     JexlContext context = new MapContext();
     context.set("request", request);
     if (request != null) {
+      context.set("uri", request.getUri());
+      context.set("params", request.getParams());
       context.set("args", request.getArguments());
     }
     if (row != null) {

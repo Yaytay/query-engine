@@ -33,21 +33,21 @@ public class ArgumentInstanceTest {
   
   @Test
   public void testGetDefinition() {
-    Argument argument = Argument.builder().build();
+    Argument argument = Argument.builder().optional(true).build();
     ArgumentInstance instance = new ArgumentInstance("name", argument, ImmutableList.of("value"));
     assertEquals(argument, instance.getDefinition());
   }
 
   @Test
   public void testGetValue() {
-    Argument argument = Argument.builder().build();
+    Argument argument = Argument.builder().optional(true).build();
     ArgumentInstance instance = new ArgumentInstance("name", argument, ImmutableList.of("value"));
     assertEquals("value", instance.getValues().get(0));
   }
 
   @Test
   public void testGetName() {
-    Argument argument = Argument.builder().build();
+    Argument argument = Argument.builder().optional(true).build();
     ArgumentInstance instance = new ArgumentInstance("name", argument, ImmutableList.of("value"));
     assertEquals("name", instance.getName());
   }

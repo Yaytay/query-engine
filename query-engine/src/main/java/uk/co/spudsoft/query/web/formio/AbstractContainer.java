@@ -28,6 +28,13 @@ import java.io.IOException;
  */
 public abstract class AbstractContainer<T extends AbstractContainer<T>> extends Component<T> {
     
+  /**
+   * Constructor.
+   * 
+   * @param generator The Jackson JsonGenerator for FormIO.
+   * @param type The type of container component.
+   * @throws IOException if something goes wrong.
+   */
   @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
   public AbstractContainer(JsonGenerator generator, String type) throws IOException {
     super(generator, type);

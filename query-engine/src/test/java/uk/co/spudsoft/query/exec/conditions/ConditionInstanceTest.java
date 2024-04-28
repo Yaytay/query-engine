@@ -71,7 +71,7 @@ public class ConditionInstanceTest {
     HttpServerRequest req = mock(HttpServerRequest.class);
     when(req.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
-    when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
+    when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3&param3=true"));
     
     RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), true, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
@@ -86,6 +86,9 @@ public class ConditionInstanceTest {
     assertTrue(new ConditionInstance("request.jwt.scope.contains(\"qe2\")").evaluate(ctx, DataRow.EMPTY_ROW));
     assertFalse(new ConditionInstance("request.jwt.scope.contains(\"qe1\")").evaluate(ctx, DataRow.EMPTY_ROW));
     
+    assertTrue(new ConditionInstance("args.get('param3')").evaluate(ctx, null));
+    assertTrue(new ConditionInstance("args['param3']").evaluate(ctx, null));
+    assertFalse(new ConditionInstance("args['param4']").evaluate(ctx, null));
   }
   
 }

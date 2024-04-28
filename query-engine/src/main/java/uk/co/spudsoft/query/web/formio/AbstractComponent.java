@@ -35,6 +35,12 @@ public class AbstractComponent<T extends AbstractComponent<T>> implements Closea
   
   protected final JsonGenerator generator;
   
+  /**
+   * Constructor.
+   * 
+   * @param generator The Jackson JsonGenerator for FormIO.
+   * @throws IOException if something goes wrong.
+   */
   @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
   protected AbstractComponent(JsonGenerator generator) throws IOException {
     this.generator = generator;

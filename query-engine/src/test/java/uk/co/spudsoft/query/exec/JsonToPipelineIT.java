@@ -71,6 +71,18 @@ public class JsonToPipelineIT {
     PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*")));
     PipelineExecutorImpl executor = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);   
 
+    RequestContext req = new RequestContext(
+            null
+            , null
+            , "localhost"
+            , null
+            , null
+            , new HeadersMultiMap().add("Host", "localhost:123")
+            , null
+            , new IPAddressString("127.0.0.1")
+            , null
+    );
+    
     serverProvider
             .prepareContainer(vertx)
             .compose(v -> serverProvider.prepareTestDatabase(vertx))
@@ -79,17 +91,6 @@ public class JsonToPipelineIT {
             })
             .compose(v -> {
               try {
-                RequestContext req = new RequestContext(
-                        null
-                        , null
-                        , "localhost"
-                        , null
-                        , null
-                        , new HeadersMultiMap().add("Host", "localhost:123")
-                        , null
-                        , new IPAddressString("127.0.0.1")
-                        , null
-                );
                 return loader.loadPipeline("sub1/sub2/JsonToPipelineIT", req, null);
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);
@@ -104,7 +105,7 @@ public class JsonToPipelineIT {
               FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), new ListingWriteStream<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), executor, "source");
               PipelineInstance instance = new PipelineInstance(
-                      executor.prepareArguments(pipeline.getArguments(), args)
+                      executor.prepareArguments(req, pipeline.getArguments(), args)
                       , pipeline.getSourceEndpointsMap()
                       , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                       , sourceInstance

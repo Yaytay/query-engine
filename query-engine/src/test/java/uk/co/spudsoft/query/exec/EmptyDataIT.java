@@ -80,6 +80,18 @@ public class EmptyDataIT {
 
     FileSystem fs = vertx.fileSystem();
     
+    RequestContext req = new RequestContext(
+            null
+            , null
+            , "localhost"
+            , null
+            , args
+            , new HeadersMultiMap().add("Host", "localhost:123")
+            , null
+            , new IPAddressString("127.0.0.1")
+            , null
+    );
+
     serverProvider
             .prepareContainer(vertx)
             .compose(v -> serverProvider.prepareTestDatabase(vertx))
@@ -90,17 +102,6 @@ public class EmptyDataIT {
               try {
                 args.add("key", serverProvider.getName());
                 args.add("port", Integer.toString(serverProvider.getPort()));
-                RequestContext req = new RequestContext(
-                        null
-                        , null
-                        , "localhost"
-                        , null
-                        , args
-                        , new HeadersMultiMap().add("Host", "localhost:123")
-                        , null
-                        , new IPAddressString("127.0.0.1")
-                        , null
-                );
                 return loader.loadPipeline("sub1/sub2/EmptyDataIT", req, null);
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);
@@ -113,7 +114,7 @@ public class EmptyDataIT {
               FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), output);
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), executor, "source");
               PipelineInstance instance = new PipelineInstance(
-                      executor.prepareArguments(pipeline.getArguments(), args)
+                      executor.prepareArguments(req, pipeline.getArguments(), args)
                       , pipeline.getSourceEndpointsMap()
                       , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                       , sourceInstance

@@ -19,15 +19,10 @@ package uk.co.spudsoft.query.main;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
-import io.vertx.core.Vertx;
-import io.vertx.junit5.VertxExtension;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.PrintStream;
 import static org.hamcrest.MatcherAssert.assertThat;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
@@ -36,7 +31,6 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
-import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
 
 /**
@@ -54,16 +48,6 @@ public class MainQueryIT {
   
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(MainQueryIT.class);
-  
-//  @BeforeAll
-//  public static void createDirs(Vertx vertx) {
-//    File paramsDir = new File("target/query-engine/samples-mainqueryit");
-//    try {
-//      FileUtils.deleteDirectory(paramsDir);
-//    } catch (Throwable ex) {
-//    }
-//    paramsDir.mkdirs();
-//  }
   
   @Test
   public void testQuery() throws Exception {

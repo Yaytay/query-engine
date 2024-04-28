@@ -108,7 +108,7 @@ public class FormatDelimitedInstance implements FormatInstance {
   }
 
   private Future<Void> outputRow(DataRow row) {
-    logger.debug("Outputting row: {}", row);
+    logger.trace("Outputting row: {}", row);
     if (row.isEmpty()) {
       return Future.succeededFuture();
     }

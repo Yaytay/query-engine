@@ -475,7 +475,7 @@ public class Argument {
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
-    private ArgumentType type;
+    private ArgumentType type = ArgumentType.String;
     private String name;
     private String title;
     private String prompt;

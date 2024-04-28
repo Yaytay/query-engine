@@ -59,7 +59,7 @@ public class ArgumentTest {
   @Test
   public void testGetType() {
     Argument instance = Argument.builder().build();
-    assertNull(instance.getType());
+    assertEquals(ArgumentType.String, instance.getType());
     instance = Argument.builder().type(ArgumentType.Long).build();
     assertEquals(ArgumentType.Long, instance.getType());
   }

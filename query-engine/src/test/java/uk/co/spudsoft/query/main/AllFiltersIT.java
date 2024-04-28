@@ -63,9 +63,9 @@ public class AllFiltersIT {
   
   @BeforeAll
   public static void createDirs(Vertx vertx) {
-    File paramsDir = new File("target/query-engine/samples-featurerichqueryit");
+    File paramsDir = new File("target/query-engine/samples-allfiltersit");
     paramsDir.mkdirs();
-    new File("target/classes/samples/sub1/sub3").mkdirs();
+    new File("target/classes/samples/sub1/sub2").mkdirs();
   }
   
   @Test

@@ -7,7 +7,7 @@
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
- * but RELABEL ANY WARRANTY; without even the implied warranty of
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
@@ -51,7 +51,7 @@ public class ProcessorMap implements Processor {
 
   @Override
   public void validate() {
-    validateType(ProcessorType.RELABEL, type);
+    validateType(ProcessorType.MAP, type);
     if (relabels.isEmpty()) {
       throw new IllegalArgumentException("No relabels provided");
     }
@@ -87,7 +87,7 @@ public class ProcessorMap implements Processor {
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
-    private ProcessorType type = ProcessorType.RELABEL;
+    private ProcessorType type = ProcessorType.MAP;
     private Condition condition;
     private String id;
     private List<ProcessorMapLabel> relabels;
@@ -130,7 +130,7 @@ public class ProcessorMap implements Processor {
   }
 
   private ProcessorMap(final ProcessorType type, final Condition condition, final String id, final List<ProcessorMapLabel> relabels) {
-    validateType(ProcessorType.RELABEL, type);
+    validateType(ProcessorType.MAP, type);
     this.type = type;
     this.condition = condition;
     this.id = id;

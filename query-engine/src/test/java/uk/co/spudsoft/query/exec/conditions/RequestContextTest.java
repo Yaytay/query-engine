@@ -99,10 +99,11 @@ public class RequestContextTest {
     RequestContext ctx = rcb.buildRequestContext(req).result();
 
     assertEquals("bob.fred", ctx.getJwt().getClaim("preferred_username"));
-    assertEquals("{\"clientIp\":\"111.122.133.144\", \"arguments\":{\"param1\":\"value1\", \"param1\":\"value3\", \"param2\":\"value2\"}, \"iss\":\"http://ca.localtest.me\", \"sub\":\"af78202f-b54a-439d-913c-0bbe99ba6bf8\"}", ctx.toString());
-    assertEquals("value1", ctx.getArguments().get("param1"));
+    assertEquals("{\"clientIp\":\"111.122.133.144\", \"arguments\":{\"param1\":[\"value1\", \"value3\"], \"param2\":\"value2\"}, \"iss\":\"http://ca.localtest.me\", \"sub\":\"af78202f-b54a-439d-913c-0bbe99ba6bf8\"}", ctx.toString());
+    
+    assertEquals(Arrays.asList("value1", "value3"), ctx.getArguments().get("param1"));
     assertEquals("value2", ctx.getArguments().get("param2"));
-    assertEquals(Arrays.asList("value1", "value3"), ctx.getArguments().getAll("param1"));
+    assertEquals(Arrays.asList("value1", "value3"), ctx.getArguments().get("param1"));
   }
   
   @Test
@@ -126,7 +127,7 @@ public class RequestContextTest {
     RequestContext ctx = new RequestContext(request, null);
     assertEquals(new IPAddressString("111.122.133.144"), ctx.getClientIp());
 
-    assertEquals("{\"clientIp\":\"111.122.133.144\"}", ctx.toString());
+    assertEquals("{\"clientIp\":\"111.122.133.144\", \"arguments\":{}}", ctx.toString());
   }
 
   @Test
@@ -136,7 +137,7 @@ public class RequestContextTest {
     RequestContext ctx = new RequestContext(request, null);
     assertEquals(new IPAddressString("111.122.133.144"), ctx.getClientIp());
 
-    assertEquals("{\"clientIp\":\"111.122.133.144\"}", ctx.toString());
+    assertEquals("{\"clientIp\":\"111.122.133.144\", \"arguments\":{}}", ctx.toString());
   }
   
   @Test

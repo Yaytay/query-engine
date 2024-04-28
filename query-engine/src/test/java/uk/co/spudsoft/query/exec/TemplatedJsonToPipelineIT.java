@@ -71,7 +71,19 @@ public class TemplatedJsonToPipelineIT {
     PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*")));
     PipelineExecutorImpl executor = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
 
-    MultiMap args = MultiMap.caseInsensitiveMultiMap();
+    MultiMap params = MultiMap.caseInsensitiveMultiMap();
+
+    RequestContext req = new RequestContext(
+            null
+            , null
+            , "localhost"
+            , null
+            , params
+            , new HeadersMultiMap().add("Host", "localhost:123")
+            , null
+            , new IPAddressString("127.0.0.1")
+            , null
+    );
     
     serverProvider
             .prepareContainer(vertx)
@@ -81,19 +93,8 @@ public class TemplatedJsonToPipelineIT {
             })
             .compose(v -> {
               try {
-                args.add("key", serverProvider.getName());
-                args.add("port", Integer.toString(serverProvider.getPort()));
-                RequestContext req = new RequestContext(
-                        null
-                        , null
-                        , "localhost"
-                        , null
-                        , args
-                        , new HeadersMultiMap().add("Host", "localhost:123")
-                        , null
-                        , new IPAddressString("127.0.0.1")
-                        , null
-                );
+                params.add("key", serverProvider.getName());
+                params.add("port", Integer.toString(serverProvider.getPort()));
                 return loader.loadPipeline("sub1/sub2/TemplatedJsonToPipelineIT", req, null);
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);
@@ -105,7 +106,7 @@ public class TemplatedJsonToPipelineIT {
               FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), new ListingWriteStream<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), executor, "source");
               PipelineInstance instance = new PipelineInstance(
-                      executor.prepareArguments(pipeline.getArguments(), args)
+                      executor.prepareArguments(req, pipeline.getArguments(), params)
                       , pipeline.getSourceEndpointsMap()
                       , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                       , sourceInstance

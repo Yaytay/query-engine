@@ -38,9 +38,9 @@ public class ProcessorMapTest {
   @Test
   public void testSetType() {
     ProcessorMap instance = ProcessorMap.builder().build();
-    assertEquals(ProcessorType.RELABEL, instance.getType());
-    instance = ProcessorMap.builder().type(ProcessorType.RELABEL).build();
-    assertEquals(ProcessorType.RELABEL, instance.getType());
+    assertEquals(ProcessorType.MAP, instance.getType());
+    instance = ProcessorMap.builder().type(ProcessorType.MAP).build();
+    assertEquals(ProcessorType.MAP, instance.getType());
     try {
       ProcessorMap.builder().type(ProcessorType.SCRIPT).build();
       fail("Expected IllegalArgumentException");
