@@ -81,6 +81,14 @@ public class ArgumentTest {
   }
 
   @Test
+  public void testIsValidate() {
+    Argument instance = Argument.builder().build();
+    assertTrue(instance.isValidate());
+    instance = Argument.builder().validate(false).build();
+    assertFalse(instance.isValidate());
+  }
+
+  @Test
   public void testGetDependsUpon() {
     Argument instance = Argument.builder().build();
     assertNotNull(instance.getDependsUpon());
@@ -108,18 +116,33 @@ public class ArgumentTest {
   
   @Test
   public void testValidate() {
-    Argument instance1 = Argument.builder().name("£$%^").build();
-    assertThrows(IllegalArgumentException.class, () -> instance1.validate());
-
+    assertEquals("The argument \"£$%^\" does not have a valid name."
+            , assertThrows(IllegalArgumentException.class
+                    , () -> Argument.builder().name("£$%^").build().validate()
+            ).getMessage()
+    );
+    
+    
     Argument instance2 = Argument.builder().name("name").build();
     instance2.validate();
     
-    Argument instance3 = Argument.builder().name("name").permittedValuesRegex("[").build();
-    assertThrows(IllegalArgumentException.class, () -> instance3.validate());
+    assertEquals("The argument \"name\" does not have a valid permittedValuesRegex.Unclosed character class near index 0\r\n[\r\n^"
+            , assertThrows(IllegalArgumentException.class
+                    , () -> Argument.builder().name("name").permittedValuesRegex("[").build().validate()
+            ).getMessage()
+    );
+    Argument.builder().name("name").permittedValuesRegex("[A-Za-z]+").build().validate();
     
-    Argument instance4 = Argument.builder().name("name").permittedValuesRegex("[A-Za-z]+").build();
-    instance4.validate();
-    
+    assertEquals("The argument \"arg\" has a minimum value of \"fred\" but this could not be parsed as \"Integer\"."
+            , assertThrows(IllegalArgumentException.class
+                    , () -> Argument.builder().name("arg").type(ArgumentType.Integer).minimumValue("fred").build().validate()
+            ).getMessage()
+    );
+    assertEquals("The argument \"arg\" has a maximum value of \"fred\" but this could not be parsed as \"Integer\"."
+            , assertThrows(IllegalArgumentException.class
+                    , () -> Argument.builder().name("arg").type(ArgumentType.Integer).maximumValue("fred").build().validate()
+            ).getMessage()
+    );
     
   }
 

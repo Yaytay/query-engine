@@ -28,6 +28,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import java.util.regex.Pattern;
 import static java.util.regex.Pattern.UNICODE_CHARACTER_CLASS;
+import uk.co.spudsoft.query.exec.ArgumentInstance;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
@@ -60,6 +61,7 @@ public class Argument {
   private final boolean optional;
   private final boolean multiValued;
   private final boolean ignored;
+  private final boolean validate;
   private final ImmutableList<String> dependsUpon; 
   private final String defaultValue;
   private final String minimumValue;
@@ -81,6 +83,24 @@ public class Argument {
     }
     if (!Strings.isNullOrEmpty(defaultValue) && !optional) {
       throw new IllegalArgumentException("The argument \"" + name + "\" has a default value specified, but is not optional.");
+    }
+    if (!Strings.isNullOrEmpty(minimumValue)) {
+      try {
+        if (ArgumentInstance.parseValue(type, minimumValue) == null) {
+          throw new IllegalArgumentException("The argument \"" + name + "\" has a minimum value of \"" + minimumValue + "\" but this could not be parsed as \"" + type + "\".");
+        }
+      } catch (Throwable ex) {
+        throw new IllegalArgumentException("The argument \"" + name + "\" has a minimum value of \"" + minimumValue + "\" but this could not be parsed as \"" + type + "\".", ex);
+      }
+    }
+    if (!Strings.isNullOrEmpty(maximumValue)) {
+      try {
+        if (ArgumentInstance.parseValue(type, maximumValue) == null) {
+          throw new IllegalArgumentException("The argument \"" + name + "\" has a maximum value of \"" + maximumValue + "\" but this could not be parsed as \"" + type + "\".");
+        }
+      } catch (Throwable ex) {
+        throw new IllegalArgumentException("The argument \"" + name + "\" has a maximum value of \"" + maximumValue + "\" but this could not be parsed as \"" + type + "\".", ex);
+      }
     }
   }
   
@@ -255,6 +275,35 @@ public class Argument {
   public boolean isIgnored() {
     return ignored;
   }  
+
+  /**
+   * Return true if the argument should be validated.
+   * Validation can only check:
+   * <ul>
+   * <li>Enum values.
+   * <li>Minimum and maximum values.
+   * <li>Permitted values regex.
+   * </ul>
+   * @return true if the argument should be validated.
+   */
+  @Schema(description = """
+                        <P>If set to true the argument will be validated.</P>
+                        <P>
+                        Validation can only check:
+                        <ul>
+                        <li>Possible values specified directly (not via possibleValuesUrl).
+                        <li>Minimum and maximum values.
+                        <li>Permitted values regex.
+                        </ul>
+                        </P>
+                        """
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+          , type = "boolean"
+          , defaultValue = "true"
+          )
+  public boolean isValidate() {
+    return validate;
+  }
 
   /**
    * Return a list of the name(s) of another argument(s) that this argument requires.
@@ -483,6 +532,7 @@ public class Argument {
     private boolean optional = false;
     private boolean multiValued = false;
     private boolean ignored = false;
+    private boolean validate = true;
     private List<String> dependsUpon;
     private String defaultValue;
     private String minimumValue;
@@ -578,6 +628,17 @@ public class Argument {
     }
 
     /**
+     * Set the validate flag of the Argument in the builder.
+     * If validate is set to true enum values and limits on numeric arguments will be checked.
+     * @param value the validate flag of the Argument.
+     * @return this, so that the builder may be used fluently.
+     */
+    public Builder validate(final boolean value) {
+      this.validate = value;
+      return this;
+    }
+
+    /**
      * Set the list of arguments that this argument depends upon in the builder.
      * @param value the list of arguments that this argument depends upon.
      * @return this, so that the builder may be used fluently.
@@ -654,7 +715,7 @@ public class Argument {
      * @return a new Argument object.
      */
     public Argument build() {
-      return new uk.co.spudsoft.query.defn.Argument(type, name, title, prompt, description, optional, multiValued, ignored, dependsUpon, defaultValue, minimumValue, maximumValue, possibleValues, possibleValuesUrl, permittedValuesRegex);
+      return new uk.co.spudsoft.query.defn.Argument(type, name, title, prompt, description, optional, multiValued, ignored, validate, dependsUpon, defaultValue, minimumValue, maximumValue, possibleValues, possibleValuesUrl, permittedValuesRegex);
     }
   }
 
@@ -667,7 +728,7 @@ public class Argument {
   }
 
   private Argument(ArgumentType type, String name, String title, String prompt, String description
-          , boolean optional, boolean multiValued, boolean ignored
+          , boolean optional, boolean multiValued, boolean ignored, boolean validate
           , List<String> dependsUpon
           , String defaultValue, String minimumValue, String maximumValue
           , List<ArgumentValue> possibleValues, String possibleValuesUrl, String permittedValuesRegex
@@ -680,6 +741,7 @@ public class Argument {
     this.optional = optional;
     this.multiValued = multiValued;
     this.ignored = ignored;
+    this.validate = validate;
     this.dependsUpon = ImmutableCollectionTools.copy(dependsUpon);
     this.defaultValue = defaultValue;
     this.minimumValue = minimumValue;

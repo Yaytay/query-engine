@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Argument;
+import uk.co.spudsoft.query.defn.ArgumentValue;
 import uk.co.spudsoft.query.defn.Condition;
 import uk.co.spudsoft.query.defn.DynamicEndpoint;
 import uk.co.spudsoft.query.defn.Pipeline;
@@ -127,6 +128,15 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     return result;
   }
   
+  private boolean possibleValuesContains(Argument argument, String value) {
+    for (ArgumentValue argValue : argument.getPossibleValues()) {
+      if (argValue.getValue().equals(value)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  
   @Override
   public Map<String, ArgumentInstance> prepareArguments(RequestContext requestContext, List<Argument> definitions, MultiMap valuesMap) {
     Map<String, ArgumentInstance> result = new HashMap<>();
@@ -139,6 +149,18 @@ public class PipelineExecutorImpl implements PipelineExecutor {
         continue ;
       }
       List<String> argValues = valuesMap.getAll(arg.getName());
+      if (arg.isValidate()) {
+        for (String argValue : argValues) {
+          if (arg.getPossibleValues() != null && !arg.getPossibleValues().isEmpty()) {
+            if (!possibleValuesContains(arg, argValue)) {
+              logger.warn("Argument {} has been passed in as {}, the value {} is not in the list of possible values ({})"
+                      , arg.getName(), argValues, argValue, arg.getPossibleValues());
+              throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" passed in as the value \"" + argValue + "\" is not permitted.");
+            }
+          }
+        }
+      }
+      
       ImmutableList<String> values = ImmutableList.of();
       if (argValues != null && !argValues.isEmpty()) {
         values = ImmutableList.copyOf(argValues);
@@ -149,7 +171,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
         values = ImmutableList.of(arg.getDefaultValue());
       }
       
-      if (!Strings.isNullOrEmpty(arg.getPermittedValuesRegex())) {
+      if (arg.isValidate() && !Strings.isNullOrEmpty(arg.getPermittedValuesRegex())) {
         Pattern pattern;
         try {
           pattern = Pattern.compile(arg.getPermittedValuesRegex());
@@ -173,7 +195,11 @@ public class PipelineExecutorImpl implements PipelineExecutor {
         arguments.put(arg.getName(), values);
       }
       
+      // Parsing of values occurs as part of construction on ArgumentInstance
       ArgumentInstance instance = new ArgumentInstance(arg.getName(), arg, values);
+      if (arg.isValidate()) {
+        instance.validateMinMax();
+      }
       result.put(arg.getName(), instance);
     }
     requestContext.setArguments(arguments);

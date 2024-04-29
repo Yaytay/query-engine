@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -24,6 +25,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Argument;
+import uk.co.spudsoft.query.defn.ArgumentType;
 
 /**
  * The realisation of an Argument passed in to a pipeline.
@@ -61,8 +63,8 @@ public final class ArgumentInstance {
     }
   }
   
-  public Comparable<?> parseValue(String value) {
-    return switch (definition.getType()) {
+  public static Comparable<?> parseValue(ArgumentType type, String value) {
+    return switch (type) {
       case Boolean -> Boolean.parseBoolean(value);
       case Date -> LocalDate.parse(value);
       case DateTime -> LocalDateTime.parse(value);
@@ -72,7 +74,31 @@ public final class ArgumentInstance {
       case String -> value;
       case Time -> LocalTime.parse(value);
     };
+  }
+  
+  public Comparable<?> parseValue(String value) {
+    return parseValue(definition.getType(), value);
   } 
+  
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  public void validateMinMax() {
+    Comparable min = Strings.isNullOrEmpty(definition.getMinimumValue()) ? null : parseValue(definition.getMinimumValue());
+    Comparable max = Strings.isNullOrEmpty(definition.getMaximumValue()) ? null : parseValue(definition.getMaximumValue());
+    
+    for (Comparable<?> value : values) {
+      if (min != null) {
+        if (min.compareTo(value) > 0) {
+          throw new IllegalArgumentException("Argument " + name + " has a minimum value of " + min + ", but \"" + value + "\" was specified.");
+        }
+      }
+      if (max != null) {
+        if (max.compareTo(value) < 0) {
+          throw new IllegalArgumentException("Argument " + name + " has a maximum value of " + min + ", but \"" + value + "\" was specified.");
+        }
+      }
+    }
+    
+  }
   
   public String getName() {
     return name;
