@@ -17,6 +17,8 @@
 package uk.co.spudsoft.query.defn;
 
 import java.util.Arrays;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.startsWith;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -126,10 +128,11 @@ public class ArgumentTest {
     Argument instance2 = Argument.builder().name("name").build();
     instance2.validate();
     
-    assertEquals("The argument \"name\" does not have a valid permittedValuesRegex.Unclosed character class near index 0\r\n[\r\n^"
-            , assertThrows(IllegalArgumentException.class
+    assertThat(
+            assertThrows(IllegalArgumentException.class
                     , () -> Argument.builder().name("name").permittedValuesRegex("[").build().validate()
             ).getMessage()
+            , startsWith("The argument \"name\" does not have a valid permittedValuesRegex.Unclosed character class near index 0")
     );
     Argument.builder().name("name").permittedValuesRegex("[A-Za-z]+").build().validate();
     
