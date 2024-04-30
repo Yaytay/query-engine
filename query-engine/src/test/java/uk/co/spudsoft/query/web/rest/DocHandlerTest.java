@@ -55,8 +55,6 @@ public class DocHandlerTest {
     for (String doc : docsKnown) {
       docsOnDisc.remove(doc);
     }
-    // The README.html file is not included in the docs output because the table of contents is always in a separate pane
-    docsOnDisc.remove("README.html");
     assertThat(docsOnDisc, is(empty()));
   }
   
@@ -69,7 +67,10 @@ public class DocHandlerTest {
         String docPath = root.relativize(p).toString();
         // Just to make Windows happy
         docPath = docPath.replace("\\", "/");
-        result.add(docPath);
+        // The README.html file is not included in the docs output because the table of contents is always in a separate pane
+        if (!"README.html".equals(docPath)) {
+          result.add(docPath);
+        }
       });
     }
     return result;
