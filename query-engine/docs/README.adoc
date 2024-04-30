@@ -17,10 +17,10 @@
 ** link:Parameters/uk.co.spudsoft.query.main.TracingConfig.adoc[TracingConfig]
 ** link:Parameters/uk.co.spudsoft.query.main.ZipkinConfig.adoc[ZipkinConfig]
 * link:Audit.adoc[Audit]
-* link:query-engine-compose.yml", "Sample Compose File"]
+* link:query-engine-compose.yml[Sample Compose File]
 * Design Mode
-** link:Design Mode/Design Mode.adoc[Design Mode]
+** link:Design%20Mode/Design%20Mode.adoc[Design Mode]
 * Samples
-** link:Samples/Sample Data.adoc[Sample Data]
+** link:Samples/Sample%20Data.adoc[Sample Data]
 
                   
