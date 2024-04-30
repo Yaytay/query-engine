@@ -55,6 +55,8 @@ public class DocHandlerTest {
     for (String doc : docsKnown) {
       docsOnDisc.remove(doc);
     }
+    // The README.html file is not included in the docs output because the table of contents is always in a separate pane
+    docsOnDisc.remove("README.html");
     assertThat(docsOnDisc, is(empty()));
   }
   
