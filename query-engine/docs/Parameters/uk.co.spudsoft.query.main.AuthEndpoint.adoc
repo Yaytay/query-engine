@@ -1,0 +1,42 @@
+= AuthEndpoint
+
+
+
+[cols="1,1a,4a",stripes=even]
+|===
+| Name
+| Type
+| Details
+
+
+| [[name]]name
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
+| 
+| [[logoUrl]]logoUrl
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
+| 
+| [[issuer]]issuer
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
+| 
+| [[authorizationEndpoint]]authorizationEndpoint
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
+| 
+| [[tokenEndpoint]]tokenEndpoint
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
+| 
+| [[credentials]]credentials
+| uk.co.spudsoft.query.main.ClientCredentials
+| 
+| [[scope]]scope
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
+| 
+| [[pkce]]pkce
+| boolean
+| 
+| [[nonce]]nonce
+| boolean
+| 
+| [[invalidDate]]invalidDate
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/time/LocalDateTime.html[LocalDateTime]
+| 
+|===

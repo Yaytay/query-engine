@@ -20,7 +20,7 @@ With a static configuration the issuer is not derived and any key from any of th
 | Details
 
 
-| issuerHostPath
+| [[issuerHostPath]]issuerHostPath
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | Set the path to be appended to the Host to derive the issuer.
 
@@ -31,12 +31,12 @@ Usually an issuer has an empty path, being just https://host[:port]/ however it 
 
 This value is <em>not</em>  used to signify that the issuer should be derived from the header, that indication is driven entirely 
  by the  value.
-| requiredAudiences
+| [[requiredAudiences]]requiredAudiences
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html[List]<link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]>
 | Set the set of audience values, any one of which must be included in any token for the query engine to accept it.
 
 The token validation requires a non-empty intersection of the required audiences with the provided audiences.
-| acceptableIssuersFile
+| [[acceptableIssuersFile]]acceptableIssuersFile
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | Set the path to the acceptable issuers file.
 
@@ -47,7 +47,7 @@ The file itself may be updated in a running system, but the path to the file is 
  
 
 An issuer is considered acceptable if it matches an entry in this file OR an acceptableIssuerRegex.
-| filePollPeriodDuration
+| [[filePollPeriodDuration]]filePollPeriodDuration
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/time/Duration.html[Duration]
 | Get the time between checks of the file (also the time that the file must stabilise before it is re-read).
 
@@ -57,7 +57,7 @@ Thus the delay between a change to the file being made and being picked up will 
 
 Checks of the file are based entirely on the last-modified timestamp - if the file is on a filesystem that
  does not support the last-modified timestamp changes will never be picked up.
-| acceptableIssuerRegexes
+| [[acceptableIssuerRegexes]]acceptableIssuerRegexes
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html[List]<link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]>
 | Set the list of regular expressions that are used to define acceptable token issuers.
 
@@ -65,12 +65,12 @@ This is a core security control and must be set as tightly as possible.
  
 
 An issuer is considered acceptable if it matches one of these regular expressions, OR it matches an entry in the acceptableIssuersFile.
-| defaultJwksCacheDuration
+| [[defaultJwksCacheDuration]]defaultJwksCacheDuration
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/time/Duration.html[Duration]
 | Set the default period to cache JWKS data for.
 
 This is expected to be overridden by cache-control/max-age headers on the JWKS response, so the default value is usually reasonable.
-| jwksEndpoints
+| [[jwksEndpoints]]jwksEndpoints
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html[List]<link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]>
 | Get the explicitly configured endpoints that will be used to download JWK sets.
 

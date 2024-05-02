@@ -9,13 +9,13 @@
 | Details
 
 
-| maxItems
+| [[maxItems]]maxItems
 | int
 | 
-| maxDurationMs
+| [[maxDurationMs]]maxDurationMs
 | int
 | 
-| purgePeriodMs
+| [[purgePeriodMs]]purgePeriodMs
 | int
 | 
 |===

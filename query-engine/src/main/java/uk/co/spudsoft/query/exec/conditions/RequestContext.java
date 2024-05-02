@@ -227,7 +227,7 @@ public class RequestContext {
   
   /**
    * Get an ID that is unique to this request.
-   * This will be either built from Zipkin trace/span IDs or a random GUID.
+   * This will be either built from OpenTelemetry/Zipkin trace/span IDs or a random GUID.
    * @return an ID that is unique to this request.
    */
   public String getRequestId() {

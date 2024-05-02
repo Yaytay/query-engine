@@ -7,7 +7,7 @@ What makes the Query Engine worth its existence is that it sits in a sweet spot 
 
 Features of the Query Engine include:
 
-* Queries for the Query Engine can be written, and deployed, independently of your application.
+* Queries for the Query Engine can be written, and deployed, independently of your application (and independently of the Query Engine itself).
 * The Query Engine is designed to support multi-tenant (SAAS) applications - dynamically selecting a datasource is built in.
 * Data is streamed, it is not (usually) necessary for all of the data to be held by the Query Engine process (sorting the stream is an obvious exception, sort in the datastore whenever possible).
 * Dynamic fields are supported directly by Query Engine, separate runs of a query can produce a different structure (depending on the data).
@@ -47,4 +47,11 @@ By default the Query Engine cannot modify queries - for it to be able to do so w
 The Query Engine can be deployed in "Design Mode" which breaks that rule and allows the UI to save designed queries.
 In order to prevent accidental deployment of Design Mode it is an entirely separate image.
 
+[frame=none,cols="1,6,1",grid=none]
+|===
 
+|
+|
+|xref:Getting%20Started.adoc[Getting Started]
+
+|===

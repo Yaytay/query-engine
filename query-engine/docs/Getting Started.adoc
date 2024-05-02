@@ -20,4 +20,11 @@ a file in the directory before starting the Query Engine.
 Putting this behaviour together means that when the Query Engine starts using the provided compose file it is a demonstrable system that can be
 experienced with minimal additional work.
 
+[frame=none,cols="1,6,1",grid=none]
+|===
 
+|xref:Introduction.adoc[Introduction]
+| 
+|xref:Configuration.adoc[Configuration]
+
+|===

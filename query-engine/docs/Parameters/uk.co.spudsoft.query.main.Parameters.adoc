@@ -9,57 +9,57 @@
 | Details
 
 
-| logging
+| [[logging]]logging
 | xref:uk.co.spudsoft.query.logging.LogbackOptions.adoc[LogbackOptions]
 | The options for configuring logback.
 
 
-| fileStabilisationDelaySeconds
+| [[fileStabilisationDelaySeconds]]fileStabilisationDelaySeconds
 | int
 | The seconds to wait after being notified or a file change to allow all file writes to complete.
 
 
-| vertxOptions
+| [[vertxOptions]]vertxOptions
 | link:https://vertx.io/docs/apidocs/io/vertx/core/VertxOptions.html[VertxOptions]
 | The VertxOptions that will be used when creating the Vertx instance.
 
 These values do not usually need to be altered.
-| httpServerOptions
+| [[httpServerOptions]]httpServerOptions
 | link:https://vertx.io/docs/apidocs/io/vertx/core/http/HttpServerOptions.html[HttpServerOptions]
 | The HttpServerOptions that will be used when creating the HTTP server.
 
 The link:https://vertx.io/docs/apidocs/io/vertx/core/http/HttpServerOptions.html#setMaxHeaderSize(int)[HttpServerOptions#setMaxHeaderSize(int)]  method should be particularly useful when running behind a proxy that passes large JSON headers.
-| tracing
+| [[tracing]]tracing
 | xref:uk.co.spudsoft.query.main.TracingConfig.adoc[TracingConfig]
 | The configuration to use for distributed tracing.
 
 
-| exitOnRun
+| [[exitOnRun]]exitOnRun
 | boolean
 | Whether the process will end rather than waiting for requests.
 
 This is useful for things such as JIT compilers or CDS preparation.
-| baseConfigPath
+| [[baseConfigPath]]baseConfigPath
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | The path to the root of the configuration files.
 
 
-| persistence
-| uk.co.spudsoft.query.main.Persistence
+| [[persistence]]persistence
+| xref:uk.co.spudsoft.query.main.Persistence.adoc[Persistence]
 | Set the persistence configuration.Persistence is used for both audit and state management of logins.
  Persistence is optional, without it there will be no audit and login state
  will be scoped to the current process.
-| pipelineCache
+| [[pipelineCache]]pipelineCache
 | xref:uk.co.spudsoft.query.main.CacheConfig.adoc[CacheConfig]
 | The configuration of the pipeline cache.
 
 
-| corsAllowedOrigins
+| [[corsAllowedOrigins]]corsAllowedOrigins
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html[List]<link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]>
 | The Allowed-Origin-Regex to use for CORS.
 
 
-| secrets
+| [[secrets]]secrets
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Map.html[Map]<link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String], xref:uk.co.spudsoft.query.main.ProtectedCredentials.adoc[ProtectedCredentials]>
 | The externalized credentials map.
 
@@ -69,13 +69,13 @@ Credentials that can be used in Source definitions.
  
 
 Kubernetes secrets can be mounted as volumes directly into the externalized credentials map, keeping them out of all configuration.
-| openIdIntrospectionHeaderName
+| [[openIdIntrospectionHeaderName]]openIdIntrospectionHeaderName
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | The name of the header that will contain the payload from a token as Json (that may be base64 encoded or not).
 
 If this is used the query engine will not attempt to validate tokens itself, the header will be trusted implicitly.
  This clearly has security implications and should only be used in a secure environment.
-| sampleDataLoads
+| [[sampleDataLoads]]sampleDataLoads
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html[List]<xref:uk.co.spudsoft.query.main.DataSourceConfig.adoc[DataSourceConfig]>
 | The data sources to use attempt to initialize with the sample data.
 
@@ -100,10 +100,10 @@ The leading component of the URL (the scheme) will be used to determine which sc
  
 
 This is unlikely to be useful unless the example compose file is used to start the Query Engine and the different database engines.
-| jwt
+| [[jwt]]jwt
 | xref:uk.co.spudsoft.query.main.JwtValidationConfig.adoc[JwtValidationConfig]
 | The configuration of the JWT validator.
-| managementEndpoints
+| [[managementEndpoints]]managementEndpoints
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html[List]<link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]>
 | Set the management endpoints (all under /manage) that should be enabled.
 
@@ -146,7 +146,7 @@ Unless you are sure that you have secured your /manage endpoint adequately it is
  enable the up; health and prometheus endpoints.
 
 See: 
-| managementEndpointPort
+| [[managementEndpointPort]]managementEndpointPort
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Integer.html[Integer]
 | Set the port that the /manage endpoints should listen on.
 
@@ -163,7 +163,7 @@ It the managementEndpointPort is negative the entire management endpoint setup w
 
 
 See: 
-| managementEndpointUrl
+| [[managementEndpointUrl]]managementEndpointUrl
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | Set the URL that clients should be using to access the management endpoints.
 
@@ -182,13 +182,13 @@ The value provided must be the full URL to the /manage path.
  
 
 If not set, and managementEndpointPort is positive, users will have no way to discover the management endpoint URL (which may be the intention).
-| session
-| uk.co.spudsoft.query.main.SessionConfig
+| [[session]]session
+| xref:uk.co.spudsoft.query.main.SessionConfig.adoc[SessionConfig]
 | Set the authentication configuration of the UI and REST API.
-| processors
-| uk.co.spudsoft.query.main.ProcessorConfig
+| [[processors]]processors
+| xref:uk.co.spudsoft.query.main.ProcessorConfig.adoc[ProcessorConfig]
 | Set the configuration for individual processors.Some processors have specific configuration options that are not appropriate for configuration in pipeline definitions, they are  controlled here.
-| outputCacheDir
+| [[outputCacheDir]]outputCacheDir
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | Set the directory to contain cached output.This is the on-disc caching of stream output, controlled by the cacheDuration value in individual pipelines.
  
@@ -212,10 +212,10 @@ If not set, and managementEndpointPort is positive, users will have no way to di
 Note that the fileHash must also match, but isn't built into the key (should usually match because of the use of the inclusion of full URL).
  
  Note that the default value for the outputCacheDir is probably a bad choice for anything other than the simplest setups.
-| enableBasicAuth
+| [[enableBasicAuth]]enableBasicAuth
 | boolean
 | If set to false any basic auth header will be ignored.
-| enableBearerAuth
+| [[enableBearerAuth]]enableBearerAuth
 | boolean
 | If set to false any basic auth header will be ignored.
 |===

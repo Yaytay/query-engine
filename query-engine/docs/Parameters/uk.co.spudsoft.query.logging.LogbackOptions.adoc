@@ -1,5 +1,10 @@
 = LogbackOptions
 
+Configuration data for logging.
+
+Logging uses link:https://logback.qos.ch/[logback] .
+ 
+
 
 
 [cols="1,1a,4a",stripes=even]
@@ -9,14 +14,57 @@
 | Details
 
 
-| configFile
+| [[configFile]]configFile
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
-| The location of a standard logback configuration file.This value should only be set if the built-in configuration options are inadequate for your purposes.
-| jsonFormat
+| The location of a standard logback configuration file.
+
+This value should only be set if the built-in configuration options are inadequate for your purposes.
+ 
+
+By default logging is all to stdout and is at INFO level for all loggers.
+ The format used is 
+ 
+[source]
+----
+"%date{yyyy-MM-dd HH:mm:ss.SSS, UTC} [%thread] %-5level %logger{36} %X{traceId:-#}:%X{spanId:-#} %X{source:-#} - %msg%n"
+----
+which is a fairly standard format with the addition of fields for the trace and source details.
+| [[jsonFormat]]jsonFormat
 | boolean
-| When true for the logs output to stdout to be in JSON format.This value is ignored if the config file is specified.
-| level
+| If true the logs output to stdout will be in JSON format.
+
+This value is ignored if the config file is specified.
+ 
+
+When running in a production environment with any kind of log collation (e.g. most of the built in docker logging drivers) 
+ it is advisable to use JSON output to ensure that multiline log records (such as stack traces) come across as a single 
+ record in the collated system.
+ 
+
+If this value is set to true the logback JsonEncoder will be used with the following options:
+ 
+
+
+[source]
+----
+encoder.setWithArguments(false);
+encoder.setWithMessage(false);
+encoder.setWithFormattedMessage(true);
+encoder.setWithSequenceNumber(false);
+encoder.setWithContext(false);
+ 
+----
+
+| [[level]]level
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Map.html[Map]<link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String], link:https://www.slf4j.org/api/org/slf4j/event/Level.html[Level]>
-| Override the level of individual link:https://www.slf4j.org/api/org/slf4j/Logger.html[org.slf4j.Logger] s.This enables configuration like:
- logging.level.uk.co.spudsoft.query.main=DEBUG
+| Override the level of individual link:https://www.slf4j.org/api/org/slf4j/Logger.html[org.slf4j.Logger] s.
+
+This enables configuration like (system property):
+ 
+[source]
+----
+-Dlogging.level.uk.co.spudsoft.query.main=DEBUG
+ 
+----
+Note that log levels can also be set dynamically using the management endpoint for loggers.
 |===

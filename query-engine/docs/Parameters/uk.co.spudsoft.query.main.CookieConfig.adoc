@@ -1,0 +1,30 @@
+= CookieConfig
+
+
+
+[cols="1,1a,4a",stripes=even]
+|===
+| Name
+| Type
+| Details
+
+
+| [[name]]name
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
+| 
+| [[secure]]secure
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Boolean.html[Boolean]
+| 
+| [[httpOnly]]httpOnly
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Boolean.html[Boolean]
+| 
+| [[domain]]domain
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
+| 
+| [[path]]path
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
+| 
+| [[sameSite]]sameSite
+| link:https://vertx.io/docs/apidocs/io/vertx/core/http/CookieSameSite.html[CookieSameSite]
+| 
+|===

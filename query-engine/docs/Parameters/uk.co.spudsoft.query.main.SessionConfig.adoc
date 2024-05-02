@@ -1,0 +1,33 @@
+= SessionConfig
+
+
+
+[cols="1,1a,4a",stripes=even]
+|===
+| Name
+| Type
+| Details
+
+
+| [[requireSession]]requireSession
+| boolean
+| Set the flag to indicate that a session is required for all REST API calls.
+| [[purgeDelay]]purgeDelay
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/time/Duration.html[Duration]
+| 
+| [[stateLength]]stateLength
+| int
+| 
+| [[codeVerifierLength]]codeVerifierLength
+| int
+| 
+| [[nonceLength]]nonceLength
+| int
+| 
+| [[oauth]]oauth
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Map.html[Map]<link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String], xref:uk.co.spudsoft.query.main.AuthEndpoint.adoc[AuthEndpoint]>
+| 
+| [[sessionCookie]]sessionCookie
+| xref:uk.co.spudsoft.query.main.CookieConfig.adoc[CookieConfig]
+| 
+|===

@@ -89,11 +89,11 @@ When referencing optional arguments use "Map accesses" (`+args['argName']+`) rat
 | Details
 
 
-| logger
+| [[logger]]logger
 | link:https://www.slf4j.org/api/org/slf4j/Logger.html[Logger]
 | 
 
-| expression
+| [[expression]]expression
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | 
 

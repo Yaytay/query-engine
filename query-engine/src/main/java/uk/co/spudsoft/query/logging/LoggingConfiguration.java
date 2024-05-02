@@ -75,7 +75,7 @@ public class LoggingConfiguration {
 
     Logger gtiLogger = loggerContext.getLogger("uk.co.spudsoft");
     gtiLogger.addAppender(appender);
-    gtiLogger.setLevel(ch.qos.logback.classic.Level.DEBUG);
+    gtiLogger.setLevel(ch.qos.logback.classic.Level.INFO);
     gtiLogger.setAdditive(false);
 
     if (options.getLevel() != null) {

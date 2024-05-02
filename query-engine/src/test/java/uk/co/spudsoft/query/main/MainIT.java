@@ -101,9 +101,9 @@ public class MainIT {
     main.testMain(new String[]{
       "--persistence.datasource.url=wibble"
       , "--baseConfigPath=target/query-engine/samples-mainit"
-      , "- query-engine.tracing.serviceName=query-engine2"
-      , "- query-engine.tracing.protocol=otlphttp"
-      , "- query-engine.tracing.url=http://jaeger:4318/v1/traces"
+      , "--query-engine.tracing.serviceName=query-engine2"
+      , "--query-engine.tracing.protocol=otlphttp"
+      , "--query-engine.tracing.url=http://jaeger:4318/v1/traces"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--jwt.jwksEndpoints[0]=http://localhost/jwks"

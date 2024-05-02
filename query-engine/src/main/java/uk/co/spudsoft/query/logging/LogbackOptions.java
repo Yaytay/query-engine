@@ -26,7 +26,10 @@ import java.util.Map.Entry;
 import org.slf4j.event.Level;
 
 /**
- *
+ * Configuration data for logging.
+ * <P>
+ * Logging uses <a href="https://logback.qos.ch/">logback</a>.
+ * <P>
  * @author jtalbut
  */
 public class LogbackOptions {
@@ -48,7 +51,13 @@ public class LogbackOptions {
 
   /**
    * The location of a standard logback configuration file.
+   * <P>
    * This value should only be set if the built-in configuration options are inadequate for your purposes.
+   * <P>
+   * By default logging is all to stdout and is at INFO level for all loggers.
+   * The format used is 
+   * <pre>"%date{yyyy-MM-dd HH:mm:ss.SSS, UTC} [%thread] %-5level %logger{36} %X{traceId:-#}:%X{spanId:-#} %X{source:-#} - %msg%n"</pre> 
+   * which is a fairly standard format with the addition of fields for the trace and source details.
    * @param configFile the location of a standard logback configuration file.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -59,7 +68,18 @@ public class LogbackOptions {
 
   /**
    * If true the logs output to stdout will be in JSON format.
+   * <P>
    * This value is ignored if the config file is specified.
+   * <P>
+   * If this value is set to true the logback JsonEncoder will be used with the following options:
+   * <P>
+   * <pre>
+   *encoder.setWithArguments(false);
+   *encoder.setWithMessage(false);
+   *encoder.setWithFormattedMessage(true);
+   *encoder.setWithSequenceNumber(false);
+   *encoder.setWithContext(false);
+   * </pre>
    * @return true if the logs output to stdout will be in JSON format.
    */
   public boolean isJsonFormat() {
@@ -67,8 +87,23 @@ public class LogbackOptions {
   }
 
   /**
-   * When true for the logs output to stdout to be in JSON format.
+   * If true the logs output to stdout will be in JSON format.
+   * <P>
    * This value is ignored if the config file is specified.
+   * <P>
+   * When running in a production environment with any kind of log collation (e.g. most of the built in docker logging drivers) 
+   * it is advisable to use JSON output to ensure that multiline log records (such as stack traces) come across as a single 
+   * record in the collated system.
+   * <P>
+   * If this value is set to true the logback JsonEncoder will be used with the following options:
+   * <P>
+   * <pre>
+   *encoder.setWithArguments(false);
+   *encoder.setWithMessage(false);
+   *encoder.setWithFormattedMessage(true);
+   *encoder.setWithSequenceNumber(false);
+   *encoder.setWithContext(false);
+   * </pre>
    * @param jsonFormat true for the logs output to stdout to be in JSON format.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -89,8 +124,13 @@ public class LogbackOptions {
 
   /**
    * Override the level of individual {@link org.slf4j.Logger}s.
-   * This enables configuration like:
-   * logging.level.uk.co.spudsoft.query.main=DEBUG
+   * <P>
+   * This enables configuration like (system property):
+   * <PRE>
+   *-Dlogging.level.uk.co.spudsoft.query.main=DEBUG
+   * </PRE>
+   * Note that log levels can also be set dynamically using the management endpoint for loggers.
+   * 
    * @param level the map of loggers to logging level.
    * @return this, so that the method may be called in a fluent manner.
    */

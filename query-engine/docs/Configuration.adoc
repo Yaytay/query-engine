@@ -3,6 +3,46 @@
 The Query Engine has a lot of configurable parameters, many of which can be ignored by  most users.
 There is only one parameter that must be configured for the query engine to start: the list of acceptable JWT issuers.
 
-The full set of parameters is defined by the Parameters class, which can be found on link:https://github.com/Yaytay/query-engine/blob/main/query-engine/src/main/java/uk/co/spudsoft/query/main/Parameters.java[GitHub].
+The full set of parameters is defined by the xref:Parameters/uk.co.spudsoft.query.main.Parameters.adoc[Parameters] class, which can be found on link:https://github.com/Yaytay/query-engine/blob/main/query-engine/src/main/java/uk/co/spudsoft/query/main/Parameters.java[GitHub].
+
+The Query Engine uses the link:https://github.com/Yaytay/params4j[params4j] library.
+This means that parameters can be configured in a few different ways (in increasing order of priority):
+
+* Files on disc (properties, json or yaml)
+
+The Query Engine will look for any files matching /etc/query-engine/*.yaml and merge them into the parameters.
+Files will be sorted so if there are multiple files they will be processed in name order.
+
+* Plain files in a hierarchy (aimed at handling Kubernetes or Docker secrets)
+
+A file named /etc/query-engine/persistence/dataSource/user/password will be loaded as the password for accessing the persistence data source.
+Any terminal value in the parameters hierarchy can be set in this way.
+
+* Environment variables
+
+The rules of environment variables in Linux shells can cause problems in some situations, to work around this the Query Engine parameters can be specified either in all upper case with underscore delimiters, or in the correct case with period delimiters.
+In order to avoid conflict with other variables, only variables with the prefix "query-engine" (or "QUERY_ENGINE") will be considered.
+Thus either of these environment variables can be used for setting the password for accessing the persistence data source:
+
+** QUERY_ENGINE.PERSISTENCE_DATASOURCE_USER_PASSWORD
+** query-engine.persistence.dataSource.user.password
+
+* System properties
+
+Parameters can be set from system properties, in order to avoid conflict with other variables, only variables with the prefix "query-engine" will be considered.
+Thus the system property "query-engine.persistence.dataSource.user.password" can be used for setting the password for accessing the persistence data source:
+
+* Command line arguments
+
+Individual parameters can be set on the command line prefixed with "--".
+Thus the argument "--persistence.dataSource.user.password" can be used for setting the password for accessing the persistence data source:
 
 
+[frame=none,cols="1,6,1",grid=none]
+|===
+
+|xref:Getting%20Started.adoc[Getting Started]
+| 
+|xref:Authentication.adoc[Authentication]
+
+|===

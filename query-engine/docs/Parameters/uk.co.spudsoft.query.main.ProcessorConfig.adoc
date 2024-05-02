@@ -1,0 +1,18 @@
+= ProcessorConfig
+
+
+
+[cols="1,1a,4a",stripes=even]
+|===
+| Name
+| Type
+| Details
+
+
+| [[tempDir]]tempDir
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
+| 
+| [[inMemorySortLimitBytes]]inMemorySortLimitBytes
+| int
+| 
+|===

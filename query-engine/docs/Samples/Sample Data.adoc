@@ -19,7 +19,7 @@ A simple lookup table containing colours.
 |===
 |Name | Datatype | Description
 
-|colourId | Integer | Primary key
+|[[colourId]]colourId | Integer | Primary key
 |name | String | The name of the colour from link:https://en.wikipedia.org/wiki/Web_colors[Wikipedia].
 |hex | String | The hex value for the colour
 |===
