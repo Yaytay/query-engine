@@ -22,7 +22,9 @@ import java.util.Objects;
 import java.util.function.Predicate;
 
 /**
- * ReadStream 
+ * {@link io.vertx.core.streams.ReadStream} that wraps another ReadStream and evaluates a predicate on each item handled to and only passes it on if the predicate returns true.
+ * 
+ * 
  * @author jtalbut
  * @param <T> The type of item in the stream.
  */
@@ -63,7 +65,7 @@ public class FilteringStream<T> implements ReadStream<T> {
       .exceptionHandler(throwable -> notifyTerminalHandler(getExceptionHandler(), throwable))
       .endHandler(v -> notifyTerminalHandler(getEndHandler(), null))
       .handler(item -> {
-        boolean emit, terminate;
+        boolean emit;
         synchronized (this) {
           received++;
           emit = !stopped && predicate.test(item);
