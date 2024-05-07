@@ -55,7 +55,7 @@ import uk.co.spudsoft.query.web.LoginDao.RequestData;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class LoginRouter  implements Handler<RoutingContext> {
   

@@ -53,7 +53,7 @@ import org.slf4j.LoggerFactory;
  * If the request does not use any of these mechanisms then the first Format specified in the Pipeline will be used.
  * </ol>
  * 
- * @author njt
+ * @author jtalbut
  */
 public class FormatRequest {
 

@@ -20,12 +20,12 @@ package uk.co.spudsoft.query.main;
 /**
  * Set the version from the pom.
  * 
- * @author njt
+ * @author jtalbut
  */
 public final class Version {
 
   public static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-  public static final String MAVEN_PROJECT_VERSION = "0.0.33-7-main";
+  public static final String MAVEN_PROJECT_VERSION = "0.0.33-8-main";
 
   private Version() {
   }

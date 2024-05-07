@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 njt
+ * Copyright (C) 2023 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,7 +61,7 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class LoginRouterWithDiscoveryIT {
   

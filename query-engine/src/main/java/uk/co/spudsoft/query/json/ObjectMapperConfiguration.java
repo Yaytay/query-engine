@@ -27,7 +27,7 @@ import com.google.common.net.MediaType;
 /**
  * Helper class to make it easier to configure all Jackson ObjectMappers consistently.
  * 
- * @author njt
+ * @author jtalbut
  */
 public class ObjectMapperConfiguration {
   

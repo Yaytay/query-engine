@@ -30,7 +30,7 @@ import uk.co.spudsoft.dircache.DirCacheTree;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class DesignNodesTree extends AbstractTree {
 

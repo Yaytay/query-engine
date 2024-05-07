@@ -20,7 +20,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * Information about the current user and environment.
- * @author njt
+ * @author jtalbut
  */
 @Schema(description = """
                       Information about the current user and environment.

@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class FormatXlsxColoursTest {
   

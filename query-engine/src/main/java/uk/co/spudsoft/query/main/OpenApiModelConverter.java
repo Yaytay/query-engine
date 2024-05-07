@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class OpenApiModelConverter implements ModelConverter {
 

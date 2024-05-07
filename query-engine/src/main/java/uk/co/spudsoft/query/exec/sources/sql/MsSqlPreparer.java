@@ -18,7 +18,7 @@ package uk.co.spudsoft.query.exec.sources.sql;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class MsSqlPreparer extends AbstractSqlPreparer {
   

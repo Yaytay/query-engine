@@ -28,7 +28,7 @@ import uk.co.spudsoft.xlsx.FontDefinition;
  * 
  * The name of the font is optional, if not provided 'Calibri' will be used.
  *
- * @author njt
+ * @author jtalbut
  */
 @JsonDeserialize(builder = FormatXlsxFont.Builder.class)
 @Schema(description = """

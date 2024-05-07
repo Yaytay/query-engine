@@ -35,7 +35,7 @@ import uk.co.spudsoft.dircache.DirCacheTree;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  * @param <T>
  */
 public class FileCache<T> {  

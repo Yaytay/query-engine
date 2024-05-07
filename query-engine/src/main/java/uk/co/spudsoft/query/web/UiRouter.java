@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * 
  * The files are all loaded from resources.
  * 
- * @author njt
+ * @author jtalbut
  */
 public class UiRouter implements Handler<RoutingContext> {
   

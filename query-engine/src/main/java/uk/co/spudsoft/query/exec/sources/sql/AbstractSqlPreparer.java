@@ -31,7 +31,7 @@ import uk.co.spudsoft.query.exec.ArgumentInstance;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public abstract class AbstractSqlPreparer {
   

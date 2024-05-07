@@ -41,7 +41,7 @@ import uk.co.spudsoft.xlsx.ColourDefinition;
  * <LI>0A5F42: I hope to get around to making these colours more descriptive!
  * </UL>
  * 
- * @author njt
+ * @author jtalbut
  */
 @JsonDeserialize(builder = FormatXlsxColours.Builder.class)
 @Schema(description = """

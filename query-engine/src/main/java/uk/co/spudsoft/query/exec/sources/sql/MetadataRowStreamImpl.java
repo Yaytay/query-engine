@@ -37,7 +37,7 @@ import java.util.List;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncResult<RowSet<Row>>>, ReadStream<Row> {
 

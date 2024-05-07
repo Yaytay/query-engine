@@ -23,7 +23,7 @@ import java.time.LocalDateTime;
 
 /**
  * Record of a request made against the Query Engine.
- * @author njt
+ * @author jtalbut
  */
 @Schema(
         description = """

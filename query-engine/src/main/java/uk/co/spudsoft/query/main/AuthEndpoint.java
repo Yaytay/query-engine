@@ -23,7 +23,7 @@ import uk.co.spudsoft.jwtvalidatorvertx.DiscoveryData;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class AuthEndpoint {
   

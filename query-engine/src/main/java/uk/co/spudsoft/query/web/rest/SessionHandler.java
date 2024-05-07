@@ -38,7 +38,7 @@ import static uk.co.spudsoft.query.web.rest.InfoHandler.reportError;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 @Path("/session")
 @Timed

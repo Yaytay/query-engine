@@ -24,7 +24,7 @@ import java.util.Map;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class SessionConfig {
   

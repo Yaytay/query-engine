@@ -29,7 +29,7 @@ import uk.co.spudsoft.query.web.formio.DateTime.TimePicker;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class DateTimeTest {
   

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 njt
+ * Copyright (C) 2024 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ import static org.junit.Assert.*;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class RsqlEvaluatorTest {
   

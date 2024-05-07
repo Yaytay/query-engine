@@ -23,7 +23,7 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
  * Information about requests made to the query engine by a single user.
- * @author njt
+ * @author jtalbut
  */
 @Schema(
         description = """

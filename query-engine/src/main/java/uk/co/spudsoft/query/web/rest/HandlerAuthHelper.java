@@ -24,7 +24,7 @@ import uk.co.spudsoft.query.web.ServiceException;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class HandlerAuthHelper {
 

@@ -34,7 +34,7 @@ import java.util.List;
  * Key IDs (kid) only have to be unique across all JWKS endpoints.
  * <p>
  * 
- * @author njt
+ * @author jtalbut
  */
 public class JwtValidationConfig {
   

@@ -24,7 +24,7 @@ import java.io.IOException;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class MediaTypeSerializer extends StdSerializer<MediaType> {
 

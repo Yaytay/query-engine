@@ -21,7 +21,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 /**
  * Configuration data for the display of authentication selection.
  * 
- * @author njt
+ * @author jtalbut
  */
 @Schema(description = """
                       <P>

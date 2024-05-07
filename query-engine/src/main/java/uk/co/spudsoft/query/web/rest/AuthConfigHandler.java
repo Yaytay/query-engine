@@ -38,7 +38,7 @@ import uk.co.spudsoft.query.main.AuthEndpoint;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 @Path("/auth-config")
 @Timed

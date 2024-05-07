@@ -35,7 +35,7 @@ import uk.co.spudsoft.query.defn.DataType;
  * 
  * Fields cannot be removed from the Types structure, nor can they change type (other than going from Null to not Null).
  * 
- * @author njt
+ * @author jtalbut
  */
 public class Types {
   

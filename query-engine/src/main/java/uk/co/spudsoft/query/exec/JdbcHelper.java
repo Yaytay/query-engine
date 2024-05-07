@@ -41,7 +41,7 @@ import uk.co.spudsoft.query.main.DataSourceConfig;
 /**
  * Helper class for working with JDBC within Vertx.
  * 
- * @author njt
+ * @author jtalbut
  */
 public class JdbcHelper {
   

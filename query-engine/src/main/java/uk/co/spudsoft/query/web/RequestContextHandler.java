@@ -27,7 +27,7 @@ import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class RequestContextHandler implements Handler<RoutingContext> {
   

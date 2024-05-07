@@ -12,7 +12,7 @@ import uk.co.spudsoft.query.exec.ArgumentInstance;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class MySqlPreparerTest {
     

@@ -46,7 +46,7 @@ import uk.co.spudsoft.query.main.Persistence;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class LoginDaoPersistenceImpl implements LoginDao {
 

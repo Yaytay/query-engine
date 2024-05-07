@@ -33,7 +33,7 @@ import uk.co.spudsoft.query.json.ObjectMapperConfiguration;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
 public class LoginDaoMemoryImplTest {

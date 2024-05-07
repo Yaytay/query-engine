@@ -25,7 +25,7 @@ import uk.co.spudsoft.query.defn.DataType;
  * <P>
  * This is not part of the definition of a pipeline, but is used in the output from pipelines.
  * </P>
- * @author njt
+ * @author jtalbut
  */
 public class ColumnDefn implements ColumnDescriptor {
   
