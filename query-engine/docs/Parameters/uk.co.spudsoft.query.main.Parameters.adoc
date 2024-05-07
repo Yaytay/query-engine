@@ -1,5 +1,7 @@
 = Parameters
 
+Top level configuration options for Query Engine.
+
 
 
 [cols="1,1a,4a",stripes=even]

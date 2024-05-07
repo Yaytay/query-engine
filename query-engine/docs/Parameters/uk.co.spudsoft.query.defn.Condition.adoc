@@ -14,7 +14,7 @@ Conditions can be applied to:
  
 
 
-The context of a Condition includes a variable called "req" that includes:
+The context of a Condition includes a variable of type uk.co.spudsoft.query.exec.conditions.RequestContext  called "req" that includes:
  
  * requestId
  A unique ID for the request.  If Distributed Tracing is enabled this will be the Span ID, otherwise it will be a random UUID.
@@ -25,7 +25,17 @@ The context of a Condition includes a variable called "req" that includes:
  * arguments
  
 
-A link:https://vertx.io/docs/apidocs/io/vertx/core/MultiMap.html[io.vertx.core.MultiMap]  of query string arguments.
+An com.google.common.collect.ImmutableMap  of query string arguments.
+ 
+
+The arguments will be typed according to their specified uk.co.spudsoft.query.defn.ArgumentType  and will either be a single value or, if the argument is multi-valued, an com.google.common.collect.ImmutableList  or typed values.
+ 
+
+Note that the arguments are only typed when a pipeline instance is created, if the arguments field is access before (i.e. in a folder permissions.jexl file) all values will be strings.
+ * params
+ 
+
+A link:https://vertx.io/docs/apidocs/io/vertx/core/MultiMap.html[io.vertx.core.MultiMap]  of un-processed query string argumets.
  * headers
  
 
@@ -78,9 +88,6 @@ Checks that the host on the request is localhost.
  
 When referencing optional arguments use "Map accesses" (`+args['argName']+`) rather than "JavaBean property access" (`+args.argName+`).
  The dotted approach will generate an error if the argument is not supplied.
- 
-
-
 
 [cols="1,1a,4a",stripes=even]
 |===

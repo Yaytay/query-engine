@@ -21,7 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ * Utility class for parsing a string of space delimited values into a List.
+ * 
  * @author jtalbut
  */
 public class SpaceParser {

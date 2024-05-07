@@ -29,7 +29,9 @@ import java.util.Map;
 import uk.co.spudsoft.params4j.JavadocCapture;
 
 /**
- *
+ * Top level configuration options for Query Engine.
+ * <P>
+ * 
  * @author jtalbut
  */
 @JavadocCapture

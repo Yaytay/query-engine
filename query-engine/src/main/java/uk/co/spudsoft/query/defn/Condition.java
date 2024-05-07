@@ -46,7 +46,7 @@ import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
  * <li>Endpoints
  * </ul>
  * <P>
- * The context of a Condition includes a variable called &quot;req&quot; that includes:
+ * The context of a Condition includes a variable of type {@link uk.co.spudsoft.query.exec.conditions.RequestContext} called &quot;req&quot; that includes:
  * <UL>
  * <LI>requestId
  * A unique ID for the request.  If Distributed Tracing is enabled this will be the Span ID, otherwise it will be a random UUID.
@@ -56,7 +56,14 @@ import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
  * The host extracted from the URL.
  * <LI>arguments
  * <p>
- * A {@link io.vertx.core.MultiMap} of query string arguments.
+ * An {@link com.google.common.collect.ImmutableMap} of query string arguments.
+ * <p>
+ * The arguments will be typed according to their specified {@link uk.co.spudsoft.query.defn.ArgumentType} and will either be a single value or, if the argument is multi-valued, an {@link com.google.common.collect.ImmutableList} or typed values.
+ * <p>
+ * Note that the arguments are only typed when a pipeline instance is created, if the arguments field is access before (i.e. in a folder permissions.jexl file) all values will be strings.
+ * <LI>params
+ * <p>
+ * A {@link io.vertx.core.MultiMap} of un-processed query string argumets.
  * <LI>headers
  * <p>
  * A {@link io.vertx.core.MultiMap} of request headers.
@@ -92,7 +99,6 @@ import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
  * </UL>
  * When referencing optional arguments use "Map accesses" ({@code args['argName']}) rather than "JavaBean property access" ({@code args.argName}).
  * The dotted approach will generate an error if the argument is not supplied.
- * <P>
  * 
  * @author jtalbut
  */

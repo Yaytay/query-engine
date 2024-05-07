@@ -26,7 +26,10 @@ import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.procs.AsyncHandler;
 
 /**
- *
+ * {@link io.vertx.core.streams.WriteStream}@lt;{@link uk.co.spudsoft.query.exec.DataRow}@gt; that formats the inbound DataRow values and writes them to a {@link io.vertx.core.streams.WriteStream}@lt;{@link io.vertx.core.buffer.Buffer}@gt;.
+ * <p>
+ * Actual formatting is carried out by a "process" method passed in to the constructor.
+ * 
  * @author jtalbut
  */
 public class FormattingWriteStream implements WriteStream<DataRow> {

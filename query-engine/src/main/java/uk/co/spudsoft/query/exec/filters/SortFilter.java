@@ -24,6 +24,18 @@ import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 
 /**
+ * Filter for converting _sort command line arguments into {@link uk.co.spudsoft.query.exec.procs.sort.ProcessorSortInstance}s.
+ * <p>
+ * The value of the argument should be a space delimited list of field names to sort by.
+ * A field name may be preceded by '-' to sort in descending order.
+ * <p>
+ * Sort is inherently slow because it has to break the streaming of the data - all rows must be collated before they can be sorted.
+ * There is a configurable limit to the amount of sortable data that can be stored in memory (see @{link uk.co.spudsoft.query.main.ProcessorConfig#setInMemorySortLimitBytes})
+ * , once that limit has been exceeded rows will be streamed to disc, making the process slow still.
+ * <p>
+ * Only sort with a Processor/Filter when there is no other option.
+ * 
+ * @author jtalbut
  *
  * @author jtalbut
  */

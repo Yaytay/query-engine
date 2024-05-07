@@ -36,7 +36,19 @@ import uk.co.spudsoft.query.web.RequestContextHandler;
 
 
 /**
- *
+ * Output {@link uk.co.spudsoft.query.exec.FormatInstance} that generates HTML output.
+ * <P>
+ * The HTML structure is quite inflexible - it is a single table with a column for each defined field and a row for each row.
+ * CSS classes are defined liberally to enable host systems to format the results nicely.
+ * The following classes are used:
+ * <UL>
+ * <LI>{@code qetable} for the entire table.
+ * <LI>{@code header} for the table header tr and for each th within.
+ * <LI>{@code evenCol} for each even numbered column (in both header and body).
+ * <LI>{@code oddCol} for each odd numbered column (in both header and body).
+ * <LI>{@code evenRow} for each even numbered row in the body.
+ * <LI>{@code oddRow} for each odd numbered row in the body.
+ * </UL>
  * @author jtalbut
  */
 public class FormatHtmlInstance implements FormatInstance {

@@ -24,6 +24,9 @@ import java.util.List;
 import java.util.function.Function;
 
 /**
+ * Utility class for consuming an entire ReadStream and putting the contents into a List.
+ * <p>
+ * This class inherently breaks streaming, it is used for some "setup" queries as part of the pipeline but must not be used for the primary streams.
  *
  * @author jtalbut
  */
