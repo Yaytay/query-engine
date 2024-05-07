@@ -22,7 +22,7 @@ import java.util.Objects;
 import java.util.function.Predicate;
 
 /**
- *
+ * ReadStream 
  * @author jtalbut
  * @param <T> The type of item in the stream.
  */

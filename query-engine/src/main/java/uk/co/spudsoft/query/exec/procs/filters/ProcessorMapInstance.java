@@ -37,7 +37,12 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
 
 /**
- *
+ * {@link uk.co.spudsoft.query.exec.ProcessorInstance} to alter the fields in a stream.
+ * <P>
+ * Configuration is via a {@link uk.co.spudsoft.query.defn.ProcessorMap} that has a list of {@link uk.co.spudsoft.query.defn.ProcessorMapLabel} instances.
+ * <P>
+ * Each {@link uk.co.spudsoft.query.defn.ProcessorMapLabel} can either rename a field or remove it from the stream (if {@link uk.co.spudsoft.query.defn.ProcessorMapLabel#newLabel} is not set).
+ * 
  * @author jtalbut
  */
 public class ProcessorMapInstance implements ProcessorInstance {

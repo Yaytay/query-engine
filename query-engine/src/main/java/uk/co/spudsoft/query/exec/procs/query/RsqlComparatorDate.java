@@ -20,7 +20,8 @@ import java.time.LocalDate;
 import java.time.chrono.ChronoLocalDate;
 
 /**
- *
+ * Specialism of {@link RsqlComparator} for LocalDate values.
+ * 
  * @author jtalbut
  */
 public class RsqlComparatorDate extends AbstractRsqlComparator<ChronoLocalDate> {

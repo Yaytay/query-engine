@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.exec.procs.query;
 import java.time.LocalTime;
 
 /**
+ * Specialism of {@link RsqlComparator} for LocalTime values.
  *
  * @author jtalbut
  */

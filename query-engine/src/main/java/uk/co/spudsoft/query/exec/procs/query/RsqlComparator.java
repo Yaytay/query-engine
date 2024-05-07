@@ -19,7 +19,10 @@ package uk.co.spudsoft.query.exec.procs.query;
 import java.util.Set;
 
 /**
- *
+ * Interface representing a comparison that can be carried out in RSQL (or FIQL).
+ * <P>
+ * Specialisms should exist for specific types.
+ * 
  * @param <T> the java type that this comparator handles
  * @author jtalbut
  */

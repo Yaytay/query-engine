@@ -17,7 +17,7 @@
 package uk.co.spudsoft.query.exec.procs.query;
 
 /**
- *
+ * Specialism of {@link RsqlComparator} for Boolean values.
  * @author jtalbut
  */
 public class RsqlComparatorBoolean extends AbstractRsqlComparator<Boolean> {

@@ -24,6 +24,9 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
+ * Specialism of {@link RsqlComparator} for Boolean values.
+ * <P>
+ * Cannot use AbstractRsqlComparator due to the nature of the LocalDateTime class.
  *
  * @author jtalbut
  */

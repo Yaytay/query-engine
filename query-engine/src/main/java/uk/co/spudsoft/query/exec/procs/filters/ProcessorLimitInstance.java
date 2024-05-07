@@ -33,6 +33,9 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
 
 /**
+ * {@link uk.co.spudsoft.query.exec.ProcessorInstance} to limit the number of rows to a configured number.
+ * <P>
+ * Not usually useful in a pipeline definition, aimed at use via the {@link uk.co.spudsoft.query.exec.filters.LimitFilter}.
  *
  * @author jtalbut
  */

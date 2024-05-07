@@ -33,6 +33,9 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
 
 /**
+ * {@link uk.co.spudsoft.query.exec.ProcessorInstance} to skip initial rows from the output.
+ * <P>
+ * Not usually useful in a pipeline definition, aimed at use via the {@link uk.co.spudsoft.query.exec.filters.OffsetFilter}.
  *
  * @author jtalbut
  */

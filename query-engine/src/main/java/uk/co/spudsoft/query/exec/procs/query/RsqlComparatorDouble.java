@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.exec.procs.query;
 
 /**
+ * Specialism of {@link RsqlComparator} for Double values.
  *
  * @author jtalbut
  */

@@ -21,7 +21,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- *
+ * Abstract implementation of the {@link RsqlComparator} interface, using methods from {@link java.util.Objects} for the comparisons.
  * @param <T> The type be compared
  * @author jtalbut
  */
@@ -44,7 +44,7 @@ public abstract class AbstractRsqlComparator<T extends Comparable<T>> implements
 
   @Override
   public boolean greaterThanOrEqual(T rowValue, T compareValue) {
-    return equal(rowValue, compareValue) || greaterThan(rowValue, compareValue);
+    return !lessThan(rowValue, compareValue);
   }
 
   @Override
@@ -54,7 +54,7 @@ public abstract class AbstractRsqlComparator<T extends Comparable<T>> implements
 
   @Override
   public boolean lessThanOrEqual(T rowValue, T compareValue) {
-    return equal(rowValue, compareValue) || lessThan(rowValue, compareValue);
+    return !greaterThan(rowValue, compareValue);
   }
 
   @Override

@@ -33,13 +33,34 @@ import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.exec.DataRow;
 
 /**
- *
+ * Implementation class for visiting nodes in an RSQL expressions and evaluating the result.
+ * 
  * @author jtalbut
  */
 public class RsqlEvaluator implements RSQLVisitor<Boolean, DataRow> {
 
   private static final Logger logger = LoggerFactory.getLogger(RsqlEvaluator.class);
 
+  /**
+   * Functional interface representing an operation in RSQL (or FIQL).
+   * 
+   * @author jtalbut
+   */
+  private interface RsqlOperator {
+
+    /**
+     * Carry out the operation.
+     * @param <T> The type of the value being operated on.
+     * @param field The field being accessed.
+     * @param rsqlComparator The comparator being used.
+     * @param rowValue The value from the row.
+     * @param arguments Arguments to the operator.
+     * @return 
+     */
+    <T> boolean operate(String field, RsqlComparator<T> rsqlComparator, Object rowValue, List<String> arguments);
+
+  }
+  
   abstract static class RsqlOperatorMulti implements RsqlOperator {
 
     abstract <T> boolean compare(RsqlComparator<T> rsqlComparator, T rowValue, Set<T> args);
