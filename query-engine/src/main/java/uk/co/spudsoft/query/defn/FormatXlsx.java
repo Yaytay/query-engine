@@ -333,9 +333,6 @@ public class FormatXlsx implements Format {
                         <P>
                         There is no capability for changing the order of output columns, this will always be set as the order they appear in the data.
                         </P>
-                        <P>
-                        The key in this map is the name of the field as it appears in the data rows as they reach the outputter.
-                        </P>
                         """)
   public List<FormatXlsxColumn> getColumns() {
     return columns;

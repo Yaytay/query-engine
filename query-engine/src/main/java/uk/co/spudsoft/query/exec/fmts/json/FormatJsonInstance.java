@@ -35,7 +35,10 @@ import uk.co.spudsoft.query.web.RequestContextHandler;
 
 
 /**
- *
+ * Output {@link uk.co.spudsoft.query.exec.FormatInstance} that generates JSON output.
+ * <P>
+ * The JSON structure itself is a single array, with one object for each row.
+ * 
  * @author jtalbut
  */
 public class FormatJsonInstance implements FormatInstance {

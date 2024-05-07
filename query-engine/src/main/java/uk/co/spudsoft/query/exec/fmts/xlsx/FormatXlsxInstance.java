@@ -50,7 +50,13 @@ import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
 /**
- *
+ * Output {@link uk.co.spudsoft.query.exec.FormatInstance} that generates XLSX output.
+ * <P>
+ * There are a number of configuration properties passed in via a {@link uk.co.spudsoft.query.defn.FormatXlsx} object.
+ * <P>
+ * Typically an organisation will decide upon a consistent style for all XLSX output and just configure a single
+ * XLSX output format in each pipeline definition.
+ * 
  * @author jtalbut
  */
 public class FormatXlsxInstance implements FormatInstance {

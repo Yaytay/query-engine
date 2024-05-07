@@ -45,6 +45,7 @@ import uk.co.spudsoft.query.exec.preprocess.DynamicEndpointPreProcessorInstance;
  * Storing credentials unencrypted in a database is not ideal security, but it's better than putting them in a git repository.
  * The recommendation would be to not start storing credentials in a database in order to satisfy the needs of the Query Engine,
  * but if the credentials are already there then there is no reason to avoid using them.
+ * Ideally the endpoints generated should reference secrets that the query engine knows.
  * 
  * @author jtalbut
  */

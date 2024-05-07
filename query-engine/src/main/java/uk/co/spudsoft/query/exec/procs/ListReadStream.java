@@ -26,7 +26,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * Helper class to make a {@link java.util.List} available as a {@link io.vertx.core.streams.ReadStream}.
+ * <P>
+ * A single iterator from the List will be taken in the constructor - anything that invalidates that iterator will break this implementation.
+ * This class is not expected to handle changes to the List whilst it is running.
+ * 
  * @param <T> The type of item being streamed.
  * @author jtalbut
  */

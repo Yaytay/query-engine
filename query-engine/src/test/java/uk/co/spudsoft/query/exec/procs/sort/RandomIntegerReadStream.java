@@ -102,7 +102,7 @@ public class RandomIntegerReadStream implements ReadStream<Integer> {
           if (exceptionHandlerCaptured != null) {
             exceptionHandlerCaptured.handle(ex);
           } else {
-            logger.warn("Exception handling item in ListReadStream: ", ex);
+            logger.warn("Exception handling item in RandomIntegerReadStream: ", ex);
           }
         }
       }

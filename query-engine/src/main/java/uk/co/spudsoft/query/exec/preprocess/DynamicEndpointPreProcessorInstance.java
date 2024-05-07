@@ -40,7 +40,12 @@ import uk.co.spudsoft.query.web.RequestContextHandler;
 import uk.co.spudsoft.query.web.ServiceException;
 
 /**
- *
+ * The Query Engine supports {@link uk.co.spudsoft.query.exec.PreProcessorInstance} that can modify the executing pipeline before it gets going.
+ * <P>
+ * This is the only PreProcessorInstance at this time.
+ * <P>
+ * See {@link uk.co.spudsoft.query.defn.DynamicEndpoint} for details of the configuration.
+ * 
  * @author jtalbut
  */
 public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance {

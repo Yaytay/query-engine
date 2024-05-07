@@ -39,7 +39,13 @@ import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
 /**
- *
+ * Output {@link uk.co.spudsoft.query.exec.FormatInstance} that generates text output.
+ * <P>
+ * There are a number of configuration properties passed in via a {@link uk.co.spudsoft.query.defn.FormatDelimited} object.
+ * <P>
+ * It is not possible to change the configuration for a {@link uk.co.spudsoft.query.exec.FormatInstance} each time a pipeline is run (unless the report design is a template)
+ * so the common approach is to configure multiple different named delimited output formats for the user to choose from.
+ * 
  * @author jtalbut
  */
 public class FormatDelimitedInstance implements FormatInstance {

@@ -26,7 +26,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * Helper class to make a number of items available as a {@link io.vertx.core.streams.ReadStream}.
+ * <P>
+ * An {@link java.util.ArrayDeque} is created in the constructor and used as a buffer for items as they are added.
+ * <P>
+ * The {@link java.util.Deque} itself is not exposed, the only permitted modification is the addition of items via the {@link #add(java.lang.Object)} method.
+ * 
  * @param <T> The type of item being streamed.
  * @author jtalbut
  */
@@ -114,7 +119,7 @@ public class QueueReadStream<T> implements ReadStream<T> {
           if (exceptionHandlerCaptured != null) {
             exceptionHandlerCaptured.handle(ex);
           } else {
-            logger.warn("Exception handling item in ListReadStream: ", ex);
+            logger.warn("Exception handling item in QueueReadStream: ", ex);
           }
         }
       }

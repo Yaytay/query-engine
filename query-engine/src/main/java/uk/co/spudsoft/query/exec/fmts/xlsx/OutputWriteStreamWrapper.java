@@ -24,7 +24,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- *
+ * A mapper between the Vert.x {@link io.vertx.core.streams.WriteStream} and the JDK {@link java.io.OutputStream}.
+ * <P>
+ * This is used by the {@link FormatXlsxInstance} because the {@link uk.co.spudsoft.xlsx.XlsxWriter} requires an OutputStream for its input.
+ * 
  * @author jtalbut
  */
 public class OutputWriteStreamWrapper extends OutputStream {
