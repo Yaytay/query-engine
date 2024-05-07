@@ -64,10 +64,10 @@ public class MainIT {
   @Test
   public void testHelp() throws Exception {
     logger.debug("Running testHelp");
+    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
-    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--help"
     }, stdout);
@@ -79,10 +79,10 @@ public class MainIT {
   @Test
   public void testHelpEnv() throws Exception {
     logger.debug("Running testHelpEnv");
+    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
-    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--helpenv"
     }, stdout);
@@ -94,10 +94,10 @@ public class MainIT {
   @Test
   public void testBadAudit() throws Exception {
     logger.debug("Running testBadAudit");
+    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
-    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--persistence.datasource.url=wibble"
       , "--baseConfigPath=target/query-engine/samples-mainit"
@@ -129,10 +129,10 @@ public class MainIT {
   @Test
   public void testMainDaemon() throws Exception {
     logger.debug("Running testMainDaemon");
+    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
-    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--persistence.datasource.url=" + postgres.getJdbcUrl()
       , "--persistence.datasource.adminUser.username=" + postgres.getUser()
@@ -284,10 +284,10 @@ public class MainIT {
   @Test
   public void testAuthRequired() throws Exception {
     logger.debug("Running testAuthRequired");
+    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
-    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--persistence.datasource.url=" + postgres.getJdbcUrl()
       , "--persistence.datasource.adminUser.username=" + postgres.getUser()

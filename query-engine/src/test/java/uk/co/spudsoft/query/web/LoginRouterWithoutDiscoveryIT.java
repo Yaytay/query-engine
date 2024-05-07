@@ -49,10 +49,10 @@ public class LoginRouterWithoutDiscoveryIT {
   @Test
   public void testLoginWithoutDiscoveryIT() throws Exception {
     logger.debug("Running testLoginWithoutDiscoveryIT");
+    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
-    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--persistence.datasource.url=" + postgres.getJdbcUrl()
       , "--persistence.datasource.adminUser.username=" + postgres.getUser()

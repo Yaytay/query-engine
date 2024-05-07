@@ -99,7 +99,6 @@ public class AuthQueryIT {
     String baseConfigDir = "target/query-engine/samples-authqueryit";
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
-    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--persistence.datasource.url=" + mysql.getJdbcUrl()
       , "--persistence.datasource.adminUser.username=" + mysql.getUser()
@@ -339,7 +338,6 @@ public class AuthQueryIT {
     assertEquals(history2.getJsonArray("rows").getJsonObject(2).getString("id"), history1.getJsonArray("rows").getJsonObject(4).getString("id"));
 
     main.shutdown();
-    GlobalOpenTelemetry.resetForTest();
   }
   
 }

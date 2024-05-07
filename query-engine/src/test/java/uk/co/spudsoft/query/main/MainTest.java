@@ -49,11 +49,11 @@ public class MainTest {
   
   @Test
   public void testMainExitOnRun() throws Exception {
+    GlobalOpenTelemetry.resetForTest();
     logger.info("testMainExitOnRun");
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
-    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
             "--exitOnRun"
             , "--baseConfigPath=target/query-engine/samples-maintest"
@@ -62,19 +62,18 @@ public class MainTest {
             , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
     }, stdout);
     logger.info("testMainExitOnRun - exit");
-    GlobalOpenTelemetry.resetForTest();
   }
   
   @Test
   public void testMain() throws IOException {
     logger.info("testMain");
+    GlobalOpenTelemetry.resetForTest();
     Main.main(new String[]{
             "--baseConfigPath=target/query-engine/samples-maintest"
             , "--jwt.acceptableIssuerRegexes[0]=.*"
             , "--jwt.defaultJwksCacheDuration=PT1M"
     });
     logger.info("testMain - exit");
-    GlobalOpenTelemetry.resetForTest();
   }
   
   @Test
@@ -110,7 +109,6 @@ public class MainTest {
     FileTime lastMod2 = Files.getLastModifiedTime(testDir.toPath());
     assertEquals(lastMod1, lastMod2);
     logger.info("testPrepareBaseConfigPath - exit");
-    GlobalOpenTelemetry.resetForTest();
   }
 
   private void deleteDir(File testDir) throws IOException {

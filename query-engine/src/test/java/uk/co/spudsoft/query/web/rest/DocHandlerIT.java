@@ -45,11 +45,11 @@ public class DocHandlerIT {
   
   @Test
   public void testDocs() throws Exception {
+    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     String baseConfigDir = "target/query-engine/samples-dochandlerit";
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
-    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
         "--baseConfigPath=" + baseConfigDir
       , "--vertxOptions.tracingOptions.serviceName=Query-Engine"

@@ -96,11 +96,11 @@ public class AuthQueryMsIT {
   
   @Test
   public void testQuery() throws Exception {
+    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     String baseConfigDir = "target/query-engine/samples-authquerymsit";
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
-    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--persistence.datasource.url=" + mssql.getJdbcUrl()
       , "--persistence.datasource.adminUser.username=" + mssql.getUser()

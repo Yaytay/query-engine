@@ -151,10 +151,10 @@ public class LoginRouterWithDiscoveryWithoutPersistenceIT {
     logger.info("Creating auth server at http://localhost:{}/", port);
     server.start();
     
+    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
-    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--baseConfigPath=target/query-engine/samples-loginrouterwithdiscoverywithoutpersistenceit"
       , "--vertxOptions.tracingOptions.serviceName=Query-Engine"

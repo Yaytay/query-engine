@@ -67,11 +67,11 @@ public class FormBuilderIT {
   
   @Test
   public void testQuery() throws Exception {
+    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     String baseConfigDir = "target/query-engine/samples-mainqueryit";
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
-    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--persistence.datasource.url=" + mysql.getJdbcUrl()
       , "--persistence.datasource.adminUser.username=" + mysql.getUser()
