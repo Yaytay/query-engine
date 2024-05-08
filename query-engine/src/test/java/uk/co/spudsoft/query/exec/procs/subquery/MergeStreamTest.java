@@ -129,6 +129,7 @@ public class MergeStreamTest {
               logger.debug("Left join rows: {}", rows);
               testContext.verify(() -> {
                 assertEquals(6, rows.size());
+                assertEquals(Arrays.asList(), rows);
                 for (DataRow row : rows) {
                   assertThat(row.get("sum"), instanceOf(Integer.class));
                   int i = (Integer) row.get("id");
