@@ -128,8 +128,10 @@ public class MergeStreamTest {
             .onSuccess(rows -> {
               logger.debug("Left join rows: {}", rows);
               testContext.verify(() -> {
-                assertEquals(6, rows.size());
-                assertEquals(Arrays.asList(), rows);
+                if (rows.size() != 6) {
+                  assertEquals(Arrays.asList(), rows);
+                }
+                assertEquals(6, rows.size());                
                 for (DataRow row : rows) {
                   assertThat(row.get("sum"), instanceOf(Integer.class));
                   int i = (Integer) row.get("id");
