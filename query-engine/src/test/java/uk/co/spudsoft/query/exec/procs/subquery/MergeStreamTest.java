@@ -51,7 +51,7 @@ public class MergeStreamTest {
   private static final Logger logger = LoggerFactory.getLogger(MergeStreamTest.class);
 
   public MergeStreamTest() {
-      ch.qos.logback.classic.Logger lg = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(MergeStreamTest.class);
+      ch.qos.logback.classic.Logger lg = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(MergeStream.class);
       lg.setLevel(Level.DEBUG);
       lg = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(ReadStreamToList.class);
       lg.setLevel(Level.DEBUG);
