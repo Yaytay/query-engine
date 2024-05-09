@@ -179,8 +179,6 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
   private void doEmit() {
     if (emitting.compareAndSet(false, true)) {
       context.runOnContext(this::emit);
-    } else {
-      logger.debug("Already emitting");
     }
   }
   
@@ -211,7 +209,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
 
       boolean resumePrimary = false;
       boolean resumeSecondary = false;
-      logger.debug("Current: {} and {}, got {} primary rows{} and {} secondary rows{}"
+      logger.info("Current: {} and {}, got {} primary rows{} and {} secondary rows{}"
               , currentPrimary
               , currentSecondaryRows
               , primaryRows.size()
