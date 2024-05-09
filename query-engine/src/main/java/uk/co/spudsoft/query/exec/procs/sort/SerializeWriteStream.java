@@ -29,6 +29,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * A {@link io.vertx.core.streams.WriteStream} that writes to a file.
+ * <P>
+ * Each item passed in to the {@link #write(java.lang.Object)} method is converted into a byte array by the Serializer passed in to the constructor.
+ * The size of this array, followed by the array itself, are then written to the output file.
+ * <P>
+ * This process does not use explicitly Java serialization, the {@link Serializer} passed in to the constructor must handle the 
+ * full conversion from an object to a byte array.
  *
  * @author jtalbut
  * @param <T> The type of object that will be written to the file.

@@ -52,6 +52,13 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
 
 /**
+ * {@link uk.co.spudsoft.query.exec.ProcessorInstance} to sort the stream of {@link uk.co.spudsoft.query.exec.DataRow} objects.
+ * <P>
+ * Configuration is via a {@link uk.co.spudsoft.query.defn.ProcessorSort} that has a list of field names to sort by (which can be preceded by "-" to sort descending).
+ * <P>
+ * The sort processor is cannot pass on any rows until it has received all rows - it is the only part of the Query Engine that absolutely cannot stream data.
+ * <P>
+ * There tempDir and memoryLimit configuration properties that are not settable in the pipeline definition - these must be configured globally as part of the overall configuration of the Query Engine (see {@link uk.co.spudsoft.query.main.Parameters}).
  *
  * @author jtalbut
  */

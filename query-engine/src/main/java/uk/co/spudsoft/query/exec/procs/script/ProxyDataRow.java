@@ -22,7 +22,11 @@ import org.graalvm.polyglot.proxy.ProxyObject;
 import uk.co.spudsoft.query.exec.DataRow;
 
 /**
- *
+ * A <a href="https://www.graalvm.org/">GraalVM</a>  {@link org.graalvm.polyglot.proxy.ProxyObject} to represent a 
+ * {@link uk.co.spudsoft.query.exec.DataRow} in <a href="https://www.graalvm.org/latest/reference-manual/polyglot-programming/">polyglot</a> scripts. 
+ * <P>
+ * The DataRow wrapped by this object can be updated by the {@link #putMember(java.lang.String, org.graalvm.polyglot.Value)} method.
+ * 
  * @author jtalbut
  */
 public class ProxyDataRow implements ProxyObject {
