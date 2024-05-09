@@ -20,7 +20,7 @@
     <appender-ref ref="STDOUTPUT" />
   </logger>
 
-  <logger name="liquibase" level="DEBUG" additivity="false">
+  <logger name="liquibase" level="INFO" additivity="false">
     <appender-ref ref="STDOUTPUT" />
   </logger>
 

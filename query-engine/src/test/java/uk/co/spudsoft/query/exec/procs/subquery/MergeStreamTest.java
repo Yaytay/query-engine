@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.procs.subquery;
 
+import ch.qos.logback.classic.Level;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.streams.ReadStream;
@@ -48,6 +49,13 @@ import uk.co.spudsoft.query.exec.procs.ListReadStream;
 public class MergeStreamTest {
   
   private static final Logger logger = LoggerFactory.getLogger(MergeStreamTest.class);
+
+  public MergeStreamTest() {
+      ch.qos.logback.classic.Logger lg = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(MergeStreamTest.class);
+      lg.setLevel(Level.DEBUG);
+      lg = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(ReadStreamToList.class);
+      lg.setLevel(Level.DEBUG);
+  }
   
   private DataRow merge(DataRow parent, Collection<DataRow> children) {
     int sum = 0;

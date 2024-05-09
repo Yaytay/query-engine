@@ -22,6 +22,8 @@ import io.vertx.core.streams.ReadStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility class for consuming an entire ReadStream and putting the contents into a List.
@@ -31,6 +33,8 @@ import java.util.function.Function;
  * @author jtalbut
  */
 public class ReadStreamToList {
+  
+  private static final Logger logger = LoggerFactory.getLogger(ReadStreamToList.class);
   
   public static <T> Future<List<T>> capture(ReadStream<T> input) {
     return captureByBatch(input, 0, 0);
@@ -62,6 +66,7 @@ public class ReadStreamToList {
     }).exceptionHandler(ex -> {
       promise.fail(ex);
     }).handler(item -> {
+      logger.debug("Got item: {}", item);
       collected.add(item);
       if (subsequentFetch > 0 && (collected.size() % subsequentFetch == 0)) {
         input.fetch(subsequentFetch);
