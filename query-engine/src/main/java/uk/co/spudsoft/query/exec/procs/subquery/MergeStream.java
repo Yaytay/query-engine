@@ -122,12 +122,16 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
     } else {
       primaryStream.endHandler(v -> {
         logger.debug("Ending primary stream");
-        primaryEnded = true;
+        synchronized (lock) {
+          primaryEnded = true;
+        }
         doEmit();
       });
       secondaryStream.endHandler(v -> {
         logger.debug("Ending secondary stream");
-        secondaryEnded = true;
+        synchronized (lock) {
+          secondaryEnded = true;
+        }
         doEmit();
       });
       primaryStream.handler(this::handlePrimaryItem);
