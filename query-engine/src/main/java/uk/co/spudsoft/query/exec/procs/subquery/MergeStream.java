@@ -209,7 +209,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
 
       boolean resumePrimary = false;
       boolean resumeSecondary = false;
-      logger.info("Current: {} and {}, got {} primary rows{} and {} secondary rows{}"
+      logger.debug("Current: {} and {}, got {} primary rows{} and {} secondary rows{}"
               , currentPrimary
               , currentSecondaryRows
               , primaryRows.size()
@@ -337,6 +337,5 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
     this.endHandler = endHandler;
     return this;
   }
-  
   
 }
