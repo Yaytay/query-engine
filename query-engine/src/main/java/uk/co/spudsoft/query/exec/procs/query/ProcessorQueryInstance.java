@@ -34,7 +34,17 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
 
 /**
- *
+ * {@link uk.co.spudsoft.query.exec.ProcessorInstance} to filter rows with an <a href="https://github.com/jirutka/rsql-parser">RSQL</a> (FIQL) expression.
+ * <P>
+ * Configuration is via a {@link uk.co.spudsoft.query.defn.ProcessorQuery} that has a single RSQL expression.
+ * <P>
+ * The RSQL expression is evaluated against each row in the stream and only those that pass the evaluation remain in the stream.
+ * <P>
+ * The query processor is only useful when the stream already contains more rows than are required - thus, whilst the processor itself is not
+ * particularly inefficient it is best not used if at all possible.
+ * This generally means that the only valid use for the query processor is via that {@link uk.co.spudsoft.query.exec.filters.QueryFilter}, and even then
+ * a templated SQL statement is likely to be a better alternative.
+ * 
  * @author jtalbut
  */
 public class ProcessorQueryInstance implements ProcessorInstance {

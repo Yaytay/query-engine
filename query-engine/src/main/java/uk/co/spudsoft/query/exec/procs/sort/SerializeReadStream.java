@@ -30,7 +30,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * A {@link io.vertx.core.streams.ReadStream} that reads from a file.
+ * <P>
+ * The file is assumed to have been written using the {@link SerializeWriteStream} class
+ * , which writes the size of each entity to the file before writing the serialized bytes.
+ * <P>
+ * This file does not use explicitly Java serialization, the {@link Deserializer} passed in to the constructor must handle the 
+ * full conversion from a byte array to a usable object.
+ * 
  * @author jtalbut
  * @param <T> The type of object that will be read from the file.
  */

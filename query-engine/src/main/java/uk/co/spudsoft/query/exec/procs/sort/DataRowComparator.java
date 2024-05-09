@@ -38,7 +38,10 @@ import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
- *
+ * {@link java.util.Comparator} class for comparing {@link uk.co.spudsoft.query.exec.DataRow} objects.
+ * <P>
+ * The comparison will be based on the fields provided to the constructor, which may be preceded by "-" to invert the result (to do a descending sort).
+ * 
  * @author jtalbut
  */
 public class DataRowComparator implements Comparator<DataRow> {
