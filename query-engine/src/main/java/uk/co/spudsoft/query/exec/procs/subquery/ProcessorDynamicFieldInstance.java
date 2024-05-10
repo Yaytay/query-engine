@@ -37,6 +37,10 @@ import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 
 /**
+ * {@link uk.co.spudsoft.query.exec.ProcessorInstance} to generate fields dynamically from a query producing key/value pairs.
+ * <P>
+ * Configuration is via a {@link uk.co.spudsoft.query.defn.ProcessorDynamicField} specifies three child pipelines.
+ * <P>
  *
  * @author jtalbut
  */

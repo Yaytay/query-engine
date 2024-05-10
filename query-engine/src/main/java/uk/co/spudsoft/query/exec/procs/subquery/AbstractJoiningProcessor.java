@@ -36,7 +36,8 @@ import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
 
 /**
- *
+ * Abstract implementation for {@link ProcessorDynamicFieldInstance} and {@link ProcessorGroupConcatInstance}.
+ * 
  * @author jtalbut
  */
 public abstract class AbstractJoiningProcessor implements ProcessorInstance {

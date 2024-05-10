@@ -31,7 +31,13 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- *
+ * {@link io.vertx.core.streams.ReadStream} implementation that takes two other {@link io.vertx.core.streams.ReadStream} instances and performs a merge join on them.
+ * <P>
+ * Both the source stream must be sorted by the comparator.
+ * <P>
+ * A merger function must be provided to combine a collection of objects of type U (from the secondary stream) into a single object of type T from the primary stream.
+ * 
+ * 
  * @author jtalbut
  * @param <T> the type of object in the primary stream.
  * @param <U> the type of object in the secondary stream.
@@ -75,6 +81,19 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
   private final AtomicBoolean emitting = new AtomicBoolean();
   private long demand;
   
+  /**
+   * Constructor.
+   * @param context Vertx {@link io.vertx.core.Context} to run in.
+   * @param primaryStream The primary stream, at most one item will be output for each item in this stream.
+   * @param secondaryStream The second stream, to be matched against objects in the primary stream.
+   * @param merger Function to use to combine a single object from the primary stream with a  collection of objects from the secondary stream into a single output object.
+   * @param comparator Function to compare objects from the secondary stream with objects from the primary stream.
+   * @param innerJoin If set to true objects from the primary stream will only be included if there is at least one object in the secondary stream to be merged.
+   * @param primaryStreamBufferHighThreshold The maximum number of objects from the primary stream to buffer before pausing the primary stream.
+   * @param primaryStreamBufferLowThreshold The minimum number of objects in the primary stream buffer before resuming the primary stream.
+   * @param secondaryStreamBufferHighThreshold The maximum number of objects from the secondary stream to buffer, in addition to those that match the current primary object, before pausing the secondary stream.
+   * @param secondaryStreamBufferLowThreshold The minimum number of objects in the secondary stream buffer, in addition to those that match the current primary object,  before resuming the secondary stream.
+   */
   public MergeStream(Context context
           , ReadStream<T> primaryStream
           , ReadStream<U> secondaryStream
