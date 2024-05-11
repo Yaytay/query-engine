@@ -1,6 +1,29 @@
 = AuthEndpoint
 
+Configuration data for OAuth authentication.
 
+OAuth is only intended to be configured for the user interface when accessed directly, which is not the intended standard production deployment
+ (where it is expected that the host will seamlessly provide a suitable JWT).
+ 
+
+OAuth can be useful in design mode where there is no host platform but JWTs are required for testing conditions.
+ 
+
+Each of the AuthEndpoints configured is presented as an option to the user when they attempt to login via the UI.
+ Login may be optional (controlled by ) - if login is optional the user must explicitly choose to login.
+ 
+
+The login mechanism is purely concerned with the generation of the JWT - the validation is still goverened by the xref:uk.co.spudsoft.query.main.JwtValidationConfig.adoc[JwtValidationConfig] .
+ 
+
+The following properties are mandatory:
+ 
+ * name
+ * issuer
+ 
+
+
+Authentication will follow the standard OAuth 2.0 authorization code grant, with or without PKCE and nonce.
 
 [cols="1,1a,4a",stripes=even]
 |===
@@ -11,32 +34,41 @@
 
 | [[name]]name
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
-| 
+| Set the name of the authentication endpoint.
+
+This is displayed is the table of authentication endpoints by the login UI.
 | [[logoUrl]]logoUrl
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
-| 
+| Set URL to use to get a icon to display in the list of authentication endpoints in the login UI.
+
+This is optional - if not provided no icon will be displayed.
 | [[issuer]]issuer
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
-| 
+| Set the issuer that JWTs created by this login will use.
+
+The issuer provided must still be valid according to the xref:uk.co.spudsoft.query.main.JwtValidationConfig.adoc[JwtValidationConfig] , this is just used to identify the issuer 
+ because the user is given a choice of login providers and the issuer cannot be extracted from the JWT.
 | [[authorizationEndpoint]]authorizationEndpoint
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
-| 
+| Set the OAuth authorization endpoint.
 | [[tokenEndpoint]]tokenEndpoint
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
-| 
+| Set the OAuth token endpoint.
 | [[credentials]]credentials
 | uk.co.spudsoft.query.main.ClientCredentials
-| 
+| Set the client credentials to use when communicating with the OAuth endpoint.
 | [[scope]]scope
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
-| 
+| Set the scope to specify in the OAuth request.
 | [[pkce]]pkce
 | boolean
-| 
+| Set true if the OAuth request will use PKCE.
 | [[nonce]]nonce
 | boolean
-| 
+| Set true if the OAuth request will include (and validate) a nonce value.
 | [[invalidDate]]invalidDate
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/time/LocalDateTime.html[LocalDateTime]
-| 
+| Set the date at which this endpoint should be refreshed via link:https://openid.net/specs/openid-connect-discovery-1_0.html[OpenID Connect Discovery] .
+
+This is not intended to be used for configuration, it is an internal value for implementation use.
 |===

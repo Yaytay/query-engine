@@ -91,7 +91,7 @@ public class SortingStream<T> implements ReadStream<T> {
     private T head;
 
     private void endHandler(Void nothing) {
-      // logger.debug("SourceStream endHandler {}", this);
+      // logger.trace("SourceStream endHandler {}", this);
       this.ended = true;
       synchronized (lock) {
         if (head == null) {
@@ -106,7 +106,7 @@ public class SortingStream<T> implements ReadStream<T> {
     }
     
     private void itemHandler(T item) {
-      // logger.debug("SourceStream handler: {} {}", this, item);
+      // logger.trace("SourceStream handler: {} {}", this, item);
       ++count;
       this.input.pause();
       this.head = item;
@@ -439,7 +439,7 @@ public class SortingStream<T> implements ReadStream<T> {
               synchronized (lock) {
                 files.add(filename);
               }
-              logger.debug("Dumping {} sorted items to {}", items.size(), filename);
+              logger.trace("Dumping {} sorted items to {}", items.size(), filename);
               return fileSystem.open(filename, new OpenOptions().setCreate(true).setTruncateExisting(true));
             })
             .compose(asyncFile -> {

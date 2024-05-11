@@ -175,7 +175,7 @@ public class SerializeWriteStream<T> implements WriteStream<T> {
 
   @Override
   public void end(Handler<AsyncResult<Void>> hndlr) {
-    logger.debug("endHandler");
+    logger.trace("endHandler");
     if (writePos > 0) {
       writeWriteBuffer(false)
               .andThen(ar -> {

@@ -130,7 +130,7 @@ public abstract class AbstractSqlPreparer {
 
   protected void appendSingleValuedParameter(ArgumentInstance argInstance, List<Object> args, Map<String, Integer> baseNumberedArgs, int inParameterIdx, StringBuilder inClause) {
     Integer outParameterIdx = baseNumberedArgs == null || argInstance == null ? null : baseNumberedArgs.get(argInstance.getName());
-    logger.debug("appendSingleValuedParameter({}, {} ({}))", argInstance == null ? null : argInstance.getName(), outParameterIdx, baseNumberedArgs);
+    logger.trace("appendSingleValuedParameter({}, {} ({}))", argInstance == null ? null : argInstance.getName(), outParameterIdx, baseNumberedArgs);
     if (outParameterIdx == null && baseNumberedArgs != null && argInstance != null) {
       baseNumberedArgs.put(argInstance.getName(), 1 + args.size());
     }

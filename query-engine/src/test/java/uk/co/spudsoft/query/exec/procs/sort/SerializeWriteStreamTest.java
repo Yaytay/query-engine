@@ -238,7 +238,7 @@ public class SerializeWriteStreamTest {
               srs = new SerializeReadStream<>(af, this::deserialize);
               startReadTime = System.currentTimeMillis();
               srs.handler(i -> {
-                logger.debug("Read {}", i);
+                logger.trace("Read {}", i);
                 ++read;
               });
               srs.exceptionHandler(ex -> {
@@ -279,7 +279,7 @@ public class SerializeWriteStreamTest {
               srs = new SerializeReadStream<>(af, this::deserialize);
               startReadTime = System.currentTimeMillis();
               srs.handler(i -> {
-                logger.debug("Read {}", i);
+                logger.trace("Read {}", i);
                 ++read;
                 vertx.setTimer(200 * nextFetchSize.get(), l -> {
                   srs.fetch(nextFetchSize.incrementAndGet());

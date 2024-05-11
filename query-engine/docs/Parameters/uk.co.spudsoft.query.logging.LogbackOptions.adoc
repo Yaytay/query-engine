@@ -3,9 +3,6 @@
 Configuration data for logging.
 
 Logging uses link:https://logback.qos.ch/[logback] .
- 
-
-
 
 [cols="1,1a,4a",stripes=even]
 |===
