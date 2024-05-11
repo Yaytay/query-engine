@@ -33,7 +33,7 @@ import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 
 /**
- * A QueryEngine Processor that acts similarly to the MySQL <a href="https://dev.mysql.com/doc/refman/8.0/en/aggregate-functions.html#function_group-concat">GROUP_CONCAT</A> aggregate function.
+ * {@link uk.co.spudsoft.query.exec.ProcessorInstance} that acts similarly to the MySQL <a href="https://dev.mysql.com/doc/refman/8.0/en/aggregate-functions.html#function_group-concat">GROUP_CONCAT</A> aggregate function.
  * 
  * A sub query is run and merged with the primary query.
  * The join is always a merge join, so the primary query must be sorted by the {@link uk.co.spudsoft.query.defn.ProcessorGroupConcat#parentIdColumns} and the sub query 

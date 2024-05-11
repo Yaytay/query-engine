@@ -17,7 +17,8 @@
 package uk.co.spudsoft.query.exec.sources.sql;
 
 /**
- *
+ * SQL preparer for MS SQL Server.
+ * 
  * @author jtalbut
  */
 public class MsSqlPreparer extends AbstractSqlPreparer {

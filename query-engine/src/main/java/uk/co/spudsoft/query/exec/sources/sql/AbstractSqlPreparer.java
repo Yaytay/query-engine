@@ -30,7 +30,11 @@ import uk.co.spudsoft.query.defn.Argument;
 import uk.co.spudsoft.query.exec.ArgumentInstance;
 
 /**
- *
+ * Abstract class to prepare SQL statements before being passed to Vert.x.
+ * <P>
+ * The main method called by {@link SourceSqlStreamingInstance} is {@link #prepareSqlStatement(java.lang.String, java.lang.Boolean, com.google.common.collect.ImmutableMap)}.
+ * 
+ * 
  * @author jtalbut
  */
 public abstract class AbstractSqlPreparer {
@@ -68,7 +72,29 @@ public abstract class AbstractSqlPreparer {
   }
   
   abstract void generateParameterNumber(StringBuilder builder, int number);
-  
+ 
+  /**
+   * Prepare SQL statements for passing to the driver - primarily to permit named parameters in the SQL.
+   * <P>
+   * For all drivers parameters can be referenced by name in the form &quot;:&lt;argname&gt;&quot;.
+   * <P>
+   * SQL preparation does three things:
+   * <UL>
+   * <LI>Optionally, double quotes get replaced with the appropriate quote character for the driver.
+   * <LI>BIND parameters are evaluated.
+   * Looks for a commented section of SQL (/&#42;&#42;/) that begin "BIND" and contains a named parameter.
+   * If the parameter does not have a value then the entire section is removed, if the parameter does have a value then the comment characters and everything preceding BIND are removed and the remainder is processed as for named parameters.
+   * <LI>Named parameters are evaluated.
+   * The parameter reference in the SQL is replaced with a positional reference appropriate for the driver and the argument is added to those returned.
+   * </UL>
+   * 
+   * @param definitionSql The SQL statement from the pipeline definition.
+   * If the definition contains a {@link uk.co.spudsoft.query.defn.SourceSql#queryTemplate} this will be the result of evaluating the template.
+   * @param replaceDoubleQuotes When a SQL statement is required to use quote entities (typically tables and columns) but does not know the correct character to use this will replace double quotes with the correct character.
+   * This is a blanket replacement, if double quotes are used for other purposes in the SQL statement they will also be replaced.
+   * @param argSrc The arguments passed in the pipeline, after having been parsed and had default values set.
+   * @return A {@link QueryAndArgs} object representing the corrected SQL and the arguments to pass to the driver.
+   */ 
   public QueryAndArgs prepareSqlStatement(String definitionSql, Boolean replaceDoubleQuotes, ImmutableMap<String, ArgumentInstance> argSrc) {
     
     if (replaceDoubleQuotes != null && replaceDoubleQuotes && !"\"".equals(getQuoteCharacter()) && definitionSql.contains("\"")) {

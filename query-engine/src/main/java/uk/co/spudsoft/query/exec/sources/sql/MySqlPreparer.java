@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.exec.sources.sql;
 
 /**
+ * SQL preparer for MySQL.
  *
  * @author jtalbut
  */

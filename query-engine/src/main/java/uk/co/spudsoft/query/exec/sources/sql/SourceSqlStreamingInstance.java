@@ -45,7 +45,10 @@ import uk.co.spudsoft.query.web.RequestContextHandler;
 import uk.co.spudsoft.query.web.ServiceException;
 
 /**
- *
+ * {@link uk.co.spudsoft.query.exec.SourceInstance} class for SQL.
+ * <P>
+ * Configuration is via a {@link uk.co.spudsoft.query.defn.SourceSql} object, that may reference {@link uk.co.spudsoft.query.main.ProtectedCredentials} configured globally.
+ * 
  * @author jtalbut
  */
 public class SourceSqlStreamingInstance extends AbstractSource {

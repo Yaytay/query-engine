@@ -40,7 +40,8 @@ import uk.co.spudsoft.query.exec.Types;
 
 
 /**
- *
+ * {@link io.vertx.core.streams.ReadStream}&lt;{@link uk.co.spudsoft.query.exec.DataRow}&gt; that works with {@link MetadataRowStreamImpl} to be able to report metadata after initialization even when no rows are returned.
+ * 
  * @author jtalbut
  */
 public final class RowStreamWrapper implements ReadStream<DataRow> {

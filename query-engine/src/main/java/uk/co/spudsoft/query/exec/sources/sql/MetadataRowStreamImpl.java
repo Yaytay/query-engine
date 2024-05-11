@@ -36,7 +36,8 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- *
+ * Capture the metadata returned by a SQL statement even when there are no rows returned.
+ * 
  * @author jtalbut
  */
 public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncResult<RowSet<Row>>>, ReadStream<Row> {

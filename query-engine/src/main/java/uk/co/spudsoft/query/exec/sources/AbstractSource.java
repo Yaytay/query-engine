@@ -21,7 +21,8 @@ import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 
 /**
- *
+ * Abstract class to aid the implementation of {@link uk.co.spudsoft.query.exec.SourceInstance} classes.
+ * 
  * @author jtalbut
  */
 public abstract class AbstractSource implements SourceInstance, SourceNameTracker {

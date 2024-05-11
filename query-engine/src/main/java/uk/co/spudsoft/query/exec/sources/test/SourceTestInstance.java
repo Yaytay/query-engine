@@ -33,6 +33,11 @@ import uk.co.spudsoft.query.exec.procs.QueueReadStream;
 import uk.co.spudsoft.query.exec.sources.AbstractSource;
 
 /**
+ * {@link uk.co.spudsoft.query.exec.SourceInstance} class for generating a simple test stream.
+ * <P>
+ * Configuration is via a {@link uk.co.spudsoft.query.defn.SourceTest} object.
+ * <P>
+ * The stream will contain two fields "value" - a sequence of increasing integers - and "name" a static name set in the configuration.
  *
  * @author jtalbut
  */

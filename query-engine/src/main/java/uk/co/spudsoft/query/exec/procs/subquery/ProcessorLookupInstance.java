@@ -40,6 +40,13 @@ import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 
 /**
+ * {@link uk.co.spudsoft.query.exec.ProcessorInstance} to create field values from a map loaded during initialization.
+ * <P>
+ * It will be rare for this processor to do a better job than a database server, but it can be worth trying if a query is slow
+ * because of reference data joins.
+ * Typically this is worth consideration when there is a large query with multiple joins to a lookup table per row.
+ * <P>
+ * The entire lookup map will be loaded into a {@link java.util.HashMap}, so beware of memory limits.
  *
  * @author jtalbut
  */

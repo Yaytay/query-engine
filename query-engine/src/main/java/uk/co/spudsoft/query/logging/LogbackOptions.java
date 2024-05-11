@@ -29,14 +29,14 @@ import org.slf4j.event.Level;
  * Configuration data for logging.
  * <P>
  * Logging uses <a href="https://logback.qos.ch/">logback</a>.
- * <P>
+ * 
  * @author jtalbut
  */
 public class LogbackOptions {
   
   private String configFile;
   
-  // This is saying "if running in kubernetes default to using JSON format"
+  // This is saying "if running in kubernetes default to using JSON format" - it would be better if it could also identify deployment to Docker Swarm, but it can't.
   private boolean jsonFormat = !Strings.isNullOrEmpty(System.getenv("KUBERNETES_SERVICE_HOST"));
   private ImmutableMap<String, Level> level;
 

@@ -37,7 +37,8 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
 /**
- *
+ * Configuration of Logback according to {@link LogbackOptions}.
+ * 
  * @author jtalbut
  */
 public class LoggingConfiguration {

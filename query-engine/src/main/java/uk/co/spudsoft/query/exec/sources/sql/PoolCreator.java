@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * Cache of {@link io.vertx.sqlclient.Pool} instances that survives between calls.
  * @author jtalbut
  */
 public class PoolCreator {

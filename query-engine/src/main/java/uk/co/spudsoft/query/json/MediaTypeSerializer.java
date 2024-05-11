@@ -23,7 +23,7 @@ import com.google.common.net.MediaType;
 import java.io.IOException;
 
 /**
- *
+ * Jackson {@link com.fasterxml.jackson.databind.ser.std.StdSerializer} for writing {@link com.google.common.net.MediaType} objects as strings.
  * @author jtalbut
  */
 public class MediaTypeSerializer extends StdSerializer<MediaType> {
