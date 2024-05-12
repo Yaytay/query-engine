@@ -34,41 +34,41 @@ Authentication will follow the standard OAuth 2.0 authorization code grant, with
 
 | [[name]]name
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
-| Set the name of the authentication endpoint.
+| The name of the authentication endpoint.
 
 This is displayed is the table of authentication endpoints by the login UI.
 | [[logoUrl]]logoUrl
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
-| Set URL to use to get a icon to display in the list of authentication endpoints in the login UI.
+| The URL to use to get a icon to display in the list of authentication endpoints in the login UI.
 
 This is optional - if not provided no icon will be displayed.
 | [[issuer]]issuer
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
-| Set the issuer that JWTs created by this login will use.
+| The issuer that JWTs created by this login will use.
 
 The issuer provided must still be valid according to the xref:uk.co.spudsoft.query.main.JwtValidationConfig.adoc[JwtValidationConfig] , this is just used to identify the issuer 
  because the user is given a choice of login providers and the issuer cannot be extracted from the JWT.
 | [[authorizationEndpoint]]authorizationEndpoint
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
-| Set the OAuth authorization endpoint.
+| The OAuth authorization endpoint.
 | [[tokenEndpoint]]tokenEndpoint
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
-| Set the OAuth token endpoint.
+| The OAuth token endpoint.
 | [[credentials]]credentials
 | uk.co.spudsoft.query.main.ClientCredentials
-| Set the client credentials to use when communicating with the OAuth endpoint.
+| The client credentials to use when communicating with the OAuth endpoint.
 | [[scope]]scope
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
-| Set the scope to specify in the OAuth request.
+| The scope(s) to specify in the OAuth request.
 | [[pkce]]pkce
 | boolean
-| Set true if the OAuth request will use PKCE.
+| True if the OAuth request will use PKCE.
 | [[nonce]]nonce
 | boolean
-| Set true if the OAuth request will include (and validate) a nonce value.
+| True if the OAuth request will include (and validate) a nonce value.
 | [[invalidDate]]invalidDate
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/time/LocalDateTime.html[LocalDateTime]
-| Set the date at which this endpoint should be refreshed via link:https://openid.net/specs/openid-connect-discovery-1_0.html[OpenID Connect Discovery] .
+| The date at which this endpoint should be refreshed via link:https://openid.net/specs/openid-connect-discovery-1_0.html[OpenID Connect Discovery] .
 
 This is not intended to be used for configuration, it is an internal value for implementation use.
 |===

@@ -1,6 +1,8 @@
 = CookieConfig
 
+Configuration of the cookie used by the session handler after login.
 
+The cookie value is a randomly generated key pointing to the JWT generated during login (which is stored in the DB and cached in memory).
 
 [cols="1,1a,4a",stripes=even]
 |===

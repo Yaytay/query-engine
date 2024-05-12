@@ -232,15 +232,15 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
 
       boolean resumePrimary = false;
       boolean resumeSecondary = false;
-      logger.debug("Current: {} and {}, got {} primary rows{} and {} secondary rows{}"
-              , currentPrimary
-              , currentSecondaryRows
-              , primaryRows.size()
-              , primaryEnded ? " (ended)" : ""
-              , secondaryRows.size()
-              , secondaryEnded ? " (ended)" : ""
-      );
       synchronized (lock) {
+        logger.info("Current: {} and {}, got {} primary rows{} and {} secondary rows{}"
+                , currentPrimary
+                , currentSecondaryRows
+                , primaryRows.size()
+                , primaryEnded ? " (ended)" : ""
+                , secondaryRows.size()
+                , secondaryEnded ? " (ended)" : ""
+        );
         if (demand  != Long.MAX_VALUE) {
           if (demand <= 0) {
             emitting.set(false);

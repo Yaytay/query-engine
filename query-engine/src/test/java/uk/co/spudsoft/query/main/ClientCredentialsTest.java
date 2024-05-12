@@ -31,21 +31,25 @@ public class ClientCredentialsTest {
   
   @Test
   public void testToString() {
-    ClientCredentials creds = new ClientCredentials().setId("user").setSecret("pass");
+    ClientCredentials creds = new ClientCredentials("user", "pass");
     assertThat(creds.toString(), not(containsString("pass")));
-    creds = new ClientCredentials().setSecret("pass");
+    creds = new ClientCredentials(null, "pass");
     assertThat(creds.toString(), not(containsString("pass")));
   }
 
   @Test
   public void testGetId() {
-    ClientCredentials creds = new ClientCredentials().setId("user").setSecret("pass");
+    ClientCredentials creds = new ClientCredentials();
+    creds.setId("user");
+    creds.setSecret("pass");
     assertThat(creds.getId(), equalTo("user"));
   }
 
   @Test
   public void testGetSecret() {
-    ClientCredentials creds = new ClientCredentials().setId("user").setSecret("pass");
+    ClientCredentials creds = new ClientCredentials();
+    creds.setId("user");
+    creds.setSecret("pass");
     assertThat(creds.getSecret(), equalTo("pass"));
   }
 

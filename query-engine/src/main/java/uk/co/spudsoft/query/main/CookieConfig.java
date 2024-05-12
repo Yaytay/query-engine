@@ -19,7 +19,10 @@ package uk.co.spudsoft.query.main;
 import io.vertx.core.http.CookieSameSite;
 
 /**
- *
+ * Configuration of the cookie used by the session handler after login.
+ * <P>
+ * The cookie value is a randomly generated key pointing to the JWT generated during login (which is stored in the DB and cached in memory).
+ * 
  * @author jtalbut
  */
 public class CookieConfig {
