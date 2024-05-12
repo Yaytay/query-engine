@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.main;
 import io.vertx.core.http.CookieSameSite;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
@@ -30,12 +31,12 @@ public class CookieConfigTest {
   
   @Test
   public void testGetName() {
-    CookieConfig cookie = new CookieConfig("bob");
-    assertEquals("bob", cookie.getName());
+    CookieConfig cookie = new CookieConfig();
+    assertEquals("QueryEngineSession", cookie.getName());
     cookie.setName("fred");
     assertEquals("fred", cookie.getName());
-    cookie = new CookieConfig();
-    assertNull(cookie.getName());
+    cookie = new CookieConfig("bob");
+    assertEquals("bob", cookie.getName());
   }
 
   @Test
@@ -76,6 +77,27 @@ public class CookieConfigTest {
     assertNull(cookie.getSameSite());
     cookie.setSameSite(CookieSameSite.LAX);
     assertEquals(CookieSameSite.LAX, cookie.getSameSite());
+  }
+ 
+  @Test
+  public void testValidate() {
+    CookieConfig cookie = new CookieConfig("bob");
+    cookie.validate("cookie");
+    
+    cookie = new CookieConfig();
+    cookie.validate("cookie");
+    
+    IllegalArgumentException ex;
+    
+    ex = assertThrows(IllegalArgumentException.class, () -> {
+      new CookieConfig(null).validate("cookie");
+    });
+    assertEquals("cookie.name not set", ex.getMessage());
+    
+    ex = assertThrows(IllegalArgumentException.class, () -> {
+      new CookieConfig("£4.50").validate("cookie");
+    });
+    assertEquals("cookie.name is invalid, must match ^[-a-zA-Z0-9!#$%&'*+.^_`|~]+$, was \"£4.50\"", ex.getMessage());
   }
   
 }

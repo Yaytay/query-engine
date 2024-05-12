@@ -21,6 +21,7 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  *
@@ -105,4 +106,17 @@ public class SessionConfig {
     this.sessionCookie = sessionCookie;
   }
 
+  public void validate(String path) throws IllegalArgumentException {
+    if (sessionCookie == null) {
+      throw new IllegalArgumentException(path + ".sessionCookie not configured");
+    }
+    sessionCookie.validate(path +  ".sessionCookie");
+    if (oauth != null) {
+      for (Entry<String, AuthEndpoint> entry : oauth.entrySet()) {
+        entry.getValue().validate(path + ".oauth." + entry.getKey());
+      }
+    }
+    
+  }
+  
 }

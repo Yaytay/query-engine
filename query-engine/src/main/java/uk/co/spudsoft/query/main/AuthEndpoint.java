@@ -48,7 +48,6 @@ import uk.co.spudsoft.jwtvalidatorvertx.DiscoveryData;
  */
 public class AuthEndpoint {
   
-  private String name;
   private String logoUrl;
   private ClientCredentials credentials;
   private String scope;
@@ -73,7 +72,6 @@ public class AuthEndpoint {
    * @param other Another prepared AuthEndpoint instance.
    */
   public AuthEndpoint(AuthEndpoint other) {
-    this.name = other.name;
     this.logoUrl = other.logoUrl;
     this.credentials = other.credentials;
     this.scope = other.scope;
@@ -102,36 +100,14 @@ public class AuthEndpoint {
   
   /**
    * Validate the configuration.
+   * @param path the configuration path to this set of properties.
    */
-  public void validate() {
-    if (Strings.isNullOrEmpty(name)) {
-      throw new IllegalArgumentException("AuthEndpoint configured with no name");
-    }
+  public void validate(String path) {
     if (Strings.isNullOrEmpty(issuer)) {
-      throw new IllegalArgumentException("AuthEndpoint \"" + name + "\" configured with no issuer");
+      throw new IllegalArgumentException(path + ".issuer not configured");
     }
   }
   
-  /**
-   * The name of the authentication endpoint.
-   * <P> 
-   * This is displayed is the table of authentication endpoints by the login UI.
-   * @return the name of the authentication endpoint.
-   */
-  public String getName() {
-    return name;
-  }
-
-  /**
-   * The name of the authentication endpoint.
-   * <P> 
-   * This is displayed is the table of authentication endpoints by the login UI.
-   * @param name the name of the authentication endpoint.
-   */
-  public void setName(String name) {
-    this.name = name;
-  }
-
   /**
    * The URL to use to get a icon to display in the list of authentication endpoints in the login UI.
    * <P>

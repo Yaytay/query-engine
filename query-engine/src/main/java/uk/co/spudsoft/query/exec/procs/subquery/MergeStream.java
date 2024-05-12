@@ -160,7 +160,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
   }
   
   private void handlePrimaryItem(T item) {
-    logger.debug("Handling primary {}", item);
+    logger.trace("Handling primary {}", item);
     synchronized (lock) {
       if (currentPrimary == null) {
         currentPrimary = item;
@@ -176,7 +176,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
   }
 
   private void handleSecondaryItem(U item) {
-    logger.debug("Handling secondary {}", item);
+    logger.trace("Handling secondary {}", item);
     synchronized (lock) {
       if (currentPrimary == null) {
         if (primaryEnded) {
@@ -233,7 +233,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
       boolean resumePrimary = false;
       boolean resumeSecondary = false;
       synchronized (lock) {
-        logger.info("Current: {} and {}, got {} primary rows{} and {} secondary rows{}"
+        logger.trace("Current: {} and {}, got {} primary rows{} and {} secondary rows{}"
                 , currentPrimary
                 , currentSecondaryRows
                 , primaryRows.size()
@@ -308,11 +308,11 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
         secondaryStream.handler(null);
       } else {
         if (resumePrimary) {
-          logger.debug("Resuming primary stream at {} rows", primaryRows.size());
+          logger.trace("Resuming primary stream at {} rows", primaryRows.size());
           primaryStream.resume();
         }
         if (resumeSecondary) {
-          logger.debug("Resuming secondary stream at {} rows", secondaryRows.size());
+          logger.trace("Resuming secondary stream at {} rows", secondaryRows.size());
           secondaryStream.resume();
         }
       }

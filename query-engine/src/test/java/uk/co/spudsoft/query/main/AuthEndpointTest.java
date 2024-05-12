@@ -73,24 +73,11 @@ public class AuthEndpointTest {
   public void testValidate() throws IllegalArgumentException {
     AuthEndpoint authEndpoint = new AuthEndpoint();
     IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
-      authEndpoint.validate();
+      authEndpoint.validate("auth");
     });
-    assertEquals("AuthEndpoint configured with no name", ex.getMessage());
-    authEndpoint.setName("name");
-    ex = assertThrows(IllegalArgumentException.class, () -> {
-      authEndpoint.validate();
-    });
-    assertEquals("AuthEndpoint \"name\" configured with no issuer", ex.getMessage());
+    assertEquals("auth.issuer not configured", ex.getMessage());
     authEndpoint.setIssuer("issuer");
-    authEndpoint.validate();
-  }
-
-  @Test
-  public void testGetName() {
-    AuthEndpoint authEndpoint = new AuthEndpoint();
-    assertNull(authEndpoint.getName());
-    authEndpoint.setName("name");
-    assertEquals("name", authEndpoint.getName());
+    authEndpoint.validate("auth");
   }
 
   @Test

@@ -48,27 +48,27 @@ public class CacheConfigTest {
     ex = assertThrows(IllegalArgumentException.class, () -> {
       cc.validate("cache");
     });
-    assertEquals("cache configured with negative maxItems (-1)", ex.getMessage());
+    assertEquals("cache.maxItems configured with negative value (-1)", ex.getMessage());
     cc.setMaxItems(10);
     
     cc.setMaxDuration(Duration.ofDays(-1));
     ex = assertThrows(IllegalArgumentException.class, () -> {
       cc.validate("cache");
     });
-    assertEquals("cache configured with negative maxDuration (PT-24H)", ex.getMessage());
+    assertEquals("cache.maxDuration configured with negative value (PT-24H)", ex.getMessage());
     cc.setMaxDuration(Duration.ofDays(1));
     
     cc.setPurgePeriod(null);
     ex = assertThrows(IllegalArgumentException.class, () -> {
       cc.validate("cache");
     });
-    assertEquals("cache configured with no purgePeriod", ex.getMessage());
+    assertEquals("cache.purgePeriod not configured", ex.getMessage());
 
     cc.setPurgePeriod(Duration.ofDays(-1));
     ex = assertThrows(IllegalArgumentException.class, () -> {
       cc.validate("cache");
     });
-    assertEquals("cache configured with purgePeriod that is not positive (PT-24H)", ex.getMessage());
+    assertEquals("cache.purgePeriod configured with value that is not positive (PT-24H)", ex.getMessage());
   }
 
 }

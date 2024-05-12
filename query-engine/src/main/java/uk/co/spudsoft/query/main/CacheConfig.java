@@ -128,15 +128,15 @@ public class CacheConfig {
    */
   public void validate(String name) throws IllegalArgumentException {
     if (maxItems < 1) {
-      throw new IllegalArgumentException(name + " configured with negative maxItems (" + maxItems + ")");
+      throw new IllegalArgumentException(name + ".maxItems configured with negative value (" + maxItems + ")");
     }
     if (maxDuration != null && maxDuration.isNegative()) {
-      throw new IllegalArgumentException(name + " configured with negative maxDuration (" + maxDuration + ")");
+      throw new IllegalArgumentException(name + ".maxDuration configured with negative value (" + maxDuration + ")");
     }
     if (purgePeriod == null) {
-      throw new IllegalArgumentException(name + " configured with no purgePeriod");
+      throw new IllegalArgumentException(name + ".purgePeriod not configured");
     } else if (!purgePeriod.isPositive()) {
-      throw new IllegalArgumentException(name + " configured with purgePeriod that is not positive (" + purgePeriod + ")");
+      throw new IllegalArgumentException(name + ".purgePeriod configured with value that is not positive (" + purgePeriod + ")");
     }
   }
     

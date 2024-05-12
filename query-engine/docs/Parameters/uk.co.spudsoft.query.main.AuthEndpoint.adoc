@@ -32,11 +32,6 @@ Authentication will follow the standard OAuth 2.0 authorization code grant, with
 | Details
 
 
-| [[name]]name
-| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
-| The name of the authentication endpoint.
-
-This is displayed is the table of authentication endpoints by the login UI.
 | [[logoUrl]]logoUrl
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | The URL to use to get a icon to display in the list of authentication endpoints in the login UI.

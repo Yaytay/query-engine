@@ -16,8 +16,11 @@
  */
 package uk.co.spudsoft.query.main;
 
+import java.util.HashMap;
+import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
@@ -59,4 +62,37 @@ public class SessionConfigTest {
     assertEquals(37, sessionConfig.getNonceLength());
   }
 
+  @Test
+  public void testValidate() {
+    SessionConfig sessionConfig = new SessionConfig();
+    sessionConfig.validate("session");
+    
+    IllegalArgumentException ex;
+    
+    ex = assertThrows(IllegalArgumentException.class, () -> {
+      SessionConfig sc = new SessionConfig();
+      sc.setSessionCookie(null);
+      sc.validate("session");
+    });
+    assertEquals("session.sessionCookie not configured", ex.getMessage());
+    
+    ex = assertThrows(IllegalArgumentException.class, () -> {
+      SessionConfig sc = new SessionConfig();
+      Map<String, AuthEndpoint> oauth = new HashMap<>();
+      AuthEndpoint auth = new AuthEndpoint();
+      oauth.put("ms", auth);
+      sc.setOauth(oauth);
+      sc.validate("session");
+    });
+    assertEquals("session.oauth.ms.issuer not configured", ex.getMessage());
+    
+    Map<String, AuthEndpoint> oauth = new HashMap<>();
+    AuthEndpoint auth = new AuthEndpoint();
+    auth.setIssuer("issuer1");
+    oauth.put("ms", auth);
+    sessionConfig.setOauth(oauth);
+    sessionConfig.validate("session");
+    
+  }
+  
 }
