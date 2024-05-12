@@ -265,15 +265,17 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
             if (!primaryRows.isEmpty()) {
               currentPrimary = primaryRows.pop();
               bringInSecondaries();
-            } else if (primaryEnded) {
-              emitting.set(false);
-              moreToDo = false;
-              capturedEndHandler = endHandler;
-              endHandler = null;
             } else {
               currentPrimary = null;
-              emitting.set(false);
-              moreToDo = false;
+              if (primaryEnded) {
+                emitting.set(false);
+                moreToDo = false;
+                capturedEndHandler = endHandler;
+                endHandler = null;
+              } else {
+                emitting.set(false);
+                moreToDo = false;
+              }
             }
           } else if (!secondaryEnded) {
             emitting.set(false);

@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.main;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Strings;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import uk.co.spudsoft.jwtvalidatorvertx.DiscoveryData;
@@ -211,6 +212,7 @@ public class AuthEndpoint {
    * The client credentials to use when communicating with the OAuth endpoint.
    * @return the client credentials to use when communicating with the OAuth endpoint.
    */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public ClientCredentials getCredentials() {
     return credentials;
   }
@@ -219,6 +221,7 @@ public class AuthEndpoint {
    * The client credentials to use when communicating with the OAuth endpoint.
    * @param credentials the client credentials to use when communicating with the OAuth endpoint.
    */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public void setCredentials(ClientCredentials credentials) {
     this.credentials = credentials;
   }
