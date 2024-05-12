@@ -38,7 +38,7 @@ public class CacheConfig {
   private Duration purgePeriod = Duration.of(1, ChronoUnit.HOURS);
 
   /**
-   * Get the maximum number of items that should be stored in the cache.
+   * The maximum number of items that should be stored in the cache.
    * <P>
    * When more items than this are in the cache they are purged eldest first.
    * <P>
@@ -50,7 +50,7 @@ public class CacheConfig {
   }
 
   /**
-   * Set the maximum number of items that should be stored in the cache.
+   * The maximum number of items that should be stored in the cache.
    * <P>
    * When more items than this are in the cache they are purged eldest first.
    * <P>
@@ -62,7 +62,7 @@ public class CacheConfig {
   }
 
   /**
-   * Get the maximum age of items in the cache.
+   * The maximum age of items in the cache.
    * <P>
    * Items older than this are purged from the cache.
    * <P>
@@ -77,7 +77,7 @@ public class CacheConfig {
   }
 
   /**
-   * Set the maximum age of items in the cache.
+   * The maximum age of items in the cache.
    * <P>
    * Items older than this are purged from the cache.
    * <P>
@@ -92,7 +92,7 @@ public class CacheConfig {
   }
 
   /**
-   * Get the purge period for the cache.
+   * The purge period for the cache.
    * <P>
    * If the purge period is null items will only be removed from the cache when they expire and space is required.
    * When purge period is set a scheduled task runs that explicitly removes from the cache any invalid items.
@@ -107,7 +107,7 @@ public class CacheConfig {
   }
 
   /**
-   * Set the purge period for the cache.
+   * The purge period for the cache.
    * <P>
    * If the purge period is null items will only be removed from the cache when they expire and space is required.
    * When purge period is set a scheduled task runs that explicitly removes from the cache any invalid items.

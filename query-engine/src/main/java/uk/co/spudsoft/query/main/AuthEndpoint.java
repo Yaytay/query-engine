@@ -112,7 +112,7 @@ public class AuthEndpoint {
   }
   
   /**
-   * Get the name of the authentication endpoint.
+   * The name of the authentication endpoint.
    * <P> 
    * This is displayed is the table of authentication endpoints by the login UI.
    * @return the name of the authentication endpoint.
@@ -122,7 +122,7 @@ public class AuthEndpoint {
   }
 
   /**
-   * Set the name of the authentication endpoint.
+   * The name of the authentication endpoint.
    * <P> 
    * This is displayed is the table of authentication endpoints by the login UI.
    * @param name the name of the authentication endpoint.
@@ -132,7 +132,7 @@ public class AuthEndpoint {
   }
 
   /**
-   * Get URL to use to get a icon to display in the list of authentication endpoints in the login UI.
+   * The URL to use to get a icon to display in the list of authentication endpoints in the login UI.
    * <P>
    * This is optional - if not provided no icon will be displayed.
    * @return URL to use to get a icon to display in the list of authentication endpoints in the login UI.
@@ -142,7 +142,7 @@ public class AuthEndpoint {
   }
 
   /**
-   * Set URL to use to get a icon to display in the list of authentication endpoints in the login UI.
+   * The URL to use to get a icon to display in the list of authentication endpoints in the login UI.
    * <P>
    * This is optional - if not provided no icon will be displayed.
    * @param logoUrl URL to use to get a icon to display in the list of authentication endpoints in the login UI.
@@ -152,7 +152,7 @@ public class AuthEndpoint {
   }
 
   /**
-   * Get the issuer that JWTs created by this login will use.
+   * The issuer that JWTs created by this login will use.
    * <P>
    * The issuer provided must still be valid according to the {@link JwtValidationConfig}, this is just used to identify the issuer 
    * because the user is given a choice of login providers and the issuer cannot be extracted from the JWT.
@@ -164,7 +164,7 @@ public class AuthEndpoint {
   }
 
   /**
-   * Set the issuer that JWTs created by this login will use.
+   * The issuer that JWTs created by this login will use.
    * <P>
    * The issuer provided must still be valid according to the {@link JwtValidationConfig}, this is just used to identify the issuer 
    * because the user is given a choice of login providers and the issuer cannot be extracted from the JWT.
@@ -176,7 +176,7 @@ public class AuthEndpoint {
   }
 
   /**
-   * Get the OAuth authorization endpoint.
+   * The OAuth authorization endpoint.
    * @return the OAuth authorization endpoint.
    */
   public String getAuthorizationEndpoint() {
@@ -184,7 +184,7 @@ public class AuthEndpoint {
   }
   
   /**
-   * Set the OAuth authorization endpoint.
+   * The OAuth authorization endpoint.
    * @param authorizationEndpoint the OAuth authorization endpoint.
    */
   public void setAuthorizationEndpoint(String authorizationEndpoint) {
@@ -192,7 +192,7 @@ public class AuthEndpoint {
   }
 
   /**
-   * Get the OAuth token endpoint.
+   * The OAuth token endpoint.
    * @return the OAuth token endpoint.
    */
   public String getTokenEndpoint() {
@@ -200,7 +200,7 @@ public class AuthEndpoint {
   }
 
   /**
-   * Set the OAuth token endpoint.
+   * The OAuth token endpoint.
    * @param tokenEndpoint the OAuth token endpoint.
    */
   public void setTokenEndpoint(String tokenEndpoint) {
@@ -208,7 +208,7 @@ public class AuthEndpoint {
   }
 
   /**
-   * Get the client credentials to use when communicating with the OAuth endpoint.
+   * The client credentials to use when communicating with the OAuth endpoint.
    * @return the client credentials to use when communicating with the OAuth endpoint.
    */
   public ClientCredentials getCredentials() {
@@ -216,7 +216,7 @@ public class AuthEndpoint {
   }
 
   /**
-   * Set the client credentials to use when communicating with the OAuth endpoint.
+   * The client credentials to use when communicating with the OAuth endpoint.
    * @param credentials the client credentials to use when communicating with the OAuth endpoint.
    */
   public void setCredentials(ClientCredentials credentials) {
@@ -224,7 +224,7 @@ public class AuthEndpoint {
   }
 
   /**
-   * Get the scope to specify in the OAuth request.
+   * The scope(s) to specify in the OAuth request.
    * @return the scope to specify in the OAuth request.
    */
   public String getScope() {
@@ -232,7 +232,7 @@ public class AuthEndpoint {
   }
 
   /**
-   * Set the scope to specify in the OAuth request.
+   * The scope(s) to specify in the OAuth request.
    * @param scope the scope to specify in the OAuth request.
    */
   public void setScope(String scope) {
@@ -248,7 +248,7 @@ public class AuthEndpoint {
   }
 
   /**
-   * Set true if the OAuth request will use PKCE.
+   * True if the OAuth request will use PKCE.
    * @param pkce true if the OAuth request will use PKCE.
    */
   public void setPkce(boolean pkce) {
@@ -264,7 +264,7 @@ public class AuthEndpoint {
   }
 
   /**
-   * Set true if the OAuth request will include (and validate) a nonce value.
+   * True if the OAuth request will include (and validate) a nonce value.
    * @param nonce true if the OAuth request will include (and validate) a nonce value.
    */
   public void setNonce(boolean nonce) {
@@ -272,7 +272,7 @@ public class AuthEndpoint {
   }
 
   /**
-   * Get the date at which this endpoint should be refreshed via <a href="https://openid.net/specs/openid-connect-discovery-1_0.html">OpenID Connect Discovery</a>.
+   * The date at which this endpoint should be refreshed via <a href="https://openid.net/specs/openid-connect-discovery-1_0.html">OpenID Connect Discovery</a>.
    * <P>
    * This is not intended to be used for configuration, it is an internal value for implementation use.
    * @return the date at which this endpoint should be refreshed via OpenID Connect Discovery.
@@ -283,7 +283,7 @@ public class AuthEndpoint {
   }
 
   /**
-   * Set the date at which this endpoint should be refreshed via <a href="https://openid.net/specs/openid-connect-discovery-1_0.html">OpenID Connect Discovery</a>.
+   * The date at which this endpoint should be refreshed via <a href="https://openid.net/specs/openid-connect-discovery-1_0.html">OpenID Connect Discovery</a>.
    * <P>
    * This is not intended to be used for configuration, it is an internal value for implementation use.
    * 

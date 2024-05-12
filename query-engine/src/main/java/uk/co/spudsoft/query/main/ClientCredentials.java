@@ -21,7 +21,10 @@ import com.google.common.base.Strings;
 import uk.co.spudsoft.params4j.SecretsSerializer;
 
 /**
- *
+ * Configuration data of client credentials for OAuth communications.
+ * <P>
+ * This is a separate class to make configuration by files simpler.
+ * 
  * @author jtalbut
  */
 public class ClientCredentials {
@@ -36,23 +39,19 @@ public class ClientCredentials {
   private String secret;
 
   /**
-   * The id.
-   * @param id the id.
-   * @return id.
+   * The client ID.
+   * @param id the client ID.
    */
-  public ClientCredentials setId(String id) {
+  public void setId(String id) {
     this.id = id;
-    return this;
   }
 
   /**
-   * The secret.
-   * @param secret The secret.
-   * @return The secret.
+   * The client secret.
+   * @param secret The client secret.
    */
-  public ClientCredentials setSecret(String secret) {
+  public void setSecret(String secret) {
     this.secret = secret;
-    return this;
   }
 
   public ClientCredentials() {
@@ -80,16 +79,16 @@ public class ClientCredentials {
   }
   
   /**
-   * The id.
-   * @return The id.
+   * The client ID.
+   * @return The client ID.
    */
   public String getId() {
     return id;
   }
 
   /**
-   * The secret.
-   * @return the secret.
+   * The client secret.
+   * @return the client secret.
    */
   @JsonSerialize(using = SecretsSerializer.class)
   public String getSecret() {
