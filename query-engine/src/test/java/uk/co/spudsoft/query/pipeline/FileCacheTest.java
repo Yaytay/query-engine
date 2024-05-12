@@ -80,7 +80,7 @@ public class FileCacheTest {
     
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     
-    FileCache<String> cache = new FileCache<>(vertx.fileSystem(), meterRegistry, "file-cache-test", 10, 10000);
+    FileCache<String> cache = new FileCache<>(vertx.fileSystem(), meterRegistry, "file-cache-test", 10, Duration.ofMillis(10000));
     
     logger.debug("Children: {}", dirCache.getRoot().getChildren().stream().map(f -> f.getPath()).collect(Collectors.toList()));
     // Child 0 is the sub directory, dirs always come before files.

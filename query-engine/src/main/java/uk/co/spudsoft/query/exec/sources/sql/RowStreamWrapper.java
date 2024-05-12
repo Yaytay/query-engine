@@ -76,7 +76,7 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
     this.types = new Types();
     rowStream.coloumnDescriptorHandler(columnDescriptors -> {
       for (ColumnDescriptor cd : columnDescriptors) {
-        logger.info("Field {} is of JDBC type {} (aka {})", cd.name(), cd.jdbcType(), cd.typeName());
+        logger.trace("Field {} is of JDBC type {} (aka {})", cd.name(), cd.jdbcType(), cd.typeName());
         if (cd.jdbcType() == JDBCType.OTHER && OTHER_TYPES_TO_TREAT_AS_STRING.contains(cd.typeName())) {
           types.putIfAbsent(cd.name(), DataType.String);
         } else {
@@ -179,15 +179,9 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
   public RowStreamWrapper endHandler(Handler<Void> endHandler) {    
     rowStream.endHandler(ehv -> {
       if (handledRows) {
-        logger.info("Finished row stream after handling some rows");
+        logger.trace("Finished row stream after handling some rows");
       } else {
-        logger.info("Finished row stream without handling any rows");
-//        Handler<DataRow> localHandler = this.handler;
-//        if (localHandler != null) {
-//          DataRow dataRow = DataRow.create(types);
-//          logger.trace("{} Passing on empty row: {}", this, dataRow);
-//          localHandler.handle(dataRow);
-//        }
+        logger.trace("Finished row stream without handling any rows");
       }
       rowStream.close()
               .compose(v -> {

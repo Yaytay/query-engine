@@ -24,10 +24,10 @@ import io.micrometer.core.instrument.binder.cache.GuavaCacheMetrics;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.FileSystem;
+import java.time.Duration;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,18 +50,22 @@ public class FileCache<T> {
           FileSystem fs
           , MeterRegistry meterRegistry
           , String name
-          , int maximumSize
-          , int maxDurationMs
+          , Integer maximumSize
+          , Duration maxDuration
   ) {
     this.fs = fs;
     CacheBuilder<Object, Object> cacheBuilder = CacheBuilder.newBuilder()
             .recordStats();
 
-    if (maxDurationMs <= 0) {
+    if (maxDuration != null && maxDuration.isZero()) {
       cacheBuilder.maximumSize(1);
     } else {
-      cacheBuilder.maximumSize(maximumSize)
-              .expireAfterWrite(maxDurationMs, TimeUnit.MILLISECONDS);
+      if (maximumSize != null) {
+        cacheBuilder.maximumSize(maximumSize);
+      }
+      if (maxDuration != null) {
+        cacheBuilder.expireAfterWrite(maxDuration);
+      }
     }
 
     this.cache = cacheBuilder.build();

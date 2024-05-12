@@ -40,7 +40,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
@@ -118,14 +117,14 @@ public final class PipelineDefnLoader {
             .recordStats()
             ;
 
-    if (cacheConfig.getMaxDurationMs() == 0) {
+    if (cacheConfig.getMaxDuration() != null && cacheConfig.getMaxDuration().isZero()) {
       cacheBuilder.maximumSize(1);
     } else {
       if (cacheConfig.getMaxItems() > 0) {
         cacheBuilder.maximumSize(cacheConfig.getMaxItems());
       }
-      if (cacheConfig.getMaxDurationMs() > 0) {
-        cacheBuilder.expireAfterWrite(cacheConfig.getMaxDurationMs(), TimeUnit.MILLISECONDS);
+      if (cacheConfig.getMaxDuration() != null) {
+        cacheBuilder.expireAfterWrite(cacheConfig.getMaxDuration());
       }
     }
 
@@ -135,19 +134,19 @@ public final class PipelineDefnLoader {
             , meterRegistry
             , "pipeline-cache"
             , cacheConfig.getMaxItems()
-            , cacheConfig.getMaxDurationMs()
+            , cacheConfig.getMaxDuration()
             );
     this.templateCache = new FileCache<>(fs
             , meterRegistry
             , "template-cache"
             , cacheConfig.getMaxItems()
-            , cacheConfig.getMaxDurationMs()
+            , cacheConfig.getMaxDuration()
             );
     this.permissionsCache = new FileCache<>(fs
             , meterRegistry
             , "permissions-cache"
             , cacheConfig.getMaxItems()
-            , cacheConfig.getMaxDurationMs()
+            , cacheConfig.getMaxDuration()
             );
     
     this.velocity = new VelocityEngine();
@@ -156,8 +155,8 @@ public final class PipelineDefnLoader {
     velocity.addProperty("resource.loader.string.repository.static", "false");
     velocity.init();    
     
-    if (cacheConfig.getPurgePeriodMs() > 0) {
-      vertx.setPeriodic(cacheConfig.getPurgePeriodMs(), l -> purgeCaches());
+    if (cacheConfig.getPurgePeriod() != null) {
+      vertx.setPeriodic(cacheConfig.getPurgePeriod().toMillis(), l -> purgeCaches());
     }
   }
   

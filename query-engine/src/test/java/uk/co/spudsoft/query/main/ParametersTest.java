@@ -97,9 +97,11 @@ public class ParametersTest {
   public void testGetPipelineCache() {
     Parameters instance = new Parameters();
     assertNotNull(instance.getPipelineCache());
-    assertEquals(-1, instance.getPipelineCache().getMaxDurationMs());
-    instance.setPipelineCache(new CacheConfig().setMaxDurationMs(12));
-    assertEquals(12, instance.getPipelineCache().getMaxDurationMs());
+    assertEquals(null, instance.getPipelineCache().getMaxDuration());
+    CacheConfig cc = new CacheConfig();
+    cc.setMaxDuration(Duration.ofMillis(12));
+    instance.setPipelineCache(cc);
+    assertEquals(12, instance.getPipelineCache().getMaxDuration().toMillis());
   }
   
   @Test

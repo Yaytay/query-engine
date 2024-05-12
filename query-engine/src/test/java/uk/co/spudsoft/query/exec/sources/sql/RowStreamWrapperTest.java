@@ -21,10 +21,6 @@ import io.vertx.core.Handler;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Transaction;
-import io.vertx.sqlclient.desc.ColumnDescriptor;
-import java.sql.JDBCType;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -38,8 +34,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import uk.co.spudsoft.query.defn.DataType;
-import uk.co.spudsoft.query.exec.ColumnDefn;
 
 /**
  *

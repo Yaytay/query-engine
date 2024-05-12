@@ -91,7 +91,7 @@ public class CachingIT {
       , "--vertxOptions.workerPoolSize=5"
       , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--httpServerOptions.tracingPolicy=ALWAYS"
-      , "--pipelineCache.maxDurationMs=60000"
+      , "--pipelineCache.maxDuration=PT10M"
       , "--logging.jsonFormat=false"
       , "--zipkin.baseUrl=http://localhost/wontwork"
       , "--jwt.acceptableIssuerRegexes[0]=.*"

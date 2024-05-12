@@ -361,6 +361,7 @@ public class Parameters {
    * Get the configuration of the pipeline cache.
    * @return Configuration of the pipeline cache.
    */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public CacheConfig getPipelineCache() {
     return pipelineCache;
   }
@@ -372,6 +373,7 @@ public class Parameters {
    * @param vertxOptions The general Vert.x configuration.
    * @return this, so that the method may be called in a fluent manner.
    */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public Parameters setVertxOptions(VertxOptions vertxOptions) {
     this.vertxOptions = vertxOptions;
     return this;
@@ -444,6 +446,7 @@ public class Parameters {
    * @param pipelineCache the configuration of the pipeline cache.
    * @return this, so that the method may be called in a fluent manner.
    */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public Parameters setPipelineCache(CacheConfig pipelineCache) {
     this.pipelineCache = pipelineCache;
     return this;
@@ -877,7 +880,9 @@ public class Parameters {
         }
       }
     }
-    
+    if (pipelineCache != null) {
+      pipelineCache.validate("pipelineCache");
+    }
   }
 
 }

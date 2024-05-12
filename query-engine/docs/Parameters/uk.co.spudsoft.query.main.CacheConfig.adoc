@@ -1,6 +1,14 @@
 = CacheConfig
 
+Configuration data for caches.
 
+May specify either or both or maxItems and maxDuration.
+ 
+
+If the maxDuration is specified as zero caching will be effectively disabled (regardless of the value of maxItems).
+ If maxItems is less than 1 the configuration is invalid.
+ If maxDuration is negative the configuration is invalid.
+ If purgePeriod is not positive the configuration is invalid.
 
 [cols="1,1a,4a",stripes=even]
 |===
@@ -11,11 +19,34 @@
 
 | [[maxItems]]maxItems
 | int
-| 
-| [[maxDurationMs]]maxDurationMs
-| int
-| 
-| [[purgePeriodMs]]purgePeriodMs
-| int
-| 
+| Set the maximum number of items that should be stored in the cache.
+
+When more items than this are in the cache they are purged eldest first.
+ 
+
+Must be >= 1.
+| [[maxDuration]]maxDuration
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/time/Duration.html[Duration]
+| Set the maximum age of items in the cache.
+
+Items older than this are purged from the cache.
+ 
+
+If set to zero the cache will only ever contain a single item.
+ If set, must not be negative.
+ 
+
+Configuration files should specify this using link:https://en.wikipedia.org/wiki/ISO_8601#Durations[ISO860 Duration]  format, i.e. PT10S.
+| [[purgePeriod]]purgePeriod
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/time/Duration.html[Duration]
+| Set the purge period for the cache.
+
+If the purge period is null items will only be removed from the cache when they expire and space is required.
+ When purge period is set a scheduled task runs that explicitly removes from the cache any invalid items.
+ 
+
+If set, must be positive.
+ 
+
+Configuration files should specify this using link:https://en.wikipedia.org/wiki/ISO_8601#Durations[ISO860 Duration]  format, i.e. PT10S.
 |===

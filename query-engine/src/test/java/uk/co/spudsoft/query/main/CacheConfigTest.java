@@ -16,9 +16,11 @@
  */
 package uk.co.spudsoft.query.main;
 
+import java.time.Duration;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
 /**
@@ -31,8 +33,42 @@ public class CacheConfigTest {
   public void testGetMaxItems() {
     CacheConfig cc = new CacheConfig();
     assertEquals(100, cc.getMaxItems());
-    cc = new CacheConfig().setMaxItems(17);
+    cc.setMaxItems(17);
     assertEquals(17, cc.getMaxItems());
+  }
+  
+  @Test
+  public void testValidate() {
+    CacheConfig cc = new CacheConfig();
+    cc.validate("default");
+    
+    IllegalArgumentException ex;
+    
+    cc.setMaxItems(-1);
+    ex = assertThrows(IllegalArgumentException.class, () -> {
+      cc.validate("cache");
+    });
+    assertEquals("cache configured with negative maxItems (-1)", ex.getMessage());
+    cc.setMaxItems(10);
+    
+    cc.setMaxDuration(Duration.ofDays(-1));
+    ex = assertThrows(IllegalArgumentException.class, () -> {
+      cc.validate("cache");
+    });
+    assertEquals("cache configured with negative maxDuration (PT-24H)", ex.getMessage());
+    cc.setMaxDuration(Duration.ofDays(1));
+    
+    cc.setPurgePeriod(null);
+    ex = assertThrows(IllegalArgumentException.class, () -> {
+      cc.validate("cache");
+    });
+    assertEquals("cache configured with no purgePeriod", ex.getMessage());
+
+    cc.setPurgePeriod(Duration.ofDays(-1));
+    ex = assertThrows(IllegalArgumentException.class, () -> {
+      cc.validate("cache");
+    });
+    assertEquals("cache configured with purgePeriod that is not positive (PT-24H)", ex.getMessage());
   }
 
 }
