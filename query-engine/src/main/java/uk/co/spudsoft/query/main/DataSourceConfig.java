@@ -16,7 +16,12 @@
  */
 package uk.co.spudsoft.query.main;
 
+import com.google.common.base.Strings;
+import java.net.URI;
+import java.net.URISyntaxException;
+
 /**
+ * Configuration data for commuicating with a data source.
  *
  * @author jtalbut
  */
@@ -123,6 +128,17 @@ public class DataSourceConfig {
    */
   public int getMinPoolSize() {
     return minPoolSize;
+  }
+  
+  public void validate(String path) throws IllegalArgumentException {
+    if (Strings.isNullOrEmpty(url)) {
+      throw new IllegalArgumentException(path + ".url is not set");
+    }
+    try {
+      new URI(url);
+    } catch (URISyntaxException x) {
+      throw new IllegalArgumentException(path + ".url is not a valid url");
+    }
   }
   
 }

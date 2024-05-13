@@ -1,6 +1,9 @@
 = ProcessorConfig
 
+Configuration for specific uk.co.spudsoft.query.exec.ProcessorInstance s.
 
+The majority of processor configuration is within the pipeline definitions, this configuration is for aspects where they
+ configuration needs to be managed by administrator rather than the pipeline designer.
 
 [cols="1,1a,4a",stripes=even]
 |===
@@ -11,8 +14,14 @@
 
 | [[tempDir]]tempDir
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
-| 
+| /**
+ The temporary file to be used by uk.co.spudsoft.query.exec.ProcessorInstance s that require it.
+
+The default value is the java system property "java.io.tmpdir".
+ It is recommended that you change this value to something specific to the query engine.
 | [[inMemorySortLimitBytes]]inMemorySortLimitBytes
 | int
-| 
+| The approximate limit on the amount of memory that should be used by uk.co.spudsoft.query.exec.procs.sort.ProcessorSortInstance .
+
+The calculation of the memory used is not very precise - specifically there is no easy way to know how many bytes a link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[java.lang.String]  uses.
 |===

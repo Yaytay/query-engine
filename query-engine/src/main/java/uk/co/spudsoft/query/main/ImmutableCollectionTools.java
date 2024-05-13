@@ -24,11 +24,19 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- *
+ * Helper class of methods to help with handling Immutable collections from the <a href="https://github.com/google/guava">Guava</a> library.
  * @author jtalbut
  */
 public class ImmutableCollectionTools {
   
+  /**
+   * Null-safe method for copying a {@link java.util.Map} to a {@link com.google.common.collect.ImmutableMap}.
+   * @param <K> The type of the key in the input and output map.
+   * @param <V> The type of item in the input and output map.
+   * @param src The input {@link java.util.Map}.
+   * @return An ImmutableMap containing the same items as src.
+   * 
+   */
   public static <K, V> ImmutableMap<K, V> copy(Map<K, V> src) {
     if (src == null) {
       return ImmutableMap.of();
@@ -38,10 +46,12 @@ public class ImmutableCollectionTools {
   }
   
   /**
-   * Create an ImmutableMap based on the contents of a Collection.
+   * Create an {@link com.google.common.collect.ImmutableMap} based on the contents of a Collection.
    * 
    * Note that if the id function returns null for a value that value will be excluded from the Map.
    * Please ensure that validation of the Collection happens to alert the user to this issue.
+   * 
+   * If the src collection is null an empty ImmutableMap will be returned.
    * 
    * @param <K> The key type for the Map.
    * @param <V> The value type for the Map.
@@ -64,6 +74,12 @@ public class ImmutableCollectionTools {
     }
   }
   
+  /**
+   * Null-safe method for copying a {@link java.util.List} to a {@link com.google.common.collect.ImmutableList}.
+   * @param <V> The type of item in the input collection.
+   * @param src The input {@link java.util.List}.
+   * @return An ImmutableList containing the same items as src.
+   */
   public static <V> ImmutableList<V> copy(List<V> src) {
     if (src == null) {
       return ImmutableList.of();

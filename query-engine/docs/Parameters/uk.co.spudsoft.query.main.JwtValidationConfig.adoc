@@ -9,9 +9,6 @@ With a dynamic configuration the issuer is derived from the Host (or X-Forwarded
 
 With a static configuration the issuer is not derived and any key from any of the configured JWKS endpoints may be used.
  Key IDs (kid) only have to be unique across all JWKS endpoints.
- 
-
-
 
 [cols="1,1a,4a",stripes=even]
 |===
@@ -57,6 +54,9 @@ Thus the delay between a change to the file being made and being picked up will 
 
 Checks of the file are based entirely on the last-modified timestamp - if the file is on a filesystem that
  does not support the last-modified timestamp changes will never be picked up.
+ 
+
+Configuration files should specify this using link:https://en.wikipedia.org/wiki/ISO_8601#Durations[ISO860 Duration]  format, i.e. PT10S.
 | [[acceptableIssuerRegexes]]acceptableIssuerRegexes
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html[List]<link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]>
 | Set the list of regular expressions that are used to define acceptable token issuers.
@@ -70,6 +70,9 @@ An issuer is considered acceptable if it matches one of these regular expression
 | Set the default period to cache JWKS data for.
 
 This is expected to be overridden by cache-control/max-age headers on the JWKS response, so the default value is usually reasonable.
+ 
+
+Configuration files should specify this using link:https://en.wikipedia.org/wiki/ISO_8601#Durations[ISO860 Duration]  format, i.e. PT10S.
 | [[jwksEndpoints]]jwksEndpoints
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html[List]<link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]>
 | Get the explicitly configured endpoints that will be used to download JWK sets.

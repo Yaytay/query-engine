@@ -21,6 +21,7 @@ import com.google.common.base.Strings;
 import uk.co.spudsoft.params4j.SecretsSerializer;
 
 /**
+ * Configuration data for credentials used when communicating with services (typically databases).
  *
  * @author jtalbut
  */

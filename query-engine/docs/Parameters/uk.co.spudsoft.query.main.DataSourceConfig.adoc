@@ -1,6 +1,6 @@
 = DataSourceConfig
 
-
+Configuration data for commuicating with a data source.
 
 [cols="1,1a,4a",stripes=even]
 |===

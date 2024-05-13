@@ -22,6 +22,7 @@ import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Base64;
 import org.junit.jupiter.api.Test;
@@ -56,8 +57,8 @@ public class AuditorTest {
                     .setDataSource(new DataSourceConfig()
                                     .setUrl(url)
                     )
-                    .setRetryBaseMs(10000)
-                    .setRetryIncrementMs(10000)
+                    .setRetryBase(Duration.ofMillis(10000))
+                    .setRetryIncrement(Duration.ofMillis(10000))
     );
     long start = System.currentTimeMillis();
     try {
@@ -77,8 +78,8 @@ public class AuditorTest {
             null,
             new Persistence()
                     .setDataSource(null)
-                    .setRetryBaseMs(100)
-                    .setRetryIncrementMs(10)
+                    .setRetryBase(Duration.ofMillis(100))
+                    .setRetryIncrement(Duration.ofMillis(10))
                     .setRetryLimit(10)
     );
     long start = System.currentTimeMillis();
@@ -101,8 +102,8 @@ public class AuditorTest {
                     .setDataSource(new DataSourceConfig()
                                     .setUrl(url)
                     )
-                    .setRetryBaseMs(100)
-                    .setRetryIncrementMs(100)
+                    .setRetryBase(Duration.ofMillis(100))
+                    .setRetryIncrement(Duration.ofMillis(100))
                     .setRetryLimit(4)
     );
     long start = System.currentTimeMillis();

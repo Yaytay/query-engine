@@ -30,7 +30,6 @@ import uk.co.spudsoft.params4j.JavadocCapture;
 
 /**
  * Top level configuration options for Query Engine.
- * <P>
  * 
  * @author jtalbut
  */
@@ -882,6 +881,9 @@ public class Parameters {
     }
     if (pipelineCache != null) {
       pipelineCache.validate("pipelineCache");
+    }
+    if (persistence != null) {
+      persistence.validate("persistence");
     }
   }
 

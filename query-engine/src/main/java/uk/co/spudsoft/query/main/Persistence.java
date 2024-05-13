@@ -17,9 +17,11 @@
 package uk.co.spudsoft.query.main;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.time.Duration;
 
 /**
- *
+ * Configuration for the internal datastore using by Query Engine for audit and for login sessions.
+ * 
  * @author jtalbut
  */
 public class Persistence {
@@ -27,56 +29,75 @@ public class Persistence {
   /**
    * JDBC data source for storing audit information.
    */
-  private DataSourceConfig dataSource = new DataSourceConfig();
+  private DataSourceConfig dataSource = null;
   /**
-   * milliseconds to wait for re-attempting to connect to the datasource.
+   * Time to wait for re-attempting to connect to the datasource.
    */
-  private int retryBaseMs = 1000;
+  private Duration retryBase = Duration.ofMillis(1000);
   /**
-   * additional milliseconds to wait for re-attempting to connect to the datasource for each retry.
+   * Additional time to wait for re-attempting to connect to the datasource for each retry.
    */
-  private int retryIncrementMs;
+  private Duration retryIncrement;
   /**
-   * maximum number of retries, zero => no retries, <0 => unlimited retries.
+   * Maximum number of retries, zero => no retries, <0 => unlimited retries.
    */
   private int retryLimit;
 
+  /**
+   * The JDBC data source for storing audit information.
+   * @return the JDBC data source for storing audit information.
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public DataSourceConfig getDataSource() {
     return dataSource;
   }
 
-  public int getRetryBaseMs() {
-    return retryBaseMs;
+  public Duration getRetryBase() {
+    return retryBase;
   }
 
-  public int getRetryIncrementMs() {
-    return retryIncrementMs;
+  public Duration getRetryIncrement() {
+    return retryIncrement;
   }
 
   public int getRetryLimit() {
     return retryLimit;
   }
 
+  /**
+   * The JDBC data source for storing audit information.
+   * @param dataSource the JDBC data source for storing audit information.
+   * @return this, so the method may be used fluently.
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public Persistence setDataSource(DataSourceConfig dataSource) {
     this.dataSource = dataSource;
     return this;
   }
 
-  public Persistence setRetryBaseMs(int retryBaseMs) {
-    this.retryBaseMs = retryBaseMs;
+  public Persistence setRetryBase(Duration retryBase) {
+    this.retryBase = retryBase;
     return this;
   }
 
-  public Persistence setRetryIncrementMs(int retryIncrementMs) {
-    this.retryIncrementMs = retryIncrementMs;
+  public Persistence setRetryIncrement(Duration retryIncrement) {
+    this.retryIncrement = retryIncrement;
     return this;
   }
 
   public Persistence setRetryLimit(int retryLimit) {
     this.retryLimit = retryLimit;
     return this;
+  }
+  
+  public void validate(String path) throws IllegalArgumentException {
+    if (retryLimit > 0 && retryBase == null) {
+      throw new IllegalArgumentException(path + ".retryLimit is " + retryLimit + ", but " + path + ".retryBase is not set");
+    }
+    if (dataSource != null) {
+      dataSource.validate(path + ".dataSource");
+    }
+    
   }
   
 }

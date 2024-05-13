@@ -80,9 +80,9 @@ public class ParametersTest {
     assertNotNull(instance.getPersistence());
     instance = new Parameters().setPersistence(null);
     assertNull(instance.getPersistence());
-    Persistence audit = new Persistence().setRetryBaseMs(17);
+    Persistence audit = new Persistence().setRetryBase(Duration.ofMillis(17));
     instance = new Parameters().setPersistence(audit);
-    assertEquals(17, instance.getPersistence().getRetryBaseMs());
+    assertEquals(17, instance.getPersistence().getRetryBase().toMillis());
   }
   
   @Test

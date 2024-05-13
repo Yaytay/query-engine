@@ -1,6 +1,6 @@
 = Persistence
 
-
+Configuration for the internal datastore using by Query Engine for audit and for login sessions.
 
 [cols="1,1a,4a",stripes=even]
 |===
@@ -11,12 +11,12 @@
 
 | [[dataSource]]dataSource
 | xref:uk.co.spudsoft.query.main.DataSourceConfig.adoc[DataSourceConfig]
+| The JDBC data source for storing audit information.
+| [[retryBase]]retryBase
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/time/Duration.html[Duration]
 | 
-| [[retryBaseMs]]retryBaseMs
-| int
-| 
-| [[retryIncrementMs]]retryIncrementMs
-| int
+| [[retryIncrement]]retryIncrement
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/time/Duration.html[Duration]
 | 
 | [[retryLimit]]retryLimit
 | int

@@ -118,6 +118,8 @@ public class AuditorPersistenceImpl implements Auditor {
   private final Vertx vertx;
   private final MeterRegistry meterRegistry;
   private final Persistence configuration;
+  private final long retryBaseMs;
+  private final long retryIncrementMs;
   private String quote;
   private OffsetLimitType offsetLimitType;
   
@@ -130,6 +132,8 @@ public class AuditorPersistenceImpl implements Auditor {
     this.vertx = vertx;
     this.meterRegistry = meterRegistry;
     this.configuration = audit;
+    this.retryBaseMs = audit.getRetryBase() == null ? 1000 : audit.getRetryBase().toMillis();
+    this.retryIncrementMs = audit.getRetryIncrement() == null ? 0 : audit.getRetryIncrement().toMillis();
   }
 
   /**
@@ -249,7 +253,7 @@ public class AuditorPersistenceImpl implements Auditor {
         }
       }
       try {
-        Thread.sleep(configuration.getRetryBaseMs() + retry * configuration.getRetryIncrementMs());
+        Thread.sleep(retryBaseMs + retry * retryIncrementMs);
       } catch (InterruptedException ex) {
         logger.warn("Liquibase retry delay interrupted");
       }

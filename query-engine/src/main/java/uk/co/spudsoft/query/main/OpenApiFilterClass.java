@@ -25,7 +25,8 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- *
+ * OpenAPI filter for removing some types from the schema, either because they are mappable from strings or have no specific schema.
+ * 
  * @author jtalbut
  */
 public class OpenApiFilterClass extends AbstractSpecFilter {

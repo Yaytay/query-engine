@@ -32,7 +32,6 @@ import java.util.List;
  * <p>
  * With a static configuration the issuer is not derived and any key from any of the configured JWKS endpoints may be used.
  * Key IDs (kid) only have to be unique across all JWKS endpoints.
- * <p>
  * 
  * @author jtalbut
  */
@@ -85,6 +84,8 @@ public class JwtValidationConfig {
    * <p>
    * Checks of the file are based entirely on the last-modified timestamp - if the file is on a filesystem that
    * does not support the last-modified timestamp changes will never be picked up.
+   * <P>
+   * Configuration files should specify this using <a href="https://en.wikipedia.org/wiki/ISO_8601#Durations">ISO860 Duration</a> format, i.e. PT10S.
    */
   private Duration filePollPeriodDuration = Duration.ofMinutes(2);
   
@@ -109,6 +110,8 @@ public class JwtValidationConfig {
    * The default period to cache JWKS data for.
    * <p>
    * This is expected to be overridden by cache-control/max-age headers on the JWKS response, so the default value is usually reasonable.
+   * <P>
+   * Configuration files should specify this using <a href="https://en.wikipedia.org/wiki/ISO_8601#Durations">ISO860 Duration</a> format, i.e. PT10S.
    */
   private Duration defaultJwksCacheDuration = Duration.ofMinutes(1);
 
@@ -205,6 +208,8 @@ public class JwtValidationConfig {
    * <p>
    * Checks of the file are based entirely on the last-modified timestamp - if the file is on a filesystem that
    * does not support the last-modified timestamp changes will never be picked up.
+   * <P>
+   * Configuration files should specify this using <a href="https://en.wikipedia.org/wiki/ISO_8601#Durations">ISO860 Duration</a> format, i.e. PT10S.
    * @return the time between checks of the file (also the time that the file must stabilise before it is re-read).
    */
   public Duration getFilePollPeriodDuration() {
@@ -219,6 +224,8 @@ public class JwtValidationConfig {
    * <p>
    * Checks of the file are based entirely on the last-modified timestamp - if the file is on a filesystem that
    * does not support the last-modified timestamp changes will never be picked up.
+   * <P>
+   * Configuration files should specify this using <a href="https://en.wikipedia.org/wiki/ISO_8601#Durations">ISO860 Duration</a> format, i.e. PT10S.
    * @param filePollPeriodDuration the time between checks of the file (also the time that the file must stabilise before it is re-read).
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -261,6 +268,8 @@ public class JwtValidationConfig {
    * Get the default period to cache JWKS data for.
    * <p>
    * This is expected to be overridden by cache-control/max-age headers on the JWKS response, so the default value is usually reasonable.
+   * <P>
+   * Configuration files should specify this using <a href="https://en.wikipedia.org/wiki/ISO_8601#Durations">ISO860 Duration</a> format, i.e. PT10S.
    * @return the default period to cache JWKS data for.
    */
   public Duration getDefaultJwksCacheDuration() {
@@ -271,6 +280,8 @@ public class JwtValidationConfig {
    * Set the default period to cache JWKS data for.
    * <p>
    * This is expected to be overridden by cache-control/max-age headers on the JWKS response, so the default value is usually reasonable.
+   * <P>
+   * Configuration files should specify this using <a href="https://en.wikipedia.org/wiki/ISO_8601#Durations">ISO860 Duration</a> format, i.e. PT10S.
    * @param defaultJwksCacheDuration the default period to cache JWKS data for.
    * @return this, so that the method may be called in a fluent manner.
    */

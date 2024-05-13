@@ -19,7 +19,8 @@ package uk.co.spudsoft.query.main;
 import com.google.common.base.Strings;
 
 /**
- *
+ * Helper class to convert an exception to a string in a similar manner to logback.
+ * 
  * @author jtalbut
  */
 public class ExceptionToString {
@@ -27,6 +28,12 @@ public class ExceptionToString {
   private ExceptionToString() {
   }
   
+  /**
+   * Convert an exception to a string detailing the exception, it's stack trace and the chain of causes.
+   * @param ex The {@link java.lang.Throwable} to process.
+   * @param delimiter Delimiter to put between each exception.
+   * @return A string detailing the exception.
+   */
   public static String convert(Throwable ex, String delimiter) {
     if (ex == null) {
       return null;

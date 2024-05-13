@@ -21,22 +21,38 @@ import uk.co.spudsoft.query.defn.Condition;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
 
 /**
- *
+ * Configuration of {@link Credentials} that also supports a {@link uk.co.spudsoft.query.defn.Condition}.
+ * <p>
+ * If a request does not meeting the Condition then it may not be used in the current pipeline.
  * @author jtalbut
  */
 public class ProtectedCredentials extends Credentials {
   
   private Condition condition;
 
+  /**
+   * Constructor.
+   */
   public ProtectedCredentials() {
     super();
   }
 
+  /**
+   * Constructor.
+   * 
+   * @param username The username.
+   * @param password The password.
+   * @param condition An optional condition upon the credentials - unless this condition is met the credentials will not be usable by the current pipeline.
+   */
   public ProtectedCredentials(String username, String password, Condition condition) {
     super(username, password);
     this.condition = condition;
   }
-  
+
+  /**
+   * An optional condition upon the credentials - unless this condition is met the credentials will not be usable by the current pipeline.
+   * @return optional condition upon the credentials 
+   */
   public Condition getCondition() {
     return condition;
   }
