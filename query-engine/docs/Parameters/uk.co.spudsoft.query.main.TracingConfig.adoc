@@ -1,6 +1,12 @@
 = TracingConfig
 
+Configuration of distributed tracing.
 
+The Query Engine can use either Open Telemetry (using HTTP) or Zipkin.
+ 
+
+All services participating in a distributed tracing must use the same propagation technique
+ - it is important that  is configured correctly.
 
 [cols="1,1a,4a",stripes=even]
 |===

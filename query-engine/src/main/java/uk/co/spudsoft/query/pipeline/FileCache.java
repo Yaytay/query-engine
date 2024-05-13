@@ -34,9 +34,9 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.dircache.DirCacheTree;
 
 /**
- *
+ * Cache of data associated with each file.
  * @author jtalbut
- * @param <T>
+ * @param <T> The type of data associated with files.
  */
 public class FileCache<T> {  
   
@@ -74,6 +74,12 @@ public class FileCache<T> {
     }
   }
   
+  /**
+   * Get an item from the cache, loading it dynamically if it is not in the cache.
+   * @param file The file to use as the cache key.
+   * @param mapper Function to convert the loaded file into an object of type T.
+   * @return A Future that will be completed either when the  file is found in the cache or when the mapper returns a value.
+   */
   public Future<T> get(DirCacheTree.File file, Function<Buffer, T> mapper) {
     T cached = cache.getIfPresent(file);
     Future<T> resultFuture;
@@ -95,6 +101,10 @@ public class FileCache<T> {
     return resultFuture;
   }
   
+  /**
+   * Purge invalid items from the cache.
+   * @param validKeys Set of keys that are known to be valid.
+   */
   public void purge(Set<DirCacheTree.File> validKeys) {
     cache.cleanUp();
     
@@ -107,6 +117,10 @@ public class FileCache<T> {
     }
   }
 
+  /**
+   * The number of items in the cache.
+   * @return number of items in the cache.
+   */
   public long size() {
     return cache.size();
   }

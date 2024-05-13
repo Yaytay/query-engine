@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * Sample data load for Microsoft SQL Server.
  * @author jtalbut
  */
 public class SampleDataLoaderMsSQL implements SampleDataLoader {

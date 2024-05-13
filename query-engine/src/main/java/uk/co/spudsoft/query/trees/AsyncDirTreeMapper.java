@@ -27,7 +27,7 @@ import uk.co.spudsoft.dircache.AbstractTree;
 import uk.co.spudsoft.dircache.DirCacheTree;
 
 /**
- *
+ * Helper class for converting one {@link uk.co.spudsoft.dircache.AbstractTree} into another.
  * @author jtalbut
  */
 public class AsyncDirTreeMapper {

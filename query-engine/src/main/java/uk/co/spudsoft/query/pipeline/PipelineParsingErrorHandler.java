@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * {@link com.fasterxml.jackson.databind.deser.DeserializationProblemHandler} that just reports any errors by WARN level log messages.
  * @author jtalbut
  */
 public class PipelineParsingErrorHandler extends DeserializationProblemHandler {

@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 
 /**
+ * Sample data load for PostgreSQL.
  *
  * @author jtalbut
  */

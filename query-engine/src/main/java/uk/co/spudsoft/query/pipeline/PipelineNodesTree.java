@@ -29,7 +29,10 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 import uk.co.spudsoft.query.defn.Format;
 
 /**
- *
+ * Tree of {@link uk.co.spudsoft.dircache.AbstractTree} specialized for pipelines.
+ * <p>
+ * This is for returning a tree of directories and pipeline definitions to the UI.
+ * 
  * @author jtalbut
  */
 public class PipelineNodesTree extends AbstractTree {
@@ -46,20 +49,39 @@ public class PipelineNodesTree extends AbstractTree {
                         Base class for pipelines and the directories that contain them.
                         </P>
                         """)
+  /**
+   * Base class for pipelines and the directories that contain them.
+   */
   public static class PipelineNode extends AbstractNode<PipelineNode> {
 
+    /**
+     * The path to the file, with no extension.
+     */
     private final String path;
 
+    /**
+     * Constructor.
+     * @param path full path to the file/directory.
+     */
     public PipelineNode(String path) {
       super(nameFromPath(path));
       this.path = undot(path);
     }
 
+    /**
+     * Constructor for a directory.
+     * @param path full path to the directory.
+     * @param children child directories/files.
+     */
     public PipelineNode(String path, List<PipelineNode> children) {
       super(nameFromPath(path), children);
       this.path = undot(path);
     }
 
+    /**
+     * The relative path to the node from the root.
+     * @return the relative path to the node from the root.
+     */
     @NotNull
     @Schema(description = """
                           <P>
@@ -72,6 +94,12 @@ public class PipelineNodesTree extends AbstractTree {
       return path;
     }
 
+    /**
+     * The children of the node.
+     * <p>
+     * If this is null then the node is a file, otherwise it is a directory.
+     * @return the children of the node.
+     */
     @Override
     @Schema(description = """
                           <P>
@@ -85,6 +113,10 @@ public class PipelineNodesTree extends AbstractTree {
       return super.getChildren();
     }
 
+    /**
+     * The leaf name of the node.
+     * @return the leaf name of the node.
+     */
     @Override
     @Schema(description = """
                           <P>
@@ -97,6 +129,13 @@ public class PipelineNodesTree extends AbstractTree {
       return super.getName();
     }
 
+    /**
+     * Return the name of the last component of the path without any extension.
+     * <p>
+     * i.e. the string between the last slash and the first dot after that.
+     * @param path The path to be extracted.
+     * @return the name of the last component of the path without any extension.
+     */
     static String nameFromPath(String path) {
       if (path == null) {
         return null;
@@ -113,6 +152,11 @@ public class PipelineNodesTree extends AbstractTree {
       }
     }
 
+    /**
+     * Remove any extension from the path.
+     * @param path The full path to the file.
+     * @return the path without any extension. 
+     */
     static String undot(String path) {
       int dotPos = path.indexOf(".");
       if (dotPos > 0) {
@@ -122,6 +166,9 @@ public class PipelineNodesTree extends AbstractTree {
     }
   }
 
+  /**
+   * A directory containing files or other directories.
+   */
   @Schema(description = """
                         <P>
                         A directory containing pipelines.
@@ -129,10 +176,19 @@ public class PipelineNodesTree extends AbstractTree {
                         """)
   public static class PipelineDir extends PipelineNode {
 
+    /**
+     * Constructor for a directory.
+     * @param path full path to the directory.
+     * @param children child directories/files.
+     */
     public PipelineDir(String path, List<PipelineNode> children) {
       super(path, children);
     }
 
+    /**
+     * Get the children of the directory.
+     * @return the children of the directory.
+     */
     @Override
     @NotNull
     @Schema(nullable = false
@@ -148,6 +204,9 @@ public class PipelineNodesTree extends AbstractTree {
 
   }
 
+  /**
+   * A single file.
+   */
   @Schema(description = """
                         <P>
                         A pipeline.
@@ -160,6 +219,15 @@ public class PipelineNodesTree extends AbstractTree {
     private final ImmutableList<Argument> arguments;
     private final ImmutableList<Format> destinations;
 
+    /**
+     * Constructor.
+     * 
+     * @param path The full path to the file.
+     * @param title The title of the pipeline, extracted from the file.
+     * @param description The description of the pipeline, extracted from the file.
+     * @param arguments The arguments to the pipeline, extracted from the file.
+     * @param destinations The output formats that the pipeline supports, extracted from the file.
+     */
     public PipelineFile(String path, String title, String description, List<Argument> arguments, List<Format> destinations) {
       super(path);
       this.title = title;
@@ -168,6 +236,10 @@ public class PipelineNodesTree extends AbstractTree {
       this.destinations = ImmutableCollectionTools.copy(destinations);
     }
 
+    /**
+     * The title of the pipeline, to be displayed in the UI.
+     * @return the title of the pipeline, to be displayed in the UI.
+     */
     @Schema(description = """
                           <P>
                           The title of the pipeline, to be displayed in the UI.
@@ -179,6 +251,10 @@ public class PipelineNodesTree extends AbstractTree {
       return title;
     }
 
+    /**
+     * The description of the pipeline.
+     * @return the description of the pipeline.
+     */
     @Schema(description = """
                           <P>
                           The description of the pipeline.
@@ -190,6 +266,21 @@ public class PipelineNodesTree extends AbstractTree {
       return description;
     }
 
+    /**
+     * Declared arguments to the Pipeline.
+     * <P>
+     * Pipelines can receive arguments via the HTTP query string.
+     * Any arguments may be provided and may be processed by the templates of the pipeline, even if they are not
+     * declared here.
+     * Declare all arguments here, otherwise no-one will know that they exist unless they read the pipeline definition.
+     * <P>
+     * The order in which Arguments are defined here is relevant as it affects the order in which they will be displayed for
+     * Interactive Pipelines.
+     * The order in which Arguments are provided in the query string is only relevant if an Argument can take multiple values (in which
+     * case they will be presented to the query in the order that they appear in the query string, regardless of any other arguments appearing
+     * between them).
+     * @return declared arguments to the Pipeline.
+     */
     @ArraySchema(
             arraySchema = @Schema(
                     description = """
@@ -219,6 +310,36 @@ public class PipelineNodesTree extends AbstractTree {
       return arguments;
     }
 
+    /**
+     * The outputs that this Pipeline supports.
+     * The format to use for a pipeline is chosen by according to the following rules:
+     * <ol>
+     * <li><pre>_fmt</pre> query string.<br>
+     * If the HTTP request includes a <pre>_fmt</pre> query string argument each Format specified in the Pipeline will be checked (in order)
+     * for a matching response from the {@link uk.co.spudsoft.query.defn.Format#getName()} method.
+     * The first matching Format will be returned.
+     * If no matching Format is found an error will be returned.
+     * 
+     * <li>Path extension.<br>
+     * If the path in the HTTP request includes a '.' (U+002E, Unicode FULL STOP) after the last '/' (U+002F, Unicode SOLIDUS) character everything following that
+     * character will be considered to be the extension, furthermore the extension (and full stop character) will be removed from the filename being sought.
+     * If an extension is found each Format specified in the Pipeline will be checked (in order)
+     * for a matching response from the {@link uk.co.spudsoft.query.defn.Format#getExtension()} method.
+     * The first matching Format will be returned.
+     * If no matching Format is found an error will be returned.
+     * 
+     * <li>Accept header.<br>
+     * If the HTTP request includes an 'Accept' header each Format specified in the Pipeline will be checked (in order)
+     * for a matching response from the {@link uk.co.spudsoft.query.defn.Format#getMediaType() ()} method.
+     * Note that most web browsers include "*\\/*" in their default Accept headers, which will match any Format that specifies a MediaType.
+     * The first matching Format will be returned.
+     * If no matching Format is found an error will be returned.
+     * 
+     * <li>Default<br>
+     * If the request does not use any of these mechanisms then the first Format specified in the Pipeline will be used.
+     * </ol>
+     * @return the outputs that this Pipeline supports.
+     */
     @ArraySchema(
             arraySchema = @Schema(
                     description = """

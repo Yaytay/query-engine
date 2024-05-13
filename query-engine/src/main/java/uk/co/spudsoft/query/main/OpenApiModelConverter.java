@@ -40,7 +40,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Open API {@link io.swagger.v3.core.converter.ModelConverter} for tidying up aspects of the generated schema.
- * <P>
  * <ul>
  * <li>Removes "empty" property from {@link java.util.List} and {@link java.util.Map} objects.
  * <li>Outputs correct schema for {@link java.time.Duration} type, rather than expecting an Object.

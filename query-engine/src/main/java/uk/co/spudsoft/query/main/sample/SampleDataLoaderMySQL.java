@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 
 /**
+ * Sample data load for MySQL.
  *
  * @author jtalbut
  */

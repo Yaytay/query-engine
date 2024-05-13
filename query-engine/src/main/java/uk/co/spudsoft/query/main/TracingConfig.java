@@ -20,7 +20,13 @@ import com.google.common.base.Strings;
 import java.net.URI;
 
 /**
- *
+ * Configuration of distributed tracing.
+ * <p>
+ * The Query Engine can use either Open Telemetry (using HTTP) or Zipkin.
+ * <p>
+ * All services participating in a distributed tracing must use the same propagation technique
+ * - it is important that {@link #propagator} is configured correctly.
+ * 
  * @author jtalbut
  */
 public class TracingConfig {
@@ -194,32 +200,32 @@ public class TracingConfig {
   /**
    * Validate the provided parameters.
    * 
-   * @param fieldName The name of the parent parameter, to be used in exception messages.
+   * @param path The name of the parent parameter, to be used in exception messages.
    * @throws IllegalArgumentException if anything in the parameters is invalid.
    */
-  public void validate(String fieldName) throws IllegalArgumentException {
+  public void validate(String path) throws IllegalArgumentException {
     if (protocol != null && Strings.isNullOrEmpty(serviceName)) {
-      throw new IllegalArgumentException("Tracing is enabled (" + fieldName + ".protocol != none) and " + fieldName + ".serviceName is not set");
+      throw new IllegalArgumentException("Tracing is enabled (" + path + ".protocol != none) and " + path + ".serviceName is not set");
     }
     if (sampler == TracingSampler.ratio) {
       if (sampleRatio < 0.0) {
-        throw new IllegalArgumentException("Parameter " + fieldName + ".sampler is set to ratio and the " + fieldName + ".sampleRatio < 0.0");
+        throw new IllegalArgumentException("Parameter " + path + ".sampler is set to ratio and the " + path + ".sampleRatio < 0.0");
       } else if (sampleRatio > 1.0) {
-        throw new IllegalArgumentException("Parameter " + fieldName + ".sampler is set to ratio and the " + fieldName + ".sampleRatio > 1.0");
+        throw new IllegalArgumentException("Parameter " + path + ".sampler is set to ratio and the " + path + ".sampleRatio > 1.0");
       }
     }
     if (sampler == TracingSampler.parent && rootSampler == TracingSampler.ratio) {
       if (sampleRatio < 0.0) {
-        throw new IllegalArgumentException("Parameter " + fieldName + ".sampler is set to parent, " + fieldName + ".rootSampler is set to ratio and the " + fieldName + ".sampleRatio < 0.0");
+        throw new IllegalArgumentException("Parameter " + path + ".sampler is set to parent, " + path + ".rootSampler is set to ratio and the " + path + ".sampleRatio < 0.0");
       } else if (sampleRatio > 1.0) {
-        throw new IllegalArgumentException("Parameter " + fieldName + ".sampler is set to parent, " + fieldName + ".rootSampler is set to ratio and the " + fieldName + ".sampleRatio > 1.0");
+        throw new IllegalArgumentException("Parameter " + path + ".sampler is set to parent, " + path + ".rootSampler is set to ratio and the " + path + ".sampleRatio > 1.0");
       }
     }
     if (!Strings.isNullOrEmpty(url)) {
       try {      
         new URI(url);
       } catch (Throwable ex) {
-        throw new IllegalArgumentException("Parameter " + fieldName + ".url is not a valid URL: " + ex.getMessage());
+        throw new IllegalArgumentException("Parameter " + path + ".url is not a valid URL: " + ex.getMessage());
       }
     }
   }  

@@ -20,15 +20,36 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 
 /**
- *
+ * Interface for a class to prepare a database with Query Engine sample data.
+ * <p>
+ * The majority of the work in preparing the database is handled by a database-platform-specific script file,
+ * but there are some platform specific actions that mean that different platforms require slightly different handling.
+ * 
  * @author jtalbut
  */
 public interface SampleDataLoader {
   
+  /**
+   * Get the name of the same data loader.
+   * @return the name of the same data loader.
+   */
   String getName();
   
+  /**
+   * Get the identifier character to use around each identifier in the script.
+   * @return the identifier character to use around each identifier in the script.
+   */
   String getIdentifierQuote();
   
+  /**
+   * Asynchronous method to do whatever is required to prepare the test databases.
+   * 
+   * @param vertx Vertx instance.
+   * @param url Vertx database URL (not JDBC URL).
+   * @param username Username for accessing the database.
+   * @param password Password for accessing the database.
+   * @return A Future that will be completed when the database has been prepared.
+   */
   Future<Void> prepareTestDatabase(Vertx vertx, String url, String username, String password);
   
 }

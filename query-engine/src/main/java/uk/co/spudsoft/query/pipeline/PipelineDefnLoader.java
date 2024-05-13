@@ -61,7 +61,10 @@ import uk.co.spudsoft.query.json.ObjectMapperConfiguration;
 import uk.co.spudsoft.query.web.ServiceException;
 
 /**
- *
+ * Class that provides a loaded pipeline and that manages the caches to do so efficiently.
+ * <P>
+ * This is largely based on using the {@link uk.co.spudsoft.dircache.DirCache} to manage the filesystem.
+ * 
  * @author jtalbut
  */
 @SuppressFBWarnings(value = "PATH_TRAVERSAL_IN", justification = "The path should come from configuration, not end user")
@@ -282,6 +285,11 @@ public final class PipelineDefnLoader {
     }
   }
   
+  /**
+   * Get a tree of pipelines that are accessible to the current request context.
+   * @param req The request context to use in assessing accessibility.
+   * @return a Future that will be completed with a tree of pipelines that are accessible to the current request context.
+   */
   public Future<PipelineNodesTree.PipelineDir> getAccessible(RequestContext req) {
     
     return AsyncDirTreeMapper.<PipelineNodesTree.PipelineNode, PipelineNodesTree.PipelineDir, PipelineNodesTree.PipelineFile>map(
@@ -414,9 +422,26 @@ public final class PipelineDefnLoader {
     });
   }  
   
+  /**
+   * Record containing a {@link uk.co.spudsoft.dircache.DirCacheTree.File} and a {@link uk.co.spudsoft.query.defn.Pipeline}.
+   * @param file {@link uk.co.spudsoft.dircache.DirCacheTree.File} representing the file on disc.
+   * @param pipeline {@link uk.co.spudsoft.query.defn.Pipeline} definition loaded from the file.
+   */
   @SuppressFBWarnings(value = {"EI_EXPOSE_REP", "EI_EXPOSE_REP2"}, justification = "It's job is to container mutable objects")
   public record PipelineAndFile(DirCacheTree.File file, Pipeline pipeline){};
   
+  /**
+   * Load a pipeline from a specific path.
+   * <p>
+   * The pipeline must be accessible to the current request context, and will be read from cache if it's already been loaded.
+   * 
+   * @param srcPath The path to the pipeline definition.
+   * @param context The request context.
+   * @param parseErrorHandler Handler for any exceptions that occur during the loading of the file.
+   * @return A Future that will be completed with a {@link PipelineAndFile} when then pipeline has been read.
+   * @throws IOException if an IO error occurs.
+   * @throws ServiceException If the path is not valid.
+   */
   public Future<PipelineAndFile> loadPipeline(String srcPath, RequestContext context, BiConsumer<DirCacheTree.File, Throwable> parseErrorHandler) throws IOException, ServiceException {
     String path = validatePath(srcPath);
     
