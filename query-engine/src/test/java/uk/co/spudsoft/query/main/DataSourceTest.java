@@ -20,6 +20,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  *
@@ -50,6 +52,14 @@ public class DataSourceTest {
     DataSourceConfig ds = new DataSourceConfig().setAdminUser(new Credentials().setUsername("admin"));
     assertThat(ds.getAdminUser().getUsername(), equalTo("admin"));
   }
+  
+  @Test
+  public void testGetMinPoolSize() {
+    DataSourceConfig ds = new DataSourceConfig();
+    assertThat(ds.getMinPoolSize(), equalTo(4));    
+    ds.setMinPoolSize(17);
+    assertThat(ds.getMinPoolSize(), equalTo(17));
+  }
 
   @Test
   public void testGetMaxPoolSize() {
@@ -58,5 +68,23 @@ public class DataSourceTest {
     ds = new DataSourceConfig().setMaxPoolSize(17);
     assertThat(ds.getMaxPoolSize(), equalTo(17));
   }
+  
+  @Test
+  public void testValidate() {
+    
+    IllegalArgumentException ex;
+    
+    ex = assertThrows(IllegalArgumentException.class, () -> {
+      DataSourceConfig ds = new DataSourceConfig();
+      ds.validate("datasource");
+    });
+    assertEquals("datasource.url is not set", ex.getMessage());
 
+    ex = assertThrows(IllegalArgumentException.class, () -> {
+      DataSourceConfig ds = new DataSourceConfig();
+      ds.setUrl("£$%");
+      ds.validate("datasource");
+    });
+    assertEquals("datasource.url is not a valid url: Malformed escape pair at index 2: £$%", ex.getMessage());
+  }
 }

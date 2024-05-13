@@ -94,6 +94,20 @@ public class ParametersTest {
   }
 
   @Test
+  public void testEnableAuth() {
+    Parameters instance = new Parameters();
+    assertTrue(instance.isEnableBasicAuth());
+    assertTrue(instance.isEnableBearerAuth());
+    instance.setEnableBasicAuth(false);
+    assertFalse(instance.isEnableBasicAuth());
+    assertTrue(instance.isEnableBearerAuth());
+    instance.setEnableBasicAuth(true);
+    instance.setEnableBearerAuth(false);
+    assertTrue(instance.isEnableBasicAuth());
+    assertFalse(instance.isEnableBearerAuth());
+  }
+  
+  @Test
   public void testGetPipelineCache() {
     Parameters instance = new Parameters();
     assertNotNull(instance.getPipelineCache());
@@ -313,6 +327,13 @@ public class ParametersTest {
       config.validate();
     }).getMessage();
     assertEquals("Sessions are configured with oauth without known JWKS endpoints being configured, please set jwt.jwksEndpoints.", msg);
+    
+    instance.setLogging(null);
+    instance.setTracing(null);
+    instance.setSession(null);
+    instance.setPipelineCache(null);
+    instance.setPersistence(null);
+    instance.validate();
     
   }
 

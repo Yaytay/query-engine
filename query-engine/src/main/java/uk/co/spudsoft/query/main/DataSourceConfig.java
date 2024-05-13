@@ -137,7 +137,12 @@ public class DataSourceConfig {
     try {
       new URI(url);
     } catch (URISyntaxException x) {
-      throw new IllegalArgumentException(path + ".url is not a valid url");
+      String message = x.getMessage();
+      if (Strings.isNullOrEmpty(message)) {
+        throw new IllegalArgumentException(path + ".url is not a valid url");
+      } else {
+        throw new IllegalArgumentException(path + ".url is not a valid url: " + message);
+      }
     }
   }
   
