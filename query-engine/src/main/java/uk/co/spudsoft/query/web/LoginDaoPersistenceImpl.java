@@ -45,6 +45,7 @@ import uk.co.spudsoft.query.main.DataSourceConfig;
 import uk.co.spudsoft.query.main.Persistence;
 
 /**
+ * Implementation of {@link LoginDao} that stores data in a database.
  *
  * @author jtalbut
  */
@@ -411,6 +412,11 @@ public class LoginDaoPersistenceImpl implements LoginDao {
             
   }
 
+  /**
+   * Store a token in the local cache.
+   * @param id Token ID.
+   * @param tt Token, with timestamp.
+   */
   void cacheToken(String id, TimestampedToken tt) {
     Entry<String, TimestampedToken> oldest = null;
     int cacheSize;
@@ -442,6 +448,10 @@ public class LoginDaoPersistenceImpl implements LoginDao {
     return jdbcHelper.runSqlUpdate("deleteToken", deleteToken, ps -> ps.setString(1, id)).mapEmpty();    
   }
   
+  /**
+   * Get the size of the token cache.
+   * @return the size of the token cache.
+   */
   int getTokenCacheSize() {
     synchronized (tokenCache) {
       return tokenCache.size();

@@ -54,7 +54,7 @@ import uk.co.spudsoft.query.main.SessionConfig;
 import uk.co.spudsoft.query.web.LoginDao.RequestData;
 
 /**
- *
+ * Vert.x {@link io.vertx.core.Handler}&lt;{@link io.vertx.ext.web.RoutingContext}&gt; for handling login requests.
  * @author jtalbut
  */
 public class LoginRouter  implements Handler<RoutingContext> {
@@ -79,6 +79,21 @@ public class LoginRouter  implements Handler<RoutingContext> {
   private final ImmutableList<String> requiredAuds;
   private final CookieConfig sessionCookie;
 
+  /**
+   * Factory method.
+   * @param vertx The Vert.x instance.
+   * @param loginDao Datastore for login data.
+   * @param openIdDiscoveryHandler Handler from <a href="https://github.com/Yaytay/jwt-validator-vertx">jwt-validator-vertx</a> for performing OpenID Connect Discovery.
+   * @param jwtValidator Handler from <a href="https://github.com/Yaytay/jwt-validator-vertx">jwt-validator-vertx</a> for validating JWTs.
+   * @param requestContextBuilder Creator of {@link uk.co.spudsoft.query.exec.conditions.RequestContext} objects, used here for some utility functions.
+   * @param sessionConfig Configuration data.
+   * @param requiredAuds A valid JWT must contain at least one of these audience values.
+   * @param outputAllErrorMessages In a production environment error messages should usually not leak information that may assist a bad actor, set this to true to return full details in error responses.
+   * <p>
+   * Note that everything is always logged.
+   * @param sessionCookie Configuration data for the session cookie.
+   * @return a newly created LoginRouter.
+   */
   public static LoginRouter create(Vertx vertx
           , LoginDao loginDao
           , OpenIdDiscoveryHandler openIdDiscoveryHandler
@@ -103,6 +118,20 @@ public class LoginRouter  implements Handler<RoutingContext> {
     return RAW_BASE64_URLENCODER.encodeToString(bytes);
   }
 
+  /**
+   * Constructor.
+   * @param vertx The Vert.x instance.
+   * @param loginDao Datastore for login data.
+   * @param openIdDiscoveryHandler Handler from <a href="https://github.com/Yaytay/jwt-validator-vertx">jwt-validator-vertx</a> for performing OpenID Connect Discovery.
+   * @param jwtValidator Handler from <a href="https://github.com/Yaytay/jwt-validator-vertx">jwt-validator-vertx</a> for validating JWTs.
+   * @param requestContextBuilder Creator of {@link uk.co.spudsoft.query.exec.conditions.RequestContext} objects, used here for some utility functions.
+   * @param sessionConfig Configuration data.
+   * @param requiredAuds A valid JWT must contain at least one of these audience values.
+   * @param outputAllErrorMessages In a production environment error messages should usually not leak information that may assist a bad actor, set this to true to return full details in error responses.
+   * <p>
+   * Note that everything is always logged.
+   * @param sessionCookie Configuration data for the session cookie.
+   */
   @SuppressFBWarnings("EI_EXPOSE_REP2")
   public LoginRouter(Vertx vertx
           , LoginDao loginDao
@@ -229,7 +258,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
     }
   }
 
-  void handleLogout(RoutingContext event) {
+  private void handleLogout(RoutingContext event) {
   
     if (sessionCookie != null && !Strings.isNullOrEmpty(sessionCookie.getName())) {
       
@@ -252,7 +281,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
     }
   }
 
-  boolean handleLoginResponse(RoutingContext event) {
+  private boolean handleLoginResponse(RoutingContext event) {
     String code = event.request().getParam("code");
     if (Strings.isNullOrEmpty(code)) {
       QueryRouter.internalError(new IllegalArgumentException("Code not specified"), event, outputAllErrorMessages);
@@ -349,7 +378,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
     return false;
   }
 
-  String buildTargetUrlWithAccessToken(String targetUrl, String accessToken) {
+  private static String buildTargetUrlWithAccessToken(String targetUrl, String accessToken) {
     String targetUrlBase = targetUrl;
     return targetUrlBase
             + (targetUrlBase.contains("?") ? "&" : "?")
@@ -367,10 +396,19 @@ public class LoginRouter  implements Handler<RoutingContext> {
     return null;
   }
   
+  /**
+   * Create a cookie according to the passed in values.
+   * @param config General cookie configuration.
+   * @param maxAge Maximum age of the cookie in seconds from now.
+   * @param wasTls True if the request to this service was originally HTTPS.
+   * @param domain The domain name in the original request to this service.
+   * @param value The value to assign to the cookie.
+   * @return A new Cookie.
+   */
   static Cookie createCookie(CookieConfig config, long maxAge, boolean wasTls, String domain, String value) {
     Cookie cookie = Cookie.cookie(config.getName(), value);
-    cookie.setHttpOnly(config.isHttpOnly() != null ? config.isHttpOnly() : false);
-    cookie.setSecure(config.isSecure() != null ? config.isSecure() : wasTls);
+    cookie.setHttpOnly(config.isHttpOnly() == null ? false : config.isHttpOnly());
+    cookie.setSecure(config.isSecure() == null ? wasTls : config.isSecure());
     cookie.setDomain(config.getDomain() != null ? config.getDomain() : domain);
     cookie.setPath(config.getPath() != null ? config.getPath() : "/");
     if (config.getSameSite() != null) {
@@ -380,7 +418,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
     return cookie;
   }
 
-  boolean handleLoginRequest(RoutingContext event) {
+  private boolean handleLoginRequest(RoutingContext event) {
     String targetUrl = event.request().getParam("return");
     if (Strings.isNullOrEmpty(targetUrl)) {
       QueryRouter.internalError(new IllegalArgumentException("Target URL not specified"), event, outputAllErrorMessages);
@@ -414,7 +452,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
     }
   }
 
-  boolean performOAuthRedirect(RoutingContext event, String targetUrl) {
+  private boolean performOAuthRedirect(RoutingContext event, String targetUrl) {
     String provider = event.request().getParam("provider");
     if (Strings.isNullOrEmpty(provider)) {
       QueryRouter.internalError(new IllegalArgumentException("OAuth provider not specified"), event, outputAllErrorMessages);
@@ -443,6 +481,15 @@ public class LoginRouter  implements Handler<RoutingContext> {
     return false;
   }
 
+  /**
+   * Return true if this authentication endpoint should undergo <a href="https://openid.net/specs/openid-connect-discovery-1_0.html">OpenID Connect Discovery</a>.
+   * <p>
+   * If the AuthEndpoint does not have an issuer this will always be false, because OpenID Connect Discovery requires an issuer.
+   * Otherwise, returns true if the endpoint does not have both an authorization endpoint and a token endpoint or it is not within its valid date.
+   * 
+   * @param authEndpoint the configured (or already discovered) endpoint details.
+   * @return true if this authentication endpoint should undergo OpenID Connect Discover.
+   */
   static boolean shouldDiscover(AuthEndpoint authEndpoint) {
     return !Strings.isNullOrEmpty(authEndpoint.getIssuer())
             && (

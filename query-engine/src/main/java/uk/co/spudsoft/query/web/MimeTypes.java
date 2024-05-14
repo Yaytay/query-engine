@@ -21,13 +21,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
+ * Helper class for getting the MimeType of files.
+ * Basically a wrapper around {@link io.vertx.core.http.impl.MimeMapping#getMimeTypeForExtension(java.lang.String)} with an override for some extensions.
  * @author jtalbut
  */
 public class MimeTypes {
   
   private static final Map<String, String> OVERRIDE = new HashMap<>();
 
+  /**
+   * Overridden MIME types.
+   */
   static {
     OVERRIDE.put("yaml", "application/yaml");
     OVERRIDE.put("yml", "application/yaml");
@@ -37,6 +41,11 @@ public class MimeTypes {
   private MimeTypes() {
   }
   
+  /**
+   * Get the MimeType for an extension.
+   * @param ext The file extension, excluding a leading dot.
+   * @return the MimeType for an extension.
+   */
   public static String getMimeTypeForExtension(String ext) {
     String result = OVERRIDE.get(ext);
     if (result == null) {
@@ -44,11 +53,19 @@ public class MimeTypes {
     }
     return result;
   }
+  
+  /**
+   * Get the MimeType for a filename.
+   * <p>
+   * Extracts the extension and then called {@link #getMimeTypeForExtension(java.lang.String)).
+   * @param filename The filename.
+   * @return the MimeType for a filename.
+   */
   public static String getMimeTypeForFilename(String filename) {
     int li = filename.lastIndexOf('.');
     if (li != -1 && li != filename.length() - 1) {
       String ext = filename.substring(li + 1, filename.length());
-      return MimeTypes.getMimeTypeForExtension(ext);
+      return getMimeTypeForExtension(ext);
     }
     return null;
   }

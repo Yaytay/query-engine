@@ -28,7 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * Implementation of {@link LoginDao} that stores data in memory.
  * @author jtalbut
  */
 public class LoginDaoMemoryImpl implements LoginDao {
@@ -78,6 +78,10 @@ public class LoginDaoMemoryImpl implements LoginDao {
   private final Duration purgeDelay;
   private final AtomicBoolean prepared = new AtomicBoolean(false);
 
+  /**
+   * Constructor.
+   * @param purgeDelay The time that expired tokens will remain in memory before being purged.
+   */
   public LoginDaoMemoryImpl(Duration purgeDelay) {
     this.purgeDelay = purgeDelay;
   }
@@ -89,6 +93,20 @@ public class LoginDaoMemoryImpl implements LoginDao {
     }
   }
   
+  /**
+   * Store information regarding an OAuth request into the database.
+   * <p>
+   * This method also purges any requests that have expired more than the purgeDelay before now.
+   * 
+   * @param state The OAuth state value passed to the OAuth provider.
+   * This value is used as the key for accessing requests in future.
+   * @param provider The OAuth provider.
+   * @param codeVerifier The OAuth PKCE code verifier calculated from the code passed to the OAuth provider.
+   * @param nonce The OAuth nonce value passed to the OAuth provider.
+   * @param redirectUri The OAuth redirect URI passed to the OAuth provider.
+   * @param targetUrl The URL that the user should be directed to after login has completed.
+   * @return A Future that will be completed when the request has been recorded.
+   */
   @Override
   public Future<Void> store(String state, String provider, String codeVerifier, String nonce, String redirectUri, String targetUrl) {
 
