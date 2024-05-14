@@ -52,6 +52,9 @@ import uk.co.spudsoft.query.exec.FormatInstance;
 
 
 /**
+ * Vert.x {@link io.vertx.core.Handler}&lt;{@link io.vertx.ext.web.RoutingContext}&gt; for handling pipeline requests.
+ * <p>
+ * The primary entry point for the Query Engine.
  *
  * @author jtalbut
  */
@@ -71,6 +74,16 @@ public class QueryRouter implements Handler<RoutingContext> {
   private final String outputCacheDir;
   private final boolean outputAllErrorMessages;
 
+  /**
+   * 
+   * @param vertx Vertx instance.
+   * @param auditor Auditor interface for tracking requests.
+   * @param requestContextBuilder The builder that does the actual work.
+   * @param loader Pipeline loader.
+   * @param pipelineExecutor Pipeline executor.
+   * @param outputCacheDir Directory to store output in where output caching is enabled (see {@link uk.co.spudsoft.query.defn.Pipeline#cacheDuration}).
+   * @param outputAllErrorMessages In a production environment error messages should usually not leak information that may assist a bad actor, set this to true to return full details in error responses.
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The PipelineDefnLoader is mutable because it changes the filesystem")
   public QueryRouter(Vertx vertx
           , Auditor auditor

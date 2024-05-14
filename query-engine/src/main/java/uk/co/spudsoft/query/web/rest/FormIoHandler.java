@@ -54,6 +54,10 @@ import uk.co.spudsoft.query.web.formio.FormBuilder;
 import static uk.co.spudsoft.query.web.rest.InfoHandler.reportError;
 
 /**
+ * JAX-RS class implementing the REST API for outputting <a href="https://form.io/">FormIO</a> definitions of forms for capturing pipeline arguments..
+ * <p>
+ * FormIO is used as the mechanism for representing arguments because it provides a simple way for front ends to display pipeline arguments 
+ * without introducing overly complex dependencies.
  *
  * @author jtalbut
  */
@@ -85,6 +89,14 @@ public class FormIoHandler {
     
   }
   
+  /**
+   * Constructor.
+   * 
+   * @param loader Loader for providing the details of pipelines.
+   * @param filterFactory Factory object for creating {@link uk.co.spudsoft.query.exec.filters.Filter} instances, used her to document the available Filters.
+   * @param outputAllErrorMessages In a production environment error messages should usually not leak information that may assist a bad actor, set this to true to return full details in error responses.
+   * @param requireSession If true any requests that do not have a login session will fail.
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The PipelineDefnLoader is mutable because it changes the filesystem")
   public FormIoHandler(PipelineDefnLoader loader, FilterFactory filterFactory, boolean outputAllErrorMessages, boolean requireSession) {
     this.loader = loader;
@@ -93,6 +105,13 @@ public class FormIoHandler {
     this.requireSession = requireSession;
   }
   
+  /**
+   * Get the formio definition of a single pipeline.
+   * 
+   * @param response JAX-RS Asynchronous response, connected to the Vertx request by the RESTeasy JAX-RS implementation.
+   * @param path The path to the pipeline that is to be loaded and have it's arguments converted to a form.
+   * @param columns The number of columns that the form should occupy.
+   */
   @GET
   @Path("/{path:.*}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -108,8 +127,6 @@ public class FormIoHandler {
   )
   public void getFormIO(
           @Suspended final AsyncResponse response
-          , @Context HttpServerRequest request
-          , @Context ObjectMapper objectMapper
           , @PathParam("path") String path
           , @QueryParam("columns") Integer columns
   ) {

@@ -26,7 +26,10 @@ import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 
 /**
- *
+ * Vert.x {@link io.vertx.core.Handler}&lt;{@link io.vertx.ext.web.RoutingContext}&gt; for extracting the {@link uk.co.spudsoft.query.exec.conditions.RequestContext} and storing it in the {@link io.vertx.ext.web.RoutingContext}.
+ * <p>
+ * The RequestContextHandler is not a terminal handler, if the request context is extracted successfully the request will be passed on to the next handler in the chain.
+ * 
  * @author jtalbut
  */
 public class RequestContextHandler implements Handler<RoutingContext> {
@@ -38,6 +41,12 @@ public class RequestContextHandler implements Handler<RoutingContext> {
   private final RequestContextBuilder requestContextBuilder;
   private final boolean outputAllErrorMessages;
 
+  /**
+   * Constructor.
+   * @param vertx Vertx instance.
+   * @param requestContextBuilder The builder that does the actual work.
+   * @param outputAllErrorMessages In a production environment error messages should usually not leak information that may assist a bad actor, set this to true to return full details in error responses.
+   */
   public RequestContextHandler(Vertx vertx, RequestContextBuilder requestContextBuilder,  boolean outputAllErrorMessages) {
     this.vertx = vertx;
     this.requestContextBuilder = requestContextBuilder;
@@ -58,6 +67,11 @@ public class RequestContextHandler implements Handler<RoutingContext> {
             });
   }
   
+  /**
+   * Helper method to get the RequestContext from the Vertx context.
+   * @param context The Vertx context.
+   * @return The RequestContext, if it has been successfully added.
+   */
   public static RequestContext getRequestContext(Context context) {
     return context == null ? null : context.getLocal(KEY);
   }

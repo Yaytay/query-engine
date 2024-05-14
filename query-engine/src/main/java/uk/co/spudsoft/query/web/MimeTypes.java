@@ -57,7 +57,7 @@ public class MimeTypes {
   /**
    * Get the MimeType for a filename.
    * <p>
-   * Extracts the extension and then called {@link #getMimeTypeForExtension(java.lang.String)).
+   * Extracts the extension and then called {@link #getMimeTypeForExtension(java.lang.String)}.
    * @param filename The filename.
    * @return the MimeType for a filename.
    */

@@ -26,7 +26,7 @@ import uk.co.spudsoft.dircache.AbstractTree;
 import uk.co.spudsoft.dircache.AbstractTree.AbstractNode;
 
 /**
- *
+ * Specialization of {@link uk.co.spudsoft.dircache.AbstractTree} for reporting the Query Engine documentation.
  * @author jtalbut
  */
 public class DocNodesTree extends AbstractTree {

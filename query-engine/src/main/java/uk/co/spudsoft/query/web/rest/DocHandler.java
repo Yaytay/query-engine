@@ -23,14 +23,12 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpServerRequest;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.container.Suspended;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.io.FileNotFoundException;
@@ -45,7 +43,14 @@ import uk.co.spudsoft.query.web.MimeTypes;
 import static uk.co.spudsoft.query.web.rest.InfoHandler.reportError;
 
 /**
- *
+ * JAX-RS class implementing the REST API for outputting the (non-javadoc) documentation.
+ * <p>
+ * Some of this documentation is written as <a href="https://asciidoc.org/">AsciiDoc</a> files, others
+ * are AsciiDoc generated from javadoc.
+ * All the AsciiDoc files are processed into HTML files by the build process.
+ * <p>
+ * The files and directories are all hardcoded in this file, partly to ensure security and partly to provide control over the presentation of the files (order and naming).
+ * 
  * @author jtalbut
  */
 @Path("/docs")
@@ -58,6 +63,12 @@ public class DocHandler {
   private final boolean requireSession;
   
   private static final String BASE_DIR = "/docs/";
+  
+  /**
+   * The tree of files that can be served.
+   * <p>
+   * This is could be private, but is used by tests.
+   */
   static final DocNodesTree.DocDir DOCS = new DocNodesTree.DocDir(
           "/"
           , Arrays.asList(new DocNodesTree.DocFile("Introduction.html", "Introduction")
@@ -120,11 +131,21 @@ public class DocHandler {
     }
   }
 
+
+  /**
+   * Constructor.
+   * @param outputAllErrorMessages In a production environment error messages should usually not leak information that may assist a bad actor, set this to true to return full details in error responses.
+   * @param requireSession If true any requests that do not have a login session will fail.
+   */
   public DocHandler(boolean outputAllErrorMessages, boolean requireSession) {
     this.outputAllErrorMessages = outputAllErrorMessages;
     this.requireSession = requireSession;
   }
   
+  /**
+   * Return a tree of available  documentation.
+   * @param response JAX-RS Asynchronous response, connected to the Vertx request by the RESTeasy JAX-RS implementation.
+   */
   @GET
   @Path("/")
   @Produces(MediaType.APPLICATION_JSON)
@@ -142,7 +163,6 @@ public class DocHandler {
   )
   public void getAvailable(
           @Suspended final AsyncResponse response
-          , @Context HttpServerRequest request
   ) {
     try {
       HandlerAuthHelper.getRequestContext(Vertx.currentContext(), requireSession);
@@ -154,6 +174,11 @@ public class DocHandler {
 
   }
   
+  /**
+   * Get a single file from the documentation.
+   * @param response JAX-RS Asynchronous response, connected to the Vertx request by the RESTeasy JAX-RS implementation.
+   * @param path Path to the requested file.
+   */
   @GET
   @Path("/{path:.*}")
   @Operation(description = "Return some documentation")
@@ -164,7 +189,6 @@ public class DocHandler {
   )
   public void getDoc(
           @Suspended final AsyncResponse response
-          , @Context HttpServerRequest request
           , @PathParam("path") String path
   ) {
     

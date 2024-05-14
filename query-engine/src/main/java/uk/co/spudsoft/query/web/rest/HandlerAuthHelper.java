@@ -23,14 +23,21 @@ import uk.co.spudsoft.query.web.RequestContextHandler;
 import uk.co.spudsoft.query.web.ServiceException;
 
 /**
- *
+ * Helper class for extracting a {@link uk.co.spudsoft.query.exec.conditions.RequestContext} from a Vertx {@link io.vertx.core.Context}.
+ * 
  * @author jtalbut
  */
 public class HandlerAuthHelper {
 
   private HandlerAuthHelper() {}
 
-
+  /**
+   * Extract a {@link uk.co.spudsoft.query.exec.conditions.RequestContext} from a Vertx {@link io.vertx.core.Context}.
+   * @param context The Vertx Context.
+   * @param required If true, the method will throw a ServiceException if the request does not have an authenticated request context.
+   * @return a valid {@link uk.co.spudsoft.query.exec.conditions.RequestContext}.
+   * @throws ServiceException if the request does not have an authenticated request context.
+   */
   public static RequestContext getRequestContext(Context context, boolean required) throws ServiceException {
     RequestContext requestContext = RequestContextHandler.getRequestContext(context);
     if (required) {

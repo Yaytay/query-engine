@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 import uk.co.spudsoft.query.main.AuthEndpoint;
 
 /**
+ * JAX-RS class implementing the REST API for outputting information about the authentication configurations.
  *
  * @author jtalbut
  */
@@ -46,10 +47,19 @@ public class AuthConfigHandler {
   
   private final List<AuthConfig> config;
 
+  /**
+   * Constructor.
+   * 
+   * @param config The authentication configuration.
+   */
   public AuthConfigHandler(Map<String, AuthEndpoint> config) {
     this.config = config.entrySet().stream().map(e -> new AuthConfig(e.getKey(), e.getValue().getLogoUrl())).collect(Collectors.toList());
   }
   
+  /**
+   * Return details of the available OAuth providers.
+   * @param response JAX-RS Asynchronous response, connected to the Vertx request by the RESTeasy JAX-RS implementation.
+   */
   @GET
   @Path("/")
   @Produces(MediaType.APPLICATION_JSON)
@@ -67,11 +77,7 @@ public class AuthConfigHandler {
   )
   public void get(
           @Suspended final AsyncResponse response
-          , @Context HttpServerRequest request
   ) {
-    
-    
-    
     response.resume(Response.ok(config).build());
   }
   
