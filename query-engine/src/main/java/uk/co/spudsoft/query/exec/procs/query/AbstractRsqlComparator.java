@@ -26,6 +26,12 @@ import java.util.Set;
  * @author jtalbut
  */
 public abstract class AbstractRsqlComparator<T extends Comparable<T>> implements RsqlComparator<T> {
+
+  /**
+   * Constructor.
+   */
+  public AbstractRsqlComparator() {
+  }
   
   @Override
   public boolean equal(T rowValue, T compareValue) {

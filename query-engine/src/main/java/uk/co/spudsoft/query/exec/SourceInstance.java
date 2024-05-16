@@ -27,6 +27,10 @@ public interface SourceInstance extends SourceNameTracker {
   
   String SOURCE_CONTEXT_KEY = "uk.co.spudsoft.query.exec.source.name";
   
+  /**
+   * Get the name of the source, for use in logs.
+   * @return the name of the source, for use in logs.
+   */
   String getName();
       
   /**

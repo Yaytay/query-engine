@@ -157,10 +157,18 @@ public class Condition {
   
   private final String expression;
 
+  /**
+   * Constructor.
+   * @param expression JEXL expression to be evaluated.
+   */
   public Condition(String expression) {
     this.expression = expression;
   }
 
+  /**
+   * The expression that makes up the condition.
+   * @return the expression that makes up the condition.
+   */
   @Schema(description = """
                         The expression that makes up the condition.
                         """
@@ -171,7 +179,14 @@ public class Condition {
     return expression;
   }
   
-  public void validate() {
+  /**
+   * Validate the Condition.
+   * <p>
+   * This involves parsing the JEXL expression, but cannot validate that the reference values by it will exist at runtime.
+   * 
+   * @throws IllegalArgumentException if the expression cannot be parsed.
+   */
+  public void validate() throws IllegalArgumentException {
     try {
       createInstance();
     } catch (Throwable ex) {
@@ -180,11 +195,18 @@ public class Condition {
     }
   }
   
+  /**
+   * Create a {@link uk.co.spudsoft.query.exec.conditions.ConditionInstance} for this Condition.
+   * @return a newly created {@link uk.co.spudsoft.query.exec.conditions.ConditionInstance} for this Condition. 
+   */
   @JsonIgnore
   public ConditionInstance createInstance() {
     return new ConditionInstance(expression);
   }
   
+  /**
+   * Jackson {@link com.fasterxml.jackson.databind.JsonDeserializer} for Conditions.
+   */
   public static class Deserializer extends JsonDeserializer<Condition> {
 
     @Override
@@ -194,6 +216,9 @@ public class Condition {
     
   }
     
+  /**
+   * Jackson {@link com.fasterxml.jackson.databind.JsonSerializer} for Conditions.
+   */
   public static class Serializer extends JsonSerializer<Condition> {  
 
     @Override

@@ -38,10 +38,22 @@ public class TextArea extends Component<TextArea> {
     super(generator, "textarea");
   }
 
+  /**
+   * Output a rows field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public TextArea withRows(final Integer value) throws IOException {
     return with("rows", value);
   }
 
+  /**
+   * Output a wysiwyg field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public TextArea withWysiwyg(final Boolean value) throws IOException {
     return with("wysiwyg", value);
   }

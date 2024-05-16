@@ -43,9 +43,21 @@ import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
 public abstract class AbstractJoiningProcessor implements ProcessorInstance {
 
   private final Logger logger;
+  /**
+   * The Vertx instance.
+   */
   protected final Vertx vertx;
+  /**
+   * Source name tracker used to identify source names in log messages.
+   */
   protected final SourceNameTracker sourceNameTracker;
+  /**
+   * Vertx context used by this class.
+   */
   protected final Context context;
+  /**
+   * The ID to use in logs for this processor.
+   */
   private final String id;
   
   private final List<String> parentIdColumns;
@@ -54,6 +66,9 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
   
   private MergeStream<DataRow, DataRow, DataRow> stream;
   
+  /**
+   * The Types captured during {@link #initialize(uk.co.spudsoft.query.exec.PipelineExecutor, uk.co.spudsoft.query.exec.PipelineInstance, java.lang.String, int, uk.co.spudsoft.query.exec.ReadStreamWithTypes)}.
+   */
   protected Types types;
   
   /**
@@ -87,6 +102,18 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
     return id;
   }
 
+  /**
+   * Initialize a child stream.
+   * <p>
+   * Helper method for subclasses.
+   * 
+   * @param executor The executor to use for running the child stream.
+   * @param pipeline The overall pipeline instance being run.
+   * @param parentSource The name of the parent source, for tracking purposes.
+   * @param processorIndex The index of this processor, for tracking purposes.
+   * @param sourcePipeline The child pipeline to initialize.
+   * @return A Future that will be completed with a {@link io.vertx.core.streams.ReadStream}&lt;{@link uk.co.spudsoft.query.exec.DataRow}@gt; when initialization has completed.
+   */
   protected Future<ReadStream<DataRow>> initializeChildStream(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, SourcePipeline sourcePipeline) {
     SourceInstance sourceInstance = sourcePipeline.getSource().createInstance(vertx, context, executor, parentSource + "-" + processorIndex);
     FormatCaptureInstance sinkInstance = new FormatCaptureInstance();
@@ -103,8 +130,21 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
             .map(v -> sinkInstance.getReadStream());
   }
 
+  /**
+   * Abstract method that specializations must implement to process one parent row and a collection of related child rows.
+   * @param parentRow The single DataRow from the parent stream.
+   * @param childRows A collection of matching DataRows from the child stream.
+   * @return The resultant row - typically this is the modified ParentRow.
+   */
   abstract DataRow processChildren(DataRow parentRow, Collection<DataRow> childRows);
 
+  /**
+   * Compare two DataRows by the {@link #parentIdColumns} and {@link #childIdColumns}.
+   * @param parentRow The parent row.
+   * @param childRow The child row.
+   * @return  a negative integer, zero, or a positive integer as this object
+   *          is less than, equal to, or greater than the specified object.
+   */
   @SuppressWarnings({"unchecked", "rawtypes"})
   protected int compare(DataRow parentRow, DataRow childRow) {
     for (int i = 0; i < parentIdColumns.size(); ++i) {
@@ -118,6 +158,16 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
     return 0;
   }
 
+  /**
+   * Abstract method that specializations must implement to initialize the child streams.
+   * <p>
+   * Typically this will result in one or more calls to {@link #initializeChildStream(uk.co.spudsoft.query.exec.PipelineExecutor, uk.co.spudsoft.query.exec.PipelineInstance, java.lang.String, int, uk.co.spudsoft.query.defn.SourcePipeline)}.
+   * @param executor The executor to use for running the child stream.
+   * @param pipeline The overall pipeline instance being run.
+   * @param parentSource The name of the parent source, for tracking purposes.
+   * @param processorIndex The index of this processor, for tracking purposes.
+   * @return A Future that will be completed with a {@link io.vertx.core.streams.ReadStream}&lt;{@link uk.co.spudsoft.query.exec.DataRow}@gt; when initialization has completed.
+   */
   abstract Future<ReadStream<DataRow>> initializeChild(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex);
   
   @Override

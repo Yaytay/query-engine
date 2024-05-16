@@ -38,6 +38,12 @@ public class FieldSet extends AbstractContainer<FieldSet> {
     super(generator, "fieldset");
   }
 
+  /**
+   * Output a legend field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public FieldSet withLegend(final String value) throws IOException {
     return with("legend", value);
   }

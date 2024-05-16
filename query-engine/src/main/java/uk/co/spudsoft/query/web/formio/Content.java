@@ -39,6 +39,12 @@ public final class Content extends Component<Content> {
     this.withInput(false).withTableView(false);
   }
 
+  /**
+   * Output an HTML field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Content withHtml(final String value) throws IOException {
     return with("html", value);
   }

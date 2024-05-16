@@ -23,14 +23,12 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpServerRequest;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.container.Suspended;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.slf4j.Logger;
@@ -42,6 +40,9 @@ import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import static uk.co.spudsoft.query.web.rest.InfoHandler.reportError;
 
 /**
+ * JAX-RS class implementing the REST API for outputting the history data.
+ * <p>
+ * The history data is entirely dependent upon the {@link uk.co.spudsoft.query.exec.Auditor} and the data it records.
  *
  * @author jtalbut
  */
@@ -54,12 +55,28 @@ public class HistoryHandler {
   private final Auditor auditor;
   private final boolean outputAllErrorMessages;
 
+  /**
+   * Constructor.
+   * @param auditor Auditor interface for tracking requests.
+   * @param outputAllErrorMessages In a production environment error messages should usually not leak information that may assist a bad actor, set this to true to return full details in error responses.
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Only method called on auditor is getHistory")
   public HistoryHandler(Auditor auditor, boolean outputAllErrorMessages) {
     this.auditor = auditor;
     this.outputAllErrorMessages = outputAllErrorMessages;
   }
   
+  /**
+   * Return history rows matching the criteria.
+   * <p>
+   * This probably uses dynamic SQL for the sorting, which is secure because of the use of the enum for sortOrder.
+   * 
+   * @param response JAX-RS Asynchronous response, connected to the Vertx request by the RESTeasy JAX-RS implementation.
+   * @param skipRows Number of rows to skip, for paging.
+   * @param maxRows Maximum number of rows to return, for paging.
+   * @param sortOrder The field to sort by.
+   * @param sortDescending If true the results are sorted in descending order.
+   */
   @GET
   @Path("/")
   @Produces(MediaType.APPLICATION_JSON)
@@ -74,7 +91,6 @@ public class HistoryHandler {
   )
   public void getHistory(
           @Suspended final AsyncResponse response
-          , @Context HttpServerRequest request
           , @QueryParam("skipRows") Integer skipRows
           , @QueryParam("maxRows") Integer maxRows
           , @QueryParam("sort") AuditHistorySortOrder sortOrder
@@ -105,6 +121,14 @@ public class HistoryHandler {
     }    
   }
   
+  /**
+   * Return an integer value that is definitely not null and is &gt;= min and &lt;= max.
+   * @param input The input value, which may be null.
+   * @param defaultValue The value to return if input is null.
+   * @param min The minimum permitted value for input.
+   * @param max The maximum permitted value for input.
+   * @return Either input, defaultValue, min or max.
+   */
   static int boundInt(Integer input, int defaultValue, int min, int max) {
     if (input == null) {
       return defaultValue;

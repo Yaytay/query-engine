@@ -38,10 +38,22 @@ public class DataGrid extends AbstractContainer<DataGrid> {
     super(generator, "datagrid");
   }
 
+  /**
+   * Output a withInitEmpty field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public final DataGrid withInitEmpty(final Boolean value) throws IOException {
     return with("initEmpty", value);
   }  
   
+  /**
+   * Output an addAnother field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public final DataGrid withAddAnother(final String value) throws IOException {
     return with("addAnother", value);
   }

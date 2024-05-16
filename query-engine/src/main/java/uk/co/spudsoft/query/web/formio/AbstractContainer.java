@@ -40,6 +40,11 @@ public abstract class AbstractContainer<T extends AbstractContainer<T>> extends 
     super(generator, type);
   }
   
+  /**
+   * Write a "components" field as a {@link ComponentArray}.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public ComponentArray addComponents() throws IOException {
     generator.writeFieldName("components");
     return new ComponentArray(generator);    

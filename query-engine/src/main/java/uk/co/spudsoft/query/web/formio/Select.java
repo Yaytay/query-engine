@@ -28,10 +28,16 @@ import java.io.IOException;
 @SuppressFBWarnings(value = {"EI_EXPOSE_REP", "EI_EXPOSE_REP2"}, justification = "Data object purely for translating to JSON")
 public class Select extends Component<Select> {
 
+  /**
+   * The type of data source for the Select.
+   */
   public enum DataSrcType {
     values, json, url, resource, customer
   }
   
+  /**
+   * A DataValue used for {@link DataSrcType#values}.
+   */
   public static class DataValue extends AbstractComponent<DataValue> {
 
     /**
@@ -45,15 +51,30 @@ public class Select extends Component<Select> {
       super(generator);
     }
 
+    /**
+     * Output a label field.
+     * @param value The value of the JSON field.
+     * @return this, so that the object can be used in a fluent manner.
+     * @throws IOException if the generator fails.
+     */
     public DataValue withLabel(final String value) throws IOException {
       return with("label", value);
     }
 
+    /**
+     * Output a value field.
+     * @param value The value of the JSON field.
+     * @return this, so that the object can be used in a fluent manner.
+     * @throws IOException if the generator fails.
+     */
     public DataValue withValue(final String value) throws IOException {
       return with("value", value);
     }
   }
   
+  /**
+   * A set of {@link DataValue} objects.
+   */
   public static class DataValues extends AbstractComponent<DataValues> {
 
     /**
@@ -67,12 +88,20 @@ public class Select extends Component<Select> {
       super(generator);
     }
 
+    /**
+     * Output a values field.
+     * @return a newly created {@link ComponentArray} to which {@link DataValue} instances should be added.
+     * @throws IOException if the generator fails.
+     */
     public ComponentArray addValues() throws IOException {
       generator.writeFieldName("values");
       return new ComponentArray(generator);    
     }
   }
   
+  /**
+   * An HTTP header to be added to URLs used for requesting select values.
+   */
   public static class DataUrlHeader extends AbstractComponent<DataUrlHeader> {
 
     /**
@@ -86,16 +115,31 @@ public class Select extends Component<Select> {
       super(generator);
     }
 
+    /**
+     * Output a key field - the header name.
+     * @param value The value of the JSON field.
+     * @return this, so that the object can be used in a fluent manner.
+     * @throws IOException if the generator fails.
+     */
     public DataUrlHeader withKey(final String value) throws IOException {
       return with("key", value);
     }
 
+    /**
+     * Output a value field.
+     * @param value The value of the JSON field.
+     * @return this, so that the object can be used in a fluent manner.
+     * @throws IOException if the generator fails.
+     */
     public DataUrlHeader withValue(final String value) throws IOException {
       return with("value", value);
     }
 
   }
   
+  /**
+   * A DataValue used for {@link DataSrcType#url}.
+   */
   public static class DataUrl extends AbstractComponent<DataUrl> {
 
     /**
@@ -109,16 +153,30 @@ public class Select extends Component<Select> {
       super(generator);
     }
 
+    /**
+     * Output a url field.
+     * @param value The value of the JSON field.
+     * @return this, so that the object can be used in a fluent manner.
+     * @throws IOException if the generator fails.
+     */
     public DataUrl withUrl(final String value) throws IOException {
       return with("url", value);
     }
 
+    /**
+     * Output a headers field.
+     * @return a newly created {@link ComponentArray} to which {@link DataUrlHeader} instances should be added.
+     * @throws IOException 
+     */
     public ComponentArray addHeaders() throws IOException {
       generator.writeFieldName("headers");
       return new ComponentArray(generator);    
     }
   }
 
+  /**
+   * Details of select component validation.
+   */
   public static class SelectValidation extends Validation {
 
     /**
@@ -132,6 +190,12 @@ public class Select extends Component<Select> {
       super(generator);
     }
     
+    /**
+     * Output a onlyAvailableItems field.
+     * @param value The value of the JSON field.
+     * @return this, so that the object can be used in a fluent manner.
+     * @throws IOException if the generator fails.
+     */
     public SelectValidation withOnlyAvailableItems(final Boolean value) throws IOException {
       with("onlyAvailableItems", value);
       return this;
@@ -150,6 +214,12 @@ public class Select extends Component<Select> {
     super(generator, "select");
   }
 
+  /**
+   * Output a dataSrc field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Select withDataSrc(final DataSrcType value) throws IOException {
     if (value != null) {
       return with("dataSrc", value.toString());
@@ -157,6 +227,12 @@ public class Select extends Component<Select> {
     return this;
   }
   
+  /**
+   * Helper method to add a {@link DataValue} object.
+   * @param label The {@link DataValue} label.
+   * @param value The {@link DataValue} value.
+   * @throws IOException if the generator fails.
+   */
   public void addCompleteDataValue(String label, String value) throws IOException {
     try (DataValue dv = new DataValue(generator)) {
       dv.withLabel(label);
@@ -164,6 +240,12 @@ public class Select extends Component<Select> {
     }
   }
 
+  /**
+   * Helper method to add a {@link DataUrlHeader} object.
+   * @param key The {@link DataUrlHeader} key.
+   * @param value The {@link DataUrlHeader} value.
+   * @throws IOException if the generator fails.
+   */
   public void addCompleteDataUrlHeader(String key, String value) throws IOException {
     try (DataUrlHeader header = new DataUrlHeader(generator)) {
       header.withKey(key);
@@ -171,38 +253,84 @@ public class Select extends Component<Select> {
     }
   }
 
+  /**
+   * Output a data field for {@link DataValues}.
+   * @return a newly created {@link DataValues} object to which {@link DataValue} instances should be added.
+   * @throws IOException if the generator fails.
+   */
   public DataValues addDataValues() throws IOException {
     withDataSrc(DataSrcType.values);
     generator.writeFieldName("data");
     return new DataValues(generator);
   }
 
+  /**
+   * Output a data field for {@link DataUrl}.
+   * @return a newly created {@link DataUrl} object which must be configured.
+   * @throws IOException if the generator fails.
+   */
   public DataUrl addDataUrl() throws IOException {
     withDataSrc(DataSrcType.url);
     generator.writeFieldName("data");
     return new DataUrl(generator);    
   }
 
+  /**
+   * Output a valueProperty field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Select withValueProperty(final String value) throws IOException {
     return with("valueProperty", value);
   }
 
+  /**
+   * Output a refreshOn field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Select withRefreshOn(final String value) throws IOException {
     return with("refreshOn", value);
   }
 
+  /**
+   * Output a filter field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Select withFilter(final String value) throws IOException {
     return with("filter", value);
   }
 
+  /**
+   * Output an authenticate field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Select withAuthenticate(final Boolean value) throws IOException {
     return with("authenticate", value);
   }
 
+  /**
+   * Output a template field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Select withTemplate(final String value) throws IOException {
     return with("template", value);
   }
   
+  /**
+   * Output a searchEnabled field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Select withSearchEnabled(final Boolean value) throws IOException {
     return with("searchEnabled", value);
   }

@@ -38,18 +38,42 @@ public class Form extends AbstractContainer<Form> {
     super(generator, "form");
   }
 
+  /**
+   * Output a name field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Form withName(final String value) throws IOException {
     return with("name", value);
   }
 
+  /**
+   * Output a title field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Form withTitle(final String value) throws IOException {
     return with("title", value);
   }
 
+  /**
+   * Output a path field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Form withPath(final String value) throws IOException {
     return with("path", value);
   }
 
+  /**
+   * Output a display field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Form withDisplay(final String value) throws IOException {
     return with("display", value);
   }

@@ -34,30 +34,72 @@ public class Number extends Component<Number> {
       super(generator);
     }
 
+    /**
+     * Output a min field.
+     * @param value The value of the JSON field.
+     * @return this, so that the object can be used in a fluent manner.
+     * @throws IOException if the generator fails.
+     */
     public NumberValidation withMin(final java.lang.Number value) throws IOException {
       return with("min", value);
     }
 
+    /**
+     * Output a max field.
+     * @param value The value of the JSON field.
+     * @return this, so that the object can be used in a fluent manner.
+     * @throws IOException if the generator fails.
+     */
     public NumberValidation withMax(final java.lang.Number value) throws IOException {
       return with("max", value);
     }
 
+    /**
+     * Output a step field.
+     * @param value The value of the JSON field.
+     * @return this, so that the object can be used in a fluent manner.
+     * @throws IOException if the generator fails.
+     */
     public NumberValidation withStep(final java.lang.Number value) throws IOException {
       return with("step", value);
     }
 
+    /**
+     * Output an integer field.
+     * @param value The value of the JSON field.
+     * @return this, so that the object can be used in a fluent manner.
+     * @throws IOException if the generator fails.
+     */
     public NumberValidation withInteger(final Boolean value) throws IOException {
       return with("integer", value);
     }
     
+    /**
+     * Output a required field.
+     * @param value The value of the JSON field.
+     * @return this, so that the object can be used in a fluent manner.
+     * @throws IOException if the generator fails.
+     */
     public NumberValidation withRequired(final Boolean value) throws IOException {
       return with("required", value);
     }
 
+    /**
+     * Output a pattern field.
+     * @param value The value of the JSON field.
+     * @return this, so that the object can be used in a fluent manner.
+     * @throws IOException if the generator fails.
+     */
     public NumberValidation withPattern(final String value) throws IOException {
       return with("pattern", value);
     }
 
+    /**
+     * Output a custom field.
+     * @param value The value of the JSON field.
+     * @return this, so that the object can be used in a fluent manner.
+     * @throws IOException if the generator fails.
+     */
     public NumberValidation withCustom(final String value) throws IOException {
       return with("custom", value);
     }
@@ -74,6 +116,11 @@ public class Number extends Component<Number> {
     super(generator, "number");
   }
 
+  /**
+   * Output a validate field.
+   * @return a newly created NumberValidation object.
+   * @throws IOException if the generator fails.
+   */
   public NumberValidation addNumberValidate() throws IOException {
     generator.writeFieldName("validate");
     return new NumberValidation(generator);

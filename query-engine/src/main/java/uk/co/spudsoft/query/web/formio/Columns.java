@@ -28,34 +28,78 @@ import java.io.IOException;
 @SuppressFBWarnings(value = {"EI_EXPOSE_REP", "EI_EXPOSE_REP2"}, justification = "Data object purely for translating to JSON")
 public class Columns extends Component<Columns> {
 
+  /**
+   * Output a single formio Column component.
+   */
   public static class Column extends AbstractComponent<Column> {
     
+    /**
+     * Constructor.
+     * 
+     * @param generator The Jackson {@link com.fasterxml.jackson.core.JsonGenerator} for FormIO.
+     * @throws IOException if something goes wrong.
+     */
     @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
     protected Column(JsonGenerator generator) throws IOException {
       super(generator);
     }
 
+    /**
+     * Output a components field.
+     * @return a newly created ComponentArray object.
+     * @throws IOException if the generator fails.
+     */
     public ComponentArray addComponents() throws IOException {
       generator.writeFieldName("components");
       return new ComponentArray(generator);    
     }
 
+    /**
+     * Output a width field.
+     * @param value The value of the JSON field.
+     * @return this, so that the object can be used in a fluent manner.
+     * @throws IOException if the generator fails.
+     */
     public Column withWidth(final int value) throws IOException {
       return with("width", value);
     }
 
+    /**
+     * Output a offset field.
+     * @param value The value of the JSON field.
+     * @return this, so that the object can be used in a fluent manner.
+     * @throws IOException if the generator fails.
+     */
     public Column withOffset(final Integer value) throws IOException {
       return with("offset", value);
     }
 
+    /**
+     * Output a push field.
+     * @param value The value of the JSON field.
+     * @return this, so that the object can be used in a fluent manner.
+     * @throws IOException if the generator fails.
+     */
     public Column withPush(final Integer value) throws IOException {
       return with("push", value);
     }
 
+    /**
+     * Output a pull field.
+     * @param value The value of the JSON field.
+     * @return this, so that the object can be used in a fluent manner.
+     * @throws IOException if the generator fails.
+     */
     public Column withPull(final Integer value) throws IOException {
       return with("pull", value);
     }
 
+    /**
+     * Output a size field.
+     * @param value The value of the JSON field.
+     * @return this, so that the object can be used in a fluent manner.
+     * @throws IOException if the generator fails.
+     */
     public Column withSize(final String value) throws IOException {
       return with("size", value);
     }
@@ -73,6 +117,11 @@ public class Columns extends Component<Columns> {
     super(generator, "columns");
   }
 
+  /**
+   * Output a columns field.
+   * @return a newly created ComponentArray object.
+   * @throws IOException if the generator fails.
+   */
   public ComponentArray addColumns() throws IOException {
     generator.writeFieldName("columns");
     return new ComponentArray(generator);    

@@ -42,22 +42,52 @@ public class Button extends Component<Button> {
     super(generator, "button");
   }
 
+  /**
+   * Output a size field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Button withSize(final String value) throws IOException {
     return with("size", value);
   }
 
+  /**
+   * Output a leftIcon field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Button withLeftIcon(final String value) throws IOException {
     return with("leftIcon", value);
   }
 
+  /**
+   * Output a rightIcon field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Button withRightIcon(final String value) throws IOException {
     return with("rightIcon", value);
   }
 
+  /**
+   * Output a block field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Button withBlock(final Boolean value) throws IOException {
     return with("block", value);
   }
 
+  /**
+   * Output an action field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Button withAction(final ActionType value) throws IOException {
     if (value != null) {
       return with("action", value.name());
@@ -66,10 +96,22 @@ public class Button extends Component<Button> {
     }
   }
 
+  /**
+   * Output a disableOnInvalid field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Button withDisableOnInvalid(final Boolean value) throws IOException {
     return with("disableOnInvalid", value);
   }
 
+  /**
+   * Output a theme field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Button withTheme(final String value) throws IOException {
     return with("theme", value);
   }

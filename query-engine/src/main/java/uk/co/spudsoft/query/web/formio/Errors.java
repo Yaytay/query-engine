@@ -38,38 +38,92 @@ public class Errors extends AbstractComponent<Errors> {
     super(generator);
   }
   
+  /**
+   * Output a required field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Errors withRequired(final String value) throws IOException {
     return with("required", value);
   }
 
+  /**
+   * Output a min field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Errors withMin(final String value) throws IOException {
     return with("min", value);
   }
 
+  /**
+   * Output a max field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Errors withMax(final String value) throws IOException {
     return with("max", value);
   }
 
+  /**
+   * Output a minLength field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Errors withMinLength(final String value) throws IOException {
     return with("minLength", value);
   }
 
+  /**
+   * Output a maxLength field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Errors withMaxLength(final String value) throws IOException {
     return with("maxLength", value);
   }
 
+  /**
+   * Output an invalid_email field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Errors withInvalidEmail(final String value) throws IOException {
     return with("invalid_email", value);
   }
 
+  /**
+   * Output a invalid_date field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Errors withInvalidDate(final String value) throws IOException {
     return with("invalid_date", value);
   }
 
+  /**
+   * Output a pattern field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Errors withPattern(final String value) throws IOException {
     return with("pattern", value);
   }
 
+  /**
+   * Output a custom field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Errors withCustom(final String value) throws IOException {
     return with("custom", value);
   }

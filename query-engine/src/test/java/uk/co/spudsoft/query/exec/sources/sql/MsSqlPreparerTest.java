@@ -20,8 +20,8 @@ public class MsSqlPreparerTest {
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of("id", new ArgumentInstance("id", Argument.builder().type(ArgumentType.Long).build(), ImmutableList.of("7")));
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id", Boolean.FALSE, argSrc);
-    assertEquals("select * from bob where id = @p1", result.query);
-    assertEquals(7L, result.args.get(0));
+    assertEquals("select * from bob where id = @p1", result.query());
+    assertEquals(7L, result.args().get(0));
   }
   
   @Test
@@ -33,10 +33,10 @@ public class MsSqlPreparerTest {
             , "name", new ArgumentInstance("name", Argument.builder().type(ArgumentType.String).build(), ImmutableList.of("fred"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id and name = :name", Boolean.TRUE, argSrc);
-    assertEquals("select * from bob where id = @p1 and name = @p2", result.query);
-    assertEquals(7L, result.args.get(0));
-    assertEquals("fred", result.args.get(1));
-    assertEquals(2, result.args.size());
+    assertEquals("select * from bob where id = @p1 and name = @p2", result.query());
+    assertEquals(7L, result.args().get(0));
+    assertEquals("fred", result.args().get(1));
+    assertEquals(2, result.args().size());
   }
   
   @Test
@@ -48,11 +48,11 @@ public class MsSqlPreparerTest {
             , "name", new ArgumentInstance("name", Argument.builder().type(ArgumentType.String).multiValued(true).build(), ImmutableList.of("fred", "bob"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id and name in (:name)", Boolean.FALSE, argSrc);
-    assertEquals("select * from bob where id = @p1 and name in (@p2, @p3)", result.query);
-    assertEquals(7L, result.args.get(0));
-    assertEquals("fred", result.args.get(1));
-    assertEquals("bob", result.args.get(2));
-    assertEquals(3, result.args.size());
+    assertEquals("select * from bob where id = @p1 and name in (@p2, @p3)", result.query());
+    assertEquals(7L, result.args().get(0));
+    assertEquals("fred", result.args().get(1));
+    assertEquals("bob", result.args().get(2));
+    assertEquals(3, result.args().size());
   }
    
   @Test
@@ -63,10 +63,10 @@ public class MsSqlPreparerTest {
             "id", new ArgumentInstance("id", Argument.builder().type(ArgumentType.Long).build(), ImmutableList.of("7"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id and name = :name", Boolean.TRUE, argSrc);
-    assertEquals("select * from bob where id = @p1 and name = @p2", result.query);
-    assertEquals(7L, result.args.get(0));
-    assertEquals(null, result.args.get(1));
-    assertEquals(2, result.args.size());
+    assertEquals("select * from bob where id = @p1 and name = @p2", result.query());
+    assertEquals(7L, result.args().get(0));
+    assertEquals(null, result.args().get(1));
+    assertEquals(2, result.args().size());
   }
 
   @Test
@@ -78,10 +78,10 @@ public class MsSqlPreparerTest {
             , "name", new ArgumentInstance("name", Argument.builder().type(ArgumentType.String).build(), ImmutableList.of("fred"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id and name = :name or othername = :name", Boolean.FALSE, argSrc);
-    assertEquals("select * from bob where id = @p1 and name = @p2 or othername = @p2", result.query);
-    assertEquals(7L, result.args.get(0));
-    assertEquals("fred", result.args.get(1));
-    assertEquals(2, result.args.size());
+    assertEquals("select * from bob where id = @p1 and name = @p2 or othername = @p2", result.query());
+    assertEquals(7L, result.args().get(0));
+    assertEquals("fred", result.args().get(1));
+    assertEquals(2, result.args().size());
   }
 
   @Test
@@ -93,11 +93,11 @@ public class MsSqlPreparerTest {
             , "name", new ArgumentInstance("name", Argument.builder().type(ArgumentType.String).multiValued(true).build(), ImmutableList.of("fred", "bob"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id and name in (:name) or othername in (:name)", Boolean.TRUE, argSrc);
-    assertEquals("select * from bob where id = @p1 and name in (@p2, @p3) or othername in (@p2, @p3)", result.query);
-    assertEquals(7L, result.args.get(0));
-    assertEquals("fred", result.args.get(1));
-    assertEquals("bob", result.args.get(2));
-    assertEquals(3, result.args.size());
+    assertEquals("select * from bob where id = @p1 and name in (@p2, @p3) or othername in (@p2, @p3)", result.query());
+    assertEquals(7L, result.args().get(0));
+    assertEquals("fred", result.args().get(1));
+    assertEquals("bob", result.args().get(2));
+    assertEquals(3, result.args().size());
   }
 
   @Test
@@ -108,11 +108,11 @@ public class MsSqlPreparerTest {
             "id", new ArgumentInstance("id", Argument.builder().type(ArgumentType.Long).build(), ImmutableList.of("7"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id and name = :name or othername = :name", Boolean.FALSE, argSrc);
-    assertEquals("select * from bob where id = @p1 and name = @p2 or othername = @p3", result.query);
-    assertEquals(7L, result.args.get(0));
-    assertEquals(null, result.args.get(1));
-    assertEquals(null, result.args.get(2));
-    assertEquals(3, result.args.size());
+    assertEquals("select * from bob where id = @p1 and name = @p2 or othername = @p3", result.query());
+    assertEquals(7L, result.args().get(0));
+    assertEquals(null, result.args().get(1));
+    assertEquals(null, result.args().get(2));
+    assertEquals(3, result.args().size());
   }
 
   @Test
@@ -124,10 +124,10 @@ public class MsSqlPreparerTest {
             , "name", new ArgumentInstance("name", Argument.builder().type(ArgumentType.String).build(), ImmutableList.of("fred"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id /* BIND and name = :name */", Boolean.TRUE, argSrc);
-    assertEquals("select * from bob where id = @p1  and name = @p2 ", result.query);
-    assertEquals(7L, result.args.get(0));
-    assertEquals("fred", result.args.get(1));
-    assertEquals(2, result.args.size());
+    assertEquals("select * from bob where id = @p1  and name = @p2 ", result.query());
+    assertEquals(7L, result.args().get(0));
+    assertEquals("fred", result.args().get(1));
+    assertEquals(2, result.args().size());
   }
   
   @Test
@@ -138,9 +138,9 @@ public class MsSqlPreparerTest {
             "id", new ArgumentInstance("id", Argument.builder().type(ArgumentType.Long).build(), ImmutableList.of("7"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id /* BIND and name = :name */", Boolean.FALSE, argSrc);
-    assertEquals("select * from bob where id = @p1 ", result.query);
-    assertEquals(7L, result.args.get(0));
-    assertEquals(1, result.args.size());
+    assertEquals("select * from bob where id = @p1 ", result.query());
+    assertEquals(7L, result.args().get(0));
+    assertEquals(1, result.args().size());
   }
   
   @Test
@@ -152,11 +152,11 @@ public class MsSqlPreparerTest {
             , "name", new ArgumentInstance("name", Argument.builder().type(ArgumentType.String).multiValued(true).build(), ImmutableList.of("fred", "bob"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id /* BIND and name in (:name) */", Boolean.TRUE, argSrc);
-    assertEquals("select * from bob where id = @p1  and name in (@p2, @p3) ", result.query);
-    assertEquals(7L, result.args.get(0));
-    assertEquals("fred", result.args.get(1));
-    assertEquals("bob", result.args.get(2));
-    assertEquals(3, result.args.size());
+    assertEquals("select * from bob where id = @p1  and name in (@p2, @p3) ", result.query());
+    assertEquals(7L, result.args().get(0));
+    assertEquals("fred", result.args().get(1));
+    assertEquals("bob", result.args().get(2));
+    assertEquals(3, result.args().size());
   }
   
   @Test
@@ -168,11 +168,11 @@ public class MsSqlPreparerTest {
             , "name", new ArgumentInstance("name", Argument.builder().type(ArgumentType.String).multiValued(true).build(), ImmutableList.of("fred", "bob"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id /* BIND and name in (:name) */ or othername in (:name)", Boolean.FALSE, argSrc);
-    assertEquals("select * from bob where id = @p1  and name in (@p2, @p3)  or othername in (@p2, @p3)", result.query);
-    assertEquals(7L, result.args.get(0));
-    assertEquals("fred", result.args.get(1));
-    assertEquals("bob", result.args.get(2));
-    assertEquals(3, result.args.size());
+    assertEquals("select * from bob where id = @p1  and name in (@p2, @p3)  or othername in (@p2, @p3)", result.query());
+    assertEquals(7L, result.args().get(0));
+    assertEquals("fred", result.args().get(1));
+    assertEquals("bob", result.args().get(2));
+    assertEquals(3, result.args().size());
   }
   
   @Test
@@ -184,11 +184,11 @@ public class MsSqlPreparerTest {
             , "name", new ArgumentInstance("name", Argument.builder().type(ArgumentType.String).multiValued(true).build(), ImmutableList.of("fred", "bob"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id /* BIND and name in (:name) *//*BIND or othername in (:name)*/", Boolean.TRUE, argSrc);
-    assertEquals("select * from bob where id = @p1  and name in (@p2, @p3)  or othername in (@p2, @p3)", result.query);
-    assertEquals(7L, result.args.get(0));
-    assertEquals("fred", result.args.get(1));
-    assertEquals("bob", result.args.get(2));
-    assertEquals(3, result.args.size());
+    assertEquals("select * from bob where id = @p1  and name in (@p2, @p3)  or othername in (@p2, @p3)", result.query());
+    assertEquals(7L, result.args().get(0));
+    assertEquals("fred", result.args().get(1));
+    assertEquals("bob", result.args().get(2));
+    assertEquals(3, result.args().size());
   }
     
   @Test
@@ -200,11 +200,11 @@ public class MsSqlPreparerTest {
             , "name", new ArgumentInstance("name", Argument.builder().type(ArgumentType.String).multiValued(true).build(), ImmutableList.of("fred", "bob"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from \"bOb\" where id = :id /* BIND and name in (:name) *//*BIND or othername in (:name)*/", Boolean.TRUE, argSrc);
-    assertEquals("select * from \"bOb\" where id = @p1  and name in (@p2, @p3)  or othername in (@p2, @p3)", result.query);
-    assertEquals(7L, result.args.get(0));
-    assertEquals("fred", result.args.get(1));
-    assertEquals("bob", result.args.get(2));
-    assertEquals(3, result.args.size());
+    assertEquals("select * from \"bOb\" where id = @p1  and name in (@p2, @p3)  or othername in (@p2, @p3)", result.query());
+    assertEquals(7L, result.args().get(0));
+    assertEquals("fred", result.args().get(1));
+    assertEquals("bob", result.args().get(2));
+    assertEquals(3, result.args().size());
   }
   
 }

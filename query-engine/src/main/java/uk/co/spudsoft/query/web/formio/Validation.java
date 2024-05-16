@@ -38,22 +38,52 @@ public class Validation extends AbstractComponent<Validation> {
     super(generator);
   }
 
+  /**
+   * Output a required field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Validation withRequired(final Boolean value) throws IOException {
     return with("required", value);
   }
 
+  /**
+   * Output a minLength field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Validation withMinLength(final Integer value) throws IOException {
     return with("minLength", value);
   }
 
+  /**
+   * Output a maxLength field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Validation withMaxLength(final Integer value) throws IOException {
     return with("maxLength", value);
   }
 
+  /**
+   * Output a pattern field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Validation withPattern(final String value) throws IOException {
     return with("pattern", value);
   }
 
+  /**
+   * Output a custom field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Validation withCustom(final String value) throws IOException {
     return with("custom", value);
   }

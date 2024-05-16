@@ -26,6 +26,8 @@ import java.time.LocalDateTime;
 
 /**
  * Base class for outputting a formio component.
+ * <p>
+ * The key construct in the use of these formio components classes is try-with-resources, which is used to guarantee the appropriate closure of each JSON object.
  * 
  * @author jtalbut
  * @param <T> The class that derives from this class in order for the with methods to return the appropriate type.
@@ -33,12 +35,15 @@ import java.time.LocalDateTime;
 @SuppressWarnings("unchecked")
 public class AbstractComponent<T extends AbstractComponent<T>> implements Closeable {
   
+  /**
+   * The {@link com.fasterxml.jackson.core.JsonGenerator} used in the construction of the output JSON.
+   */
   protected final JsonGenerator generator;
   
   /**
    * Constructor.
    * 
-   * @param generator The Jackson JsonGenerator for FormIO.
+   * @param generator The Jackson {@link com.fasterxml.jackson.core.JsonGenerator} for FormIO.
    * @throws IOException if something goes wrong.
    */
   @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
@@ -52,6 +57,13 @@ public class AbstractComponent<T extends AbstractComponent<T>> implements Closea
     generator.writeEndObject();
   }
   
+  /**
+   * Output an Integer value as a JSON field.
+   * @param key The key for the JSON field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   protected T with(String key, Integer value) throws IOException {
     if (value != null) {
       generator.writeNumberField(key, value);
@@ -59,6 +71,13 @@ public class AbstractComponent<T extends AbstractComponent<T>> implements Closea
     return (T) this;    
   }
 
+  /**
+   * Output a Number value as a JSON field.
+   * @param key The key for the JSON field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   protected T with(String key, java.lang.Number value) throws IOException {
     if (value != null) {
       if (value instanceof Integer i) {
@@ -80,6 +99,13 @@ public class AbstractComponent<T extends AbstractComponent<T>> implements Closea
     return (T) this;    
   }
 
+  /**
+   * Output a Boolean value as a JSON field.
+   * @param key The key for the JSON field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   protected T with(String key, Boolean value) throws IOException {
     if (value != null) {
       generator.writeBooleanField(key, value);
@@ -87,6 +113,13 @@ public class AbstractComponent<T extends AbstractComponent<T>> implements Closea
     return (T) this;    
   }
   
+  /**
+   * Output a String value as a JSON field.
+   * @param key The key for the JSON field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   protected T with(String key, String value) throws IOException {
     if (value != null) {
       generator.writeStringField(key, value);
@@ -94,6 +127,13 @@ public class AbstractComponent<T extends AbstractComponent<T>> implements Closea
     return (T) this;    
   }
   
+  /**
+   * Output a LocalDateTime value as a JSON field.
+   * @param key The key for the JSON field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   protected T with(String key, LocalDateTime value) throws IOException {
     if (value != null) {
       generator.writeStringField(key, value.toString());

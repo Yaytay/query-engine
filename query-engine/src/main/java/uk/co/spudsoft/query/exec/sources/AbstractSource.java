@@ -29,6 +29,10 @@ public abstract class AbstractSource implements SourceInstance, SourceNameTracke
   
   private final String name;
 
+  /**
+   * Constructor.
+   * @param name the name of the data source, as used in logs.   
+   */
   public AbstractSource(String name) {
     this.name = name;
   }

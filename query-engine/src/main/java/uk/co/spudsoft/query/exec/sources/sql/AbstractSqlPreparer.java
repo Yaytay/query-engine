@@ -34,24 +34,32 @@ import uk.co.spudsoft.query.exec.ArgumentInstance;
  * <P>
  * The main method called by {@link SourceSqlStreamingInstance} is {@link #prepareSqlStatement(java.lang.String, java.lang.Boolean, com.google.common.collect.ImmutableMap)}.
  * 
- * 
  * @author jtalbut
  */
 public abstract class AbstractSqlPreparer {
   
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(AbstractSqlPreparer.class);
-  
-  public static final class QueryAndArgs {
-    public final String query;
-    public final List<Object> args;
 
-    public QueryAndArgs(String query, List<Object> args) {
-      this.query = query;
-      this.args = args;
-    }
+  /**
+   * Constructor.
+   */
+  public AbstractSqlPreparer() {
   }
   
+  /**
+   * Grouping of a prepared SQL statement and its associated arguments.
+   * @param query The modified SQL statement.
+   * @param args The arguments for the SQL statement.
+   */
+  record QueryAndArgs(String query, List<Object> args) {};
+  
+  /**
+   * For a multi-valued parameter, return the selected parameter.
+   * @param instance The ArgumentInstance that encapsulates the past in values.
+   * @param idx The index of the required argument.
+   * @return The selected parameter value, or null.
+   */
   protected Object generateArg(ArgumentInstance instance, int idx) {
     if (instance == null || idx >= instance.getValues().size()) {
       return null;
@@ -59,6 +67,12 @@ public abstract class AbstractSqlPreparer {
     return instance.getValues().get(idx);
   }
   
+  /**
+   * If true the SQL driver uses numbers to identify parameters, rather than position.
+   * <p>
+   * This is more efficient if parameters are repeated, but it is just a question of the protocol that the DBMS uses.
+   * @return true if the SQL driver uses numbers to identify parameters, rather than position.
+   */
   boolean hasNumberedParameters() {
     return true;
   }
@@ -71,6 +85,11 @@ public abstract class AbstractSqlPreparer {
     return "\"";
   }
   
+  /**
+   * Insert the number into the builder in the appropriate way for the driver.
+   * @param builder The StringBuilder container the resulting SQL statement.
+   * @param number The number of the parameter to be appended.
+   */
   abstract void generateParameterNumber(StringBuilder builder, int number);
  
   /**
@@ -87,6 +106,7 @@ public abstract class AbstractSqlPreparer {
    * <LI>Named parameters are evaluated.
    * The parameter reference in the SQL is replaced with a positional reference appropriate for the driver and the argument is added to those returned.
    * </UL>
+   * The processing is largely based around a regular expression match and replace into a StringBuilder.
    * 
    * @param definitionSql The SQL statement from the pipeline definition.
    * If the definition contains a {@link uk.co.spudsoft.query.defn.SourceSql#queryTemplate} this will be the result of evaluating the template.
@@ -95,7 +115,7 @@ public abstract class AbstractSqlPreparer {
    * @param argSrc The arguments passed in the pipeline, after having been parsed and had default values set.
    * @return A {@link QueryAndArgs} object representing the corrected SQL and the arguments to pass to the driver.
    */ 
-  public QueryAndArgs prepareSqlStatement(String definitionSql, Boolean replaceDoubleQuotes, ImmutableMap<String, ArgumentInstance> argSrc) {
+  QueryAndArgs prepareSqlStatement(String definitionSql, Boolean replaceDoubleQuotes, ImmutableMap<String, ArgumentInstance> argSrc) {
     
     if (replaceDoubleQuotes != null && replaceDoubleQuotes && !"\"".equals(getQuoteCharacter()) && definitionSql.contains("\"")) {
       definitionSql = definitionSql.replaceAll("\"", getQuoteCharacter());
@@ -128,6 +148,14 @@ public abstract class AbstractSqlPreparer {
     return new QueryAndArgs(sql, args);
   }
 
+  /**
+   * Add a single valued parameter to the list of arguments.
+   * @param argInstance The ArgumentInstance representing the value of the parameter.
+   * @param args The list of arguments that will be passed to the SQL driver.
+   * @param baseNumberedArgs The map of argument names to argument numbers for drivers that support numbered parameters.
+   * @param inParameterIdx The index of the parameter within the passed in arguments.
+   * @param inClause If the parameter is multivalued this should be an in-clause in the format of the driver that is to be built up.
+   */
   protected void appendSingleValuedParameter(ArgumentInstance argInstance, List<Object> args, Map<String, Integer> baseNumberedArgs, int inParameterIdx, StringBuilder inClause) {
     Integer outParameterIdx = baseNumberedArgs == null || argInstance == null ? null : baseNumberedArgs.get(argInstance.getName());
     logger.trace("appendSingleValuedParameter({}, {} ({}))", argInstance == null ? null : argInstance.getName(), outParameterIdx, baseNumberedArgs);
@@ -137,6 +165,14 @@ public abstract class AbstractSqlPreparer {
     appendSingleValuedParameter(argInstance, args, outParameterIdx, inParameterIdx, inClause);
   }
 
+  /**
+   * Add a single valued parameter to the list of arguments.
+   * @param argInstance The ArgumentInstance representing the value of the parameter.
+   * @param args The list of arguments that will be passed to the SQL driver.
+   * @param outParameterIdx The index of the parameter in the arglist if (and only if) the driver {@link #hasNumberedParameters()}.
+   * @param inParameterIdx The index of the parameter within the passed in arguments.
+   * @param inClause If the parameter is multivalued this should be an in-clause in the format of the driver that is to be built up.
+   */
   protected void appendSingleValuedParameter(ArgumentInstance argInstance, List<Object> args, Integer outParameterIdx, int inParameterIdx, StringBuilder inClause) {
     if (outParameterIdx == null) {
       Object argValue = generateArg(argInstance, inParameterIdx);
@@ -147,6 +183,13 @@ public abstract class AbstractSqlPreparer {
     }
   }
 
+  /**
+   * Add a multi valued parameter to the list of arguments.
+   * @param argInstance The ArgumentInstance representing the value of the parameter.
+   * @param args The list of arguments that will be passed to the SQL driver.
+   * @param baseNumberedArgs The map of argument names to argument numbers for drivers that support numbered parameters.
+   * @param inClause If the parameter is multivalued this should be an in-clause in the format of the driver that is to be built up.
+   */
   protected void appendMultivaluedParameter(ArgumentInstance argInstance, List<Object> args, Map<String, Integer> baseNumberedArgs, StringBuilder inClause) {
     Integer outParameterIdx = baseNumberedArgs == null ? null : baseNumberedArgs.get(argInstance.getName());
     if (outParameterIdx == null && baseNumberedArgs != null) {
@@ -163,6 +206,18 @@ public abstract class AbstractSqlPreparer {
     }
   }
 
+  /**
+   * Replace a named parameter with the correct driver-specific SQL for that parameter.
+   * <p>
+   * The parameter may be single valued or multi-valued.
+   * @param argSrc Details of the arguments defined by, and passed in to, the pipeline.
+   * @param matcher Regex Matcher that contains the parameter reference from the original SQL.
+   * @param baseNumberedArgs If the driver uses numbered references to arguments (see {@link #hasNumberedParameters()}) QE can avoid providing the same argument twice.
+   * This tracks the numbers assigned to each argument in that case.
+   * @param varName The name of the variable found in matcher (matcher covers BIND as well as simple named parameters so the group that contains the variable name is not always the same.
+   * @param args The List of arguments being built up to pass in to the driver.
+   * @param builder The builder containing the resultant SQL statement.
+   */
   protected void processParameter(ImmutableMap<String, ArgumentInstance> argSrc, Matcher matcher, Map<String, Integer> baseNumberedArgs, String varName, List<Object> args, StringBuilder builder) {
     ArgumentInstance argInstance = argSrc.get(varName);
     if (argInstance == null || argInstance.getValues().isEmpty()) {
@@ -177,6 +232,18 @@ public abstract class AbstractSqlPreparer {
     matcher.appendReplacement(builder, inClause.toString());
   }
 
+  /**
+   * Replace a BIND parameter with the correct driver-specific SQL for that parameter (if the argument is provided).
+   * <p>
+   * The parameter may be single valued or multi-valued.
+   * @param argSrc Details of the arguments defined by, and passed in to, the pipeline.
+   * @param matcher Regex Matcher that contains the parameter reference from the original SQL.
+   * @param baseNumberedArgs If the driver uses numbered references to arguments (see {@link #hasNumberedParameters()}) QE can avoid providing the same argument twice.
+   * This tracks the numbers assigned to each argument in that case.
+   * @param varName The name of the variable found in matcher (matcher covers BIND as well as simple named parameters so the group that contains the variable name is not always the same.
+   * @param args The List of arguments being built up to pass in to the driver.
+   * @param builder The builder containing the resultant SQL statement.
+   */
   protected void processBind(ImmutableMap<String, ArgumentInstance> argSrc, Matcher matcher, Map<String, Integer> baseNumberedArgs, String varName, List<Object> args, StringBuilder builder) {
     ArgumentInstance argInstance = argSrc.get(varName);
     if (argInstance == null || argInstance.getValues().isEmpty()) {

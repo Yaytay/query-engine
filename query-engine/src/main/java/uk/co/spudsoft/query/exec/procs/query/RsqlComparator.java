@@ -28,18 +28,80 @@ import java.util.Set;
  */
 public interface RsqlComparator<T> {
 
-  T validateType(String field, Object value);
+  /**
+   * Validate that the value is of type T.
+   * @param field The name of the field being validated.
+   * @param value The value to validate.
+   * @return The value cast to type T.
+   * @throws IllegalStateException if the value is not of the appropriate type.
+   */
+  T validateType(String field, Object value) throws IllegalStateException;
   
+  /**
+   * Parse a string value to type T.
+   * @param field The name of the field being parsed.
+   * @param value The string representation of the value.
+   * @return The value parsed to type T.
+   */
   T parseType(String field, String value);
   
+  
+  /**
+   * Compare two values of type T and return true if they are equal.
+   * @param rowValue The left value to compare.
+   * @param compareValue The right value to compare.
+   * @return true if rowValue == compareValue.
+   */
   boolean equal(T rowValue, T compareValue);
+  /**
+   * Compare two values of type T and return true if they are not equal.
+   * @param rowValue The left value to compare.
+   * @param compareValue The right value to compare.
+   * @return true if rowValue != compareValue.
+   */
   boolean notEqual(T rowValue, T compareValue);
+  /**
+   * Compare two values of type T and return true if rowValue is greater than compareValue.
+   * @param rowValue The left value to compare.
+   * @param compareValue The right value to compare.
+   * @return true if rowValue &gt; compareValue.
+   */
   boolean greaterThan(T rowValue, T compareValue);
+  /**
+   * Compare two values of type T and return true if rowValue is greater than or equal to compareValue.
+   * @param rowValue The left value to compare.
+   * @param compareValue The right value to compare.
+   * @return true if rowValue &gt;= compareValue.
+   */
   boolean greaterThanOrEqual(T rowValue, T compareValue);
+  /**
+   * Compare two values of type T and return true if rowValue is less than compareValue.
+   * @param rowValue The left value to compare.
+   * @param compareValue The right value to compare.
+   * @return true if rowValue &lt; compareValue.
+   */
   boolean lessThan(T rowValue, T compareValue);
+  /**
+   * Compare two values of type T and return true if rowValue is less than or equal to compareValue.
+   * @param rowValue The left value to compare.
+   * @param compareValue The right value to compare.
+   * @return true if rowValue &lt;= compareValue.
+   */
   boolean lessThanOrEqual(T rowValue, T compareValue);
   
+  /**
+   * Return true if rowValue is in the {@link java.util.Set} compareValue.
+   * @param rowValue The value to search for.
+   * @param compareValue The set of values to search in.
+   * @return true if rowValue is in the {@link java.util.Set} compareValue.
+   */
   boolean in(T rowValue, Set<T> compareValue);
+  /**
+   * Return true if rowValue is not in the {@link java.util.Set} compareValue.
+   * @param rowValue The value to search for.
+   * @param compareValue The set of values to search in.
+   * @return true if rowValue is not in the {@link java.util.Set} compareValue.
+   */
   boolean notIn(T rowValue, Set<T> compareValue);
   
 }

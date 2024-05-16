@@ -22,13 +22,11 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpServerRequest;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.container.Suspended;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +35,9 @@ import uk.co.spudsoft.query.main.Version;
 import static uk.co.spudsoft.query.web.rest.InfoHandler.reportError;
 
 /**
+ * JAX-RS class implementing the REST API for reporting the user's profile data.
+ * <p>
+ * The information presented comes from the {@link uk.co.spudsoft.query.exec.conditions.RequestContext}.
  *
  * @author jtalbut
  */
@@ -49,11 +50,20 @@ public class SessionHandler {
   private final boolean outputAllErrorMessages;
   private final boolean requireSession;
 
+  /**
+   * Constructor.
+   * @param outputAllErrorMessages In a production environment error messages should usually not leak information that may assist a bad actor, set this to true to return full details in error responses.
+   * @param requireSession If true any requests that do not have a login session will fail.
+   */
   public SessionHandler(boolean outputAllErrorMessages, boolean requireSession) {
     this.outputAllErrorMessages = outputAllErrorMessages;
     this.requireSession = requireSession;
   }
   
+  /**
+   * Get the {@link Profile} data from the {@link uk.co.spudsoft.query.exec.conditions.RequestContext}.
+   * @param response JAX-RS Asynchronous response, connected to the Vertx request by the RESTeasy JAX-RS implementation.
+   */
   @GET
   @Path("/profile")
   @Produces(MediaType.APPLICATION_JSON)
@@ -68,7 +78,6 @@ public class SessionHandler {
   )
   public void getProfile(
           @Suspended final AsyncResponse response
-          , @Context HttpServerRequest request
   ) {
     try {
       RequestContext requestContext = HandlerAuthHelper.getRequestContext(Vertx.currentContext(), requireSession);

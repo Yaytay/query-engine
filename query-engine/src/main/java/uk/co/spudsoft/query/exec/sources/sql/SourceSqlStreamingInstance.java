@@ -154,8 +154,8 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     
     AbstractSqlPreparer preparer = getPreparer(url);
     AbstractSqlPreparer.QueryAndArgs queryAndArgs = preparer.prepareSqlStatement(query, definition.getReplaceDoubleQuotes(), pipeline.getArgumentInstances());
-    String sql = queryAndArgs.query;
-    Tuple args = Tuple.from(queryAndArgs.args);
+    String sql = queryAndArgs.query();
+    Tuple args = Tuple.from(queryAndArgs.args());
     
     return pool.getConnection()
             .recover(ex -> {

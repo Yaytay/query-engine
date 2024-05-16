@@ -26,13 +26,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.vertx.core.Vertx;
 import io.vertx.core.file.FileSystemException;
-import io.vertx.core.http.HttpServerRequest;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.container.Suspended;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.io.FileNotFoundException;
@@ -45,6 +43,9 @@ import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 import uk.co.spudsoft.query.web.ServiceException;
 
 /**
+ * JAX-RS class implementing the REST API for outputting information about the available pipeline definitions.
+ * <p>
+ * The information presented comes from the {@link uk.co.spudsoft.query.pipeline.PipelineDefnLoader}.
  *
  * @author jtalbut
  */
@@ -58,6 +59,12 @@ public class InfoHandler {
   private final boolean outputAllErrorMessages;
   private final boolean requireSession;
 
+  /**
+   * Constructor.
+   * @param loader Pipeline loader.
+   * @param outputAllErrorMessages In a production environment error messages should usually not leak information that may assist a bad actor, set this to true to return full details in error responses.
+   * @param requireSession If true any requests that do not have a login session will fail.
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The PipelineDefnLoader is mutable because it changes the filesystem")
   public InfoHandler(PipelineDefnLoader loader, boolean outputAllErrorMessages, boolean requireSession) {
     this.loader = loader;
@@ -65,6 +72,10 @@ public class InfoHandler {
     this.requireSession = requireSession;
   }
   
+  /**
+   * Get a list of available pipelines from the {@link uk.co.spudsoft.query.pipeline.PipelineDefnLoader}.
+   * @param response JAX-RS Asynchronous response, connected to the Vertx request by the RESTeasy JAX-RS implementation.
+   */
   @GET
   @Path("/available")
   @Produces(MediaType.APPLICATION_JSON)
@@ -82,7 +93,6 @@ public class InfoHandler {
   )
   public void getAvailable(
           @Suspended final AsyncResponse response
-          , @Context HttpServerRequest request
   ) {
     try {
       RequestContext requestContext = HandlerAuthHelper.getRequestContext(Vertx.currentContext(), requireSession);
@@ -99,6 +109,15 @@ public class InfoHandler {
     }    
   }
   
+  /**
+   * Report an error to the JAX-RS {@link jakarta.ws.rs.container.AsyncResponse}.
+   * 
+   * @param logger The logger to use for logging the error, so that this method may be used by any of the JAX-RS handlers.
+   * @param log The message to write to the log.
+   * @param response JAX-RS Asynchronous response, connected to the Vertx request by the RESTeasy JAX-RS implementation.
+   * @param ex The exception to report.
+   * @param outputAllErrorMessages In a production environment error messages should usually not leak information that may assist a bad actor, set this to true to return full details in error responses.
+   */
   static void reportError(Logger logger, String log, AsyncResponse response, Throwable ex, boolean outputAllErrorMessages) {
     logger.error(log, ex);
     
