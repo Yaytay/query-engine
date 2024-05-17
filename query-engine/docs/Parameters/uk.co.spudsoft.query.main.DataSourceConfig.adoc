@@ -1,6 +1,6 @@
 = DataSourceConfig
 
-Configuration data for commuicating with a data source.
+Configuration data for communicating with a data source.
 
 [cols="1,1a,4a",stripes=even]
 |===
@@ -11,20 +11,20 @@ Configuration data for commuicating with a data source.
 
 | [[url]]url
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
-| 
+| Set the URL to use for accessing the datasource.
 | [[schema]]schema
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
-| 
+| Set the schema to use for accessing the datasource.
 | [[user]]user
 | xref:uk.co.spudsoft.query.main.Credentials.adoc[Credentials]
-| 
+| Set the user to use for accessing the datasource for CRUD operations.
 | [[adminUser]]adminUser
 | xref:uk.co.spudsoft.query.main.Credentials.adoc[Credentials]
-| 
+| Set the user to use for accessing the datasource for DDL operations.
 | [[maxPoolSize]]maxPoolSize
 | int
-| 
+| Set the maximum number of concurrent connections that should be made to this datasource.
 | [[minPoolSize]]minPoolSize
 | int
-| 
+| Set the minimum number of concurrent connections that should be made to this datasource.
 |===

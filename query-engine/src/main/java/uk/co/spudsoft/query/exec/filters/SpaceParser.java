@@ -28,6 +28,9 @@ import java.util.List;
 public class SpaceParser {
   
   private static final int SPACE = 0x20;
+
+  private SpaceParser() {
+  }
   
   /**
    * Convert a single string of space delimited items into a List of separate strings.
@@ -44,7 +47,7 @@ public class SpaceParser {
    * <li>"a   b" => ["a  b"]
    * </ul>
    * 
-   * @param input
+   * @param input the input string to be split
    * @return a List of separate strings.
    */
   public static List<String> parse(String input) {

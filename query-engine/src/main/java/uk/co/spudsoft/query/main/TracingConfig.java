@@ -71,6 +71,12 @@ public class TracingConfig {
    * The URL to send distributed tracing data to.
    */
   private String url;
+
+  /**
+   * Constructor.
+   */
+  public TracingConfig() {
+  }
   
   /**
    * Get the service name to use in zipkin spans.

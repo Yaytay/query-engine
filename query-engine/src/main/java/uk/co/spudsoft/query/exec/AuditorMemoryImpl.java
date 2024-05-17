@@ -65,6 +65,9 @@ import uk.co.spudsoft.query.main.ExceptionToString;
  */
 public class AuditorMemoryImpl implements Auditor {
   
+  /**
+   * The maximum number of audit rows to hold in memory.
+   */
   public static final int SIZE = 200;
   private static final String PROCESS_ID = ManagementFactory.getRuntimeMXBean().getName();
   
@@ -129,6 +132,12 @@ public class AuditorMemoryImpl implements Auditor {
   }
   
   private final Deque<AuditRow> auditRows = new ArrayDeque<>(SIZE + 1);
+
+  /**
+   * Constructor.
+   */
+  public AuditorMemoryImpl() {
+  }
   
   @Override
   public void prepare() throws Exception {

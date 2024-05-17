@@ -28,6 +28,12 @@ import io.opentelemetry.sdk.trace.SpanProcessor;
  */
 public class VertxMDCSpanProcessor implements SpanProcessor {
 
+  /**
+   * Constructor.
+   */
+  public VertxMDCSpanProcessor() {
+  }
+
   @Override
   public void onStart(Context cntxt, ReadWriteSpan rws) {
     VertxMDC.INSTANCE.put("traceId", rws.getSpanContext().getTraceId());

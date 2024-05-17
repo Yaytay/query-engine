@@ -26,7 +26,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
                       The type of Source.
                       """)
 public enum SourceType {
-  TEST
-  , SQL
-  , HTTP  
+  /**
+   * The test source that outputs a fixed name and a sequence of numbers.
+   */
+  TEST, 
+  /**
+   * The SQL source that pulls data from a database.
+   */
+  SQL, 
+  /**
+   * The HTTP source that can pull data from an HTTP endpoint that outputs JSON.
+   */
+  HTTP
 }

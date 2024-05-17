@@ -47,6 +47,9 @@ public class DataRow {
   private final Types types;
   private final LinkedHashMap<String, Comparable<?>> data;
 
+  /**
+   * An empty row that should never be modified.
+   */
   public static final DataRow EMPTY_ROW = new DataRow(new Types(), new LinkedHashMap<>());
   
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "It is expected that the types map change between instances of the DataRow")
@@ -79,22 +82,37 @@ public class DataRow {
     return result;
   }
   
+  /**
+   * Set the type for a field if it is not already set.
+   * @param key the name of the field.
+   * @param type the DataType.
+   * @throws IllegalStateException if the field already has a type that is not {@link DataType#Null} or the same as type.
+   */
   public final void putTypeIfAbsent(String key, DataType type) throws IllegalStateException {
     types.putIfAbsent(key, type);
   }
 
+  /**
+   * Create a DataRow with the given types.
+   * @param types List of {@link ColumnDefn} objects that make up the row.
+   * @return a newly created DataRow.
+   */
   public static DataRow create(List<ColumnDefn> types) {
     return new DataRow(new Types(types), new LinkedHashMap<>());
   }
   
+  /**
+   * Return true if not fields have been set on this DataRow.
+   * @return true if not fields have been set on this DataRow.
+   */
   public boolean isEmpty() {
     return data.isEmpty();
   }
 
-//  public static DataRow createNonRow(Types types) {
-//    return new DataRow(types, null);
-//  }
-
+  /**
+   * Output a JsonObject containing the same data as the DataRow.
+   * @return a newly created JsonObject containing the same data as the DataRow. 
+   */
   public JsonObject toJson() {
     JsonObject json = new JsonObject();
     data.forEach((k, v) -> json.put(k, Utils.toJson(v)));
@@ -106,20 +124,41 @@ public class DataRow {
     return toJson().toString();
   }
 
+  /**
+   * Get the value of a field from this DataRow.
+   * @param key The name of the field.
+   * @return The value of the field "key" in this DataRow.
+   */
   public Comparable<?> get(String key) {
     return data.get(key);
   }
   
+  /**
+   * Get the type of a field from this DataRow.
+   * @param key The name of the field.
+   * @return The type of the field "key" in this DataRow.
+   */
   public DataType getType(String key) {
     return types.get(key);
   }
 
+  /**
+   * Get the number of fields in this DataRow.
+   * @return the number of fields in this DataRow.
+   */
   public int size() {
     return data == null ? 0 : data.size();
   }
   
   private static final Logger logger = LoggerFactory.getLogger(DataRow.class);
   
+  /**
+   * Get the approximate size of this DataRow, in bytes.
+   * <p>
+   * This can only ever be approximate as Java does not provide any cheap way to know the number of bytes used to store a String.
+   * This method assumes one byte per character.
+   * @return the approximate size of this DataRow, in bytes.
+   */
   public int bytesSize() {
     int total[] = {0};
     types.forEach(cd -> {
@@ -138,16 +177,34 @@ public class DataRow {
     return total[0];
   }
   
+  /**
+   * Carry out action for each column in this DataRow.
+   * <p>
+   * This version iterates across all fields, even those that have no value.
+   * @param action to carry out for each column.
+   */
   public void forEach(BiConsumer<ColumnDefn, ? super Comparable<?>> action) {
     types.forEach(cd -> {
       action.accept(cd, data.get(cd.name()));
     });
   }
 
+  /**
+   * Carry out action for each column in this DataRow.
+   * <p>
+   * This version only iterates across fields that have a value (even null) in this DataRow.
+   * @param action to carry out for each column.
+   */
   public void forEach(Consumer<Entry<? super String, ? super Comparable<?>>> action) {
     data.entrySet().forEach(action);
   }
 
+  /**
+   * Add a value to this DataRow.
+   * @param key The name of the field being set.
+   * @param value The value of the field.
+   * @return this, so that this method may be used in a fluent manner.
+   */
   public DataRow put(String key, Comparable<?> value) {
     DataType type = DataType.fromObject(value);
     types.putIfAbsent(key, type);
@@ -155,12 +212,26 @@ public class DataRow {
     return this;
   }
   
+  /**
+   * Add a value to this DataRow.
+   * @param key The name of the field being set.
+   * @param type The type of the field being set.
+   * @param value The value of the field.
+   * @return this, so that this method may be used in a fluent manner.
+   */
   public DataRow put(String key, DataType type, Comparable<?> value) {
     types.putIfAbsent(key, type);
     data.put(key, value);
     return this;
   }
   
+  /**
+   * Add a value to this DataRow, but allow a wider variety of input classes.
+   * 
+   * @param key The name of the field being set.
+   * @param value The value of the field.
+   * @return this, so that this method may be used in a fluent manner.
+   */
   public DataRow convertPut(String key, Object value) {
     if (value == null) {
       put(key, null);
@@ -197,6 +268,11 @@ public class DataRow {
     return this;
   }
   
+  /**
+   * Convert a value to one that is acceptable to a DataRow, if possible.
+   * @param value The value to be converted.
+   * @return A value that can be stored in a DataRow.
+   */
   public static Comparable<?> convert(Object value) {
     if (value == null 
             || value instanceof Integer
@@ -226,18 +302,35 @@ public class DataRow {
     }
   }
   
+  /**
+   * Get an unmodifiable copy of the internal map of field names to values.
+   * @return an unmodifiable copy of the internal map of field names to values.
+   */
   public Map<String, Object> getMap() {
     return Collections.unmodifiableMap(data);
   }
 
+  /**
+   * Return true if this DataRow contains the field with name "key".
+   * @param key The name of the field be checked.
+   * @return true if this DataRow contains the field with name "key".
+   */
   public boolean containsKey(String key) {
     return data.containsKey(key);
   }
 
+  /**
+   * Return a Set of the keys understood by this DataRow.
+   * @return a Set of the keys understood by this DataRow.
+   */
   public Set<String> keySet() {
     return types.keySet();
   }
 
+  /**
+   * Return the Type object used by this DataRow.
+   * @return the Type object used by this DataRow.
+   */
   public Types types() {
     return types;
   }

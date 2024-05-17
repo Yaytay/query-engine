@@ -27,8 +27,26 @@ import java.io.IOException;
  */
 public class Button extends Component<Button> {
 
+  /**
+   * The type of action that the FormIO button takes when clicked.
+   */
   public enum ActionType {
-    submit, reset, event, oauth
+    /**
+     * Submits the form to the back-end server.
+     */
+    submit,
+    /**
+     * Reset all fields on the form back to their pristine state.
+     */
+    reset,
+    /**
+     * Triggers an 'event' on the form which is usually correlated to application logic or form workflow logic.
+     */
+    event,
+    /**
+     * Opens an OAuth authentication popup. This will only work after it has been assigned to an OAuth Action.
+     */
+    oauth
   }
   
   /**

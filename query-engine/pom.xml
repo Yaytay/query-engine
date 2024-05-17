@@ -517,6 +517,7 @@
             </goals>
             <configuration>
               <quiet>true</quiet>
+              <!--failOnWarnings>true</failOnWarnings-->
               <additionalJOptions>
                 <additionalJOption>-Xmaxwarns</additionalJOption>
                 <additionalJOption>1000</additionalJOption>

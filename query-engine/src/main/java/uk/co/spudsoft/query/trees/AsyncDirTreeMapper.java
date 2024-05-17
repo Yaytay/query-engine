@@ -28,62 +28,66 @@ import uk.co.spudsoft.dircache.DirCacheTree;
 
 /**
  * Helper class for converting one {@link uk.co.spudsoft.dircache.AbstractTree} into another.
+ *
  * @author jtalbut
  */
 public class AsyncDirTreeMapper {
-  
-    /**
-     * Map this Directory and all its children (recursively) into a different subclass of {@link AbstractTree}.
-     * 
-     * Either of the mapping methods may return null, which will not be included in the output structure.
-     * This is the recommended approach if empty Directories are to be trimmed from the output.
-     * 
-     * @param <N> The subtype of AbstractTree.AbstractNode used for generic nodes in the mapped tree.
-     * @param <D> The subtype of AbstractTree.AbstractNode used for internal nodes (directories) in the mapped tree.
-     * @param <F> The subtype of AbstractTree.AbstractNode used for leaf nodes (files) in the mapped tree.
-     * @param dir The directory whose contents are to be mapped.
-     * @param dirValidator Method that should return a Future&lt;Boolean> that must be completed with a TRUE value for the directory to be processed.
-     * @param dirMapper Method for mapping a Directory and it's already mapped children to a mapped Directory.
-     * @param fileMapper Method for mapping a File to a mapped File.
-     * @return The result of called dirMapper on this Directory with all of its children mapped.
-     */
-    @SuppressWarnings({"rawtypes"})
-    public static <N, D extends N, F extends N> Future<D> map(
-            DirCacheTree.Directory dir
-            , Function<DirCacheTree.Directory, Future<Boolean>> dirValidator
-            , BiFunction<DirCacheTree.Directory, List<N>, Future<D>> dirMapper
-            , Function<DirCacheTree.File, Future<F>> fileMapper
-    ) {
-      
-      List<Future<? extends N>> futures = dir.getChildren().stream().map(n -> {
-                if (n instanceof DirCacheTree.File) {
-                  DirCacheTree.File f = (DirCacheTree.File) n;
-                  return fileMapper.apply(f);
-                } else {
-                  DirCacheTree.Directory d = (DirCacheTree.Directory) n;
-                  return dirValidator.apply(d)
-                          .compose(permitted -> {
-                            if (permitted) {
-                              return map(d, dirValidator, dirMapper, fileMapper);
-                            } else {
-                              return Future.succeededFuture();
-                            }
-                          });
-                }
-              })
-              .collect(Collectors.toList());
-      
-      return CompositeFutureImpl.all(futures.toArray(size -> new Future[size]))
-              .compose(cf -> {
-                List<N> children = new ArrayList<>(futures.size());
-                for (Future<? extends N> future : futures) {
-                  N node = future.result();
-                  if (node != null) {
-                    children.add(node);
+
+  private AsyncDirTreeMapper() {
+  }
+
+  /**
+   * Map this Directory and all its children (recursively) into a different subclass of {@link AbstractTree}.
+   *
+   * Either of the mapping methods may return null, which will not be included in the output structure. This is the recommended
+   * approach if empty Directories are to be trimmed from the output.
+   *
+   * @param <N> The subtype of AbstractTree.AbstractNode used for generic nodes in the mapped tree.
+   * @param <D> The subtype of AbstractTree.AbstractNode used for internal nodes (directories) in the mapped tree.
+   * @param <F> The subtype of AbstractTree.AbstractNode used for leaf nodes (files) in the mapped tree.
+   * @param dir The directory whose contents are to be mapped.
+   * @param dirValidator Method that should return a Future&lt;Boolean> that must be completed with a TRUE value for the directory
+   * to be processed.
+   * @param dirMapper Method for mapping a Directory and it's already mapped children to a mapped Directory.
+   * @param fileMapper Method for mapping a File to a mapped File.
+   * @return The result of called dirMapper on this Directory with all of its children mapped.
+   */
+  @SuppressWarnings({"rawtypes"})
+  public static <N, D extends N, F extends N> Future<D> map(
+          DirCacheTree.Directory dir,
+           Function<DirCacheTree.Directory, Future<Boolean>> dirValidator,
+           BiFunction<DirCacheTree.Directory, List<N>, Future<D>> dirMapper,
+           Function<DirCacheTree.File, Future<F>> fileMapper
+  ) {
+
+    List<Future<? extends N>> futures = dir.getChildren().stream().map(n -> {
+      if (n instanceof DirCacheTree.File) {
+        DirCacheTree.File f = (DirCacheTree.File) n;
+        return fileMapper.apply(f);
+      } else {
+        DirCacheTree.Directory d = (DirCacheTree.Directory) n;
+        return dirValidator.apply(d)
+                .compose(permitted -> {
+                  if (permitted) {
+                    return map(d, dirValidator, dirMapper, fileMapper);
+                  } else {
+                    return Future.succeededFuture();
                   }
+                });
+      }
+    })
+            .collect(Collectors.toList());
+
+    return CompositeFutureImpl.all(futures.toArray(size -> new Future[size]))
+            .compose(cf -> {
+              List<N> children = new ArrayList<>(futures.size());
+              for (Future<? extends N> future : futures) {
+                N node = future.result();
+                if (node != null) {
+                  children.add(node);
                 }
-                return dirMapper.apply(dir, children);
-              });
-    }
-  
+              }
+              return dirMapper.apply(dir, children);
+            });
+  }
 }

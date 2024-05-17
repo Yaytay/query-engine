@@ -127,6 +127,12 @@ public class AuditorPersistenceImpl implements Auditor {
   
   private boolean prepared;
 
+  /**
+   * Constructor.
+   * @param vertx The Vert.x instance.
+   * @param meterRegistry Meter registry to record metrics.
+   * @param audit Configuration.
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "MeterRegisty is intended to be mutable by any user")
   public AuditorPersistenceImpl(Vertx vertx, MeterRegistry meterRegistry, Persistence audit) {
     this.vertx = vertx;
@@ -786,6 +792,13 @@ public class AuditorPersistenceImpl implements Auditor {
   private static final String BEARER = "Bearer ";
   private static final String BASIC = "Basic ";
   
+  /**
+   * Convert a Vert.x MultiMap to JSON.
+   * <p>
+   * Individual values are written directly, multiple values are written as a JsonArray.
+   * @param map The input MultiMap.
+   * @return A JsonObject.
+   */
   public static JsonObject multiMapToJson(MultiMap map) {
     if (map == null) {
       return null;

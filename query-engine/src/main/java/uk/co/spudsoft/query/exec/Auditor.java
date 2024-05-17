@@ -49,30 +49,109 @@ public interface Auditor {
    */
   void prepare() throws Exception;
 
+  /**
+   * Perform a simple health check that validates that the Auditor has been prepared.
+   * @param promise A Promise that will be completed with either {@link Status#KO()} or {@link Status#OK()}.
+   */
   void healthCheck(Promise<Status> promise);
   
-  void recordException(RequestContext context, Throwable ex);
-
-  Future<Void> recordFileDetails(RequestContext context, File file, Pipeline pipeline);
-
+  /**
+   * Record a request.
+   * <p>
+   * This must be the first method to call as it is the one that creates the row with the given {@link RequestContext#requestId}.
+   * @param context The context for the request to be recorded.
+   * @return a Future that will be completed when the request has been recorded.
+   */
   Future<Void> recordRequest(RequestContext context);
 
+  /**
+   * Record an exception in the data store against the current {@link RequestContext#requestId}.
+   * @param context The {@link RequestContext} from which to derive the {@link RequestContext#requestId}.
+   * @param ex The exception to report.
+   */
+  void recordException(RequestContext context, Throwable ex);
+
+  /**
+   * Record details of the file found against a previously recorded {@link RequestContext#requestId}.
+   * @param context The {@link RequestContext} from which to derive the {@link RequestContext#requestId}.
+   * @param file The physical file containing the pipeline definition.
+   * @param pipeline The pipeline definition.
+   * @return a Future that will be completed when the file has been recorded.
+   */
+  Future<Void> recordFileDetails(RequestContext context, File file, Pipeline pipeline);
+
+  /**
+   * A record containing details of the cached output from a previous request.
+   * @param auditId The {@link RequestContext#requestId} for the request the created the cache file.
+   * @param cacheFile The file containing the cached output.
+   * @param expiry The expiry date/time for the cached file.
+   */
   record CacheDetails(String auditId, String cacheFile, LocalDateTime expiry){};
   
+  /**
+   * Get the most recent cache file (if any) matching the current request.
+   * @param context Details of the current request to be matched against a previous run.
+   * @param pipeline The pipeline being sought.
+   * @return A Future that will be completed with either a {@link CacheDetails} instance or null.
+   */
   Future<CacheDetails> getCacheFile(RequestContext context, Pipeline pipeline);
 
+  /**
+   * Record a cached file against the current {@link RequestContext#requestId}.
+   * @param context The {@link RequestContext} from which to derive the {@link RequestContext#requestId}.
+   * @param fileName The name of the file containing the cached output.
+   * @param expiry The expiry date/time of the output file.
+   * @return A Future that will be completed when the file has been recorded in the data store.
+   */
   Future<Void> recordCacheFile(RequestContext context, String fileName, LocalDateTime expiry);
   
+  /**
+   * Record that the current {@link RequestContext#requestId} used the specified cache file.
+   * @param context The {@link RequestContext} from which to derive the {@link RequestContext#requestId}.
+   * @param fileName The cache file (created on a previous run) returned by this request.
+   * @return A Future that will be completed when the file has been recorded in the data store.
+   */
   Future<Void> recordCacheFileUsed(RequestContext context, String fileName);
   
+  /**
+   * Delete (or mark unusable) a cache file from a previous run.
+   * @param auditId The {@link CacheDetails#auditId} for the request the created the cache file.
+   * @return A Future that will be completed when the file has been deleted (or marked unusable) in the data store.
+   */
   Future<Void> deleteCacheFile(String auditId);
 
+  /**
+   * Calculated whether or not the current request is permitted according to the rate limit rules specified in the definition.
+   * @param context The {@link RequestContext} to match against previous runs.
+   * @param pipeline The pipeline definition containing {@link Pipeline#rateLimitRules}.
+   * @return A Future that will be completed with the passed in pipeline if the rules permit this request, or failed with a {@link uk.co.spudsoft.query.web.ServiceException} if they do not.
+   */
   Future<Pipeline> runRateLimitRules(RequestContext context, Pipeline pipeline);
 
+  /**
+   * Record details of the HTTP response against the current {@link RequestContext#requestId}.
+   * @param context The {@link RequestContext} from which to derive the {@link RequestContext#requestId}.
+   * @param response The response details to be recorded.
+   */
   void recordResponse(RequestContext context, HttpServerResponse response);
   
+  /**
+   * Get the details of any recorded requests matching the passed in values.
+   * @param issuer The issuer to match.
+   * @param subject The subject to match.
+   * @param skipRows The number of rows to skip (for paging).
+   * @param maxRows The maximum number of rows to return.
+   * @param sortOrder The field to sort by.
+   * @param sortDescending If true the sort will be in descending order.
+   * @return A Future that will be completed with the audit history.
+   */
   Future<AuditHistory> getHistory(String issuer, String subject, int skipRows, int maxRows, AuditHistorySortOrder sortOrder, boolean sortDescending);
  
+  /**
+   * Return a username with any '@&lt;domain&gt;' stripped off.
+   * @param username The username, which may be an email address.
+   * @return The username with anything following the first '@' removed.
+   */
   static String localizeUsername(String username) {
     if (username == null) {
       return username;
@@ -81,6 +160,11 @@ public interface Auditor {
     return parts[0];
   }
 
+  /**
+   * Convert a possibly nullable List into a JsonArray.
+   * @param items A List of strings that may be null.
+   * @return Either null, or a JsonArray created from the List.
+   */
   static JsonArray listToJson(List<String> items) {
     if (items == null) {
       return null;

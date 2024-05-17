@@ -93,6 +93,11 @@ public class DynamicEndpoint {
   private final String passwordField;
   private final String conditionField;
 
+  /**
+   * Validate the configuration.
+   * <p>
+   * The input must be a valid {@link SourcePipeline}; either key or keyField must be set; and either urlField or urlTemplateField must be set.
+   */
   public void validate() {
     if (input == null) {
       throw new IllegalArgumentException("Input not specified in dynamic endpoint");
@@ -106,8 +111,14 @@ public class DynamicEndpoint {
     }
   }
   
-  public PreProcessorInstance createInstance(Vertx vertx, Context context, DynamicEndpoint de) {
-    return new DynamicEndpointPreProcessorInstance(vertx, context, de);
+  /**
+   * Create a {@link DynamicEndpointPreProcessorInstance} based on this configuration.
+   * @param vertx The Vert.x instance.
+   * @param context The Vert.x context.
+   * @return a newly created {@link DynamicEndpointPreProcessorInstance} object.
+   */
+  public PreProcessorInstance createInstance(Vertx vertx, Context context) {
+    return new DynamicEndpointPreProcessorInstance(vertx, context, this);
   }
   
   /**
@@ -331,6 +342,9 @@ public class DynamicEndpoint {
     return conditionField;
   }
 
+  /**
+   * Builder class.
+   */
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
@@ -348,51 +362,101 @@ public class DynamicEndpoint {
     private Builder() {
     }
 
+    /**
+     * Set the input value on the builder.
+     * @param value the input value.
+     * @return this, so that the builder may be used in a fluent manner.
+     */
     public Builder input(final SourcePipeline value) {
       this.input = value;
       return this;
     }
 
+    /**
+     * Set the key value on the builder.
+     * @param value the key value.
+     * @return this, so that the builder may be used in a fluent manner.
+     */
     public Builder key(final String value) {
       this.key = value;
       return this;
     }
 
+    /**
+     * Set the typeField value on the builder.
+     * @param value the typeField value.
+     * @return this, so that the builder may be used in a fluent manner.
+     */
     public Builder typeField(final String value) {
       this.typeField = value;
       return this;
     }
 
+    /**
+     * Set the keyField value on the builder.
+     * @param value the keyField value.
+     * @return this, so that the builder may be used in a fluent manner.
+     */
     public Builder keyField(final String value) {
       this.keyField = value;
       return this;
     }
 
+    /**
+     * Set the urlField value on the builder.
+     * @param value the urlField value.
+     * @return this, so that the builder may be used in a fluent manner.
+     */
     public Builder urlField(final String value) {
       this.urlField = value;
       return this;
     }
 
+    /**
+     * Set the urlTemplateField value on the builder.
+     * @param value the urlTemplateField value.
+     * @return this, so that the builder may be used in a fluent manner.
+     */
     public Builder urlTemplateField(final String value) {
       this.urlTemplateField = value;
       return this;
     }
 
+    /**
+     * Set the secretField value on the builder.
+     * @param value the secretField value.
+     * @return this, so that the builder may be used in a fluent manner.
+     */
     public Builder secretField(final String value) {
       this.secretField = value;
       return this;
     }
 
+    /**
+     * Set the usernameField value on the builder.
+     * @param value the usernameField value.
+     * @return this, so that the builder may be used in a fluent manner.
+     */
     public Builder usernameField(final String value) {
       this.usernameField = value;
       return this;
     }
 
+    /**
+     * Set the passwordField value on the builder.
+     * @param value the passwordField value.
+     * @return this, so that the builder may be used in a fluent manner.
+     */
     public Builder passwordField(final String value) {
       this.passwordField = value;
       return this;
     }
 
+    /**
+     * Set the conditionField value on the builder.
+     * @param value the conditionField value.
+     * @return this, so that the builder may be used in a fluent manner.
+     */
     public Builder conditionField(final String value) {
       this.conditionField = value;
       return this;

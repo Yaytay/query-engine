@@ -21,7 +21,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 /**
- * Configuration data for commuicating with a data source.
+ * Configuration data for communicating with a data source.
  *
  * @author jtalbut
  */
@@ -53,33 +53,70 @@ public class DataSourceConfig {
    */
   private int maxPoolSize = 10;
 
+  /**
+   * Constructor.
+   */
+  public DataSourceConfig() {
+  }
+
+  /**
+   * Set the URL to use for accessing the datasource.
+   * @param url the URL to use for accessing the datasource.
+   * @return this, so that this method may be used in a fluent manner.
+   */
   public DataSourceConfig setUrl(String url) {
     this.url = url;
     return this;
   }
 
+  /**
+   * Set the schema to use for accessing the datasource.
+   * @param schema the schema to use for accessing the datasource.
+   * @return this, so that this method may be used in a fluent manner.
+   */
   public DataSourceConfig setSchema(String schema) {
     this.schema = schema;
     return this;
   }
 
+  /**
+   * Set the user to use for accessing the datasource for CRUD operations.
+   * @param user the user to use for accessing the datasource for CRUD operations.
+   * @return this, so that this method may be used in a fluent manner.
+   */
   public DataSourceConfig setUser(Credentials user) {
     this.user = user;
     return this;
   }
 
+  /**
+   * Set the user to use for accessing the datasource for DDL operations.
+   * @param adminUser the user to use for accessing the datasource for DDL operations.
+   * @return this, so that this method may be used in a fluent manner.
+   */
   public DataSourceConfig setAdminUser(Credentials adminUser) {
     this.adminUser = adminUser;
     return this;
   }
 
+  /**
+   * Set the maximum number of concurrent connections that should be made to this datasource.
+   * @param maxPoolSize the maximum number of concurrent connections that should be made to this datasource.
+   * @return this, so that this method may be used in a fluent manner.
+   */
   public DataSourceConfig setMaxPoolSize(int maxPoolSize) {
     this.maxPoolSize = maxPoolSize;
     return this;
   }
 
-  public void setMinPoolSize(int minPoolSize) {
+  /**
+   * Set the minimum number of concurrent connections that should be made to this datasource.
+   * @param minPoolSize the minimum number of concurrent connections that should be made to this datasource.
+   * @return this, so that this method may be used in a fluent manner.
+   */
+  public DataSourceConfig setMinPoolSize(int minPoolSize) {
     this.minPoolSize = minPoolSize;
+    return this;
   }
 
   /**
@@ -130,6 +167,14 @@ public class DataSourceConfig {
     return minPoolSize;
   }
   
+  /**
+   * Validate the configuration.
+   * <p>
+   * The URL must be set to a valid URL, the remaining parameters are optional.
+   * 
+   * @param path the configuration path to this set of properties.
+   * @throws IllegalArgumentException if the configuration is not valid.
+   */
   public void validate(String path) throws IllegalArgumentException {
     if (Strings.isNullOrEmpty(url)) {
       throw new IllegalArgumentException(path + ".url is not set");

@@ -31,6 +31,9 @@ import uk.co.spudsoft.dircache.AbstractTree.AbstractNode;
  */
 public class DocNodesTree extends AbstractTree {
 
+  /**
+   * Constructor.
+   */
   private DocNodesTree() {
   }
   
@@ -50,6 +53,10 @@ public class DocNodesTree extends AbstractTree {
     
     private final String path; 
 
+    /**
+     * Constructor.
+     * @param path the relative path to the node.
+     */
     public DocNode(String path) {
       super(nameFromPath(path));
       this.path = path;
@@ -138,6 +145,11 @@ public class DocNodesTree extends AbstractTree {
                         """)
   public static class DocDir extends DocNode {
     
+    /**
+     * Constructor.
+     * @param path The relative path to the dir.
+     * @param children The children of the dir.
+     */
     public DocDir(String path,  List<DocNode> children) {
       super(path, children);
     }
@@ -175,6 +187,11 @@ public class DocNodesTree extends AbstractTree {
     
     private final String title;
     
+    /**
+     * Constructor.
+     * @param path The relative path to the document.
+     * @param title The title of the document.
+     */
     @JsonCreator
     public DocFile(String path, String title) {
       super(path);

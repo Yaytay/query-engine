@@ -24,7 +24,7 @@ import java.time.LocalTime;
 
 /**
  * The basic data types that values can have in Query Engine.
- * 
+ *
  * @author jtalbut
  */
 @Schema(description = """
@@ -33,34 +33,81 @@ import java.time.LocalTime;
 )
 public enum DataType {
 
-  Null(JDBCType.NULL, 0)
-  , Integer(JDBCType.INTEGER, 16)
-  , Long(JDBCType.BIGINT, 24)
-  , Float(JDBCType.FLOAT, 16)
-  , Double(JDBCType.DOUBLE, 24)
-  , String(JDBCType.NVARCHAR, -1)
-  , Boolean(JDBCType.BOOLEAN, 16)
-  , Date(JDBCType.DATE, 24)
-  , DateTime(JDBCType.TIMESTAMP, 24)
-  , Time(JDBCType.TIME, 24)
-  ;
-  
+  /**
+   * The value is null.
+   */
+  Null(JDBCType.NULL, 0),
+  /**
+   * The value is a java.lang.Integer.
+   */
+  Integer(JDBCType.INTEGER, 16), 
+  /**
+   * The value is a java.lang.Long.
+   */
+  Long(JDBCType.BIGINT, 24), 
+  /**
+   * The value is a java.lang.Float.
+   */
+  Float(JDBCType.FLOAT, 16), 
+  /**
+   * The value is a java.lang.Double.
+   */
+  Double(JDBCType.DOUBLE, 24), 
+  /**
+   * The value is a java.lang.String.
+   */
+  String(JDBCType.NVARCHAR, -1), 
+  /**
+   * The value is a java.lang.Boolean.
+   */
+  Boolean(JDBCType.BOOLEAN, 16),
+  /**
+   * The value is a java.time.LocalDate.
+   */
+  Date(JDBCType.DATE, 24), 
+  /**
+   * The value is a java.time.LocalDateTime.
+   */
+  DateTime(JDBCType.TIMESTAMP, 24), 
+  /**
+   * The value is a java.time.LocalTime.
+   */
+  Time(JDBCType.TIME, 24);
+
   private final JDBCType jdbcType;
   private final int bytes;
   private int index;
-  
+
   private static final DataType[] VALUES = DataType.values();
 
+  /**
+   * Constructor.
+   * @param jdbcType The type used to represent this datatype in JDBC.
+   * @param bytes The size of this data type, in bytes.
+   */
   DataType(JDBCType jdbcType, int bytes) {
     this.jdbcType = jdbcType;
     this.bytes = bytes;
   }
-  
+
+  /**
+   * Return a DataType given its ordinal number.
+   * <p>
+   * This value is not guaranteed to be consistent between builds or platforms.
+   * @param ord The ordinal.
+   * @return the DataType with the given ordinal number.
+   */
   public static DataType fromOrdinal(int ord) {
     return VALUES[ord];
   }
-  
-  public static DataType fromObject(Object value) {
+
+  /**
+   * Return the DataType of the passed in object.
+   * @param value The object being considered.
+   * @return the DataType of the passed in object.
+   * @throws IllegalArgumentException if the value is not of a recognized class.
+   */
+  public static DataType fromObject(Object value) throws IllegalArgumentException {
     if (value == null) {
       return Null;
     } else if (value instanceof Integer) {
@@ -86,14 +133,27 @@ public enum DataType {
     }
   }
 
+  /**
+   * Get the value uses to represent this datatype in JDBC.
+   * @return the value uses to represent this datatype in JDBC.
+   */
   public JDBCType jdbcType() {
     return jdbcType;
   }
 
+  /**
+   * Get the size of this datatype, in bytes.
+   * @return the size of this datatype, in bytes.
+   */
   public int bytes() {
     return bytes;
   }
-  
+
+  /**
+   * Get the appropriate DataType for any JDBCType.
+   * @param jdbcType The JDBCType being sought.
+   * @return the appropriate DataType for the JDBCType.
+   */
   public static DataType fromJdbcType(JDBCType jdbcType) {
     switch (jdbcType) {
       case BOOLEAN:
@@ -147,5 +207,5 @@ public enum DataType {
       default:
         throw new IllegalArgumentException("Cannot process fields of type " + jdbcType.getName());
     }
-  }  
+  }
 }

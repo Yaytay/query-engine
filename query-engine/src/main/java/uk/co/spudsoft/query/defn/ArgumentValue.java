@@ -82,6 +82,9 @@ public class ArgumentValue {
     return label;
   }
 
+  /**
+   * Builder class for {@link ArgumentValue}.
+   */
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 

@@ -50,6 +50,10 @@ public class DataRowComparator implements Comparator<DataRow> {
 
   private final ImmutableList<String> fields;
   
+  /**
+   * Constructor.
+   * @param fields The list of fields to use in the comparison. 
+   */
   public DataRowComparator(List<String> fields) {
     this.fields = ImmutableCollectionTools.copy(fields);
   }

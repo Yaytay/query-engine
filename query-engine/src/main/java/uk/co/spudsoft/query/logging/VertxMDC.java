@@ -40,7 +40,17 @@ import org.slf4j.spi.MDCAdapter;
 public class VertxMDC implements MDCAdapter {
 
   private static final String VERTX_KEY = VertxMDC.class.getCanonicalName();
+  
+  /**
+   * The singleton instance of VertxMDC that clients should use.
+   */
   public static final VertxMDC INSTANCE = new VertxMDC();
+
+  /**
+   * Constructor.
+   */
+  public VertxMDC() {
+  }
   
   private static class MdcData {
     private final Map<String, String> mdcReadWriteMap = new HashMap<>();

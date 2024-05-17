@@ -123,7 +123,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
   public List<PreProcessorInstance> createPreProcessors(Vertx vertx, Context context, Pipeline definition) {
     List<PreProcessorInstance> result = new ArrayList<>();
     for (DynamicEndpoint de : definition.getDynamicEndpoints()) {
-      result.add(de.createInstance(vertx, context, de));
+      result.add(de.createInstance(vertx, context));
     }
     return result;
   }

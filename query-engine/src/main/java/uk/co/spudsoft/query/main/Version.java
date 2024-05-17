@@ -19,13 +19,22 @@ package uk.co.spudsoft.query.main;
 
 /**
  * Set the version from the pom.
+ * <p>
+ * This file is updated by com.google.code.maven-replacer-plugin/replacer maven plugin.
  * 
  * @author jtalbut
  */
 public final class Version {
 
+  /**
+   * The project name, as set in the Maven pom.xml.
+   */
   public static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-  public static final String MAVEN_PROJECT_VERSION = "0.0.33-31-main";
+  
+  /**
+   * The project version, as set in the Maven pom.xml.
+   */
+  public static final String MAVEN_PROJECT_VERSION = "0.0.33-32-main";
 
   private Version() {
   }

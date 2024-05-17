@@ -32,6 +32,11 @@ public class ColumnDefn implements ColumnDescriptor {
   private final String name;
   private final DataType type;
 
+  /**
+   * Constructor.
+   * @param name The name of the column.
+   * @param type The type of the column.
+   */
   public ColumnDefn(String name, DataType type) {
     this.name = name;
     this.type = type;
@@ -57,6 +62,10 @@ public class ColumnDefn implements ColumnDescriptor {
     return type.jdbcType();
   }
 
+  /**
+   * Get the type of the column.
+   * @return the type of the column.
+   */
   public DataType type() {
     return type;
   }

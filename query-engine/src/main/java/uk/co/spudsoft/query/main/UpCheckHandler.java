@@ -31,6 +31,10 @@ public class UpCheckHandler implements Handler<Promise<Status>> {
   
   private final AtomicBoolean up;
 
+  /**
+   * Constructor.
+   * @param up An AtomicBoolean that the main method sets when initialization is complete.
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The whole point is that the mutable object gets modified externally")
   public UpCheckHandler(AtomicBoolean up) {
     this.up = up;

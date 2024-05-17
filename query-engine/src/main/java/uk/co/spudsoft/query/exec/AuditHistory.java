@@ -36,16 +36,29 @@ public class AuditHistory {
   private final long totalRows;
   private final ImmutableList<AuditHistoryRow> rows;
 
+  /**
+   * Constructor.
+   * 
+   * @param firstRow The number (not ID) of the first row.
+   * @param totalRows  The number of rows that the current user has.
+   * @param rows The rows of data.
+   */
   public AuditHistory(long firstRow, long totalRows, List<AuditHistoryRow> rows) {
     this.firstRow = firstRow;
     this.totalRows = totalRows;
     this.rows = ImmutableCollectionTools.copy(rows);
   }
 
+  /**
+   * Get the index of the first row (out of all those for the current user) present in this dataset.
+   * <P>
+   * This should equal the skipsRows argument passed in the request for history.
+   * @return the index of the first row (out of all those for the current user) present in this dataset.
+   */
   @Schema(
           description = """
                         <P>The index of the first row (out of all those for the current user) present in this dataset.</P>
-                        <P>This shhould equal the skipsRows argument passed in the request for history.</P>
+                        <P>This should equal the skipsRows argument passed in the request for history.</P>
                         """
           , requiredMode = Schema.RequiredMode.REQUIRED
   )
@@ -53,6 +66,10 @@ public class AuditHistory {
     return firstRow;
   }
 
+  /**
+   * Get the total number of history records that the current user has.
+   * @return the total number of history records that the current user has.
+   */
   @Schema(
           description = """
                         <P>The total number of history records that the current user has.</P>
@@ -63,6 +80,12 @@ public class AuditHistory {
     return totalRows;
   }
 
+  /**
+   * Get details of specific requests to the query engine for the current user.
+   * <P>
+   * The number of entries in this array should be no greater than the maxRows argument passed in the request for history.
+   * @return details of specific requests to the query engine for the current user.
+   */
   @Schema(
           description = """
                         <P>Details of specific requests to the query engine for the current user.</P>

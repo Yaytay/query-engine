@@ -29,18 +29,56 @@ import io.swagger.v3.oas.annotations.media.Schema;
 )
 public enum AuditHistorySortOrder {
   
+  /**
+   * Sort the audit history by {@link AuditHistoryRow#timestamp}.
+   */
   timestamp,
+  /**
+   * Sort the audit history by {@link AuditHistoryRow#id}.
+   */
   id,
+  /**
+   * Sort the audit history by {@link AuditHistoryRow#path}.
+   */
   path,
+  /**
+   * Sort the audit history by {@link AuditHistoryRow#host}.
+   */
   host,
+  /**
+   * Sort the audit history by {@link AuditHistoryRow#issuer}.
+   */
   issuer,
+  /**
+   * Sort the audit history by {@link AuditHistoryRow#subject}.
+   */
   subject,
+  /**
+   * Sort the audit history by {@link AuditHistoryRow#username}.
+   */
   username,
+  /**
+   * Sort the audit history by {@link AuditHistoryRow#name}.
+   */
   name,
+  /**
+   * Sort the audit history by {@link AuditHistoryRow#responseCode}.
+   */
   responseCode,
+  /**
+   * Sort the audit history by {@link AuditHistoryRow#responseRows}.
+   */
   responseRows,
+  /**
+   * Sort the audit history by {@link AuditHistoryRow#responseSize}.
+   */
   responseSize,
+  /**
+   * Sort the audit history by {@link AuditHistoryRow#responseStreamStart}.
+   */
   responseStreamStart,
+  /**
+   * Sort the audit history by {@link AuditHistoryRow#responseDuration}.
+   */
   responseDuration,
-  
 }

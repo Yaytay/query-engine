@@ -51,6 +51,12 @@ public class SourceTestInstance extends AbstractSource {
   private final Types types;
   private final QueueReadStream<DataRow> stream;
 
+  /**
+   * Constructor.
+   * @param context The Vert.x context.
+   * @param definition The configuration of this source.
+   * @param defaultName The name to use for this source if the definition does not provide one.
+   */
   public SourceTestInstance(Context context, SourceTest definition, String defaultName) {
     super(Strings.isNullOrEmpty(definition.getName()) ? defaultName : definition.getName());
     this.context = context;

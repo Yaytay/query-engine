@@ -48,6 +48,13 @@ public final class CachingWriteStream implements WriteStream<Buffer> {
   private Handler<Void> drainHandler;
   private Handler<Throwable> exceptionHandler;
 
+  /**
+   * Constructor.
+   * @param fileSystem The Vert.x FileSystem for working with files.
+   * @param cacheFile The path to the file to cache the stream to.
+   * @param cacheStream The stream to cache.
+   * @param destStream The output stream.
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "It does store external mutable objects.")
   public  CachingWriteStream(FileSystem fileSystem, String cacheFile, WriteStream<Buffer> cacheStream, WriteStream<Buffer> destStream) {
     this.fileSystem = fileSystem;

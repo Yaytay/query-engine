@@ -51,6 +51,9 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
                       """)
 public class Argument {
   
+  /**
+   * Regular expression for a valid argument name - a case sensitive string of alpha numeric characters.
+   */
   public static final Pattern VALID_NAME = Pattern.compile("\\p{Alnum}+", UNICODE_CHARACTER_CLASS);
   
   private final ArgumentType type;
@@ -70,7 +73,11 @@ public class Argument {
   private final String possibleValuesUrl;
   private final String permittedValuesRegex;
 
-  public void validate() {
+  /**
+   * Validate the provided definition.
+   * @throws IllegalArgumentException If the argument definition is not valid.
+   */
+  public void validate() throws IllegalArgumentException {
     if (!VALID_NAME.matcher(name).matches()) {
       throw new IllegalArgumentException("The argument \"" + name + "\" does not have a valid name.");
     }
@@ -105,8 +112,8 @@ public class Argument {
   }
   
   /**
-   * Get the data of the argument.
-   * @return the data of the argument.
+   * Get the data type of the argument.
+   * @return the data type of the argument.
    */
   @Schema(description = """
                         <P>The data type of the argument</P>

@@ -56,6 +56,9 @@ public class Credentials {
     return this;
   }
 
+  /**
+   * Constructor.
+   */
   public Credentials() {
   }
     

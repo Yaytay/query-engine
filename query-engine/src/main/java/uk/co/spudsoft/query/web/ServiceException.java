@@ -29,20 +29,40 @@ public class ServiceException extends Exception {
   
   private final int statusCode;
 
+  /**
+   * Constructor.
+   * @param statusCode HTTP status code to use on the response to the client.
+   * @param message Message to use on the response to the client.
+   * @param cause Cause of this ServiceException - this will only be included in the response to the client if outputAllErrorMessages is set.
+   */
   public ServiceException(int statusCode, String message, Throwable cause) {
     super(message, cause);
     this.statusCode = statusCode;
   }
 
+  /**
+   * Constructor.
+   * @param statusCode HTTP status code to use on the response to the client.
+   * @param message Message to use on the response to the client.
+   */
   public ServiceException(int statusCode, String message) {
     super(message);
     this.statusCode = statusCode;
   }
 
+  /**
+   * Get the HTTP status code.
+   * @return the HTTP status code.
+   */
   public int getStatusCode() {
     return statusCode;
   }  
   
+  /**
+   * Return a ServiceException, either the one passed in or a newly created on with that set as the cause.
+   * @param ex An exception, that might already be a ServiceException.
+   * @return A ServiceException.
+   */
   public static ServiceException rethrowOrWrap(Throwable ex) {
     if (ex instanceof ServiceException se) {
       return se;

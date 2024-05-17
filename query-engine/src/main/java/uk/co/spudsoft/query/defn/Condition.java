@@ -209,6 +209,12 @@ public class Condition {
    */
   public static class Deserializer extends JsonDeserializer<Condition> {
 
+    /**
+     * Constructor.
+     */
+    public Deserializer() {
+    }
+
     @Override
     public Condition deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
       return new Condition(p.getText());
@@ -220,6 +226,12 @@ public class Condition {
    * Jackson {@link com.fasterxml.jackson.databind.JsonSerializer} for Conditions.
    */
   public static class Serializer extends JsonSerializer<Condition> {  
+
+    /**
+     * Constructor.
+     */
+    public Serializer() {
+    }
 
     @Override
     public void serialize(Condition value, JsonGenerator gen, SerializerProvider serializers) throws IOException {

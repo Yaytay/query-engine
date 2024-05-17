@@ -55,6 +55,14 @@ public class UiRouter implements Handler<RoutingContext> {
   
   private final long bootTime = System.currentTimeMillis();
 
+  /**
+   * Factory method.
+   * @param vertx The Vert.x instance.
+   * @param stripPath Any path that starts with this will have it stripped before further processing.
+   * @param baseResourcePath The physical path to the UI resources.
+   * @param defaultFilePath If the requested file does not exist as a resource this file is returned instead.
+   * @return a newly created UiRouter instance.
+   */
   public static UiRouter create(Vertx vertx, String stripPath, String baseResourcePath, String defaultFilePath) {
     return new UiRouter(vertx, stripPath, baseResourcePath, defaultFilePath);
   }

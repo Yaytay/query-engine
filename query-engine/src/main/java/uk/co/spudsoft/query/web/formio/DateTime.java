@@ -33,7 +33,22 @@ public class DateTime extends Component<DateTime> {
    * Date picker mode.
    */
   public enum DatePickerMode {
-    day, week, month, year
+    /**
+     * The DatePicker is in Day mode.
+     */
+    day, 
+    /**
+     * The DatePicker is in Week mode.
+     */
+    week, 
+    /**
+     * The DatePicker in in Month mode.
+     */
+    month, 
+    /**
+     * The DatePicker is in Year mode.
+     */
+    year
   }
   
   /**

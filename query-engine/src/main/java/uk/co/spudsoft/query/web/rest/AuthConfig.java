@@ -34,7 +34,7 @@ public class AuthConfig {
   private final String logo;
 
   /**
-   * 
+   * Constructor.
    * @param name The name to use in the list of authentication providers.
    * @param logo The URL to the logo to use in the list of authentication providers.
    */

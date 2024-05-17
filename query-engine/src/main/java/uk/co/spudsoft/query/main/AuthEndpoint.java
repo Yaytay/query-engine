@@ -84,7 +84,7 @@ public class AuthEndpoint {
   /**
    * Modify this AuthEndpoint according to the data found at an <a href="https://openid.net/specs/openid-connect-discovery-1_0.html">OpenID Connect Discovery</a> endpoint.
    * 
-   * @param discoveryData 
+   * @param discoveryData Open ID Connector Discovery data downloaded.
    */
   public void updateFromOpenIdConfiguration(DiscoveryData discoveryData) {
     String tempTokenEndpoint = discoveryData.getTokenEndpoint();

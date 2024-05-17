@@ -54,6 +54,9 @@ public class ClientCredentials {
     this.secret = secret;
   }
 
+  /**
+   * Constructor.
+   */
   public ClientCredentials() {
   }
     

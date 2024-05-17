@@ -44,9 +44,16 @@ public class Types {
   private final List<ColumnDefn> defns = new ArrayList<>();
   private final HashMap<String, Integer> indices = new HashMap<>();
   
+  /**
+   * Constructor.
+   */
   public Types() {
   }
 
+  /**
+   * Copy constructor.
+   * @param types The Types object to copy from.
+   */
   public Types(List<ColumnDefn> types) {
     int i = 0;
     for (ColumnDefn defn : types) {
@@ -55,6 +62,11 @@ public class Types {
     }
   }
   
+  /**
+   * Get the type of one field.
+   * @param key The field being requested.
+   * @return the type of the requested field.
+   */
   public DataType get(String key) {
     Integer idx = indices.get(key);
     if (idx == null) {
@@ -64,6 +76,10 @@ public class Types {
     }
   }
   
+  /**
+   * Get the set of all fields.
+   * @return the set of all fields.
+   */
   public Set<String> keySet() {
     return indices.keySet();
   }
@@ -97,22 +113,42 @@ public class Types {
     return this;
   }
 
+  /**
+   * Get the list of column definitions.
+   * @return the list of column definitions.
+   */
   public List<ColumnDescriptor> getColumnDescriptors() {
     return Collections.unmodifiableList(defns);
   }
 
+  /**
+   * Carry out action for each known column definition.
+   * @param action The action to carry out.
+   */
   public void forEach(Consumer<? super ColumnDefn> action) {
     defns.forEach(action);
   }
   
+  /**
+   * Create a new Iterator across the column definitions.
+   * @return a newly created Iterator across the column definitions.
+   */
   public Iterator<ColumnDefn> iterator() {
     return defns.iterator();
   }
   
+  /**
+   * True if the there are no column definitions.
+   * @return true if the there are no column definitions.
+   */
   public boolean isEmpty() {
     return defns.isEmpty();
   }
 
+  /**
+   * The number of column definitions known.
+   * @return the number of column definitions known.
+   */
   public int size() {
     return defns.size();
   }

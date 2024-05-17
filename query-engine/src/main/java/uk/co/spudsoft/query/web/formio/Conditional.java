@@ -38,18 +38,42 @@ public class Conditional extends AbstractComponent<Conditional> {
     super(generator);
   }
   
+  /**
+   * Output a show field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Conditional withShow(final Boolean value) throws IOException {
     return with("show", value);
   }
 
+  /**
+   * Output a when field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Conditional withWhen(final String value) throws IOException {
     return with("when", value);
   }
 
+  /**
+   * Output an eq field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Conditional withEq(final String value) throws IOException {
     return with("eq", value);
   }
 
+  /**
+   * Output a json field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
   public Conditional withJson(final String value) throws IOException {
     return with("json", value);
   }

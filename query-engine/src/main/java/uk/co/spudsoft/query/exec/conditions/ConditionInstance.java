@@ -65,6 +65,11 @@ public class ConditionInstance {
   
   private final JexlExpression expression;
 
+  /**
+   * Return true if the condition or its expression is null or blank.
+   * @param condition The condition being assessed.
+   * @return true if the condition or its expression is null or blank.
+   */
   public static boolean isNullOrBlank(Condition condition) {
     return condition == null
             || condition.getExpression() == null
@@ -72,18 +77,36 @@ public class ConditionInstance {
             ;
   }
   
+  /**
+   * Constructor.
+   * @param expression The <a href="https://commons.apache.org/proper/commons-jexl/">JEXL</a> expression.
+   */
   public ConditionInstance(String expression) {
     this.expression = JEXL.createExpression(expression);
   }
 
+  /**
+   * Get the source text of the expression.
+   * @return the source text of the expression.
+   */
   public String getSourceText() {
     return expression.getSourceText();
   }
 
+  /**
+   * Get the parsed test of the expression.
+   * @return the parsed test of the expression.
+   */
   public String getParsedText() {
     return expression.getParsedText();
   }
   
+  /**
+   * Evaluate the expression for the given RequestContext and DataRow, which may be null.
+   * @param request The context of the request.
+   * @param row The current DataRow, if this expression is to be evaluated in the context of a row.
+   * @return true is the expression evaluates to true.
+   */
   // Compare the bindings with PipelineInstance#renderTemplate and ProcessorScriptInstance#runSource
   public boolean evaluate(RequestContext request, DataRow row) {
     JexlContext context = new MapContext();

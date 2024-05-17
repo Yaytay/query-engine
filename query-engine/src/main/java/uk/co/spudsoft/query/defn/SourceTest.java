@@ -122,6 +122,9 @@ public class SourceTest implements Source {
     return new SourceTestInstance(context, this, defaultName);
   }
   
+  /**
+   * Builder class.
+   */
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
@@ -133,25 +136,49 @@ public class SourceTest implements Source {
     private Builder() {
     }
 
+    /**
+     * Construct a new {@link SourceTest} instance.
+     * @return a newly created {@link SourceTest} instance.
+     */
     public SourceTest build() {
       return new SourceTest(type, rowCount, name, delayMs);
     }
 
+    /**
+     * Set the {@link SourceTest#type} value on the builder.
+     * @param value the type value.
+     * @return this, so that the builder may be used in a fluent manner.
+     */
     public Builder type(final SourceType value) {
       this.type = value;
       return this;
     }
 
+    /**
+     * Set the {@link SourceTest#rowCount} value on the builder.
+     * @param value the rowCount value.
+     * @return this, so that the builder may be used in a fluent manner.
+     */
     public Builder rowCount(final int value) {
       this.rowCount = value;
       return this;
     }
 
+    /**
+     * Set the {@link SourceTest#name} value on the builder.
+     * @param value the name value.
+     * @return this, so that the builder may be used in a fluent manner.
+     */
     public Builder name(final String value) {
       this.name = value;
       return this;
     }
     
+    /**
+     * Set the {@link SourceTest#delayMs} value on the builder.
+     * @param value the delayMs value.
+     * @return this, so that the builder may be used in a fluent manner.
+     */
     public Builder delayMs(final int value) {
       this.delayMs = value;
       return this;

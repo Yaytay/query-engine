@@ -38,6 +38,12 @@ public class CacheConfig {
   private Duration purgePeriod = Duration.of(1, ChronoUnit.HOURS);
 
   /**
+   * Constructor.
+   */
+  public CacheConfig() {
+  }
+
+  /**
    * The maximum number of items that should be stored in the cache.
    * <P>
    * When more items than this are in the cache they are purged eldest first.
@@ -123,20 +129,20 @@ public class CacheConfig {
 
   /**
    * Validate the provided values.
-   * @param name
-   * @throws IllegalArgumentException 
+   * @param path The configuration path to this item, for reporting.
+   * @throws IllegalArgumentException If the cache configuration is invalid.
    */
-  public void validate(String name) throws IllegalArgumentException {
+  public void validate(String path) throws IllegalArgumentException {
     if (maxItems < 1) {
-      throw new IllegalArgumentException(name + ".maxItems configured with negative value (" + maxItems + ")");
+      throw new IllegalArgumentException(path + ".maxItems configured with negative value (" + maxItems + ")");
     }
     if (maxDuration != null && maxDuration.isNegative()) {
-      throw new IllegalArgumentException(name + ".maxDuration configured with negative value (" + maxDuration + ")");
+      throw new IllegalArgumentException(path + ".maxDuration configured with negative value (" + maxDuration + ")");
     }
     if (purgePeriod == null) {
-      throw new IllegalArgumentException(name + ".purgePeriod not configured");
+      throw new IllegalArgumentException(path + ".purgePeriod not configured");
     } else if (!purgePeriod.isPositive()) {
-      throw new IllegalArgumentException(name + ".purgePeriod configured with value that is not positive (" + purgePeriod + ")");
+      throw new IllegalArgumentException(path + ".purgePeriod configured with value that is not positive (" + purgePeriod + ")");
     }
   }
     
