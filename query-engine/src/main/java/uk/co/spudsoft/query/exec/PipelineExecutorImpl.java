@@ -196,7 +196,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
       }
       
       // Parsing of values occurs as part of construction on ArgumentInstance
-      ArgumentInstance instance = new ArgumentInstance(arg.getName(), arg, values);
+      ArgumentInstance instance = new ArgumentInstance(arg, values);
       if (arg.isValidate()) {
         instance.validateMinMax();
       }

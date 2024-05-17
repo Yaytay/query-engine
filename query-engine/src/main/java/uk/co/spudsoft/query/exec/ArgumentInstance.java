@@ -34,7 +34,6 @@ public final class ArgumentInstance {
   
   private static final Logger logger = LoggerFactory.getLogger(ArgumentInstance.class);
   
-  private final String name;
   private final Argument definition;
   private final ImmutableList<Comparable<?>> values;
 
@@ -44,12 +43,10 @@ public final class ArgumentInstance {
    * The values passed in will be parsed to the appropriate type and some validation will be carried out.
    * Any failures will result in an IllegalArgumentException.
    * 
-   * @param name The name of the argument.
    * @param definition The definition of the argument.
    * @param values The values for the argument as passed in as query string parameters.
    */
-  public ArgumentInstance(String name, Argument definition, ImmutableList<String> values) {
-    this.name = name;
+  public ArgumentInstance(Argument definition, ImmutableList<String> values) {
     this.definition = definition;
     
     ImmutableList.Builder<Comparable<?>> valueBuilder = ImmutableList.builder();
@@ -59,21 +56,21 @@ public final class ArgumentInstance {
           Comparable<?> parsed = parseValue(values.get(i));
           valueBuilder.add(parsed);
         } catch (Throwable ex) {
-          logger.warn("Failed to parse argument {} value {} (\"{}\") as {}", name, i, values.get(i), definition.getType());
-          if (i == 0) {
-            throw new IllegalArgumentException("Argument " + name + " was given a value that could not be parsed as " + definition.getType().name());
+          logger.warn("Failed to parse argument {} value {} (\"{}\") as {}", definition.getName(), i, values.get(i), definition.getType());
+          if (values.size() == 1) {
+            throw new IllegalArgumentException("Argument " + definition.getName() + " value could not be parsed as " + definition.getType().name());
           } else {
-            throw new IllegalArgumentException("Argument " + name + " was given a value that could not be parsed");
+            throw new IllegalArgumentException("Argument " + definition.getName() + " value number " + (i + 1) + " could not be parsed as " + definition.getType().name());
           }
         }
       }
     }
     this.values = valueBuilder.build();
     if (!definition.isMultiValued() && this.values.size() > 1) {
-      throw new IllegalArgumentException("Argument " + name + " is not multi valued but " + this.values.size() + " values supplied");
+      throw new IllegalArgumentException("Argument " + definition.getName() + " is not multi valued but " + this.values.size() + " values supplied");
     }
     if (!definition.isOptional() && this.values.isEmpty()) {
-      throw new IllegalArgumentException("Argument " + name + " is not optional but has no value");
+      throw new IllegalArgumentException("Argument " + definition.getName() + " is not optional but has no value");
     }
   }
   
@@ -117,12 +114,12 @@ public final class ArgumentInstance {
     for (Comparable<?> value : values) {
       if (min != null) {
         if (min.compareTo(value) > 0) {
-          throw new IllegalArgumentException("Argument " + name + " has a minimum value of " + min + ", but \"" + value + "\" was specified.");
+          throw new IllegalArgumentException("Argument " + definition.getName() + " has a minimum value of " + min + ", but \"" + value + "\" was specified.");
         }
       }
       if (max != null) {
         if (max.compareTo(value) < 0) {
-          throw new IllegalArgumentException("Argument " + name + " has a maximum value of " + min + ", but \"" + value + "\" was specified.");
+          throw new IllegalArgumentException("Argument " + definition.getName() + " has a maximum value of " + min + ", but \"" + value + "\" was specified.");
         }
       }
     }
@@ -133,7 +130,7 @@ public final class ArgumentInstance {
    * @return the name of this instance.
    */
   public String getName() {
-    return name;
+    return definition.getName();
   }
   
   /**
