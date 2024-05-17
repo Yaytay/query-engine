@@ -253,7 +253,7 @@ public class Parameters {
 
   /**
    * Get the options for configuring logback.
-   * <p>
+   * 
    * @return the options for configuring logback.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
@@ -263,7 +263,7 @@ public class Parameters {
 
   /**
    * The options for configuring logback.
-   * <p>
+   * 
    * @param logging the options for configuring logback.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -276,7 +276,7 @@ public class Parameters {
   
   /**
    * Get the VertxOptions that will be used when creating the Vertx instance.
-   * <p>
+   * 
    * These values do not usually need to be altered.
    * @return the VertxOptions that will be used when creating the Vertx instance.
    */
@@ -286,7 +286,7 @@ public class Parameters {
 
   /**
    * Get the HttpServerOptions that will be used when creating the HTTP server.
-   * <p>
+   * 
    * The {@link io.vertx.core.http.HttpServerOptions#setMaxHeaderSize(int)} method should be particularly useful when running behind a proxy that passes large JSON headers.
    * @return the HttpServerOptions that will be used when creating the HTTP server.
    */
@@ -297,7 +297,7 @@ public class Parameters {
 
   /**
    * Get the configuration to use for distributed tracing.
-   * <p>
+   * 
    * @return the configuration to use for distributed tracing.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
@@ -307,7 +307,7 @@ public class Parameters {
 
   /**
    * Get whether the process will end rather than waiting for requests
-   * <p>
+   * 
    * This is useful for things such as JIT compilers or CDS preparation.
    * @return the exitOnRun value.
    */
@@ -317,7 +317,7 @@ public class Parameters {
 
   /**
    * Get the path to the root of the configuration files.
-   * <p>
+   * 
    * @return the path to the root of the configuration files.
    */
   public String getBaseConfigPath() {
@@ -326,7 +326,7 @@ public class Parameters {
 
   /**
    * Get the seconds to wait after being notified or a file change to allow all file writes to complete.
-   * <p>
+   * 
    * @return the seconds to wait after being notified or a file change to allow all file writes to complete.
    */
   public int getFileStabilisationDelaySeconds() {
@@ -335,7 +335,7 @@ public class Parameters {
 
   /**
    * The seconds to wait after being notified or a file change to allow all file writes to complete.
-   * <p>
+   * 
    * @param fileStabilisationDelaySeconds the seconds to wait after being notified or a file change to allow all file writes to complete.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -393,7 +393,7 @@ public class Parameters {
 
   /**
    * The configuration to use for distributed tracing.
-   * <p>
+   * 
    * @param tracing the configuration to use for distributed tracing.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -405,7 +405,7 @@ public class Parameters {
   
   /**
    * Whether the process will end rather than waiting for requests.
-   * <p>
+   * 
    * This is useful for things such as JIT compilers or CDS preparation.
    * @param exitOnRun if true process will end rather than waiting for requests.
    * @return this, so that the method may be called in a fluent manner.
@@ -417,7 +417,7 @@ public class Parameters {
 
   /**
    * The path to the root of the configuration files.
-   * <p>
+   * 
    * @param baseConfigPath the path to the root of the configuration files.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -441,7 +441,7 @@ public class Parameters {
 
   /**
    * The configuration of the pipeline cache.
-   * <p>
+   * 
    * @param pipelineCache the configuration of the pipeline cache.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -453,7 +453,7 @@ public class Parameters {
 
   /**
    * Get the Allowed-Origin-Regex to use for CORS.
-   * <p>
+   * 
    * @return the Allowed-Origin-Regex to use for CORS.
    */
   @SuppressFBWarnings("EI_EXPOSE_REP")
@@ -463,7 +463,7 @@ public class Parameters {
 
   /**
    * The Allowed-Origin-Regex to use for CORS.
-   * <p>
+   * 
    * @param corsAllowedOrigins the Allowed-Origin valuess to use for CORS.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -660,6 +660,18 @@ public class Parameters {
     this.managementEndpoints = ImmutableList.copyOf(managementEndpoints);
   }
 
+  /**
+   * Get the port that the /manage endpoints should listen on.
+   * <p>
+   * In order to help secure the management endpoints they can be run on a secondary port.
+   * <p>
+   * If the managementEndpointPort is set to null (the default) the management endpoints will listen on the same port as the API.
+   * This is the least secure option (but most convenient for the UI).
+   * <p>
+   * It the managementEndpointPort is negative the entire management endpoint setup will be disabled.
+   * 
+   * @return the port that the /manage endpoints should listen on.
+   */
   public Integer getManagementEndpointPort() {
     return managementEndpointPort;
   }
@@ -673,7 +685,7 @@ public class Parameters {
    * This is the least secure option (but most convenient for the UI).
    * <p>
    * It the managementEndpointPort is negative the entire management endpoint setup will be disabled.
-   * <p>
+   * 
    * @param managementEndpointPort The port to listen on for the management endpoints.
    * @see Parameters#setManagementEndpoints
    */
@@ -725,6 +737,7 @@ public class Parameters {
 
   /**
    * Get the authentication configuration of the UI and REST API.
+   * 
    * @return the authentication configuration of the UI and REST API.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
@@ -734,6 +747,7 @@ public class Parameters {
 
   /**
    * Set the authentication configuration of the UI and REST API.
+   * 
    * @param session the authentication configuration of the UI and REST API.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
@@ -743,7 +757,9 @@ public class Parameters {
 
   /**
    * Get the configuration for individual processors.
+   * <p>
    * Some processors have specific configuration options that are not appropriate for configuration in pipeline definitions, they are  controlled here.
+   * 
    * @return the configuration for individual processors.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
@@ -753,7 +769,9 @@ public class Parameters {
 
   /**
    * Set the configuration for individual processors.
+   * <p>
    * Some processors have specific configuration options that are not appropriate for configuration in pipeline definitions, they are  controlled here.
+   * 
    * @param processors set the configuration for individual processors.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
@@ -763,8 +781,9 @@ public class Parameters {
 
   /**
    * Get the directory to contain cached output.
+   * <p>
    * This is the on-disc caching of stream output, controlled by the cacheDuration value in individual pipelines.
-   * 
+   * <p>
    * The cache key is based on:
    * <UL>
    * <LI>The full request URL.
@@ -784,8 +803,9 @@ public class Parameters {
    * </UL>
    * 
    * Note that the fileHash must also match, but isn't built into the key (should usually match because of the use of the inclusion of full URL).
-   * 
+   * <p>
    * Note that the default value for the outputCacheDir is probably a bad choice for anything other than the simplest setups.
+   * 
    * @return the directory to contain cached output.
    */
   public String getOutputCacheDir() {
@@ -794,8 +814,9 @@ public class Parameters {
 
   /**
    * Set the directory to contain cached output.
+   * <p>
    * This is the on-disc caching of stream output, controlled by the cacheDuration value in individual pipelines.
-   * 
+   * <p>
    * The cache key is based on:
    * <UL>
    * <LI>The full request URL.
@@ -815,8 +836,9 @@ public class Parameters {
    * </UL>
    * 
    * Note that the fileHash must also match, but isn't built into the key (should usually match because of the use of the inclusion of full URL).
-   * 
+   * <p>
    * Note that the default value for the outputCacheDir is probably a bad choice for anything other than the simplest setups.
+   * 
    * @param outputCacheDir the directory to contain cached output.
    */
   public void setOutputCacheDir(String outputCacheDir) {
@@ -825,6 +847,7 @@ public class Parameters {
 
   /**
    * If set to false any basic auth header will be ignored.
+   * 
    * @return false if any basic auth header will be ignored.
    */
   public boolean isEnableBasicAuth() {
@@ -833,6 +856,7 @@ public class Parameters {
 
   /**
    * If set to false any basic auth header will be ignored.
+   * 
    * @param enableBasicAuth  false if any basic auth header will be ignored.
    */
   public void setEnableBasicAuth(boolean enableBasicAuth) {
@@ -841,6 +865,7 @@ public class Parameters {
 
   /**
    * If set to false any basic auth header will be ignored.
+   * 
    * @return false if any basic auth header will be ignored.
    */
   public boolean isEnableBearerAuth() {
@@ -849,6 +874,7 @@ public class Parameters {
 
   /**
    * If set to false any basic auth header will be ignored.
+   * 
    * @param enableBearerAuth false if any basic auth header will be ignored.
    */
   public void setEnableBearerAuth(boolean enableBearerAuth) {

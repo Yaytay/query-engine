@@ -39,12 +39,13 @@ public class Persistence {
    */
   private Duration retryIncrement;
   /**
-   * Maximum number of retries, zero => no retries, <0 => unlimited retries.
+   * Maximum number of retries, zero => no retries, &lt;0 implies unlimited retries.
    */
   private int retryLimit;
 
   /**
    * The JDBC data source for storing audit information.
+   * 
    * @return the JDBC data source for storing audit information.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
@@ -52,14 +53,27 @@ public class Persistence {
     return dataSource;
   }
 
+  /**
+   * Time to wait for re-attempting to connect to the datasource.
+   * 
+   * @return the time to wait for re-attempting to connect to the datasource.
+   */
   public Duration getRetryBase() {
     return retryBase;
   }
 
+  /**
+   * Additional time to wait for re-attempting to connect to the datasource for each retry.
+   * @return the additional time to wait for re-attempting to connect to the datasource for each retry.
+   */
   public Duration getRetryIncrement() {
     return retryIncrement;
   }
 
+  /**
+   * Maximum number of retries, zero => no retries, &lt;0 implies unlimited retries.
+   * @return the maximum number of retries, zero => no retries, &lt;0 implies unlimited retries.
+   */
   public int getRetryLimit() {
     return retryLimit;
   }
@@ -75,21 +89,42 @@ public class Persistence {
     return this;
   }
 
+  /**
+   * Time to wait for re-attempting to connect to the datasource.
+   * @param retryBase the time to wait for re-attempting to connect to the datasource.
+   * @return this, so the method may be used fluently.
+   */
   public Persistence setRetryBase(Duration retryBase) {
     this.retryBase = retryBase;
     return this;
   }
 
+  /**
+   * Additional time to wait for re-attempting to connect to the datasource for each retry.
+   * @param retryIncrement the additional time to wait for re-attempting to connect to the datasource for each retry.
+   * @return this, so the method may be used fluently.
+   */
   public Persistence setRetryIncrement(Duration retryIncrement) {
     this.retryIncrement = retryIncrement;
     return this;
   }
 
+  /**
+   * Maximum number of retries, zero => no retries, &lt;0 implies unlimited retries.
+   * @param retryLimit the maximum number of retries, zero => no retries, &lt;0 implies unlimited retries.
+   * @return this, so the method may be used fluently.
+   */
   public Persistence setRetryLimit(int retryLimit) {
     this.retryLimit = retryLimit;
     return this;
   }
   
+  /**
+   * Validate the provided parameters.
+   * 
+   * @param path The configuration path to this item, for reporting.
+   * @throws IllegalArgumentException if anything in the parameters is invalid.
+   */
   public void validate(String path) throws IllegalArgumentException {
     if (retryLimit > 0 && retryBase == null) {
       throw new IllegalArgumentException(path + ".retryLimit is " + retryLimit + ", but " + path + ".retryBase is not set");

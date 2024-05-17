@@ -14,11 +14,11 @@ Configuration for the internal datastore using by Query Engine for audit and for
 | The JDBC data source for storing audit information.
 | [[retryBase]]retryBase
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/time/Duration.html[Duration]
-| 
+| Time to wait for re-attempting to connect to the datasource.
 | [[retryIncrement]]retryIncrement
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/time/Duration.html[Duration]
-| 
+| Additional time to wait for re-attempting to connect to the datasource for each retry.
 | [[retryLimit]]retryLimit
 | int
-| 
+| Maximum number of retries, zero => no retries, <0 implies unlimited retries.
 |===

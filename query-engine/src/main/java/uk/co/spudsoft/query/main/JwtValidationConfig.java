@@ -331,9 +331,9 @@ public class JwtValidationConfig {
   /**
    * Validate the provided parameters.
    * 
-   * @param fieldName The name of the parent parameter, to be used in exception messages.
+   * @param path The configuration path to this item, for reporting.
    * @throws IllegalArgumentException if anything in the parameters is invalid.
    */
-  public void validate(String fieldName) throws IllegalArgumentException {
+  public void validate(String path) throws IllegalArgumentException {
   }  
 }

@@ -12,13 +12,9 @@ Top level configuration options for Query Engine.
 | [[logging]]logging
 | xref:uk.co.spudsoft.query.logging.LogbackOptions.adoc[LogbackOptions]
 | The options for configuring logback.
-
-
 | [[fileStabilisationDelaySeconds]]fileStabilisationDelaySeconds
 | int
 | The seconds to wait after being notified or a file change to allow all file writes to complete.
-
-
 | [[vertxOptions]]vertxOptions
 | link:https://vertx.io/docs/apidocs/io/vertx/core/VertxOptions.html[VertxOptions]
 | The VertxOptions that will be used when creating the Vertx instance.
@@ -32,18 +28,12 @@ The link:https://vertx.io/docs/apidocs/io/vertx/core/http/HttpServerOptions.html
 | [[tracing]]tracing
 | xref:uk.co.spudsoft.query.main.TracingConfig.adoc[TracingConfig]
 | The configuration to use for distributed tracing.
-
-
 | [[exitOnRun]]exitOnRun
 | boolean
-| Whether the process will end rather than waiting for requests.
-
-This is useful for things such as JIT compilers or CDS preparation.
+| Whether the process will end rather than waiting for requests.This is useful for things such as JIT compilers or CDS preparation.
 | [[baseConfigPath]]baseConfigPath
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | The path to the root of the configuration files.
-
-
 | [[persistence]]persistence
 | xref:uk.co.spudsoft.query.main.Persistence.adoc[Persistence]
 | Set the persistence configuration.Persistence is used for both audit and state management of logins.
@@ -52,13 +42,9 @@ This is useful for things such as JIT compilers or CDS preparation.
 | [[pipelineCache]]pipelineCache
 | xref:uk.co.spudsoft.query.main.CacheConfig.adoc[CacheConfig]
 | The configuration of the pipeline cache.
-
-
 | [[corsAllowedOrigins]]corsAllowedOrigins
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html[List]<link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]>
 | The Allowed-Origin-Regex to use for CORS.
-
-
 | [[secrets]]secrets
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Map.html[Map]<link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String], xref:uk.co.spudsoft.query.main.ProtectedCredentials.adoc[ProtectedCredentials]>
 | The externalized credentials map.
@@ -158,9 +144,6 @@ If the managementEndpointPort is set to null (the default) the management endpoi
  
 
 It the managementEndpointPort is negative the entire management endpoint setup will be disabled.
- 
-
-
 
 See: 
 | [[managementEndpointUrl]]managementEndpointUrl
@@ -187,12 +170,17 @@ If not set, and managementEndpointPort is positive, users will have no way to di
 | Set the authentication configuration of the UI and REST API.
 | [[processors]]processors
 | xref:uk.co.spudsoft.query.main.ProcessorConfig.adoc[ProcessorConfig]
-| Set the configuration for individual processors.Some processors have specific configuration options that are not appropriate for configuration in pipeline definitions, they are  controlled here.
+| Set the configuration for individual processors.
+
+Some processors have specific configuration options that are not appropriate for configuration in pipeline definitions, they are  controlled here.
 | [[outputCacheDir]]outputCacheDir
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
-| Set the directory to contain cached output.This is the on-disc caching of stream output, controlled by the cacheDuration value in individual pipelines.
+| Set the directory to contain cached output.
+
+This is the on-disc caching of stream output, controlled by the cacheDuration value in individual pipelines.
  
- The cache key is based on:
+
+The cache key is based on:
  
  * The full request URL.
  * Headers:
@@ -211,7 +199,8 @@ If not set, and managementEndpointPort is positive, users will have no way to di
 
 Note that the fileHash must also match, but isn't built into the key (should usually match because of the use of the inclusion of full URL).
  
- Note that the default value for the outputCacheDir is probably a bad choice for anything other than the simplest setups.
+
+Note that the default value for the outputCacheDir is probably a bad choice for anything other than the simplest setups.
 | [[enableBasicAuth]]enableBasicAuth
 | boolean
 | If set to false any basic auth header will be ignored.
