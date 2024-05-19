@@ -87,6 +87,9 @@ public class ProcessorSort implements Processor {
     return fields;
   }
   
+  /**
+   * Builder class for ProcessorSort.
+   */
   @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "Builder class should result in all instances being immutable when object is built")
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
@@ -99,36 +102,59 @@ public class ProcessorSort implements Processor {
     private Builder() {
     }
     
+    /**
+     * Set the {@link ProcessorSort#type} value in the builder.
+     * @param value The value for the {@link ProcessorSort#type}, must be {@link ProcessorType#DYNAMIC_FIELD}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder type(final ProcessorType value) {
       this.type = value;
       return this;
     }
     
     /**
-     * Set the condition on the Pipeline in the builder.
-     * @param value the condition on the Endpoint.
-     * @return this, so that the builder may be used fluently.
+     * Set the {@link ProcessorSort#condition} value in the builder.
+     * @param value The value for the {@link ProcessorSort#condition}.
+     * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder condition(final Condition value) {
       this.condition = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorSort#id} value in the builder.
+     * @param value The value for the {@link ProcessorSort#id}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder id(final String value) {
       this.id = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorSort#fields} value in the builder.
+     * @param value The value for the {@link ProcessorSort#fields}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder fields(final List<String> value) {
       this.fields = value;
       return this;
     }
 
+    /**
+     * Construct a new instance of the ProcessorSort class.
+     * @return a new instance of the ProcessorSort class.
+     */
     public ProcessorSort build() {
       return new ProcessorSort(type, condition, id, fields);
     }
   }
 
+  /**
+   * Construct a new instance of the ProcessorSort.Builder class.
+   * @return a new instance of the ProcessorSort.Builder class.
+   */
   public static ProcessorSort.Builder builder() {
     return new ProcessorSort.Builder();
   }

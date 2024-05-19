@@ -78,6 +78,9 @@ public class ProcessorLimit implements Processor {
     return limit;
   }
   
+  /**
+   * Builder class for ProcessorLimit.
+   */
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
@@ -89,36 +92,59 @@ public class ProcessorLimit implements Processor {
     private Builder() {
     }
     
+    /**
+     * Set the {@link ProcessorLimit#type} value in the builder.
+     * @param value The value for the {@link ProcessorLimit#type}, must be {@link ProcessorType#DYNAMIC_FIELD}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder type(final ProcessorType value) {
       this.type = value;
       return this;
     }
     
     /**
-     * Set the condition on the Pipeline in the builder.
-     * @param value the condition on the Endpoint.
-     * @return this, so that the builder may be used fluently.
+     * Set the {@link ProcessorLimit#condition} value in the builder.
+     * @param value The value for the {@link ProcessorLimit#condition}.
+     * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder condition(final Condition value) {
       this.condition = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorLimit#id} value in the builder.
+     * @param value The value for the {@link ProcessorLimit#id}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder id(final String value) {
       this.id = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorLimit#limit} value in the builder.
+     * @param value The value for the {@link ProcessorLimit#limit}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder limit(final int value) {
       this.limit = value;
       return this;
     }
 
+    /**
+     * Construct a new instance of the ProcessorLimit class.
+     * @return a new instance of the ProcessorLimit class.
+     */
     public ProcessorLimit build() {
       return new ProcessorLimit(type, condition, id, limit);
     }
   }
 
+    /**
+     * Construct a new instance of the ProcessorLimit.Builder class.
+     * @return a new instance of the ProcessorLimit.Builder class.
+     */
   public static ProcessorLimit.Builder builder() {
     return new ProcessorLimit.Builder();
   }

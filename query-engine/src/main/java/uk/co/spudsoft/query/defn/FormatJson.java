@@ -149,30 +149,49 @@ public class FormatJson implements Format {
     }
 
     /**
-     * Set the type of the Format.
-     * @param value must be FormatType.JSON.
-     * @return this, so that the builder may be used fluently.
+     * Set the {@link FormatJson#type} value in the builder.
+     * @param value The value for the {@link FormatJson#type}, must be {@link FormatType#JSON}.
+     * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder type(final FormatType value) {
       this.type = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatJson#name} value in the builder.
+     * @param value The value for the {@link FormatJson#name}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder name(final String value) {
       this.name = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatJson#extension} value in the builder.
+     * @param value The value for the {@link FormatJson#extension}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder extension(final String value) {
       this.extension = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatJson#mediaType} value in the builder.
+     * @param value The value for the {@link FormatJson#mediaType}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder mediaType(final String value) {
       this.mediaType = MediaType.parse(value);
       return this;
     }
 
+    /**
+     * Construct a new instance of the FormatJson class.
+     * @return a new instance of the FormatJson class.
+     */
     public FormatJson build() {
       return new uk.co.spudsoft.query.defn.FormatJson(type, name, extension, mediaType);
     }

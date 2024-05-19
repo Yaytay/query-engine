@@ -216,63 +216,108 @@ public class FormatDelimited implements Format {
     }
 
     /**
-     * Set the type of the Format.
-     * @param value must be FormatType.JSON.
-     * @return this, so that the builder may be used fluently.
+     * Set the {@link FormatDelimited#type} value in the builder.
+     * @param value The value for the {@link FormatDelimited#type}, must be {@link FormatType#Delimited}.
+     * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder type(final FormatType value) {
       this.type = value;
       return this;
     }
    
+    /**
+     * Set the {@link FormatDelimited#name} value in the builder.
+     * @param value The value for the {@link FormatDelimited#name}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder name(final String value) {
       this.name = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatDelimited#extension} value in the builder.
+     * @param value The value for the {@link FormatDelimited#extension}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder extension(final String value) {
       this.extension = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatDelimited#mediaType} value in the builder.
+     * @param value The value for the {@link FormatDelimited#mediaType}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder mediaType(final String value) {
       this.mediaType = MediaType.parse(value);
       return this;
     }
 
+    /**
+     * Set the {@link FormatDelimited#headerRow} value in the builder.
+     * @param value The value for the {@link FormatDelimited#headerRow}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder headerRow(final boolean value) {
       this.headerRow = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatDelimited#delimiter} value in the builder.
+     * @param value The value for the {@link FormatDelimited#delimiter}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder delimiter(final String value) {
       this.delimiter = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatDelimited#openQuote} value in the builder.
+     * @param value The value for the {@link FormatDelimited#openQuote}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder openQuote(final String value) {
       this.openQuote = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatDelimited#closeQuote} value in the builder.
+     * @param value The value for the {@link FormatDelimited#closeQuote}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder closeQuote(final String value) {
       this.closeQuote = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatDelimited#escapeCloseQuote} value in the builder.
+     * @param value The value for the {@link FormatDelimited#escapeCloseQuote}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder escapeCloseQuote(final String value) {
       this.escapeCloseQuote = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatDelimited#newline} value in the builder.
+     * @param value The value for the {@link FormatDelimited#newline}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder newline(final String value) {
       this.newline = value;
       return this;
     }
     
     /**
-     * Construct a new instance of the FormatJson class.
-     * @return a new instance of the FormatJson class.
+     * Construct a new instance of the FormatDelimited class.
+     * @return a new instance of the FormatDelimited class.
      */
     public FormatDelimited build() {
       return new FormatDelimited(type, name, extension, mediaType, headerRow, delimiter, openQuote, closeQuote, escapeCloseQuote, newline);

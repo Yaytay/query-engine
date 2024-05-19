@@ -534,20 +534,31 @@ public final class Pipeline extends SourcePipeline {
 
     private Builder() {
     }
+    
+    /**
+     * Create a new instance of the {@link Pipeline}
+     * @return a new instance of the {@link Pipeline}
+     */
     @Override
     public Pipeline build() {
       return new Pipeline(title, description, condition, cacheDuration, rateLimitRules, arguments, sourceEndpoints, source, dynamicEndpoints, processors, formats);
     }
 
+    /**
+     * Set the {@link SourcePipeline#source} value in the builder.
+     * @param value The value for the {@link SourcePipeline#source}
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    @Override
     public Builder source(final Source value) {
       this.source = value;
       return this;
     }
 
     /**
-     * Set the condition on the Endpoint in the builder.
-     * @param value the condition on the Endpoint.
-     * @return this, so that the builder may be used fluently.
+     * Set the {@link SourcePipeline#processors} value in the builder.
+     * @param value The value for the {@link SourcePipeline#processors}
+     * @return this, so that this builder may be used in a fluent manner.
      */
     @Override
     public Builder processors(final List<Processor> value) {
@@ -555,52 +566,100 @@ public final class Pipeline extends SourcePipeline {
       return this;
     }
     
+    /**
+     * Set the {@link Pipeline#title} value in the builder.
+     * @param value The value for the {@link Pipeline#title}
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder title(final String value) {
       this.title = value;
       return this;
     }
 
+    /**
+     * Set the {@link Pipeline#description} value in the builder.
+     * @param value The value for the {@link Pipeline#description}
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder description(final String value) {
       this.description = value;
       return this;
     }
 
+    /**
+     * Set the {@link Pipeline#condition} value in the builder.
+     * @param value The value for the {@link Pipeline#condition}
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder condition(final Condition value) {
       this.condition = value;
       return this;
     }
 
+    /**
+     * Set the {@link Pipeline#cacheDuration} value in the builder.
+     * @param value The value for the {@link Pipeline#cacheDuration}
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder cacheDuration(final Duration value) {
       this.cacheDuration = value;
       return this;
     }
 
+    /**
+     * Set the {@link Pipeline#rateLimitRules} value in the builder.
+     * @param value The value for the {@link Pipeline#rateLimitRules}
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder rateLimitRules(final List<RateLimitRule> value) {
       this.rateLimitRules = value;
       return this;
     }
 
+    /**
+     * Set the {@link Pipeline#arguments} value in the builder.
+     * @param value The value for the {@link Pipeline#arguments}
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder arguments(final List<Argument> value) {
       this.arguments = value;
       return this;
     }
 
+    /**
+     * Set the {@link Pipeline#sourceEndpoints} value in the builder.
+     * @param value The value for the {@link Pipeline#sourceEndpoints}
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder sourceEndpoints(final List<Endpoint> value) {
       this.sourceEndpoints = value;
       return this;
     }
 
+    /**
+     * Set the {@link Pipeline#dynamicEndpoints} value in the builder.
+     * @param value The value for the {@link Pipeline#dynamicEndpoints}
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder dynamicEndpoints(final List<DynamicEndpoint> value) {
       this.dynamicEndpoints = value;
       return this;
     }
 
+    /**
+     * Set the {@link Pipeline#formats} value in the builder.
+     * @param value The value for the {@link Pipeline#formats}
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder formats(final List<Format> value) {
       this.formats = value;
       return this;
     }
   }
-
+/**
+ * Construct a new Builder object.
+ * @return a newly created Builder object.
+ */
   public static Pipeline.Builder builder() {
     return new Pipeline.Builder();
   }

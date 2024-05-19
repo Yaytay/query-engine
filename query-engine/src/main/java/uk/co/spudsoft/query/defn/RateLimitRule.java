@@ -72,7 +72,12 @@ public class RateLimitRule {
   private final String byteLimit;
   private final int concurrencyLimit;
 
-  public void validate() {
+  /**
+   * Validate the provided rate limit rule.
+   * 
+   * @throws IllegalArgumentException if the definition is not valid.
+   */
+  public void validate() throws IllegalArgumentException {
     if (CollectionUtils.isEmpty(scope))  {
       throw new IllegalArgumentException("No scope provided for rate limit rule.");
     }
@@ -221,6 +226,9 @@ public class RateLimitRule {
     return concurrencyLimit;
   }
 
+  /**
+   * Builder class for RateLimitRule.
+   */
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "Builder class should result in all instances being immutable when object is built")
   public static class Builder {
@@ -259,11 +267,19 @@ public class RateLimitRule {
       return this;
     }
 
+    /**
+     * Construct a new instance of the RateLimitRule class.
+     * @return a new instance of the RateLimitRule class.
+     */
     public RateLimitRule build() {
       return new uk.co.spudsoft.query.defn.RateLimitRule(scope, timeLimit, runLimit, byteLimit, concurrencyLimit);
     }
   }
 
+  /**
+   * Construct a new instance of the RateLimitRule.Builder class.
+   * @return a new instance of the RateLimitRule.Builder class.
+   */
   public static RateLimitRule.Builder builder() {
     return new RateLimitRule.Builder();
   }

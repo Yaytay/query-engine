@@ -100,6 +100,9 @@ public class ProcessorScript implements Processor {
     return process;
   }
 
+  /**
+   * Builder class for ProcessorScript.
+   */
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
@@ -113,46 +116,79 @@ public class ProcessorScript implements Processor {
     private Builder() {
     }
 
+    /**
+     * Set the {@link ProcessorScript#type} value in the builder.
+     * @param value The value for the {@link ProcessorScript#type}, must be {@link ProcessorType#DYNAMIC_FIELD}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder type(final ProcessorType value) {
       this.type = value;
       return this;
     }
 
     /**
-     * Set the condition on the Pipeline in the builder.
-     * @param value the condition on the Endpoint.
-     * @return this, so that the builder may be used fluently.
+     * Set the {@link ProcessorScript#condition} value in the builder.
+     * @param value The value for the {@link ProcessorScript#condition}.
+     * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder condition(final Condition value) {
       this.condition = value;
       return this;
     }
     
+    /**
+     * Set the {@link ProcessorScript#id} value in the builder.
+     * @param value The value for the {@link ProcessorScript#id}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder id(final String value) {
       this.id = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorScript#language} value in the builder.
+     * @param value The value for the {@link ProcessorScript#language}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder language(final String value) {
       this.language = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorScript#predicate} value in the builder.
+     * @param value The value for the {@link ProcessorScript#predicate}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder predicate(final String value) {
       this.predicate = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorScript#process} value in the builder.
+     * @param value The value for the {@link ProcessorScript#process}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder process(final String value) {
       this.process = value;
       return this;
     }
 
+    /**
+     * Construct a new instance of the ProcessorScript class.
+     * @return a new instance of the ProcessorScript class.
+     */
     public ProcessorScript build() {
       return new ProcessorScript(type, condition, id, language, predicate, process);
     }
   }
 
+  /**
+   * Construct a new instance of the ProcessorScript.Builder class.
+   * @return a new instance of the ProcessorScript.Builder class.
+   */
   public static ProcessorScript.Builder builder() {
     return new ProcessorScript.Builder();
   }

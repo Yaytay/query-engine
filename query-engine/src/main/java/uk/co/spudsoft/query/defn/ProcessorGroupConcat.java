@@ -201,6 +201,9 @@ public class ProcessorGroupConcat implements Processor {
     return delimiter;
   }
 
+  /**
+   * Builder class for ProcessorGroupConcat.
+   */
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "Builder class should result in all instances being immutable when object is built")
   public static class Builder {
@@ -218,66 +221,120 @@ public class ProcessorGroupConcat implements Processor {
 
     private Builder() {
     }
+
+    /**
+     * Construct a new instance of the ProcessorGroupConcat class.
+     * @return a new instance of the ProcessorGroupConcat class.
+     */
     public ProcessorGroupConcat build() {
       return new ProcessorGroupConcat(type, condition, id, input, innerJoin, parentIdColumns, childIdColumns, childValueColumn, parentValueColumn, delimiter);
     }
 
+    /**
+     * Set the {@link ProcessorGroupConcat#type} value in the builder.
+     * @param value The value for the {@link ProcessorGroupConcat#type}, must be {@link ProcessorType#DYNAMIC_FIELD}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder type(final ProcessorType value) {
       this.type = value;
       return this;
     }
 
     /**
-     * Set the condition on the Pipeline in the builder.
-     * @param value the condition on the Endpoint.
-     * @return this, so that the builder may be used fluently.
+     * Set the {@link ProcessorGroupConcat#condition} value in the builder.
+     * @param value The value for the {@link ProcessorGroupConcat#condition}.
+     * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder condition(final Condition value) {
       this.condition = value;
       return this;
     }
     
+    /**
+     * Set the {@link ProcessorGroupConcat#id} value in the builder.
+     * @param value The value for the {@link ProcessorGroupConcat#id}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder id(final String value) {
       this.id = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorGroupConcat#input} value in the builder.
+     * @param value The value for the {@link ProcessorGroupConcat#input}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder input(final SourcePipeline value) {
       this.input = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorGroupConcat#innerJoin} value in the builder.
+     * @param value The value for the {@link ProcessorGroupConcat#innerJoin}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder innerJoin(final boolean value) {
       this.innerJoin = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorGroupConcat#parentIdColumns} value in the builder.
+     * @param value The value for the {@link ProcessorGroupConcat#parentIdColumns}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder parentIdColumns(final List<String> value) {
       this.parentIdColumns = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorGroupConcat#childIdColumns} value in the builder.
+     * @param value The value for the {@link ProcessorGroupConcat#childIdColumns}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder childIdColumns(final List<String> value) {
       this.childIdColumns = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorGroupConcat#childValueColumn} value in the builder.
+     * @param value The value for the {@link ProcessorGroupConcat#childValueColumn}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder childValueColumn(final String value) {
       this.childValueColumn = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorGroupConcat#parentValueColumn} value in the builder.
+     * @param value The value for the {@link ProcessorGroupConcat#parentValueColumn}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder parentValueColumn(final String value) {
       this.parentValueColumn = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorGroupConcat#delimiter} value in the builder.
+     * @param value The value for the {@link ProcessorGroupConcat#delimiter}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder delimiter(final String value) {
       this.delimiter = value;
       return this;
     }
   }
 
+  /**
+   * Construct a new instance of the ProcessorGroupConcat.Builder class.
+   * @return a new instance of the ProcessorGroupConcat.Builder class.
+   */
   public static ProcessorGroupConcat.Builder builder() {
     return new ProcessorGroupConcat.Builder();
   }

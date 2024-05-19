@@ -182,6 +182,9 @@ public class ProcessorLookup implements Processor {
     return lookupFields;
   }
   
+  /**
+   * Builder class for ProcessorLookup.
+   */
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "Builder class should result in all instances being immutable when object is built")
   public static class Builder {
@@ -197,46 +200,89 @@ public class ProcessorLookup implements Processor {
     private Builder() {
     }
 
+    /**
+     * Set the {@link ProcessorLookup#type} value in the builder.
+     * @param value The value for the {@link ProcessorLookup#type}, must be {@link ProcessorType#DYNAMIC_FIELD}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder type(final ProcessorType value) {
       this.type = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorLookup#condition} value in the builder.
+     * @param value The value for the {@link ProcessorLookup#condition}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder condition(final Condition value) {
       this.condition = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorLookup#id} value in the builder.
+     * @param value The value for the {@link ProcessorLookup#id}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder id(final String value) {
       this.id = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorLookup#lookupKeyField} value in the builder.
+     * @param value The value for the {@link ProcessorLookup#lookupKeyField}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder lookupKeyField(final String value) {
       this.lookupKeyField = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorLookup#lookupValueField} value in the builder.
+     * @param value The value for the {@link ProcessorLookup#lookupValueField}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder lookupValueField(final String value) {
       this.lookupValueField = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorLookup#lookupFields} value in the builder.
+     * @param value The value for the {@link ProcessorLookup#lookupFields}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder lookupFields(final List<ProcessorLookupField> value) {
       this.lookupFields = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorLookup#map} value in the builder.
+     * @param value The value for the {@link ProcessorLookup#map}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder map(final SourcePipeline value) {
       this.map = value;
       return this;
     }
 
+    /**
+     * Construct a new instance of the ProcessorLookup class.
+     * @return a new instance of the ProcessorLookup class.
+     */
     public ProcessorLookup build() {
       return new ProcessorLookup(type, condition, id, lookupKeyField, lookupValueField, lookupFields, map);
     }
   }
 
+  /**
+   * Construct a new instance of the ProcessorLookup.Builder class.
+   * @return a new instance of the ProcessorLookup.Builder class.
+   */
   public static ProcessorLookup.Builder builder() {
     return new ProcessorLookup.Builder();
   }

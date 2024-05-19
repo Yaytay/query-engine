@@ -368,76 +368,150 @@ public class FormatXlsx implements Format {
     private Builder() {
     }
 
+    /**
+     * Set the {@link FormatXlsx#type} value in the builder.
+     * @param value The value for the {@link FormatXlsx#type}, must be {@link FormatType#XLSX}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder type(final FormatType value) {
       this.type = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatXlsx#name} value in the builder.
+     * @param value The value for the {@link FormatXlsx#name}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder name(final String value) {
       this.name = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatXlsx#extension} value in the builder.
+     * @param value The value for the {@link FormatXlsx#extension}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder extension(final String value) {
       this.extension = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatXlsx#mediaType} value in the builder.
+     * @param value The value for the {@link FormatXlsx#mediaType}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder mediaType(final String value) {
       this.mediaType = MediaType.parse(value);
       return this;
     }
 
+    /**
+     * Set the {@link FormatXlsx#sheetName} value in the builder.
+     * @param value The value for the {@link FormatXlsx#sheetName}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder sheetName(final String value) {
       this.sheetName = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatXlsx#creator} value in the builder.
+     * @param value The value for the {@link FormatXlsx#creator}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder creator(final String value) {
       this.creator = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatXlsx#gridLines} value in the builder.
+     * @param value The value for the {@link FormatXlsx#gridLines}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder gridLines(final boolean value) {
       this.gridLines = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatXlsx#headers} value in the builder.
+     * @param value The value for the {@link FormatXlsx#headers}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder headers(final boolean value) {
       this.headers = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatXlsx#headerFont} value in the builder.
+     * @param value The value for the {@link FormatXlsx#headerFont}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder headerFont(final FormatXlsxFont value) {
       this.headerFont = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatXlsx#bodyFont} value in the builder.
+     * @param value The value for the {@link FormatXlsx#bodyFont}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder bodyFont(final FormatXlsxFont value) {
       this.bodyFont = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatXlsx#headerColours} value in the builder.
+     * @param value The value for the {@link FormatXlsx#headerColours}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder headerColours(final FormatXlsxColours value) {
       this.headerColours = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatXlsx#evenColours} value in the builder.
+     * @param value The value for the {@link FormatXlsx#evenColours}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder evenColours(final FormatXlsxColours value) {
       this.evenColours = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatXlsx#oddColours} value in the builder.
+     * @param value The value for the {@link FormatXlsx#oddColours}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder oddColours(final FormatXlsxColours value) {
       this.oddColours = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatXlsx#columns} value in the builder.
+     * @param value The value for the {@link FormatXlsx#columns}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder columns(final List<FormatXlsxColumn> value) {
       this.columns = value;
       return this;
     }
 
+    /**
+     * Construct a new instance of the FormatXlsx class.
+     * @return a new instance of the FormatXlsx class.
+     */
     public FormatXlsx build() {
       return new FormatXlsx(type, name, extension, mediaType, sheetName, creator, gridLines, headers, headerFont, bodyFont, headerColours, evenColours, oddColours, columns);
     }
@@ -445,8 +519,8 @@ public class FormatXlsx implements Format {
 
 
   /**
-   * Construct a new instance of the FormatJson.Builder class.
-   * @return a new instance of the FormatJson.Builder class.
+   * Construct a new instance of the FormatXlsx.Builder class.
+   * @return a new instance of the FormatXlsx.Builder class.
    */
   public static FormatXlsx.Builder builder() {
     return new FormatXlsx.Builder();

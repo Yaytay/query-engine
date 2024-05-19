@@ -20,22 +20,49 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * The type of Processor.
+ *
  * @author jtalbut
  */
 @Schema(description = """
                       The type of Processor.
                       """)
 public enum ProcessorType {
-  
-  LIMIT
-  , OFFSET
-  , GROUP_CONCAT
-  , DYNAMIC_FIELD
-  , LOOKUP
-  , SCRIPT
-  , WITHOUT
-  , QUERY
-  , MAP
-  , SORT
-  
+
+  /**
+   * The {@link Processor} is a {@link ProcessorLimit} that restricts the number of rows output.
+   */
+  LIMIT, 
+  /**
+   * The {@link Processor} is a {@link ProcessorOffset} that skips a number of initial rows in the output.
+   */
+  OFFSET, 
+  /**
+   * The {@link Processor} is a {@link ProcessorGroupConcat} that concatenates fields from multiple rows in a child query.
+   */
+  GROUP_CONCAT, 
+  /**
+   * The {@link Processor} is a {@link ProcessorDynamicField} that create news fields from multiple rows in a child query.
+   */
+  DYNAMIC_FIELD, 
+  /**
+   * The {@link Processor} is a {@link ProcessorLookup} that creates new fields by looking up values in a map created from a child query.
+   */
+  LOOKUP, 
+  /**
+   * The {@link Processor} is a {@link ProcessorScript} that runs a script to either act as a predicate per row or to modify rows.
+   */
+  SCRIPT, 
+  /**
+   * The {@link Processor} is a {@link ProcessorQuery} that uses a FIQL expression to filter rows.
+   */
+  QUERY, 
+  /**
+   * The {@link Processor} is a {@link ProcessorMap} that either renames fields or drops them.
+   */
+  MAP, 
+  /**
+   * The {@link Processor} is a {@link ProcessorSort} that sorts the output rows.
+   */
+  SORT
+
 }

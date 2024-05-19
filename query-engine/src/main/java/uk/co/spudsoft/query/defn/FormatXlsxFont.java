@@ -78,6 +78,9 @@ public class FormatXlsxFont {
     return fontSize;
   }
   
+  /**
+   * Builder class for FormatFont.
+   */
   @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "Builder class should result in all instances being immutable when object is built")
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
@@ -88,21 +91,39 @@ public class FormatXlsxFont {
     private Builder() {
     }
 
+    /**
+     * Set the {@link FormatXlsxFont#fontName} value in the builder.
+     * @param value The value for the {@link FormatXlsxFont#fontName}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder fontName(final String value) {
       this.fontName = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatXlsxFont#fontSize} value in the builder.
+     * @param value The value for the {@link FormatXlsxFont#fontSize}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder fontSize(final int value) {
       this.fontSize = value;
       return this;
     }
 
+    /**
+     * Construct a new instance of the FormatXlsxFont class.
+     * @return a new instance of the FormatXlsxFont class.
+     */
     public FormatXlsxFont build() {
       return new uk.co.spudsoft.query.defn.FormatXlsxFont(fontName, fontSize);
     }
   }
 
+  /**
+   * Construct a new instance of the FormatXlsxFont.Builder class.
+   * @return a new instance of the FormatXlsxFont.Builder class.
+   */
   public static FormatXlsxFont.Builder builder() {
     return new FormatXlsxFont.Builder();
   }

@@ -51,9 +51,21 @@ import uk.co.spudsoft.query.exec.SourceInstance;
 )
 public interface Source {
   
+  /**
+   * Create a new {@link SourceInstance} specialized for this Source instance.
+   * @param vertx The Vert.x instance.
+   * @param context The Vert.x context.
+   * @param sharedMap Pooling map.
+   * @param defaultName The name to use for the SourceInstance if no other name is provided in the definition.
+   * @return A newly created instance of an implementation of {@link SourceInstance}.
+   */
   @JsonIgnore
   SourceInstance createInstance(Vertx vertx, Context context, SharedMap sharedMap, String defaultName);
   
+  /**
+   * The type of Source being configured.
+   * @return the type of Source being configured.
+   */
   @Schema(description = """
                         <P>The type of Source being configured.</P>
                         """
@@ -62,10 +74,10 @@ public interface Source {
   SourceType getType();
   
   /**
-   * Throw an IllegalArgumentException if the Source is not usable.
+   * Validate the Source.
    * @throws IllegalArgumentException if the Source is not usable.
    */
-  void validate();
+  void validate() throws IllegalArgumentException;
   
   /**
    * Get the name of the Source, that will be used in logging.

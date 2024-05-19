@@ -81,6 +81,9 @@ public class ProcessorQuery implements Processor {
     return expression;
   }
   
+  /**
+   * Builder class for ProcessorQuery.
+   */
   @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "Builder class should result in all instances being immutable when object is built")
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
@@ -93,36 +96,59 @@ public class ProcessorQuery implements Processor {
     private Builder() {
     }
     
+    /**
+     * Set the {@link ProcessorQuery#type} value in the builder.
+     * @param value The value for the {@link ProcessorQuery#type}, must be {@link ProcessorType#DYNAMIC_FIELD}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder type(final ProcessorType value) {
       this.type = value;
       return this;
     }
     
     /**
-     * Set the condition on the Pipeline in the builder.
-     * @param value the condition on the Endpoint.
-     * @return this, so that the builder may be used fluently.
+     * Set the {@link ProcessorQuery#condition} value in the builder.
+     * @param value The value for the {@link ProcessorQuery#condition}.
+     * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder condition(final Condition value) {
       this.condition = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorQuery#id} value in the builder.
+     * @param value The value for the {@link ProcessorQuery#id}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder id(final String value) {
       this.id = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorQuery#expression} value in the builder.
+     * @param value The value for the {@link ProcessorQuery#expression}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder expression(final String value) {
       this.expression = value;
       return this;
     }
 
+    /**
+     * Construct a new instance of the ProcessorQuery class.
+     * @return a new instance of the ProcessorQuery class.
+     */
     public ProcessorQuery build() {
       return new ProcessorQuery(type, condition, id, expression);
     }
   }
 
+  /**
+   * Construct a new instance of the ProcessorQuery.Builder class.
+   * @return a new instance of the ProcessorQuery.Builder class.
+   */
   public static ProcessorQuery.Builder builder() {
     return new ProcessorQuery.Builder();
   }

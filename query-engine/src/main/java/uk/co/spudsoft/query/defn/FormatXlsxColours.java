@@ -143,6 +143,9 @@ public class FormatXlsxColours {
     return bgColour;
   }
   
+  /**
+   * Builder class for FormatXlsxColours.
+   */
   @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "Builder class should result in all instances being immutable when object is built")
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
@@ -153,21 +156,39 @@ public class FormatXlsxColours {
     private Builder() {
     }
 
+    /**
+     * Set the {@link FormatXlsxColours#fgColour} value in the builder.
+     * @param value The value for the {@link FormatXlsxColours#fgColour}, must be 6 or 8 hexadecimal characters ([0-9A-Z]).
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder fgColour(final String value) {
       this.fgColour = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatXlsxColours#bgColour} value in the builder.
+     * @param value The value for the {@link FormatXlsxColours#bgColour}, must be 6 or 8 hexadecimal characters ([0-9A-Z]).
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder bgColour(final String value) {
       this.bgColour = value;
       return this;
     }
 
+    /**
+     * Construct a new instance of the FormatXlsxColours class.
+     * @return a new instance of the FormatXlsxColours class.
+     */
     public FormatXlsxColours build() {
       return new uk.co.spudsoft.query.defn.FormatXlsxColours(fgColour, bgColour);
     }
   }
 
+  /**
+   * Construct a new instance of the FormatXlsxColours.Builder class.
+   * @return a new instance of the FormatXlsxColours.Builder class.
+   */
   public static FormatXlsxColours.Builder builder() {
     return new FormatXlsxColours.Builder();
   }

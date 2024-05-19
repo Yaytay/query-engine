@@ -182,6 +182,9 @@ public class FormatXlsxColumn {
     }
   }
   
+  /**
+   * Builder class for FormatXlsxColumns.
+   */
   @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "Builder class should result in all instances being immutable when object is built")
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
@@ -194,31 +197,59 @@ public class FormatXlsxColumn {
     private Builder() {
     }
 
+    /**
+     * Set the {@link FormatXlsxColumn#name} value in the builder.
+     * @param value The value for the {@link FormatXlsxColumn#name}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder name(final String value) {
       this.name = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatXlsxColumn#header} value in the builder.
+     * @param value The value for the {@link FormatXlsxColumn#header}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder header(final String value) {
       this.header = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatXlsxColumn#format} value in the builder.
+     * @param value The value for the {@link FormatXlsxColumn#format}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder format(final String value) {
       this.format = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatXlsxColumn#width} value in the builder.
+     * @param value The value for the {@link FormatXlsxColumn#width}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder width(final Double value) {
       this.width = value;
       return this;
     }
 
+    /**
+     * Construct a new instance of the FormatXlsxColumn class.
+     * @return a new instance of the FormatXlsxColumn class.
+     */
     public FormatXlsxColumn build() {
       return new uk.co.spudsoft.query.defn.FormatXlsxColumn(name, header, format, width);
     }
   }
 
+  /**
+   * Construct a new instance of the FormatXlsxColumn.Builder class.
+   * @return a new instance of the FormatXlsxColumn.Builder class.
+   */
   public static FormatXlsxColumn.Builder builder() {
     return new FormatXlsxColumn.Builder();
   }

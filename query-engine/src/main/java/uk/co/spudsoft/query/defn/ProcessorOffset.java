@@ -78,6 +78,9 @@ public class ProcessorOffset implements Processor {
     return offset;
   }
   
+  /**
+   * Builder class for ProcessorOffset.
+   */
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
@@ -89,36 +92,59 @@ public class ProcessorOffset implements Processor {
     private Builder() {
     }
     
+    /**
+     * Set the {@link ProcessorOffset#type} value in the builder.
+     * @param value The value for the {@link ProcessorOffset#type}, must be {@link ProcessorType#DYNAMIC_FIELD}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder type(final ProcessorType value) {
       this.type = value;
       return this;
     }
     
     /**
-     * Set the condition on the Pipeline in the builder.
-     * @param value the condition on the Endpoint.
-     * @return this, so that the builder may be used fluently.
+     * Set the {@link ProcessorOffset#condition} value in the builder.
+     * @param value The value for the {@link ProcessorOffset#condition}.
+     * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder condition(final Condition value) {
       this.condition = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorOffset#id} value in the builder.
+     * @param value The value for the {@link ProcessorOffset#id}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder id(final String value) {
       this.id = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorOffset#offset} value in the builder.
+     * @param value The value for the {@link ProcessorOffset#offset}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder offset(final int value) {
       this.offset = value;
       return this;
     }
 
+    /**
+     * Construct a new instance of the ProcessorOffset class.
+     * @return a new instance of the ProcessorOffset class.
+     */
     public ProcessorOffset build() {
       return new ProcessorOffset(type, condition, id, offset);
     }
   }
 
+  /**
+   * Construct a new instance of the ProcessorOffset.Builder class.
+   * @return a new instance of the ProcessorOffset.Builder class.
+   */
   public static ProcessorOffset.Builder builder() {
     return new ProcessorOffset.Builder();
   }

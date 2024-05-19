@@ -49,7 +49,14 @@ public final class SourceSql implements Source {
     return new SourceSqlStreamingInstance(vertx, context, sharedMap, this, defaultName);
   }
 
+  /**
+   * The type of Source being configured.
+   */
   private final SourceType type;
+  /**
+   * Get the name of the Source, that will be used in logging.
+   * This is optional, if it is not set a numeric (or delimited numeric) name will be allocated.
+   */
   private final String name;
   private final String endpoint;
   private final String endpointTemplate;
@@ -63,8 +70,9 @@ public final class SourceSql implements Source {
   private final Duration connectionTimeout;
   private final Boolean replaceDoubleQuotes;
   
+  
   @Override
-  public void validate() {
+  public void validate() throws IllegalArgumentException {
     validateType(SourceType.SQL, type);
     if (Strings.isNullOrEmpty(endpoint) && Strings.isNullOrEmpty(endpointTemplate)) {
       throw new IllegalArgumentException("Neither endpoint nor endpointTemplate specified in SQL source");
@@ -107,10 +115,20 @@ public final class SourceSql implements Source {
     return name;
   }
   
+  /**
+   * The name of the endpoint that provides the data for the Source.
+   * <P>
+   * The endpoint represents the SQL database that contains the actual data.
+   * <P>
+   * The endpoint must be specified as either a straight name (this field) or as a template value (endpointEmplate).
+   * If both fields are provided it is an error.
+   * 
+   * @return the name of the endpoint that provides the data for the Source.
+   */
   @Schema(description = """
                         <P>The name of the endpoint that provides the data for the Source.</P>
                         <P>
-                        The endpoint represents with the HTTP endpoint or the SQL database that contains the actual data.
+                        The endpoint represents the SQL database that contains the actual data.
                         </P>
                         <P>
                         The endpoint must be specified as either a straight name (this field) or as a template value (endpointEmplate).
@@ -123,10 +141,20 @@ public final class SourceSql implements Source {
     return endpoint;
   }
 
+  /**
+   * A <a href="http://www.stringtemplate.org">String Template</a> version of the name of the endpoint that provides the data for the Source.
+   * <P>
+   * The endpoint represents the SQL database that contains the actual data.
+   * <P>
+   * The endpoint must be specified as either a template value (this field) or as a straight name (endpoint).
+   * If both fields are provided it is an error.
+   * 
+   * @return a <a href="http://www.stringtemplate.org">String Template</a> version of the name of the endpoint that provides the data for the Source.
+   */
   @Schema(description = """
-                        <P>A templated version of the name of the endpoint that provides the data for the Source.</P>
+                        <P>A <a href="http://www.stringtemplate.org">String Template</a> version of the name of the endpoint that provides the data for the Source.</P>
                         <P>
-                        The endpoint represents with the HTTP endpoint or the SQL database that contains the actual data.
+                        The endpoint represents the SQL database that contains the actual data.
                         </P>
                         <P>
                         The endpoint must be specified as either a template value (this field) or as a straight name (endpoint).
@@ -139,10 +167,24 @@ public final class SourceSql implements Source {
     return endpointTemplate;
   }
 
+  /**
+   * The query to run against the Endpoint.
+   * <P>
+   * A SQL statement.
+   * <p>
+   * The query must be specified as either a plain SQL statement (this field) or as a template value (queryTemplate).
+   * If both fields are provided it is an error.
+   * 
+   * @return the query to run against the Endpoint.
+   */
   @Schema(description = """
                         <P>The query to run against the Endpoint.</P>
                         <P>
                         A SQL statement.
+                        </P>
+                        <P>
+                        The query must be specified as either a plain SQL statement (this field) or as a template value (queryTemplate).
+                        If both fields are provided it is an error.
                         </P>
                         """
           , maxLength = 1000000
@@ -151,10 +193,23 @@ public final class SourceSql implements Source {
     return query;
   }
   
+  /**
+   * The query to run against the Endpoint, as a <a href="http://www.stringtemplate.org">String Template</a> that will be rendered first.
+   * <P>
+   * A StringTemplate that results in a SQL statement.
+   * <p>
+   * The query must be specified as either a templated value (this field) or as a plain SQL statement (query).
+   * If both fields are provided it is an error.
+   * @return the query to run against the Endpoint, as a <a href="http://www.stringtemplate.org">String Template</a> that will be rendered first.
+   */
   @Schema(description = """
-                        <P>The query to run against the Endpoint, as a <A href="https://github.com/antlr/stringtemplate4/blob/master/doc/introduction.md">StringTemplate</A> that will be rendered first.</P>
+                        <P>The query to run against the Endpoint, as a <a href="http://www.stringtemplate.org">String Template</a> that will be rendered first.</P>
                         <P>
                         A StringTemplate that results in a SQL statement.
+                        </P>
+                        <p>
+                        The query must be specified as either a templated value (this field) or as a plain SQL statement (query).
+                        If both fields are provided it is an error.
                         </P>
                         """
           , maxLength = 1000000
@@ -163,6 +218,14 @@ public final class SourceSql implements Source {
     return queryTemplate;
   }
 
+  /**
+   * The number of rows to get from the Source at a time.
+   * <P>
+   * A larger streaming fetch size will slow the initial data, but may be quicker overall (at the cost of more memory).
+   * Experiment with values in the range 10-1000.
+   * 
+   * @return the number of rows to get from the Source at a time.
+   */
   @Schema(description = """
                         <P>The number of rows to get from the Source at a time.</P>
                         <P>
@@ -175,9 +238,15 @@ public final class SourceSql implements Source {
     return streamingFetchSize;
   }    
 
-  
+  /**
+   * The maximum number of connections to open to the Endpoint.
+   * <P>
+   * If there are likely to be multiple concurrent pipelines running to the same Endpoint it can be beneficial to set this to a small number, otherwise leave it at the default.
+   * 
+   * @return the maximum number of connections to open to the Endpoint.
+   */
   @Schema(description = """
-                        <P>The maxmimum number of connections to open to the Endpoint.</P>
+                        <P>The maximum number of connections to open to the Endpoint.</P>
                         <P>
                         If there are likely to be multiple concurrent pipelines running to the same Endpoint it can be beneficial to set this to a small number, otherwise leave it at the default.
                         </P>
@@ -187,8 +256,15 @@ public final class SourceSql implements Source {
     return maxPoolSize;
   }
 
+  /**
+   * The maximum number of connections have queued up for the Endpoint.
+   * <P>
+   * This is unlikely to be useful.
+   * 
+   * @return the maximum number of connections have queued up for the Endpoint.
+   */
   @Schema(description = """
-                        <P>The maxmimum number of connections have queued up for the Endpoint.</P>
+                        <P>The maximum number of connections have queued up for the Endpoint.</P>
                         <P>
                         This is unlikely to be useful.
                         </P>
@@ -198,6 +274,18 @@ public final class SourceSql implements Source {
     return maxPoolWaitQueueSize;
   }
 
+  /**
+   * If set to true all double quotes in the query will be replaced with the identifier quoting character for the target.
+   * <P>
+   * If the native quoting character is already a double quote no replacement will take place.
+   * <P>
+   * This enables queries for all database platforms to be defined using double quotes for identifiers, but it is a straight replacement
+   * so if the query needs to contain a double quote that is not quoting an identifier then this must be set to false.
+   * <P>
+   * This is only useful when it is not known what flavour of database is being queried, which should be rare.
+   * 
+   * @return true if all double quotes in the query should be replaced with the identifier quoting character for the target.
+   */
   @Schema(description = """
                         <P>If set to true all double quotes in the query will be replaced with the identifier quoting character for the target.</P>
                         <P>
@@ -216,6 +304,26 @@ public final class SourceSql implements Source {
     return replaceDoubleQuotes;
   }
 
+  /**
+   * The idle timeout for the connection pool that will be created.
+   * <P>
+   * After this time has passed the connection will be closed and a new one will be opened by subequent pipelines.
+   * <P>
+   * The value is an ISO8601 period string:  - the ASCII letter "P" in upper or lower case followed by four sections, each consisting of a number and a suffix.
+   * The sections have suffixes in ASCII of "D", "H", "M" and "S" for days, hours, minutes and seconds, accepted in upper or lower case.
+   * The suffixes must occur in order.
+   * The ASCII letter "T" must occur before the first occurrence, if any, of an hour, minute or second section.
+   * At least one of the four sections must be present, and if "T" is present there must be at least one section after the "T".
+   * The number part of each section must consist of one or more ASCII digits.
+   * The number of days, hours and minutes must parse to an long.
+   * The number of seconds must parse to an long with optional fraction.
+   * The decimal point may be either a dot or a comma.
+   * The fractional part may have from zero to 9 digits.
+   * <P>
+   * The ISO8601 period format permits negative values, but they make no sense for timeouts and will cause an error.
+   * 
+   * @return the idle timeout for the connection pool that will be created.
+   */
   @Schema(description = """
                         <P>The idle timeout for the connection pool that will be created.</P>
                         <P>
@@ -243,11 +351,27 @@ public final class SourceSql implements Source {
     return idleTimeout;
   }
 
+  /**
+   * The connection timeout for the connections that will be created.
+  * <P>
+   * The value is an ISO8601 period string:  - the ASCII letter "P" in upper or lower case followed by four sections, each consisting of a number and a suffix.
+   * The sections have suffixes in ASCII of "D", "H", "M" and "S" for days, hours, minutes and seconds, accepted in upper or lower case.
+   * The suffixes must occur in order.
+   * The ASCII letter "T" must occur before the first occurrence, if any, of an hour, minute or second section.
+   * At least one of the four sections must be present, and if "T" is present there must be at least one section after the "T".
+   * The number part of each section must consist of one or more ASCII digits.
+   * The number of days, hours and minutes must parse to an long.
+   * The number of seconds must parse to an long with optional fraction.
+   * The decimal point may be either a dot or a comma.
+   * The fractional part may have from zero to 9 digits.
+   * <P>
+   * The ISO8601 period format permits negative values, but they make no sense for timeouts and will cause an error.
+   * 
+   * @return the connection timeout for the connections that will be created.
+   */
   @Schema(
           description = """
-                        <P>The idle timeout for the connection pool that will be created.</P>
-                        <P>
-                        After this time has passed the connection will be closed and a new one will be opened by subequent pipelines.
+                        <P>The connection timeout for the connections that will be created.</P>
                         </P>
                         <P>
                         The value is an ISO8601 period string:  - the ASCII letter "P" in upper or lower case followed by four sections, each consisting of a number and a suffix.
@@ -272,6 +396,9 @@ public final class SourceSql implements Source {
   }
 
   
+  /**
+   * Builder class for SourceSql.
+   */
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
@@ -291,66 +418,130 @@ public final class SourceSql implements Source {
     private Builder() {
     }
 
+    /**
+     * Set the {@link SourceSql#type} value in the builder.
+     * @param value The value for the {@link SourceSql#type}, must be {@link SourceType#SQL}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder type(final SourceType value) {
       this.type = value;
       return this;
     }
 
+    /**
+     * Set the {@link SourceSql#name} value in the builder.
+     * @param value The value for the {@link SourceSql#name}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder name(final String value) {
       this.name = value;
       return this;
     }
 
+    /**
+     * Set the {@link SourceSql#endpoint} value in the builder.
+     * @param value The value for the {@link SourceSql#endpoint}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder endpoint(final String value) {
       this.endpoint = value;
       return this;
     }
 
+    /**
+     * Set the {@link SourceSql#endpointTemplate} value in the builder.
+     * @param value The value for the {@link SourceSql#endpointTemplate}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder endpointTemplate(final String value) {
       this.endpointTemplate = value;
       return this;
     }
 
+    /**
+     * Set the {@link SourceSql#query} value in the builder.
+     * @param value The value for the {@link SourceSql#query}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder query(final String value) {
       this.query = value;
       return this;
     }
 
+    /**
+     * Set the {@link SourceSql#queryTemplate} value in the builder.
+     * @param value The value for the {@link SourceSql#queryTemplate}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder queryTemplate(final String value) {
       this.queryTemplate = value;
       return this;
     }
 
+    /**
+     * Set the {@link SourceSql#streamingFetchSize} value in the builder.
+     * @param value The value for the {@link SourceSql#streamingFetchSize}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder streamingFetchSize(final int value) {
       this.streamingFetchSize = value;
       return this;
     }
 
+    /**
+     * Set the {@link SourceSql#maxPoolSize} value in the builder.
+     * @param value The value for the {@link SourceSql#maxPoolSize}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder maxPoolSize(final Integer value) {
       this.maxPoolSize = value;
       return this;
     }
 
+    /**
+     * Set the {@link SourceSql#maxPoolWaitQueueSize} value in the builder.
+     * @param value The value for the {@link SourceSql#maxPoolWaitQueueSize}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder maxPoolWaitQueueSize(final Integer value) {
       this.maxPoolWaitQueueSize = value;
       return this;
     }
 
+    /**
+     * Set the {@link SourceSql#idleTimeout} value in the builder.
+     * @param value The value for the {@link SourceSql#idleTimeout}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder idleTimeout(final Duration value) {
       this.idleTimeout = value;
       return this;
     }
 
+    /**
+     * Set the {@link SourceSql#connectionTimeout} value in the builder.
+     * @param value The value for the {@link SourceSql#connectionTimeout}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder connectionTimeout(final Duration value) {
       this.connectionTimeout = value;
       return this;
     }
 
+    /**
+     * Set the {@link SourceSql#replaceDoubleQuotes} value in the builder.
+     * @param value The value for the {@link SourceSql#replaceDoubleQuotes}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder replaceDoubleQuotes(final Boolean value) {
       this.replaceDoubleQuotes = value;
       return this;
     }
 
+    /**
+     * Construct a new instance of the SourceSql class.
+     * @return a new instance of the SourceSql class.
+     */
     public SourceSql build() {
       return new SourceSql(type, name, endpoint, endpointTemplate
             , query, queryTemplate
@@ -361,10 +552,29 @@ public final class SourceSql implements Source {
     }
   }
 
+  /**
+   * Construct a new instance of the SourceSql.Builder class.
+   * @return a new instance of the SourceSql.Builder class.
+   */
   public static Builder builder() {
     return new Builder();
   }
 
+  /**
+   * Constructor.
+   * @param type {@link SourceSql#type}
+   * @param name {@link SourceSql#name}
+   * @param endpoint {@link SourceSql#endpoint}
+   * @param endpointTemplate {@link SourceSql#endpointTemplate}
+   * @param query {@link SourceSql#query}
+   * @param queryTemplate {@link SourceSql#queryTemplate}
+   * @param streamingFetchSize {@link SourceSql#streamingFetchSize}
+   * @param maxPoolSize {@link SourceSql#maxPoolSize}
+   * @param maxPoolWaitQueueSize {@link SourceSql#maxPoolWaitQueueSize}
+   * @param idleTimeout {@link SourceSql#idleTimeout}
+   * @param connectionTimeout {@link SourceSql#connectionTimeout}
+   * @param replaceDoubleQuotes  {@link SourceSql#replaceDoubleQuotes}
+   */
   public SourceSql(final SourceType type
           , final String name
           , final String endpoint

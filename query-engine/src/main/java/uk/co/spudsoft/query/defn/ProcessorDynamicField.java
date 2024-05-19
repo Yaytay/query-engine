@@ -351,6 +351,9 @@ public class ProcessorDynamicField implements Processor {
     return valuesFieldIdColumn;
   }
 
+  /**
+   * Builder class for ProcessorDynamicField.
+   */
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "Builder class should result in all instances being immutable when object is built")
   public static class Builder {
@@ -372,81 +375,149 @@ public class ProcessorDynamicField implements Processor {
     private Builder() {
     }
     
+    /**
+     * Set the {@link ProcessorDynamicField#type} value in the builder.
+     * @param value The value for the {@link ProcessorDynamicField#type}, must be {@link ProcessorType#DYNAMIC_FIELD}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder type(final ProcessorType value) {
       this.type = value;
       return this;
     }
 
     /**
-     * Set the condition on the Pipeline in the builder.
-     * @param value the condition on the Endpoint.
-     * @return this, so that the builder may be used fluently.
+     * Set the {@link ProcessorDynamicField#condition} value in the builder.
+     * @param value The value for the {@link ProcessorDynamicField#condition}.
+     * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder condition(final Condition value) {
       this.condition = value;
       return this;
     }
     
+    /**
+     * Set the {@link ProcessorDynamicField#id} value in the builder.
+     * @param value The value for the {@link ProcessorDynamicField#id}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder id(final String value) {
       this.id = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorDynamicField#innerJoin} value in the builder.
+     * @param value The value for the {@link ProcessorDynamicField#innerJoin}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder innerJoin(final boolean value) {
       this.innerJoin = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorDynamicField#fieldIdColumn} value in the builder.
+     * @param value The value for the {@link ProcessorDynamicField#fieldIdColumn}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder fieldIdColumn(final String value) {
       this.fieldIdColumn = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorDynamicField#fieldNameColumn} value in the builder.
+     * @param value The value for the {@link ProcessorDynamicField#fieldNameColumn}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder fieldNameColumn(final String value) {
       this.fieldNameColumn = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorDynamicField#fieldTypeColumn} value in the builder.
+     * @param value The value for the {@link ProcessorDynamicField#fieldTypeColumn}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder fieldTypeColumn(final String value) {
       this.fieldTypeColumn = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorDynamicField#fieldColumnColumn} value in the builder.
+     * @param value The value for the {@link ProcessorDynamicField#fieldColumnColumn}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder fieldColumnColumn(final String value) {
       this.fieldColumnColumn = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorDynamicField#parentIdColumns} value in the builder.
+     * @param value The value for the {@link ProcessorDynamicField#parentIdColumns}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder parentIdColumns(final List<String> value) {
       this.parentIdColumns = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorDynamicField#valuesParentIdColumns} value in the builder.
+     * @param value The value for the {@link ProcessorDynamicField#valuesParentIdColumns}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder valuesParentIdColumns(final List<String> value) {
       this.valuesParentIdColumns = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorDynamicField#valuesFieldIdColumn} value in the builder.
+     * @param value The value for the {@link ProcessorDynamicField#valuesFieldIdColumn}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder valuesFieldIdColumn(final String value) {
       this.valuesFieldIdColumn = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorDynamicField#fieldDefns} value in the builder.
+     * @param value The value for the {@link ProcessorDynamicField#fieldDefns}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder fieldDefns(final SourcePipeline value) {
       this.fieldDefns = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorDynamicField#fieldValues} value in the builder.
+     * @param value The value for the {@link ProcessorDynamicField#fieldValues}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder fieldValues(final SourcePipeline value) {
       this.fieldValues = value;
       return this;
     }
 
+    /**
+     * Construct a new instance of the ProcessorDynamicField class.
+     * @return a new instance of the ProcessorDynamicField class.
+     */
     public ProcessorDynamicField build() {
       return new uk.co.spudsoft.query.defn.ProcessorDynamicField(type, condition, id, innerJoin, fieldIdColumn, fieldNameColumn, fieldTypeColumn, fieldColumnColumn, parentIdColumns, valuesParentIdColumns, valuesFieldIdColumn, fieldDefns, fieldValues);
     }
   }
 
+  /**
+   * Construct a new instance of the ProcessorDynamicField.Builder class.
+   * @return a new instance of the ProcessorDynamicField.Builder class.
+   */
   public static ProcessorDynamicField.Builder builder() {
     return new ProcessorDynamicField.Builder();
   }

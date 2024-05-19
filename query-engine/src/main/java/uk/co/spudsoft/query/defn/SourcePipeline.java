@@ -47,7 +47,11 @@ public class SourcePipeline {
   private final Source source;
   private final ImmutableList<Processor> processors;
 
-  public void validate() {    
+  /**
+   * Validate the definition.
+   * @throws IllegalArgumentException if the definition is not valid.
+   */
+  public void validate() throws IllegalArgumentException {
     if (source == null) {
       throw new IllegalArgumentException("Source not specified in pipeline");
     }
@@ -55,6 +59,10 @@ public class SourcePipeline {
     processors.forEach(Processor::validate);
   }
 
+  /**
+   * The query for the pipeline.
+   * @return the query for the pipeline.
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Source.name may have to be set after creation, must not be changed after PipelineInstance is created")
   @Schema(
           description = """
@@ -68,6 +76,10 @@ public class SourcePipeline {
     return source;
   }
 
+  /**
+   * Processors to run on the data as it flows from the Source.
+   * @return processors to run on the data as it flows from the Source.
+   */
   @ArraySchema(
           schema = @Schema(
                   implementation = Processor.class
@@ -85,6 +97,10 @@ public class SourcePipeline {
     return processors;
   }
 
+  /**
+   * Builder class for SourcePipeline.
+   * @param <T> Subclass of this to use in fluent return values.
+   */
   @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "Builder class should result in all instances being immutable when object is built")
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder<T extends Builder<T>> {
@@ -92,29 +108,54 @@ public class SourcePipeline {
     protected Source source;
     protected List<Processor> processors;
 
+    /**
+     * Constructor.
+     */
     protected Builder() {
     }
 
+    /**
+     * This, typed to T.
+     * @return this, cast to type T.
+     */
     @SuppressWarnings("unchecked")
     final T self() {
         return (T) this;
     }
     
+    /**
+     * Set the {@link SourcePipeline#source} value in the builder.
+     * @param value The value for the {@link SourcePipeline#source}
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public T source(final Source value) {
       this.source = value;
       return self();
     }
 
+    /**
+     * Set the {@link SourcePipeline#processors} value in the builder.
+     * @param value The value for the {@link SourcePipeline#processors}
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public T processors(final List<Processor> value) {
       this.processors = value;
       return self();
     }
 
+    /**
+     * Construct a new instance of the SourcePipeline class.
+     * @return a new instance of the SourcePipeline class.
+     */
     public SourcePipeline build() {
       return new SourcePipeline(source, processors);
     }
   }
 
+  /**
+   * Construct a new instance of the SourcePipeline.Builder class.
+   * @return a new instance of the SourcePipeline.Builder class.
+   */
   public static SourcePipeline.Builder<?> builder() {
     return new SourcePipeline.Builder<>();
   }

@@ -170,30 +170,49 @@ public class FormatHtml implements Format {
     }
 
     /**
-     * Set the type of the Format.
-     * @param value must be FormatType.JSON.
-     * @return this, so that the builder may be used fluently.
+     * Set the {@link FormatHtml#type} value in the builder.
+     * @param value The value for the {@link FormatHtml#type}, must be {@link FormatType#HTML}.
+     * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder type(final FormatType value) {
       this.type = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatHtml#name} value in the builder.
+     * @param value The value for the {@link FormatHtml#name}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder name(final String value) {
       this.name = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatHtml#extension} value in the builder.
+     * @param value The value for the {@link FormatHtml#extension}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder extension(final String value) {
       this.extension = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatHtml#mediaType} value in the builder.
+     * @param value The value for the {@link FormatHtml#mediaType}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder mediaType(final String value) {
       this.mediaType = MediaType.parse(value);
       return this;
     }
 
+    /**
+     * Construct a new instance of the FormatHtml class.
+     * @return a new instance of the FormatHtml class.
+     */
     public FormatHtml build() {
       return new uk.co.spudsoft.query.defn.FormatHtml(type, name, extension, mediaType);
     }

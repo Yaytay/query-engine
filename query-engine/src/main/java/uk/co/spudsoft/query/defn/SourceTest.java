@@ -123,7 +123,7 @@ public class SourceTest implements Source {
   }
   
   /**
-   * Builder class.
+   * Builder class for SourceTest.
    */
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
@@ -185,6 +185,10 @@ public class SourceTest implements Source {
     }
   }
 
+  /**
+   * Construct a new instance of the SourceTest.Builder class.
+   * @return a new instance of the SourceTest.Builder class.
+   */
   public static Builder builder() {
     return new Builder();
   }
