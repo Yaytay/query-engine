@@ -170,10 +170,18 @@ public class RateLimitRule {
 
   /**
    * Get the limit on the number of bytes that may be been sent by previous runs.
+   * <p>
+   * This value may be entered as a string ending in 'M', 'G', or 'K' to multiply the numeric value by 1000000, 1000000000 or 1000 respectively.
+   * No other non-numeric characters are permitted.
+   * 
    * @return the limit on the number of bytes that may be been sent by previous runs.
    */
   @Schema(description = """
                         <P>The limit on the number of bytes that may be been sent by previous runs.</P>
+                        <P>
+                        This value may be entered as a string ending in 'M', 'G', or 'K' to multiply the numeric value by 1000000, 1000000000 or 1000 respectively.
+                        No other non-numeric characters are permitted.
+                        </P>
                         """
           , maxLength = 100
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED)
@@ -181,6 +189,10 @@ public class RateLimitRule {
     return byteLimit;
   }
   
+  /**
+   * Get the {@link #byteLimit} value as a number after processing any 'M', 'G' or 'K' suffix.
+   * @return the {@link #byteLimit} value as a number after processing any 'M', 'G' or 'K' suffix.
+   */
   @JsonIgnore
   public Long getParsedByteLimit() {
     if (Strings.isNullOrEmpty(byteLimit)) {
@@ -192,10 +204,18 @@ public class RateLimitRule {
 
   /**
    * Get the limit on the number of pipeline runs matching the scope that may be initiated.
+   * <p>
+   * This value may be entered as a string ending in 'M', 'G', or 'K' to multiply the numeric value by 1000000, 1000000000 or 1000 respectively.
+   * No other non-numeric characters are permitted.
+   * 
    * @return the limit on the number of pipeline runs matching the scope that may be initiated.
    */
   @Schema(description = """
                         <P>The limit on the number of pipeline runs matching the scope that may be initiated.</P>
+                        <P>
+                        This value may be entered as a string ending in 'M', 'G', or 'K' to multiply the numeric value by 1000000, 1000000000 or 1000 respectively.
+                        No other non-numeric characters are permitted.
+                        </P>
                         """
           , maxLength = 100
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
@@ -204,6 +224,10 @@ public class RateLimitRule {
     return runLimit;
   }
 
+  /**
+   * Get the {@link #runLimit} value as a number after processing any 'M', 'G' or 'K' suffix.
+   * @return the {@link #runLimit} value as a number after processing any 'M', 'G' or 'K' suffix.
+   */
   @JsonIgnore
   public Long getParsedRunLimit() {
     if (Strings.isNullOrEmpty(runLimit)) {
@@ -242,26 +266,51 @@ public class RateLimitRule {
     private Builder() {
     }
 
+    /**
+     * Set the {@link RateLimitRule#scope} value in the builder.
+     * @param value The value for the {@link RateLimitRule#scope}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder scope(final List<RateLimitScopeType> value) {
       this.scope = value;
       return this;
     }
 
+    /**
+     * Set the {@link RateLimitRule#timeLimit} value in the builder.
+     * @param value The value for the {@link RateLimitRule#timeLimit}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder timeLimit(final Duration value) {
       this.timeLimit = value;
       return this;
     }
 
+    /**
+     * Set the {@link RateLimitRule#runLimit} value in the builder.
+     * @param value The value for the {@link RateLimitRule#runLimit}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder runLimit(final String value) {
       this.runLimit = value;
       return this;
     }
 
+    /**
+     * Set the {@link RateLimitRule#byteLimit} value in the builder.
+     * @param value The value for the {@link RateLimitRule#byteLimit}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder byteLimit(final String value) {
       this.byteLimit = value;
       return this;
     }
 
+    /**
+     * Set the {@link RateLimitRule#concurrencyLimit} value in the builder.
+     * @param value The value for the {@link RateLimitRule#concurrencyLimit}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder concurrencyLimit(final int value) {
       this.concurrencyLimit = value;
       return this;

@@ -31,6 +31,13 @@ import java.util.Set;
  * @author jtalbut
  */
 public class RsqlComparatorDateTime implements RsqlComparator<LocalDateTime> {
+
+  /**
+   * Constructor.
+   */
+  public RsqlComparatorDateTime() {
+  }
+  
   
   @Override
   public LocalDateTime validateType(String field, Object value) {

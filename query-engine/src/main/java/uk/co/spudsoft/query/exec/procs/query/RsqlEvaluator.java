@@ -42,6 +42,12 @@ public class RsqlEvaluator implements RSQLVisitor<Boolean, DataRow> {
   private static final Logger logger = LoggerFactory.getLogger(RsqlEvaluator.class);
 
   /**
+   * Constructor.
+   */
+  public RsqlEvaluator() {
+  }
+
+  /**
    * Functional interface representing an operation in RSQL (or FIQL).
    * 
    * @author jtalbut

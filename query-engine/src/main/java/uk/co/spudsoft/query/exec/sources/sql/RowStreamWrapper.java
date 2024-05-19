@@ -18,7 +18,6 @@ package uk.co.spudsoft.query.exec.sources.sql;
 
 import com.google.common.collect.ImmutableSet;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -53,7 +52,6 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
   private final MetadataRowStreamImpl rowStream;
   private final SqlConnection connection;
   private final Transaction transaction;
-  private final PreparedStatement preparedStatement;
   private final Types types;
 
   private Handler<Throwable> exceptionHandler;
@@ -66,12 +64,19 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
           .add("UUID")
           .build();
   
+  /**
+   * Constructor.
+   * 
+   * @param sourceNameTracker The object used to identify this source in the Vert.x context for logging purposes.
+   * @param connection The connection to the data source.
+   * @param transaction The database transaction.
+   * @param rowStream The output row stream.
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
-  public RowStreamWrapper(SourceNameTracker sourceNameTracker, SqlConnection connection, Transaction transaction, PreparedStatement preparedStatement, MetadataRowStreamImpl rowStream) {
+  public RowStreamWrapper(SourceNameTracker sourceNameTracker, SqlConnection connection, Transaction transaction, MetadataRowStreamImpl rowStream) {
     this.sourceNameTracker = sourceNameTracker;
     this.connection = connection;
     this.transaction = transaction;
-    this.preparedStatement = preparedStatement;
     this.rowStream = rowStream;
     this.types = new Types();
     rowStream.coloumnDescriptorHandler(columnDescriptors -> {
@@ -114,10 +119,21 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
     });
   }
  
+  /**
+   * Get the types in the {@link DataRow} objects in the output stream.
+   * <P>
+   * This method must only be called after the Future return by {@link #ready()} has succeeded.
+   * 
+   * @return the types in the {@link DataRow} objects in the output stream.
+   */
   public Types getTypes() {
     return types;
   }
   
+  /**
+   * Return a Future that will be completed when the initial query has run (and the types are known).
+   * @return a Future that will be completed when the initial query has run (and the types are known).
+   */
   public Future<Void> ready() {
     return readyPromise.future();
   }
@@ -208,12 +224,12 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
     return this;
   }
 
+  /**
+   * Close the underlying {@link ReadStream}.
+   * @return A Future that will be completed when the underlying {@link ReadStream} has been closed.
+   */
   public Future<Void> close() {
     return rowStream.close();
   }
 
-  public void close(Handler<AsyncResult<Void>> completionHandler) {
-    rowStream.close(completionHandler);
-  }
-  
 }

@@ -25,6 +25,13 @@ import java.time.chrono.ChronoLocalDate;
  * @author jtalbut
  */
 public class RsqlComparatorDate extends AbstractRsqlComparator<ChronoLocalDate> {
+
+  /**
+   * Constructor.
+   */
+  public RsqlComparatorDate() {
+  }
+  
   
   @Override
   public LocalDate validateType(String field, Object value) {

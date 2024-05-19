@@ -44,7 +44,17 @@ public class SerializeWriteStream<T> implements WriteStream<T> {
 
   private static final Logger logger = LoggerFactory.getLogger(SerializeWriteStream.class);
   
+  /**
+   * Functional interface for converting an item into a byte array that can be written to disc.
+   * @param <T> The type of item being serialized.
+   */
   public interface Serializer<T> {
+    /**
+     * Convert the item to a byte array.
+     * @param item the item to be converted.
+     * @return a byte array suitable for storing on disc.
+     * @throws IOException if the conversion cannot be carried out.
+     */
     byte[] serialize(T item) throws IOException;
   }
       

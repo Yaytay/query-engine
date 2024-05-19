@@ -29,10 +29,30 @@ import io.swagger.v3.oas.annotations.media.Schema;
                       """)
 public class Profile {
   
-  private String username;
-  private String fullname;
-  private String version;
+  private final String username;
+  private final String fullname;
+  private final String version;
 
+  /**
+   * Constructor.
+   * 
+   * @param username The username from the token ({@link uk.co.spudsoft.query.exec.conditions.RequestContext#getUsername()}).
+   * @param fullname The full name from the token ({@link uk.co.spudsoft.query.exec.conditions.RequestContext#getNameFromJwt()}).
+   * @param version The version of the Query Engine ({@link uk.co.spudsoft.query.main.Version}).
+   */
+  public Profile(String username, String fullname, String version) {
+    this.username = username;
+    this.fullname = fullname;
+    this.version = version;
+  }
+
+  /**
+   * The username from the token.
+   * <p>
+   * See {@link uk.co.spudsoft.query.exec.conditions.RequestContext#getUsername()}.
+   * 
+   * @return username from the token.
+   */
   @Schema(description = """
                         The username from the token.
                         <P>
@@ -48,10 +68,13 @@ public class Profile {
     return username;
   }
 
-  public void setUsername(String username) {
-    this.username = username;
-  }
-
+  /**
+   * The full name from the token.
+   * <p>
+   * See {@link uk.co.spudsoft.query.exec.conditions.RequestContext#getNameFromJwt()}.
+   * 
+   * @return full name from the token.
+   */
   @Schema(description = """
                         The users full name from the token.
                         <P>
@@ -69,10 +92,10 @@ public class Profile {
     return fullname;
   }
 
-  public void setFullname(String fullname) {
-    this.fullname = fullname;
-  }
-
+  /**
+   * Get the version of the Query Engine.
+   * @return the version of the Query Engine.
+   */
   @Schema(description = """
                         The version of the Query Engine backend.
                         """
@@ -82,8 +105,4 @@ public class Profile {
     return version;
   }
 
-  public void setVersion(String version) {
-    this.version = version;
-  }
-  
 }

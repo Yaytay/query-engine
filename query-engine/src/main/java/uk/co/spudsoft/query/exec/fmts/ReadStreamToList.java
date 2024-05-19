@@ -35,11 +35,28 @@ import org.slf4j.LoggerFactory;
 public class ReadStreamToList {
   
   private static final Logger logger = LoggerFactory.getLogger(ReadStreamToList.class);
+
+  private ReadStreamToList() {
+  }
   
+  /**
+   * Capture all values from a {@link ReadStream} as a {@link List}.
+   * @param <T> The type of item be read from the ReadStream.
+   * @param input The ReadStream supplying the items.
+   * @return A Future that will be completed with a {@link List} of items when the ReadStream has ended.
+   */
   public static <T> Future<List<T>> capture(ReadStream<T> input) {
     return captureByBatch(input, 0, 0);
   }
   
+  /**
+   * Map all values from a {@link ReadStream} via a mapping function and store the resulting items as a {@link List}.
+   * @param <T> The type of item be read from the ReadStream.
+   * @param <U> The type of item be written to the {@link List}.
+   * @param input The ReadStream supplying the items.
+   * @param mapper Function to convert input items to the objects that will be stored in the {@link List}.
+   * @return A Future that will be completed with a {@link List} of items when the ReadStream has ended.
+   */
   public static <T, U> Future<List<U>> map(ReadStream<T> input, Function<T, U> mapper) {
     Promise<List<U>> promise = Promise.promise();
     List<U> collected = new ArrayList<>();
@@ -57,6 +74,14 @@ public class ReadStreamToList {
     return promise.future();
   }
   
+  /**
+   * Capture values from a {@link ReadStream} to a {@link List}, requesting items from the input stream in chunks to avoid filling memory.
+   * @param <T> The type of item be read from the ReadStream.
+   * @param input The ReadStream supplying the items.
+   * @param initialFetch The number of items to request on the first call.
+   * @param subsequentFetch The number of items to request in the handler if the number of items collected is a multiple of this number.
+   * @return A Future that will be completed with a {@link List} of items when the ReadStream has ended.
+   */
   public static <T> Future<List<T>> captureByBatch(ReadStream<T> input, int initialFetch, int subsequentFetch) {
     Promise<List<T>> promise = Promise.promise();
     List<T> collected = new ArrayList<>();

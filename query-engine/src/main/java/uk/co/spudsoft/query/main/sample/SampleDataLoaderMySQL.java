@@ -44,6 +44,12 @@ public class SampleDataLoaderMySQL implements SampleDataLoader {
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(SampleDataLoaderMySQL.class);
+
+  /**
+   * Constructor.
+   */
+  public SampleDataLoaderMySQL() {
+  }
   
   @Override
   public String getName() {
@@ -55,6 +61,10 @@ public class SampleDataLoaderMySQL implements SampleDataLoader {
     return "`";
   }
   
+  /**
+   * Get the SQL script used to generate test structures for MySQL.
+   * @return the SQL script used to generate test structures for MySQL.
+   */
   protected String getScript() {
     return "/sampleData/MySQL Test Structures.sql";
   }

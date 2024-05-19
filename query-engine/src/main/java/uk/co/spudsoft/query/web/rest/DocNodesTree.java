@@ -54,7 +54,8 @@ public class DocNodesTree extends AbstractTree {
     private final String path; 
 
     /**
-     * Constructor.
+     * Constructor that will result in a File node.
+     * 
      * @param path the relative path to the node.
      */
     public DocNode(String path) {
@@ -62,6 +63,12 @@ public class DocNodesTree extends AbstractTree {
       this.path = path;
     }    
 
+    /**
+     * Constructor that will result in a Directory node.
+     * 
+     * @param path  the relative path to the node.
+     * @param children children of the this node.
+     */
     public DocNode(String path, List<DocNode> children) {
       super(nameFromPath(path), children);
       this.path = path;      

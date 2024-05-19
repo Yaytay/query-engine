@@ -55,8 +55,17 @@ public class SortingStream<T> implements ReadStream<T> {
   private final String tempDir;
   private final String baseFileName;
   private final long memoryLimit;
-  
-  interface MemoryEvaluator<T> {
+
+  /**
+   * Functional interface for evaluating the approximate amount of memory used by an item.
+   * @param <T> The type of the item being evaluated.
+   */
+  public interface MemoryEvaluator<T> {
+    /**
+     * Return the approximate amount of memory that the argument uses.
+     * @param data the item under consideration.
+     * @return the approximate amount of memory that the argument uses.
+     */
     int sizeof(T data);
   }
   
@@ -176,8 +185,23 @@ public class SortingStream<T> implements ReadStream<T> {
   private Set<SourceStream> pending;
   private PriorityQueue<SourceStream> outputs;
 
+  /**
+   * Constructor.
+   * 
+   * @param context The Vert.x context used when asynchronous actions must be scheduled.
+   * @param fileSystem The Vert.x filesystem used for managing data when it is too large to fit in memory.
+   * @param comparator The comparator used to sort items
+   * @param serializer The functional class for converting items into byte arrays that can be written to disc.
+   * @param deserializer The functional class for converting byte arrays from disc into items for the output stream.
+   * @param tempDir The temporary directory to use for writing sorted files to be merged later - if the data is too big to fit in memory.
+   * @param baseFileName The base name to use for temporary files.
+   * @param memoryLimit The approximate maximum amount of memory to use for storing items in memory before writing them to disc.
+   * @param memoryEvaluator The functional class used to calculate the approximate amount of memory used by a single item.
+   * @param input The input stream.
+   */
   @SuppressFBWarnings(value = {"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"}, justification = "CT_CONSTRUCTOR_THROW is false positive")
-  public SortingStream(Context context
+  public SortingStream(
+          Context context
           , FileSystem fileSystem
           , Comparator<T> comparator
           , SerializeWriteStream.Serializer<T> serializer

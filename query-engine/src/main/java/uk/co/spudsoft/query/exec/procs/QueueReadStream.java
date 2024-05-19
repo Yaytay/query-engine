@@ -53,12 +53,21 @@ public class QueueReadStream<T> implements ReadStream<T> {
   private boolean ended;
   private boolean completed;
   
+  /**
+   * Constructor.
+   * @param context The Vert.x context to use for asynchronous method calls.
+   */
   @SuppressFBWarnings("EI_EXPOSE_REP2")
   public QueueReadStream(Context context) {
     this.context = context;
     this.items = new ArrayDeque<>();
   }
   
+  /**
+   * Add an item to the queue of items to be sent (and emit it if appropriate).
+   * @param item The item to add.
+   * @return this, so that this method may be used in a fluent manner.
+   */
   public QueueReadStream<T> add(T item) {
     if (completed) {
       throw new IllegalStateException("Last item has already been sent");
@@ -74,6 +83,10 @@ public class QueueReadStream<T> implements ReadStream<T> {
     return this;
   }
 
+  /**
+   * Mark that no more items will be added.
+   * @return this, so that this method may be used in a fluent manner.
+   */
   public QueueReadStream<T> complete() {
     synchronized (lock) {
       this.completed = true;

@@ -65,6 +65,14 @@ public class SourceSqlStreamingInstance extends AbstractSource {
   private PreparedStatement preparedStatement;
   private Transaction transaction;
 
+  /**
+   * Constructor.
+   * @param vertx The Vert.x instance.
+   * @param context The Vert.x context.
+   * @param sharedMap Pooling map.
+   * @param definition The {@link SourceSql} definition.
+   * @param defaultName The name to use for the SourceInstance if no other name is provided in the definition.
+   */
   public SourceSqlStreamingInstance(Vertx vertx, Context context, SharedMap sharedMap, SourceSql definition, String defaultName) {
     super(Strings.isNullOrEmpty(definition.getName()) ? defaultName : definition.getName());
     this.vertx = vertx;
@@ -171,7 +179,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
               transaction = tran;
               logger.trace("Creating SQL stream on {}", connection);
               MetadataRowStreamImpl rowStream = new MetadataRowStreamImpl(preparedStatement, context, definition.getStreamingFetchSize(), args);
-              rowStreamWrapper = new RowStreamWrapper(this, connection, transaction, preparedStatement, rowStream);
+              rowStreamWrapper = new RowStreamWrapper(this, connection, transaction, rowStream);
               return rowStreamWrapper.ready();
             })
             .recover(ex -> {

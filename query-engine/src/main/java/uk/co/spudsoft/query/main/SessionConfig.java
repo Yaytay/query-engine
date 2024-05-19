@@ -45,6 +45,13 @@ public class SessionConfig {
   private Map<String, AuthEndpoint> oauth = new HashMap<>();
 
   /**
+   * Constructor.
+   */
+  public SessionConfig() {
+  }
+
+  
+  /**
    * Get the flag to indicate that a session is required for all REST API calls.
    * @return the flag to indicate that a session is required for all REST API calls.
    */

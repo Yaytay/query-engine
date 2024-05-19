@@ -39,12 +39,22 @@ public class SampleDataLoaderPostgreSQL implements SampleDataLoader {
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(SampleDataLoaderPostgreSQL.class);
+
+  /**
+   * Constructor.
+   */
+  public SampleDataLoaderPostgreSQL() {
+  }
   
   @Override
   public String getName() {
     return "PostgreSQL";
   }
   
+  /**
+   * Get the SQL script used to generate test structures for PostgreSQL.
+   * @return the SQL script used to generate test structures for PostgreSQL.
+   */
   protected String getScript() {
     return "/sampleData/PostgreSQL Test Structures.sql";
   }  

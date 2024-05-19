@@ -45,7 +45,17 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
   
   private static final Logger logger = LoggerFactory.getLogger(SerializeReadStream.class);
   
+  /**
+   * Functional interface for converting a byte array read from disc into an item of type T.
+   * @param <T> The type of the output item.
+   */
   public interface Deserializer<T> {
+    /**
+     * Convert a byte array to an item.
+     * @param data the byte array to be converted.
+     * @return the item represented by the byte array.
+     * @throws IOException if the conversion cannot be carried out.
+     */
     T deserialize(byte[] data) throws IOException;
   }
       

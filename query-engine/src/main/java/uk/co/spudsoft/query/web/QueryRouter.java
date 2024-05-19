@@ -63,7 +63,13 @@ public class QueryRouter implements Handler<RoutingContext> {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(QueryRouter.class);
   
+  /**
+   * The URL path prefix for this router.
+   */
   public static final String PATH_ROOT = "/query";
+  /**
+   * The base name of any sources that do not have a specified name.
+   */
   public static final String ROOT_SOURCE_DEFAULT_NAME = "Source";
   
   private final Vertx vertx;
@@ -75,6 +81,7 @@ public class QueryRouter implements Handler<RoutingContext> {
   private final boolean outputAllErrorMessages;
 
   /**
+   * Constructor.
    * 
    * @param vertx Vertx instance.
    * @param auditor Auditor interface for tracking requests.
@@ -102,6 +109,11 @@ public class QueryRouter implements Handler<RoutingContext> {
     this.outputAllErrorMessages = outputAllErrorMessages;    
   }
   
+  /**
+   * Find the index of the last dot after the last slash in a string.
+   * @param path The string being examined.
+   * @return the index of the last dot after the last slash in a string.
+   */
   static int indexOfLastDotAfterLastSlash(String path) {
     int dotPos = path.lastIndexOf(".");
     int slashPos = path.lastIndexOf("/");

@@ -82,10 +82,11 @@ public class SessionHandler {
     try {
       RequestContext requestContext = HandlerAuthHelper.getRequestContext(Vertx.currentContext(), requireSession);
 
-      Profile profile = new Profile();
-      profile.setUsername(requestContext.getUsername());
-      profile.setFullname(requestContext.getNameFromJwt());
-      profile.setVersion(Version.MAVEN_PROJECT_NAME + " " + Version.MAVEN_PROJECT_VERSION);
+      Profile profile = new Profile(
+              requestContext.getUsername()
+              , requestContext.getNameFromJwt()
+              , Version.MAVEN_PROJECT_NAME + " " + Version.MAVEN_PROJECT_VERSION
+      );
 
       response.resume(profile);
     } catch (Throwable ex) {

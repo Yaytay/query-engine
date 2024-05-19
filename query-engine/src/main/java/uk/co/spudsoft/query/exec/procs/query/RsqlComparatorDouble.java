@@ -22,6 +22,13 @@ package uk.co.spudsoft.query.exec.procs.query;
  * @author jtalbut
  */
 public class RsqlComparatorDouble extends AbstractRsqlComparator<Double> {
+
+  /**
+   * Constructor.
+   */
+  public RsqlComparatorDouble() {
+  }
+  
   
   @Override
   public Double validateType(String field, Object value) {

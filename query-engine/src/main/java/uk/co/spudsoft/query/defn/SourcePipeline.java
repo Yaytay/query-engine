@@ -105,7 +105,13 @@ public class SourcePipeline {
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder<T extends Builder<T>> {
 
+    /**
+     * The {@link SourcePipeline#source} value in the builder.
+     */
     protected Source source;
+    /**
+     * The {@link SourcePipeline#processors} value in the builder.
+     */
     protected List<Processor> processors;
 
     /**
@@ -160,6 +166,11 @@ public class SourcePipeline {
     return new SourcePipeline.Builder<>();
   }
 
+  /**
+   * Constructor.
+   * @param source The query for the pipeline.
+   * @param processors Processors to run on the data as it flows from the Source.
+   */
   protected SourcePipeline(Source source, List<Processor> processors) {
     this.source = source;
     this.processors = ImmutableCollectionTools.copy(processors);

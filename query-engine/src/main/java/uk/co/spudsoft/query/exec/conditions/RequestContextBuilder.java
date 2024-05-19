@@ -128,15 +128,27 @@ public class RequestContextBuilder {
     return sb.toString();
   }
   
+  /**
+   * Return true if the scheme is http and the port is 80.
+   * @param scheme The HTTP request scheme.
+   * @param port The port used in  the connection.
+   * @return true if the scheme is http and the port is 80.
+   */
   public static boolean isStandardHttpPort(String scheme, int port) {
     return "http".equals(scheme) && port == 80;
   }
 
+  /**
+   * Return true if the scheme is https and the port is 443.
+   * @param scheme The HTTP request scheme.
+   * @param port The port used in  the connection.
+   * @return true if the scheme is https and the port is 443.
+   */
   public static boolean isStandardHttpsPort(String scheme, int port) {
     return "https".equals(scheme) && port == 443;
   }
 
-  String issuer(HttpServerRequest request) {
+  private String issuer(HttpServerRequest request) {
     if (deriveIssuerFromHost) {
       return baseRequestUrl(request) + issuerHostPath;
     } else {
@@ -192,6 +204,12 @@ public class RequestContextBuilder {
     }
   }
 
+  /**
+   * Validate a JWT using the configured rules.
+   * @param request The HTTP request, which may be used to derive the issuer (if so configured).
+   * @param token The JWT.
+   * @return A token that will be completed when the token has been validated, though possibly with an Exception if the validation fails.
+   */
   public Future<Jwt> validateToken(HttpServerRequest request, String token) {
     return validator.validateToken(issuer(request), token, audList, false);
   }
@@ -280,7 +298,7 @@ public class RequestContextBuilder {
     }
   }
   
-  Future<String> performClientCredentialsGrant(String issuer, String clientId, String clientSecret) {
+  private Future<String> performClientCredentialsGrant(String issuer, String clientId, String clientSecret) {
     return discoverer.performOpenIdDiscovery(issuer)
             .compose(dd -> {
               String authEndpoint = dd.getAuthorizationEndpoint();

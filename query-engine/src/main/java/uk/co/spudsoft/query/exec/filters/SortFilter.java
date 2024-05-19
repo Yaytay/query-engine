@@ -41,6 +41,12 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
  */
 public class SortFilter implements Filter {
 
+  /**
+   * Constructor.
+   */
+  public SortFilter() {
+  }
+
   @Override
   public String getKey() {
     return "_sort";

@@ -77,9 +77,9 @@ public class RequestContext {
   
   private final ImmutableSet<Cookie> cookies;
 
-  public final IPAddressString clientIp;
+  private final IPAddressString clientIp;
   
-  public final Jwt jwt;
+  private final Jwt jwt;
   
   private long headersSentTime;
   
@@ -178,6 +178,10 @@ public class RequestContext {
     }
   }
   
+  /**
+   * true if the context includes a JWT.
+   * @return true if the context includes a JWT.
+   */
   public boolean isAuthenticated() {
     return jwt != null;
   }
@@ -469,7 +473,7 @@ public class RequestContext {
         response.append(", ");
       }
       response.append("\"arguments\":");
-      appendMultiMap(response, arguments);
+      appendMap(response, arguments);
     }
     if (headers != null) {
       if (!response.isEmpty()) {
@@ -500,6 +504,10 @@ public class RequestContext {
     return response.toString();
   }
   
+  /**
+   * Get the audience ('aud' claim) from the JWT, or null if there is no JWT.
+   * @return the audience ('aud' claim) from the JWT, or null if there is no JWT.
+   */
   public List<String> getAudience() {
     if (jwt != null) {
       return jwt.getAudience();
@@ -507,6 +515,10 @@ public class RequestContext {
     return null;
   }
   
+  /**
+   * Get the issuer ('iss' claim) from the JWT, or null if there is no JWT.
+   * @return the issuer ('iss' claim) from the JWT, or null if there is no JWT.
+   */
   public String getIssuer() {
     if (jwt != null) {
       return jwt.getIssuer();
@@ -514,6 +526,10 @@ public class RequestContext {
     return null;
   }
   
+  /**
+   * Get the subject ('sub' claim) from the JWT, or null if there is no JWT.
+   * @return the subject ('sub' claim) from the JWT, or null if there is no JWT.
+   */
   public String getSubject() {
     if (jwt != null) {
       return jwt.getSubject();
@@ -521,6 +537,10 @@ public class RequestContext {
     return null;
   }
   
+  /**
+   * Get the groups ('groups' claim) from the JWT, or null if there is no JWT.
+   * @return the groups ('groups' claim) from the JWT, or null if there is no JWT.
+   */
   public List<String> getGroups() {
     if (jwt != null) {
       return jwt.getGroups();
@@ -528,6 +548,10 @@ public class RequestContext {
     return null;
   }
   
+  /**
+   * Get the roles ('roles' claim) from the JWT, or null if there is no JWT.
+   * @return the roles ('roles' claim) from the JWT, or null if there is no JWT.
+   */
   public List<String> getRoles() {
     if (jwt != null) {
       return jwt.getRoles();
@@ -535,7 +559,13 @@ public class RequestContext {
     return null;
   }
   
-  public void appendMultiMap(StringBuilder builder, Map<String, Object> map) {
+  /**
+   * Append a Map to a StringBuilder as JSON.
+   * @param builder the StringBuilder that is used to build up the JSON.
+   * 
+   * @param map the map that is to be written to the build.
+   */
+  private static void appendMap(StringBuilder builder, Map<String, Object> map) {
     boolean started = false;
     builder.append("{");
     for (Map.Entry<String, Object> entry : map.entrySet()) {
@@ -549,8 +579,16 @@ public class RequestContext {
     builder.append("}");
   }
 
+  /**
+   * Append a value to a StringBuilder to build up a JSON structure.
+   * <P>
+   * The value is either a List or a single value.
+   * 
+   * @param builder the StringBuilder that is used to build up the JSON.
+   * @param map the map that is to be written to the build.
+   */
   @SuppressWarnings("rawtypes")
-  public void appendValue(StringBuilder builder, Object value) {
+  private static void appendValue(StringBuilder builder, Object value) {
     if (value instanceof List list) {
       builder.append("[");
       boolean started = false;
@@ -573,7 +611,13 @@ public class RequestContext {
     }
   }
   
-  public void appendMultiMap(StringBuilder builder, MultiMap map) {
+  /**
+   * Append a MuiltiMap to a StringBuilder as JSON.
+   * @param builder the StringBuilder that is used to build up the JSON.
+   * 
+   * @param map the map that is to be written to the build.
+   */
+  private static void appendMultiMap(StringBuilder builder, MultiMap map) {
     boolean started = false;
     builder.append("{");
     for (Map.Entry<String, String> entry : map.entries()) {
@@ -586,6 +630,10 @@ public class RequestContext {
     builder.append("}");
   }
   
+  /**
+   * Get the username (either the 'preferred_username' claim or the 'sub' claim) from the JWT, or null if there is no JWT.
+   * @return the username (either the 'preferred_username' claim or the 'sub' claim) from the JWT, or null if there is no JWT.
+   */
   public String getUsername() {
     if (jwt == null) {
       return null;
@@ -602,6 +650,10 @@ public class RequestContext {
     return null;
   }
   
+  /**
+   * Get the users human name (either the 'name' claim, a combination of the 'given_name' and 'family_name' claims, the 'preferred_username' claim, or the 'sub' claim) from the JWT, or null if there is no JWT.
+   * @return the users human name (either the 'name' claim, a combination of the 'given_name' and 'family_name' claims, the 'preferred_username' claim, or the 'sub' claim) from the JWT, or null if there is no JWT.
+   */
   public String getNameFromJwt() {
     if (jwt == null) {
       return null;

@@ -30,11 +30,20 @@ public class ReadStreamWithTypes {
   private final ReadStream<DataRow> stream;
   private final Types types;
 
+  /**
+   * Constructor.
+   * @param stream The {@link ReadStream} itself.
+   * @param types Get the Types as understood by this ReadStream.
+   */
   public ReadStreamWithTypes(ReadStream<DataRow> stream, Types types) {
     this.stream = stream;
     this.types = types;
   }
 
+  /**
+   * Get the {@link ReadStream}.
+   * @return the {@link ReadStream}.
+   */
   public ReadStream<DataRow> getStream() {
     return stream;
   }

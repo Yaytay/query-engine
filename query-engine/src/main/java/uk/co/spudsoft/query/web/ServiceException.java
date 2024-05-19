@@ -27,6 +27,9 @@ public class ServiceException extends Exception {
 
   private static final long serialVersionUID = 1123543245L;
   
+  /**
+   * The HTTP status code to use on the response to the client.
+   */
   private final int statusCode;
 
   /**

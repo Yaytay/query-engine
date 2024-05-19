@@ -30,9 +30,30 @@ public class Select extends Component<Select> {
 
   /**
    * The type of data source for the Select.
+   * <p>
+   * See <a href="https://help.form.io/userguide/form-building/form-components#select">https://help.form.io/userguide/form-building/form-components#select</a>
    */
   public enum DataSrcType {
-    values, json, url, resource, customer
+    /**
+     * Create your own list of static values for the select dropdown.
+     */
+    values, 
+    /**
+     * Provide raw JSON data as the select field value. 
+     */
+    json, 
+    /**
+     * Designate a URL that will provide the option values for the Select Dropdown
+     */
+    url, 
+    /**
+     * Source of data is mapped to a Resource within your project to populate the entire Resource Object or underlying field data within the selected Resource as the Select component options. 
+     */
+    resource, 
+    /**
+     * Write custom code to provide value options for the Select component.
+     */
+    custom
   }
   
   /**
@@ -166,7 +187,7 @@ public class Select extends Component<Select> {
     /**
      * Output a headers field.
      * @return a newly created {@link ComponentArray} to which {@link DataUrlHeader} instances should be added.
-     * @throws IOException 
+     * @throws IOException if the generator fails.
      */
     public ComponentArray addHeaders() throws IOException {
       generator.writeFieldName("headers");

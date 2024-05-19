@@ -22,6 +22,13 @@ package uk.co.spudsoft.query.exec.procs.query;
  * @author jtalbut
  */
 public class RsqlComparatorFloat extends AbstractRsqlComparator<Float> {
+
+  /**
+   * Constructor.
+   */
+  public RsqlComparatorFloat() {
+  }
+  
   
   @Override
   public Float validateType(String field, Object value) {

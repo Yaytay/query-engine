@@ -33,6 +33,10 @@ public class ProxyDataRow implements ProxyObject {
   
   private final DataRow dataRow;
 
+  /**
+   * Constructor.
+   * @param dataRow The {@link DataRow} being wrapped.
+   */
   @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "DataRow should only be modified on context")
   public ProxyDataRow(DataRow dataRow) {
     this.dataRow = dataRow;

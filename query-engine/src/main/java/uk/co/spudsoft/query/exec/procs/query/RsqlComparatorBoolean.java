@@ -21,6 +21,13 @@ package uk.co.spudsoft.query.exec.procs.query;
  * @author jtalbut
  */
 public class RsqlComparatorBoolean extends AbstractRsqlComparator<Boolean> {
+
+  /**
+   * Constructor.
+   */
+  public RsqlComparatorBoolean() {
+  }
+  
   
   @Override
   public Boolean validateType(String field, Object value) {

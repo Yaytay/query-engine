@@ -37,6 +37,12 @@ public class SampleDataLoaderMsSQL implements SampleDataLoader {
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(SampleDataLoaderMsSQL.class);
+
+  /**
+   * Constructor.
+   */
+  public SampleDataLoaderMsSQL() {
+  }
   
   @Override
   public String getName() {
@@ -48,6 +54,10 @@ public class SampleDataLoaderMsSQL implements SampleDataLoader {
     return "\"";
   }
   
+  /**
+   * Get the SQL script used to generate test structures for Microsoft SQL Server.
+   * @return the SQL script used to generate test structures for Microsoft SQL Server.
+   */
   protected String getScript() {
     return "/sampleData/MS SQL Test Structures.sql";
   }

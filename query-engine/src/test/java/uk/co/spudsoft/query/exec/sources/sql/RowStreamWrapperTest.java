@@ -48,7 +48,7 @@ public class RowStreamWrapperTest {
   public void testPause() {
     @SuppressWarnings("unchecked")
     MetadataRowStreamImpl target = mock(MetadataRowStreamImpl.class);
-    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, null, null, null, target);
+    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, null, null, target);
     instance.pause();
     verify(target, times(2)).pause();
   }
@@ -57,7 +57,7 @@ public class RowStreamWrapperTest {
   public void testResume() {
     @SuppressWarnings("unchecked")
     MetadataRowStreamImpl target = mock(MetadataRowStreamImpl.class);
-    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, null, null, null, target);
+    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, null, null, target);
     instance.resume();
     verify(target).resume();
   }
@@ -66,7 +66,7 @@ public class RowStreamWrapperTest {
   public void testFetch() {
     @SuppressWarnings("unchecked")
     MetadataRowStreamImpl target = mock(MetadataRowStreamImpl.class);
-    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, null, null, null, target);
+    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, null, null, target);
     instance.fetch(12);
     verify(target).fetch(12);
   }
@@ -75,7 +75,7 @@ public class RowStreamWrapperTest {
   public void testHandlerWithoutExceptionHandler() {
     @SuppressWarnings("unchecked")
     MetadataRowStreamImpl target = mock(MetadataRowStreamImpl.class);
-    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, null, null, null, target);
+    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, null, null, target);
     @SuppressWarnings("unchecked")
     ArgumentCaptor<Handler<Row>> handlerCaptor = ArgumentCaptor.forClass(Handler.class);
     instance.handler((DataRow jo) -> {
@@ -90,7 +90,7 @@ public class RowStreamWrapperTest {
   public void testHandlerWithExceptionHandler() {
     @SuppressWarnings("unchecked")
     MetadataRowStreamImpl target = mock(MetadataRowStreamImpl.class);
-    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, null, null, null, target);
+    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, null, null, target);
     @SuppressWarnings("unchecked")
     ArgumentCaptor<Handler<Row>> handlerCaptor = ArgumentCaptor.forClass(Handler.class);
     AtomicBoolean called = new AtomicBoolean();
@@ -114,7 +114,7 @@ public class RowStreamWrapperTest {
     Transaction transaction = mock(Transaction.class);
     SqlConnection connection = mock(SqlConnection.class);
     when (connection.close()).thenReturn(Future.succeededFuture());
-    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, connection, transaction, null, target);
+    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, connection, transaction, target);
     @SuppressWarnings("unchecked")
     ArgumentCaptor<Handler<Void>> handlerCaptor = ArgumentCaptor.forClass(Handler.class);
     when(target.close()).thenReturn(Future.succeededFuture());
@@ -133,7 +133,7 @@ public class RowStreamWrapperTest {
     Transaction transaction = mock(Transaction.class);
     SqlConnection connection = mock(SqlConnection.class);
     when (connection.close()).thenReturn(Future.succeededFuture());
-    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, connection, transaction, null, target);
+    RowStreamWrapper instance = new RowStreamWrapper(ctx -> {}, connection, transaction, target);
     @SuppressWarnings("unchecked")
     ArgumentCaptor<Handler<Void>> handlerCaptor = ArgumentCaptor.forClass(Handler.class);
     when(target.close()).thenReturn(Future.succeededFuture());
@@ -151,7 +151,7 @@ public class RowStreamWrapperTest {
   @Test
   public void testClose() {
     MetadataRowStreamImpl rowStream = mock(MetadataRowStreamImpl.class);
-    RowStreamWrapper wrapper = new RowStreamWrapper(null, null, null, null, rowStream);
+    RowStreamWrapper wrapper = new RowStreamWrapper(null, null, null, rowStream);
     wrapper.close();
     verify(rowStream, times(1)).close();
   }

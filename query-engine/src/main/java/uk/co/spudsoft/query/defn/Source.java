@@ -94,7 +94,12 @@ public interface Source {
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
   String getName();
-    
+ 
+  /**
+   * Validate the type of the Source.
+   * @param required The {@link SourceType} that the class requires.
+   * @param actual The currently set {@link SourceType}.
+   */
   default void validateType(SourceType required, SourceType actual) {
     if (required != actual) {
       throw new IllegalArgumentException("Source of type " + required + " configured with type " + actual);

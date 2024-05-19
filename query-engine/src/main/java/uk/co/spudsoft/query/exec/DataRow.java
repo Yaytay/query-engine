@@ -60,6 +60,14 @@ public class DataRow {
     this.data = data;
   }
   
+  /**
+   * Factory method to create a new DataRow instance.
+   * <p>
+   * Multiple DataRow instances should share a single {@link Types} object.
+   * 
+   * @param types The known Types to use for this DataRow.
+   * @return a newly created DataRow object.
+   */
   public static DataRow create(Types types) {
     return new DataRow(types, new LinkedHashMap<>());
   }

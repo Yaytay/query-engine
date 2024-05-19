@@ -22,6 +22,12 @@ package uk.co.spudsoft.query.exec.procs.query;
  * @author jtalbut
  */
 public class RsqlComparatorLong extends AbstractRsqlComparator<Long> {
+
+  /**
+   * Constructor.
+   */
+  public RsqlComparatorLong() {
+  }
   
   @Override
   public Long validateType(String field, Object value) {

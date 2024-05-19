@@ -24,6 +24,13 @@ import java.time.LocalTime;
  * @author jtalbut
  */
 public class RsqlComparatorTime extends AbstractRsqlComparator<LocalTime> {
+
+  /**
+   * Constructor.
+   */
+  public RsqlComparatorTime() {
+  }
+  
   
   @Override
   public LocalTime validateType(String field, Object value) {

@@ -36,6 +36,12 @@ import uk.co.spudsoft.query.exec.procs.query.ProcessorQueryInstance;
 public class QueryFilter implements Filter {
 
   private static final Logger logger = LoggerFactory.getLogger(QueryFilter.class);
+
+  /**
+   * Constructor.
+   */
+  public QueryFilter() {
+  }
   
   @Override
   public String getKey() {

@@ -22,6 +22,13 @@ package uk.co.spudsoft.query.exec.procs.query;
  * @author jtalbut
  */
 public class RsqlComparatorInteger extends AbstractRsqlComparator<Integer> {
+
+  /**
+   * Constructor.
+   */
+  public RsqlComparatorInteger() {
+  }
+  
   
   @Override
   public Integer validateType(String field, Object value) {
