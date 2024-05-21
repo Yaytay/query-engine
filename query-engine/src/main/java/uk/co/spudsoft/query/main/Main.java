@@ -171,6 +171,12 @@ public class Main extends Application {
 
   
   private int port;
+
+  /**
+   * Constructor.
+   */
+  public Main() {
+  }
   
   @ExcludeFromJacocoGenerated
   protected void mainCompletion(AsyncResult<Integer> result) {

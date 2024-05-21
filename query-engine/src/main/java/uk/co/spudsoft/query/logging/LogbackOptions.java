@@ -41,6 +41,12 @@ public class LogbackOptions {
   private ImmutableMap<String, Level> level;
 
   /**
+   * Constructor.
+   */
+  public LogbackOptions() {
+  }
+
+  /**
    * Get the location of a standard logback configuration file.
    * This value should only be set if the built-in configuration options are inadequate for your purposes.
    * @return location of a standard logback configuration file.

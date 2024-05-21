@@ -61,6 +61,11 @@ public class PipelineExecutorImpl implements PipelineExecutor {
   private final Map<String, ProtectedCredentials> secrets;
   private final Map<String, Object> sharedMap;
 
+  /**
+   * Constructor.
+   * @param filterFactory The {@link FilterFactory} for creating {@link ProcessorInstance} objects from command line arguments.
+   * @param secrets The preconfigured secrets that can be used by pipelines.
+   */
   public PipelineExecutorImpl(FilterFactory filterFactory, Map<String, ProtectedCredentials> secrets) {
     this.filterFactory = filterFactory;
     this.secrets = ImmutableCollectionTools.copy(secrets);
@@ -305,9 +310,9 @@ public class PipelineExecutorImpl implements PipelineExecutor {
    * <li>Firstly by q value (with default q value being 1 (best)).
    * <li>Secondly by specificity, wildcards come after more specific types.
    * </ul>
-   * @param formats
-   * @param requested
-   * @return 
+   * @param formats the formats specified in the pipeline definition.
+   * @param requested the FormatRequest built from the HTTP request.
+   * @return the best format found in the formats.
    */
   protected Format findBestAcceptableFormat(List<Format> formats, FormatRequest requested) {
     for (MediaType rangeRequested : requested.getAccept()) {

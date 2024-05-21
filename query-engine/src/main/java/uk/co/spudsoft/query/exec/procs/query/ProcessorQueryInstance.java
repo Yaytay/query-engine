@@ -52,6 +52,9 @@ public class ProcessorQueryInstance implements ProcessorInstance {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ProcessorQueryInstance.class);
   
+  /**
+   * The single instance of {@link RSQLParser} that is required.
+   */
   public static final RSQLParser RSQL_PARSER = new RSQLParser();
   
   private final SourceNameTracker sourceNameTracker;
@@ -64,6 +67,13 @@ public class ProcessorQueryInstance implements ProcessorInstance {
   
   private Node rootNode;
   
+  /**
+   * Constructor.
+   * @param vertx the Vert.x instance.
+   * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
+   * @param context the Vert.x context.
+   * @param definition the definition of this processor.
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
   public ProcessorQueryInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorQuery definition) {
     this.sourceNameTracker = sourceNameTracker;
@@ -77,6 +87,12 @@ public class ProcessorQueryInstance implements ProcessorInstance {
     return definition.getId();
   }
 
+  /**
+   * Process the RSQL/FIQL for a DataRow and return the result.
+   * @param rootNode the root of the RSQL abstract tree.
+   * @param row the {@link DataRow} being evaluated.
+   * @return the value calculated by the RSQL evaluation.
+   */
   static boolean evaluate(Node rootNode, DataRow row) {
     return rootNode.accept(new RsqlEvaluator(), row);
   }

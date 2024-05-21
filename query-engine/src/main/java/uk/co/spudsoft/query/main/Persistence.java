@@ -44,6 +44,12 @@ public class Persistence {
   private int retryLimit;
 
   /**
+   * Constructor.
+   */
+  public Persistence() {
+  }
+
+  /**
    * The JDBC data source for storing audit information.
    * 
    * @return the JDBC data source for storing audit information.

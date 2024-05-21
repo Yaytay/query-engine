@@ -93,7 +93,13 @@ public final class PipelineDefnLoader {
   private final VelocityEngine velocity;
   
   private static final DeserializationProblemHandler PROBLEM_HANDLER = new PipelineParsingErrorHandler();
+  /**
+   * The ObjectMapper to reading/writing JSON files containing {@link Pipeline} definitions.
+   */
   public static final ObjectMapper JSON_OBJECT_MAPPER = createObjectMapper(null);
+  /**
+   * The ObjectMapper to reading/writing YAML files containing {@link Pipeline} definitions.
+   */
   public static final ObjectMapper YAML_OBJECT_MAPPER = createObjectMapper(new YAMLFactory());  
 
   private static ObjectMapper createObjectMapper(JsonFactory jf) {
@@ -104,7 +110,15 @@ public final class PipelineDefnLoader {
     mapper.addHandler(PROBLEM_HANDLER);
     return mapper;
   }
-  
+
+  /**
+   * Constructor.
+   * @param meterRegistry The {@link MeterRegistry} for generating metrics.
+   * @param vertx The Vert.x instance.
+   * @param cacheConfig Configuration to use for the pipeline and template caches.
+   * @param dirCache The {@link DirCache} of the filesystem.
+   * @throws IOException if something goes wrong with Velocity initialization.
+   */  
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "No real option for accessing a MeterRegistry")
   public PipelineDefnLoader(
           MeterRegistry meterRegistry
@@ -163,6 +177,11 @@ public final class PipelineDefnLoader {
     }
   }
   
+  /**
+   * Create a flat {@link Set} of all files in a {@link DirCacheTree.Directory directory tree}.
+   * @param dir The {@link DirCacheTree.Directory directory tree}.
+   * @param files The {@link Set} of files being collected.
+   */
   static void addFilesToSet(DirCacheTree.Directory dir, Set<DirCacheTree.File> files) {
     if (dir != null) {
       dir.getChildren().forEach(node -> {
@@ -185,6 +204,16 @@ public final class PipelineDefnLoader {
     permissionsCache.purge(files);
   }
   
+  /**
+   * Validate a requested path.
+   * <p>
+   * A valid path must match the {@link #GOOD_PATH} regular expression and must not contain a double slash.
+   * Paths are always normalized using NFC before any processing is carried out.
+   * 
+   * @param path the path to validate.
+   * @return the normalized, valid, path.
+   * @throws ServiceException if the requested path is not valid.
+   */
   public static String validatePath(String path) throws ServiceException {
     if (path == null) {
       throw new ServiceException(400, "The requested path is not valid", new IllegalArgumentException("Null path"));
@@ -334,6 +363,11 @@ public final class PipelineDefnLoader {
             });
   }
   
+  /**
+   * Read a {@link Pipeline} from a file containing JSON.
+   * @param absolutePath the path to the file that is to be read.
+   * @return A Future that will be completed with the {@link Pipeline} definition when the file has been written.
+   */
   public Future<Pipeline> readJsonFile(String absolutePath) {
     return fs.readFile(absolutePath)
             .compose(buffer -> {
@@ -345,6 +379,11 @@ public final class PipelineDefnLoader {
             });
   }
   
+  /**
+   * Read a {@link Pipeline} from a file containing YAML.
+   * @param absolutePath the path to the file that is to be read.
+   * @return A Future that will be completed with the {@link Pipeline} definition when the file has been written.
+   */
   public Future<Pipeline> readYamlFile(String absolutePath) {
     return fs.readFile(absolutePath)
             .compose(buffer -> {
@@ -356,6 +395,12 @@ public final class PipelineDefnLoader {
             });
   }
   
+  /**
+   * Write the provided {@link Pipeline} definition as JSON to a file.
+   * @param absolutePath the path to the file that is to be written.
+   * @param pipeline the {@link Pipeline} to convert to JSON.
+   * @return A Future that will be completed when the file has been written.
+   */
   public Future<Void> writeJsonFile(String absolutePath, Pipeline pipeline) {
     try {
       byte[] bytes = JSON_OBJECT_MAPPER.writeValueAsBytes(pipeline);
@@ -365,6 +410,12 @@ public final class PipelineDefnLoader {
     }
   }
   
+  /**
+   * Write the provided {@link Pipeline} definition as YAML to a file.
+   * @param absolutePath the path to the file that is to be written.
+   * @param pipeline the {@link Pipeline} to convert to YAML.
+   * @return A Future that will be completed when the file has been written.
+   */
   public Future<Void> writeYamlFile(String absolutePath, Pipeline pipeline) {
     try {
       byte[] bytes = YAML_OBJECT_MAPPER.writeValueAsBytes(pipeline);

@@ -59,6 +59,15 @@ public class PipelineInstance {
   private final FormatInstance sink;
   private final Promise<Void> finalPromise;
 
+  /**
+   * Constructor.
+   * @param argumentInstances the arguments passed in to the request, matched to argument in the {@link Pipeline} definition.
+   * @param sourceEndpoints The set of {@link Endpoint} definitions from the {@link Pipeline} definition.
+   * @param preProcessors The {@link PreProcessorInstance} objects instantiated from the {@link Pipeline} definition.
+   * @param source The primary {@link SourceInstance} object instantiated from the {@link Pipeline} definition.
+   * @param processors The {@link ProcessorInstance} objects instantiated from the {@link Pipeline} definition.
+   * @param sink The {@link FormatInstance} object that will handle the output.
+   */
   public PipelineInstance(
           final Map<String, ArgumentInstance> argumentInstances
           , final Map<String, Endpoint> sourceEndpoints
@@ -79,10 +88,22 @@ public class PipelineInstance {
     this.finalPromise = Promise.promise();
   }
   
+  /**
+   * Get the definition of the currently executing {@link Pipeline}.
+   * @param context The Vert.x {@link Context} that should contain the {@link Pipeline} definition.
+   * @return The {@link Pipeline} definition found in the Vert.x {@link Context}, if any.
+   */
   public static Pipeline getPipelineDefinition(Context context) {
     return context == null ? null : context.getLocal("pipeline");
   }
   
+  /**
+   * Build the {@link Map} of argument names to values (a simpler map than using {@link ArgumentInstance} objects.
+   * <p>
+   * This is for use by templates and scripts.
+   * @param arguments The {@link Map} of arguments names to {@link ArgumentInstance} objects that contains the argument values.
+   * @return an {@link ImmutableMap} of names to arguments values (potentially to multiple values).
+   */
   public static ImmutableMap<String, Object> buildArgumentMap(Map<String, ArgumentInstance> arguments) {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.<String, Object>builder();
     if (arguments != null) {
@@ -99,35 +120,68 @@ public class PipelineInstance {
     return builder.build();
   }
 
+  /**
+   * Get the {@link Map} of {@link ArgumentInstance} objects.
+   * @return the {@link Map} of {@link ArgumentInstance} objects.
+   */
   public ImmutableMap<String, ArgumentInstance> getArgumentInstances() {
     return argumentInstances;
   }
   
+  /**
+   * Get the {@link Map} of {@link Endpoint} objects.
+   * @return the {@link Map} of {@link Endpoint} objects.
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "DynamicSourceEndpoints do modify this value")
   public Map<String, Endpoint> getSourceEndpoints() {
     return sourceEndpoints;
   }
 
+  /**
+   * Get the {@link List} of {@link PreProcessorInstance} objects that will be run first.
+   * @return the {@link List} of {@link PreProcessorInstance} objects.
+   */
   public ImmutableList<PreProcessorInstance> getPreProcessors() {
     return preProcessors;
   }
 
+  /**
+   * Get the primary {@link SourceInstance}.
+   * @return the primary {@link SourceInstance}.
+   */
   public SourceInstance getSource() {
     return source;
   }
 
+  /**
+   * Get the {@link List} of {@link ProcessorInstance} objects.
+   * @return the {@link List} of {@link ProcessorInstance} objects.
+   */
   public List<ProcessorInstance> getProcessors() {
     return processors;
   }
 
+  /**
+   * Get the output {@link FormatInstance}.
+   * @return the output {@link FormatInstance}.
+   */
   public FormatInstance getSink() {
     return sink;
   }
 
+  /**
+   * Get the {@link Promise} that will be completed when the {@link PipelineInstance} has stream all the data.
+   * @return the {@link Promise} that will be completed when the {@link PipelineInstance} has stream all the data.
+   */
   public Promise<Void> getFinalPromise() {
     return finalPromise;
   }
   
+  /**
+   * Render a {@link ST StringTemplate}.
+   * @param template the {@link ST StringTemplate}.
+   * @return the output from the {@link ST StringTemplate}.
+   */
   // Compare the values added with the ProcessorScriptInstance#runSource and ConditionInstance#evaluate
   public String renderTemplate(String template) {
     if (Strings.isNullOrEmpty(template)) {

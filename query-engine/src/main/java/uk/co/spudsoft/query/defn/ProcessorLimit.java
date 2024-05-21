@@ -70,6 +70,10 @@ public class ProcessorLimit implements Processor {
     return id;
   }
   
+  /**
+   * The limit on the number of rows that will be output by this processor.
+   * @return the limit on the number of rows that will be output by this processor.
+   */
   @Schema(description = """
                         The limit on the number of rows that will be output by this processor.
                         """

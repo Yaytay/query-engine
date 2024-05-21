@@ -75,6 +75,10 @@ public class ProcessorMap implements Processor {
     return id;
   }
 
+  /**
+   * The fields that will be renamed by this processor.
+   * @return the fields that will be renamed by this processor.
+   */
   @Schema(description = """
                         The fields that will be renamed by this processor.
                         """

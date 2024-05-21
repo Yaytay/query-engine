@@ -22,6 +22,12 @@ package uk.co.spudsoft.query.exec.sources.sql;
  * @author jtalbut
  */
 public class MsSqlPreparer extends AbstractSqlPreparer {
+
+  /**
+   * Constructor.
+   */
+  public MsSqlPreparer() {
+  }
   
   @Override
   void generateParameterNumber(StringBuilder builder, int number) {

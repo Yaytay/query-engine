@@ -252,6 +252,12 @@ public class Parameters {
   private SessionConfig session = new SessionConfig();
 
   /**
+   * Constructor.
+   */
+  public Parameters() {
+  }
+  
+  /**
    * Get the options for configuring logback.
    * 
    * @return the options for configuring logback.

@@ -22,8 +22,18 @@ package uk.co.spudsoft.query.exec;
  */
 public interface SharedMap {
   
+  /**
+   * Get a named object from the map.
+   * @param name The name of the object in the map.
+   * @return The value that was previously put into the map with the {@link #put(java.lang.String, java.lang.Object)} method.
+   */
   Object get(String name);
   
+  /**
+   * Put a value into the map.
+   * @param name The name of the object to put in the map.
+   * @param value The object to put in the map.
+   */
   void put(String name, Object value);
   
 }

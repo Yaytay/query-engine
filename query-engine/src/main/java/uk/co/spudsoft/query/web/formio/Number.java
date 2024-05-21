@@ -27,8 +27,16 @@ import java.io.IOException;
  */
 public class Number extends Component<Number> {
   
+  /**
+   * Output a formio Validation component for Number components.
+   */
   public static class NumberValidation extends AbstractComponent<NumberValidation> {
 
+    /**
+     * Constructor.
+     * @param generator The Jackson {@link com.fasterxml.jackson.core.JsonGenerator} for FormIO.
+     * @throws IOException if something goes wrong.
+     */
     @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
     protected NumberValidation(JsonGenerator generator) throws IOException {
       super(generator);

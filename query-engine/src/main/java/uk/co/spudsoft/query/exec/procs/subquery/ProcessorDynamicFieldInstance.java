@@ -67,6 +67,13 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
   
   private List<FieldDefn> fields;
   
+  /**
+   * Constructor.
+   * @param vertx the Vert.x instance.
+   * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
+   * @param context the Vert.x context.
+   * @param definition the definition of this processor.
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
   public ProcessorDynamicFieldInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorDynamicField definition) {
     super(logger, vertx, sourceNameTracker, context, definition.getId(), definition.getParentIdColumns(), definition.getValuesParentIdColumns(), definition.isInnerJoin());

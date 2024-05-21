@@ -79,8 +79,12 @@ public class ProcessorSort implements Processor {
     return id;
   }
 
+  /**
+   * The fields by which this processor will sort the data.
+   * @return the fields by which this processor will sort the data.
+   */
   @Schema(description = """
-                        The fields this processor will use to sort the data.
+                        The fields by which this processor will sort the data.
                         """
   )
   public List<String> getFields() {

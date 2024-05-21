@@ -35,6 +35,12 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
 public class OffsetFilter implements Filter {
 
   private static final Logger logger = LoggerFactory.getLogger(OffsetFilter.class);
+
+  /**
+   * Constructor.
+   */
+  public OffsetFilter() {
+  }
   
   @Override
   public String getKey() {

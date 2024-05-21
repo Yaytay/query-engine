@@ -74,9 +74,20 @@ public interface Processor {
    */
   void validate();
     
+  /**
+   * Create a new instance of the appropriate {@link ProcessorInstance}.
+   * @param vertx The Vert.x instance.
+   * @param sourceNameTracker The {@link SourceNameTracker} used to enable child {@link uk.co.spudsoft.query.exec.SourceInstance} objects to identify themselves to logs.
+   * @param context The Vert.x (@link Context} to use for any asynchronous tasks that must be performed.
+   * @return a newly created {@link ProcessorInstance}.
+   */
   @JsonIgnore
   ProcessorInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context);
   
+  /**
+   * The type of Processor being configured.
+   * @return the type of Processor being configured.
+   */
   @Schema(description = """
                         <P>The type of Processor being configured.</P>
                         """
@@ -84,6 +95,10 @@ public interface Processor {
   )
   ProcessorType getType();
   
+  /**
+   * ID that uniquely identifies this processor within the pipeline.
+   * @return an ID that uniquely identifies this processor within the pipeline.
+   */
   @Schema(description = """
                         <P>ID that uniquely idenfities this processor within the pipeline.</P>
                         """
@@ -93,6 +108,10 @@ public interface Processor {
   )
   String getId();
   
+  /**
+   * Optional condition that controls whether the processor will be run.
+   * @return an optional condition that controls whether the processor will be run.
+   */
   @Schema(description = """
                         <P>Optional condition that controls whether the processor will be run.</P>
                         """
@@ -100,7 +119,13 @@ public interface Processor {
   )
   Condition getCondition();
   
-  default void validateType(ProcessorType required, ProcessorType actual) {
+  /**
+   * Validate that the {@link ProcessorType} configured is correct.
+   * @param required the required {@link ProcessorType}.
+   * @param actual the configured {@link ProcessorType}.
+   * @throws IllegalArgumentException if the two types do not match.
+   */
+  default void validateType(ProcessorType required, ProcessorType actual) throws IllegalArgumentException {
     if (required != actual) {
       throw new IllegalArgumentException("Processor of type " + required + " configured with type " + actual);
     }

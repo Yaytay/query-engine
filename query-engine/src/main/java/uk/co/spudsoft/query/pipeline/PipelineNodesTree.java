@@ -40,6 +40,9 @@ public class PipelineNodesTree extends AbstractTree {
   private PipelineNodesTree() {
   }
 
+  /**
+   * Base class for pipelines and the directories that contain them.
+   */
   @JsonSubTypes({
     @JsonSubTypes.Type(value = PipelineDir.class),
     @JsonSubTypes.Type(value = PipelineFile.class)
@@ -49,9 +52,6 @@ public class PipelineNodesTree extends AbstractTree {
                         Base class for pipelines and the directories that contain them.
                         </P>
                         """)
-  /**
-   * Base class for pipelines and the directories that contain them.
-   */
   public static class PipelineNode extends AbstractNode<PipelineNode> {
 
     /**

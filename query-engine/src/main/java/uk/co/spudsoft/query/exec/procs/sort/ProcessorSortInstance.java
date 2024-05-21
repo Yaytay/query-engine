@@ -80,6 +80,13 @@ public class ProcessorSortInstance implements ProcessorInstance {
   
   private Types types;
   
+  /**
+   * Constructor.
+   * @param vertx the Vert.x instance.
+   * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
+   * @param context the Vert.x context.
+   * @param definition the definition of this processor.
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
   public ProcessorSortInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorSort definition) {
     this.vertx = vertx;
@@ -93,10 +100,21 @@ public class ProcessorSortInstance implements ProcessorInstance {
     return definition.getId();
   }
 
+  /**
+   * The temporary directory used for files created when a stream exceeds the memory limit.
+   * @param tempDir the temporary directory used for files created when a stream exceeds the memory limit.
+   */
   public static void setTempDir(String tempDir) {
     ProcessorSortInstance.tempDir = tempDir;
   }
 
+  /**
+   * Set the global memory limit.
+   * <p>
+   * There is only one memory limit value in the entire process, but each ProcessorSortInstance is permitted to use that amount of memory.
+   * i.e. the limit is not shared amongst all instances, even though the configuration is.
+   * @param memoryLimit the global memory limit.
+   */
   public static void setMemoryLimit(int memoryLimit) {
     ProcessorSortInstance.memoryLimit = memoryLimit;
   }

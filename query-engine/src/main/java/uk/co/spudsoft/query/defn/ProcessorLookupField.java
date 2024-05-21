@@ -35,7 +35,11 @@ public class ProcessorLookupField {
   private final String keyField;
   private final String valueField;
 
-  public void validate() {
+  /**
+   * Validate this definition.
+   * @throws IllegalArgumentException if the definition is not valid.
+   */
+  public void validate() throws IllegalArgumentException {
     if (Strings.isNullOrEmpty(keyField)) {
       throw new IllegalArgumentException("No key field name provided for map");
     }
@@ -44,6 +48,10 @@ public class ProcessorLookupField {
     }
   }
   
+  /**
+   * The name of the field in the primary stream that is to be looked up in the map.
+   * @return the name of the field in the primary stream that is to be looked up in the map.
+   */
   @Schema(description = """
                         The name of the field in the primary stream that is to be looked up in the map.
                         """
@@ -54,6 +62,10 @@ public class ProcessorLookupField {
     return keyField;
   }
 
+  /**
+   * The name of the field to be created in the stream that is to be set by the value from the map.
+   * @return the name of the field to be created in the stream that is to be set by the value from the map.
+   */
   @Schema(description = """
                         The name of the field to be created in the stream that is to be set by the value from the map.
                         """
@@ -64,6 +76,9 @@ public class ProcessorLookupField {
     return valueField;
   }
 
+  /**
+   * Builder class for ProcessorLookupField.
+   */
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
@@ -73,21 +88,39 @@ public class ProcessorLookupField {
     private Builder() {
     }
 
+    /**
+     * Set the {@link ProcessorLookupField#keyField} value in the builder.
+     * @param value The value for the {@link ProcessorLookupField#keyField}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder keyField(final String value) {
       this.keyField = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorLookupField#valueField} value in the builder.
+     * @param value The value for the {@link ProcessorLookupField#valueField}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder valueField(final String value) {
       this.valueField = value;
       return this;
     }
 
+    /**
+     * Construct a new instance of the ProcessorLookupField class.
+     * @return a new instance of the ProcessorLookupField class.
+     */
     public ProcessorLookupField build() {
       return new uk.co.spudsoft.query.defn.ProcessorLookupField(keyField, valueField);
     }
   }
 
+  /**
+   * Construct a new instance of the ProcessorLookupField.Builder class.
+   * @return a new instance of the ProcessorLookupField.Builder class.
+   */
   public static ProcessorLookupField.Builder builder() {
     return new ProcessorLookupField.Builder();
   }

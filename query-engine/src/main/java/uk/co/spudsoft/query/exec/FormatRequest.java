@@ -59,22 +59,39 @@ public class FormatRequest {
 
   private static final Logger logger = LoggerFactory.getLogger(FormatRequest.class);
   
-  private String name;
-  private String extension;
-  private ImmutableList<MediaType> accept;
+  private final String name;
+  private final String extension;
+  private final ImmutableList<MediaType> accept;
 
+  /**
+   * Get the name of the format.
+   * @return the name of the format.
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   * Get the extension used in the URL.
+   * @return the extension used in the URL.
+   */
   public String getExtension() {
     return extension;
   }
 
+  /**
+   * Get the list of media types specified in the Accept header.
+   * @return the list of media types specified in the Accept header.
+   */
   public List<MediaType> getAccept() {
     return accept;
   }
 
+  /**
+   * Parse the Accept header into a sorted {@link List} of {@link MediaType} objects.
+   * @param value the Accept header string.
+   * @return a sorted {@link List} of {@link MediaType} objects built from the Accept header.
+   */
   public static List<MediaType> parseAcceptHeader(final String value) {
     List<MediaType> types = new ArrayList<>();
     String[] parts = value.split(",");
@@ -89,6 +106,9 @@ public class FormatRequest {
     return types;
   }
     
+  /**
+   * Builder class for {@link FormatRequest}.
+   */
   @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "Builder class should result in all instances being immutable when object is built")
   public static class Builder {
 
@@ -99,21 +119,41 @@ public class FormatRequest {
     private Builder() {
     }
 
+    /**
+     * Set the {@link FormatRequest#name} value in the builder.
+     * @param value The value for the {@link FormatRequest#name} in the builder.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder name(final String value) {
       this.name = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatRequest#extension} value in the builder.
+     * @param value The value for the {@link FormatRequest#extension} in the builder.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder extension(final String value) {
       this.extension = value;
       return this;
     }
 
+    /**
+     * Set the {@link FormatRequest#accept} value in the builder as a parsed {@link List} of {@link MediaType} instances.
+     * @param value The value for the {@link FormatRequest#accept} in the builder as a parsed {@link List} of {@link MediaType} instances.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder accept(final List<MediaType> value) {
       this.accept = value;
       return this;
     }
     
+    /**
+     * Set the {@link FormatRequest#name} value in the builder as a {@link String} that will be parsed by {@link #parseAcceptHeader(java.lang.String)}.
+     * @param value The value for the {@link FormatRequest#name}in the builder as a {@link String} that will be parsed by {@link #parseAcceptHeader(java.lang.String)}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder accept(final String value) {
       if (Strings.isNullOrEmpty(value)) {
         this.accept = Collections.emptyList();
@@ -124,11 +164,19 @@ public class FormatRequest {
       return this;
     }
 
+    /**
+     * Construct a new instance of the {@link FormatRequest} class.
+     * @return a new instance of the {@link FormatRequest} class.
+     */
     public FormatRequest build() {
       return new uk.co.spudsoft.query.exec.FormatRequest(name, extension, accept);
     }
   }
 
+  /**
+   * Construct a new instance of the {@link FormatRequest.Builder} class.
+   * @return a new instance of the {@link FormatRequest.Builder} class.
+   */
   public static FormatRequest.Builder builder() {
     return new FormatRequest.Builder();
   }

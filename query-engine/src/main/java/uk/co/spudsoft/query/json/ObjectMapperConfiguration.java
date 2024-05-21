@@ -30,6 +30,9 @@ import com.google.common.net.MediaType;
  * @author jtalbut
  */
 public class ObjectMapperConfiguration {
+
+  private ObjectMapperConfiguration() {
+  }
   
   /**
    * Configure the ObjectMapper in a standard way for the query engine.

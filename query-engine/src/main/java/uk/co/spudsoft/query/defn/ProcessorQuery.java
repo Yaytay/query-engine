@@ -71,6 +71,10 @@ public class ProcessorQuery implements Processor {
     return id;
   }
 
+  /**
+   * Get the FIQL expression that will be evaluated on each row.
+   * @return the FIQL expression that will be evaluated on each row.
+   */
   @Schema(description = """
                         A valid FIQL expression that will be evaluated on each row.
                         """

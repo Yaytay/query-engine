@@ -30,6 +30,12 @@ public class ProcessorConfig {
   private int inMemorySortLimitBytes = 1 << 22; // 4MB;
 
   /**
+   * Constructor.
+   */
+  public ProcessorConfig() {
+  }
+
+  /**
    * The temporary file to be used by {@link uk.co.spudsoft.query.exec.ProcessorInstance}s that require it.
    * <p>
    * The default value is the java system property &quot;java.io.tmpdir&quot;.

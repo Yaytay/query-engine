@@ -68,6 +68,12 @@ public class ProcessorScript implements Processor {
     return id;
   }
 
+  /**
+   * The language to use, as understood by GraalVM.
+   * <P>
+   * By default the only acceptable value is "js", but custom builds can use other lanaguages.
+   * @return The language to use, as understood by GraalVM.
+   */
   @Schema(description = """
                         The language to use, as understood by GraalVM.
                         <P>
@@ -79,6 +85,12 @@ public class ProcessorScript implements Processor {
     return language;
   }
 
+  /**
+   * A predicate script that is used to determine whether or not the row should be discarded.
+   * <P>
+   * The script should return a value that is either true or false, if the value is false the row will be discarded.
+   * @return A predicate script that is used to determine whether or not the row should be discarded.
+   */
   @Schema(description = """
                         A predicate script is used to determine whether or not the row should be discarded.
                         <P>
@@ -90,6 +102,10 @@ public class ProcessorScript implements Processor {
     return predicate;
   }
 
+  /**
+   * A process script that can manipulate the row in any way it wants.
+   * @return a process script that can manipulate the row in any way it wants.
+   */
   @Schema(description = """
                         A process script can manipulate the row in any way it wants.
                         <P>

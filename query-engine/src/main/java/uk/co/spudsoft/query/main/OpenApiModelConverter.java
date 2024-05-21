@@ -52,6 +52,12 @@ import org.slf4j.LoggerFactory;
 public class OpenApiModelConverter implements ModelConverter {
 
   private static final Logger logger = LoggerFactory.getLogger(OpenApiModelConverter.class);
+
+  /**
+   * Constructor.
+   */
+  public OpenApiModelConverter() {
+  }
   
   @Override
   @SuppressWarnings({"unchecked", "rawtypes"})  

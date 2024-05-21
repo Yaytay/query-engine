@@ -34,17 +34,29 @@ public class OutputWriteStreamWrapper extends OutputStream {
 
   private final WriteStream<Buffer> outputStream;
 
+  /**
+   * Constructor.
+   * @param outputStream The Vert.x {@link WriteStream that the output is actually written to}.
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "OutputWriteStreamWrapper is a wrapper around WriteStream<Buffer>, it will make mutating calls to it")
   public OutputWriteStreamWrapper(WriteStream<Buffer> outputStream) {
     this.outputStream = outputStream;
   }
 
+  /**
+   * Return true if the {@link WriteStream} is full.
+   * @return true if the {@link WriteStream} is full.
+   */
   public boolean writeQueueFull() {
     return outputStream.writeQueueFull();
   }
 
-  public WriteStream<Buffer> drainHandler(Handler<Void> handler) {
-    return outputStream.drainHandler(handler);
+  /**
+   * Set the handler to call when the {@link WriteStream} is not full any more.
+   * @param handler the handler to call when the {@link WriteStream} is not full any more.
+   */
+  public void drainHandler(Handler<Void> handler) {
+    outputStream.drainHandler(handler);
   }
   
   @Override

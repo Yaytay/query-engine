@@ -35,6 +35,12 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
  */
 public class MapFilter implements Filter {
 
+  /**
+   * Constructor.
+   */
+  public MapFilter() {
+  }
+  
   @Override
   public String getKey() {
     return "_map";

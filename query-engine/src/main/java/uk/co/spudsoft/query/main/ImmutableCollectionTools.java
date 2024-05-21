@@ -28,6 +28,9 @@ import java.util.function.Function;
  * @author jtalbut
  */
 public class ImmutableCollectionTools {
+
+  private ImmutableCollectionTools() {
+  }
   
   /**
    * Null-safe method for copying a {@link java.util.Map} to a {@link com.google.common.collect.ImmutableMap}.

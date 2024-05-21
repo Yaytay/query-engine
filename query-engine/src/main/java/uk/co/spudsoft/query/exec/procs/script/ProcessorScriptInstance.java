@@ -78,6 +78,13 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
   private Types types;
   
   
+  /**
+   * Constructor.
+   * @param vertx the Vert.x instance.
+   * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
+   * @param context the Vert.x context.
+   * @param definition the definition of this processor.
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
   public ProcessorScriptInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorScript definition) {
     this.sourceNameTracker = sourceNameTracker;

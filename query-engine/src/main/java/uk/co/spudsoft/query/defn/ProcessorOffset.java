@@ -70,8 +70,12 @@ public class ProcessorOffset implements Processor {
     return id;
   }
 
+  /**
+   * The number of rows that will be skipped by this processor.
+   * @return the number of rows that will be skipped by this processor.
+   */
   @Schema(description = """
-                        The offset on the number of rows that will be output by this processor.
+                        The number of rows that will be skipped by this processor.
                         """
   )
   public int getOffset() {

@@ -35,7 +35,11 @@ public class ProcessorMapLabel {
   private final String sourceLabel;
   private final String newLabel;
 
-  public void validate() {
+  /**
+   * Validate this definition.
+   * @throws IllegalArgumentException if the definition is not valid.
+   */
+  public void validate() throws IllegalArgumentException {
     if (Strings.isNullOrEmpty(sourceLabel)) {
       throw new IllegalArgumentException("No source field name provided for relabel");
     }
@@ -44,6 +48,12 @@ public class ProcessorMapLabel {
     }
   }
   
+  /**
+   * The name of the field to be renamed.
+   * <p>
+   * This value is not optional.
+   * @return the name of the field to be renamed.
+   */
   @Schema(description = """
                         The name of the field to be renamed.
                         """
@@ -53,7 +63,13 @@ public class ProcessorMapLabel {
   public String getSourceLabel() {
     return sourceLabel;
   }
-
+  
+  /**
+   * The new name of the field, may be blank to remove a field.
+   * <p>
+   * This value may not be null, but may be blank.
+   * @return the new name of the field, may be blank to remove a field.
+   */
   @Schema(description = """
                         The new name of the field, may be blank to remove a field.
                         """
@@ -64,6 +80,9 @@ public class ProcessorMapLabel {
     return newLabel;
   }
 
+  /**
+   * Builder class for ProcessorMapLabel.
+   */
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
@@ -73,21 +92,39 @@ public class ProcessorMapLabel {
     private Builder() {
     }
 
+    /**
+     * Set the {@link ProcessorMapLabel#sourceLabel} value in the builder.
+     * @param value The value for the {@link ProcessorMapLabel#sourceLabel}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder sourceLabel(final String value) {
       this.sourceLabel = value;
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorMapLabel#newLabel} value in the builder.
+     * @param value The value for the {@link ProcessorMapLabel#newLabel}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
     public Builder newLabel(final String value) {
       this.newLabel = value;
       return this;
     }
 
+    /**
+     * Construct a new instance of the ProcessorMapLabel class.
+     * @return a new instance of the ProcessorMapLabel class.
+     */
     public ProcessorMapLabel build() {
       return new uk.co.spudsoft.query.defn.ProcessorMapLabel(sourceLabel, newLabel);
     }
   }
 
+  /**
+   * Construct a new instance of the ProcessorMapLabel.Builder class.
+   * @return a new instance of the ProcessorMapLabel.Builder class.
+   */
   public static ProcessorMapLabel.Builder builder() {
     return new ProcessorMapLabel.Builder();
   }

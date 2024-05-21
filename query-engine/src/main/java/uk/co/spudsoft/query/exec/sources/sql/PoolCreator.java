@@ -47,6 +47,19 @@ public class PoolCreator {
           })
           .build();
 
+  /**
+   * Constructor.
+   */
+  public PoolCreator() {
+  }
+  
+  /**
+   * Create a {@link Pool} from the given configuration.
+   * @param vertx the Vert.x instance.
+   * @param database the configuration of the connection.
+   * @param options the configuration of the {@link Pool}.
+   * @return a newly created {@link Pool} instance.
+   */
   public Pool pool(Vertx vertx, SqlConnectOptions database, PoolOptions options) {
     JsonObject databaseJson = database.toJson();
     //options.setIdleTimeout(1);

@@ -23,6 +23,12 @@ package uk.co.spudsoft.query.exec.sources.sql;
  */
 public class MySqlPreparer extends AbstractSqlPreparer {
 
+  /**
+   * Constructor.
+   */
+  public MySqlPreparer() {
+  }
+  
   @Override
   void generateParameterNumber(StringBuilder builder, int number) {
     builder.append("?");

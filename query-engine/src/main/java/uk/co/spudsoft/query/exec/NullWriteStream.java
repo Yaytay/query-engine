@@ -28,6 +28,12 @@ import io.vertx.core.streams.WriteStream;
  * @author jtalbut
  */
 public class NullWriteStream<T> implements WriteStream<T> {
+
+  /**
+   * Constructor.
+   */
+  public NullWriteStream() {
+  }
   
   @Override
   public WriteStream<T> exceptionHandler(Handler<Throwable> handler) {

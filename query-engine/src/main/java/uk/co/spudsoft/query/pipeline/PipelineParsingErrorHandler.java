@@ -38,6 +38,12 @@ public class PipelineParsingErrorHandler extends DeserializationProblemHandler {
 
   private static final Logger logger = LoggerFactory.getLogger(PipelineParsingErrorHandler.class);
 
+  /**
+   * Constructor.
+   */
+  public PipelineParsingErrorHandler() {
+  }
+
   @Override
   public Object handleUnexpectedToken(DeserializationContext ctxt, JavaType targetType, JsonToken t, JsonParser p, String failureMsg) throws IOException {
     logger.warn("Unexpected token: {} at {}: {}", targetType, buildLocation(ctxt.getParser()), failureMsg);

@@ -23,6 +23,12 @@ package uk.co.spudsoft.query.exec.sources.sql;
  */
 public class PostgreSqlPreparer extends AbstractSqlPreparer {
 
+  /**
+   * Constructor.
+   */
+  public PostgreSqlPreparer() {
+  }
+  
   @Override
   void generateParameterNumber(StringBuilder builder, int number) {
     builder.append("\\$").append(number);

@@ -35,6 +35,12 @@ public class OpenApiFilterClass extends AbstractSpecFilter {
           .add("MediaType")
           .add("ObjectNode")
           .build();
+
+  /**
+   * Constructor.
+   */
+  public OpenApiFilterClass() {
+  }
   
   @Override
   public boolean isOpenAPI31Filter() {

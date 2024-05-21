@@ -45,6 +45,9 @@ public class LoggingConfiguration {
 
   private static final org.slf4j.Logger logger = LoggerFactory.getLogger(LoggingConfiguration.class);
 
+  private LoggingConfiguration() {
+  }
+  
   public static void configureLogback(LoggerContext loggerContext, LogbackOptions options) {
     if (options == null) {
       // No configuration, so just leave as default
