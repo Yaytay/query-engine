@@ -178,6 +178,10 @@ public class Main extends Application {
   public Main() {
   }
   
+  /**
+   * Handler for completion of the Future returned by the {@link #innerMain(java.lang.String[], java.io.PrintStream)} method.
+   * @param result the {@link AsyncResult} found in the Future returned by {@link #innerMain(java.lang.String[], java.io.PrintStream)}.
+   */
   @ExcludeFromJacocoGenerated
   protected void mainCompletion(AsyncResult<Integer> result) {
     if (result.succeeded()) {
@@ -191,14 +195,26 @@ public class Main extends Application {
     }
   }
 
+  /**
+   * Get the Vert.x instance.
+   * @return the Vert.x instance.
+   */
   protected Vertx getVertx() {
     return vertx;
   }
 
+  /**
+   * Get the {@link DirCache} for the {@link uk.co.spudsoft.query.defn.Pipeline} definitions.
+   * @return the {@link DirCache} for the {@link uk.co.spudsoft.query.defn.Pipeline} definitions.
+   */
   protected DirCache getDirCache() {
     return dirCache;
   }
 
+  /**
+   * Get the {@link PipelineDefnLoader}.
+   * @return the {@link PipelineDefnLoader}.
+   */
   protected PipelineDefnLoader getDefnLoader() {
     return defnLoader;
   }
@@ -213,11 +229,20 @@ public class Main extends Application {
     main.innerMain(args, System.out).onComplete(ar -> main.mainCompletion(ar));
   }
   
+  /**
+   * Shutdown the entire process.
+   * <p>
+   * Do not call this from tests.
+   * @param statusCode The status code to return to the calling shell.
+   */
   protected void shutdown(int statusCode) {
     shutdown();
     System.exit(statusCode);                
   }
   
+  /**
+   * Shutdown Vert.x, but not the entire process.
+   */
   public void shutdown() {
     Vertx v = this.vertx;
     if (v != null) {
@@ -257,10 +282,23 @@ public class Main extends Application {
     }
   }
 
+  /**
+   * Get the port that is actually being used (which will be non-deterministic if httpServerOptions.port is zero (the default).
+   * @return the port that is actually being used.
+   */
   public int getPort() {
     return port;
   }
       
+  /**
+   * The actual, non-static, main method that sets up the Query Engine.
+   * <p>
+   * The static method {@link Main#main(java.lang.String[])} just creates a {@link Main} instance and calls this method on it.
+   * 
+   * @param args The command line arguments.
+   * @param stdout The output stream to use for messages.  Direct use of {@link System#out} is avoided for test reasons.
+   * @return A Future that will be completed when everything is ready.  If the result of this Future is not zero the process will be shut down.
+   */
   @SuppressFBWarnings(value = {"PATH_TRAVERSAL_IN", "POTENTIAL_XML_INJECTION"}, justification = "False positive, the dirs at this stage cannot be specified by the user")
   protected Future<Integer> innerMain(String[] args, PrintStream stdout) {
         
@@ -615,6 +653,13 @@ public class Main extends Application {
     }
   }
 
+  /**
+   * Return a description of the type of thing that a file on disc is.
+   * <p>
+   * This is used solely to make log records more useful, see {@link #prepareBaseConfigPath(java.io.File, java.util.List)}.
+   * @param file The file being described.
+   * @return A simple string that is either "directory" or "file" or "does not exist".
+   */
   public static String fileType(File file) {
     if (file.exists()) {
       if (file.isDirectory()) {
@@ -627,6 +672,13 @@ public class Main extends Application {
     }
   }
   
+  /**
+   * Create the base config directory, and fill it with the sample files if it is currently empty.
+   * <p>
+   * If sample data loads have been requested, any sample pipeline definitions that reference localhost endpoints of that type will be updated with the URL from the sample data load.
+   * @param baseConfigFile the base config directory.
+   * @param sampleDataLoads details of the sample data loads that have been requested.
+   */
   @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_BAD_PRACTICE")
   public static void prepareBaseConfigPath(File baseConfigFile, List<DataSourceConfig> sampleDataLoads) {
     if (!baseConfigFile.exists()) {
@@ -721,7 +773,12 @@ public class Main extends Application {
     }
   }
   
-
+  /**
+   * Create the {@link RequestContextBuilder} that will be used for creating {@link uk.co.spudsoft.query.exec.conditions.RequestContext} instances.
+   * @param params the {@link Parameters} for configuring the {@link RequestContextBuilder}.
+   * @param loginDao this {@link LoginDao} passed to the {@link RequestContextBuilder}.
+   * @return a newly created {@link RequestContextBuilder}.
+   */
   protected RequestContextBuilder createRequestContextBuilder(Parameters params, LoginDao loginDao) {    
     JwtValidationConfig jwtConfig = params.getJwt();
     IssuerAcceptabilityHandler iah = IssuerAcceptabilityHandler.create(jwtConfig.getAcceptableIssuerRegexes()
@@ -831,10 +888,26 @@ public class Main extends Application {
     return openTelemetryBuilder.buildAndRegisterGlobal();
   }
 
+  /**
+   * Should error messages be returned in detail to callers?
+   * <p>
+   * For a production deployment the answer is always no.
+   * In Design Mode it is useful to output all full details of errors because it should only be used in a trusted environment.
+   * 
+   * @return false.
+   */
   protected boolean outputAllErrorMessages() {
     return false;
   }
   
+  /**
+   * Allow subclasses to provide additional JAX-RS controllers.
+   * <p>
+   * This is used by Design Mode to provide write access to the pipeline definitions.
+   * 
+   * @param params the Parameters object that may be required to configure the additional controllers.
+   * @param controllers the {@link List} of JAX-RS controllers that will be appended to.
+   */
   protected void addExtraControllers(Parameters params, List<Object> controllers) {
   }
 }

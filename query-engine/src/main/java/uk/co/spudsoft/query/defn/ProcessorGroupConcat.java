@@ -223,14 +223,6 @@ public class ProcessorGroupConcat implements Processor {
     }
 
     /**
-     * Construct a new instance of the ProcessorGroupConcat class.
-     * @return a new instance of the ProcessorGroupConcat class.
-     */
-    public ProcessorGroupConcat build() {
-      return new ProcessorGroupConcat(type, condition, id, input, innerJoin, parentIdColumns, childIdColumns, childValueColumn, parentValueColumn, delimiter);
-    }
-
-    /**
      * Set the {@link ProcessorGroupConcat#type} value in the builder.
      * @param value The value for the {@link ProcessorGroupConcat#type}, must be {@link ProcessorType#DYNAMIC_FIELD}.
      * @return this, so that this builder may be used in a fluent manner.
@@ -329,6 +321,17 @@ public class ProcessorGroupConcat implements Processor {
       this.delimiter = value;
       return this;
     }
+    
+    /**
+     * Construct a new instance of the ProcessorGroupConcat class.
+     * @return a new instance of the ProcessorGroupConcat class.
+     */
+    public ProcessorGroupConcat build() {
+      ProcessorGroupConcat result = new ProcessorGroupConcat(type, condition, id, input, innerJoin, parentIdColumns, childIdColumns, childValueColumn, parentValueColumn, delimiter);
+      result.validateType(ProcessorType.GROUP_CONCAT, type);
+      return result;
+    }
+    
   }
 
   /**
@@ -350,7 +353,6 @@ public class ProcessorGroupConcat implements Processor {
           , String parentValueColumn
           , String delimiter
   ) {
-    validateType(ProcessorType.GROUP_CONCAT, type);
     this.type = type;
     this.condition = condition;
     this.id = id;

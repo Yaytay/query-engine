@@ -40,6 +40,12 @@ public class FormatXlsxColumn {
   private final String format;
   private final Double width;
 
+  /**
+   * Convert to a {@link ColumnDefinition} as used by the streaming XLSX writer.
+   * @param key the field name to use if header is not set.
+   * @param type the type to treat the data as (and thus to format the column as) if format is not set.
+   * @return this font converted to a {@link ColumnDefinition}.
+   */  
   public ColumnDefinition toColumnDefinition(String key, DataType type) {
     String calculatedHeader = Strings.isNullOrEmpty(header) ? key : header;
     String calculatedFormat = Strings.isNullOrEmpty(format) ? defaultFormatFor(type) : format;
@@ -170,6 +176,10 @@ public class FormatXlsxColumn {
     return Double.valueOf(result);
   }
   
+  /**
+   * Validate the definition.
+   * @throws IllegalArgumentException if the definition is not usable.
+   */
   public void validate() {
     if (Strings.isNullOrEmpty(name)) {
       throw new IllegalArgumentException("FormatXlsxColumn has no name");

@@ -148,7 +148,9 @@ public class ProcessorMap implements Processor {
      * @return a new instance of the ProcessorMap class.
      */
     public ProcessorMap build() {
-      return new ProcessorMap(type, condition, id, relabels);
+      ProcessorMap result = new ProcessorMap(type, condition, id, relabels);
+      result.validateType(ProcessorType.MAP, type);
+      return result;
     }
   }
 
@@ -161,7 +163,6 @@ public class ProcessorMap implements Processor {
   }
 
   private ProcessorMap(final ProcessorType type, final Condition condition, final String id, final List<ProcessorMapLabel> relabels) {
-    validateType(ProcessorType.MAP, type);
     this.type = type;
     this.condition = condition;
     this.id = id;

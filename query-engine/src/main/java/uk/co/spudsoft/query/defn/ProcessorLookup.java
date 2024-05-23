@@ -275,7 +275,9 @@ public class ProcessorLookup implements Processor {
      * @return a new instance of the ProcessorLookup class.
      */
     public ProcessorLookup build() {
-      return new ProcessorLookup(type, condition, id, lookupKeyField, lookupValueField, lookupFields, map);
+      ProcessorLookup result = new ProcessorLookup(type, condition, id, lookupKeyField, lookupValueField, lookupFields, map);
+      result.validateType(ProcessorType.LOOKUP, type);
+      return result;
     }
   }
 
@@ -288,7 +290,6 @@ public class ProcessorLookup implements Processor {
   }
 
   private ProcessorLookup(final ProcessorType type, final Condition condition, final String id, final String lookupKeyField, final String lookupValueField, final List<ProcessorLookupField> lookupFields, final SourcePipeline map) {
-    validateType(ProcessorType.LOOKUP, type);
     this.type = type;
     this.condition = condition;
     this.id = id;

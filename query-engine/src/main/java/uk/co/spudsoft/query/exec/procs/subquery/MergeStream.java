@@ -54,8 +54,19 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
   private Handler<V> handler;
   private Handler<Throwable> exceptionHandler;
   private Handler<Void> endHandler;
-  
+
+  /**
+   * Interface for comparing two objects of different types.
+   * @param <T> The type of the first object to compare.
+   * @param <U> The type of the second object to compare.
+   */
   public interface BiComparator<T, U> {
+    /**
+     * Compare two objects in the same manner as {@link java.util.Comparator} except that the objects need not be of the same class.
+     * @param p The primary object to compare.
+     * @param s The secondary object to compare.
+     * @return a negative integer, zero, or a positive integer as the first argument is less than, equal to, or greater than the second.
+     */
     int compare(T p, U s);
   }
   

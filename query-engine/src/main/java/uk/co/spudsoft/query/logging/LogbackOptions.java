@@ -78,7 +78,6 @@ public class LogbackOptions {
    * This value is ignored if the config file is specified.
    * <P>
    * If this value is set to true the logback JsonEncoder will be used with the following options:
-   * <P>
    * <pre>
    *encoder.setWithArguments(false);
    *encoder.setWithMessage(false);
@@ -102,7 +101,6 @@ public class LogbackOptions {
    * record in the collated system.
    * <P>
    * If this value is set to true the logback JsonEncoder will be used with the following options:
-   * <P>
    * <pre>
    *encoder.setWithArguments(false);
    *encoder.setWithMessage(false);

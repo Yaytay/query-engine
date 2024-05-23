@@ -73,6 +73,13 @@ public class LoginDaoPersistenceImpl implements LoginDao {
   
   private final Map<String, TimestampedToken> tokenCache = new HashMap<>();
   
+  /**
+   * Constructor.
+   * @param vertx the Vert.x instance.
+   * @param meterRegistry {@link MeterRegistry} for reporting metrics.
+   * @param configuration database configuration.
+   * @param purgeDelay purge delay for expired tokens/sessions.  A scheduled job will be set up with this period to clean up expired data.
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "MeterRegisty is intended to be mutable by any user")
   public LoginDaoPersistenceImpl(Vertx vertx, MeterRegistry meterRegistry, Persistence configuration, Duration purgeDelay) {
     this.vertx = vertx;

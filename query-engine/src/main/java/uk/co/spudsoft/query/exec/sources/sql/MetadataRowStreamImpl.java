@@ -57,6 +57,13 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
   private boolean readInProgress;
   private Iterator<Row> result;
   
+  /**
+   * Constructor.
+   * @param ps The {@link PreparedStatement} to be executed.
+   * @param context The Vert.x context to use for asynchronous operations.
+   * @param fetch The number of rows to fetch.
+   * @param params Parameters to pass to the {@link PreparedStatement}.
+   */
   @SuppressFBWarnings("EI_EXPOSE_REP2")
   public MetadataRowStreamImpl(PreparedStatement ps, Context context, int fetch, Tuple params) {
     this.ps = ps;
@@ -77,6 +84,11 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
     return this;
   }
 
+  /**
+   * Set the handler that will be notified when the {@link ColumnDescriptor} details are known.
+   * @param handler the handler that will be notified when the {@link ColumnDescriptor} details are known.
+   * @return this, so that this method may be used in a fluent manner.
+   */
   public RowStream<Row> coloumnDescriptorHandler(Handler<List<ColumnDescriptor>> handler) {
     synchronized (this) {
       columnDescriptorHandler = handler;

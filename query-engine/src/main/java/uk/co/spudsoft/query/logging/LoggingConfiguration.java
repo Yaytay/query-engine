@@ -48,6 +48,11 @@ public class LoggingConfiguration {
   private LoggingConfiguration() {
   }
   
+  /**
+   * Configure Logback according to the passed in options.
+   * @param loggerContext the result of calling {@link org.slf4j.LoggerFactory#getILoggerFactory()} cast to (LoggerContext).
+   * @param options logging options specified in parameters ({@link uk.co.spudsoft.query.main.Parameters#logging}).
+   */
   public static void configureLogback(LoggerContext loggerContext, LogbackOptions options) {
     if (options == null) {
       // No configuration, so just leave as default

@@ -56,6 +56,12 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
   private final Context context;
   private final DynamicEndpoint definition;
   
+  /**
+   * Constructor.
+   * @param vertx the Vert.x instance.
+   * @param context the Vert.x context.
+   * @param definition the definition of this processor.
+   */
   public DynamicEndpointPreProcessorInstance(Vertx vertx, Context context, DynamicEndpoint definition) {
     this.vertx = vertx;
     this.context = context;

@@ -51,6 +51,11 @@ public class ListReadStream<T> implements ReadStream<T> {
   private boolean emitting;
   private boolean ended;
   
+  /**
+   * Constructor.
+   * @param context the Vert.x {@link Context} for asynchronous operations.
+   * @param items the items to send on the {@link ReadStream}.
+   */
   @SuppressFBWarnings("EI_EXPOSE_REP2")
   public ListReadStream(Context context, List<T> items) {
     this.context = context;

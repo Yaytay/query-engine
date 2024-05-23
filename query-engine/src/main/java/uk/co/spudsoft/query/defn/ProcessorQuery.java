@@ -145,7 +145,9 @@ public class ProcessorQuery implements Processor {
      * @return a new instance of the ProcessorQuery class.
      */
     public ProcessorQuery build() {
-      return new ProcessorQuery(type, condition, id, expression);
+      ProcessorQuery result = new ProcessorQuery(type, condition, id, expression);
+      result.validateType(ProcessorType.QUERY, type);
+      return result;
     }
   }
 
@@ -158,7 +160,6 @@ public class ProcessorQuery implements Processor {
   }
 
   private ProcessorQuery(final ProcessorType type, final Condition condition, final String id, final String expression) {
-    validateType(ProcessorType.QUERY, type);
     this.type = type;
     this.condition = condition;
     this.id = id;

@@ -34,8 +34,20 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
  */
 public interface Filter {
   
+  /**
+   * Get the key for this filter, that would be the argument name used in a query string.
+   * @return the key for this filter, that would be the argument name used in a query string.
+   */
   String getKey();
   
+  /**
+   * Create the processor given the argument set on the query string.
+   * @param vertx the Vert.x instance.
+   * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
+   * @param context the Vert.x context.
+   * @param argument the value of the query string parameter, that must be parsed into the configuration for this {@link ProcessorInstance}.
+   * @return a newly created {@link ProcessorInstance} of the appropriate type.
+   */
   ProcessorInstance createProcessor(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String argument);
   
 }

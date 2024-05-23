@@ -39,11 +39,19 @@ public class FormatXlsxFont {
   private final String fontName;
   private final int fontSize;
 
+  /**
+   * Convert to a {@link FontDefinition} as used by the streaming XLSX writer.
+   * @return this font converted to a {@link FontDefinition}.
+   */
   public FontDefinition toFontDefinition() {
     return new FontDefinition(Strings.isNullOrEmpty(fontName) ? "Calibri" : fontName, fontSize);
   }
   
-  public void validate() {
+  /**
+   * Validate the definition.
+   * @throws IllegalArgumentException if the definition is not usable.
+   */
+  public void validate() throws IllegalArgumentException {
     if (fontSize < 1) {
       throw new IllegalArgumentException("FormatXlsxFont has non-positive fontSize (" + fontSize +").");
     }

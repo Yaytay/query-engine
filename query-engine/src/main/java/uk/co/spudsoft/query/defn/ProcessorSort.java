@@ -151,7 +151,9 @@ public class ProcessorSort implements Processor {
      * @return a new instance of the ProcessorSort class.
      */
     public ProcessorSort build() {
-      return new ProcessorSort(type, condition, id, fields);
+      ProcessorSort result = new ProcessorSort(type, condition, id, fields);
+      result.validateType(ProcessorType.SORT, type);
+      return result;
     }
   }
 
@@ -164,7 +166,6 @@ public class ProcessorSort implements Processor {
   }
 
   private ProcessorSort(final ProcessorType type, final Condition condition, final String id, final List<String> fields) {
-    validateType(ProcessorType.SORT, type);
     this.type = type;
     this.condition = condition;
     this.id = id;

@@ -30,10 +30,17 @@ public class MediaTypeSerializer extends StdSerializer<MediaType> {
 
   private static final long serialVersionUID = 1L;
 
+  /**
+   * Constructor.
+   */
   public MediaTypeSerializer() {
     this(null);
   }
 
+  /**
+   * Constructor.
+   * @param t The class being serialized, which must be {@link MediaType}.
+   */
   public MediaTypeSerializer(Class<MediaType> t) {
     super(t);
   }

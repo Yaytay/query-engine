@@ -44,7 +44,15 @@ public class FileCache<T> {
   
   private final FileSystem fs;
   private final Cache<DirCacheTree.File, T> cache;
-    
+
+  /**
+   * Constructor.
+   * @param fs The Vert.x filesystem.
+   * @param meterRegistry The {@link MeterRegistry} for generating metrics.
+   * @param name The name of the filecache for use in metrics.
+   * @param maximumSize The maximum number of items that may be stored in the cache.
+   * @param maxDuration The maximum lifetime of items in the cache.
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "FileSystem object should be considered immutable (though, of course, the file system isn't).")
   public FileCache(
           FileSystem fs

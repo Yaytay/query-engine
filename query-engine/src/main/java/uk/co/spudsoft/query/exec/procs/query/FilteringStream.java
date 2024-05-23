@@ -38,6 +38,11 @@ public class FilteringStream<T> implements ReadStream<T> {
   private Handler<Throwable> exceptionHandler;
   private Handler<Void> endHandler;
 
+  /**
+   * Constructor.
+   * @param source the {@link ReadStream} being filtered.
+   * @param predicate the {@link Predicate} to run on each row.
+   */
   public FilteringStream(ReadStream<T> source, Predicate<T> predicate) {
     Objects.requireNonNull(source, "Source cannot be null");
     Objects.requireNonNull(predicate, "Predicate cannot be null");

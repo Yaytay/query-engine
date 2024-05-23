@@ -40,8 +40,6 @@ When running in a production environment with any kind of log collation (e.g. mo
 
 If this value is set to true the logback JsonEncoder will be used with the following options:
  
-
-
 [source]
 ----
 encoder.setWithArguments(false);

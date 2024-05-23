@@ -37,6 +37,9 @@ public class FormatCaptureInstance implements FormatInstance {
   
   private ReadStreamWithTypes streamWithTypes;
 
+  /**
+   * Constructor.
+   */
   public FormatCaptureInstance() {
   }
 
@@ -46,6 +49,10 @@ public class FormatCaptureInstance implements FormatInstance {
     return Future.succeededFuture();
   }
 
+  /**
+   * Return the internal {@link ReadStream} that was captured by {@link #initialize(uk.co.spudsoft.query.exec.PipelineExecutor, uk.co.spudsoft.query.exec.PipelineInstance, uk.co.spudsoft.query.exec.ReadStreamWithTypes)}.
+   * @return the internal {@link ReadStream} that was captured by {@link #initialize(uk.co.spudsoft.query.exec.PipelineExecutor, uk.co.spudsoft.query.exec.PipelineInstance, uk.co.spudsoft.query.exec.ReadStreamWithTypes)}.
+   */
   public ReadStream<DataRow> getReadStream() {
     return streamWithTypes.getStream();
   }

@@ -35,6 +35,12 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
 public class LimitFilter implements Filter {
 
   private static final Logger logger = LoggerFactory.getLogger(LimitFilter.class);
+
+  /**
+   * Constructor.
+   */
+  public LimitFilter() {
+  }
   
   @Override
   public String getKey() {

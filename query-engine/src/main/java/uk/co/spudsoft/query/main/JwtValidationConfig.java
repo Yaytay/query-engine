@@ -116,6 +116,12 @@ public class JwtValidationConfig {
   private Duration defaultJwksCacheDuration = Duration.ofMinutes(1);
 
   /**
+   * Constructor.
+   */
+  public JwtValidationConfig() {
+  }
+
+  /**
    * Get the path to be appended to the Host to derive the issuer.
    * <p>
    * Usually an issuer has an empty path, being just https://host[:port]/ however it is perfectly valid for an issuer

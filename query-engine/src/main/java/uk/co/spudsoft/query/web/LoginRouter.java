@@ -63,7 +63,7 @@ public class LoginRouter  implements Handler<RoutingContext> {
 
   private static final Base64.Encoder RAW_BASE64_URLENCODER = Base64.getUrlEncoder().withoutPadding();
   
-  protected static final SecureRandom RANDOM = new SecureRandom();
+  private static final SecureRandom RANDOM = new SecureRandom();
   
   private final Vertx vertx;
   private final WebClient webClient;

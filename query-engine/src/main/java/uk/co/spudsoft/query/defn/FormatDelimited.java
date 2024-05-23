@@ -136,7 +136,11 @@ public class FormatDelimited implements Format {
   public MediaType getMediaType() {
     return mediaType;
   }
-
+  
+  /**
+   * If true the output will have a header row containing the field names.
+   * @return true if the output should have a header row containing the field names.
+   */
   @Schema(description = """
                         If true the output will have a header row containing the field names.
                         """
@@ -145,6 +149,10 @@ public class FormatDelimited implements Format {
     return headerRow;
   }
 
+  /**
+   * The delimiter between field values in the output.
+   * @return the delimiter between field values in the output.
+   */
   @Schema(description = """
                         The delimiter between field values in the output.
                         """
@@ -155,6 +163,10 @@ public class FormatDelimited implements Format {
     return delimiter;
   }
 
+  /**
+   * Value with which to prefix any string values in the output.
+   * @return the value with which to prefix any string values in the output.
+   */
   @Schema(description = """
                         Any string values in the output will be prefixed by this value.
                         """
@@ -165,6 +177,10 @@ public class FormatDelimited implements Format {
     return openQuote;
   }
 
+  /**
+   * Value with which to suffix any string values in the output.
+   * @return the value with which to suffix any string values in the output.
+   */
   @Schema(description = """
                         Any string values in the output will be suffixed by this value.
                         """
@@ -175,6 +191,10 @@ public class FormatDelimited implements Format {
     return closeQuote;
   }
 
+  /**
+   * Value with which to prefix any occurrence of the {@link #closeQuote} string in an output string value.
+   * @return the value with which to prefix any occurrence of the {@link #closeQuote} string in an output string value.
+   */
   @Schema(description = """
                         If a string value contains the close quote string it will be prefixed by this string.
                         """
@@ -185,6 +205,10 @@ public class FormatDelimited implements Format {
     return escapeCloseQuote;
   }
   
+  /**
+   * Value with which to suffix each row in the output.
+   * @return the value with which to suffix each row in the output.
+   */
   @Schema(description = """
                         Each row in the output will be suffixed by this value.
                         """

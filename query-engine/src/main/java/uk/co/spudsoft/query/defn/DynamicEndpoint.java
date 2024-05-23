@@ -95,10 +95,10 @@ public class DynamicEndpoint {
 
   /**
    * Validate the configuration.
-   * <p>
-   * The input must be a valid {@link SourcePipeline}; either key or keyField must be set; and either urlField or urlTemplateField must be set.
+   * 
+   * @throws IllegalArgumentException if the definition is not valid.
    */
-  public void validate() {
+  public void validate() throws IllegalArgumentException {
     if (input == null) {
       throw new IllegalArgumentException("Input not specified in dynamic endpoint");
     }
@@ -462,11 +462,20 @@ public class DynamicEndpoint {
       return this;
     }
 
+    /**
+     * Construct a new DynamicEndpoint object.
+     * @return a new DynamicEndpoint object.
+     */
     public DynamicEndpoint build() {
       return new uk.co.spudsoft.query.defn.DynamicEndpoint(input, key, typeField, keyField, urlField, urlTemplateField, secretField, usernameField, passwordField, conditionField);
     }
   }
 
+  
+  /**
+   * Construct a new {@link uk.co.spudsoft.query.defn.DynamicEndpoint.Builder} object.
+   * @return a new {@link uk.co.spudsoft.query.defn.DynamicEndpoint.Builder} object.
+   */
   public static DynamicEndpoint.Builder builder() {
     return new DynamicEndpoint.Builder();
   }

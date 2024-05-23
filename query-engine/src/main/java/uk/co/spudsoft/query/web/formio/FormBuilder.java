@@ -56,6 +56,11 @@ public class FormBuilder {
   private final int columns;
   private final FilterFactory filterFactory;
   
+  /**
+   * Constructor.
+   * @param columns The number of columns to use for the arguments.
+   * @param filterFactory The FilterFactory to use to get filter arguments.3
+   */
   @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
   public FormBuilder(int columns, FilterFactory filterFactory) {
     this.factory = new JsonFactory();
@@ -63,10 +68,21 @@ public class FormBuilder {
     this.filterFactory = filterFactory;
   }
   
+  /**
+   * Return true if the passed in collection is null or empty.
+   * @param collection the nullable collection that may be empty.
+   * @return true if the passed in collection is null or empty.
+   */
   static boolean isNullOrEmpty(Collection<?> collection) {
     return collection == null || collection.isEmpty();
   }
   
+  /**
+   * Build a form definition from a pipeline to an {@link OutputStream}.
+   * @param pipeline the {@link PipelineFile} that contains enough of a {@link uk.co.spudsoft.query.defn.Pipeline} definition to build the input form.
+   * @param stream the {@link OutputStream} to which the formio form will be written.
+   * @throws IOException if anything goes wrong.
+   */
   public void buildForm(PipelineFile pipeline, OutputStream stream) throws IOException {
     
     try (JsonGenerator generator = factory.createGenerator(stream, JsonEncoding.UTF8)) {

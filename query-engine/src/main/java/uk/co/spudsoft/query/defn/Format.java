@@ -204,6 +204,14 @@ public interface Format {
   )
   MediaType getMediaType();
 
+  /**
+   * Helper method for implementation to validate that they have been configured with the required {@link FormatType}.
+   * <p>
+   * There is no reason for users to specify the format type, but they can, so it is necessary to validate it.
+   * 
+   * @param required the {@link FormatType} that the {@link Format} requires.
+   * @param actual the {@link FormatType} configured.
+   */
   default void validateType(FormatType required, FormatType actual) {
     if (required != actual) {
       throw new IllegalArgumentException("Format of type " + required + " configured with type " + actual);

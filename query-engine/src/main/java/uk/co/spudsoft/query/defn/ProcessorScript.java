@@ -197,7 +197,9 @@ public class ProcessorScript implements Processor {
      * @return a new instance of the ProcessorScript class.
      */
     public ProcessorScript build() {
-      return new ProcessorScript(type, condition, id, language, predicate, process);
+      ProcessorScript result = new ProcessorScript(type, condition, id, language, predicate, process);
+      result.validateType(ProcessorType.SCRIPT, type);
+      return result;
     }
   }
 
@@ -210,7 +212,6 @@ public class ProcessorScript implements Processor {
   }
 
   private ProcessorScript(final ProcessorType type, final Condition condition, final String id, final String language, final String predicate, final String process) {
-    validateType(ProcessorType.SCRIPT, type);
     this.type = type;
     this.condition = condition;
     this.id = id;

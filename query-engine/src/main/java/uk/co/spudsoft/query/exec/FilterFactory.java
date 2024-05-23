@@ -34,6 +34,10 @@ public class FilterFactory {
   private final Map<String, Filter> filters;
   private final List<String> sortedKeys;
 
+  /**
+   * Constructor.
+   * @param filters the filters that are to be handled.
+   */
   public FilterFactory(List<Filter> filters) {
     ImmutableMap.Builder<String, Filter> builder = ImmutableMap.<String, Filter>builder();
     filters.forEach(f -> builder.put(f.getKey(), f));
@@ -41,10 +45,23 @@ public class FilterFactory {
     sortedKeys = ImmutableList.copyOf(this.filters.keySet().stream().sorted().collect(Collectors.toList()));
   }
   
+  /**
+   * Get the value of {@link Filter#getKey()} from each configured {@link Filter}, sorted alphabetically.
+   * @return the value of {@link Filter#getKey()} from each configured {@link Filter}, sorted alphabetically.
+   */
   public List<String> getSortedKeys() {
     return sortedKeys;
   }
   
+  /**
+   * Create the {@link ProcessorInstance} for the identified {@link Filter}.
+   * @param vertx the Vert.x instance.
+   * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
+   * @param context the Vert.x context.
+   * @param arg the query string parameter name (the key for the filter).
+   * @param value the value of the query string parameter, that must be parsed into the configuration for this {@link ProcessorInstance}.
+   * @return a newly created {@link ProcessorInstance} of the appropriate type.
+   */
   public ProcessorInstance createFilter(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String arg, String value) {
     Filter filter = filters.get(arg);
     if (filter != null) {

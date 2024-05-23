@@ -205,7 +205,7 @@ public class PipelineNodesTree extends AbstractTree {
   }
 
   /**
-   * A single file.
+   * A single pipeline file that contains enough information from the {@link uk.co.spudsoft.query.defn.Pipeline} definition to build an input form.
    */
   @Schema(description = """
                         <P>

@@ -510,7 +510,9 @@ public class ProcessorDynamicField implements Processor {
      * @return a new instance of the ProcessorDynamicField class.
      */
     public ProcessorDynamicField build() {
-      return new uk.co.spudsoft.query.defn.ProcessorDynamicField(type, condition, id, innerJoin, fieldIdColumn, fieldNameColumn, fieldTypeColumn, fieldColumnColumn, parentIdColumns, valuesParentIdColumns, valuesFieldIdColumn, fieldDefns, fieldValues);
+      ProcessorDynamicField result = new ProcessorDynamicField(type, condition, id, innerJoin, fieldIdColumn, fieldNameColumn, fieldTypeColumn, fieldColumnColumn, parentIdColumns, valuesParentIdColumns, valuesFieldIdColumn, fieldDefns, fieldValues);
+      result.validateType(ProcessorType.DYNAMIC_FIELD, type);
+      return result;
     }
   }
 
@@ -523,7 +525,6 @@ public class ProcessorDynamicField implements Processor {
   }
 
   private ProcessorDynamicField(final ProcessorType type, final Condition condition, final String id, final boolean innerJoin, final String fieldIdColumn, final String fieldNameColumn, final String fieldTypeColumn, final String fieldColumnColumn, final List<String> parentIdColumns, final List<String> valuesParentIdColumns, final String valuesFieldIdColumn, final SourcePipeline fieldDefns, final SourcePipeline fieldValues) {
-    validateType(ProcessorType.DYNAMIC_FIELD, type);
     this.type = type;
     this.condition = condition;
     this.id = id;

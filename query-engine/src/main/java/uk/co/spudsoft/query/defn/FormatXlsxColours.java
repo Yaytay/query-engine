@@ -63,11 +63,18 @@ import uk.co.spudsoft.xlsx.ColourDefinition;
 )
 public class FormatXlsxColours {
   
+  /**
+   * Regular expression matching valid colour names (three or four pairs of hexadecimal digits).
+   */
   public static final Pattern VALID_COLOUR = Pattern.compile("[0-9A-F]{6}([0-9A-F]{2})?");  
   
   private final String fgColour;
   private final String bgColour;
 
+  /**
+   * Validate the definition.
+   * @throws IllegalArgumentException if the definition is not usable.
+   */
   public void validate() {
     if (!Strings.isNullOrEmpty(fgColour)) {
       if (!VALID_COLOUR.matcher(fgColour).matches()) {
@@ -81,6 +88,10 @@ public class FormatXlsxColours {
     }    
   }
   
+  /**
+   * Convert to a {@link ColourDefinition} as used by the streaming XLSX writer.
+   * @return this font converted to a {@link ColourDefinition}.
+   */  
   public ColourDefinition toColourDefinition() {
     return new ColourDefinition(
             Strings.isNullOrEmpty(fgColour) ? "000000" : fgColour

@@ -85,7 +85,12 @@ public class Endpoint {
   private final String password;
   private final Condition condition;
 
-  public void validate() {
+  /**
+   * Validate the configuration.
+   * 
+   * @throws IllegalArgumentException if the definition is not valid.
+   */
+  public void validate() throws IllegalArgumentException {
     if (Strings.isNullOrEmpty(name)) {
       throw new IllegalArgumentException("Endpoint has no name.");
     }

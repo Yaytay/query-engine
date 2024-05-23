@@ -614,6 +614,48 @@ public class Parameters {
     return this;
   }
 
+  /**
+   * Get the management endpoints (all under /manage) that should be enabled.
+   * <p>
+   * Some of the management endpoints provide internal information and should absolutely not be accessible to end-users.
+   * This can either be achieved by configuring the ingress appropriately, or by disabling the endpoints.
+   * <p>
+   * If no endpoints are specified then all endpoints will be enabled.
+   * Whilst this does mean that it is not possible to disable all management endpoints, the "up" endpoint should always be enabled so this should not be a problem.
+   * Also, if you really want to you can set a single invalid value for the list of management endpoints, which will result in none of them being enabled (invalid values are silently ignored).
+   * <p>
+   * The complete list of management endpoints can be seen by making a request to /manage on a running query engine.
+   * The list below is a subset of some of them:
+   * <ul>
+   * <li>up
+   * A simple health endpoint that reports when the service is up (suitable for use by a Kubernetes readiness/startup probe).
+   * <li>health
+   * A more complete health endpoint.
+   * <li>prometheus
+   * System metrics in Prometheus format.
+   * <li>parameters
+   * Dumps the full set of configuration parameters.
+   * <li>envvars
+   * Dumps all environment variables.
+   * <li>sysprops
+   * Dumps all system properties.
+   * <li>accesslog
+   * Reports the past few requests to the system.
+   * <li>inflight
+   * Reports all requests made to the system that have not yet completed.
+   * <li>threads
+   * Dump stack traces from all threads.
+   * <li>heapdump
+   * Download a heap dump.
+   * </ul>
+   * <p>
+   * Unless you are sure that you have secured your /manage endpoint adequately it is strongly recommended that production systems only
+   * enable the up; health and prometheus endpoints.
+   * 
+   * @return managementEndpoints the management endpoints (all under /manage) that should be enabled.
+   * @see Parameters#setManagementEndpointPort
+   * 
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public List<String> getManagementEndpoints() {
     return managementEndpoints;

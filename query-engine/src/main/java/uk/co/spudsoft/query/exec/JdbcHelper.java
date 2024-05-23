@@ -52,12 +52,24 @@ public class JdbcHelper {
   private final Vertx vertx;
   private final DataSource dataSource;
 
+  /**
+   * Constructor.
+   * @param vertx The Vert.x instance.
+   * @param dataSource The {@link DataSource} to communicate with.
+   */
   @SuppressFBWarnings("EI_EXPOSE_REP2")
   public JdbcHelper(Vertx vertx, DataSource dataSource) {
     this.vertx = vertx;
     this.dataSource = dataSource;
   }
   
+  /**
+   * Create a {@link HikariDataSource} from parameters.
+   * @param config the configuration of the {@link DataSource}.
+   * @param credentials credentials to use.
+   * @param meterRegistry optional {@link MeterRegistry} to use for gathering metrics for the {@link DataSource}.
+   * @return a newly created {@link HikariDataSource}.
+   */
   public static HikariDataSource createDataSource(DataSourceConfig config, @Nullable Credentials credentials, @Nullable MeterRegistry meterRegistry) {
     HikariDataSource ds = new HikariDataSource();
     ds.setJdbcUrl(config.getUrl());
@@ -115,6 +127,13 @@ public class JdbcHelper {
     R accept(T t) throws Throwable;
   }
 
+  /**
+   * Set a timestamp parameter on a {@link PreparedStatement} from a {@link LocalDateTime}.
+   * @param ps the {@link PreparedStatement} having a parameter set on it.
+   * @param index the (one-based) index of the parameter being set.
+   * @param utc the {@link LocalDateTime} value being set, which is assumed to be UTC.
+   * @throws SQLException if something goes wrong.
+   */
   public static void setLocalDateTimeUTC(PreparedStatement ps, int index, LocalDateTime utc) throws SQLException {
     if (utc == null) {
       ps.setTimestamp(index, null);
@@ -123,13 +142,28 @@ public class JdbcHelper {
     }
   }
   
+  /**
+   * Run a SQL update asynchronously (in the Vertx worker thread).
+   * @param name name of the action being taken for log messages.
+   * @param sql statement to be run.
+   * @param prepareStatement a {@link SqlConsumer} to use to set parameters on the {@link PreparedStatement}.
+   * @return A Future that will be completed when the operation is complete.
+   */
   public Future<Integer> runSqlUpdate(String name, String sql, SqlConsumer<PreparedStatement> prepareStatement) {
     return vertx.executeBlocking(() -> runSqlUpdateSynchronously(name, sql, prepareStatement));
   }
 
+  /**
+   * Run a SQL update synchronously.
+   * @param name name of the action being taken for log messages.
+   * @param sql statement to be run.
+   * @param prepareStatement a {@link SqlConsumer} to use to set parameters on the {@link PreparedStatement}.
+   * @return the number of rows affected.
+   * @throws Exception if anything goes wrong.
+   */
   @SuppressFBWarnings(value = "SQL_INJECTION_JDBC", justification = "SQL is generated from static strings")
   public int runSqlUpdateSynchronously(String name, String sql, SqlConsumer<PreparedStatement> prepareStatement) throws Exception {
-    logger.trace("Executing update ({}): {}", sql);
+    logger.trace("Executing update ({}: {}): {}", name, sql);
     String logMessage = "Failed to get connection ({}): ";
     try {
       Connection conn = dataSource.getConnection();
@@ -156,6 +190,15 @@ public class JdbcHelper {
     }
   }
 
+  /**
+   * Run a SQL select asynchronously (in the Vertx worker thread).
+   * 
+   * @param <R> The type of data being returned.
+   * @param sql statement to be run.
+   * @param prepareStatement a {@link SqlConsumer} to use to set parameters on the {@link PreparedStatement}.
+   * @param resultSetHandler a {@link SqlFunction} called once to convert the complete {@link ResultSet} to an object of type R.
+   * @return A Future that will be completed when all the results have been processed.
+   */
   public <R> Future<R> runSqlSelect(String sql
           , SqlConsumer<PreparedStatement> prepareStatement
           , SqlFunction<ResultSet, R> resultSetHandler
@@ -165,6 +208,16 @@ public class JdbcHelper {
     });
   }
 
+  /**
+   * Run a SQL select synchronously.
+   * 
+   * @param <R> The type of data being returned.
+   * @param sql statement to be run.
+   * @param prepareStatement a {@link SqlConsumer} to use to set parameters on the {@link PreparedStatement}.
+   * @param resultSetHandler a {@link SqlFunction} called once to convert the complete {@link ResultSet} to an object of type R.
+   * @return A Future that will be completed when all the results have been processed.
+   * @throws Exception if anything goes wrong.
+   */
   @SuppressFBWarnings(value = "SQL_INJECTION_JDBC", justification = "SQL is generated from static strings")
   public <R> R runSqlSelectSynchronously(String sql
           , SqlConsumer<PreparedStatement> prepareStatement
@@ -204,6 +257,12 @@ public class JdbcHelper {
     }
   }
   
+  /**
+   * Return the string value truncated to at most maxLen-4 characters with "..." appended.
+   * @param value the value to be truncated.
+   * @param maxLen the maximum length of the string, must be at least 4.
+   * @return the string value truncated to at most maxLen-4 characters with "..." appended.
+   */
   public static String limitLength(String value, int maxLen) {
     if (value == null) {
       return value;
@@ -215,6 +274,11 @@ public class JdbcHelper {
     }
   }
   
+  /**
+   * Convert value to a string, returning null if value is null.
+   * @param value the value to convert.
+   * @return value as a string (or null).
+   */
   public static String toString(Object value) {
     if (value == null) {
       return null;
@@ -222,6 +286,10 @@ public class JdbcHelper {
     return value.toString();
   }
   
+  /**
+   * Close a {@link Connection} without throwing an error (just reporting it).
+   * @param conn the {@link Connection} to close.
+   */
   static void closeConnection(Connection conn) {
     try {
       conn.close();
@@ -230,6 +298,10 @@ public class JdbcHelper {
     }
   }
 
+  /**
+   * Close a {@link PreparedStatement} without throwing an error (just reporting it).
+   * @param conn the {@link PreparedStatement} to close.
+   */
   static void closeStatement(PreparedStatement statement) {
     try {
       statement.close();

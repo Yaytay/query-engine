@@ -141,7 +141,9 @@ public class ProcessorLimit implements Processor {
      * @return a new instance of the ProcessorLimit class.
      */
     public ProcessorLimit build() {
-      return new ProcessorLimit(type, condition, id, limit);
+      ProcessorLimit result = new ProcessorLimit(type, condition, id, limit);
+      result.validateType(ProcessorType.LIMIT, type);
+      return result;
     }
   }
 
@@ -154,7 +156,6 @@ public class ProcessorLimit implements Processor {
   }
 
   private ProcessorLimit(final ProcessorType type, final Condition condition, final String id, final int limit) {
-    validateType(ProcessorType.LIMIT, type);
     this.type = type;
     this.condition = condition;
     this.id = id;

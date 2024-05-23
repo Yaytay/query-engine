@@ -41,6 +41,13 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
   private final AsyncHandler<Long> terminate;
   private long rowCount = 0;
 
+  /**
+   * Constructor.
+   * @param outputStream The {@link WriteStream} that the formatted output is to be written to.
+   * @param initialize {@link AsyncHandler} to call when the output must be initialized (output headers, etc.).
+   * @param process {@link AsyncHandler} to call for each DataRow written.
+   * @param terminate {@link AsyncHandler} to call when the output must be terminated (output footer).
+   */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "FormattingWriteStream is a helper wrapper around WriteStream<Buffer>, it will make mutating calls to it")
   public FormattingWriteStream(
           WriteStream<Buffer> outputStream

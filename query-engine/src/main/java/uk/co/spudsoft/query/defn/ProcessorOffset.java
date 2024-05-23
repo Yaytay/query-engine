@@ -141,7 +141,9 @@ public class ProcessorOffset implements Processor {
      * @return a new instance of the ProcessorOffset class.
      */
     public ProcessorOffset build() {
-      return new ProcessorOffset(type, condition, id, offset);
+      ProcessorOffset result = new ProcessorOffset(type, condition, id, offset);
+      result.validateType(ProcessorType.OFFSET, type);
+      return result;
     }
   }
 
@@ -154,7 +156,6 @@ public class ProcessorOffset implements Processor {
   }
 
   private ProcessorOffset(final ProcessorType type, final Condition condition, final String id, final int offset) {
-    validateType(ProcessorType.OFFSET, type);
     this.type = type;
     this.condition = condition;
     this.id = id;

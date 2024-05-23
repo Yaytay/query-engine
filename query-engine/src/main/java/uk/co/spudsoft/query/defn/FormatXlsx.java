@@ -338,6 +338,10 @@ public class FormatXlsx implements Format {
     return columns;
   }
 
+  /**
+   * Get the defined {@link #columns} as a map.
+   * @return the defined {@link #columns} as a map.
+   */
   @JsonIgnore
   public ImmutableMap<String, FormatXlsxColumn> getColumnsMap() {
     return columnsMap;
