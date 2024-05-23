@@ -43,7 +43,7 @@ public class Select extends Component<Select> {
      */
     json, 
     /**
-     * Designate a URL that will provide the option values for the Select Dropdown
+     * Designate a URL that will provide the option values for the Select Dropdown.
      */
     url, 
     /**

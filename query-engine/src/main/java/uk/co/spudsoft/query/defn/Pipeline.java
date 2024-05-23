@@ -536,8 +536,8 @@ public final class Pipeline extends SourcePipeline {
     }
     
     /**
-     * Create a new instance of the {@link Pipeline}
-     * @return a new instance of the {@link Pipeline}
+     * Create a new instance of the {@link Pipeline}.
+     * @return a new instance of the {@link Pipeline}.
      */
     @Override
     public Pipeline build() {
@@ -546,7 +546,7 @@ public final class Pipeline extends SourcePipeline {
 
     /**
      * Set the {@link SourcePipeline#source} value in the builder.
-     * @param value The value for the {@link SourcePipeline#source}
+     * @param value The value for the {@link SourcePipeline#source}.
      * @return this, so that this builder may be used in a fluent manner.
      */
     @Override
@@ -557,7 +557,7 @@ public final class Pipeline extends SourcePipeline {
 
     /**
      * Set the {@link SourcePipeline#processors} value in the builder.
-     * @param value The value for the {@link SourcePipeline#processors}
+     * @param value The value for the {@link SourcePipeline#processors}.
      * @return this, so that this builder may be used in a fluent manner.
      */
     @Override
@@ -568,7 +568,7 @@ public final class Pipeline extends SourcePipeline {
     
     /**
      * Set the {@link Pipeline#title} value in the builder.
-     * @param value The value for the {@link Pipeline#title}
+     * @param value The value for the {@link Pipeline#title}.
      * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder title(final String value) {
@@ -578,7 +578,7 @@ public final class Pipeline extends SourcePipeline {
 
     /**
      * Set the {@link Pipeline#description} value in the builder.
-     * @param value The value for the {@link Pipeline#description}
+     * @param value The value for the {@link Pipeline#description}.
      * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder description(final String value) {
@@ -588,7 +588,7 @@ public final class Pipeline extends SourcePipeline {
 
     /**
      * Set the {@link Pipeline#condition} value in the builder.
-     * @param value The value for the {@link Pipeline#condition}
+     * @param value The value for the {@link Pipeline#condition}.
      * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder condition(final Condition value) {
@@ -598,7 +598,7 @@ public final class Pipeline extends SourcePipeline {
 
     /**
      * Set the {@link Pipeline#cacheDuration} value in the builder.
-     * @param value The value for the {@link Pipeline#cacheDuration}
+     * @param value The value for the {@link Pipeline#cacheDuration}.
      * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder cacheDuration(final Duration value) {
@@ -608,7 +608,7 @@ public final class Pipeline extends SourcePipeline {
 
     /**
      * Set the {@link Pipeline#rateLimitRules} value in the builder.
-     * @param value The value for the {@link Pipeline#rateLimitRules}
+     * @param value The value for the {@link Pipeline#rateLimitRules}.
      * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder rateLimitRules(final List<RateLimitRule> value) {
@@ -618,7 +618,7 @@ public final class Pipeline extends SourcePipeline {
 
     /**
      * Set the {@link Pipeline#arguments} value in the builder.
-     * @param value The value for the {@link Pipeline#arguments}
+     * @param value The value for the {@link Pipeline#arguments}.
      * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder arguments(final List<Argument> value) {
