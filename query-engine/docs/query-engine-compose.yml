@@ -45,9 +45,11 @@ services:
     - 14268:14268
       
   query-engine:
-    image: ghcr.io/yaytay/query-engine-design-mode:0.0.33-38-main
+    image: ghcr.io/yaytay/query-engine-design-mode:0.0.33-40-main
     ports:
     - 2000:8080
+    volumes:
+    - ./pipelines:/var/query-engine
     environment:
     - query-engine.httpServerOptions.port=8080
     - query-engine.logging.level.uk=DEBUG
@@ -71,4 +73,7 @@ services:
     - query-engine.sampleDataLoads[2].url=sqlserver://query-engine-mssql-1:1433/test
     - query-engine.sampleDataLoads[2].adminUser.username=sa
     - query-engine.sampleDataLoads[2].adminUser.password=T0p-Secret
+    - query-engine.baseConfigPath=/var/query-engine
+    - query-engine.outputCacheDir=/var/cache/query-engine
+    - query-engine.processors.tempDir=/tmp/query-engine
     

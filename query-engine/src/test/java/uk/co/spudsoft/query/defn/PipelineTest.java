@@ -16,14 +16,19 @@
  */
 package uk.co.spudsoft.query.defn;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.Json;
 import java.util.Arrays;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 
 /**
  *
@@ -205,6 +210,46 @@ public class PipelineTest {
                       .build();
             });
   }
+  
+  @Test
+  public void testSimplestJson() throws JsonProcessingException {
+    String src = """
+                 {}
+                 """;
+    Pipeline pipeline = PipelineDefnLoader.JSON_OBJECT_MAPPER.readValue(src, Pipeline.class);
+    assertNotNull(pipeline);
+  }
+  
+  @Test
+  public void testSimplestValidJson() throws JsonProcessingException {
+    String src = """
+                 {"source":{"type":"TEST"},"formats":[{"type":"Delimited"}]}
+                 """;
+    Pipeline pipeline = PipelineDefnLoader.JSON_OBJECT_MAPPER.readValue(src, Pipeline.class);
+    assertNotNull(pipeline);
+    pipeline.validate();
+  }
 
+  @Test
+  public void testSimplestYaml() throws JsonProcessingException {
+    String src = """
+                 {}
+                 """;
+    Pipeline pipeline = PipelineDefnLoader.YAML_OBJECT_MAPPER.readValue(src, Pipeline.class);
+    assertNotNull(pipeline);
+  }
+  
+  @Test
+  public void testSimplestValidYaml() throws JsonProcessingException {
+    String src = """
+                 source:
+                  type: TEST
+                 formats:
+                 - type: Delimited
+                 """;
+    Pipeline pipeline = PipelineDefnLoader.YAML_OBJECT_MAPPER.readValue(src, Pipeline.class);
+    assertNotNull(pipeline);
+    pipeline.validate();
+  }
   
 }
