@@ -46,7 +46,7 @@ import uk.co.spudsoft.query.exec.SourceInstance;
         , discriminatorProperty = "type"
         , discriminatorMapping = {
           @DiscriminatorMapping(schema = SourceSql.class, value = "SQL")
-          , @DiscriminatorMapping(schema = SourceTest.class, value = "Test")
+          , @DiscriminatorMapping(schema = SourceTest.class, value = "TEST")
         }
 )
 public interface Source {

@@ -45,7 +45,7 @@ services:
     - 14268:14268
       
   query-engine:
-    image: ghcr.io/yaytay/query-engine-design-mode:0.0.33-41-main
+    image: ghcr.io/yaytay/query-engine-design-mode:0.0.33-45-main
     ports:
     - 2000:8080
     volumes:
@@ -53,13 +53,13 @@ services:
     environment:
     - query-engine.httpServerOptions.port=8080
     - query-engine.logging.level.uk=DEBUG
-    - query-engine.audit.dataSource.url=jdbc:mysql://mysql/test?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
-    - query-engine.audit.dataSource.user.username=user
-    - query-engine.audit.dataSource.user.password=T0p-Secret
-    - query-engine.audit.dataSource.adminUser.username=user
-    - query-engine.audit.dataSource.adminUser.password=T0p-Secret
-    - query-engine.audit.retryLimit=100
-    - query-engine.audit.retryIncrementMs=500
+    - query-engine.persistence.dataSource.url=jdbc:mysql://mysql/test?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+    - query-engine.persistence.dataSource.user.username=user
+    - query-engine.persistence.dataSource.user.password=T0p-Secret
+    - query-engine.persistence.dataSource.adminUser.username=user
+    - query-engine.persistence.dataSource.adminUser.password=T0p-Secret
+    - query-engine.persistence.retryLimit=100
+    - query-engine.persistence.retryIncrementMs=500
     - query-engine.jwt.acceptableIssuerRegexes[0]=.*
     - query-engine.tracing.serviceName=query-engine2
     - query-engine.tracing.protocol=otlphttp    

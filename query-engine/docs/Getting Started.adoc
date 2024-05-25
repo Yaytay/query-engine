@@ -2,12 +2,20 @@
 
 The quickest way to get a feel for the Query Engine is to use the link:query-engine-compose.yml[compose file].
 
-This compose file needs to be run on a single container host (i.e. not Swarm or Kubernetes) with localhost ports 2000-2003 free.
-It spawns four containers: MySQL, Microsoft SQL Server, PostgreSQL and Query Engine in link:pass:[Design Mode/Design Mode.html][Design Mode].
+This compose file needs to be run on a single container host (i.e. not Swarm or Kubernetes) with localhost ports 2000-2003 free (as well as the ports required by Jaeger: 5775/udp, 6831/udp, 6832/udp, 5778, 4317, 4318, 16686, 14268).
+It spawns five containers: MySQL, Microsoft SQL Server, PostgreSQL, Jaeger all-in-one and Query Engine in link:pass:[Design Mode/Design Mode.html][Design Mode].
+
+The Jaeger container can be removed without making any further changes - no tracing data will be captured, but the Query Engine will otherwise work.
 
 The configuration of the Query Engine container uses the sampleDataLoads configuration to set up a database on each of these DBMS 
 platforms with a link:Samples/Sample%20Data.html[very similar structure and data].
 This data is all set up in transient storage - when the containers are deleted the sample data will go with them (though the containers can be restarted without losing it).
+
+The Microsoft SQL Server and PostgreSQL containers can be removed from the compose file, but you should also remove their configured sampleDataLoads from the QueryEngine environment.
+The sample pipelines that use these containers won't work.
+
+The MySQL container can also be removed, but that is also used by Query Engine for its own persistence.
+In addition to removing the sampeDataLoads configuration for MySQL you will need to either change the audit.persistence to another destination, or remove it completely to use in-memory audit and login state.
 
 Whenever the Query Engine starts it tries to access (and monitor) its baseConfigPath 
 (by default this is "/var/query-engine"; it can be changed if necessary, though you should prefer using volume mounts to point this location to your files rather than reconfiguring it).
@@ -16,6 +24,10 @@ Whenever the Query Engine boots, if the baseConfigPath does not exist it will at
 If the baseConfigPath does exist and isn't a directory the Query Engine will fail to start.
 If the baseConfigPath is an empty directory the Query Engine will copy the sample queries to that location - the only way to disable this behaviour is to create 
 a file in the directory before starting the Query Engine.
+
+The sample compose file explicitly specifies the baseConfigPath for clarity, but does not actually change it from the default value.
+The directory "./pipelines" is mounted to /var/query-engine.
+For real use this volume should point to a git (or other SCM) repository for your pipeline definitions.
 
 Putting this behaviour together means that when the Query Engine starts using the provided compose file it is a demonstrable system that can be
 experienced with minimal additional work.
