@@ -31,5 +31,4 @@ Given the above, your query developers should then:
 NOTE: Design Mode will only permit the editing of Velocity templates as plain text files.
 
 TIP: There are much better text editors than Design Mode for editing Velocity templates.
-
 As a general rule you should stop using Design Mode when you start using Velocity templates.

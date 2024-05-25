@@ -164,6 +164,7 @@ public interface Format {
                         </P>
                         """
           , maxLength = 100
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
   String getName();
   
@@ -181,6 +182,7 @@ public interface Format {
                         </P>
                         """
           , maxLength = 20
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
   String getExtension();
   
@@ -201,7 +203,8 @@ public interface Format {
                         The media type will also be set as the Content-Type header in the response.
                         </P>
                         """
-  )
+            , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+)
   MediaType getMediaType();
 
   /**

@@ -86,6 +86,7 @@ public class FormatDelimited implements Format {
                         """
           , maxLength = 100
           , defaultValue = "csv"
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
   public String getName() {
     return name;
@@ -107,6 +108,7 @@ public class FormatDelimited implements Format {
                         """
           , maxLength = 20
           , defaultValue = "csv"
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
   public String getExtension() {
     return extension;
@@ -132,6 +134,7 @@ public class FormatDelimited implements Format {
                         """
           , defaultValue = "text/csv"
           , implementation = String.class
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
   public MediaType getMediaType() {
     return mediaType;
@@ -144,7 +147,9 @@ public class FormatDelimited implements Format {
   @Schema(description = """
                         If true the output will have a header row containing the field names.
                         """
-          , defaultValue = "true")
+          , defaultValue = "true"
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
   public boolean hasHeaderRow() {
     return headerRow;
   }
@@ -157,6 +162,7 @@ public class FormatDelimited implements Format {
                         The delimiter between field values in the output.
                         """
           , defaultValue = ","
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           , maxLength = 10
   )
   public String getDelimiter() {
@@ -171,6 +177,7 @@ public class FormatDelimited implements Format {
                         Any string values in the output will be prefixed by this value.
                         """
           , defaultValue = "\""
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           , maxLength = 10
 )
   public String getOpenQuote() {
@@ -185,6 +192,7 @@ public class FormatDelimited implements Format {
                         Any string values in the output will be suffixed by this value.
                         """
           , defaultValue = "\""
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           , maxLength = 10
   )
   public String getCloseQuote() {
@@ -199,6 +207,7 @@ public class FormatDelimited implements Format {
                         If a string value contains the close quote string it will be prefixed by this string.
                         """
           , defaultValue = "\""
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           , maxLength = 10
   )
   public String getEscapeCloseQuote() {
@@ -212,7 +221,8 @@ public class FormatDelimited implements Format {
   @Schema(description = """
                         Each row in the output will be suffixed by this value.
                         """
-          , defaultValue = "\r\n"
+          , defaultValue = "\\r\\n"
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           , maxLength = 10
   )
   public String getNewline() {

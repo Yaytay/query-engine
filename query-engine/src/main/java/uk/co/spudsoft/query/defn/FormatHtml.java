@@ -104,6 +104,7 @@ public class FormatHtml implements Format {
                         """
           , maxLength = 100
           , defaultValue = "html"
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
   public String getName() {
     return name;
@@ -125,6 +126,7 @@ public class FormatHtml implements Format {
                         """
           , maxLength = 20
           , defaultValue = "html"
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
   public String getExtension() {
     return extension;
@@ -150,6 +152,7 @@ public class FormatHtml implements Format {
                         """
           , defaultValue = "text/html"
           , implementation = String.class
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
   public MediaType getMediaType() {
     return mediaType;
