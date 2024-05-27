@@ -23,7 +23,7 @@ import uk.co.spudsoft.query.defn.Argument;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import uk.co.spudsoft.query.defn.ArgumentType;
+import uk.co.spudsoft.query.defn.DataType;
 
 /**
  *
@@ -33,7 +33,7 @@ public class ArgumentInstanceTest {
   
   @Test
   public void testConstructor1() {
-    Argument argument = Argument.builder().name("arg").type(ArgumentType.Integer).build();
+    Argument argument = Argument.builder().name("arg").type(DataType.Integer).build();
     IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
       new ArgumentInstance(argument, ImmutableList.of("one"));
     });
@@ -42,7 +42,7 @@ public class ArgumentInstanceTest {
   
   @Test
   public void testConstructor2() {
-    Argument argument = Argument.builder().name("arg").type(ArgumentType.Integer).build();
+    Argument argument = Argument.builder().name("arg").type(DataType.Integer).build();
     IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
       new ArgumentInstance(argument, ImmutableList.of("1", "two"));
     });

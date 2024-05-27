@@ -61,9 +61,9 @@ public class ArgumentTest {
   @Test
   public void testGetType() {
     Argument instance = Argument.builder().build();
-    assertEquals(ArgumentType.String, instance.getType());
-    instance = Argument.builder().type(ArgumentType.Long).build();
-    assertEquals(ArgumentType.Long, instance.getType());
+    assertEquals(DataType.String, instance.getType());
+    instance = Argument.builder().type(DataType.Long).build();
+    assertEquals(DataType.Long, instance.getType());
   }
 
   @Test
@@ -138,17 +138,17 @@ public class ArgumentTest {
     
     assertEquals("The argument \"arg\" has a minimum value of \"fred\" but this could not be parsed as \"Integer\"."
             , assertThrows(IllegalArgumentException.class
-                    , () -> Argument.builder().name("arg").type(ArgumentType.Integer).minimumValue("fred").build().validate()
+                    , () -> Argument.builder().name("arg").type(DataType.Integer).minimumValue("fred").build().validate()
             ).getMessage()
     );
     assertEquals("The argument \"arg\" has a maximum value of \"fred\" but this could not be parsed as \"Integer\"."
             , assertThrows(IllegalArgumentException.class
-                    , () -> Argument.builder().name("arg").type(ArgumentType.Integer).maximumValue("fred").build().validate()
+                    , () -> Argument.builder().name("arg").type(DataType.Integer).maximumValue("fred").build().validate()
             ).getMessage()
     );
     assertEquals("The argument \"arg\" has a default value specified, but is not optional or conditional."
             , assertThrows(IllegalArgumentException.class
-                    , () -> Argument.builder().name("arg").type(ArgumentType.Integer).defaultValue("7").optional(false).build().validate()
+                    , () -> Argument.builder().name("arg").type(DataType.Integer).defaultValue("7").optional(false).build().validate()
             ).getMessage()
     );
     

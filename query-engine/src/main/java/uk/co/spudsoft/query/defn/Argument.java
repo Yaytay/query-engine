@@ -56,7 +56,7 @@ public class Argument {
    */
   public static final Pattern VALID_NAME = Pattern.compile("\\p{Alnum}+", UNICODE_CHARACTER_CLASS);
   
-  private final ArgumentType type;
+  private final DataType type;
   private final String name;
   private final String title;
   private final String prompt;
@@ -81,6 +81,9 @@ public class Argument {
   public void validate() throws IllegalArgumentException {
     if (!VALID_NAME.matcher(name).matches()) {
       throw new IllegalArgumentException("The argument \"" + name + "\" does not have a valid name.");
+    }
+    if (type == DataType.Null) {
+      throw new IllegalArgumentException("The argument \"" + name + "\" has a type of \"" + type + "\" which cannot be used.");
     }
     if (!Strings.isNullOrEmpty(permittedValuesRegex)) {
       try {
@@ -124,7 +127,7 @@ public class Argument {
                         """
           , requiredMode = Schema.RequiredMode.REQUIRED
   )
-  public ArgumentType getType() {
+  public DataType getType() {
     return type;
   }
 
@@ -549,7 +552,7 @@ public class Argument {
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
-    private ArgumentType type = ArgumentType.String;
+    private DataType type = DataType.String;
     private String name;
     private String title;
     private String prompt;
@@ -575,7 +578,7 @@ public class Argument {
      * @param value the data type of the Argument.
      * @return this, so that the builder may be used fluently.
      */
-    public Builder type(final ArgumentType value) {
+    public Builder type(final DataType value) {
       this.type = value;
       return this;
     }
@@ -762,7 +765,7 @@ public class Argument {
     return new Argument.Builder();
   }
 
-  private Argument(ArgumentType type, String name, String title, String prompt, String description
+  private Argument(DataType type, String name, String title, String prompt, String description
           , boolean optional, boolean multiValued, boolean ignored, boolean validate
           , List<String> dependsUpon
           , String defaultValue, String minimumValue, String maximumValue

@@ -69,8 +69,8 @@ public class PipelineTest {
             .formats(Arrays.asList(FormatDelimited.builder().build()))
             .arguments(
                     Arrays.asList(
-                            Argument.builder().name("arg1").type(ArgumentType.String).build()
-                            , Argument.builder().name("arg2").type(ArgumentType.String).dependsUpon(Arrays.asList("arg1")).build()
+                            Argument.builder().name("arg1").type(DataType.String).build()
+                            , Argument.builder().name("arg2").type(DataType.String).dependsUpon(Arrays.asList("arg1")).build()
                     )
             )
             .build();
@@ -81,8 +81,8 @@ public class PipelineTest {
             .formats(Arrays.asList(FormatDelimited.builder().build()))
             .arguments(
                     Arrays.asList(
-                            Argument.builder().name("arg1").type(ArgumentType.String).build()
-                            , Argument.builder().name("arg").type(ArgumentType.String).dependsUpon(Arrays.asList("arg1")).build()
+                            Argument.builder().name("arg1").type(DataType.String).build()
+                            , Argument.builder().name("arg").type(DataType.String).dependsUpon(Arrays.asList("arg1")).build()
                     )
             )
             .build();
@@ -94,8 +94,8 @@ public class PipelineTest {
                   .formats(Arrays.asList(FormatDelimited.builder().build()))
                   .arguments(
                           Arrays.asList(
-                                  Argument.builder().name("arg1").type(ArgumentType.String).build()
-                                  , Argument.builder().name("arg1").type(ArgumentType.String).build()
+                                  Argument.builder().name("arg1").type(DataType.String).build()
+                                  , Argument.builder().name("arg1").type(DataType.String).build()
                           )
                   )
                   .build();
@@ -134,8 +134,8 @@ public class PipelineTest {
             .formats(Arrays.asList(FormatDelimited.builder().build()))
             .arguments(
                     Arrays.asList(
-                            Argument.builder().name("arg1").type(ArgumentType.String).build()
-                            , Argument.builder().name("arg").type(ArgumentType.String).dependsUpon(Arrays.asList("arg12")).build()
+                            Argument.builder().name("arg1").type(DataType.String).build()
+                            , Argument.builder().name("arg").type(DataType.String).dependsUpon(Arrays.asList("arg12")).build()
                     )
             )
             .build();
@@ -204,7 +204,7 @@ public class PipelineTest {
               Pipeline.builder()
                       .arguments(
                               Arrays.asList(
-                                      Argument.builder().type(ArgumentType.Long).name("a b").build()
+                                      Argument.builder().type(DataType.Long).name("a b").build()
                               )
                       )
                       .build();

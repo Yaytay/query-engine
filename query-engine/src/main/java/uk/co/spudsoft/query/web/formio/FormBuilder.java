@@ -34,7 +34,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Argument;
-import uk.co.spudsoft.query.defn.ArgumentType;
+import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.ArgumentValue;
 import uk.co.spudsoft.query.defn.Format;
 import uk.co.spudsoft.query.exec.FilterFactory;
@@ -186,7 +186,7 @@ public class FormBuilder {
         }
         break;
       default:
-        throw new IllegalStateException("New types added to ArgumentType and not implemented here");
+        throw new IllegalStateException("New types added to DataType and not implemented here");
     }
   }
   
@@ -362,8 +362,8 @@ public class FormBuilder {
               .withPlaceholder(arg.getPrompt())
               .withKey(arg.getName())
               .withMultiple(arg.isMultiValued())
-              .withEnableDate(arg.getType() == ArgumentType.Date || arg.getType() == ArgumentType.DateTime)
-              .withEnableTime(arg.getType() == ArgumentType.Time || arg.getType() == ArgumentType.DateTime)              
+              .withEnableDate(arg.getType() == DataType.Date || arg.getType() == DataType.DateTime)
+              .withEnableTime(arg.getType() == DataType.Time || arg.getType() == DataType.DateTime)              
             ;
       if (!Strings.isNullOrEmpty(arg.getDefaultValue())) {
         dateTime.withDefaultValue(arg.getDefaultValue());
@@ -395,7 +395,7 @@ public class FormBuilder {
       
       try (Number.NumberValidation v = number.addNumberValidate()) {
         v
-                .withInteger(arg.getType() != ArgumentType.Double)
+                .withInteger(arg.getType() != DataType.Double && arg.getType() != DataType.Float)
                 .withRequired(!arg.isOptional())
                 ;
         if (arg.getMaximumValue() != null) {
@@ -422,7 +422,7 @@ public class FormBuilder {
     }
   }
   
-  static java.lang.Number parseNumber(ArgumentType type, String value) {
+  static java.lang.Number parseNumber(DataType type, String value) {
     if (Strings.isNullOrEmpty(value)) {
       return null;
     }

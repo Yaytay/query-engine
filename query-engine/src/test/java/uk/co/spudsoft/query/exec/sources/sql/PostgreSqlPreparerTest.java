@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 import uk.co.spudsoft.query.defn.Argument;
-import uk.co.spudsoft.query.defn.ArgumentType;
+import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.exec.ArgumentInstance;
 
 /**
@@ -18,7 +18,7 @@ public class PostgreSqlPreparerTest {
   public void testSingleProvidedSingleValuedParameter() {
     AbstractSqlPreparer instance = new PostgreSqlPreparer();
 
-    ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of("id", new ArgumentInstance(Argument.builder().name("id").type(ArgumentType.Long).build(), ImmutableList.of("7")));
+    ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of("id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7")));
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id", Boolean.FALSE, argSrc);
     assertEquals("select * from bob where id = $1", result.query());
     assertEquals(7L, result.args().get(0));
@@ -30,8 +30,8 @@ public class PostgreSqlPreparerTest {
     AbstractSqlPreparer instance = new PostgreSqlPreparer();
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
-            "id", new ArgumentInstance( Argument.builder().type(ArgumentType.Long).build(), ImmutableList.of("7"))
-            , "name", new ArgumentInstance(Argument.builder().name("name").type(ArgumentType.String).build(), ImmutableList.of("fred"))
+            "id", new ArgumentInstance( Argument.builder().type(DataType.Long).build(), ImmutableList.of("7"))
+            , "name", new ArgumentInstance(Argument.builder().name("name").type(DataType.String).build(), ImmutableList.of("fred"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id and name = :name", Boolean.TRUE, argSrc);
     assertEquals("select * from bob where id = $1 and name = $2", result.query());
@@ -45,8 +45,8 @@ public class PostgreSqlPreparerTest {
     AbstractSqlPreparer instance = new PostgreSqlPreparer();
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
-            "id", new ArgumentInstance(Argument.builder().name("id").type(ArgumentType.Long).build(), ImmutableList.of("7"))
-            , "name", new ArgumentInstance(Argument.builder().name("name").type(ArgumentType.String).multiValued(true).build(), ImmutableList.of("fred", "bob"))
+            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7"))
+            , "name", new ArgumentInstance(Argument.builder().name("name").type(DataType.String).multiValued(true).build(), ImmutableList.of("fred", "bob"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id and name in (:name)", Boolean.FALSE, argSrc);
     assertEquals("select * from bob where id = $1 and name in ($2, $3)", result.query());
@@ -61,7 +61,7 @@ public class PostgreSqlPreparerTest {
     AbstractSqlPreparer instance = new PostgreSqlPreparer();
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
-            "id", new ArgumentInstance(Argument.builder().name("id").type(ArgumentType.Long).build(), ImmutableList.of("7"))
+            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id and name = :name", Boolean.TRUE, argSrc);
     assertEquals("select * from bob where id = $1 and name = $2", result.query());
@@ -75,8 +75,8 @@ public class PostgreSqlPreparerTest {
     AbstractSqlPreparer instance = new PostgreSqlPreparer();
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
-            "id", new ArgumentInstance(Argument.builder().name("id").type(ArgumentType.Long).build(), ImmutableList.of("7"))
-            , "name", new ArgumentInstance(Argument.builder().name("name").type(ArgumentType.String).build(), ImmutableList.of("fred"))
+            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7"))
+            , "name", new ArgumentInstance(Argument.builder().name("name").type(DataType.String).build(), ImmutableList.of("fred"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id and name = :name or othername = :name", Boolean.FALSE, argSrc);
     assertEquals("select * from bob where id = $1 and name = $2 or othername = $2", result.query());
@@ -90,8 +90,8 @@ public class PostgreSqlPreparerTest {
     AbstractSqlPreparer instance = new PostgreSqlPreparer();
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
-            "id", new ArgumentInstance(Argument.builder().name("id").type(ArgumentType.Long).build(), ImmutableList.of("7"))
-            , "name", new ArgumentInstance(Argument.builder().name("name").type(ArgumentType.String).multiValued(true).build(), ImmutableList.of("fred", "bob"))
+            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7"))
+            , "name", new ArgumentInstance(Argument.builder().name("name").type(DataType.String).multiValued(true).build(), ImmutableList.of("fred", "bob"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id and name in (:name) or othername in (:name)", Boolean.TRUE, argSrc);
     assertEquals("select * from bob where id = $1 and name in ($2, $3) or othername in ($2, $3)", result.query());
@@ -106,7 +106,7 @@ public class PostgreSqlPreparerTest {
     AbstractSqlPreparer instance = new PostgreSqlPreparer();
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
-            "id", new ArgumentInstance(Argument.builder().name("id").type(ArgumentType.Long).build(), ImmutableList.of("7"))
+            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id and name = :name or othername = :name", Boolean.FALSE, argSrc);
     assertEquals("select * from bob where id = $1 and name = $2 or othername = $3", result.query());
@@ -121,8 +121,8 @@ public class PostgreSqlPreparerTest {
     AbstractSqlPreparer instance = new PostgreSqlPreparer();
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
-            "id", new ArgumentInstance(Argument.builder().name("id").type(ArgumentType.Long).build(), ImmutableList.of("7"))
-            , "name", new ArgumentInstance(Argument.builder().name("name").type(ArgumentType.String).build(), ImmutableList.of("fred"))
+            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7"))
+            , "name", new ArgumentInstance(Argument.builder().name("name").type(DataType.String).build(), ImmutableList.of("fred"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id /* BIND and name = :name */", Boolean.TRUE, argSrc);
     assertEquals("select * from bob where id = $1  and name = $2 ", result.query());
@@ -136,7 +136,7 @@ public class PostgreSqlPreparerTest {
     AbstractSqlPreparer instance = new PostgreSqlPreparer();
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
-            "id", new ArgumentInstance(Argument.builder().name("id").type(ArgumentType.Long).build(), ImmutableList.of("7"))
+            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id /* BIND and name = :name */", Boolean.FALSE, argSrc);
     assertEquals("select * from bob where id = $1 ", result.query());
@@ -149,8 +149,8 @@ public class PostgreSqlPreparerTest {
     AbstractSqlPreparer instance = new PostgreSqlPreparer();
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
-            "id", new ArgumentInstance(Argument.builder().name("id").type(ArgumentType.Long).build(), ImmutableList.of("7"))
-            , "name", new ArgumentInstance(Argument.builder().name("name").type(ArgumentType.String).multiValued(true).build(), ImmutableList.of("fred", "bob"))
+            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7"))
+            , "name", new ArgumentInstance(Argument.builder().name("name").type(DataType.String).multiValued(true).build(), ImmutableList.of("fred", "bob"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id /* BIND and name in (:name) */", Boolean.TRUE, argSrc);
     assertEquals("select * from bob where id = $1  and name in ($2, $3) ", result.query());
@@ -165,8 +165,8 @@ public class PostgreSqlPreparerTest {
     AbstractSqlPreparer instance = new PostgreSqlPreparer();
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
-            "id", new ArgumentInstance(Argument.builder().name("id").type(ArgumentType.Long).build(), ImmutableList.of("7"))
-            , "name", new ArgumentInstance(Argument.builder().name("name").type(ArgumentType.String).multiValued(true).build(), ImmutableList.of("fred", "bob"))
+            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7"))
+            , "name", new ArgumentInstance(Argument.builder().name("name").type(DataType.String).multiValued(true).build(), ImmutableList.of("fred", "bob"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id /* BIND and name in (:name) */ or othername in (:name)", Boolean.FALSE, argSrc);
     assertEquals("select * from bob where id = $1  and name in ($2, $3)  or othername in ($2, $3)", result.query());
@@ -181,8 +181,8 @@ public class PostgreSqlPreparerTest {
     AbstractSqlPreparer instance = new PostgreSqlPreparer();
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
-            "id", new ArgumentInstance(Argument.builder().name("id").type(ArgumentType.Long).build(), ImmutableList.of("7"))
-            , "name", new ArgumentInstance(Argument.builder().name("name").type(ArgumentType.String).multiValued(true).build(), ImmutableList.of("fred", "bob"))
+            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7"))
+            , "name", new ArgumentInstance(Argument.builder().name("name").type(DataType.String).multiValued(true).build(), ImmutableList.of("fred", "bob"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id /* BIND and name in (:name) *//*BIND or othername in (:name)*/", Boolean.TRUE, argSrc);
     assertEquals("select * from bob where id = $1  and name in ($2, $3)  or othername in ($2, $3)", result.query());
@@ -197,8 +197,8 @@ public class PostgreSqlPreparerTest {
     AbstractSqlPreparer instance = new PostgreSqlPreparer();
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
-            "id", new ArgumentInstance(Argument.builder().name("id").type(ArgumentType.Long).build(), ImmutableList.of("7"))
-            , "name", new ArgumentInstance(Argument.builder().name("name").type(ArgumentType.String).multiValued(true).build(), ImmutableList.of("fred", "bob"))
+            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7"))
+            , "name", new ArgumentInstance(Argument.builder().name("name").type(DataType.String).multiValued(true).build(), ImmutableList.of("fred", "bob"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from \"bOb\" where id = :id /* BIND and name in (:name) *//*BIND or othername in (:name)*/", Boolean.TRUE, argSrc);
     assertEquals("select * from \"bOb\" where id = $1  and name in ($2, $3)  or othername in ($2, $3)", result.query());

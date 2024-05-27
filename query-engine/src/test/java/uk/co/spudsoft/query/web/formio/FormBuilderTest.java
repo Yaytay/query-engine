@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Argument;
-import uk.co.spudsoft.query.defn.ArgumentType;
+import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.ArgumentValue;
 import uk.co.spudsoft.query.defn.FormatJson;
 import uk.co.spudsoft.query.defn.FormatXlsx;
@@ -67,12 +67,12 @@ public class FormBuilderTest {
   
   @Test
   public void testParseNumber() {
-    assertEquals(1.2, FormBuilder.parseNumber(ArgumentType.Double, "1.2"));
-    assertEquals(1L, FormBuilder.parseNumber(ArgumentType.Long, "1"));
-    assertEquals(1, FormBuilder.parseNumber(ArgumentType.Integer, "1"));
-    assertNull(FormBuilder.parseNumber(ArgumentType.String, "1.2"));
-    assertNull(FormBuilder.parseNumber(ArgumentType.Integer, null));
-    assertNull(FormBuilder.parseNumber(ArgumentType.Integer, ""));
+    assertEquals(1.2, FormBuilder.parseNumber(DataType.Double, "1.2"));
+    assertEquals(1L, FormBuilder.parseNumber(DataType.Long, "1"));
+    assertEquals(1, FormBuilder.parseNumber(DataType.Integer, "1"));
+    assertNull(FormBuilder.parseNumber(DataType.String, "1.2"));
+    assertNull(FormBuilder.parseNumber(DataType.Integer, null));
+    assertNull(FormBuilder.parseNumber(DataType.Integer, ""));
   }
   
   @Test
@@ -86,7 +86,7 @@ public class FormBuilderTest {
                             .permittedValuesRegex("A.*Z")
                             .maximumValue("x")
                             .minimumValue("z")
-                            .type(ArgumentType.String)
+                            .type(DataType.String)
                             .build()
                     ,
                     Argument.builder()
@@ -95,17 +95,7 @@ public class FormBuilderTest {
                             .description("The first argument")
                             .maximumValue("1")
                             .minimumValue("12")
-                            .type(ArgumentType.Double)
-                            .build()
-                    ,
-                    Argument.builder()
-                            .name("arg1")
-                            .title("First Arg")
-                            .description("The first argument")
-                            .permittedValuesRegex("A.*Z")
-                            .maximumValue("1")
-                            .minimumValue("12")
-                            .type(ArgumentType.Integer)
+                            .type(DataType.Double)
                             .build()
                     ,
                     Argument.builder()
@@ -115,7 +105,17 @@ public class FormBuilderTest {
                             .permittedValuesRegex("A.*Z")
                             .maximumValue("1")
                             .minimumValue("12")
-                            .type(ArgumentType.Long)
+                            .type(DataType.Integer)
+                            .build()
+                    ,
+                    Argument.builder()
+                            .name("arg1")
+                            .title("First Arg")
+                            .description("The first argument")
+                            .permittedValuesRegex("A.*Z")
+                            .maximumValue("1")
+                            .minimumValue("12")
+                            .type(DataType.Long)
                             .build()
                     ,
                     Argument.builder()
@@ -123,7 +123,7 @@ public class FormBuilderTest {
                             .title("Second Arg")
                             .description("The second argument")
                             .minimumValue("2023-10-01")
-                            .type(ArgumentType.Date)
+                            .type(DataType.Date)
                             .build()
                     ,
                     Argument.builder()
@@ -131,7 +131,7 @@ public class FormBuilderTest {
                             .title("Second Arg")
                             .description("The second argument")
                             .minimumValue("2023-10-01")
-                            .type(ArgumentType.DateTime)
+                            .type(DataType.DateTime)
                             .build()
                     ,
                     Argument.builder()
@@ -139,7 +139,7 @@ public class FormBuilderTest {
                             .title("Second Arg")
                             .description("The second argument")
                             .maximumValue("13:56")
-                            .type(ArgumentType.Time)
+                            .type(DataType.Time)
                             .optional(true)
                             .build()
                     ,
@@ -147,7 +147,7 @@ public class FormBuilderTest {
                             .name("arg2")
                             .title("Second Arg")
                             .description("The second argument")
-                            .type(ArgumentType.String)
+                            .type(DataType.String)
                             .possibleValues(
                                     Arrays.asList(
                                             ArgumentValue.builder().label("one").value("One").build()

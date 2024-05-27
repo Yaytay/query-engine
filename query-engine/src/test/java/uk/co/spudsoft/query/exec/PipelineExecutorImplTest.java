@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import uk.co.spudsoft.query.defn.Argument;
-import uk.co.spudsoft.query.defn.ArgumentType;
+import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.defn.ProcessorLimit;
 import uk.co.spudsoft.query.defn.SourceTest;
@@ -109,9 +109,9 @@ public class PipelineExecutorImplTest {
     Map<String, ArgumentInstance> result = instance.prepareArguments(
             req
             , Arrays.asList(
-                    Argument.builder().type(ArgumentType.Long).name("arg1").optional(true).defaultValue("12").build()
-                    , Argument.builder().type(ArgumentType.String).name("arg2").optional(true).defaultValue("message").build()
-                    , Argument.builder().type(ArgumentType.String).name("arg3").optional(true).build()
+                    Argument.builder().type(DataType.Long).name("arg1").optional(true).defaultValue("12").build()
+                    , Argument.builder().type(DataType.String).name("arg2").optional(true).defaultValue("message").build()
+                    , Argument.builder().type(DataType.String).name("arg3").optional(true).build()
             )
             , 
             MultiMap.caseInsensitiveMultiMap()
@@ -124,9 +124,9 @@ public class PipelineExecutorImplTest {
     result = instance.prepareArguments(
             req
             , Arrays.asList(
-                    Argument.builder().type(ArgumentType.Long).name("arg1").defaultValue("12").build()
-                    , Argument.builder().type(ArgumentType.String).name("arg2").defaultValue("message").build()
-                    , Argument.builder().type(ArgumentType.String).name("arg3").optional(true).build()
+                    Argument.builder().type(DataType.Long).name("arg1").defaultValue("12").build()
+                    , Argument.builder().type(DataType.String).name("arg2").defaultValue("message").build()
+                    , Argument.builder().type(DataType.String).name("arg3").optional(true).build()
             )
             , 
             MultiMap.caseInsensitiveMultiMap()
@@ -172,9 +172,9 @@ public class PipelineExecutorImplTest {
             req
             , 
             Arrays.asList(
-                    Argument.builder().type(ArgumentType.Long).name("arg1").optional(true).defaultValue("12").build()
-                    , Argument.builder().type(ArgumentType.String).name("arg2").optional(true).defaultValue("message").build()
-                    , Argument.builder().type(ArgumentType.String).name("arg3").optional(true).build()
+                    Argument.builder().type(DataType.Long).name("arg1").optional(true).defaultValue("12").build()
+                    , Argument.builder().type(DataType.String).name("arg2").optional(true).defaultValue("message").build()
+                    , Argument.builder().type(DataType.String).name("arg3").optional(true).build()
             )
             , 
             MultiMap.caseInsensitiveMultiMap()

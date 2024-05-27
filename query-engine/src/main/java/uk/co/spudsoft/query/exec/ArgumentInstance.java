@@ -18,13 +18,10 @@ package uk.co.spudsoft.query.exec;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Argument;
-import uk.co.spudsoft.query.defn.ArgumentType;
+import uk.co.spudsoft.query.defn.DataType;
 
 /**
  * The realisation of an Argument passed in to a pipeline.
@@ -75,22 +72,18 @@ public final class ArgumentInstance {
   }
   
   /**
-   * Parse a single string as a specific ArgumentType.
+   * Parse a single string as a specific DataType.
    * @param type The type to convert to.
    * @param value The string value to be parsed.
-   * @return a single string parsed as a specific ArgumentType.
+   * @return a single string parsed as a specific DataType.
    */
-  public static Comparable<?> parseValue(ArgumentType type, String value) {
-    return switch (type) {
-      case Boolean -> Boolean.parseBoolean(value);
-      case Date -> LocalDate.parse(value);
-      case DateTime -> LocalDateTime.parse(value);
-      case Double -> Double.parseDouble(value);
-      case Integer -> Integer.parseInt(value);
-      case Long -> Long.parseLong(value);
-      case String -> value;
-      case Time -> LocalTime.parse(value);
-    };
+  public static Comparable<?> parseValue(DataType type, String value) {
+    try {
+      return type.cast(value);
+    } catch (Throwable ex) {
+      logger.warn("Cannot parsse \"{}\" as {}", value, type);
+      throw new IllegalArgumentException("Cannot parse arguments as " + type, ex);
+    }
   }
   
   /**

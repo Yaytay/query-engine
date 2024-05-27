@@ -105,7 +105,7 @@ public class ProcessorExpression implements Processor {
    * <p>
    * An {@link com.google.common.collect.ImmutableMap} of query string arguments.
    * <p>
-   * The arguments will be typed according to their specified {@link uk.co.spudsoft.query.defn.ArgumentType} and will either be a single value or, if the argument is multi-valued, an {@link com.google.common.collect.ImmutableList} or typed values.
+   * The arguments will be typed according to their specified {@link uk.co.spudsoft.query.defn.DataType} and will either be a single value or, if the argument is multi-valued, an {@link com.google.common.collect.ImmutableList} or typed values.
    * <p>
    * Note that the arguments are only typed when a pipeline instance is created, if the arguments field is access before (i.e. in a folder permissions.jexl file) all values will be strings.
    * <LI>params
@@ -150,7 +150,7 @@ public class ProcessorExpression implements Processor {
                         <p>
                         An {@link com.google.common.collect.ImmutableMap} of query string arguments.
                         <p>
-                        The arguments will be typed according to their specified {@link uk.co.spudsoft.query.defn.ArgumentType} and will either be a single value or, if the argument is multi-valued, an {@link com.google.common.collect.ImmutableList} or typed values.
+                        The arguments will be typed according to their specified {@link uk.co.spudsoft.query.defn.DataType} and will either be a single value or, if the argument is multi-valued, an {@link com.google.common.collect.ImmutableList} or typed values.
                         <p>
                         Note that the arguments are only typed when a pipeline instance is created, if the arguments field is access before (i.e. in a folder permissions.jexl file) all values will be strings.
                         <LI>params
@@ -235,7 +235,7 @@ public class ProcessorExpression implements Processor {
    * <p>
    * An {@link com.google.common.collect.ImmutableMap} of query string arguments.
    * <p>
-   * The arguments will be typed according to their specified {@link uk.co.spudsoft.query.defn.ArgumentType} and will either be a single value or, if the argument is multi-valued, an {@link com.google.common.collect.ImmutableList} or typed values.
+   * The arguments will be typed according to their specified {@link uk.co.spudsoft.query.defn.DataType} and will either be a single value or, if the argument is multi-valued, an {@link com.google.common.collect.ImmutableList} or typed values.
    * <p>
    * Note that the arguments are only typed when a pipeline instance is created, if the arguments field is access before (i.e. in a folder permissions.jexl file) all values will be strings.
    * <LI>params
@@ -278,7 +278,7 @@ public class ProcessorExpression implements Processor {
                         <p>
                         An {@link com.google.common.collect.ImmutableMap} of query string arguments.
                         <p>
-                        The arguments will be typed according to their specified {@link uk.co.spudsoft.query.defn.ArgumentType} and will either be a single value or, if the argument is multi-valued, an {@link com.google.common.collect.ImmutableList} or typed values.
+                        The arguments will be typed according to their specified {@link uk.co.spudsoft.query.defn.DataType} and will either be a single value or, if the argument is multi-valued, an {@link com.google.common.collect.ImmutableList} or typed values.
                         <p>
                         Note that the arguments are only typed when a pipeline instance is created, if the arguments field is access before (i.e. in a folder permissions.jexl file) all values will be strings.
                         <LI>params
