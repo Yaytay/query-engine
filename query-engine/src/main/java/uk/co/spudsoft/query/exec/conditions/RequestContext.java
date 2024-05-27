@@ -654,7 +654,7 @@ public class RequestContext {
    * Get the users human name (either the 'name' claim, a combination of the 'given_name' and 'family_name' claims, the 'preferred_username' claim, or the 'sub' claim) from the JWT, or null if there is no JWT.
    * @return the users human name (either the 'name' claim, a combination of the 'given_name' and 'family_name' claims, the 'preferred_username' claim, or the 'sub' claim) from the JWT, or null if there is no JWT.
    */
-  public String getNameFromJwt() {
+  public String getName() {
     if (jwt == null) {
       return null;
     }

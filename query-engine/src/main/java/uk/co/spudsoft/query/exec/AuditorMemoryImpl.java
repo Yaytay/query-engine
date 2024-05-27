@@ -268,7 +268,7 @@ public class AuditorMemoryImpl implements Auditor {
              context.getIssuer(),
              context.getSubject(),
              context.getUsername(),
-             context.getNameFromJwt(),
+             context.getName(),
              context.getGroups()
     );
     
@@ -286,7 +286,7 @@ public class AuditorMemoryImpl implements Auditor {
       , JdbcHelper.limitLength(context.getIssuer(), 1000)
       , JdbcHelper.limitLength(context.getSubject(), 1000)
       , JdbcHelper.limitLength(context.getUsername(), 1000)
-      , JdbcHelper.limitLength(context.getNameFromJwt(), 1000)
+      , JdbcHelper.limitLength(context.getName(), 1000)
       , JdbcHelper.toString(groups)
     );
 

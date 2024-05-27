@@ -139,7 +139,7 @@ public class RequestContextBuilderBearerAuthTest {
                         logger.info("Request context: {}", requestContext);
                         HttpServerResponse response = ctx.response();
                         response.setStatusCode(200);
-                        response.end("Hello " + requestContext.getNameFromJwt());                        
+                        response.end("Hello " + requestContext.getName());                        
                       });
             });
     

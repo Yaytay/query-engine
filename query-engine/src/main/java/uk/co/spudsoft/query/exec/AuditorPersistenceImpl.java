@@ -568,7 +568,7 @@ public class AuditorPersistenceImpl implements Auditor {
              context.getIssuer(),
              context.getSubject(),
              context.getUsername(),
-             context.getNameFromJwt(),
+             context.getName(),
              context.getGroups(),
              context.getRoles()
     );
@@ -589,7 +589,7 @@ public class AuditorPersistenceImpl implements Auditor {
                     ps.setString(param++, JdbcHelper.limitLength(context.getIssuer(), 1000));
                     ps.setString(param++, JdbcHelper.limitLength(context.getSubject(), 1000));
                     ps.setString(param++, JdbcHelper.limitLength(context.getUsername(), 1000));
-                    ps.setString(param++, JdbcHelper.limitLength(context.getNameFromJwt(), 1000));
+                    ps.setString(param++, JdbcHelper.limitLength(context.getName(), 1000));
                     ps.setString(param++, JdbcHelper.toString(groups));                    
                     ps.setString(param++, JdbcHelper.toString(roles));
     })

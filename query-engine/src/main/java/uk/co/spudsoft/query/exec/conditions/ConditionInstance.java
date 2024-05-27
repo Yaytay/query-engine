@@ -16,15 +16,8 @@
  */
 package uk.co.spudsoft.query.exec.conditions;
 
-import org.apache.commons.jexl3.JexlBuilder;
-import org.apache.commons.jexl3.JexlContext;
-import org.apache.commons.jexl3.JexlEngine;
-import org.apache.commons.jexl3.JexlExpression;
-import org.apache.commons.jexl3.MapContext;
-import org.apache.commons.jexl3.introspection.JexlPermissions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.defn.Condition;
 import uk.co.spudsoft.query.exec.DataRow;
 
 /**
@@ -49,40 +42,14 @@ public class ConditionInstance {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ConditionInstance.class);
   
-  private static final JexlEngine JEXL = new JexlBuilder()
-          .permissions(
-                  JexlPermissions.RESTRICTED
-                          .compose(
-                                  "io.vertx.core.http.impl.headers.*"
-                                  , "uk.co.spudsoft.jwtvalidatorvertx.*"
-                                  , "uk.co.spudsoft.query.exec.conditions.*"
-                                   
-                          )
-          )
-          .strict(false)
-          .silent(true)
-          .create();
-  
-  private final JexlExpression expression;
-
-  /**
-   * Return true if the condition or its expression is null or blank.
-   * @param condition The condition being assessed.
-   * @return true if the condition or its expression is null or blank.
-   */
-  public static boolean isNullOrBlank(Condition condition) {
-    return condition == null
-            || condition.getExpression() == null
-            || condition.getExpression().isBlank()
-            ;
-  }
+  private final JexlEvaluator evaluator;
   
   /**
    * Constructor.
    * @param expression The <a href="https://commons.apache.org/proper/commons-jexl/">JEXL</a> expression.
    */
   public ConditionInstance(String expression) {
-    this.expression = JEXL.createExpression(expression);
+    this.evaluator = new JexlEvaluator(expression);
   }
 
   /**
@@ -90,7 +57,7 @@ public class ConditionInstance {
    * @return the source text of the expression.
    */
   public String getSourceText() {
-    return expression.getSourceText();
+    return evaluator.getSourceText();
   }
 
   /**
@@ -98,7 +65,7 @@ public class ConditionInstance {
    * @return the parsed test of the expression.
    */
   public String getParsedText() {
-    return expression.getParsedText();
+    return evaluator.getParsedText();
   }
   
   /**
@@ -109,33 +76,7 @@ public class ConditionInstance {
    */
   // Compare the bindings with PipelineInstance#renderTemplate and ProcessorScriptInstance#runSource
   public boolean evaluate(RequestContext request, DataRow row) {
-    JexlContext context = new MapContext();
-    context.set("request", request);
-    if (request != null) {
-      context.set("uri", request.getUri());
-      context.set("params", request.getParams());
-      context.set("args", request.getArguments());
-    }
-    if (row != null) {
-      context.set("row", row);
-    } else {
-      context.set("row", DataRow.EMPTY_ROW);
-    }
-    
-    Object result = expression.evaluate(context);
-    if (result instanceof Boolean b) {
-      return b;
-    } else if (result == null) {
-      logger.trace("The result of expression \"{}\" was null", expression);
-      return false;
-    } else if (result instanceof String s) {
-      logger.warn("The result of expression \"{}\" was \"{}\", avoid returning strings", expression, s);
-      return Boolean.parseBoolean(s);
-    } else {
-      logger.warn("The result of expression \"{}\" was <{}>, should have been a Boolean", expression, result);
-      return false;
-    }
-    
+    return evaluator.evaluate(request, row);
   }
   
 }

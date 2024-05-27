@@ -146,6 +146,11 @@ public class ArgumentTest {
                     , () -> Argument.builder().name("arg").type(ArgumentType.Integer).maximumValue("fred").build().validate()
             ).getMessage()
     );
+    assertEquals("The argument \"arg\" has a default value specified, but is not optional or conditional."
+            , assertThrows(IllegalArgumentException.class
+                    , () -> Argument.builder().name("arg").type(ArgumentType.Integer).defaultValue("7").optional(false).build().validate()
+            ).getMessage()
+    );
     
   }
 

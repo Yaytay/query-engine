@@ -69,7 +69,7 @@ public class FormIoHandler {
   private final boolean outputAllErrorMessages;
   private final boolean requireSession;
 
-  private class PipelineStreamer implements StreamingOutput {
+  static class PipelineStreamer implements StreamingOutput {
     
     private final PipelineFile pipeline;
     private final FormBuilder builder;
@@ -81,9 +81,22 @@ public class FormIoHandler {
 
     @Override
     public void write(OutputStream output) throws IOException, WebApplicationException {
-      builder.buildForm(pipeline, output);
+      try {
+        builder.buildForm(pipeline, output);
+      } catch (Throwable ex) {
+        logger.error("Failed to build form: ", ex);
+      }
+      closeQuietly(output);
     }
     
+    void closeQuietly(OutputStream stream) {
+      try {
+        stream.close();
+      } catch (Throwable ex) {
+        logger.debug("Ignoring exception closing output stream: ", ex);
+      }
+    }
+
   }
   
   /**

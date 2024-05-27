@@ -25,6 +25,7 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -144,6 +145,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
   
   @Override
   public Map<String, ArgumentInstance> prepareArguments(RequestContext requestContext, List<Argument> definitions, MultiMap valuesMap) {
+    
     Map<String, ArgumentInstance> result = new HashMap<>();
     Map<String, Object> arguments = new HashMap<>();
     if (valuesMap == null) {
@@ -153,7 +155,20 @@ public class PipelineExecutorImpl implements PipelineExecutor {
       if (arg.isIgnored()) {
         continue ;
       }
-      List<String> argValues = valuesMap.getAll(arg.getName());
+      List<String> argValues = valuesMap.getAll(arg.getName());      
+      
+      if (arg.getCondition() != null && !Strings.isNullOrEmpty(arg.getCondition().getExpression())) {
+        ConditionInstance conditionInstance = arg.getCondition().createInstance();
+        if (!conditionInstance.evaluate(requestContext, null)) {
+          // Condition not met, either use default or skip this argument
+          if (Strings.isNullOrEmpty(arg.getDefaultValue())) {
+            continue ;
+          } else {
+            argValues = Arrays.asList(arg.getDefaultValue());
+          }
+        }
+      }
+      
       if (arg.isValidate()) {
         for (String argValue : argValues) {
           if (arg.getPossibleValues() != null && !arg.getPossibleValues().isEmpty()) {

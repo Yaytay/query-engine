@@ -245,6 +245,9 @@ public class RequestContextBuilder {
                 request.resume();
                 return validateToken(request, token);
               })
+              .onFailure(ex -> {
+                request.resume();
+              })
               .compose(jwt -> {
                 return build(request, jwt);
               });
@@ -258,6 +261,9 @@ public class RequestContextBuilder {
       String token = authHeader.substring(BEARER.length());
       request.pause();
       return validator.validateToken(issuer(request), token, audList, false)
+              .onFailure(ex -> {
+                request.resume();
+              })
               .compose(jwt -> {
                 request.resume();
                 return build(request, jwt);

@@ -26,6 +26,10 @@ import uk.co.spudsoft.query.exec.procs.script.ProcessorScriptInstance;
 
 /**
  * Processor that runs a custom script on each row of the output.
+ * <P>
+ * The difference between the ProcessorScript and the {@link ProcessorExpression} is that the evaluation of JEXL expressions is a lot faster that the evaluation of JavaScript,
+ * but there are fewer things that can be done in a single JEXL expression.
+ * In general, prefer {@link ProcessorExpression} unless it is unable to achieve what you want.
  * 
  * @author jtalbut
  */

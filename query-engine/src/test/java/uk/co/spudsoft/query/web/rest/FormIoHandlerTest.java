@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 jtalbut
+ * Copyright (C) 2024 njt
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,29 +14,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package uk.co.spudsoft.query.defn;
+package uk.co.spudsoft.query.web.rest;
 
+import java.io.IOException;
+import java.util.Collections;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import uk.co.spudsoft.query.exec.FilterFactory;
 
 /**
  *
- * @author jtalbut
+ * @author njt
  */
-public class ProcessorScriptTest {
+public class FormIoHandlerTest {
   
+  // This should not actually leak an exception
   @Test
-  public void testSetType() {
-    ProcessorScript instance = ProcessorScript.builder().type(ProcessorType.SCRIPT).build();
-    assertEquals(ProcessorType.SCRIPT, instance.getType());
-    try {
-      ProcessorScript.builder().type(ProcessorType.GROUP_CONCAT).build();
-      fail("Expected IllegalArgumentException");
-    } catch (IllegalArgumentException ex) {
-    }
+  public void testPipelineStreamExceptions() throws IOException {
+    
+    FormIoHandler.PipelineStreamer streamer = new FormIoHandler.PipelineStreamer(null, 0, new FilterFactory(Collections.emptyList()));
+    streamer.write(null);
+    
   }
-
   
 }

@@ -17,6 +17,10 @@
 package uk.co.spudsoft.query.defn;
 
 import java.sql.JDBCType;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
@@ -83,4 +87,65 @@ public class DataTypeTest {
     assertThrows(IllegalArgumentException.class, () -> {DataType.fromJdbcType(JDBCType.SQLXML);});
   }
 
+  @Test
+  public void testCast() throws Exception {
+    assertEquals(null, DataType.Null.cast("irrelevant"));
+    
+    assertEquals(null, DataType.Boolean.cast(null));
+    assertEquals(Boolean.TRUE, DataType.Boolean.cast(Boolean.TRUE));
+    assertEquals(Boolean.TRUE, DataType.Boolean.cast("true"));
+    assertEquals(Boolean.TRUE, DataType.Boolean.cast(7.5));
+    assertEquals(Boolean.TRUE, DataType.Boolean.cast(new StringBuilder("true")));
+    
+    assertEquals(null, DataType.Date.cast(null));
+    assertEquals(LocalDate.of(1971, 5, 6), DataType.Date.cast(LocalDate.of(1971, 5, 6)));
+    assertEquals(LocalDate.of(1971, 5, 6), DataType.Date.cast(LocalDateTime.of(1971, 5, 6, 7, 8)));
+    assertEquals(LocalDate.of(1973, 2, 17), DataType.Date.cast(Instant.ofEpochMilli(98765432100L)));
+    assertEquals(LocalDate.of(1971, 5, 6), DataType.Date.cast("1971-05-06"));
+    assertEquals(LocalDate.of(1971, 5, 6), DataType.Date.cast(new StringBuilder("1971-05-06")));
+    
+    assertEquals(null, DataType.DateTime.cast(null));
+    assertEquals(LocalDateTime.of(1971, 5, 6, 7, 8), DataType.DateTime.cast(LocalDateTime.of(1971, 5, 6, 7, 8)));
+    assertEquals(LocalDateTime.of(1971, 5, 6, 0, 0), DataType.DateTime.cast(LocalDate.of(1971, 5, 6)));
+    assertEquals(LocalDateTime.of(1973, 2, 17, 2, 50, 32, 100000000), DataType.DateTime.cast(Instant.ofEpochMilli(98765432100L)));
+    assertEquals(LocalDateTime.of(1971, 5, 6, 7, 8), DataType.DateTime.cast("1971-05-06T07:08"));
+    assertEquals(LocalDateTime.of(1971, 5, 6, 7, 8), DataType.DateTime.cast(new StringBuilder("1971-05-06T07:08")));
+    
+    assertEquals(null, DataType.Double.cast(null));
+    assertEquals(Double.MAX_VALUE, DataType.Double.cast(Double.MAX_VALUE));
+    assertEquals(1.8, DataType.Double.cast(1.8));
+    assertEquals(1.8, DataType.Double.cast("1.8"));
+    assertEquals(1.8, DataType.Double.cast(new StringBuilder("1.8")));
+    
+    assertEquals(null, DataType.Float.cast(null));
+    assertEquals(Float.MAX_VALUE, DataType.Float.cast(Float.MAX_VALUE));
+    assertEquals((float) 1.8, DataType.Float.cast(1.8));
+    assertEquals((float) 1.8, DataType.Float.cast("1.8"));
+    assertEquals((float) 1.8, DataType.Float.cast(new StringBuilder("1.8")));
+    
+    assertEquals(null, DataType.Long.cast(null));
+    assertEquals(Long.MAX_VALUE, DataType.Long.cast(Long.MAX_VALUE));
+    assertEquals(18L, DataType.Long.cast(18));
+    assertEquals(18L, DataType.Long.cast("18"));
+    assertEquals(18L, DataType.Long.cast(new StringBuilder("18")));
+    
+    assertEquals(null, DataType.Integer.cast(null));
+    assertEquals(Integer.MAX_VALUE, DataType.Integer.cast(Integer.MAX_VALUE));
+    assertEquals(18, DataType.Integer.cast(18));
+    assertEquals(18, DataType.Integer.cast("18"));
+    assertEquals(18, DataType.Integer.cast(new StringBuilder("18")));
+    
+    assertEquals(null, DataType.String.cast(null));
+    assertEquals("wibble", DataType.String.cast("wibble"));
+    assertEquals("07:08", DataType.String.cast(LocalTime.of(7, 8)));
+    
+    assertEquals(null, DataType.Time.cast(null));
+    assertEquals(LocalTime.of(7, 8), DataType.Time.cast(LocalTime.of(7, 8)));
+    assertEquals(LocalTime.of(7, 8), DataType.Time.cast(LocalDateTime.of(1971, 5, 6, 7, 8)));
+    assertEquals(LocalTime.of(2, 50, 32, 100000000), DataType.Time.cast(Instant.ofEpochMilli(98765432100L)));
+    assertEquals(LocalTime.of(7, 8), DataType.Time.cast("07:08"));
+    assertEquals(LocalTime.of(7, 8), DataType.Time.cast(new StringBuilder("07:08")));
+    
+  }
+  
 }

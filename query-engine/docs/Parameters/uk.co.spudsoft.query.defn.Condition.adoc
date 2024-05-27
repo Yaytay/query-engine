@@ -14,7 +14,9 @@ Conditions can be applied to:
  
 
 
-The context of a Condition includes a variable of type uk.co.spudsoft.query.exec.conditions.RequestContext  called "req" that includes:
+The context of a Condition includes three variables:
+ 
+ * a variable of type uk.co.spudsoft.query.exec.conditions.RequestContext  called "req" that includes:
  
  * requestId
  A unique ID for the request.  If Distributed Tracing is enabled this will be the Span ID, otherwise it will be a random UUID.
@@ -57,6 +59,11 @@ The IP address of client making the request, taken from the first of:
  The link:https://jwt.io/[Json Web Token]  associated with the request, if any.
  * clientIpIsIn
  A function that receives an array of IP addresses or subnets (in slash notation) and returns true if the clientIp matches any of them.
+ 
+* a variable of type integer called "iteration" that is incremented each time the condition is evaluated.
+ <br>For conditions evaluated in the context of a DataRow this can be used as a surrogate for the row number.
+ 
+ * a variable of type uk.co.spudsoft.query.exec.DataRow  called "row" that will be set to the current DataRow if there is one, or an empty row if not.
  
 
 

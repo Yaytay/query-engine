@@ -18,9 +18,11 @@ package uk.co.spudsoft.query.defn;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.sql.JDBCType;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 
 /**
  * The basic data types that values can have in Query Engine.
@@ -133,6 +135,174 @@ public enum DataType {
     }
   }
 
+  /**
+   * Return the passed in value in this data type.
+   * <p>
+   * If the value is already in the appropriate type it will be returned as is
+   * ; if it's a compatible type if will be converted; if it's a string it will be parsed; otherwise it will be converted to a string and then parsed.
+   * 
+   * @param value the value to be cast.
+   * @return the passed in value in this data type.
+   * @throws java.lang.Exception if the value cannot be converted to this type.
+   */
+  public Comparable<?> cast(Object value) throws Exception {
+    if (value == null) {
+      return null;
+    }
+    if (this == Null) {
+      return null;
+    } else if (this == Integer) {
+      switch (value) {
+        case Integer tv -> {
+          return tv;
+        }
+        case Number tv -> {
+          return tv.intValue();
+        }
+        case String tv -> {
+          return java.lang.Integer.valueOf(tv);
+        }
+        default -> {
+          return java.lang.Integer.valueOf(value.toString());
+        }
+      }
+    } else if (this == Long) {
+      switch (value) {
+        case Long tv -> {
+          return tv;
+        }
+        case Number tv -> {
+          return tv.longValue();
+        }
+        case String tv -> {
+          return java.lang.Long.valueOf(tv);
+        }
+        default -> {
+          return java.lang.Long.valueOf(value.toString());
+        }
+      }
+    } else if (this == Float) {
+      switch (value) {
+        case Float tv -> {
+          return tv;
+        }
+        case Number tv -> {
+          return tv.floatValue();
+        }
+        case String tv -> {
+          return java.lang.Float.valueOf(tv);
+        }
+        default -> {
+          return java.lang.Float.valueOf(value.toString());
+        }
+      }
+    } else if (this == Double) {
+      switch (value) {
+        case Double tv -> {
+          return tv;
+        }
+        case Number tv -> {
+          return tv.doubleValue();
+        }
+        case String tv -> {
+          return java.lang.Double.valueOf(tv);
+        }
+        default -> {
+          return java.lang.Double.valueOf(value.toString());
+        }
+      }
+    } else if (this == String) {
+      switch (value) {
+        case String tv -> {
+          return tv;
+        }
+        default -> {
+          return value.toString();
+        }
+      }
+    } else if (this == Boolean) {
+      switch (value) {
+        case Boolean tv -> {
+          return tv;
+        }
+        case Number tv -> {
+          return java.lang.Double.compare(tv.doubleValue(), 0.0) != 0;
+        }
+        case String tv -> {
+          return java.lang.Boolean.valueOf(tv);
+        }
+        default -> {
+          return java.lang.Boolean.valueOf(value.toString());
+        }
+      }
+    } else if (this == Date) {
+      switch (value) {
+        case LocalDate tv -> {
+          return tv;
+        }
+        case LocalDateTime tv -> {
+          return tv.toLocalDate();
+        }
+        case Instant tv -> {
+          return LocalDate.ofInstant(tv, ZoneOffset.UTC);
+        }
+        case java.util.Date tv -> {
+          return LocalDate.ofInstant(tv.toInstant(), ZoneOffset.UTC);
+        }
+        case String tv -> {
+          return LocalDate.parse(tv);
+        }
+        default -> {
+          return LocalDate.parse(value.toString());
+        }
+      }
+    } else if (this == DateTime) {
+      switch (value) {
+        case LocalDateTime tv -> {
+          return tv;
+        }
+        case LocalDate tv -> {
+          return tv.atStartOfDay();
+        }
+        case Instant tv -> {
+          return LocalDateTime.ofInstant(tv, ZoneOffset.UTC);
+        }
+        case java.util.Date tv -> {
+          return LocalDateTime.ofInstant(tv.toInstant(), ZoneOffset.UTC);
+        }
+        case String tv -> {
+          return LocalDateTime.parse(tv);
+        }
+        default -> {
+          return LocalDateTime.parse(value.toString());
+        }
+      }
+    } else if (this == Time) {
+      switch (value) {
+        case LocalTime tv -> {
+          return tv;
+        }
+        case LocalDateTime tv -> {
+          return tv.toLocalTime();
+        }
+        case Instant tv -> {
+          return LocalTime.ofInstant(tv, ZoneOffset.UTC);
+        }
+        case java.util.Date tv -> {
+          return LocalTime.ofInstant(tv.toInstant(), ZoneOffset.UTC);
+        }
+        case String tv -> {
+          return LocalTime.parse(tv);
+        }
+        default -> {
+          return LocalTime.parse(value.toString());
+        }
+      }
+    } else {
+      throw new IllegalArgumentException("Unhandled value type: " + value.getClass());
+    }
+  }
+  
   /**
    * Get the value uses to represent this datatype in JDBC.
    * @return the value uses to represent this datatype in JDBC.

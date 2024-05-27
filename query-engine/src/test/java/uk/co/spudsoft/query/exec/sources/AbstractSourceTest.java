@@ -18,9 +18,7 @@ package uk.co.spudsoft.query.exec.sources;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.streams.ReadStream;
 import org.junit.jupiter.api.Test;
-import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.SourceInstance;

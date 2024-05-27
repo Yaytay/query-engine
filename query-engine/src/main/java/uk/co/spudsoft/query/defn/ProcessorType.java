@@ -53,6 +53,10 @@ public enum ProcessorType {
    */
   SCRIPT, 
   /**
+   * The {@link Processor} is a {@link ProcessorExpression} that runs a JEXL expression to either act as a predicate per row or to set a field on the row.
+   */
+  EXPRESSION, 
+  /**
    * The {@link Processor} is a {@link ProcessorQuery} that uses a FIQL expression to filter rows.
    */
   QUERY, 

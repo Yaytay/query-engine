@@ -21,12 +21,14 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.vertx.core.Vertx;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import org.slf4j.Logger;
@@ -36,7 +38,10 @@ import uk.co.spudsoft.query.defn.ArgumentType;
 import uk.co.spudsoft.query.defn.ArgumentValue;
 import uk.co.spudsoft.query.defn.Format;
 import uk.co.spudsoft.query.exec.FilterFactory;
+import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
+import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.pipeline.PipelineNodesTree.PipelineFile;
+import uk.co.spudsoft.query.web.RequestContextHandler;
 import uk.co.spudsoft.query.web.formio.DateTime.DatePicker;
 
 /**
@@ -113,7 +118,20 @@ public class FormBuilder {
   }
   
   void buildArguments(JsonGenerator generator, PipelineFile pipeline) throws IOException {
-    List<Argument> args = pipeline.getArguments();
+    List<Argument> args = new ArrayList<>(pipeline.getArguments().size());
+
+    RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
+    for (Argument arg : pipeline.getArguments()) {
+      if (arg.getCondition() == null || Strings.isNullOrEmpty(arg.getCondition().getExpression())) {
+        args.add(arg);
+      } else {
+        ConditionInstance conditionInstance = arg.getCondition().createInstance();
+        if (conditionInstance.evaluate(requestContext, null)) {
+          args.add(arg);
+        }
+      }
+    }
+    
     if (args.isEmpty()) {
       return ;
     }

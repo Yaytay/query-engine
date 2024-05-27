@@ -1,0 +1,40 @@
+description: Test pipeline that presents an argument if there is no appropriate data in the request context.
+arguments:
+  - name: name
+    title: The name of the user
+    prompt: name
+    type: String
+    optional: false
+    # If this condition is met (request.name is not set) then name is a mandatory argument.
+    # If this condition is not met (i.e. if reguest.name is set) there will be no name argument.
+    condition: "isEmpty(request.name)"
+  - name: defaultName
+    title: The name of the user, with a default value
+    prompt: name
+    type: String
+    optional: true
+    # If this condition is met (request.name is not set) then name is a mandatory argument.
+    # If this condition is not met (i.e. if reguest.name is set) the defaultName argument will have its default value (and be unmodifiable from that).
+    condition: "isEmpty(request.name)"
+    defaultValue: Henry
+source:
+  type: TEST
+  rowCount: 2
+processors:
+  - type: EXPRESSION
+    field: name
+    fieldValue: "isEmpty(request.name) ? args.name : request.name"
+  - type: EXPRESSION
+    field: defaultName
+    fieldValue: args.defaultName
+  - type: EXPRESSION
+    field: iterator
+    fieldValue: iteration
+formats:
+- type: Delimited
+  name: tab
+  delimiter: "\t"
+  newline: "\n"
+  extension: tsv
+  headerRow: true
+  mediaType: text/tsv

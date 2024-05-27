@@ -37,7 +37,7 @@ public class Profile {
    * Constructor.
    * 
    * @param username The username from the token ({@link uk.co.spudsoft.query.exec.conditions.RequestContext#getUsername()}).
-   * @param fullname The full name from the token ({@link uk.co.spudsoft.query.exec.conditions.RequestContext#getNameFromJwt()}).
+   * @param fullname The full name from the token ({@link uk.co.spudsoft.query.exec.conditions.RequestContext#getName()}).
    * @param version The version of the Query Engine ({@link uk.co.spudsoft.query.main.Version}).
    */
   public Profile(String username, String fullname, String version) {
@@ -71,7 +71,7 @@ public class Profile {
   /**
    * The full name from the token.
    * <p>
-   * See {@link uk.co.spudsoft.query.exec.conditions.RequestContext#getNameFromJwt()}.
+   * See {@link uk.co.spudsoft.query.exec.conditions.RequestContext#getName()}.
    * 
    * @return full name from the token.
    */

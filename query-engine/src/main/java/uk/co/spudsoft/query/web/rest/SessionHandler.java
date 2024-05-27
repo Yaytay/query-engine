@@ -84,7 +84,7 @@ public class SessionHandler {
 
       Profile profile = new Profile(
               requestContext.getUsername()
-              , requestContext.getNameFromJwt()
+              , requestContext.getName()
               , Version.MAVEN_PROJECT_NAME + " " + Version.MAVEN_PROJECT_VERSION
       );
 

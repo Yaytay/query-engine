@@ -32,7 +32,7 @@ import uk.co.spudsoft.query.exec.ArgumentInstance;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
- * An Argument represents a named piece of data that will be passed in to a pipepline.
+ * An Argument represents a named piece of data that will be passed in to a pipeline.
  * Typically these correspond to query string arguments.
  * 
  * @author jtalbut
@@ -40,7 +40,7 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 @JsonDeserialize(builder = Argument.Builder.class)
 @Schema(description = """
                       <P>
-                      An Argument represents a named piece of data that will be passed in to a pipepline.
+                      An Argument represents a named piece of data that will be passed in to a pipeline.
                       </P>
                       <P>
                       Typically these correspond to query string arguments.
@@ -72,6 +72,7 @@ public class Argument {
   private final ImmutableList<ArgumentValue> possibleValues;
   private final String possibleValuesUrl;
   private final String permittedValuesRegex;
+  private final Condition condition;
 
   /**
    * Validate the provided definition.
@@ -88,8 +89,8 @@ public class Argument {
         throw new IllegalArgumentException("The argument \"" + name + "\" does not have a valid permittedValuesRegex." + ex.getMessage());
       }
     }
-    if (!Strings.isNullOrEmpty(defaultValue) && !optional) {
-      throw new IllegalArgumentException("The argument \"" + name + "\" has a default value specified, but is not optional.");
+    if (!Strings.isNullOrEmpty(defaultValue) && !optional && condition == null) {
+      throw new IllegalArgumentException("The argument \"" + name + "\" has a default value specified, but is not optional or conditional.");
     }
     if (!Strings.isNullOrEmpty(minimumValue)) {
       try {
@@ -108,6 +109,9 @@ public class Argument {
       } catch (Throwable ex) {
         throw new IllegalArgumentException("The argument \"" + name + "\" has a maximum value of \"" + maximumValue + "\" but this could not be parsed as \"" + type + "\".", ex);
       }
+    }
+    if (condition != null) {
+      condition.validate();
     }
   }
   
@@ -357,7 +361,7 @@ public class Argument {
                         Note that the default value should <em>not</em> be URL encoded.
                         </P>
                         <P>
-                        The default value can only be used if the argument is optional.
+                        The default value can only be used if the argument is optional (or conditional, where it will be used if the condition is false).
                         </P>
                         """
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
@@ -523,6 +527,20 @@ public class Argument {
     return permittedValuesRegex;
   }  
   
+  /**
+   * Optional condition that controls whether the argument will be used, and will appear as an argument in the form.
+   * @return an optional condition that controls whether the argument will be used, and will appear as an argument in the form.
+   */
+  @Schema(description = """
+                        <P>Optional condition that controls whether the argument will be used, and will appear as an argument in the form.</P>
+                        <P>If the condition is not met the argument will not appear in the pipeline form and it will be as if the argument was not supplied on the command line (even if it is).</p>
+                        """
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  public Condition getCondition() {
+    return condition;
+  }
+  
 
   /**
    * Builder class for Argument objects.
@@ -547,6 +565,7 @@ public class Argument {
     private List<ArgumentValue> possibleValues;
     private String possibleValuesUrl;
     private String permittedValuesRegex;
+    private Condition condition;
 
     private Builder() {
     }
@@ -716,13 +735,22 @@ public class Argument {
       return this;
     }
     
+    /**
+     * Set the {@link Argument#condition} value in the builder.
+     * @param value The value for the {@link Argument#condition}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder condition(final Condition value) {
+      this.condition = value;
+      return this;
+    }
 
     /**
      * Construct a new Argument object.
      * @return a new Argument object.
      */
     public Argument build() {
-      return new uk.co.spudsoft.query.defn.Argument(type, name, title, prompt, description, optional, multiValued, ignored, validate, dependsUpon, defaultValue, minimumValue, maximumValue, possibleValues, possibleValuesUrl, permittedValuesRegex);
+      return new uk.co.spudsoft.query.defn.Argument(type, name, title, prompt, description, optional, multiValued, ignored, validate, dependsUpon, defaultValue, minimumValue, maximumValue, possibleValues, possibleValuesUrl, permittedValuesRegex, condition);
     }
   }
 
@@ -739,6 +767,7 @@ public class Argument {
           , List<String> dependsUpon
           , String defaultValue, String minimumValue, String maximumValue
           , List<ArgumentValue> possibleValues, String possibleValuesUrl, String permittedValuesRegex
+          , Condition condition
   ) {
     this.type = type;
     this.name = name;
@@ -756,6 +785,7 @@ public class Argument {
     this.possibleValues = ImmutableCollectionTools.copy(possibleValues);
     this.possibleValuesUrl = possibleValuesUrl;
     this.permittedValuesRegex = permittedValuesRegex;
+    this.condition = condition;
   }
   
 }

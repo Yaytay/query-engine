@@ -38,6 +38,7 @@ import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.SharedMap;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
+import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.exec.sources.AbstractSource;
 import uk.co.spudsoft.query.main.ProtectedCredentials;
@@ -131,7 +132,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     if (endpoint == null) {
       return Future.failedFuture(new ServiceException(400, "Endpoint \"" + definition.getEndpoint() + "\" not found in " + pipeline.getSourceEndpoints().keySet()));
     }
-    if (!ConditionInstance.isNullOrBlank(endpoint.getCondition())) {
+    if (!JexlEvaluator.isNullOrBlank(endpoint.getCondition())) {
       ConditionInstance cond = endpoint.getCondition().createInstance();
       if (!cond.evaluate(requestContext, null)) {
         String message = String.format("Endpoint %s (%s) rejected by condition (%s)", definition.getEndpoint(), endpoint.getUrl(), endpoint.getCondition());
@@ -218,7 +219,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
         logger.warn(message);
         throw new ServiceException(503, "Endpoint \"" + definition.getEndpoint() + "\" not accessible", new IllegalStateException(message));
       }
-      if (!ConditionInstance.isNullOrBlank(credentials.getCondition())) {
+      if (!JexlEvaluator.isNullOrBlank(credentials.getCondition())) {
         ConditionInstance cond = credentials.getCondition().createInstance();
         if (!cond.evaluate(requestContext, null)) {
           String message = String.format("Endpoint %s (%s) prevented from accessing secret %s by condition (%s)", definition.getEndpoint(), coalesce(endpoint.getUrl(), endpoint.getUrlTemplate()), endpoint.getSecret(), endpoint.getCondition());

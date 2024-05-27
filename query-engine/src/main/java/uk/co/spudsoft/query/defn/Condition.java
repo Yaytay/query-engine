@@ -46,7 +46,9 @@ import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
  * <li>Endpoints
  * </ul>
  * <P>
- * The context of a Condition includes a variable of type {@link uk.co.spudsoft.query.exec.conditions.RequestContext} called &quot;req&quot; that includes:
+ * The context of a Condition includes three variables:
+ * <UL>
+ * <LI>a variable of type {@link uk.co.spudsoft.query.exec.conditions.RequestContext} called &quot;req&quot; that includes:
  * <UL>
  * <LI>requestId
  * A unique ID for the request.  If Distributed Tracing is enabled this will be the Span ID, otherwise it will be a random UUID.
@@ -83,7 +85,15 @@ import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
  * <LI>clientIpIsIn
  * A function that receives an array of IP addresses or subnets (in slash notation) and returns true if the clientIp matches any of them.
  * </UL>
+ * <LI>a variable of type integer called &quot;iteration&quot; that is incremented each time the condition is evaluated.
+ * <br>For conditions evaluated in the context of a DataRow this can be used as a surrogate for the row number.
+ * 
+ * <LI>a variable of type {@link uk.co.spudsoft.query.exec.DataRow} called &quot;row&quot; that will be set to the current DataRow if there is one, or an empty row if not.
+ * </ul>
+ * 
  * <P>
+ * 
+ * 
  * A condition should return either the true or false.
  * In addition if it returns the string "true" it will be considered to be true.
  * Any other return value will be considered false.

@@ -41,6 +41,7 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
 @JsonSubTypes({ 
   @JsonSubTypes.Type(value = ProcessorLimit.class, name = "LIMIT") 
   , @JsonSubTypes.Type(value = ProcessorDynamicField.class, name = "DYNAMIC_FIELD") 
+  , @JsonSubTypes.Type(value = ProcessorExpression.class, name = "EXPRESSION") 
   , @JsonSubTypes.Type(value = ProcessorGroupConcat.class, name = "GROUP_CONCAT") 
   , @JsonSubTypes.Type(value = ProcessorLookup.class, name = "LOOKUP") 
   , @JsonSubTypes.Type(value = ProcessorMap.class, name = "MAP") 
