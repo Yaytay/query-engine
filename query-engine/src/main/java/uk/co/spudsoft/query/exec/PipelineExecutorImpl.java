@@ -222,7 +222,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     if (permittedValuesPattern != null && !permittedValuesPattern.matcher(value).matches()) {
       if (defaultValue) {
         logger.warn("Argument {} generated the default value \"{}\", which does not match \"{}\"", arg.getName(), value, arg.getPermittedValuesRegex());
-        throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" generated the default value which is not permitted, please contact the designer.");
+        throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" generated a default value which is not permitted, please contact the designer.");
       } else {
         logger.warn("Argument {} was passed the value \"{}\", which does not match \"{}\"", arg.getName(), value, arg.getPermittedValuesRegex());
         throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" was passed a value which is not permitted.");        
