@@ -886,6 +886,7 @@ public class Main extends Application {
             .setPropagators(ContextPropagators.create(propagator))
             ;
     
+    logger.debug("Building OpenTelemetry");    
     return openTelemetryBuilder.buildAndRegisterGlobal();
   }
 
