@@ -103,7 +103,7 @@ public class DateTimeTest {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     try (JsonGenerator generator = factory.createGenerator(baos)) {
       try (DateTime field = new DateTime(generator)) {
-        field.withDefaultDate(null);
+        field.withDefaultDate((LocalDateTime) null);
       }
     }
     baos.close();

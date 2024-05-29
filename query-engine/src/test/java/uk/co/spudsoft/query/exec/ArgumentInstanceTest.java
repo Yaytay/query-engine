@@ -37,16 +37,7 @@ public class ArgumentInstanceTest {
     IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
       new ArgumentInstance(argument, ImmutableList.of("one"));
     });
-    assertEquals("Argument arg value could not be parsed as Integer", ex.getMessage());
-  }
-  
-  @Test
-  public void testConstructor2() {
-    Argument argument = Argument.builder().name("arg").type(DataType.Integer).build();
-    IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
-      new ArgumentInstance(argument, ImmutableList.of("1", "two"));
-    });
-    assertEquals("Argument arg value number 2 could not be parsed as Integer", ex.getMessage());
+    assertEquals("Argument arg set with the value \"one\" which is not Integer", ex.getMessage());
   }
   
   @Test

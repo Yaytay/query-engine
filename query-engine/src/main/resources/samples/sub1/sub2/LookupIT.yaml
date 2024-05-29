@@ -5,18 +5,18 @@ arguments:
     description: If set to true the SQL query will include the results of the lookup.
     type: Boolean
     optional: true
-    defaultValue: false
+    defaultValueExpression: false
   - name: removeRefColumnsFromResults
     title: Remove Reference ID Columns From Results
     description: If set to true the map processor will be used to remove the ref* columns.
     type: Boolean
     optional: true
-    defaultValue: false
+    defaultValueExpression: false
   - name: port
     type: Integer
     optional: true
     description: The port to use to connect to mysql.
-    defaultValue: 2001
+    defaultValueExpression: 2001
     permittedValuesRegex: '[0-9]+'
 sourceEndpoints:
   - name: MySQL

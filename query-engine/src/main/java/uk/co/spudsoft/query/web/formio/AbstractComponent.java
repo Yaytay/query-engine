@@ -22,7 +22,9 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 /**
  * Base class for outputting a formio component.
@@ -135,6 +137,34 @@ public class AbstractComponent<T extends AbstractComponent<T>> implements Closea
    * @throws IOException if the generator fails.
    */
   protected T with(String key, LocalDateTime value) throws IOException {
+    if (value != null) {
+      generator.writeStringField(key, value.toString());
+    }
+    return (T) this;    
+  }
+  
+  /**
+   * Output a LocalDate value as a JSON field.
+   * @param key The key for the JSON field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
+  protected T with(String key, LocalDate value) throws IOException {
+    if (value != null) {
+      generator.writeStringField(key, value.toString());
+    }
+    return (T) this;    
+  }
+  
+  /**
+   * Output a LocalTime value as a JSON field.
+   * @param key The key for the JSON field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
+  protected T with(String key, LocalTime value) throws IOException {
     if (value != null) {
       generator.writeStringField(key, value.toString());
     }

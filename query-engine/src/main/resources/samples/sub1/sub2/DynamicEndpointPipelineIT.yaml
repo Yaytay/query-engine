@@ -3,12 +3,12 @@ arguments:
   - name: port
     type: Integer
     optional: true
-    defaultValue: 2001
+    defaultValueExpression: 2001
     permittedValuesRegex: '[0-9]+'
   - name: maxId
     type: Integer
     optional: true
-    defaultValue: 1000
+    defaultValueExpression: 1000
 sourceEndpoints:
   - name: db
     type: SQL

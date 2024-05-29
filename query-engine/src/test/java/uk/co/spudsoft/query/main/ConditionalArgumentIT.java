@@ -23,7 +23,6 @@ import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
 import io.restassured.http.Header;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import java.io.ByteArrayOutputStream;
@@ -217,8 +216,8 @@ public class ConditionalArgumentIT {
     logger.debug("Output with query but no token:", body);
     assertEquals("""
                  "value"	"name"	"defaultName"	"iterator"
-                 0	"Name From Query"	"Henry"	"0"
-                 1	"Name From Query"	"Henry"	"1"
+                 0	"Name From Query"	"Henry"	0
+                 1	"Name From Query"	"Henry"	1
                  """, body);
     
     // Output with token but no query
@@ -235,8 +234,8 @@ public class ConditionalArgumentIT {
     logger.debug("Output with token but no query:", body);
     assertEquals("""
                  "value"	"name"	"defaultName"	"iterator"
-                 0	"Name From Token"	"Henry"	"0"
-                 1	"Name From Token"	"Henry"	"1"
+                 0	"Name From Token"	"Henry"	0
+                 1	"Name From Token"	"Henry"	1
                  """, body);
     
     // Output with token and query
@@ -254,8 +253,8 @@ public class ConditionalArgumentIT {
     logger.debug("Output with token and query:", body);
     assertEquals("""
                  "value"	"name"	"defaultName"	"iterator"
-                 0	"Name From Token"	"Henry"	"0"
-                 1	"Name From Token"	"Henry"	"1"
+                 0	"Name From Token"	"Henry"	0
+                 1	"Name From Token"	"Henry"	1
                  """, body);
     
     main.shutdown();

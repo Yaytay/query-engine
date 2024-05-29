@@ -16,7 +16,7 @@ arguments:
     # If this condition is met (request.name is not set) then name is a mandatory argument.
     # If this condition is not met (i.e. if reguest.name is set) the defaultName argument will have its default value (and be unmodifiable from that).
     condition: "isEmpty(request.name)"
-    defaultValue: Henry
+    defaultValueExpression: '"Henry"'
 source:
   type: TEST
   rowCount: 2
@@ -30,6 +30,7 @@ processors:
   - type: EXPRESSION
     field: iterator
     fieldValue: iteration
+    fieldType: Integer
 formats:
 - type: Delimited
   name: tab

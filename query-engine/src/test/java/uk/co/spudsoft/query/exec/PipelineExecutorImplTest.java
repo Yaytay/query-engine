@@ -16,23 +16,29 @@
  */
 package uk.co.spudsoft.query.exec;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.net.MediaType;
 import inet.ipaddr.IPAddressString;
+import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import uk.co.spudsoft.query.defn.Argument;
+import uk.co.spudsoft.query.defn.ArgumentValue;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.defn.ProcessorLimit;
@@ -41,8 +47,12 @@ import uk.co.spudsoft.query.exec.procs.filters.ProcessorLimitInstance;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.FormatDelimited;
@@ -109,8 +119,8 @@ public class PipelineExecutorImplTest {
     Map<String, ArgumentInstance> result = instance.prepareArguments(
             req
             , Arrays.asList(
-                    Argument.builder().type(DataType.Long).name("arg1").optional(true).defaultValue("12").build()
-                    , Argument.builder().type(DataType.String).name("arg2").optional(true).defaultValue("message").build()
+                    Argument.builder().type(DataType.Long).name("arg1").optional(true).defaultValueExpression("12").build()
+                    , Argument.builder().type(DataType.String).name("arg2").optional(true).defaultValueExpression("'message'").build()
                     , Argument.builder().type(DataType.String).name("arg3").optional(true).build()
             )
             , 
@@ -124,8 +134,8 @@ public class PipelineExecutorImplTest {
     result = instance.prepareArguments(
             req
             , Arrays.asList(
-                    Argument.builder().type(DataType.Long).name("arg1").defaultValue("12").build()
-                    , Argument.builder().type(DataType.String).name("arg2").defaultValue("message").build()
+                    Argument.builder().type(DataType.Long).name("arg1").defaultValueExpression("12").build()
+                    , Argument.builder().type(DataType.String).name("arg2").defaultValueExpression("message").build()
                     , Argument.builder().type(DataType.String).name("arg3").optional(true).build()
             )
             , 
@@ -172,8 +182,8 @@ public class PipelineExecutorImplTest {
             req
             , 
             Arrays.asList(
-                    Argument.builder().type(DataType.Long).name("arg1").optional(true).defaultValue("12").build()
-                    , Argument.builder().type(DataType.String).name("arg2").optional(true).defaultValue("message").build()
+                    Argument.builder().type(DataType.Long).name("arg1").optional(true).defaultValueExpression("12").build()
+                    , Argument.builder().type(DataType.String).name("arg2").optional(true).defaultValueExpression("message").build()
                     , Argument.builder().type(DataType.String).name("arg3").optional(true).build()
             )
             , 
@@ -285,5 +295,149 @@ public class PipelineExecutorImplTest {
     // A Q that cannot be parsed as a double will be considered to be 0.0
     assertEquals(FormatType.XLSX, instance.getFormat(formats, drAcceptXlsxOverJsonWithBadQ).getType());
   }
-  
+
+  @Test
+  public void testValidatePipeline() {
+    Pipeline pipeline = Pipeline.builder().build();
+
+    PipelineExecutorImpl instance = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
+    Future<Pipeline> future = instance.validatePipeline(pipeline);
+    assertTrue(future.failed());
+    assertThat(future.cause(), instanceOf(IllegalArgumentException.class));
+    assertEquals("Source not specified in pipeline", future.cause().getMessage());
+  }
+
+  @Test
+  public void testPossibleValuesContains() {
+    Argument arg = Argument.builder().possibleValues(
+            Arrays.asList(
+                    ArgumentValue.builder().label("l1").value("v1").build()
+            )
+    ).build();
+    assertTrue(PipelineExecutorImpl.possibleValuesContains(arg, "v1"));
+    assertFalse(PipelineExecutorImpl.possibleValuesContains(arg, "v2"));
+  }
+
+  @Test
+  public void testAddCastItem() {
+    ImmutableList.Builder<Comparable<?>> builder = ImmutableList.<Comparable<?>>builder();
+    PipelineExecutorImpl.addCastItem(builder, DataType.Time, "12:34");
+    PipelineExecutorImpl.addCastItem(builder, DataType.Long, "12:34");
+    assertEquals(Arrays.asList(LocalTime.of(12, 34)), builder.build());
+  }
+
+  @Test
+  public void testEvaluateDefaultValues() {
+    RequestContext requestContext = new RequestContext("id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    
+    Argument arg = Argument.builder()
+            .type(DataType.Date)
+            .multiValued(true)
+            .build();
+    
+    ImmutableList<Comparable<?>> values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null, "['1971-05-06', '1968-07-30', ...]");
+    assertNotNull(values);
+    assertEquals(Arrays.asList(LocalDate.of(1971, 5, 6), LocalDate.of(1968, 7, 30)), values);
+
+    values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null, "['1923-05-06', '2042-07-30']");
+    assertNotNull(values);
+    assertEquals(Arrays.asList(LocalDate.of(1923, 5, 6), LocalDate.of(2042, 7, 30)), values);
+
+    arg = Argument.builder()
+            .type(DataType.Integer)
+            .multiValued(true)
+            .build();
+    
+    values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null, "[23, 45, null, ...]");
+    assertNotNull(values);
+    assertEquals(Arrays.asList(23, 45), values);
+
+    values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null, "[23, 45, null]");
+    assertNotNull(values);
+    assertEquals(Arrays.asList(23, 45), values);
+
+    arg = Argument.builder()
+            .type(DataType.Date)
+            .multiValued(true)
+            .permittedValuesRegex("\\d{4}-\\d{2}-\\d{2}")
+            .build();
+    
+    values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null, "['1971-05-06', '1968-07-30', ...]");
+    assertNotNull(values);
+    assertEquals(Arrays.asList(LocalDate.of(1971, 5, 6), LocalDate.of(1968, 7, 30)), values);
+
+    arg = Argument.builder()
+            .type(DataType.Date)
+            .multiValued(true)
+            .validate(false)
+            .permittedValuesRegex("ABCD")
+            .build();
+    
+    values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null, "['1971-05-06', '1968-07-30', ...]");
+    assertNotNull(values);
+    assertEquals(Arrays.asList(LocalDate.of(1971, 5, 6), LocalDate.of(1968, 7, 30)), values);
+  }
+
+  @Test
+  public void testValidateArgumentValue() {
+    Argument arg;
+    
+    // No constraints and casting is handled later:
+    arg = Argument.builder()
+            .type(DataType.Integer)
+            .multiValued(true)
+            .build();
+    PipelineExecutorImpl.validateArgumentValue(arg, null, "fred", true);
+    
+    // Still no constraints because possible values is empty and casting is handled later:
+    arg = Argument.builder()
+            .type(DataType.Integer)
+            .possibleValues(Collections.emptyList())
+            .multiValued(true)
+            .build();
+    PipelineExecutorImpl.validateArgumentValue(arg, null, "fred", true);
+    
+    // Now fail because value is not in possible values
+    Argument argPermitsBob = Argument.builder()
+            .name("testarg")
+            .type(DataType.Integer)
+            .possibleValues(Arrays.asList(ArgumentValue.builder().value("bob").build()))
+            .multiValued(true)
+            .build();
+    PipelineExecutorImpl.validateArgumentValue(argPermitsBob, null, "bob", true);
+    assertEquals("The argument \"testarg\" generated a default value which is not permitted, please contact the designer."
+            , assertThrows(IllegalArgumentException.class, () -> {
+              PipelineExecutorImpl.validateArgumentValue(argPermitsBob, null, "fred", true);
+            }).getMessage()
+            );
+    assertEquals("The argument \"testarg\" was passed a value which is not permitted."
+            , assertThrows(IllegalArgumentException.class, () -> {
+              PipelineExecutorImpl.validateArgumentValue(argPermitsBob, null, "fred", false);
+            }).getMessage()
+            );
+    
+    // Now fail because value is not in regex
+    Argument argPermitsRegex = Argument.builder()
+            .name("testarg")
+            .type(DataType.Integer)
+            .permittedValuesRegex("\\d+")
+            .multiValued(true)
+            .build();
+    Pattern pattern = Pattern.compile(argPermitsRegex.getPermittedValuesRegex());
+    PipelineExecutorImpl.validateArgumentValue(argPermitsRegex, pattern, "7", true);
+    assertEquals("The argument \"testarg\" generated a default value which is not permitted, please contact the designer."
+            , assertThrows(IllegalArgumentException.class, () -> {
+              PipelineExecutorImpl.validateArgumentValue(argPermitsRegex, pattern, "fred", true);
+            }).getMessage()
+            );
+    assertEquals("The argument \"testarg\" was passed a value which is not permitted."
+            , assertThrows(IllegalArgumentException.class, () -> {
+              PipelineExecutorImpl.validateArgumentValue(argPermitsRegex, pattern, "fred", false);
+            }).getMessage()
+            );
+    
+    
+    
+  }
+
 }

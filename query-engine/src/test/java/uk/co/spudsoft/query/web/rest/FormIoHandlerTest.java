@@ -16,10 +16,12 @@
  */
 package uk.co.spudsoft.query.web.rest;
 
+import inet.ipaddr.IPAddressString;
 import java.io.IOException;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import uk.co.spudsoft.query.exec.FilterFactory;
+import uk.co.spudsoft.query.exec.conditions.RequestContext;
 
 /**
  *
@@ -31,7 +33,9 @@ public class FormIoHandlerTest {
   @Test
   public void testPipelineStreamExceptions() throws IOException {
     
-    FormIoHandler.PipelineStreamer streamer = new FormIoHandler.PipelineStreamer(null, 0, new FilterFactory(Collections.emptyList()));
+    RequestContext requestContext = new RequestContext("requestId", "url", "host", "path", null, null, null, new IPAddressString("0.0.0.0"), null);
+
+    FormIoHandler.PipelineStreamer streamer = new FormIoHandler.PipelineStreamer(requestContext, null, 0, new FilterFactory(Collections.emptyList()));
     streamer.write(null);
     
   }

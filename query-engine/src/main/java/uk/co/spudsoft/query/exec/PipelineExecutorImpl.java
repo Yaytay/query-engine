@@ -25,7 +25,6 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -38,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Argument;
 import uk.co.spudsoft.query.defn.ArgumentValue;
 import uk.co.spudsoft.query.defn.Condition;
+import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.DynamicEndpoint;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.defn.Processor;
@@ -46,6 +46,7 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 import uk.co.spudsoft.query.main.ProtectedCredentials;
 import uk.co.spudsoft.query.defn.Format;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
+import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
@@ -134,7 +135,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     return result;
   }
   
-  private boolean possibleValuesContains(Argument argument, String value) {
+  static boolean possibleValuesContains(Argument argument, String value) {
     for (ArgumentValue argValue : argument.getPossibleValues()) {
       if (argValue.getValue().equals(value)) {
         return true;
@@ -143,9 +144,95 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     return false;
   }
   
+  static void addCastItem(ImmutableList.Builder<Comparable<?>> builder, DataType type, Object item) {
+    try {
+      builder.add(type.cast(item));
+    } catch (Throwable ex) {
+      logger.warn("Unable to cast '{}' ({}) as {}: ", item, item.getClass(), type, ex);
+    }
+  }
+  
+  static ImmutableList<Comparable<?>> evaluateDefaultValues(Argument arg, RequestContext requestContext, Pattern permittedValuesPattern, String expression) {
+    JexlEvaluator evaluator = new JexlEvaluator(expression);
+    Object raw = evaluator.evaluateAsObject(requestContext, null);
+    if (raw == null) {
+      return ImmutableList.of();
+    }
+    ImmutableList.Builder<Comparable<?>> builder = ImmutableList.<Comparable<?>>builder();
+    if (raw instanceof Object[] rawArray) {
+      for (Object item : rawArray) {
+        if (arg.isValidate()) {
+          if (item instanceof String stringItem) {
+            validateArgumentValue(arg, permittedValuesPattern, stringItem, true);
+          }
+        }
+        if (item != null) {
+          addCastItem(builder, arg.getType(), item);
+        }
+      }
+    } else if (raw instanceof List<?> rawList) {
+      for (Object item : rawList) {
+        if (arg.isValidate()) {
+          if (item instanceof String stringItem) {
+            validateArgumentValue(arg, permittedValuesPattern, stringItem, true);
+          }
+        }
+        if (item != null) {
+          addCastItem(builder, arg.getType(), item);
+        }
+      }
+    } else {
+      if (arg.isValidate()) {
+        if (raw instanceof String stringItem) {
+          validateArgumentValue(arg, permittedValuesPattern, stringItem, true);
+        }
+      }
+      addCastItem(builder, arg.getType(), raw);
+    }
+    return builder.build();
+  }
+
+  static ImmutableList<Comparable<?>> castAndValidatePassedValues(Argument arg, RequestContext requestContext, Pattern permittedValuesPattern, List<String> values) {
+    ImmutableList.Builder<Comparable<?>> builder = ImmutableList.<Comparable<?>>builder();
+    for (Object item : values) {
+      if (arg.isValidate()) {
+        if (item instanceof String stringItem) {
+          validateArgumentValue(arg, permittedValuesPattern, stringItem, false);
+        }
+      }
+      if (item != null) {
+        addCastItem(builder, arg.getType(), item);
+      }
+    }
+    return builder.build();
+  }
+
+  static void validateArgumentValue(Argument arg, Pattern permittedValuesPattern, String value, boolean defaultValue) throws IllegalArgumentException {
+    if (arg.getPossibleValues() != null && !arg.getPossibleValues().isEmpty()) {
+      if (!possibleValuesContains(arg, value)) {
+        if (defaultValue) {
+          logger.warn("Argument {} generated the default value \"{}\", which is not in the list of possible values ({})", arg.getName(), value, arg.getPossibleValues());
+          throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" generated a default value which is not permitted, please contact the designer.");
+        } else {
+          logger.warn("Argument {} was passed the value \"{}\", which is not in the list of possible values ({})", arg.getName(), value, arg.getPossibleValues());
+          throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" was passed a value which is not permitted.");
+        }
+      }
+    }
+    if (permittedValuesPattern != null && !permittedValuesPattern.matcher(value).matches()) {
+      if (defaultValue) {
+        logger.warn("Argument {} generated the default value \"{}\", which does not match \"{}\"", arg.getName(), value, arg.getPermittedValuesRegex());
+        throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" generated the default value which is not permitted, please contact the designer.");
+      } else {
+        logger.warn("Argument {} was passed the value \"{}\", which does not match \"{}\"", arg.getName(), value, arg.getPermittedValuesRegex());
+        throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" was passed a value which is not permitted.");        
+      }
+    }
+  }
+
   @Override
   public Map<String, ArgumentInstance> prepareArguments(RequestContext requestContext, List<Argument> definitions, MultiMap valuesMap) {
-    
+        
     Map<String, ArgumentInstance> result = new HashMap<>();
     Map<String, Object> arguments = new HashMap<>();
     if (valuesMap == null) {
@@ -155,54 +242,39 @@ public class PipelineExecutorImpl implements PipelineExecutor {
       if (arg.isIgnored()) {
         continue ;
       }
-      List<String> argValues = valuesMap.getAll(arg.getName());      
+
+      Pattern permittedValuesPattern = null;
+      if (arg.isValidate() && !Strings.isNullOrEmpty(arg.getPermittedValuesRegex())) {
+        try {
+          permittedValuesPattern = Pattern.compile(arg.getPermittedValuesRegex());
+        } catch (Throwable ex) {
+          throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" does not have a valid permittedValuesRegex." + ex.getMessage());
+        }
+      }
+      
+      List<String> argStringValues = valuesMap.getAll(arg.getName());      
+      ImmutableList<Comparable<?>> values = null;
       
       if (arg.getCondition() != null && !Strings.isNullOrEmpty(arg.getCondition().getExpression())) {
         ConditionInstance conditionInstance = arg.getCondition().createInstance();
         if (!conditionInstance.evaluate(requestContext, null)) {
           // Condition not met, either use default or skip this argument
-          if (Strings.isNullOrEmpty(arg.getDefaultValue())) {
+          if (Strings.isNullOrEmpty(arg.getDefaultValueExpression())) {
             continue ;
           } else {
-            argValues = Arrays.asList(arg.getDefaultValue());
+            values = evaluateDefaultValues(arg, requestContext, permittedValuesPattern, arg.getDefaultValueExpression());
           }
         }
       }
       
-      if (arg.isValidate()) {
-        for (String argValue : argValues) {
-          if (arg.getPossibleValues() != null && !arg.getPossibleValues().isEmpty()) {
-            if (!possibleValuesContains(arg, argValue)) {
-              logger.warn("Argument {} has been passed in as {}, the value {} is not in the list of possible values ({})"
-                      , arg.getName(), argValues, argValue, arg.getPossibleValues());
-              throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" passed in as the value \"" + argValue + "\" is not permitted.");
-            }
-          }
-        }
-      }
-      
-      ImmutableList<String> values = ImmutableList.of();
-      if (argValues != null && !argValues.isEmpty()) {
-        values = ImmutableList.copyOf(argValues);
+      if (values == null && argStringValues != null && !argStringValues.isEmpty()) {
+        values = castAndValidatePassedValues(arg, requestContext, permittedValuesPattern, argStringValues);
       } else if (!arg.isOptional()) {
         throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" is mandatory and was not provided.");
-      } else if (!Strings.isNullOrEmpty(arg.getDefaultValue())) {
-        // Default values need to be JEXL expressions
-        values = ImmutableList.of(arg.getDefaultValue());
-      }
-      
-      if (arg.isValidate() && !Strings.isNullOrEmpty(arg.getPermittedValuesRegex())) {
-        Pattern pattern;
-        try {
-          pattern = Pattern.compile(arg.getPermittedValuesRegex());
-        } catch (Throwable ex) {
-          throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" does not have a valid permittedValuesRegex." + ex.getMessage());
-        }
-        for (String value : values) {
-          if (!pattern.matcher(value).matches()) {
-            throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" has been passed a value that does not match its permittedValuesRegex.");
-          }
-        }
+      } else if (!Strings.isNullOrEmpty(arg.getDefaultValueExpression())) {
+        values = evaluateDefaultValues(arg, requestContext, permittedValuesPattern, arg.getDefaultValueExpression());
+      } else {
+        values = ImmutableList.of();
       }
       
       if (values.size() > 1 && !arg.isMultiValued()) {

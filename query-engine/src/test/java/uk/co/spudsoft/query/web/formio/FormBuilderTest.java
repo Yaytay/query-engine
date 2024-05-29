@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.web.formio;
 
+import inet.ipaddr.IPAddressString;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -36,6 +37,7 @@ import uk.co.spudsoft.query.defn.ArgumentValue;
 import uk.co.spudsoft.query.defn.FormatJson;
 import uk.co.spudsoft.query.defn.FormatXlsx;
 import uk.co.spudsoft.query.exec.FilterFactory;
+import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.pipeline.PipelineNodesTree;
 import uk.co.spudsoft.query.pipeline.PipelineNodesTree.PipelineFile;
 
@@ -165,7 +167,9 @@ public class FormBuilderTest {
             )
     );
     
-    FormBuilder fb = new FormBuilder(3, new FilterFactory(Collections.emptyList()));
+    RequestContext requestContext = new RequestContext("requestId", "url", "host", "path", null, null, null, new IPAddressString("0.0.0.0"), null);
+    
+    FormBuilder fb = new FormBuilder(requestContext, 3, new FilterFactory(Collections.emptyList()));
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     fb.buildForm(file, baos);
     baos.close();

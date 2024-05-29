@@ -21,7 +21,6 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.vertx.core.Vertx;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDate;
@@ -39,9 +38,9 @@ import uk.co.spudsoft.query.defn.ArgumentValue;
 import uk.co.spudsoft.query.defn.Format;
 import uk.co.spudsoft.query.exec.FilterFactory;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
+import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.pipeline.PipelineNodesTree.PipelineFile;
-import uk.co.spudsoft.query.web.RequestContextHandler;
 import uk.co.spudsoft.query.web.formio.DateTime.DatePicker;
 
 /**
@@ -58,17 +57,20 @@ public class FormBuilder {
   private static final Logger logger = LoggerFactory.getLogger(FormBuilder.class);
     
   private final JsonFactory factory;
+  private final RequestContext requestContext;
   private final int columns;
   private final FilterFactory filterFactory;
   
   /**
    * Constructor.
+   * @param requestContext the context of the request, for evaluating expressions.
    * @param columns The number of columns to use for the arguments.
    * @param filterFactory The FilterFactory to use to get filter arguments.3
    */
   @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
-  public FormBuilder(int columns, FilterFactory filterFactory) {
+  public FormBuilder(RequestContext requestContext, int columns, FilterFactory filterFactory) {
     this.factory = new JsonFactory();
+    this.requestContext = requestContext;
     this.columns = columns;
     this.filterFactory = filterFactory;
   }
@@ -120,7 +122,6 @@ public class FormBuilder {
   void buildArguments(JsonGenerator generator, PipelineFile pipeline) throws IOException {
     List<Argument> args = new ArrayList<>(pipeline.getArguments().size());
 
-    RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
     for (Argument arg : pipeline.getArguments()) {
       if (arg.getCondition() == null || Strings.isNullOrEmpty(arg.getCondition().getExpression())) {
         args.add(arg);
@@ -365,8 +366,33 @@ public class FormBuilder {
               .withEnableDate(arg.getType() == DataType.Date || arg.getType() == DataType.DateTime)
               .withEnableTime(arg.getType() == DataType.Time || arg.getType() == DataType.DateTime)              
             ;
-      if (!Strings.isNullOrEmpty(arg.getDefaultValue())) {
-        dateTime.withDefaultValue(arg.getDefaultValue());
+      if (!Strings.isNullOrEmpty(arg.getDefaultValueExpression())) {
+        JexlEvaluator evaluator = new JexlEvaluator(arg.getDefaultValueExpression());
+        Object result = evaluator.evaluateAsObject(requestContext, null);
+        if (result != null) {
+          if (arg.getType() == DataType.Date) {
+            try {
+              LocalDate defaultDate = (LocalDate) DataType.Date.cast(result);
+              dateTime.withDefaultDate(defaultDate);
+            } catch (Throwable ex) {
+              dateTime.withDefaultValue(result.toString());
+            }
+          } else if (arg.getType() == DataType.DateTime) {
+            try {
+              LocalDateTime defaultDateTime = (LocalDateTime) DataType.DateTime.cast(result);
+              dateTime.withDefaultDate(defaultDateTime);
+            } catch (Throwable ex) {
+              dateTime.withDefaultValue(result.toString());
+            }
+          } else if (arg.getType() == DataType.Time) {
+            try {
+              LocalTime defaultTime = (LocalTime) DataType.Time.cast(result);
+              dateTime.withDefaultDate(defaultTime);
+            } catch (Throwable ex) {
+              dateTime.withDefaultValue(result.toString());
+            }
+          }
+        }
       }
       
       try (Validation v = dateTime.addValidate()) {
@@ -389,8 +415,40 @@ public class FormBuilder {
             .withKey(arg.getName())
             .withMultiple(arg.isMultiValued())
             ;
-      if (!Strings.isNullOrEmpty(arg.getDefaultValue())) {
-        number.withDefaultValue(arg.getDefaultValue());
+      if (!Strings.isNullOrEmpty(arg.getDefaultValueExpression())) {
+        JexlEvaluator evaluator = new JexlEvaluator(arg.getDefaultValueExpression());
+        Object result = evaluator.evaluateAsObject(requestContext, null);
+        if (result != null) {
+          if (arg.getType() == DataType.Double) {
+            try {
+              Double defaultNum = (Double) DataType.Double.cast(result);
+              number.withDefaultValue(defaultNum.toString());
+            } catch (Throwable ex) {
+              number.withDefaultValue(result.toString());
+            }
+          } else if (arg.getType() == DataType.Float) {
+            try {
+              Float defaultNum = (Float) DataType.Float.cast(result);
+              number.withDefaultValue(defaultNum.toString());
+            } catch (Throwable ex) {
+              number.withDefaultValue(result.toString());
+            }
+          } else if (arg.getType() == DataType.Integer) {
+            try {
+              Integer defaultNum = (Integer) DataType.Integer.cast(result);
+              number.withDefaultValue(defaultNum.toString());
+            } catch (Throwable ex) {
+              number.withDefaultValue(result.toString());
+            }
+          } else if (arg.getType() == DataType.Long) {
+            try {
+              Long defaultNum = (Long) DataType.Long.cast(result);
+              number.withDefaultValue(defaultNum.toString());
+            } catch (Throwable ex) {
+              number.withDefaultValue(result.toString());
+            }
+          }
+        }        
       }
       
       try (Number.NumberValidation v = number.addNumberValidate()) {
@@ -447,8 +505,17 @@ public class FormBuilder {
             .withKey(arg.getName())
             .withMultiple(arg.isMultiValued())
             ;
-      if (!Strings.isNullOrEmpty(arg.getDefaultValue())) {
-        textField.withDefaultValue(arg.getDefaultValue());
+      if (!Strings.isNullOrEmpty(arg.getDefaultValueExpression())) {
+        JexlEvaluator evaluator = new JexlEvaluator(arg.getDefaultValueExpression());
+        Object result = evaluator.evaluateAsObject(requestContext, null);
+        if (result != null) {
+          try {
+            String defaultString = (String) DataType.String.cast(result);
+            textField.withDefaultValue(defaultString);
+          } catch (Throwable ex) {
+            textField.withDefaultValue(result.toString());
+          }
+        }        
       }
       
       try (Validation v = textField.addValidate()) {
@@ -470,8 +537,17 @@ public class FormBuilder {
       try (Validation v = select.addValidate()) {
         v.withRequired(!arg.isOptional());
       }
-      if (!Strings.isNullOrEmpty(arg.getDefaultValue())) {
-        select.withDefaultValue(arg.getDefaultValue());
+      if (!Strings.isNullOrEmpty(arg.getDefaultValueExpression())) {
+        JexlEvaluator evaluator = new JexlEvaluator(arg.getDefaultValueExpression());
+        Object result = evaluator.evaluateAsObject(requestContext, null);
+        if (result != null) {
+          try {
+            String defaultString = (String) DataType.String.cast(result);
+            select.withDefaultValue(defaultString);
+          } catch (Throwable ex) {
+            select.withDefaultValue(result.toString());
+          }
+        }        
       }
       if (isNullOrEmpty(arg.getPossibleValues())) {
         try (Select.DataUrl url = select.addDataUrl()) {

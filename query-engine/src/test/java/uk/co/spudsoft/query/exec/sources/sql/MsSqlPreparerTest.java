@@ -18,7 +18,7 @@ public class MsSqlPreparerTest {
   public void testSingleProvidedSingleValuedParameter() {
     AbstractSqlPreparer instance = new MsSqlPreparer();
 
-    ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of("id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7")));
+    ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of("id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L)));
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id", Boolean.FALSE, argSrc);
     assertEquals("select * from bob where id = @p1", result.query());
     assertEquals(7L, result.args().get(0));
@@ -29,7 +29,7 @@ public class MsSqlPreparerTest {
     AbstractSqlPreparer instance = new MsSqlPreparer();
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
-            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7"))
+            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))
             , "name", new ArgumentInstance(Argument.builder().name("name").type(DataType.String).build(), ImmutableList.of("fred"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id and name = :name", Boolean.TRUE, argSrc);
@@ -44,7 +44,7 @@ public class MsSqlPreparerTest {
     AbstractSqlPreparer instance = new MsSqlPreparer();
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
-            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7"))
+            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))
             , "name", new ArgumentInstance(Argument.builder().name("name").type(DataType.String).multiValued(true).build(), ImmutableList.of("fred", "bob"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id and name in (:name)", Boolean.FALSE, argSrc);
@@ -60,7 +60,7 @@ public class MsSqlPreparerTest {
     AbstractSqlPreparer instance = new MsSqlPreparer();
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
-            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7"))
+            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id and name = :name", Boolean.TRUE, argSrc);
     assertEquals("select * from bob where id = @p1 and name = @p2", result.query());
@@ -74,7 +74,7 @@ public class MsSqlPreparerTest {
     AbstractSqlPreparer instance = new MsSqlPreparer();
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
-            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7"))
+            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))
             , "name", new ArgumentInstance(Argument.builder().name("name").type(DataType.String).build(), ImmutableList.of("fred"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id and name = :name or othername = :name", Boolean.FALSE, argSrc);
@@ -89,7 +89,7 @@ public class MsSqlPreparerTest {
     AbstractSqlPreparer instance = new MsSqlPreparer();
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
-            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7"))
+            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))
             , "name", new ArgumentInstance(Argument.builder().name("name").type(DataType.String).multiValued(true).build(), ImmutableList.of("fred", "bob"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id and name in (:name) or othername in (:name)", Boolean.TRUE, argSrc);
@@ -105,7 +105,7 @@ public class MsSqlPreparerTest {
     AbstractSqlPreparer instance = new MsSqlPreparer();
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
-            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7"))
+            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id and name = :name or othername = :name", Boolean.FALSE, argSrc);
     assertEquals("select * from bob where id = @p1 and name = @p2 or othername = @p3", result.query());
@@ -120,7 +120,7 @@ public class MsSqlPreparerTest {
     AbstractSqlPreparer instance = new MsSqlPreparer();
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
-            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7"))
+            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))
             , "name", new ArgumentInstance(Argument.builder().name("name").type(DataType.String).build(), ImmutableList.of("fred"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id /* BIND and name = :name */", Boolean.TRUE, argSrc);
@@ -135,7 +135,7 @@ public class MsSqlPreparerTest {
     AbstractSqlPreparer instance = new MsSqlPreparer();
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
-            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7"))
+            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id /* BIND and name = :name */", Boolean.FALSE, argSrc);
     assertEquals("select * from bob where id = @p1 ", result.query());
@@ -148,7 +148,7 @@ public class MsSqlPreparerTest {
     AbstractSqlPreparer instance = new MsSqlPreparer();
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
-            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7"))
+            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))
             , "name", new ArgumentInstance(Argument.builder().name("name").type(DataType.String).multiValued(true).build(), ImmutableList.of("fred", "bob"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id /* BIND and name in (:name) */", Boolean.TRUE, argSrc);
@@ -164,7 +164,7 @@ public class MsSqlPreparerTest {
     AbstractSqlPreparer instance = new MsSqlPreparer();
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
-            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7"))
+            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))
             , "name", new ArgumentInstance(Argument.builder().name("name").type(DataType.String).multiValued(true).build(), ImmutableList.of("fred", "bob"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id /* BIND and name in (:name) */ or othername in (:name)", Boolean.FALSE, argSrc);
@@ -180,7 +180,7 @@ public class MsSqlPreparerTest {
     AbstractSqlPreparer instance = new MsSqlPreparer();
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
-            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7"))
+            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))
             , "name", new ArgumentInstance(Argument.builder().name("name").type(DataType.String).multiValued(true).build(), ImmutableList.of("fred", "bob"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id /* BIND and name in (:name) *//*BIND or othername in (:name)*/", Boolean.TRUE, argSrc);
@@ -196,7 +196,7 @@ public class MsSqlPreparerTest {
     AbstractSqlPreparer instance = new MsSqlPreparer();
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
-            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of("7"))
+            "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))
             , "name", new ArgumentInstance(Argument.builder().name("name").type(DataType.String).multiValued(true).build(), ImmutableList.of("fred", "bob"))
     );
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from \"bOb\" where id = :id /* BIND and name in (:name) *//*BIND or othername in (:name)*/", Boolean.TRUE, argSrc);

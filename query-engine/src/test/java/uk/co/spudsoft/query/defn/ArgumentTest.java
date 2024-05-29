@@ -102,9 +102,9 @@ public class ArgumentTest {
   @Test
   public void testGetDefaultValue() {
     Argument instance = Argument.builder().build();
-    assertNull(instance.getDefaultValue());
-    instance = Argument.builder().defaultValue("seven").build();
-    assertEquals("seven", instance.getDefaultValue());
+    assertNull(instance.getDefaultValueExpression());
+    instance = Argument.builder().defaultValueExpression("seven").build();
+    assertEquals("seven", instance.getDefaultValueExpression());
   }
 
   @Test
@@ -136,19 +136,19 @@ public class ArgumentTest {
     );
     Argument.builder().name("name").permittedValuesRegex("[A-Za-z]+").build().validate();
     
-    assertEquals("The argument \"arg\" has a minimum value of \"fred\" but this could not be parsed as \"Integer\"."
+    assertEquals("The argument \"arg\" has a minimum value of \"fred\" but that cannot be parsed as Integer."
             , assertThrows(IllegalArgumentException.class
                     , () -> Argument.builder().name("arg").type(DataType.Integer).minimumValue("fred").build().validate()
             ).getMessage()
     );
-    assertEquals("The argument \"arg\" has a maximum value of \"fred\" but this could not be parsed as \"Integer\"."
+    assertEquals("The argument \"arg\" has a maximum value of \"fred\" but that cannot be parsed as Integer."
             , assertThrows(IllegalArgumentException.class
                     , () -> Argument.builder().name("arg").type(DataType.Integer).maximumValue("fred").build().validate()
             ).getMessage()
     );
     assertEquals("The argument \"arg\" has a default value specified, but is not optional or conditional."
             , assertThrows(IllegalArgumentException.class
-                    , () -> Argument.builder().name("arg").type(DataType.Integer).defaultValue("7").optional(false).build().validate()
+                    , () -> Argument.builder().name("arg").type(DataType.Integer).defaultValueExpression("7").optional(false).build().validate()
             ).getMessage()
     );
     

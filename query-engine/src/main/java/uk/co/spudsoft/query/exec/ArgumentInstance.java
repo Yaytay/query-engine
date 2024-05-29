@@ -43,26 +43,14 @@ public final class ArgumentInstance {
    * @param definition The definition of the argument.
    * @param values The values for the argument as passed in as query string parameters.
    */
-  public ArgumentInstance(Argument definition, ImmutableList<String> values) {
+  public ArgumentInstance(Argument definition, ImmutableList<Comparable<?>> values) {
     this.definition = definition;
-    
-    ImmutableList.Builder<Comparable<?>> valueBuilder = ImmutableList.builder();
-    if (values != null) {
-      for (int i = 0; i < values.size(); ++i) {
-        try {
-          Comparable<?> parsed = parseValue(values.get(i));
-          valueBuilder.add(parsed);
-        } catch (Throwable ex) {
-          logger.warn("Failed to parse argument {} value {} (\"{}\") as {}", definition.getName(), i, values.get(i), definition.getType());
-          if (values.size() == 1) {
-            throw new IllegalArgumentException("Argument " + definition.getName() + " value could not be parsed as " + definition.getType().name());
-          } else {
-            throw new IllegalArgumentException("Argument " + definition.getName() + " value number " + (i + 1) + " could not be parsed as " + definition.getType().name());
-          }
-        }
+    this.values = values == null ? ImmutableList.of() : values;
+    for (Comparable<?> value : this.values) {
+      if (definition.getType() != DataType.fromObject(value)) {
+        throw new IllegalArgumentException("Argument " + definition.getName() + " set with the value \"" + value + "\" which is not " + definition.getType());
       }
     }
-    this.values = valueBuilder.build();
     if (!definition.isMultiValued() && this.values.size() > 1) {
       throw new IllegalArgumentException("Argument " + definition.getName() + " is not multi valued but " + this.values.size() + " values supplied");
     }
@@ -72,37 +60,23 @@ public final class ArgumentInstance {
   }
   
   /**
-   * Parse a single string as a specific DataType.
-   * @param type The type to convert to.
-   * @param value The string value to be parsed.
-   * @return a single string parsed as a specific DataType.
-   */
-  public static Comparable<?> parseValue(DataType type, String value) {
-    try {
-      return type.cast(value);
-    } catch (Throwable ex) {
-      logger.warn("Cannot parsse \"{}\" as {}", value, type);
-      throw new IllegalArgumentException("Cannot parse arguments as " + type, ex);
-    }
-  }
-  
-  /**
-   * Parse a single string value as the correct type for this instance.
-   * @param value The string value to be parsed.
-   * @return the string value as the correct type for this instance.
-   */
-  public Comparable<?> parseValue(String value) {
-    return parseValue(definition.getType(), value);
-  } 
-  
-  /**
    * Validate each currently known value for minimum and maximum.
    * @throws IllegalArgumentException if any value exceeds the known minima/maxima.
    */
   @SuppressWarnings({"rawtypes", "unchecked"})
   public void validateMinMax() throws IllegalArgumentException {
-    Comparable min = Strings.isNullOrEmpty(definition.getMinimumValue()) ? null : parseValue(definition.getMinimumValue());
-    Comparable max = Strings.isNullOrEmpty(definition.getMaximumValue()) ? null : parseValue(definition.getMaximumValue());
+    Comparable min;
+    Comparable max;
+    try {
+      min = Strings.isNullOrEmpty(definition.getMinimumValue()) ? null : definition.getType().cast(definition.getMinimumValue());
+    } catch (Exception ex) {
+      throw new IllegalArgumentException("Argument " + definition.getName() + " has a minimum value of \"" + definition.getMinimumValue() + "\", but that cannot be parsed as a " + definition.getType() + ".", ex);
+    }
+    try {
+      max = Strings.isNullOrEmpty(definition.getMaximumValue()) ? null : definition.getType().cast(definition.getMaximumValue());
+    } catch (Exception ex) {
+      throw new IllegalArgumentException("Argument " + definition.getName() + " has a maximum value of \"" + definition.getMaximumValue() + "\", but that cannot be parsed as a " + definition.getType() + ".", ex);
+    }
     
     for (Comparable<?> value : values) {
       if (min != null) {

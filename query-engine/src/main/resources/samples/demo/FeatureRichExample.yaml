@@ -22,14 +22,14 @@ arguments:
     prompt: start date
     description: The earliest date that the row must have.
     optional: true
-    defaultValue: 1971-05-06
+    defaultValueExpression: '"1971-05-06"'
   - name: maxId
     type: Long
     title: Maximum dataId
     optional: true
     prompt: max id
     description: Maximum values for the dataId.
-    defaultValue: 20
+    defaultValueExpression: 20
   - name: maxLong
     type: Long
     title: Maximum Long Value

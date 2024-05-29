@@ -74,9 +74,9 @@ public class FormIoHandler {
     private final PipelineFile pipeline;
     private final FormBuilder builder;
 
-    PipelineStreamer(PipelineFile pipeline, int columns, FilterFactory filterFactory) {
+    PipelineStreamer(RequestContext requestContext, PipelineFile pipeline, int columns, FilterFactory filterFactory) {
       this.pipeline = pipeline;
-      this.builder = new FormBuilder(columns, filterFactory);
+      this.builder = new FormBuilder(requestContext, columns, filterFactory);
     }
 
     @Override
@@ -157,7 +157,7 @@ public class FormIoHandler {
               .compose(root -> {
                 try {
                   PipelineFile file = findFile(root, path);
-                  return Future.succeededFuture(new PipelineStreamer(file, colCount, filterFactory));
+                  return Future.succeededFuture(new PipelineStreamer(requestContext, file, colCount, filterFactory));
                 } catch (Throwable ex) {
                   return Future.failedFuture(ex);
                 }

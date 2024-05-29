@@ -19,7 +19,9 @@ package uk.co.spudsoft.query.web.formio;
 import com.fasterxml.jackson.core.JsonGenerator;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 /**
  * Output a formio DateTime picker.
@@ -274,6 +276,26 @@ public class DateTime extends Component<DateTime> {
    * @throws IOException if the generator fails.
    */
   public DateTime withDefaultDate(final LocalDateTime value) throws IOException {
+    return with("defaultDate", value);
+  }
+
+  /**
+   * Output a defaultDate field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
+  public DateTime withDefaultDate(final LocalDate value) throws IOException {
+    return with("defaultDate", value);
+  }
+
+  /**
+   * Output a defaultDate field.
+   * @param value The value of the JSON field.
+   * @return this, so that the object can be used in a fluent manner.
+   * @throws IOException if the generator fails.
+   */
+  public DateTime withDefaultDate(final LocalTime value) throws IOException {
     return with("defaultDate", value);
   }
 
