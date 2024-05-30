@@ -84,6 +84,7 @@ public class DocHandler {
                                   , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.defn.Condition.html", "Condition")
                                   , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.main.CookieConfig.html", "CacheConfig")
                                   , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.main.Credentials.html", "Credentials")
+                                  , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.defn.DataType.html", "DataTypes")
                                   , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.main.DataSourceConfig.html", "DataSourceConfig")
                                   , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.main.JwtValidationConfig.html", "JwtValidationConfig")
                                   , new DocNodesTree.DocFile("Parameters/uk.co.spudsoft.query.logging.LogbackOptions.html", "LogbackOptions")

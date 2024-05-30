@@ -580,6 +580,8 @@
                 <additionalOption>uk.co.spudsoft.query.main.Audit</additionalOption>
                 <additionalOption>--include-classes</additionalOption>                	
                 <additionalOption>uk.co.spudsoft.query.defn.Condition</additionalOption>
+                <additionalOption>--include-classes</additionalOption>                	
+                <additionalOption>uk.co.spudsoft.query.defn.DataType</additionalOption>
               </additionalOptions>
             </configuration>
           </execution>      

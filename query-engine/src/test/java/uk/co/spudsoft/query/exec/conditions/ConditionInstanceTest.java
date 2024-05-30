@@ -86,9 +86,9 @@ public class ConditionInstanceTest {
     assertTrue(new ConditionInstance("request.jwt.scope.contains(\"qe2\")").evaluate(ctx, DataRow.EMPTY_ROW));
     assertFalse(new ConditionInstance("request.jwt.scope.contains(\"qe1\")").evaluate(ctx, DataRow.EMPTY_ROW));
     
-    assertTrue(new ConditionInstance("args.get('param3')").evaluate(ctx, null));
-    assertTrue(new ConditionInstance("args['param3']").evaluate(ctx, null));
-    assertFalse(new ConditionInstance("args['param4']").evaluate(ctx, null));
+    assertTrue(new ConditionInstance("params.get('param3')").evaluate(ctx, null));
+    assertTrue(new ConditionInstance("params['param3']").evaluate(ctx, null));
+    assertFalse(new ConditionInstance("params['param4']").evaluate(ctx, null));
   }
   
 }

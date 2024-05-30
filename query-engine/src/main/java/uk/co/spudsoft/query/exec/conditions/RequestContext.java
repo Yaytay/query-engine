@@ -101,7 +101,7 @@ public class RequestContext {
     this.host = extractHost(request);
     this.path = request.path();
     this.params = request.params();
-    this.arguments = multiMapToMap(request.params());
+    // this.arguments = multiMapToMap(request.params());
     this.headers = request.headers();
     this.cookies = ImmutableSet.copyOf(request.cookies());
     this.jwt = jwt;
@@ -474,6 +474,12 @@ public class RequestContext {
       }
       response.append("\"arguments\":");
       appendMap(response, arguments);
+    } else if (params != null) {
+      if (!response.isEmpty()) {
+        response.append(", ");
+      }
+      response.append("\"params\":");
+      appendMultiMap(response, params);
     }
     if (headers != null) {
       if (!response.isEmpty()) {
@@ -620,12 +626,18 @@ public class RequestContext {
   private static void appendMultiMap(StringBuilder builder, MultiMap map) {
     boolean started = false;
     builder.append("{");
-    for (Map.Entry<String, String> entry : map.entries()) {
+    for (String key : map.names()) {
       if (started) {
         builder.append(", ");          
       }
       started = true;
-      builder.append('"').append(entry.getKey()).append("\":\"").append(entry.getValue()).append('"');
+      List<String> values = map.getAll(key);
+      builder.append('"').append(key).append("\":");
+      if (values.size() == 1) {
+        appendValue(builder, values.get(0));
+      } else {
+        appendValue(builder, values);
+      }
     }
     builder.append("}");
   }

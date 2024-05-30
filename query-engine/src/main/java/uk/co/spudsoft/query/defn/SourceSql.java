@@ -152,7 +152,7 @@ public final class SourceSql implements Source {
    * @return a <a href="http://www.stringtemplate.org">String Template</a> version of the name of the endpoint that provides the data for the Source.
    */
   @Schema(description = """
-                        <P>A <a href="http://www.stringtemplate.org">String Template</a> version of the name of the endpoint that provides the data for the Source.</P>
+                        <P>A <a target="_blank" href="http://www.stringtemplate.org">String Template</a> version of the name of the endpoint that provides the data for the Source.</P>
                         <P>
                         The endpoint represents the SQL database that contains the actual data.
                         </P>
@@ -203,7 +203,7 @@ public final class SourceSql implements Source {
    * @return the query to run against the Endpoint, as a <a href="http://www.stringtemplate.org">String Template</a> that will be rendered first.
    */
   @Schema(description = """
-                        <P>The query to run against the Endpoint, as a <a href="http://www.stringtemplate.org">String Template</a> that will be rendered first.</P>
+                        <P>The query to run against the Endpoint, as a <a target="_blank" href="http://www.stringtemplate.org">String Template</a> that will be rendered first.</P>
                         <P>
                         A StringTemplate that results in a SQL statement.
                         </P>

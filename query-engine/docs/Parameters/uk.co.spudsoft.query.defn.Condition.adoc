@@ -30,7 +30,7 @@ The context of a Condition includes three variables:
 An com.google.common.collect.ImmutableMap  of query string arguments.
  
 
-The arguments will be typed according to their specified uk.co.spudsoft.query.defn.DataType  and will either be a single value or, if the argument is multi-valued, an com.google.common.collect.ImmutableList  or typed values.
+The arguments will be typed according to their specified xref:uk.co.spudsoft.query.defn.DataType.adoc[uk.co.spudsoft.query.defn.DataType]  and will either be a single value or, if the argument is multi-valued, an com.google.common.collect.ImmutableList  or typed values.
  
 
 Note that the arguments are only typed when a pipeline instance is created, if the arguments field is access before (i.e. in a folder permissions.jexl file) all values will be strings.

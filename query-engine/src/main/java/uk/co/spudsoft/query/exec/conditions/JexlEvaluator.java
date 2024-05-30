@@ -32,13 +32,29 @@ import uk.co.spudsoft.query.exec.DataRow;
  * An instance of a {@link uk.co.spudsoft.query.defn.Condition} to be evaluated before doing something else.
  * 
  * The context of a condition may include the following variables:
+ * 
  * <ul>
- * <li>request
+ * <li>request<br>
  * Details of the HTTP request, a {@link RequestContext} object.
- * <li>args
- * Query string arguments to the HTTP request, a {@link io.vertx.core.MultiMap} object.
- * <li>row
+ * 
+ * <li>args<br>
+ * Processed arguments to the pipeline, as a {@link java.util.Map Map} from argument name to either a single object or a {@link java.util.List List} of objects.
+ * Each argument will be the converted argument passed in (or the result of evaluating the {@link uk.co.spudsoft.query.defn.Argument#defaultValueExpression defaultValueExpresson}.
+ * 
+ * <li>uri<br>
+ * The full URI of the request as a Java {@link java.net.URI URI}.
+ * 
+ * <li>params<br>
+ * The raw query string arguments to the HTTP request, a {@link io.vertx.core.MultiMap MultiMap} object.
+ * Avoid using this variable, prefer the &quot;args&quot; variable.
+ * 
+ * <li>row<br>
  * If the condition is per-row it will include the {@link uk.co.spudsoft.query.exec.DataRow} object.
+ * 
+ * <li>iteration<br>
+ * A number that is incremented each time this instance of the expression is evaluated.
+ * This can be used as a surrogate for a row number on expressions evaluated whilst processing a stream, otherwise it is not very useful.
+ * 
  * </ul>
  * 
  * Conditions are <a href="uk.co.spudsoft.query.defn.Condition">JEXL</a> expressions.

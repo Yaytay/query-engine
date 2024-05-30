@@ -369,16 +369,20 @@ public class Argument {
    * @return the default value for the argument. 
    */
   @Schema(description = """
-                        The default value for the argument, as a <a href="https://commons.apache.org/proper/commons-jexl/">JEXL</a> <a href="https://commons.apache.org/proper/commons-jexl/reference/syntax.html">expression</a>.
+                        The default value for the argument, as a <a target="_blank" href="https://commons.apache.org/proper/commons-jexl/">JEXL</a> <a target="_blank" href="https://commons.apache.org/proper/commons-jexl/reference/syntax.html">expression</a>.
                         <P>
-                        The expression will be evaluated in the same context as a <a href="/ui/help/Parameters/uk.co.spudsoft.query.defn.Condition.html">Condition</a> would be, but the result is not constrained to being a boolean value.
+                        The expression will be evaluated in the same context as a <a target="_blank" href="/ui/help/Parameters/uk.co.spudsoft.query.defn.Condition.html">Condition</a> would be, but the result is not constrained to being a boolean value.
                         The evaluation may result in multiple values (as either an array or a Collection) or a single value.
                         Each value will be converted or parsed to the correct data type.
                         Be aware that multi-valued defaults don't work with formio.
                         <P>
-                        Numeric values can simply be entered on their own, but strings (and dates/times) must be quoted (single or double) which does complicate things when working with YAML files (where quotes are optional).
+                        Numeric values can simply be entered on their own, but strings must be quoted (single or double) which does complicate things when working with YAML files (where quotes are optional).
+                        <P>
+                        All output from a JEXL epression will be converted to the appropriate data type.
+                        This can either be by parsing a string, or by converting a specific Java type.
+                        <P>
                         When using the Design page of the Query Engine UI it is sufficient to enter a quoted string, but when editing a YAML file directly it will be necessary to quote the string twice (once for YAML and once for JEXL).
-                        Both YAML and JEXL can recognise single and double quotes, JEXL treats them the same but YAML does not (see <a href="https://www.yaml.info/learn/quote.html">To Quote or not to Quote?</a>).
+                        Both YAML and JEXL can recognise single and double quotes, JEXL treats them the same but YAML does not (see <a target="_blank" href="https://www.yaml.info/learn/quote.html">To Quote or not to Quote?</a>).
                         By default the recommended approach is to use single quotes for YAML and double quotes for JEXL.
                         <P>
                         Note that the default value should <em>not</em> be URL encoded.
