@@ -208,7 +208,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(200)
             .contentType(equalTo("application/json+velocity"))
-            .body(startsWith("{\r\n  \"arguments\": ["));
+            .body(startsWith("{\n  \"arguments\": ["));
     
     // Can get a json template file as correct type even if asked for any
     given().accept(ContentType.ANY).log().all()
@@ -216,7 +216,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(200)
             .contentType(equalTo("application/json+velocity"))
-            .body(startsWith("{\r\n  \"arguments\": ["));
+            .body(startsWith("{\n  \"arguments\": ["));
     
     // Can get a yaml template file as plain text even if asked for any
     given().accept(ContentType.ANY).log().all()
@@ -224,7 +224,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(200)
             .contentType(equalTo("application/yaml+velocity"))
-            .body(startsWith("arguments:\r\n  - name: key\r\n"));
+            .body(startsWith("arguments:\n  - name: key\n"));
     
     // Request for a file that does not exist should 404
     given().accept(ContentType.ANY).log().all()
