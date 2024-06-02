@@ -52,6 +52,7 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import org.junit.jupiter.api.BeforeAll;
 import uk.co.spudsoft.dircache.DirCache;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.main.ProtectedCredentials;
@@ -75,6 +76,23 @@ public class DynamicEndpointPipelineIT {
   private final ServerProvider serverProviderMs = new ServerProviderMsSQL();
   private final ServerProvider serverProviderMy = new ServerProviderMySQL();
   private final ServerProvider serverProviderPg = new ServerProviderPostgreSQL();
+  
+  @BeforeAll
+  public void prepareDatabase(Vertx vertx, VertxTestContext testContext) {
+    Future.all(
+            serverProviderMy.prepareContainer(vertx)
+            , serverProviderMs.prepareContainer(vertx)
+            , serverProviderPg.prepareContainer(vertx)
+    )
+            .compose(v -> {
+                return Future.all(
+                        serverProviderMy.prepareTestDatabase(vertx)
+                        , serverProviderMs.prepareTestDatabase(vertx)
+                        , serverProviderPg.prepareTestDatabase(vertx)
+                );
+            })
+            .andThen(testContext.succeedingThenComplete());      
+  }
     
   @Test
   @Timeout(value = 240, timeUnit = TimeUnit.SECONDS)
@@ -104,40 +122,22 @@ public class DynamicEndpointPipelineIT {
             , null
     );
     
-    serverProviderMy
-            .prepareContainer(vertx)
-            .compose(v -> serverProviderMs.prepareContainer(vertx))
-            .compose(v -> serverProviderPg.prepareContainer(vertx))
-            .compose(v -> {
-              logger.info("Loading {} sample data @{}", serverProviderMs.getName(), serverProviderMs.getPort());
-              return serverProviderMs.prepareTestDatabase(vertx);
-            })
-            .compose(v -> {
-              logger.info("Loading {} sample data @{}", serverProviderMy.getName(), serverProviderMy.getPort());
-              return serverProviderMy.prepareTestDatabase(vertx);
-            })
-            .compose(v -> {
-              logger.info("Loading {} sample data @{}", serverProviderPg.getName(), serverProviderPg.getPort());
-              return serverProviderPg.prepareTestDatabase(vertx);
-            })
-            .compose(v -> {
-              logger.info("Preparing dynamic endpoints");
-              SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getVertxUrl());
-              connectOptions.setUser(serverProviderMy.getUser());
-              connectOptions.setPassword(serverProviderMy.getPassword());
-              Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(1));
-              return pool.preparedQuery("delete from DynamicEndpoint")
-                      .execute()
-                      .compose(rs -> {
-                        return pool.preparedQuery("insert into DynamicEndpoint (endpointKey, type, url, username, password, useCondition) values (?, ?, ?, ?, ?, ?)")
-                            .executeBatch(
-                                    Arrays.asList(
-                                            Tuple.of("my", "SQL", serverProviderMy.getVertxUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
-                                            , Tuple.of("ms", "SQL", serverProviderMs.getVertxUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
-                                            , Tuple.of("pg", "SQL", serverProviderPg.getVertxUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
-                                    )
-                            );
-                      });
+    logger.info("Preparing dynamic endpoints");
+    SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getVertxUrl());
+    connectOptions.setUser(serverProviderMy.getUser());
+    connectOptions.setPassword(serverProviderMy.getPassword());
+    Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(1));
+    pool.preparedQuery("delete from DynamicEndpoint")
+            .execute()
+            .compose(rs -> {
+              return pool.preparedQuery("insert into DynamicEndpoint (endpointKey, type, url, username, password, useCondition) values (?, ?, ?, ?, ?, ?)")
+                  .executeBatch(
+                          Arrays.asList(
+                                  Tuple.of("my", "SQL", serverProviderMy.getVertxUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
+                                  , Tuple.of("ms", "SQL", serverProviderMs.getVertxUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
+                                  , Tuple.of("pg", "SQL", serverProviderPg.getVertxUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
+                          )
+                  );
             })
             .onComplete(ar -> {
               logger.debug("Data prepped");
@@ -209,30 +209,21 @@ public class DynamicEndpointPipelineIT {
             , null
     );
     
-    serverProviderMy
-            .prepareContainer(vertx)
-            .compose(v -> serverProviderMs.prepareContainer(vertx))
-            .compose(v -> serverProviderPg.prepareContainer(vertx))
-            .compose(v -> serverProviderMs.prepareTestDatabase(vertx))
-            .compose(v -> serverProviderMy.prepareTestDatabase(vertx))
-            .compose(v -> serverProviderPg.prepareTestDatabase(vertx))
-            .compose(v -> {
-              SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getVertxUrl());
-              connectOptions.setUser(serverProviderMy.getUser());
-              connectOptions.setPassword(serverProviderMy.getPassword());
-              Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(1));
-              return pool.preparedQuery("delete from DynamicEndpoint")
-                      .execute()
-                      .compose(rs -> {
-                        return pool.preparedQuery("insert into DynamicEndpoint (endpointKey, type, url, username, password, useCondition) values (?, ?, ?, ?, ?, ?)")
-                            .executeBatch(
-                                    Arrays.asList(
-                                            Tuple.of("my", "SQL", serverProviderMy.getVertxUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
-                                            , Tuple.of("ms", "SQL", serverProviderMs.getVertxUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
-                                            , Tuple.of("pg", "SQL", serverProviderPg.getVertxUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
-                                    )
-                            );
-                      });
+    SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getVertxUrl());
+    connectOptions.setUser(serverProviderMy.getUser());
+    connectOptions.setPassword(serverProviderMy.getPassword());
+    Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(1));
+    pool.preparedQuery("delete from DynamicEndpoint")
+            .execute()
+            .compose(rs -> {
+              return pool.preparedQuery("insert into DynamicEndpoint (endpointKey, type, url, username, password, useCondition) values (?, ?, ?, ?, ?, ?)")
+                  .executeBatch(
+                          Arrays.asList(
+                                  Tuple.of("my", "SQL", serverProviderMy.getVertxUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
+                                  , Tuple.of("ms", "SQL", serverProviderMs.getVertxUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
+                                  , Tuple.of("pg", "SQL", serverProviderPg.getVertxUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
+                          )
+                  );
             })
             .onComplete(ar -> {
               logger.debug("Data prepped");
@@ -309,30 +300,21 @@ public class DynamicEndpointPipelineIT {
             , null
     );
     
-    serverProviderMy
-            .prepareContainer(vertx)
-            .compose(v -> serverProviderMs.prepareContainer(vertx))
-            .compose(v -> serverProviderPg.prepareContainer(vertx))
-            .compose(v -> serverProviderMs.prepareTestDatabase(vertx))
-            .compose(v -> serverProviderMy.prepareTestDatabase(vertx))
-            .compose(v -> serverProviderPg.prepareTestDatabase(vertx))
-            .compose(v -> {
-              SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getVertxUrl());
-              connectOptions.setUser(serverProviderMy.getUser());
-              connectOptions.setPassword(serverProviderMy.getPassword());
-              Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(1));
-              return pool.preparedQuery("delete from DynamicEndpoint")
-                      .execute()
-                      .compose(rs -> {
-                        return pool.preparedQuery("insert into DynamicEndpoint (endpointKey, type, url, username, password, useCondition) values (?, ?, ?, ?, ?, ?)")
-                            .executeBatch(
-                                    Arrays.asList(
-                                            Tuple.of("my", "SQL", serverProviderMy.getVertxUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
-                                            , Tuple.of("ms", "SQL", serverProviderMs.getVertxUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
-                                            , Tuple.of("pg", "SQL", serverProviderPg.getVertxUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
-                                    )
-                            );
-                      });
+    SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getVertxUrl());
+    connectOptions.setUser(serverProviderMy.getUser());
+    connectOptions.setPassword(serverProviderMy.getPassword());
+    Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(1));
+    pool.preparedQuery("delete from DynamicEndpoint")
+            .execute()
+            .compose(rs -> {
+              return pool.preparedQuery("insert into DynamicEndpoint (endpointKey, type, url, username, password, useCondition) values (?, ?, ?, ?, ?, ?)")
+                  .executeBatch(
+                          Arrays.asList(
+                                  Tuple.of("my", "SQL", serverProviderMy.getVertxUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
+                                  , Tuple.of("ms", "SQL", serverProviderMs.getVertxUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
+                                  , Tuple.of("pg", "SQL", serverProviderPg.getVertxUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
+                          )
+                  );
             })
             .onComplete(ar -> {
               logger.debug("Data prepped");
@@ -406,40 +388,22 @@ public class DynamicEndpointPipelineIT {
             , null
     );
     
-    serverProviderMy
-            .prepareContainer(vertx)
-            .compose(v -> serverProviderMs.prepareContainer(vertx))
-            .compose(v -> serverProviderPg.prepareContainer(vertx))
-            .compose(v -> {
-              logger.info("Loading {} sample data @{}", serverProviderMs.getName(), serverProviderMs.getPort());
-              return serverProviderMs.prepareTestDatabase(vertx);
-            })
-            .compose(v -> {
-              logger.info("Loading {} sample data @{}", serverProviderMy.getName(), serverProviderMy.getPort());
-              return serverProviderMy.prepareTestDatabase(vertx);
-            })
-            .compose(v -> {
-              logger.info("Loading {} sample data @{}", serverProviderPg.getName(), serverProviderPg.getPort());
-              return serverProviderPg.prepareTestDatabase(vertx);
-            })
-            .compose(v -> {
-              logger.info("Preparing dynamic endpoints");
-              SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getVertxUrl());
-              connectOptions.setUser(serverProviderMy.getUser());
-              connectOptions.setPassword(serverProviderMy.getPassword());
-              Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(1));
-              return pool.preparedQuery("delete from DynamicEndpoint")
-                      .execute()
-                      .compose(rs -> {
-                        return pool.preparedQuery("insert into DynamicEndpoint (endpointKey, type, url, username, password, useCondition) values (?, ?, ?, ?, ?, ?)")
-                            .executeBatch(
-                                    Arrays.asList(
-                                            Tuple.of("my", "SQL", serverProviderMy.getVertxUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
-                                            , Tuple.of("ms", "SQL", serverProviderMs.getVertxUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
-                                            , Tuple.of("pg", "SQL", serverProviderPg.getVertxUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
-                                    )
-                            );
-                      });
+    logger.info("Preparing dynamic endpoints");
+    SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getVertxUrl());
+    connectOptions.setUser(serverProviderMy.getUser());
+    connectOptions.setPassword(serverProviderMy.getPassword());
+    Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(1));
+    pool.preparedQuery("delete from DynamicEndpoint")
+            .execute()
+            .compose(rs -> {
+              return pool.preparedQuery("insert into DynamicEndpoint (endpointKey, type, url, username, password, useCondition) values (?, ?, ?, ?, ?, ?)")
+                  .executeBatch(
+                          Arrays.asList(
+                                  Tuple.of("my", "SQL", serverProviderMy.getVertxUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
+                                  , Tuple.of("ms", "SQL", serverProviderMs.getVertxUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
+                                  , Tuple.of("pg", "SQL", serverProviderPg.getVertxUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
+                          )
+                  );
             })
             .onComplete(ar -> {
               logger.debug("Data prepped");

@@ -128,7 +128,7 @@ public class JwtValidationConfig {
    * to have a path as long as, when ".well-known/openid-configuration" is appended to it it results in a valid URL
    * to the OpenID configuration for that issuer.
    * <p>
-   * This value is <em>not</em> used to signify that the issuer should be derived from the header, that indication is driven entirely 
+   * This value is <i>not</i> used to signify that the issuer should be derived from the header, that indication is driven entirely 
    * by the {@link jwksEndpoints} value.
    * @return the path to be appended to the Host to derive the issuer.
    */
