@@ -96,7 +96,7 @@ public class ConcurrentRuleIT {
             .log().all()
             ;
     long endTime = System.currentTimeMillis();
-    assertThat(endTime - startTime, greaterThan(5000L));
+    assertThat(endTime - startTime, greaterThan(2500L));
     
     List<Response> responses = new ArrayList<>();
     Thread thread1 = new Thread(() -> runQuery(responses));
