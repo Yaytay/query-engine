@@ -108,7 +108,6 @@ public class AuthQueryMsIT {
       , "--persistence.datasource.user.username=" + mssql.getUser()
       , "--persistence.datasource.user.password=" + mssql.getPassword()
       , "--persistence.retryLimit=100"
-      , "--persistence.retryIncrementMs=500"
       , "--baseConfigPath=" + baseConfigDir
       , "--vertxOptions.eventLoopPoolSize=5"
       , "--vertxOptions.workerPoolSize=5"

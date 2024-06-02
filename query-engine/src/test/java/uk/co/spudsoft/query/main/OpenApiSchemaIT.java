@@ -86,7 +86,6 @@ public class OpenApiSchemaIT {
       , "--persistence.datasource.user.username=" + postgres.getUser()
       , "--persistence.datasource.user.password=" + postgres.getPassword()
       , "--persistence.retryLimit=100"
-      , "--persistence.retryIncrementMs=500"
       , "--baseConfigPath=target/query-engine/samples-mainqueryit"
       , "--vertxOptions.eventLoopPoolSize=5"
       , "--vertxOptions.workerPoolSize=5"

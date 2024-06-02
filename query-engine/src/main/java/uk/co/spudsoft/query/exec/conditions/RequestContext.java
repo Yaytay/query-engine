@@ -272,10 +272,12 @@ public class RequestContext {
       Span span = Span.current();
       if (span != null) {
         SpanContext spanContext = span.getSpanContext();
-        if (spanContext.getTraceId().equals(spanContext.getSpanId())) {
-          return spanContext.getSpanId();
-        } else {
-          return spanContext.getTraceId() + "/" + spanContext.getSpanId();
+        if (spanContext.isValid()) {
+          if (spanContext.getTraceId().equals(spanContext.getSpanId())) {
+            return spanContext.getSpanId();
+          } else {
+            return spanContext.getTraceId() + "/" + spanContext.getSpanId();
+          }
         }
       }
     }

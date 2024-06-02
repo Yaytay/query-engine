@@ -830,7 +830,11 @@ public class Main extends Application {
   }
 
   static OpenTelemetry buildOpenTelemetry(TracingConfig config) {
-
+    
+    if  (config.getProtocol() == TracingProtocol.none) {
+      return null;
+    }
+      
     ResourceBuilder resourceBuilder = Resource.getDefault().toBuilder()
             .put("service.name", config.getServiceName())
             .put("service.version", Version.MAVEN_PROJECT_VERSION)

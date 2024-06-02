@@ -63,7 +63,6 @@ public class MainQueryIT {
       , "--persistence.datasource.user.username=" + mysql.getUser()
       , "--persistence.datasource.user.password=" + mysql.getPassword()
       , "--persistence.retryLimit=100"
-      , "--persistence.retryIncrementMs=500"
       , "--baseConfigPath=" + baseConfigDir
       , "--vertxOptions.eventLoopPoolSize=5"
       , "--vertxOptions.workerPoolSize=5"
