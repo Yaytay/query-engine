@@ -47,7 +47,7 @@
       <dependency>
         <groupId>io.opentelemetry</groupId>
         <artifactId>opentelemetry-bom</artifactId>
-        <version>1.38.0</version>
+        <version>1.39.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -250,7 +250,7 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-jexl3</artifactId>
-      <version>3.3</version>
+      <version>3.4.0</version>
     </dependency>
     <dependency>
       <!-- Required for sasl SCRAM-SHA-256 authentication against PostgreSQL with vertx client -->
