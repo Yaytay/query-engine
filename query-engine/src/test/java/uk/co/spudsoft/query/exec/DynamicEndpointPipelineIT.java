@@ -22,6 +22,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.junit5.Timeout;
@@ -52,7 +53,8 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import org.junit.jupiter.api.BeforeAll;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.testcontainers.shaded.org.awaitility.Awaitility;
 import uk.co.spudsoft.dircache.DirCache;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.main.ProtectedCredentials;
@@ -77,28 +79,37 @@ public class DynamicEndpointPipelineIT {
   private final ServerProvider serverProviderMy = new ServerProviderMySQL();
   private final ServerProvider serverProviderPg = new ServerProviderPostgreSQL();
   
-  @BeforeAll
-  public void prepareDatabase(Vertx vertx, VertxTestContext testContext) {
-    Future.all(
-            serverProviderMy.prepareContainer(vertx)
-            , serverProviderMs.prepareContainer(vertx)
-            , serverProviderPg.prepareContainer(vertx)
-    )
-            .compose(v -> {
-                return Future.all(
-                        serverProviderMy.prepareTestDatabase(vertx)
-                        , serverProviderMs.prepareTestDatabase(vertx)
-                        , serverProviderPg.prepareTestDatabase(vertx)
-                );
-            })
-            .andThen(testContext.succeedingThenComplete());      
+  private Future<Void> databasesPrepped = null;
+  
+  public Future<Void> prepareDatabase(Vertx vertx) {
+    if (databasesPrepped == null) {
+      databasesPrepped = Future.all(
+              serverProviderMy.prepareContainer(vertx)
+              , serverProviderMs.prepareContainer(vertx)
+              , serverProviderPg.prepareContainer(vertx)
+      )
+              .compose(v -> {
+                  return Future.all(
+                          serverProviderMy.prepareTestDatabase(vertx)
+                          , serverProviderMs.prepareTestDatabase(vertx)
+                          , serverProviderPg.prepareTestDatabase(vertx)
+                  );
+              })
+              .mapEmpty()
+              ;
+    }
+    return databasesPrepped;
   }
     
   @Test
-  @Timeout(value = 240, timeUnit = TimeUnit.SECONDS)
+  @Timeout(value = 600, timeUnit = TimeUnit.SECONDS)
   public void testHandlingWithDynamicEndpoint(Vertx vertx, VertxTestContext testContext) throws Throwable {
     logger.info("testHandlingWithDynamicEndpoint");
 
+    Future<Void> prepFuture = prepareDatabase(vertx);
+    Awaitility.await().atMost(60, TimeUnit.SECONDS).until(() -> prepFuture.isComplete());
+    assertTrue(prepFuture.succeeded());
+    
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     CacheConfig cacheConfig = new CacheConfig();
     cacheConfig.setMaxDuration(Duration.ZERO);
@@ -182,10 +193,14 @@ public class DynamicEndpointPipelineIT {
   }
 
   @Test
-  @Timeout(value = 120, timeUnit = TimeUnit.SECONDS)
+  @Timeout(value = 600, timeUnit = TimeUnit.SECONDS)
   public void testHandlingDynamicEndpointFailureBadPort(Vertx vertx, VertxTestContext testContext) throws Throwable {
     logger.info("testHandlingDynamicEndpointFailureBadPort");
 
+    Future<Void> prepFuture = prepareDatabase(vertx);
+    Awaitility.await().atMost(60, TimeUnit.SECONDS).until(() -> prepFuture.isComplete());
+    assertTrue(prepFuture.succeeded());
+        
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     CacheConfig cacheConfig = new CacheConfig();
     cacheConfig.setMaxDuration(Duration.ZERO);
@@ -273,10 +288,14 @@ public class DynamicEndpointPipelineIT {
   }
 
   @Test
-  @Timeout(value = 120, timeUnit = TimeUnit.SECONDS)
+  @Timeout(value = 600, timeUnit = TimeUnit.SECONDS)
   public void testHandlingDynamicEndpointFailureNoKey(Vertx vertx, VertxTestContext testContext) throws Throwable {
     logger.info("testHandlingDynamicEndpointFailureNoKey");
 
+    Future<Void> prepFuture = prepareDatabase(vertx);
+    Awaitility.await().atMost(60, TimeUnit.SECONDS).until(() -> prepFuture.isComplete());
+    assertTrue(prepFuture.succeeded());
+    
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     CacheConfig cacheConfig = new CacheConfig();
     cacheConfig.setMaxDuration(Duration.ZERO);
@@ -363,10 +382,14 @@ public class DynamicEndpointPipelineIT {
   }
 
   @Test
-  @Timeout(value = 240, timeUnit = TimeUnit.SECONDS)
+  @Timeout(value = 600, timeUnit = TimeUnit.SECONDS)
   public void testHandlingWithDynamicEndpointMissingSecret(Vertx vertx, VertxTestContext testContext) throws Throwable {
     logger.info("testHandlingWithDynamicEndpoint");
 
+    Future<Void> prepFuture = prepareDatabase(vertx);
+    Awaitility.await().atMost(60, TimeUnit.SECONDS).until(() -> prepFuture.isComplete());
+    assertTrue(prepFuture.succeeded());
+    
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     CacheConfig cacheConfig = new CacheConfig();
     cacheConfig.setMaxDuration(Duration.ZERO);
