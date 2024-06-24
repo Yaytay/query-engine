@@ -70,3 +70,4 @@ Any number of xref:Parameters/uk.co.spudsoft.query.main.AuthEndpoint.adoc[authen
 When a user attempts to login (which will happen on first access to the UI if xref:Parameters/uk.co.spudsoft.query.main.SessionConfig.adoc#requireSession[requireSession] is set) they will be presented with a list of all the auth endpoints to choose from.
 
 After authenticating with their chosen provider the generated JWT will be stored in the Query Engine database and a random cookie (configured at xref:Parameters/uk.co.spudsoft.query.main.SessionConfig.adoc#sessionCookie[sessionCookie]) will be generated to refer to it.
+

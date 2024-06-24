@@ -24,8 +24,8 @@ The rules of environment variables in Linux shells can cause problems in some si
 In order to avoid conflict with other variables, only variables with the prefix "query-engine" (or "QUERY_ENGINE") will be considered.
 Thus either of these environment variables can be used for setting the password for accessing the persistence data source:
 
-** QUERY_ENGINE.PERSISTENCE_DATASOURCE_USER_PASSWORD
-** query-engine.persistence.dataSource.user.password
+  * QUERY_ENGINE.PERSISTENCE_DATASOURCE_USER_PASSWORD
+  * query-engine.persistence.dataSource.user.password
 
 * System properties
 

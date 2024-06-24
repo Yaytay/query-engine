@@ -2,6 +2,19 @@
 
 The quickest way to get a feel for the Query Engine is to use the link:query-engine-compose.yml[compose file].
 
+For consistency this document assumes you are using Linux or WSL, very similar commands should work on Windows.
+
+Download that file and save it to a new directory.
+Open a shell and CD to that directory, then run:
+
+```bash
+docker compose -f query-engine-compose.yml -p query-engine up -d
+```
+
+Then navigate to http://localhost:2000/ in your favourite browser.
+
+== Details
+
 This compose file needs to be run on a single container host (i.e. not Swarm or Kubernetes) with localhost ports 2000-2003 free (as well as the ports required by Jaeger: 5775/udp, 6831/udp, 6832/udp, 5778, 4317, 4318, 16686, 14268).
 It spawns five containers: MySQL, Microsoft SQL Server, PostgreSQL, Jaeger all-in-one and Query Engine in link:pass:[Design Mode/Design Mode.html][Design Mode].
 
@@ -31,6 +44,9 @@ For real use this volume should point to a git (or other SCM) repository for you
 
 Putting this behaviour together means that when the Query Engine starts using the provided compose file it is a demonstrable system that can be
 experienced with minimal additional work.
+
+NOTE: Although the system deployed is fully operational the History section of the UI will not return any data because you have not logged in.
+The data is recorded and you are encouraged to have a look at the mysql database (localhost:2001/test, credentials are in the compose file) to see it.
 
 [frame=none,cols="1,6,1",grid=none]
 |===
