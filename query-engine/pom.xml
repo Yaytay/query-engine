@@ -744,6 +744,7 @@
             <configuration>
               <url>https://github.com/Yaytay/query-engine-ui/releases/latest/download/build.tar.gz</url>
               <unpack>true</unpack>
+              <skipCache>true</skipCache>
               <followRedirects>true</followRedirects>
               <outputDirectory>target/ui-build</outputDirectory>
             </configuration>
