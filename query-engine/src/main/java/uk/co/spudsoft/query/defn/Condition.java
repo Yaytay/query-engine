@@ -222,7 +222,7 @@ public class Condition {
 
     private Builder() {
     }
-
+    
     /**
      * Set the expression of the Condition in the builder.
      * @param value the expression of the Condition in the builder.
@@ -248,6 +248,15 @@ public class Condition {
    */
   public static Condition.Builder builder() {
     return new Condition.Builder();
+  }
+
+  /**
+   * Construct a new Builder object with an expression.
+   * @param expression The expression.
+   * @return a new Builder object with an expression.
+   */
+  public static Condition.Builder builder(String expression) {
+    return new Condition.Builder().expression(expression);
   }
 
 }
