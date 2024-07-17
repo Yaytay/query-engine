@@ -14,29 +14,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package uk.co.spudsoft.query.web.formio;
 
-package uk.co.spudsoft.query.main;
+import com.fasterxml.jackson.core.JsonGenerator;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.io.IOException;
 
 /**
- * Set the version from the pom.
- * <p>
- * This file is updated by com.google.code.maven-replacer-plugin/replacer maven plugin.
- * 
+ * Output a formio TextField component.
+ *
  * @author jtalbut
  */
-public final class Version {
+public class CheckBox extends Component<CheckBox> {
 
   /**
-   * The project name, as set in the Maven pom.xml.
+   * Constructor.
+   * 
+   * @param generator The Jackson JsonGenerator for FormIO.
+   * @throws IOException if something goes wrong.
    */
-  public static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-  
-  /**
-   * The project version, as set in the Maven pom.xml.
-   */
-  public static final String MAVEN_PROJECT_VERSION = "0.0.40-main";
-
-  private Version() {
+  @SuppressFBWarnings({"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"})
+  public CheckBox(JsonGenerator generator) throws IOException {
+    super(generator, "checkbox");
   }
   
 }

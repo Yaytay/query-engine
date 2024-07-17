@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Argument;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.ArgumentValue;
+import static uk.co.spudsoft.query.defn.DataType.Null;
 import uk.co.spudsoft.query.defn.Format;
 import uk.co.spudsoft.query.exec.FilterFactory;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
@@ -169,25 +170,22 @@ public class FormBuilder {
 
   private void buildArgument(Argument arg, JsonGenerator generator) throws IOException, IllegalStateException {
     switch (arg.getType()) {
-      case Date:
-      case Time:
-      case DateTime:
-        buildDateTime(generator, arg);
-        break;
-      case Double:
-      case Integer:
-      case Long:
-        buildNumber(generator, arg);
-        break;
-      case String:
+      case Date, Time, DateTime -> buildDateTime(generator, arg);
+      case Double, Integer, Long, Float -> buildNumber(generator, arg);
+      case String -> {
         if (!isNullOrEmpty(arg.getPossibleValues()) || !Strings.isNullOrEmpty(arg.getPossibleValuesUrl())) {
           buildSelect(generator, arg);
         } else {
           buildTextField(generator, arg);
         }
-        break;
-      default:
-        throw new IllegalStateException("New types added to DataType and not implemented here");
+      }
+      case Boolean -> buildCheckBox(generator, arg);
+      case Null -> {
+        logger.warn("Argument {} is of null type", arg.getName());
+      }
+      default -> {
+        logger.warn("Argument {} is of unknown type ({})", arg.getName(), arg.getType());
+      }
     }
   }
   
@@ -353,6 +351,36 @@ public class FormBuilder {
         }
       }
     }
+  }
+  
+  void buildCheckBox(JsonGenerator generator, Argument arg) throws IOException {
+    try (CheckBox checkbox = new CheckBox(generator)) {
+      checkbox
+            .withLabel(arg.getTitle())
+            .withPlaceholder(arg.getPrompt())
+            .withDescription(arg.getDescription())
+            .withKey(arg.getName())
+            .withMultiple(arg.isMultiValued())
+            ;
+      if (!Strings.isNullOrEmpty(arg.getDefaultValueExpression())) {
+        JexlEvaluator evaluator = new JexlEvaluator(arg.getDefaultValueExpression());
+        Object result = evaluator.evaluateAsObject(requestContext, null);
+        if (result != null) {
+          try {
+            Boolean defaultBoolean = (Boolean) DataType.Boolean.cast(result);
+            if (defaultBoolean != null) {
+              checkbox.withDefaultValue(defaultBoolean.toString());
+            }
+          } catch (Throwable ex) {
+            checkbox.withDefaultValue(result.toString());
+          }
+        }        
+      }
+      
+      try (Validation v = checkbox.addValidate()) {
+        v.withRequired(!arg.isOptional());
+      }
+    }    
   }
   
   void buildDateTime(JsonGenerator generator, Argument arg) throws IOException {    

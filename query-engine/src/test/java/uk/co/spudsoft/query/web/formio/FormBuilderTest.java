@@ -24,6 +24,7 @@ import java.util.Collections;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -160,6 +161,23 @@ public class FormBuilderTest {
                             .multiValued(true)
                             .optional(false)
                             .build()
+                    ,
+                    Argument.builder()
+                            .name("arg3")
+                            .title("Third Arg")
+                            .description("The third argument")
+                            .type(DataType.Boolean)
+                            .optional(true)
+                            .build()
+                    ,
+                    Argument.builder()
+                            .name("arg4")
+                            .title("Fourht Arg")
+                            .description("The fourht argument")
+                            .type(DataType.Null)
+                            .optional(true)
+                            .build()
+                    
             )
             , Arrays.asList(
                     FormatXlsx.builder().build()
@@ -181,6 +199,8 @@ public class FormBuilderTest {
     assertThat(result.length(), greaterThan(100));
     assertThat(result, containsString("<h2>Title</h2>"));
     assertThat(result, containsString("<p>description</p>"));
+    assertThat(result, containsString("\"arg3\""));
+    assertThat(result, not(containsString("\"arg4\"")));
   }
 
 }
