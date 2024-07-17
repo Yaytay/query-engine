@@ -62,9 +62,7 @@ public class ProcessorMapTest {
     assertThrows(IllegalArgumentException.class, () -> {
       ProcessorMap.builder().relabels(Arrays.asList(ProcessorMapLabel.builder().build())).build().validate();
     }, "Zero relabels provided");
-    assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorMap.builder().relabels(Arrays.asList(ProcessorMapLabel.builder().sourceLabel("source").build())).build().validate();
-    }, "Zero relabels provided");
+    ProcessorMap.builder().relabels(Arrays.asList(ProcessorMapLabel.builder().sourceLabel("source").build())).build().validate();
     ProcessorMap.builder().relabels(Arrays.asList(ProcessorMapLabel.builder().sourceLabel("source").newLabel("new").build())).build().validate();
   }
   

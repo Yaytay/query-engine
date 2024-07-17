@@ -43,9 +43,6 @@ public class ProcessorMapLabel {
     if (Strings.isNullOrEmpty(sourceLabel)) {
       throw new IllegalArgumentException("No source field name provided for relabel");
     }
-    if (newLabel == null) {
-      throw new IllegalArgumentException("No new field name provided for relabel - the new field name may be an empty string but cannot be null");
-    }
   }
   
   /**
@@ -67,11 +64,11 @@ public class ProcessorMapLabel {
   /**
    * The new name of the field, may be blank to remove a field.
    * <p>
-   * This value may not be null, but may be blank.
+   * This value may be null or blank, both of which will remove the field from the stream.
    * @return the new name of the field, may be blank to remove a field.
    */
   @Schema(description = """
-                        The new name of the field, may be blank to remove a field.
+                        The new name of the field, may be null or blank, both of which will remove the field from the stream.
                         """
           , maxLength = 100
           , requiredMode = Schema.RequiredMode.REQUIRED
