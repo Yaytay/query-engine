@@ -222,6 +222,15 @@ public class Condition {
 
     private Builder() {
     }
+
+    /**
+     * Construct the builder with an initial expression.
+     * This enables shortcutting of condition values, primarily for parameters.
+     * @param expression the JEXL expression.
+     */
+    public Builder(String expression) {
+      this.expression = expression;
+    }
     
     /**
      * Set the expression of the Condition in the builder.
@@ -248,15 +257,6 @@ public class Condition {
    */
   public static Condition.Builder builder() {
     return new Condition.Builder();
-  }
-
-  /**
-   * Construct a new Builder object with an expression.
-   * @param expression The expression.
-   * @return a new Builder object with an expression.
-   */
-  public static Condition.Builder builder(String expression) {
-    return new Condition.Builder().expression(expression);
   }
 
 }
