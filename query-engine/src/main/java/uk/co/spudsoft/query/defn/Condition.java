@@ -17,17 +17,10 @@
 package uk.co.spudsoft.query.defn;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.core.JacksonException;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
@@ -112,8 +105,6 @@ import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
  * 
  * @author jtalbut
  */
-@JsonDeserialize(using = Condition.Deserializer.class) 
-@JsonSerialize(using = Condition.Serializer.class) 
 @Schema(description = """
                       <P>
                       Conditions are expressions using <A href="https://commons.apache.org/proper/commons-jexl/" target="_blank">JEXL</A> that control access to something.
@@ -161,6 +152,7 @@ import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
                       Checks that the host on the request is localhost.
                       </UL>
                       """)
+@JsonDeserialize(builder = Condition.Builder.class)
 public class Condition {
   
   private static final Logger logger = LoggerFactory.getLogger(Condition.class);
@@ -188,7 +180,7 @@ public class Condition {
   public String getExpression() {
     return expression;
   }
-  
+ 
   /**
    * Validate the Condition.
    * <p>
@@ -214,45 +206,48 @@ public class Condition {
     return new ConditionInstance(expression);
   }
   
-  /**
-   * Jackson {@link com.fasterxml.jackson.databind.JsonDeserializer} for Conditions.
-   */
-  public static class Deserializer extends JsonDeserializer<Condition> {
-
-    /**
-     * Constructor.
-     */
-    public Deserializer() {
-    }
-
-    @Override
-    public Condition deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
-      return new Condition(p.getText());
-    }
-    
-  }
-    
-  /**
-   * Jackson {@link com.fasterxml.jackson.databind.JsonSerializer} for Conditions.
-   */
-  public static class Serializer extends JsonSerializer<Condition> {  
-
-    /**
-     * Constructor.
-     */
-    public Serializer() {
-    }
-
-    @Override
-    public void serialize(Condition value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-      gen.writeString(value.getExpression());
-    }
-    
-  }
-
   @Override
   public String toString() {
     return "Condition{" + "expression=" + expression + '}';
   }
-       
+
+  /**
+   * Builder class for Condition objects.
+   */
+  @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "Builder class should result in all instances being immutable when object is built")
+  @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
+  public static class Builder {
+
+    private String expression;
+
+    private Builder() {
+    }
+
+    /**
+     * Set the expression of the Condition in the builder.
+     * @param value the expression of the Condition in the builder.
+     * @return this, so that the builder may be used fluently.
+     */
+    public Builder expression(final String value) {
+      this.expression = value;
+      return this;
+    }
+
+    /**
+     * Construct a new Condition object.
+     * @return a new Condition object.
+     */
+    public Condition build() {
+      return new uk.co.spudsoft.query.defn.Condition(expression);
+    }
+  }
+
+  /**
+   * Construct a new Builder object.
+   * @return a new Builder object.
+   */
+  public static Condition.Builder builder() {
+    return new Condition.Builder();
+  }
+
 }

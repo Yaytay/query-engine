@@ -96,7 +96,7 @@ public class ConditionTest {
     
     String json = Json.encode(owner);
     logger.debug("Json: {}", json);
-    assertEquals("{\"condition\":\"1 == 3-2\"}", json);
+    assertEquals("{\"condition\":{\"expression\":\"1 == 3-2\"}}", json);
     
     Owner owner2 = Json.decodeValue(json, Owner.class);
     logger.debug("Owners: {} & {}", owner, owner2);

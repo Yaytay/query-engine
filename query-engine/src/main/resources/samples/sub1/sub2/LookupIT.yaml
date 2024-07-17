@@ -58,7 +58,8 @@ source:
         , d."instant"
 processors:
 - type: LOOKUP
-  condition: "!args['includeLookupsInQuery']"
+  condition:
+    expression: "!args['includeLookupsInQuery']"
   map:
     source:
       type: SQL
@@ -83,7 +84,8 @@ processors:
   - keyField: ref6
     valueField: value6
 - type: MAP
-  condition: args['removeRefColumnsFromResults']
+  condition:
+    expression: args['removeRefColumnsFromResults']
   relabels:
   - sourceLabel: ref1
     newLabel: ''

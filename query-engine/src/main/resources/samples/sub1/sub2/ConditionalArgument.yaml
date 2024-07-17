@@ -7,7 +7,8 @@ arguments:
     optional: false
     # If this condition is met (request.name is not set) then name is a mandatory argument.
     # If this condition is not met (i.e. if reguest.name is set) there will be no name argument.
-    condition: "isEmpty(request.name)"
+    condition:
+      expression: "isEmpty(request.name)"
   - name: defaultName
     title: The name of the user, with a default value
     prompt: name
@@ -15,7 +16,8 @@ arguments:
     optional: true
     # If this condition is met (request.name is not set) then name is a mandatory argument.
     # If this condition is not met (i.e. if reguest.name is set) the defaultName argument will have its default value (and be unmodifiable from that).
-    condition: "isEmpty(request.name)"
+    condition:
+      expression: "isEmpty(request.name)"
     defaultValueExpression: '"Henry"'
 source:
   type: TEST

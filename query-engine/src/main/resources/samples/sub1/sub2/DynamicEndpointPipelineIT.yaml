@@ -14,7 +14,8 @@ sourceEndpoints:
     type: SQL
     urlTemplate: "mysql://localhost:<args.port>/test"
     secret: cred
-    condition: true
+    condition:
+      expression: true
 dynamicEndpoints:
 - keyField: endpointKey
   conditionField: cond
