@@ -172,13 +172,14 @@ public class SourceSqlStreamingInstance extends AbstractSource {
             })
             .compose(conn -> {
               connection = conn;
+              logger.info("Preparing SQL: {}", sql);
               return prepareSqlStatement(conn, sql);
             }).compose(ps -> {
               preparedStatement = ps;
               return connection.begin();
             }).compose(tran -> {
               transaction = tran;
-              logger.trace("Creating SQL stream on {}", connection);
+              logger.debug("Executing SQL stream on {} with {}", connection, args);
               MetadataRowStreamImpl rowStream = new MetadataRowStreamImpl(preparedStatement, context, definition.getStreamingFetchSize(), args);
               rowStreamWrapper = new RowStreamWrapper(this, connection, transaction, rowStream);
               return rowStreamWrapper.ready();

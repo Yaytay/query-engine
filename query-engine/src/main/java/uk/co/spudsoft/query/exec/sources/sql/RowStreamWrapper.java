@@ -84,7 +84,11 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
         if (cd.jdbcType() == JDBCType.OTHER && OTHER_TYPES_TO_TREAT_AS_STRING.contains(cd.typeName())) {
           types.putIfAbsent(cd.name(), DataType.String);
         } else {
-          types.putIfAbsent(cd.name(), DataType.fromJdbcType(cd.jdbcType()));
+          try {
+            types.putIfAbsent(cd.name(), DataType.fromJdbcType(cd.jdbcType()));
+          } catch (Throwable ex) {
+            logger.warn("Failed to process column {}: ", cd.name(), ex);
+          }
         }
       }
       readyPromise.complete();
