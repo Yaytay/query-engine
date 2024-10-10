@@ -211,8 +211,9 @@ public final class Pipeline extends SourcePipeline {
                         A condition that constrains who can use the Pipeline.
                         </P>
                         """
-            , implementation = String.class
-            , externalDocs = @ExternalDocumentation(description = "Conditions", url = "")
+          , implementation = String.class
+          , externalDocs = @ExternalDocumentation(description = "Conditions", url = "")
+          , maxLength = 1000000
     )
   public Condition getCondition() {
     return condition;
