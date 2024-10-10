@@ -112,7 +112,7 @@ public class OpenApiSchemaIT {
     assertThat(body, containsString("SpudSoft Query Engine"));
     
     JsonObject jo = new JsonObject(body);
-    logger.debug("OpenAPI: {}", jo);
+    logger.info("OpenAPI: {}", jo);
     JsonObject schemas = jo.getJsonObject("components").getJsonObject("schemas");
     List<String> validationFailures = new ArrayList<>();
     validateRefs(validationFailures, body);
