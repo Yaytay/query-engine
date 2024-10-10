@@ -134,6 +134,8 @@ public class AuditHistoryRow {
           description = """
                         Arguments passed to the pipeline.
                         """
+          , types = "object"
+          , schemaResolution = Schema.SchemaResolution.INLINE
           , requiredMode = Schema.RequiredMode.REQUIRED
   )
   @SuppressFBWarnings(value="EI_EXPOSE_REP", justification = "AuditHistory is just a carrier")
