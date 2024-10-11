@@ -90,7 +90,6 @@ jobs:
                           
     - name: Upload site reports on success
       uses: actions/upload-artifact@v4
-      if: success()
       with:
         name: reports
         path: |
