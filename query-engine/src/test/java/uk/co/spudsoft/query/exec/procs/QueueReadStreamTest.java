@@ -20,13 +20,22 @@ import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 
 /**
@@ -67,6 +76,69 @@ public class QueueReadStreamTest {
       }      
     });
     
+  }
+  
+  @Test
+  public void testManual(Vertx vertx) throws InterruptedException {
+    
+    Context context = vertx.getOrCreateContext();
+    QueueReadStream<Integer> qrs = new QueueReadStream<>(context);
+    for (int i = 0; i < 30; ++i) {
+      qrs.add(i);
+    }
+    qrs.complete();
+    
+    IllegalStateException ex1 = assertThrows(IllegalStateException.class, () -> {
+      qrs.add(31);
+    });
+    assertEquals("Last item has already been sent", ex1.getMessage());
+    
+    IllegalArgumentException ex2 = assertThrows(IllegalArgumentException.class, () -> {
+      qrs.fetch(-1);
+    });
+    assertEquals("Negative fetch amount", ex2.getMessage());
+    
+    List<Integer> received = new ArrayList<>();
+    AtomicBoolean ended = new AtomicBoolean();
+    qrs.handler(value -> {
+      received.add(value);
+    });
+    qrs.endHandler(v -> {
+      ended.set(true);
+    });
+    
+    qrs.fetch(5);
+    await().atMost(1, TimeUnit.MINUTES).until(() -> {
+      return received.size() >= 5;
+    });
+    Thread.sleep(100);
+    assertThat(received, hasSize(5));
+    assertFalse(ended.get());
+
+    qrs.fetch(10);
+    await().atMost(1, TimeUnit.MINUTES).until(() -> {
+      return received.size() >= 15;
+    });
+    Thread.sleep(100);
+    assertThat(received, hasSize(15));
+    assertFalse(ended.get());
+
+    qrs.fetch(10);
+    await().atMost(1, TimeUnit.MINUTES).until(() -> {
+      return received.size() >= 25;
+    });
+    Thread.sleep(100);
+    assertThat(received, hasSize(25));
+    assertFalse(ended.get());
+    
+
+    qrs.fetch(10);
+    await().atMost(1, TimeUnit.MINUTES).until(() -> {
+      return received.size() >= 30;
+    });
+    Thread.sleep(100);
+    assertThat(received, hasSize(30));
+    assertTrue(ended.get());
   }
   
 }

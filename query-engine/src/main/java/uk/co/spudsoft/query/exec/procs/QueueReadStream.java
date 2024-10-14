@@ -192,7 +192,7 @@ public class QueueReadStream<T> implements ReadStream<T> {
   @Override
   public QueueReadStream<T> fetch(long amount) {
     if (amount < 0L) {
-      throw new IllegalArgumentException();
+      throw new IllegalArgumentException("Negative fetch amount");
     }
     synchronized (lock) {
       demand += amount;
