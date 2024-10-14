@@ -88,8 +88,9 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
                           
-    - name: Upload site reports on success
+    - name: Upload site reports
       uses: actions/upload-artifact@v4
+      if: always()
       with:
         name: reports
         path: |
