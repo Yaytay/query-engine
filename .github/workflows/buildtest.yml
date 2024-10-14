@@ -88,11 +88,22 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
                           
-    - name: Upload site reports
+    - name: Upload site reports on success
       uses: actions/upload-artifact@v4
-      if: always()
+      if: success()
       with:
         name: reports
+        retention-days: 90
+        path: |
+          query-engine/target/site
+          query-engine-design-mode/target/site
+                          
+    - name: Upload site reports on failure
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: reports
+        retention-days: 3
         path: |
           query-engine/target/site
           query-engine-design-mode/target/site
