@@ -122,6 +122,10 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
   @Override
   DataRow processChildren(DataRow parentRow, Collection<DataRow> childRows) {
     logger.debug("Got child rows: {}", childRows);
+    if (parentRow == null) {
+      logger.warn("No parentRow matching {}", childRows);
+      return null;
+    }
     for (FieldDefn fieldDefn : fields) {
       boolean added = false;
       parentRow.putTypeIfAbsent(fieldDefn.name, fieldDefn.type);

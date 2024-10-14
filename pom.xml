@@ -225,7 +225,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-checkstyle-plugin</artifactId>
-          <version>3.4.0</version>
+          <version>3.5.0</version>
           <configuration>
             <configLocation>${basedir}/../checkstyle.xml</configLocation>
             <consoleOutput>true</consoleOutput>
@@ -402,7 +402,7 @@
         <plugin>
           <groupId>org.owasp</groupId>
           <artifactId>dependency-check-maven</artifactId>
-          <version>10.0.3</version>
+          <version>10.0.4</version>
           <configuration>
             <failBuildOnCVSS>8</failBuildOnCVSS>
             <failOnError>false</failOnError>
@@ -426,7 +426,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
-          <version>3.7.1</version>
+          <version>3.8.0</version>
           <executions>
             <execution>
               <id>copy-dependencies</id>
@@ -545,7 +545,7 @@
         <plugin>
           <groupId>io.fabric8</groupId>
           <artifactId>docker-maven-plugin</artifactId>
-          <version>0.44.0</version>
+          <version>0.45.1</version>
           <executions>
             <execution>
               <phase>install</phase>
