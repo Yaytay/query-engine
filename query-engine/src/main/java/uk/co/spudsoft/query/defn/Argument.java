@@ -92,7 +92,7 @@ public class Argument {
         throw new IllegalArgumentException("The argument \"" + name + "\" does not have a valid permittedValuesRegex." + ex.getMessage());
       }
     }
-    if (!Strings.isNullOrEmpty(defaultValueExpression) && !optional && ! hidden && condition == null) {
+    if (!Strings.isNullOrEmpty(defaultValueExpression) && !optional && !hidden && condition == null) {
       throw new IllegalArgumentException("The argument \"" + name + "\" has a default value specified, but is not optional, hidden or conditional.");
     }
     if (!Strings.isNullOrEmpty(minimumValue)) {
