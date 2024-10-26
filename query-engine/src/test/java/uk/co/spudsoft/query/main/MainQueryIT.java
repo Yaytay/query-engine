@@ -40,7 +40,6 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
  * 
  * @author jtalbut
  */
-//@ExtendWith(VertxExtension.class)
 public class MainQueryIT {
   
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
@@ -70,7 +69,6 @@ public class MainQueryIT {
       , "--httpServerOptions.tracingPolicy=ALWAYS"
       , "--pipelineCache.maxDuration=PT10M"
       , "--logging.jsonFormat=true"
-      , "--zipkin.baseUrl=http://localhost/wontwork"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.jwksEndpoints[0]=http://localhost/"
       , "--jwt.defaultJwksCacheDuration=PT1M"

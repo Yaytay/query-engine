@@ -19,32 +19,27 @@ package uk.co.spudsoft.query.main;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
-import io.vertx.core.Vertx;
-import io.vertx.junit5.VertxExtension;
-import io.vertx.junit5.VertxTestContext;
-import java.io.File;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
-import io.vertx.junit5.Timeout;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.concurrent.TimeUnit;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
 
 /**
- *
+ * Note that this set of tests requires the sample data to be loaded, but relies on the "loadSampleData" flag to make it happen.
+ * When running with the full set of tests this won't actually stress that flag because others tests may have already
+ * loaded the sample data.
+ * 
  * @author jtalbut
  */
-@ExtendWith(VertxExtension.class)
 public class MainQueryIT {
   
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
@@ -53,33 +48,21 @@ public class MainQueryIT {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(MainQueryIT.class);
   
-  @BeforeAll
-  public static void createDirs(Vertx vertx, VertxTestContext testContext) {
-    File paramsDir = new File("target/query-engine/samples-mainqueryit");
-    Main.prepareBaseConfigPath(paramsDir, null);
-    postgres.prepareTestDatabase(vertx)
-            .compose(v -> mysql.prepareTestDatabase(vertx))
-            .onComplete(testContext.succeedingThenComplete())
-            ;
-    new File("target/classes/samples/sub1/sub3").mkdirs();
-  }
-  
   @Test
-  @Timeout(value = 2400, timeUnit = TimeUnit.SECONDS)
   public void testQuery() throws Exception {
-    Main main = new DesignMain();
+    GlobalOpenTelemetry.resetForTest();
+    Main main = new Main();
+    String baseConfigDir = "target/query-engine/samples-mainqueryit";
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
-    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
-        "--persistence.datasource.url=" + mysql.getJdbcUrl()
+      "--persistence.datasource.url=" + mysql.getJdbcUrl()
       , "--persistence.datasource.adminUser.username=" + mysql.getUser()
       , "--persistence.datasource.adminUser.password=" + mysql.getPassword()
       , "--persistence.datasource.user.username=" + mysql.getUser()
       , "--persistence.datasource.user.password=" + mysql.getPassword()
       , "--persistence.retryLimit=100"
-      , "--persistence.retryIncrementMs=500"
-      , "--baseConfigPath=target/query-engine/samples-mainqueryit"
+      , "--baseConfigPath=" + baseConfigDir
       , "--vertxOptions.eventLoopPoolSize=5"
       , "--vertxOptions.workerPoolSize=5"
       , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
@@ -87,8 +70,22 @@ public class MainQueryIT {
       , "--pipelineCache.maxDuration=PT10M"
       , "--logging.jsonFormat=true"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
+      , "--jwt.jwksEndpoints[0]=http://localhost/"
       , "--jwt.defaultJwksCacheDuration=PT1M"
-      , "--zipkin.baseUrl=http://localhost/wontwork"
+      , "--managementEndpoints[0]=health"
+      , "--sampleDataLoads[0].url=" + postgres.getVertxUrl()
+      , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()
+      , "--sampleDataLoads[0].adminUser.password=" + postgres.getPassword()
+      , "--sampleDataLoads[1].url=" + mysql.getVertxUrl()
+      , "--sampleDataLoads[1].user.username=" + mysql.getUser()
+      , "--sampleDataLoads[1].user.password=" + mysql.getPassword()
+      , "--sampleDataLoads[2].url=sqlserver://localhost:1234/test"
+      , "--sampleDataLoads[2].adminUser.username=sa"
+      , "--sampleDataLoads[2].adminUser.password=unknown"
+      , "--sampleDataLoads[3].url=wibble"
+      , "--tracing.protocol=otlphttp"
+      , "--tracing.sampler=alwaysOn"
+      , "--tracing.url=http://nonexistent/otlphttp"
     }, stdout);
     
     RestAssured.port = main.getPort();
@@ -103,6 +100,7 @@ public class MainQueryIT {
     
     assertThat(body, startsWith("openapi: 3.1.0"));
     assertThat(body, containsString("SpudSoft Query Engine"));
+    assertThat(body, not(containsString("empty")));
     
     body = given()
             .log().all()
@@ -114,17 +112,31 @@ public class MainQueryIT {
     
     assertThat(body, containsString("\"openapi\" : \"3.1.0\","));
     assertThat(body, containsString("SpudSoft Query Engine"));
+    assertThat(body, not(containsString("empty")));
     
     body = given()
             .log().all()
             .get("/api/info/available")
             .then()
-            .log().ifError()
+            .log().all()
             .statusCode(200)
             .extract().body().asString();
     
     assertThat(body, startsWith("{\"name\":\"\",\"children\":[{\"name\":\"args\",\"children\":[{\"name\":\"Args00\",\"path\":\"args/Args00\",\"title\":\"No Arguments\",\"description\":\"Test pipeline that has no arguments\",\"arguments"));
-
+    assertThat(body, containsString("\"mediaType\":\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\""));
+        
+    body = given()
+            .log().all()
+            .get("/api/formio/demo/FeatureRichExample")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .extract().body().asString();
+    
+    assertThat(body, startsWith("{\"type\":\"form\""));
+    assertThat(body, not(containsString("clientIp")));
+    assertThat(body, containsString("Output"));
+        
     body = given()
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
@@ -199,8 +211,18 @@ public class MainQueryIT {
             .extract().body().asString();
     
     assertThat(body, startsWith("<table class=\"qetable\"><thead>\n<tr class=\"header\"><th class=\"header evenCol\" >dataId</th><th class=\"header oddCol\" >instant</th><th class=\"header evenCol\" >ref</th><th class=\"header oddCol\" >value</th><th class=\"header evenCol\" >children</th></tr>\n</thead><tbody>\n<tr class=\"dataRow evenRow\" ><td class=\"evenRow evenCol\">1</td><td class=\"evenRow oddCol\">1971-05-07T03:00</td><td class=\"evenRow evenCol\">antiquewhite</td><td class=\"evenRow oddCol\">first</td><td class=\"evenRow evenCol\">one</td></tr>"));
+
+    body = given()
+            .queryParam("key", postgres.getName())
+            .queryParam("port", postgres.getPort())
+            .log().all()
+            .get("/api/history")
+            .then()
+            .log().ifError()
+            .statusCode(401)
+            .extract().body().asString();
     
     main.shutdown();
   }
-
+  
 }
