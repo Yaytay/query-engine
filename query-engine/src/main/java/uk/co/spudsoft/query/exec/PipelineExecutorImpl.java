@@ -255,6 +255,10 @@ public class PipelineExecutorImpl implements PipelineExecutor {
       List<String> argStringValues = valuesMap.getAll(arg.getName());      
       ImmutableList<Comparable<?>> values = null;
       
+      if (arg.isHidden() && argStringValues != null && !argStringValues.isEmpty()) {
+        throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" is not permitted.");
+      }
+      
       if (arg.getCondition() != null && !Strings.isNullOrEmpty(arg.getCondition().getExpression())) {
         ConditionInstance conditionInstance = arg.getCondition().createInstance();
         if (!conditionInstance.evaluate(requestContext, null)) {
@@ -269,7 +273,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
       
       if (values == null && argStringValues != null && !argStringValues.isEmpty()) {
         values = castAndValidatePassedValues(arg, requestContext, permittedValuesPattern, argStringValues);
-      } else if (!arg.isOptional()) {
+      } else if (!arg.isOptional() && !arg.isHidden()) {
         throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" is mandatory and was not provided.");
       } else if (!Strings.isNullOrEmpty(arg.getDefaultValueExpression())) {
         values = evaluateDefaultValues(arg, requestContext, permittedValuesPattern, arg.getDefaultValueExpression());

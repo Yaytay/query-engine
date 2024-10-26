@@ -143,6 +143,20 @@ public class FeatureRichQueryIT {
     
     assertThat(body, equalTo("[]"));
     
+    body = given()
+            .queryParam("minDate", "2971-05-06")
+            .queryParam("_fmt", "json")
+            .queryParam("clientIp", "192.168.1.1")
+            .accept("text/html")
+            .log().all()
+            .get("/query/demo/FeatureRichExample")
+            .then()
+            .log().ifError()
+            .statusCode(400)
+            .extract().body().asString();
+    
+    assertThat(body, equalTo("The argument \"clientIp\" is not permitted."));
+    
     byte[] bodyBytes = given()
             .queryParam("minDate", "1971-05-06")
             .queryParam("_fmt", "xlsx")

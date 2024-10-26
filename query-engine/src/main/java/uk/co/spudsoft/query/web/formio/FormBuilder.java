@@ -124,6 +124,9 @@ public class FormBuilder {
     List<Argument> args = new ArrayList<>(pipeline.getArguments().size());
 
     for (Argument arg : pipeline.getArguments()) {
+      if (arg.isHidden()) {
+        continue ;
+      }
       if (arg.getCondition() == null || Strings.isNullOrEmpty(arg.getCondition().getExpression())) {
         args.add(arg);
       } else {

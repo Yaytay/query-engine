@@ -136,6 +136,7 @@ public class MainQueryIT {
             .extract().body().asString();
     
     assertThat(body, startsWith("{\"type\":\"form\""));
+    assertThat(body, not(containsString("clientIp")));
     assertThat(body, containsString("Output"));
         
     body = given()

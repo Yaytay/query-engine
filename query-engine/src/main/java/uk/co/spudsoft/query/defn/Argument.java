@@ -61,6 +61,7 @@ public class Argument {
   private final String prompt;
   private final String description;
   private final boolean optional;
+  private final boolean hidden;
   private final boolean multiValued;
   private final boolean ignored;
   private final boolean validate;
@@ -91,8 +92,8 @@ public class Argument {
         throw new IllegalArgumentException("The argument \"" + name + "\" does not have a valid permittedValuesRegex." + ex.getMessage());
       }
     }
-    if (!Strings.isNullOrEmpty(defaultValueExpression) && !optional && condition == null) {
-      throw new IllegalArgumentException("The argument \"" + name + "\" has a default value specified, but is not optional or conditional.");
+    if (!Strings.isNullOrEmpty(defaultValueExpression) && !optional && ! hidden && condition == null) {
+      throw new IllegalArgumentException("The argument \"" + name + "\" has a default value specified, but is not optional, hidden or conditional.");
     }
     if (!Strings.isNullOrEmpty(minimumValue)) {
       try {
@@ -235,6 +236,27 @@ public class Argument {
           )
   public boolean isOptional() {
     return optional;
+  }
+
+  /**
+   * Return true if the argument is hidden.
+   * Hidden arguments will not be presented in the UI and cannot be set via query string parameters.
+   * The purpose of hidden arguments is to use the defaultValueExpression to present dynamic data to the query.
+   * @return true if the argument is hidden.
+   */
+  @Schema(description = """
+                        <P>If set to true the pipeline UI will not show this argument and the pipeline will fail if the argument is supplied.</P>
+                        <P>
+                        The purpose of hidden arguments is to use the defaultValueExpression to present dynamic data to the query.
+                        Suggested uses include dynamic limits on a query or values extracted from the token.
+                        </P>
+                        """
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+          , type = "boolean"
+          , defaultValue = "false"          
+          )
+  public boolean isHidden() {
+    return hidden;
   }
 
   /**
@@ -580,6 +602,7 @@ public class Argument {
     private String prompt;
     private String description;
     private boolean optional = false;
+    private boolean hidden = false;
     private boolean multiValued = false;
     private boolean ignored = false;
     private boolean validate = true;
@@ -653,6 +676,18 @@ public class Argument {
      */
     public Builder optional(final boolean value) {
       this.optional = value;
+      return this;
+    }
+
+    /**
+     * Set the hidden flag of the Argument in the builder.
+     * Hidden arguments will not be presented in the UI and cannot be set via query string parameters.
+     * The purpose of hidden arguments is to use the defaultValueExpression to present dynamic data to the query.
+     * @param value the hidden flag of the Argument.
+     * @return this, so that the builder may be used fluently.
+     */
+    public Builder hidden(final boolean value) {
+      this.hidden = value;
       return this;
     }
 
@@ -775,7 +810,7 @@ public class Argument {
      * @return a new Argument object.
      */
     public Argument build() {
-      return new uk.co.spudsoft.query.defn.Argument(type, name, title, prompt, description, optional, multiValued, ignored, validate, dependsUpon, defaultValueExpression, minimumValue, maximumValue, possibleValues, possibleValuesUrl, permittedValuesRegex, condition);
+      return new uk.co.spudsoft.query.defn.Argument(type, name, title, prompt, description, optional, hidden, multiValued, ignored, validate, dependsUpon, defaultValueExpression, minimumValue, maximumValue, possibleValues, possibleValuesUrl, permittedValuesRegex, condition);
     }
   }
 
@@ -788,7 +823,7 @@ public class Argument {
   }
 
   private Argument(DataType type, String name, String title, String prompt, String description
-          , boolean optional, boolean multiValued, boolean ignored, boolean validate
+          , boolean optional, boolean hidden, boolean multiValued, boolean ignored, boolean validate
           , List<String> dependsUpon
           , String defaultValueExpression, String minimumValue, String maximumValue
           , List<ArgumentValue> possibleValues, String possibleValuesUrl, String permittedValuesRegex
@@ -800,6 +835,7 @@ public class Argument {
     this.prompt = prompt;
     this.description = description;
     this.optional = optional;
+    this.hidden = hidden;
     this.multiValued = multiValued;
     this.ignored = ignored;
     this.validate = validate;

@@ -50,10 +50,12 @@ import io.swagger.v3.oas.models.info.Info;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.VertxBuilder;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.jackson.DatabindCodec;
+import io.vertx.core.spi.VertxTracerFactory;
 import io.vertx.ext.healthchecks.HealthCheckHandler;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.WebClient;
@@ -63,6 +65,7 @@ import io.vertx.micrometer.VertxPrometheusOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import io.vertx.micrometer.impl.PrometheusScrapingHandlerImpl;
 import io.vertx.tracing.opentelemetry.OpenTelemetryOptions;
+import io.vertx.tracing.opentelemetry.OpenTelemetryTracingFactory;
 import jakarta.ws.rs.core.Application;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -402,11 +405,15 @@ public class Main extends Application {
                     )
                     .setEnabled(true)
     );
+    VertxBuilder vertxBuilder = Vertx.builder()
+            .with(vertxOptions);
+
     OpenTelemetry openTelemetry = buildOpenTelemetry(params.getTracing());
     if (openTelemetry != null) {
-      vertxOptions.setTracingOptions(new OpenTelemetryOptions(openTelemetry));
+      vertxBuilder = vertxBuilder.withTracer(new OpenTelemetryTracingFactory(openTelemetry));
     }
-    vertx = Vertx.vertx(vertxOptions);
+   
+    vertx = vertxBuilder.build();
     meterRegistry = (PrometheusMeterRegistry) BackendRegistries.getDefaultNow();
     
     LoginDao loginDao;

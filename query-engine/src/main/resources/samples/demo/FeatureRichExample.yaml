@@ -48,6 +48,10 @@ arguments:
     description: Reference value that must be had by the row.
     optional: true
     possibleValuesUrl: http://localhost:8000/query/demo/LookupValues
+  - name: clientIp
+    type: String
+    hidden: true
+    defaultValueExpression: request.clientIp
 sourceEndpoints:
   - name: MySQL
     type: SQL
