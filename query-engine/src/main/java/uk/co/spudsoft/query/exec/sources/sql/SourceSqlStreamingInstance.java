@@ -126,7 +126,12 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     
     String endpointName = definition.getEndpoint();
     if (Strings.isNullOrEmpty(endpointName)) {
-      endpointName = pipeline.renderTemplate(definition.getEndpointTemplate());
+      try {
+        endpointName = pipeline.renderTemplate(definition.getName() + ":endpoint", definition.getEndpointTemplate());
+      } catch(Throwable ex) {
+        logger.warn("Failed to render endpoint template ({}): ", definition.getEndpointTemplate(), ex);
+        return Future.failedFuture(ex);
+      }
     }    
     Endpoint endpoint = pipeline.getSourceEndpoints().get(endpointName);
     if (endpoint == null) {
@@ -143,7 +148,12 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     
     String url = endpoint.getUrl();
     if (Strings.isNullOrEmpty(url)) {
-      url = pipeline.renderTemplate(endpoint.getUrlTemplate());
+      try {
+        url = pipeline.renderTemplate(definition.getName() + ":url", endpoint.getUrlTemplate());
+      } catch(Throwable ex) {
+        logger.warn("Failed to render url template ({}): ", definition.getEndpointTemplate(), ex);
+        return Future.failedFuture(ex);
+      }
     }
     
     SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(url);
@@ -158,7 +168,12 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     
     String query = definition.getQuery();
     if (!Strings.isNullOrEmpty(definition.getQueryTemplate())) {
-      query = pipeline.renderTemplate(definition.getQueryTemplate());
+      try {
+        query = pipeline.renderTemplate(definition.getName() + ":query", definition.getQueryTemplate());
+      } catch(Throwable ex) {
+        logger.warn("Failed to render query template ({}): ", definition.getEndpointTemplate(), ex);
+        return Future.failedFuture(ex);
+      }
     }
     
     AbstractSqlPreparer preparer = getPreparer(url);

@@ -16,8 +16,11 @@
  */
 package uk.co.spudsoft.query.exec;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -33,9 +36,13 @@ public class PipelineInstanceTest {
   public void testRenderTemplate() {
     
     PipelineInstance instance = new PipelineInstance(null, null, null, null, null, null);
-    assertNull(instance.renderTemplate(null));
-    assertEquals("", instance.renderTemplate(""));
-    assertNull(instance.renderTemplate("$<£>"));
+    assertNull(instance.renderTemplate("test", null));
+    assertEquals("", instance.renderTemplate("test", ""));
+    
+    IllegalStateException ex = assertThrows(IllegalStateException.class, () -> {
+      instance.renderTemplate("test", "$<£>");
+    });
+    assertThat(ex.getMessage(), containsString("£"));
   }
 
 }

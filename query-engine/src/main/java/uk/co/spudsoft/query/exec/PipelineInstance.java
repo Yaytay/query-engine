@@ -23,6 +23,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.Json;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,9 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STGroup;
+import org.stringtemplate.v4.compiler.CompiledST;
+import org.stringtemplate.v4.compiler.STException;
 import uk.co.spudsoft.query.defn.Endpoint;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
@@ -179,23 +183,29 @@ public class PipelineInstance {
   
   /**
    * Render a {@link ST StringTemplate}.
+   * @param name the name of the template, used for error reporting.
    * @param template the {@link ST StringTemplate}.
    * @return the output from the {@link ST StringTemplate}.
    */
   // Compare the values added with the ProcessorScriptInstance#runSource and ConditionInstance#evaluate
-  public String renderTemplate(String template) {
+  public String renderTemplate(String name, String template) throws IllegalStateException {
     if (Strings.isNullOrEmpty(template)) {
       return template;
     }
+    StringTemplateListener errorListener = new StringTemplateListener();
     try {
-      ST st = new ST(template);
+      STGroup stgroup = new STGroup();
+      stgroup.setListener(errorListener);
+      CompiledST cst = stgroup.defineTemplate(name, template);
+      ST st = stgroup.createStringTemplate(cst);
       st.add("request", requestContext);
       st.add("args", arguments);
       st.add("pipeline", definition);
       return st.render();
     } catch (Throwable ex) {
-      logger.warn("Failed to render template {} with values {}: ", template, arguments);
-      return null;
+      logger.warn("Failed to render template {} with values {}: ", template, arguments, ex);
+      logger.warn("Errors: ", Json.encode(errorListener.getErrors()));
+      throw new IllegalStateException("Error(s) evaluating " + name + " template: " + Json.encode(errorListener.getErrors()), ex);
     }
   }
 }

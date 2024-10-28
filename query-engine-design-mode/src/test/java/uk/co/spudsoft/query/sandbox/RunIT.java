@@ -97,6 +97,12 @@ public class RunIT {
       , "--sampleDataLoads[2].adminUser.username=sa"
       , "--sampleDataLoads[2].adminUser.password=unknown"
       , "--httpServerOptions.port=8000"
+      , "--secrets.tc-master.username=" + System.getProperty("tc-master-username")
+      , "--secrets.tc-master.password=" + System.getProperty("tc-master-password")
+      , "--secrets.tc-master.condition=true"
+      , "--secrets.tc-demo-uat6.username=" + System.getProperty("tc-master-username")
+      , "--secrets.tc-demo-uat6.password=" + System.getProperty("tc-master-password")
+      , "--secrets.tc-demo-uat6.condition=true"
       // , "--managementEndpointPort=8001" 
       // , "--managementEndpointUrl=http://localhost:8001/manage"
       , "--corsAllowedOriginRegex=.*"
