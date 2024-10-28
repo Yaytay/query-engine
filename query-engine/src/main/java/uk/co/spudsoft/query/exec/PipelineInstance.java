@@ -32,8 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
-import org.stringtemplate.v4.compiler.CompiledST;
-import org.stringtemplate.v4.compiler.STException;
 import uk.co.spudsoft.query.defn.Endpoint;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
@@ -196,8 +194,7 @@ public class PipelineInstance {
     try {
       STGroup stgroup = new STGroup();
       stgroup.setListener(errorListener);
-      CompiledST cst = stgroup.defineTemplate(name, template);
-      ST st = stgroup.createStringTemplate(cst);
+      ST st = new ST(stgroup, template);
       st.add("request", requestContext);
       st.add("args", arguments);
       st.add("pipeline", definition);

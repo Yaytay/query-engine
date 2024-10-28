@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 njt
+ * Copyright (C) 2024 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ public class StringTemplateListener implements STErrorListener {
   /**
   Category of error from StringTemplate compiler.
   */
-  public static enum ErrorType {
+  public enum ErrorType {
     /**
      * Error produced during compilation.
      */

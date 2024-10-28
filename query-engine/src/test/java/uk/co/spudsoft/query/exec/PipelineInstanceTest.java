@@ -16,12 +16,16 @@
  */
 package uk.co.spudsoft.query.exec;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
+import uk.co.spudsoft.query.defn.Argument;
+import uk.co.spudsoft.query.defn.DataType;
 
 /**
  *
@@ -43,6 +47,28 @@ public class PipelineInstanceTest {
       instance.renderTemplate("test", "$<£>");
     });
     assertThat(ex.getMessage(), containsString("£"));
+  }
+  
+  @Test
+  public void testRenderTemplateWithArgs() {
+    PipelineInstance instance1 = new PipelineInstance(
+            ImmutableMap.<String, ArgumentInstance>builder()
+                    .put("port"
+                            , new ArgumentInstance(
+                                    Argument.builder()
+                                            .name("port")
+                                            .type(DataType.Integer)
+                                            .build()
+                                    , ImmutableList.<Comparable<?>>builder()
+                                          .add(4)
+                                          .build()
+                            )
+                    )
+                    .build()
+            , null, null, null, null, null);
+    
+    assertEquals("4", instance1.renderTemplate("test", "<args.port>"));
+            
   }
 
 }
