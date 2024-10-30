@@ -116,7 +116,12 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
           , int secondaryStreamBufferHighThreshold
           , int secondaryStreamBufferLowThreshold
   ) {
-    logger.debug("Constructor {} and {}", primaryStream, secondaryStream);
+    logger.debug("Constructor streams: {} and {}; inner join: {}; primary thresholds: {}/{}; secondary thresholds: {}/{}"
+            , primaryStream, secondaryStream
+            , innerJoin
+            , primaryStreamBufferHighThreshold, primaryStreamBufferLowThreshold
+            , secondaryStreamBufferHighThreshold, secondaryStreamBufferLowThreshold
+    );
     this.context = context;
     this.primaryStream = primaryStream;
     this.secondaryStream = secondaryStream;
@@ -178,9 +183,15 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
         currentSecondaryRows = new ArrayList<>();
       } else {
         primaryRows.add(item);
-        if (primaryRows.size() > this.primaryStreamBufferHighThreshold) {
-          logger.debug("Pausing primary stream at {}", primaryRows.size());
-          primaryStream.pause();
+        if (!secondaryEnded) {
+          if (primaryRows.size() > this.primaryStreamBufferHighThreshold) {
+            logger.debug("Pausing primary stream at {}", primaryRows.size());
+            primaryStream.pause();
+            if (secondaryRows.size() < this.secondaryStreamBufferLowThreshold) {
+              logger.debug("Resuming secondary stream at {}", secondaryRows.size());
+              secondaryStream.resume();
+            }
+          }
         }
       }
     }
@@ -206,6 +217,9 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
       if (secondaryRows.size() > this.secondaryStreamBufferHighThreshold) {
         logger.debug("Pausing secondary stream at {}", secondaryRows.size());
         secondaryStream.pause();
+      } else if (secondaryRows.size() < this.secondaryStreamBufferLowThreshold) {
+        logger.debug("Resuming secondary stream at {}", secondaryRows.size());
+        secondaryStream.resume();
       }
     }
   }

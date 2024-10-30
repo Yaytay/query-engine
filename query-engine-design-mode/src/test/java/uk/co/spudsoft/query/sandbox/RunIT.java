@@ -85,7 +85,7 @@ public class RunIT {
       , "--jwt.requiredAudiences[0]=query-engine"
       , "--jwt.requiredAudiences[1]=" + System.getProperty("queryEngineEntraId")
       , "--logging.jsonFormat=false"
-//      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.vertx\\\\.rest=TRACE"
+      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec=TRACE"
 //      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec\\\\.procs\\\\.query=TRACE"
       , "--sampleDataLoads[0].url=" + postgres.getVertxUrl()
       , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()
