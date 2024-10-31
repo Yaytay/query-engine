@@ -23,7 +23,9 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.streams.ReadStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.DataType;
@@ -36,6 +38,7 @@ import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
+import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
 import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 
@@ -65,6 +68,8 @@ public class ProcessorLookupInstance implements ProcessorInstance {
   
   private DataType outputFieldType;
   private ReadStream<DataRow> stream;
+  
+  private final Set<String> includedFields = new HashSet<>();
   
   /**
    * Constructor.
@@ -103,6 +108,20 @@ public class ProcessorLookupInstance implements ProcessorInstance {
     );
     
     long start = System.currentTimeMillis();
+    
+    for (ProcessorLookupField field : definition.getLookupFields()) {
+      if (field.getCondition() == null) {
+        includedFields.add(field.getKeyField());
+      } else {
+        ConditionInstance cond = field.getCondition().createInstance();
+        if (cond.evaluate(context.get("req"), null)) {
+          includedFields.add(field.getKeyField());          
+        } else {
+          logger.info("Field {} excluded by condition {}", field.getKeyField(), field.getCondition().getExpression());
+        }
+      }
+    }
+    
     return executor.initializePipeline(childPipeline)
             .compose(v -> {
               return ReadStreamToList.map(
@@ -127,7 +146,9 @@ public class ProcessorLookupInstance implements ProcessorInstance {
               }
               logger.info("{} Loaded {} mappings in {}s", id, map.size(), ((System.currentTimeMillis() - start) / 1000.0));
               for (ProcessorLookupField field : definition.getLookupFields()) {
-                input.getTypes().putIfAbsent(field.getValueField(), outputFieldType);
+                if (includedFields.contains(field.getKeyField())) {
+                  input.getTypes().putIfAbsent(field.getValueField(), outputFieldType);
+                }
               }
               stream = new MappingStream<>(input.getStream(), this::runProcess);
 
@@ -138,7 +159,7 @@ public class ProcessorLookupInstance implements ProcessorInstance {
   private DataRow runProcess(DataRow input) {
     for (ProcessorLookupField field : definition.getLookupFields()) {
       Comparable<?> key = input.get(field.getKeyField());
-      if (key != null) {
+      if (key != null && includedFields.contains(field.getKeyField())) {
         Comparable<?> value = map.get(key);
         if (value != null) {
           input.put(field.getValueField(), value);
@@ -147,6 +168,5 @@ public class ProcessorLookupInstance implements ProcessorInstance {
     }
     return input;
   }
-  
   
 }

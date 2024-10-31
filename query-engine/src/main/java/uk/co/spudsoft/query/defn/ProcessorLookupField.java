@@ -34,6 +34,7 @@ public class ProcessorLookupField {
   
   private final String keyField;
   private final String valueField;
+  private final Condition condition;
 
   /**
    * Validate this definition.
@@ -45,6 +46,9 @@ public class ProcessorLookupField {
     }
     if (Strings.isNullOrEmpty(valueField)) {
       throw new IllegalArgumentException("No value field name provided for map");
+    }
+    if (condition != null) {
+      condition.validate();
     }
   }
   
@@ -75,6 +79,26 @@ public class ProcessorLookupField {
   public String getValueField() {
     return valueField;
   }
+  
+  /**
+   * Get any condition that applies to this field.
+   * 
+   * This can be used to exclude fields based upon input conditions.
+   * The condition will be evaluated once at the beginning of the process and will not have access to each output row.
+   * 
+   * @return any condition that applies to this field.
+   */
+  @Schema(description = """
+                        Any condition that applies to this field.
+                        <P>
+                        This can be used to exclude fields based upon input conditions.
+                        The condition will be evaluated once at the beginning of the process and will not have access to each output row.
+                        """
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  public Condition getCondition() {
+    return condition;
+  }    
 
   /**
    * Builder class for ProcessorLookupField.
@@ -84,6 +108,7 @@ public class ProcessorLookupField {
 
     private String keyField;
     private String valueField;
+    private Condition condition;
 
     private Builder() {
     }
@@ -109,11 +134,21 @@ public class ProcessorLookupField {
     }
 
     /**
+     * Set the {@link ProcessorLookupField#condition} value in the builder.
+     * @param value The value for the {@link ProcessorLookupField#condition}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder condition(final Condition value) {
+      this.condition = value;
+      return this;
+    }
+
+    /**
      * Construct a new instance of the ProcessorLookupField class.
      * @return a new instance of the ProcessorLookupField class.
      */
     public ProcessorLookupField build() {
-      return new uk.co.spudsoft.query.defn.ProcessorLookupField(keyField, valueField);
+      return new uk.co.spudsoft.query.defn.ProcessorLookupField(keyField, valueField, condition);
     }
   }
 
@@ -125,9 +160,10 @@ public class ProcessorLookupField {
     return new ProcessorLookupField.Builder();
   }
 
-  private ProcessorLookupField(final String keyField, final String valueField) {
+  private ProcessorLookupField(final String keyField, final String valueField, final Condition condition) {
     this.keyField = keyField;
     this.valueField = valueField;
+    this.condition = condition;
   }
   
   

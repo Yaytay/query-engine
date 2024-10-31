@@ -73,6 +73,8 @@ processors:
   lookupFields:
   - keyField: ref1
     valueField: value1
+    condition: 
+      expression: true
   - keyField: ref2
     valueField: value2
   - keyField: ref3
@@ -83,6 +85,10 @@ processors:
     valueField: value5
   - keyField: ref6
     valueField: value6
+  - keyField: ref7
+    valueField: value7
+    condition: 
+      expression: false
 - type: MAP
   condition:
     expression: args['removeRefColumnsFromResults']

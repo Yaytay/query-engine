@@ -100,6 +100,9 @@ public class ProcessorLookup implements Processor {
     if (lookupValueField == null || lookupValueField.isEmpty()) {
       throw new IllegalArgumentException("Lookup value field (lookupValueField) not specified for lookup stream");      
     }
+    if (condition != null) {
+      condition.validate();
+    }
   }
   
   @Override
