@@ -7,10 +7,10 @@ source:
 rateLimitRules:
 - scope:
   - path
-  timeLimit: P1D  
+  timeLimit: PT1M
 - scope:
   - host
-  timeLimit: PT1H
+  timeLimit: PT1M
   byteLimit: 100M  
 - scope:
   - issuer

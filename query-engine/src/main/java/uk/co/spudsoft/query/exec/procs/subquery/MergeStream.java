@@ -47,7 +47,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
   
   private static final Logger logger = LoggerFactory.getLogger(MergeStream.class);
   
-  private static final int MAX_ROWS_TO_BUFFER = 100;
+  private static final int EXTRA_ROWS_TO_BUFFER = 100;
   
   private final Object lock = new Object();
   
@@ -86,8 +86,8 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
   private boolean primaryEnded = false;
   private T currentPrimary;
   private List<U> currentSecondaryRows;
-  private final Deque<T> primaryRows = new ArrayDeque<>(MAX_ROWS_TO_BUFFER);
-  private final Deque<U> secondaryRows = new ArrayDeque<>(MAX_ROWS_TO_BUFFER);
+  private final Deque<T> primaryRows;
+  private final Deque<U> secondaryRows;
   
   private final AtomicBoolean emitting = new AtomicBoolean();
   private long demand;
@@ -128,6 +128,8 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
     this.merger = merger;
     this.comparator = comparator;
     this.innerJoin = innerJoin;
+    this.primaryRows = new ArrayDeque<>(primaryStreamBufferHighThreshold + EXTRA_ROWS_TO_BUFFER);
+    this.secondaryRows = new ArrayDeque<>(secondaryStreamBufferHighThreshold + EXTRA_ROWS_TO_BUFFER);
     this.primaryStreamBufferHighThreshold = primaryStreamBufferHighThreshold;
     this.primaryStreamBufferLowThreshold = primaryStreamBufferLowThreshold;
     this.secondaryStreamBufferHighThreshold = secondaryStreamBufferHighThreshold;
@@ -139,7 +141,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
     this.exceptionHandler = handler;
     primaryStream.exceptionHandler(handler);
     secondaryStream.exceptionHandler(handler);
-    return  this;
+    return this;
   }
 
   @Override
@@ -185,7 +187,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
         primaryRows.add(item);
         if (!secondaryEnded) {
           if (primaryRows.size() > this.primaryStreamBufferHighThreshold) {
-            logger.debug("Pausing primary stream at {}", primaryRows.size());
+            logger.debug("Pausing primary stream at {} (childStream at {})", primaryRows.size(), secondaryRows.size());
             primaryStream.pause();
             if (secondaryRows.size() < this.secondaryStreamBufferLowThreshold) {
               logger.debug("Resuming secondary stream at {}", secondaryRows.size());
@@ -194,6 +196,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
           }
         }
       }
+      doEmit();
     }
   }
 

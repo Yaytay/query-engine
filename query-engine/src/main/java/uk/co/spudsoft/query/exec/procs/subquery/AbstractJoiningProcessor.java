@@ -186,10 +186,10 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
                       , this::processChildren
                       , this::compare
                       , innerJoin
-                      , 20
-                      , 10
                       , 100
                       , 50
+                      , 200
+                      , 100
               );
               return Future.succeededFuture(new ReadStreamWithTypes(stream, types));
             })
