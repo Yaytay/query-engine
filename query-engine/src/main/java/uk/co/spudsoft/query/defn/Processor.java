@@ -80,10 +80,11 @@ public interface Processor {
    * @param vertx The Vert.x instance.
    * @param sourceNameTracker The {@link SourceNameTracker} used to enable child {@link uk.co.spudsoft.query.exec.SourceInstance} objects to identify themselves to logs.
    * @param context The Vert.x (@link Context} to use for any asynchronous tasks that must be performed.
+   * @param name The name of this processor, either from the definition or generated.
    * @return a newly created {@link ProcessorInstance}.
    */
   @JsonIgnore
-  ProcessorInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context);
+  ProcessorInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String name);
   
   /**
    * The type of Processor being configured.
@@ -97,17 +98,17 @@ public interface Processor {
   ProcessorType getType();
   
   /**
-   * ID that uniquely identifies this processor within the pipeline.
-   * @return an ID that uniquely identifies this processor within the pipeline.
+   * Name that uniquely identifies this processor within the pipeline.
+   * @return a name that uniquely identifies this processor within the pipeline.
    */
   @Schema(description = """
-                        <P>ID that uniquely idenfities this processor within the pipeline.</P>
+                        <P>Name that uniquely idenfities this processor within the pipeline.</P>
                         """
           , minLength = 1
           , maxLength = 60
           , requiredMode = Schema.RequiredMode.REQUIRED
   )
-  String getId();
+  String getName();
   
   /**
    * Optional condition that controls whether the processor will be run.

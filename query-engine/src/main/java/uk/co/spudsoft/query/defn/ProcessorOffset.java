@@ -37,12 +37,12 @@ public class ProcessorOffset implements Processor {
   
   private final ProcessorType type;
   private final Condition condition;
-  private final String id;
+  private final String name;
   private final int offset;
 
   @Override
-  public ProcessorOffsetInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
-    return new ProcessorOffsetInstance(vertx, sourceNameTracker, context, this);
+  public ProcessorOffsetInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String name) {
+    return new ProcessorOffsetInstance(vertx, sourceNameTracker, context, this, name);
   }
 
   @Override
@@ -66,8 +66,8 @@ public class ProcessorOffset implements Processor {
   }  
 
   @Override
-  public String getId() {
-    return id;
+  public String getName() {
+    return name;
   }
 
   /**
@@ -90,7 +90,7 @@ public class ProcessorOffset implements Processor {
 
     private ProcessorType type = ProcessorType.OFFSET;
     private Condition condition;
-    private String id;
+    private String name;
     private int offset;
 
     private Builder() {
@@ -117,12 +117,12 @@ public class ProcessorOffset implements Processor {
     }
 
     /**
-     * Set the {@link ProcessorOffset#id} value in the builder.
-     * @param value The value for the {@link ProcessorOffset#id}.
+     * Set the {@link ProcessorOffset#name} value in the builder.
+     * @param value The value for the {@link ProcessorOffset#name}.
      * @return this, so that this builder may be used in a fluent manner.
      */
-    public Builder id(final String value) {
-      this.id = value;
+    public Builder name(final String value) {
+      this.name = value;
       return this;
     }
 
@@ -141,7 +141,7 @@ public class ProcessorOffset implements Processor {
      * @return a new instance of the ProcessorOffset class.
      */
     public ProcessorOffset build() {
-      ProcessorOffset result = new ProcessorOffset(type, condition, id, offset);
+      ProcessorOffset result = new ProcessorOffset(type, condition, name, offset);
       result.validateType(ProcessorType.OFFSET, type);
       return result;
     }
@@ -155,10 +155,10 @@ public class ProcessorOffset implements Processor {
     return new ProcessorOffset.Builder();
   }
 
-  private ProcessorOffset(final ProcessorType type, final Condition condition, final String id, final int offset) {
+  private ProcessorOffset(final ProcessorType type, final Condition condition, final String name, final int offset) {
     this.type = type;
     this.condition = condition;
-    this.id = id;
+    this.name = name;
     this.offset = offset;
   }
   

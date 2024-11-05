@@ -21,6 +21,7 @@ import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.UUID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -140,6 +141,7 @@ public class MainQueryIT {
     body = given()
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
+            .queryParam("_runid", UUID.randomUUID().toString())
             .accept("text/html, application/xhtml+xml, image/webp, image/apng, application/xml; q=0.9, application/signed-exchange; v=b3; q=0.9, */*; q=0.8")
             .log().all()
             .get("/query/sub1/sub2/TemplatedJsonToPipelineIT")

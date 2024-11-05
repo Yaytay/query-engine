@@ -99,24 +99,50 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     return Future.succeededFuture(definition);
   }
     
+  private String processorName(String definitionName, String parentName, String type, int index, Object definition) {
+    if (Strings.isNullOrEmpty(definitionName)) {
+      String implName;
+      if (definition instanceof String str) {
+        implName = str;
+      } else {
+        implName = definition.getClass().getSimpleName();
+      }
+      if (implName.startsWith("_")) {
+        implName = implName.substring(1);
+      } else if (implName.startsWith("Processor")) {
+        implName = implName.substring(9);
+      }
+      if (Strings.isNullOrEmpty(parentName)) {
+        return type + index + "-" + implName;
+      } else {
+        return parentName + "." + type + index + "-" + implName;
+      }
+    } else {
+      return definitionName;
+    }
+  }
+  
   @Override
-  public List<ProcessorInstance> createProcessors(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, SourcePipeline definition, MultiMap params) {
+  public List<ProcessorInstance> createProcessors(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, SourcePipeline definition, MultiMap params, String parentName) {
     List<ProcessorInstance> result = new ArrayList<>();
+    
+    int index = 0;
     for (Processor processor : definition.getProcessors()) {
       Condition condition = processor.getCondition();
       if (condition == null) {
-        result.add(processor.createInstance(vertx, sourceNameTracker, context));
+        result.add(processor.createInstance(vertx, sourceNameTracker, context, processorName(processor.getName(), parentName, "P", index++, processor)));
       } else {
         ConditionInstance cond = new ConditionInstance(condition.getExpression());
         RequestContext requestContext = RequestContextHandler.getRequestContext(context);
         if (cond.evaluate(requestContext, null)) {
-          result.add(processor.createInstance(vertx, sourceNameTracker, context));
+          result.add(processor.createInstance(vertx, sourceNameTracker, context, processorName(processor.getName(), parentName, "P", index++, processor)));
         }
       }
     }
     if (params != null) {
+      index = 0;
       for (Entry<String, String> entry : params.entries()) {
-        ProcessorInstance processor = filterFactory.createFilter(vertx, sourceNameTracker, context, entry.getKey(), entry.getValue());
+        ProcessorInstance processor = filterFactory.createFilter(vertx, sourceNameTracker, context, entry.getKey(), entry.getValue(), processorName(null, parentName, "F", index++, entry.getKey()));
         if (processor != null) {
           result.add(processor);
         }
@@ -129,8 +155,9 @@ public class PipelineExecutorImpl implements PipelineExecutor {
   @Override
   public List<PreProcessorInstance> createPreProcessors(Vertx vertx, Context context, Pipeline definition) {
     List<PreProcessorInstance> result = new ArrayList<>();
+    int index = 0;
     for (DynamicEndpoint de : definition.getDynamicEndpoints()) {
-      result.add(de.createInstance(vertx, context));
+      result.add(de.createInstance(vertx, context, index++));
     }
     return result;
   }
@@ -302,14 +329,30 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     return result;
   }  
   
+  private void progressNotification(PipelineInstance pipeline
+          , SourceInstance source
+          , ProcessorInstance processor
+          , String message
+          , Object... arguments
+  ) {
+    ProgressNotificationHandler handler = pipeline.getProgressNotificationHandler();
+    RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
+    if (requestContext != null) {
+      handler.event(requestContext.getRunID(), requestContext, pipeline, source, processor, message, arguments);
+    }
+  }
+  
   private Future<ReadStreamWithTypes> initializeProcessors(PipelineInstance pipeline, String parentSource, Iterator<ProcessorInstance> iter, int index, ReadStreamWithTypes input) {
     logger.debug("initializeProcessors({}, {}, {}, {}, {})", pipeline, parentSource, iter, index, input);
     if (!iter.hasNext()) {
+      progressNotification(pipeline, null, null, "All processors initialized", null, null);
       return Future.succeededFuture(input);
     } else {
       ProcessorInstance processor = iter.next();
+      progressNotification(pipeline, null, processor, "Initializing {}", processor.getName());
       return processor.initialize(this, pipeline, parentSource, index, input)
               .compose(streamWithTypes -> {
+                progressNotification(pipeline, null, processor, "Initialized {}", processor.getName());
                 return initializeProcessors(pipeline, parentSource, iter, index + 1, streamWithTypes);
               });
     }

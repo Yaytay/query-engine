@@ -55,10 +55,11 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
    * Vertx context used by this class.
    */
   protected final Context context;
+  
   /**
-   * The ID to use in logs for this processor.
+   * The name to use in logs for this processor.
    */
-  private final String id;
+  private final String name;
   
   private final List<String> parentIdColumns;
   private final List<String> childIdColumns;
@@ -77,7 +78,7 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
    * @param vertx The vertx instance.
    * @param sourceNameTracker Source name tracker used to identify source names in log messages
    * @param context Vertx context used by this class.
-   * @param id The ID to use in logs for this processor.
+   * @param name The name to use in logs for this processor - not nullable.
    * @param parentIdColumns The columns from the parent dataset that identifies a row.
    * @param childIdColumns The columns from the child dataset that identifies a row.
    * @param innerJoin If true parent rows without child rows will be excluded.
@@ -86,20 +87,20 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")  
   @SuppressWarnings("this-escape")
-  public AbstractJoiningProcessor(Logger logger, Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String id, List<String> parentIdColumns, List<String> childIdColumns, boolean innerJoin) {
+  public AbstractJoiningProcessor(Logger logger, Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String name, List<String> parentIdColumns, List<String> childIdColumns, boolean innerJoin) {
     this.logger = logger;
     this.vertx = vertx;
     this.sourceNameTracker = sourceNameTracker;
     this.context = context;
-    this.id = id;
+    this.name = name;
     this.parentIdColumns = parentIdColumns;
     this.childIdColumns = childIdColumns;
     this.innerJoin = innerJoin;
   }
 
   @Override
-  public String getId() {
-    return id;
+  public String getName() {
+    return name;
   }
 
   /**
@@ -123,7 +124,7 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
             , pipeline.getSourceEndpoints()
             , null
             , sourceInstance
-            , executor.createProcessors(vertx, sourceInstance, context, sourcePipeline, null)
+            , executor.createProcessors(vertx, sourceInstance, context, sourcePipeline, null, name)
             , sinkInstance
     );
     return executor.initializePipeline(childPipeline)

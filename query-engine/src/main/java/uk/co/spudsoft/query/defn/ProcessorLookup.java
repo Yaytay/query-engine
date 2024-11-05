@@ -67,7 +67,7 @@ public class ProcessorLookup implements Processor {
 
   private final ProcessorType type;
   private final Condition condition;
-  private final String id;
+  private final String name;
     
   private final String lookupKeyField;
   private final String lookupValueField;
@@ -77,8 +77,8 @@ public class ProcessorLookup implements Processor {
   private final SourcePipeline map;
   
   @Override
-  public ProcessorLookupInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
-    return new ProcessorLookupInstance(vertx, sourceNameTracker, context, this);
+  public ProcessorLookupInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String name) {
+    return new ProcessorLookupInstance(vertx, sourceNameTracker, context, this, name);
   }
 
   @Override
@@ -116,8 +116,8 @@ public class ProcessorLookup implements Processor {
   }  
 
   @Override
-  public String getId() {
-    return id;
+  public String getName() {
+    return name;
   }
   
   /**
@@ -194,7 +194,7 @@ public class ProcessorLookup implements Processor {
 
     private ProcessorType type = ProcessorType.LOOKUP;
     private Condition condition;
-    private String id;
+    private String name;
     private String lookupKeyField;
     private String lookupValueField;
     private List<ProcessorLookupField> lookupFields;
@@ -224,12 +224,12 @@ public class ProcessorLookup implements Processor {
     }
 
     /**
-     * Set the {@link ProcessorLookup#id} value in the builder.
-     * @param value The value for the {@link ProcessorLookup#id}.
+     * Set the {@link ProcessorLookup#name} value in the builder.
+     * @param value The value for the {@link ProcessorLookup#name}.
      * @return this, so that this builder may be used in a fluent manner.
      */
-    public Builder id(final String value) {
-      this.id = value;
+    public Builder name(final String value) {
+      this.name = value;
       return this;
     }
 
@@ -278,7 +278,7 @@ public class ProcessorLookup implements Processor {
      * @return a new instance of the ProcessorLookup class.
      */
     public ProcessorLookup build() {
-      ProcessorLookup result = new ProcessorLookup(type, condition, id, lookupKeyField, lookupValueField, lookupFields, map);
+      ProcessorLookup result = new ProcessorLookup(type, condition, name, lookupKeyField, lookupValueField, lookupFields, map);
       result.validateType(ProcessorType.LOOKUP, type);
       return result;
     }
@@ -292,10 +292,10 @@ public class ProcessorLookup implements Processor {
     return new ProcessorLookup.Builder();
   }
 
-  private ProcessorLookup(final ProcessorType type, final Condition condition, final String id, final String lookupKeyField, final String lookupValueField, final List<ProcessorLookupField> lookupFields, final SourcePipeline map) {
+  private ProcessorLookup(final ProcessorType type, final Condition condition, final String name, final String lookupKeyField, final String lookupValueField, final List<ProcessorLookupField> lookupFields, final SourcePipeline map) {
     this.type = type;
     this.condition = condition;
-    this.id = id;
+    this.name = name;
     this.lookupKeyField = lookupKeyField;
     this.lookupValueField = lookupValueField;
     this.lookupFields = ImmutableCollectionTools.copy(lookupFields);

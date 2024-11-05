@@ -64,7 +64,9 @@ public class ProcessorLimitInstanceTest {
     
     ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, ctx -> {}, context
             , ProcessorLimit.builder().limit(17).build()
+            , "P0-Limit"
     );
+    assertEquals("P0-Limit", instance.getName());
     assertTrue(instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(context, rowsList), types)).isComplete());
   }
   
@@ -82,8 +84,10 @@ public class ProcessorLimitInstanceTest {
     Context context = vertx.getOrCreateContext();
     
     ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, ctx -> {}, context
-            , ProcessorLimit.builder().limit(3).build()
+            , ProcessorLimit.builder().name("fred").limit(3).build()
+            , "P0-Limit"
     );
+    assertEquals("P0-Limit", instance.getName());
     instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(context, rowsList), types))
             .compose(rswt -> {
               return ReadStreamToList.capture(rswt.getStream());

@@ -132,11 +132,11 @@ public class ProcessorLookupTest {
   }
 
   @Test
-  public void testGetId() {
+  public void testGetName() {
     ProcessorLookup instance = ProcessorLookup.builder().build();
-    assertNull(instance.getId());
-    instance = ProcessorLookup.builder().id("id").build();
-    assertEquals("id", instance.getId());
+    assertNull(instance.getName());
+    instance = ProcessorLookup.builder().name("id").build();
+    assertEquals("id", instance.getName());
   }
 
   @Test

@@ -31,8 +31,8 @@ public class ProcessorMapTest {
   
   @Test
   public void testGetId() {
-    ProcessorMap instance = ProcessorMap.builder().id("id").build();
-    assertEquals("id", instance.getId());
+    ProcessorMap instance = ProcessorMap.builder().name("id").build();
+    assertEquals("id", instance.getName());
   }
 
   @Test

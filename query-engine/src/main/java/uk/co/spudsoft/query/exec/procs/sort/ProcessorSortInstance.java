@@ -75,6 +75,7 @@ public class ProcessorSortInstance implements ProcessorInstance {
   private final SourceNameTracker sourceNameTracker;
   private final Context context;
   private final ProcessorSort definition;
+  private final String name;
   
   private SortingStream<DataRow> stream;
   
@@ -86,18 +87,20 @@ public class ProcessorSortInstance implements ProcessorInstance {
    * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
    * @param context the Vert.x context.
    * @param definition the definition of this processor.
+   * @param name the name of this processor, used in tracking and logging.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
-  public ProcessorSortInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorSort definition) {
+  public ProcessorSortInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorSort definition, String name) {
     this.vertx = vertx;
     this.sourceNameTracker = sourceNameTracker;
     this.context = context;
     this.definition = definition;    
+    this.name = name;
   }  
 
   @Override
-  public String getId() {
-    return definition.getId();
+  public String getName() {
+    return name;
   }
 
   /**

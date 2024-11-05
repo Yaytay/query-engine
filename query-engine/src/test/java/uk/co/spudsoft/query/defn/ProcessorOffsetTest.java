@@ -30,8 +30,8 @@ public class ProcessorOffsetTest {
   
   @Test
   public void testGetId() {
-    ProcessorOffset instance = ProcessorOffset.builder().id("id").build();
-    assertEquals("id", instance.getId());
+    ProcessorOffset instance = ProcessorOffset.builder().name("id").build();
+    assertEquals("id", instance.getName());
   }
 
   @Test

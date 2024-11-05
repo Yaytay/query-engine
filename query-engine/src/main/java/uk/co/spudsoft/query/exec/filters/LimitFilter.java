@@ -48,7 +48,7 @@ public class LimitFilter implements Filter {
   }
 
   @Override
-  public ProcessorInstance createProcessor(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String argument) throws IllegalArgumentException {
+  public ProcessorInstance createProcessor(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String argument, String name) throws IllegalArgumentException {
     int value;
     try {
       value = Integer.parseInt(argument);
@@ -56,8 +56,8 @@ public class LimitFilter implements Filter {
       logger.warn("Failed to convert argument to _limit filter (\"{}\") to integer: ", argument, ex);
       throw new IllegalArgumentException("Invalid argument to _limit filter, should be an integer");
     }
-    ProcessorLimit definition = ProcessorLimit.builder().limit(value).build();
-    return definition.createInstance(vertx, sourceNameTracker, context);
+    ProcessorLimit definition = ProcessorLimit.builder().name(name).limit(value).build();
+    return definition.createInstance(vertx, sourceNameTracker, context, name);
   }
   
 }

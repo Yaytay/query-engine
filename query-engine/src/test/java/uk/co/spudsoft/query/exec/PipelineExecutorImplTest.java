@@ -95,7 +95,7 @@ public class PipelineExecutorImplTest {
             )
             .build();
     PipelineExecutorImpl instance = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
-    List<ProcessorInstance> results = instance.createProcessors(vertx, ctx -> {}, vertx.getOrCreateContext(), definition, null);
+    List<ProcessorInstance> results = instance.createProcessors(vertx, ctx -> {}, vertx.getOrCreateContext(), definition, null, null);
     assertThat(results, hasSize(2));
     assertEquals(1, ((ProcessorLimitInstance) results.get(0)).getLimit());
     assertEquals(2, ((ProcessorLimitInstance) results.get(1)).getLimit());
@@ -164,7 +164,7 @@ public class PipelineExecutorImplTest {
             )
             .build();
     PipelineExecutorImpl instance = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
-    List<ProcessorInstance> processors = instance.createProcessors(vertx, ctx -> {}, vertx.getOrCreateContext(), definition, null);
+    List<ProcessorInstance> processors = instance.createProcessors(vertx, ctx -> {}, vertx.getOrCreateContext(), definition, null, null);
     
     RequestContext req = new RequestContext(
             null

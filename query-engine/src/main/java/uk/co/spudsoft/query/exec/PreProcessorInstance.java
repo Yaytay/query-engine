@@ -28,6 +28,13 @@ import io.vertx.core.Future;
 public interface PreProcessorInstance {
   
   /**
+   * Return a name for this pre-processor, unique within the pipeline, used in logs an tracking.
+   * This can either be specified in the pipeline definition, or assigned by the executor.
+   * @return an ID for this processor, unique within the pipeline. 
+   */
+  String getName();
+  
+  /**
    * Take whatever steps are necessary to start reading or writing the streams.
    * 
    * At the time of the call the arguments in the {@link PipelineInstance} will have been set and can be used in the evaluation of any "template" values in the definition.

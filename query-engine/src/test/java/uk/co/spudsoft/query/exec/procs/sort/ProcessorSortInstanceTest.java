@@ -66,6 +66,7 @@ public class ProcessorSortInstanceTest {
 
     ProcessorSortInstance instance = new ProcessorSortInstance(vertx, ctx -> {}, vertx.getOrCreateContext()
             , ProcessorSort.builder().fields(Arrays.asList("timestamp")).build()
+            , "P0-Sort"
     );
     instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(null, rowsList), types))
             .andThen(testContext.succeedingThenComplete());
@@ -74,9 +75,9 @@ public class ProcessorSortInstanceTest {
 
   @Test
   public void testGetId() {
-    ProcessorSort defn = ProcessorSort.builder().id("id").build();
-    ProcessorSortInstance instance = new ProcessorSortInstance(null, null, null, defn);
-    assertEquals("id", instance.getId());
+    ProcessorSort defn = ProcessorSort.builder().name("id").build();
+    ProcessorSortInstance instance = new ProcessorSortInstance(null, null, null, defn, "P0-Sort");
+    assertEquals("P0-Sort", instance.getName());
   }
   
   @Test
@@ -97,6 +98,7 @@ public class ProcessorSortInstanceTest {
 
     ProcessorSortInstance instance = new ProcessorSortInstance(vertx, ctx -> {}, vertx.getOrCreateContext()
             , ProcessorSort.builder().fields(Arrays.asList("timestamp")).build()
+            , "P0-Sort"
     );
     // This will fail, but its only purpose here is to set the types
     instance.initialize(null, null, null, 0, new ReadStreamWithTypes(null, types));
@@ -133,6 +135,7 @@ public class ProcessorSortInstanceTest {
 
     ProcessorSortInstance instance = new ProcessorSortInstance(vertx, ctx -> {}, vertx.getOrCreateContext()
             , ProcessorSort.builder().fields(Arrays.asList("timestamp")).build()
+            , "P0-Sort"
     );
     // This will fail, but its only purpose here is to set the types
     instance.initialize(null, null, null, 0, new ReadStreamWithTypes(null, types));

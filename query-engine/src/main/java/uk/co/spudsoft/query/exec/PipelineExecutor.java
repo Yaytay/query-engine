@@ -72,9 +72,10 @@ public interface PipelineExecutor extends SharedMap {
    * @param context The Vert.x {@link Context} for any asynchronous processing.
    * @param definition The definition of the {@link SourcePipeline pipeline}.
    * @param params The original parameters, for identifying {@link uk.co.spudsoft.query.exec.filters.Filter} arguments.
+   * @param parentName The name of any parent Processor, used in generation of a default name for the processors.
    * @return all of the {@link ProcessorInstance} objects specified in the {@link Pipeline} definition and {@link uk.co.spudsoft.query.exec.filters.Filter} arguments in the query string.
    */
-  List<ProcessorInstance> createProcessors(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, SourcePipeline definition, MultiMap params);
+  List<ProcessorInstance> createProcessors(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, SourcePipeline definition, MultiMap params, String parentName);
   
   /**
    * Create any {@link PreProcessorInstance} objects specified in the {@link Pipeline} definition. 

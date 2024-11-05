@@ -45,15 +45,15 @@ public class ProcessorExpression implements Processor {
   
   private final ProcessorType type;
   private final Condition condition;
-  private final String id;
+  private final String name;
   private final String predicate;
   private final String field;
   private final DataType fieldType;
   private final String fieldValue;
 
   @Override
-  public ProcessorExpressionInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
-    return new ProcessorExpressionInstance(vertx, sourceNameTracker, context, this);
+  public ProcessorExpressionInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String name) {
+    return new ProcessorExpressionInstance(vertx, sourceNameTracker, context, this, name);
   }
   
   @Override
@@ -84,8 +84,8 @@ public class ProcessorExpression implements Processor {
   }
 
   @Override
-  public String getId() {
-    return id;
+  public String getName() {
+    return name;
   }
 
   /**
@@ -319,7 +319,7 @@ public class ProcessorExpression implements Processor {
 
     private ProcessorType type = ProcessorType.EXPRESSION;
     private Condition condition;
-    private String id;
+    private String name;
     private String predicate;
     private String field;
     private DataType fieldType = DataType.String;
@@ -349,12 +349,12 @@ public class ProcessorExpression implements Processor {
     }
     
     /**
-     * Set the {@link ProcessorExpression#id} value in the builder.
-     * @param value The value for the {@link ProcessorExpression#id}.
+     * Set the {@link ProcessorExpression#name} value in the builder.
+     * @param value The value for the {@link ProcessorExpression#name}.
      * @return this, so that this builder may be used in a fluent manner.
      */
-    public Builder id(final String value) {
-      this.id = value;
+    public Builder name(final String value) {
+      this.name = value;
       return this;
     }
 
@@ -403,7 +403,7 @@ public class ProcessorExpression implements Processor {
      * @return a new instance of the ProcessorExpression class.
      */
     public ProcessorExpression build() {
-      ProcessorExpression result = new ProcessorExpression(type, condition, id, predicate, field, fieldType, fieldValue);
+      ProcessorExpression result = new ProcessorExpression(type, condition, name, predicate, field, fieldType, fieldValue);
       result.validateType(ProcessorType.EXPRESSION, type);
       return result;
     }
@@ -417,10 +417,10 @@ public class ProcessorExpression implements Processor {
     return new ProcessorExpression.Builder();
   }
 
-  private ProcessorExpression(ProcessorType type, Condition condition, String id, String predicate, String field, DataType fieldType, String fieldValue) {
+  private ProcessorExpression(ProcessorType type, Condition condition, String name, String predicate, String field, DataType fieldType, String fieldValue) {
     this.type = type;
     this.condition = condition;
-    this.id = id;
+    this.name = name;
     this.predicate = predicate;
     this.field = field;
     this.fieldType = fieldType;

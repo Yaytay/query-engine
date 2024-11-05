@@ -69,6 +69,8 @@ public class RequestContext {
   
   private final String path;
   
+  private final String runId;
+  
   private final MultiMap params;
   
   private ImmutableMap<String, Object> arguments;
@@ -104,7 +106,8 @@ public class RequestContext {
     // this.arguments = multiMapToMap(request.params());
     this.headers = request.headers();
     this.cookies = ImmutableSet.copyOf(request.cookies());
-    this.jwt = jwt;
+    this.jwt = jwt;    
+    this.runId = this.params == null ? null : this.params.get("_runid");
   }
 
   /**
@@ -132,6 +135,7 @@ public class RequestContext {
     this.cookies = ImmutableSet.copyOf(cookies == null ? Collections.emptySet() : cookies);
     this.clientIp = clientIp;
     this.jwt = jwt;
+    this.runId = params == null ? null : params.get("_runid");
   }
   
   private static URI parseURI(String url) {
@@ -260,6 +264,15 @@ public class RequestContext {
    */
   public URI getUri() {
     return uri;
+  }
+  
+  /**
+   * The RunID is a caller allocated value that can be used to track requests.
+   * Every RunID must be unique and it is up to the caller to guarantee that.
+   * @return the RunID, a caller allocated value that can be used to track requests.
+   */
+  public String getRunID() {
+    return runId;
   }
   
   /**

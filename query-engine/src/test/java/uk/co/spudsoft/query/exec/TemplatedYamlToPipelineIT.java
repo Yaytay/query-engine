@@ -111,7 +111,7 @@ public class TemplatedYamlToPipelineIT {
                       , pipeline.getSourceEndpointsMap()
                       , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                       , sourceInstance
-                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline, null)
+                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline, null, null)
                       , formatInstance
               );
       

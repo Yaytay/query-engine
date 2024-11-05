@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 jtalbut
+ * Copyright (C) 2024 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,38 +14,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package uk.co.spudsoft.query.exec.sources;
+package uk.co.spudsoft.query.exec.notifications;
 
-import io.vertx.core.Context;
+import uk.co.spudsoft.query.exec.PipelineInstance;
+import uk.co.spudsoft.query.exec.ProcessorInstance;
+import uk.co.spudsoft.query.exec.ProgressNotificationHandler;
 import uk.co.spudsoft.query.exec.SourceInstance;
-import uk.co.spudsoft.query.exec.SourceNameTracker;
+import uk.co.spudsoft.query.exec.conditions.RequestContext;
 
 /**
- * Abstract class to aid the implementation of {@link uk.co.spudsoft.query.exec.SourceInstance} classes.
- * 
- * @author jtalbut
+ * Null instance of the {@link ProgressNotificationHandler}.
+ * This instance does nothing.
+ * @author njt
  */
-public abstract class AbstractSource implements SourceInstance, SourceNameTracker {
-  
-  private final String name;
+public class NullNotificationHandler implements ProgressNotificationHandler {
 
   /**
    * Constructor.
-   * @param name the name of the data source, as used in logs and tracking.   
    */
-  public AbstractSource(String name) {
-    this.name = name;
+  public NullNotificationHandler() {
   }
 
   @Override
-  public String getName() {
-    return name;
+  public void event(String runID, RequestContext requestContext, PipelineInstance pipeline, SourceInstance source, ProcessorInstance processor, String message, Object... arguments) {
   }
-
-  @Override
-  public void addNameToContextLocalData(Context context) {
-    if (context != null) {
-      context.putLocal(SourceInstance.SOURCE_CONTEXT_KEY, name);
-    }
-  }
+  
 }

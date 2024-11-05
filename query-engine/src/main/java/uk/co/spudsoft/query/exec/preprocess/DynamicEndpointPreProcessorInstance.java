@@ -55,17 +55,29 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
   private final Vertx vertx;
   private final Context context;
   private final DynamicEndpoint definition;
+  private final String name;
   
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
    * @param context the Vert.x context.
    * @param definition the definition of this processor.
+   * @param index zero based index of this pre-processor within the list of pre-processors in the pipeline.
    */
-  public DynamicEndpointPreProcessorInstance(Vertx vertx, Context context, DynamicEndpoint definition) {
+  public DynamicEndpointPreProcessorInstance(Vertx vertx, Context context, DynamicEndpoint definition, int index) {
     this.vertx = vertx;
     this.context = context;
     this.definition = definition;
+    if (Strings.isNullOrEmpty(definition.getName())) {
+      this.name = "PP" + index + "-" + definition.getClass().getSimpleName();
+    } else {
+      this.name = definition.getName();
+    }
+  }
+
+  @Override
+  public String getName() {
+    return name;
   }
   
   @Override
@@ -78,7 +90,7 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
             , pipeline.getSourceEndpoints()
             , null
             , sourceInstance
-            , executor.createProcessors(vertx, sourceInstance, context, definition.getInput(), null)
+            , executor.createProcessors(vertx, sourceInstance, context, definition.getInput(), null, name)
             , format
     );
     return executor.initializePipeline(dePipeline)

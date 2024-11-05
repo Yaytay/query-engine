@@ -22,7 +22,6 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.junit5.Timeout;
@@ -41,6 +40,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
@@ -171,11 +171,17 @@ public class DynamicEndpointPipelineIT {
                       , pipeline.getSourceEndpointsMap()
                       , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                       , sourceInstance
-                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline, null)
+                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline, null, null)
                       , formatInstance
               );
       
               assertNotNull(instance);
+              assertEquals("source", instance.getSource().getName());
+              assertEquals(1, instance.getPreProcessors().size());
+              assertEquals("PP0-DynamicEndpoint", instance.getPreProcessors().get(0).getName());
+              assertEquals(2, instance.getProcessors().size());
+              assertEquals("P0-GroupConcat", instance.getProcessors().get(0).getName());
+              assertEquals("P1-Limit", instance.getProcessors().get(1).getName());
 
               return executor.initializePipeline(instance);
             })
@@ -262,7 +268,7 @@ public class DynamicEndpointPipelineIT {
                       , pipeline.getSourceEndpointsMap()
                       , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                       , sourceInstance
-                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline, null)
+                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline, null, null)
                       , formatInstance
               );
       
@@ -356,7 +362,7 @@ public class DynamicEndpointPipelineIT {
                       , pipeline.getSourceEndpointsMap()
                       , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                       , sourceInstance
-                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline, null)
+                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline, null, null)
                       , formatInstance
               );
       
@@ -449,7 +455,7 @@ public class DynamicEndpointPipelineIT {
                       , pipeline.getSourceEndpointsMap()
                       , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                       , sourceInstance
-                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline, null)
+                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline, null, null)
                       , formatInstance
               );
       

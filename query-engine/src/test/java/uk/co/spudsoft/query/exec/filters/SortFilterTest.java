@@ -30,7 +30,7 @@ public class SortFilterTest {
     SortFilter sf = new SortFilter();
     
     assertThrows(IllegalArgumentException.class, () -> {
-      sf.createProcessor(null, null, null, "");
+      sf.createProcessor(null, null, null, "", "F1.Sort");
     });
   }
   

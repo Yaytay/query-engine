@@ -8,13 +8,14 @@ databaseChangeLog:
         tableName: request
         columns:
         - {column: {name: id, type: varchar(100), constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_request}}}
+        - {column: {name: runid, type: varchar(100), constraints: {nullable: true}}}
         - {column: {name: timestamp, type: timestamp, constraints: {nullable: false}}}
         - {column: {name: processId, type: varchar(1000), constraints: {nullable: false}}}
         - {column: {name: url, type: varchar(1000), constraints: {nullable: false}}}
         - {column: {name: clientIp, type: varchar(40), constraints: {nullable: false}}}
         - {column: {name: host, type: varchar(260), constraints: {nullable: false}}}
         - {column: {name: path, type: varchar(260), constraints: {nullable: false}}}
-        - {column: {name: arguments, type: clob, constraints: {nullable: fal se}}}
+        - {column: {name: arguments, type: clob, constraints: {nullable: false}}}
         - {column: {name: headers, type: clob, constraints: {nullable: false}}}
         - {column: {name: openIdDetails, type: clob, constraints: {nullable: true}}}
         - {column: {name: audience, type: varchar(1000), constraints: {nullable: true}}}
@@ -46,7 +47,7 @@ databaseChangeLog:
     - modifySql: 
        dbms: mysql
        append: 
-        value: engine=innodb default character set latin1 collate latin1_general_ci
+        value: engine=innodb default character set latin1 collate latin1_general_ci               
         
 - changeSet:
     id: 1_0_0-2
@@ -112,3 +113,21 @@ databaseChangeLog:
        - column:
           name:  responseTime
        unique:  false
+
+- changeSet:
+    id: 1_0_0-3
+    author: jtalbut (generated)
+    runWith: jdbc
+    changes:
+    - createIndex:  
+       indexName:  idx_request_runid
+       tableName:  request
+       columns:
+       - column:
+          name:  runid
+       unique:  true
+    - modifySql: 
+       dbms: mssql
+       append: 
+        value: " WHERE runid IS NOT NULL"
+

@@ -21,17 +21,17 @@ import io.vertx.core.Future;
 /**
  * An Instance of a {@link uk.co.spudsoft.query.defn.Processor}.
  * 
- * Usually created by called {@link uk.co.spudsoft.query.defn.Processor#createInstance(io.vertx.core.Vertx, uk.co.spudsoft.query.exec.SourceNameTracker, io.vertx.core.Context)}.
+ * Usually created by called {@link uk.co.spudsoft.query.defn.Processor#createInstance(io.vertx.core.Vertx, uk.co.spudsoft.query.exec.SourceNameTracker, io.vertx.core.Context, java.lang.String) }.
  * 
  * @author jtalbut
  */
 public interface ProcessorInstance {
     
   /**
-   * Return an ID for this processor, unique within the pipeline.
-   * @return an ID for this processor, unique within the pipeline. 
+   * Return a name for this processor, unique within the pipeline.
+   * @return a name for this processor, unique within the pipeline. 
    */
-  String getId();
+  String getName();
   
   /**
    * Take whatever steps are necessary to start reading or writing the streams.

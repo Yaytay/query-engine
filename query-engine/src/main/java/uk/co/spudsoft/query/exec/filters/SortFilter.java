@@ -53,13 +53,13 @@ public class SortFilter implements Filter {
   }
 
   @Override
-  public ProcessorInstance createProcessor(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String argument) {
+  public ProcessorInstance createProcessor(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String argument, String name) {
     List<String> fields = SpaceParser.parse(argument);
     if (fields.isEmpty()) {
       throw new IllegalArgumentException("Invalid argument to _sort filter, should be a space delimited list of fields");
     } else {
       ProcessorSort definition = ProcessorSort.builder().fields(fields).build();
-      return definition.createInstance(vertx, sourceNameTracker, context);
+      return definition.createInstance(vertx, sourceNameTracker, context, name);
     }
   }
   

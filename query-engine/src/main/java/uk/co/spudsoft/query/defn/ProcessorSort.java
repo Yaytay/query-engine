@@ -48,12 +48,12 @@ public class ProcessorSort implements Processor {
   
   private final ProcessorType type;
   private final Condition condition;
-  private final String id;
+  private final String name;
   private final ImmutableList<String> fields;
 
   @Override
-  public ProcessorSortInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
-    return new ProcessorSortInstance(vertx, sourceNameTracker, context, this);
+  public ProcessorSortInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String name) {
+    return new ProcessorSortInstance(vertx, sourceNameTracker, context, this, name);
   }
 
   @Override
@@ -75,8 +75,8 @@ public class ProcessorSort implements Processor {
   }  
 
   @Override
-  public String getId() {
-    return id;
+  public String getName() {
+    return name;
   }
 
   /**
@@ -100,7 +100,7 @@ public class ProcessorSort implements Processor {
 
     private ProcessorType type = ProcessorType.SORT;
     private Condition condition;
-    private String id;
+    private String name;
     private List<String> fields;
 
     private Builder() {
@@ -127,12 +127,12 @@ public class ProcessorSort implements Processor {
     }
 
     /**
-     * Set the {@link ProcessorSort#id} value in the builder.
-     * @param value The value for the {@link ProcessorSort#id}.
+     * Set the {@link ProcessorSort#name} value in the builder.
+     * @param value The value for the {@link ProcessorSort#name}.
      * @return this, so that this builder may be used in a fluent manner.
      */
-    public Builder id(final String value) {
-      this.id = value;
+    public Builder name(final String value) {
+      this.name = value;
       return this;
     }
 
@@ -151,7 +151,7 @@ public class ProcessorSort implements Processor {
      * @return a new instance of the ProcessorSort class.
      */
     public ProcessorSort build() {
-      ProcessorSort result = new ProcessorSort(type, condition, id, fields);
+      ProcessorSort result = new ProcessorSort(type, condition, name, fields);
       result.validateType(ProcessorType.SORT, type);
       return result;
     }
@@ -165,10 +165,10 @@ public class ProcessorSort implements Processor {
     return new ProcessorSort.Builder();
   }
 
-  private ProcessorSort(final ProcessorType type, final Condition condition, final String id, final List<String> fields) {
+  private ProcessorSort(final ProcessorType type, final Condition condition, final String name, final List<String> fields) {
     this.type = type;
     this.condition = condition;
-    this.id = id;
+    this.name = name;
     this.fields = ImmutableCollectionTools.copy(fields);
   }
   

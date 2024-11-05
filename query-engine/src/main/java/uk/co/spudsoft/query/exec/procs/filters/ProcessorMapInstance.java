@@ -58,6 +58,7 @@ public class ProcessorMapInstance implements ProcessorInstance {
   private final Map<String, String> relabels;
   
   private final Types types;
+  private final String name;
   
   /**
    * Constructor.
@@ -65,9 +66,10 @@ public class ProcessorMapInstance implements ProcessorInstance {
    * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
    * @param context the Vert.x context.
    * @param definition the definition of this processor.
+   * @param name the name of this processor, used in tracking and logging.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
-  public ProcessorMapInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorMap definition) {
+  public ProcessorMapInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorMap definition, String name) {
     this.sourceNameTracker = sourceNameTracker;
     this.context = context;
     this.definition = definition;
@@ -77,11 +79,12 @@ public class ProcessorMapInstance implements ProcessorInstance {
     }
     this.relabels = builder.build();
     this.types = new Types();
+    this.name = name;
   }
 
   @Override
-  public String getId() {
-    return definition.getId();
+  public String getName() {
+    return name;
   }
 
   @Override

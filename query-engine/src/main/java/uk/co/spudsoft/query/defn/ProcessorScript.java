@@ -42,14 +42,14 @@ public class ProcessorScript implements Processor {
   
   private final ProcessorType type;
   private final Condition condition;
-  private final String id;
+  private final String name;
   private final String language;
   private final String predicate;
   private final String process;
 
   @Override
-  public ProcessorScriptInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
-    return new ProcessorScriptInstance(vertx, sourceNameTracker, context, this);
+  public ProcessorScriptInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String name) {
+    return new ProcessorScriptInstance(vertx, sourceNameTracker, context, this, name);
   }
   
   @Override
@@ -68,8 +68,8 @@ public class ProcessorScript implements Processor {
   }
 
   @Override
-  public String getId() {
-    return id;
+  public String getName() {
+    return name;
   }
 
   /**
@@ -128,7 +128,7 @@ public class ProcessorScript implements Processor {
 
     private ProcessorType type = ProcessorType.SCRIPT;
     private Condition condition;
-    private String id;
+    private String name;
     private String language = "js";
     private String predicate;
     private String process;
@@ -157,12 +157,12 @@ public class ProcessorScript implements Processor {
     }
     
     /**
-     * Set the {@link ProcessorScript#id} value in the builder.
-     * @param value The value for the {@link ProcessorScript#id}.
+     * Set the {@link ProcessorScript#name} value in the builder.
+     * @param value The value for the {@link ProcessorScript#name}.
      * @return this, so that this builder may be used in a fluent manner.
      */
-    public Builder id(final String value) {
-      this.id = value;
+    public Builder name(final String value) {
+      this.name = value;
       return this;
     }
 
@@ -201,7 +201,7 @@ public class ProcessorScript implements Processor {
      * @return a new instance of the ProcessorScript class.
      */
     public ProcessorScript build() {
-      ProcessorScript result = new ProcessorScript(type, condition, id, language, predicate, process);
+      ProcessorScript result = new ProcessorScript(type, condition, name, language, predicate, process);
       result.validateType(ProcessorType.SCRIPT, type);
       return result;
     }
@@ -215,10 +215,10 @@ public class ProcessorScript implements Processor {
     return new ProcessorScript.Builder();
   }
 
-  private ProcessorScript(final ProcessorType type, final Condition condition, final String id, final String language, final String predicate, final String process) {
+  private ProcessorScript(final ProcessorType type, final Condition condition, final String name, final String language, final String predicate, final String process) {
     this.type = type;
     this.condition = condition;
-    this.id = id;
+    this.name = name;
     this.language = language;
     this.predicate = predicate;
     this.process = process;

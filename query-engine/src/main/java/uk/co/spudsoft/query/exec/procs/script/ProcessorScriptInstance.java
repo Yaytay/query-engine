@@ -64,6 +64,7 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
   private final SourceNameTracker sourceNameTracker;
   private final Context context;
   private final ProcessorScript definition;
+  private final String name;
   private ReadStream<DataRow> stream;
   
   private Engine engine;
@@ -84,20 +85,22 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
    * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
    * @param context the Vert.x context.
    * @param definition the definition of this processor.
+   * @param name the name of this processor, used in tracking and logging.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
-  public ProcessorScriptInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorScript definition) {
+  public ProcessorScriptInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorScript definition, String name) {
     this.sourceNameTracker = sourceNameTracker;
     this.context = context;
     this.definition = definition;
+    this.name = name;
     this.requestContext = RequestContextHandler.getRequestContext(context);
     this.pipeline = PipelineInstance.getPipelineDefinition(context);
     this.arguments = ImmutableCollectionTools.copy(requestContext == null ? null : requestContext.getArguments());
   }
   
   @Override
-  public String getId() {
-    return definition.getId();
+  public String getName() {
+    return name;
   }
 
   private boolean runPredicate(DataRow data) {

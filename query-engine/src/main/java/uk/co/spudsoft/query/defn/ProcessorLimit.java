@@ -37,12 +37,12 @@ public class ProcessorLimit implements Processor {
   
   private final ProcessorType type;
   private final Condition condition;
-  private final String id;
+  private final String name;
   private final int limit;
 
   @Override
-  public ProcessorLimitInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
-    return new ProcessorLimitInstance(vertx, sourceNameTracker, context, this);
+  public ProcessorLimitInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String name) {
+    return new ProcessorLimitInstance(vertx, sourceNameTracker, context, this, name);
   }
 
   @Override
@@ -66,8 +66,8 @@ public class ProcessorLimit implements Processor {
   }  
 
   @Override
-  public String getId() {
-    return id;
+  public String getName() {
+    return name;
   }
   
   /**
@@ -90,7 +90,7 @@ public class ProcessorLimit implements Processor {
 
     private ProcessorType type = ProcessorType.LIMIT;
     private Condition condition;
-    private String id;
+    private String name;
     private int limit;
 
     private Builder() {
@@ -117,12 +117,12 @@ public class ProcessorLimit implements Processor {
     }
 
     /**
-     * Set the {@link ProcessorLimit#id} value in the builder.
-     * @param value The value for the {@link ProcessorLimit#id}.
+     * Set the {@link ProcessorLimit#name} value in the builder.
+     * @param value The value for the {@link ProcessorLimit#name}.
      * @return this, so that this builder may be used in a fluent manner.
      */
-    public Builder id(final String value) {
-      this.id = value;
+    public Builder name(final String value) {
+      this.name = value;
       return this;
     }
 
@@ -141,7 +141,7 @@ public class ProcessorLimit implements Processor {
      * @return a new instance of the ProcessorLimit class.
      */
     public ProcessorLimit build() {
-      ProcessorLimit result = new ProcessorLimit(type, condition, id, limit);
+      ProcessorLimit result = new ProcessorLimit(type, condition, name, limit);
       result.validateType(ProcessorType.LIMIT, type);
       return result;
     }
@@ -155,10 +155,10 @@ public class ProcessorLimit implements Processor {
     return new ProcessorLimit.Builder();
   }
 
-  private ProcessorLimit(final ProcessorType type, final Condition condition, final String id, final int limit) {
+  private ProcessorLimit(final ProcessorType type, final Condition condition, final String name, final int limit) {
     this.type = type;
     this.condition = condition;
-    this.id = id;
+    this.name = name;
     this.limit = limit;
   }
   

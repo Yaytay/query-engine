@@ -82,6 +82,7 @@ import uk.co.spudsoft.query.exec.preprocess.DynamicEndpointPreProcessorInstance;
 )
 public class DynamicEndpoint {
   
+  private final String name;
   private final SourcePipeline input;
   private final String key;
   private final String typeField;
@@ -115,10 +116,29 @@ public class DynamicEndpoint {
    * Create a {@link DynamicEndpointPreProcessorInstance} based on this configuration.
    * @param vertx The Vert.x instance.
    * @param context The Vert.x context.
+   * @param index zero based index of this pre-processor within the list of pre-processors in the pipeline.
    * @return a newly created {@link DynamicEndpointPreProcessorInstance} object.
    */
-  public PreProcessorInstance createInstance(Vertx vertx, Context context) {
-    return new DynamicEndpointPreProcessorInstance(vertx, context, this);
+  public PreProcessorInstance createInstance(Vertx vertx, Context context, int index) {
+    return new DynamicEndpointPreProcessorInstance(vertx, context, this, index);
+  }
+  
+  /**
+   * Get the name of the {@link DynamicEndpoint}, that will be used in logging and tracking.
+   * This is optional, if it is not set a generated name will be allocated.
+   * @return the name of the {@link DynamicEndpoint}, that will be used in logging and tracking.
+   */
+  @Schema(description = """
+                        <P>Get the name of the PreProcessor, that will be used in logging and tracking..</P>
+                        <P>
+                        This is optional, if it is not set a generated name will be allocated.
+                        </P>
+                        """
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  public String getName() {
+    return name;
   }
   
   /**
@@ -348,6 +368,7 @@ public class DynamicEndpoint {
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
+    private String name;
     private SourcePipeline input;
     private String key;
     private String typeField = "type";
@@ -362,6 +383,16 @@ public class DynamicEndpoint {
     private Builder() {
     }
 
+    /**
+     * Set the {@link DynamicEndpoint#name} value in the builder.
+     * @param value The value for the {@link DynamicEndpoint#name}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder name(final String value) {
+      this.name = value;
+      return this;
+    }
+    
     /**
      * Set the input value on the builder.
      * @param value the input value.
@@ -467,7 +498,7 @@ public class DynamicEndpoint {
      * @return a new DynamicEndpoint object.
      */
     public DynamicEndpoint build() {
-      return new uk.co.spudsoft.query.defn.DynamicEndpoint(input, key, typeField, keyField, urlField, urlTemplateField, secretField, usernameField, passwordField, conditionField);
+      return new uk.co.spudsoft.query.defn.DynamicEndpoint(name, input, key, typeField, keyField, urlField, urlTemplateField, secretField, usernameField, passwordField, conditionField);
     }
   }
 
@@ -480,7 +511,8 @@ public class DynamicEndpoint {
     return new DynamicEndpoint.Builder();
   }
 
-  private DynamicEndpoint(final SourcePipeline input, final String key, final String typeField, final String keyField, final String urlField, final String urlTemplateField, final String secretField, final String usernameField, final String passwordField, final String conditionField) {
+  private DynamicEndpoint(final String name, final SourcePipeline input, final String key, final String typeField, final String keyField, final String urlField, final String urlTemplateField, final String secretField, final String usernameField, final String passwordField, final String conditionField) {
+    this.name = name;
     this.input = input;
     this.key = key;
     this.typeField = typeField;

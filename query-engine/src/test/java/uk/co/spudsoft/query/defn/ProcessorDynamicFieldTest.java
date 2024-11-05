@@ -33,9 +33,9 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class ProcessorDynamicFieldTest {
   
   @Test
-  public void testGetId() {
-    ProcessorDynamicField instance = ProcessorDynamicField.builder().id("id").build();
-    assertEquals("id", instance.getId());
+  public void testGetName() {
+    ProcessorDynamicField instance = ProcessorDynamicField.builder().name("name").build();
+    assertEquals("name", instance.getName());
   }
   
   @Test
@@ -90,7 +90,7 @@ public class ProcessorDynamicFieldTest {
   }
     
   @Test
-  public void testValidateNoChildIdColumns() {    
+  public void testValidateNoChildNameColumns() {    
     ProcessorDynamicField instance = ProcessorDynamicField.builder()
             .fieldDefns(
                     SourcePipeline.builder()
@@ -106,7 +106,7 @@ public class ProcessorDynamicFieldTest {
                             )
                             .build()
             )
-            .parentIdColumns(Arrays.asList("id"))
+            .parentIdColumns(Arrays.asList("name"))
             .build();
     assertEquals("ID column(s) not specified for values stream"
             , assertThrows(IllegalArgumentException.class, () -> {
@@ -116,7 +116,7 @@ public class ProcessorDynamicFieldTest {
   }
     
   @Test
-  public void testValidateMismatchedIdColumns() {    
+  public void testValidateMismatchedNameColumns() {    
     ProcessorDynamicField instance = ProcessorDynamicField.builder()
             .fieldDefns(
                     SourcePipeline.builder()
@@ -132,8 +132,8 @@ public class ProcessorDynamicFieldTest {
                             )
                             .build()
             )
-            .parentIdColumns(Arrays.asList("id"))
-            .valuesParentIdColumns(Arrays.asList("id1", "id2"))
+            .parentIdColumns(Arrays.asList("name"))
+            .valuesParentIdColumns(Arrays.asList("name1", "name2"))
             .build();
     assertEquals("ID column(s) specified for parent stream does not have the same number of fields as those specified for values stream"
             , assertThrows(IllegalArgumentException.class, () -> {
@@ -143,7 +143,7 @@ public class ProcessorDynamicFieldTest {
   }
     
   @Test
-  public void testValidateTypeIdColumnNotSet() {    
+  public void testValidateTypeNameColumnNotSet() {    
     ProcessorDynamicField instance = ProcessorDynamicField.builder()
             .fieldDefns(
                     SourcePipeline.builder()
@@ -159,8 +159,8 @@ public class ProcessorDynamicFieldTest {
                             )
                             .build()
             )
-            .parentIdColumns(Arrays.asList("id"))
-            .valuesParentIdColumns(Arrays.asList("id1"))
+            .parentIdColumns(Arrays.asList("name"))
+            .valuesParentIdColumns(Arrays.asList("name1"))
             .fieldTypeColumn(null)
             .build();
     assertEquals("Type column not set (fieldTypeColumn)"
@@ -187,8 +187,8 @@ public class ProcessorDynamicFieldTest {
                             )
                             .build()
             )
-            .parentIdColumns(Arrays.asList("id"))
-            .valuesParentIdColumns(Arrays.asList("id"))
+            .parentIdColumns(Arrays.asList("name"))
+            .valuesParentIdColumns(Arrays.asList("name"))
             .build();
     instance.validate();
   }
@@ -216,8 +216,8 @@ public class ProcessorDynamicFieldTest {
     assertEquals(false, instance.isInnerJoin());
     assertEquals("column", instance.getFieldColumnColumn());
     assertEquals(null, instance.getFieldDefns());
-    assertEquals("id", instance.getFieldIdColumn());
     assertEquals("name", instance.getFieldNameColumn());
+    assertEquals("id", instance.getFieldIdColumn());
     assertEquals("type", instance.getFieldTypeColumn());
     assertEquals(null, instance.getFieldValues());
     assertThat(instance.getParentIdColumns(), hasSize(0));
@@ -233,9 +233,9 @@ public class ProcessorDynamicFieldTest {
   }
 
   @Test
-  public void testGetParentIdColumn() {
-    ProcessorDynamicField instance = ProcessorDynamicField.builder().parentIdColumns(Arrays.asList("parentId")).build();
-    assertEquals(Arrays.asList("parentId"), instance.getParentIdColumns());
+  public void testGetParentNameColumn() {
+    ProcessorDynamicField instance = ProcessorDynamicField.builder().parentIdColumns(Arrays.asList("parentName")).build();
+    assertEquals(Arrays.asList("parentName"), instance.getParentIdColumns());
   }
 
   @Test
@@ -263,7 +263,7 @@ public class ProcessorDynamicFieldTest {
   }
 
   @Test
-  public void testGetValuesParentIdColumn() {
+  public void testGetValuesParentNameColumn() {
     ProcessorDynamicField instance = ProcessorDynamicField.builder().valuesParentIdColumns(Arrays.asList("valuesParentIdColumns")).build();
     assertEquals(Arrays.asList("valuesParentIdColumns"), instance.getValuesParentIdColumns());
   }
@@ -273,6 +273,5 @@ public class ProcessorDynamicFieldTest {
     ProcessorDynamicField instance = ProcessorDynamicField.builder().valuesFieldIdColumn("valuesFieldIdColumn").build();
     assertEquals("valuesFieldIdColumn", instance.getValuesFieldIdColumn());
   }
-
 
 }

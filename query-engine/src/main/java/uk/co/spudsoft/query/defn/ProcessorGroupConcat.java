@@ -40,7 +40,7 @@ public class ProcessorGroupConcat implements Processor {
 
   private final ProcessorType type;
   private final Condition condition;
-  private final String id;
+  private final String name;
   private final SourcePipeline input;
   private final boolean innerJoin;
   private final ImmutableList<String> parentIdColumns;
@@ -50,8 +50,8 @@ public class ProcessorGroupConcat implements Processor {
   private final String delimiter;
   
   @Override
-  public ProcessorGroupConcatInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
-    return new ProcessorGroupConcatInstance(vertx, sourceNameTracker, context, this);
+  public ProcessorGroupConcatInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String name) {
+    return new ProcessorGroupConcatInstance(vertx, sourceNameTracker, context, this, name);
   }
 
   @Override
@@ -70,8 +70,8 @@ public class ProcessorGroupConcat implements Processor {
   }
   
   @Override
-  public String getId() {
-    return id;
+  public String getName() {
+    return name;
   }
   
   /**
@@ -210,7 +210,7 @@ public class ProcessorGroupConcat implements Processor {
 
     private ProcessorType type = ProcessorType.GROUP_CONCAT;
     private Condition condition;
-    private String id;
+    private String name;
     private SourcePipeline input;
     private boolean innerJoin;
     private List<String> parentIdColumns;
@@ -243,12 +243,12 @@ public class ProcessorGroupConcat implements Processor {
     }
     
     /**
-     * Set the {@link ProcessorGroupConcat#id} value in the builder.
-     * @param value The value for the {@link ProcessorGroupConcat#id}.
+     * Set the {@link ProcessorGroupConcat#name} value in the builder.
+     * @param value The value for the {@link ProcessorGroupConcat#name}.
      * @return this, so that this builder may be used in a fluent manner.
      */
-    public Builder id(final String value) {
-      this.id = value;
+    public Builder name(final String value) {
+      this.name = value;
       return this;
     }
 
@@ -327,7 +327,7 @@ public class ProcessorGroupConcat implements Processor {
      * @return a new instance of the ProcessorGroupConcat class.
      */
     public ProcessorGroupConcat build() {
-      ProcessorGroupConcat result = new ProcessorGroupConcat(type, condition, id, input, innerJoin, parentIdColumns, childIdColumns, childValueColumn, parentValueColumn, delimiter);
+      ProcessorGroupConcat result = new ProcessorGroupConcat(type, condition, name, input, innerJoin, parentIdColumns, childIdColumns, childValueColumn, parentValueColumn, delimiter);
       result.validateType(ProcessorType.GROUP_CONCAT, type);
       return result;
     }
@@ -344,7 +344,7 @@ public class ProcessorGroupConcat implements Processor {
 
   private ProcessorGroupConcat(ProcessorType type
           , final Condition condition
-          , final String id
+          , final String name
           , SourcePipeline input
           , boolean innerJoin
           , List<String> parentIdColumns
@@ -355,7 +355,7 @@ public class ProcessorGroupConcat implements Processor {
   ) {
     this.type = type;
     this.condition = condition;
-    this.id = id;
+    this.name = name;
     this.input = input;
     this.innerJoin = innerJoin;
     this.parentIdColumns = ImmutableCollectionTools.copy(parentIdColumns);

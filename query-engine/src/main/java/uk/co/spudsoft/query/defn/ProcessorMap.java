@@ -41,12 +41,12 @@ public class ProcessorMap implements Processor {
   
   private final ProcessorType type;
   private final Condition condition;
-  private final String id;
+  private final String name;
   private final ImmutableList<ProcessorMapLabel> relabels;
 
   @Override
-  public ProcessorMapInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
-    return new ProcessorMapInstance(vertx, sourceNameTracker, context, this);
+  public ProcessorMapInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String name) {
+    return new ProcessorMapInstance(vertx, sourceNameTracker, context, this, name);
   }
 
   @Override
@@ -71,8 +71,8 @@ public class ProcessorMap implements Processor {
   }  
 
   @Override
-  public String getId() {
-    return id;
+  public String getName() {
+    return name;
   }
 
   /**
@@ -97,7 +97,7 @@ public class ProcessorMap implements Processor {
 
     private ProcessorType type = ProcessorType.MAP;
     private Condition condition;
-    private String id;
+    private String name;
     private List<ProcessorMapLabel> relabels;
 
     private Builder() {
@@ -124,12 +124,12 @@ public class ProcessorMap implements Processor {
     }
 
     /**
-     * Set the {@link ProcessorMap#id} value in the builder.
-     * @param value The value for the {@link ProcessorMap#id}.
+     * Set the {@link ProcessorMap#name} value in the builder.
+     * @param value The value for the {@link ProcessorMap#name}.
      * @return this, so that this builder may be used in a fluent manner.
      */
-    public Builder id(final String value) {
-      this.id = value;
+    public Builder name(final String value) {
+      this.name = value;
       return this;
     }
 
@@ -148,7 +148,7 @@ public class ProcessorMap implements Processor {
      * @return a new instance of the ProcessorMap class.
      */
     public ProcessorMap build() {
-      ProcessorMap result = new ProcessorMap(type, condition, id, relabels);
+      ProcessorMap result = new ProcessorMap(type, condition, name, relabels);
       result.validateType(ProcessorType.MAP, type);
       return result;
     }
@@ -162,10 +162,10 @@ public class ProcessorMap implements Processor {
     return new ProcessorMap.Builder();
   }
 
-  private ProcessorMap(final ProcessorType type, final Condition condition, final String id, final List<ProcessorMapLabel> relabels) {
+  private ProcessorMap(final ProcessorType type, final Condition condition, final String name, final List<ProcessorMapLabel> relabels) {
     this.type = type;
     this.condition = condition;
-    this.id = id;
+    this.name = name;
     this.relabels = ImmutableCollectionTools.copy(relabels);
   }
   

@@ -321,9 +321,10 @@ public class QueryRouter implements Handler<RoutingContext> {
               , pipeline.getSourceEndpointsMap()
               , pipelineExecutor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
               , sourceInstance
-              , pipelineExecutor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline, routingContext.request().params())
+              , pipelineExecutor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline, routingContext.request().params(), null)
               , formatInstance
       );
+      logger.debug("Instance: {}", instance);
     } catch (Throwable ex) {
       return Future.failedFuture(ex);
     }

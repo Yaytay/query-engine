@@ -64,7 +64,9 @@ public class ProcessorOffsetInstanceTest {
         
     ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, ctx -> {}, context
             , ProcessorOffset.builder().offset(17).build()
+            , "P0-Offset"
     );
+    assertEquals("P0-Offset", instance.getName());
     assertTrue(instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(context, rowsList), types)).succeeded());
   }
 
@@ -83,8 +85,10 @@ public class ProcessorOffsetInstanceTest {
     Context context = vertx.getOrCreateContext();
     
     ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, ctx -> {}, context
-            , ProcessorOffset.builder().offset(2).build()
+            , ProcessorOffset.builder().name("fred").offset(2).build()
+            , "P0-Offset"
     );
+    assertEquals("P0-Offset", instance.getName());
     instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(context, rowsList), types))
             .compose(rswt -> {
               return ReadStreamToList.capture(rswt.getStream());

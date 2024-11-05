@@ -60,12 +60,13 @@ public class FilterFactory {
    * @param context the Vert.x context.
    * @param arg the query string parameter name (the key for the filter).
    * @param value the value of the query string parameter, that must be parsed into the configuration for this {@link ProcessorInstance}.
+   * @param name the generated name of the processor to be used in logging and tracking
    * @return a newly created {@link ProcessorInstance} of the appropriate type.
    */
-  public ProcessorInstance createFilter(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String arg, String value) {
+  public ProcessorInstance createFilter(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String arg, String value, String name) {
     Filter filter = filters.get(arg);
     if (filter != null) {
-      return filter.createProcessor(vertx, sourceNameTracker, context, value);
+      return filter.createProcessor(vertx, sourceNameTracker, context, value, name);
     } else {
       return null;
     }

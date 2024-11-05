@@ -49,7 +49,7 @@ public class QueryFilter implements Filter {
   }
 
   @Override
-  public ProcessorInstance createProcessor(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String argument) throws IllegalArgumentException {
+  public ProcessorInstance createProcessor(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String argument, String name) throws IllegalArgumentException {
     try {
       ProcessorQueryInstance.RSQL_PARSER.parse(argument);
     } catch (Throwable ex) {
@@ -57,7 +57,7 @@ public class QueryFilter implements Filter {
       throw new IllegalArgumentException("Invalid argument to _query filter, should be a valid RSQL expression");
     }
     ProcessorQuery definition = ProcessorQuery.builder().expression(argument).build();
-    return definition.createInstance(vertx, sourceNameTracker, context);
+    return definition.createInstance(vertx, sourceNameTracker, context, name);
   }
   
 }

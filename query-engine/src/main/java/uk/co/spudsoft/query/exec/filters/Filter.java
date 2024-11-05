@@ -46,8 +46,9 @@ public interface Filter {
    * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
    * @param context the Vert.x context.
    * @param argument the value of the query string parameter, that must be parsed into the configuration for this {@link ProcessorInstance}.
+   * @param name the generated name of the processor to be used in logging and tracking.
    * @return a newly created {@link ProcessorInstance} of the appropriate type.
    */
-  ProcessorInstance createProcessor(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String argument);
+  ProcessorInstance createProcessor(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String argument, String name);
   
 }

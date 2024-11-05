@@ -38,12 +38,12 @@ public class ProcessorQuery implements Processor {
     
   private final ProcessorType type;
   private final Condition condition;
-  private final String id;
+  private final String name;
   private final String expression;
 
   @Override
-  public ProcessorQueryInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
-    return new ProcessorQueryInstance(vertx, sourceNameTracker, context, this);
+  public ProcessorQueryInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String name) {
+    return new ProcessorQueryInstance(vertx, sourceNameTracker, context, this, name);
   }
 
   @Override
@@ -67,8 +67,8 @@ public class ProcessorQuery implements Processor {
   }  
 
   @Override
-  public String getId() {
-    return id;
+  public String getName() {
+    return name;
   }
 
   /**
@@ -94,7 +94,7 @@ public class ProcessorQuery implements Processor {
 
     private ProcessorType type = ProcessorType.QUERY;
     private Condition condition;
-    private String id;
+    private String name;
     private String expression;
 
     private Builder() {
@@ -121,12 +121,12 @@ public class ProcessorQuery implements Processor {
     }
 
     /**
-     * Set the {@link ProcessorQuery#id} value in the builder.
-     * @param value The value for the {@link ProcessorQuery#id}.
+     * Set the {@link ProcessorQuery#name} value in the builder.
+     * @param value The value for the {@link ProcessorQuery#name}.
      * @return this, so that this builder may be used in a fluent manner.
      */
-    public Builder id(final String value) {
-      this.id = value;
+    public Builder name(final String value) {
+      this.name = value;
       return this;
     }
 
@@ -145,7 +145,7 @@ public class ProcessorQuery implements Processor {
      * @return a new instance of the ProcessorQuery class.
      */
     public ProcessorQuery build() {
-      ProcessorQuery result = new ProcessorQuery(type, condition, id, expression);
+      ProcessorQuery result = new ProcessorQuery(type, condition, name, expression);
       result.validateType(ProcessorType.QUERY, type);
       return result;
     }
@@ -159,10 +159,10 @@ public class ProcessorQuery implements Processor {
     return new ProcessorQuery.Builder();
   }
 
-  private ProcessorQuery(final ProcessorType type, final Condition condition, final String id, final String expression) {
+  private ProcessorQuery(final ProcessorType type, final Condition condition, final String name, final String expression) {
     this.type = type;
     this.condition = condition;
-    this.id = id;
+    this.name = name;
     this.expression = expression;
   }
   

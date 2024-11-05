@@ -43,9 +43,9 @@ public class ProcessorExpressionTest {
   @Test
   public void testGetId() {
     ProcessorExpression instance = ProcessorExpression.builder().build();
-    assertNull(instance.getId());
-    instance = ProcessorExpression.builder().id("one").build();
-    assertEquals("one", instance.getId());
+    assertNull(instance.getName());
+    instance = ProcessorExpression.builder().name("one").build();
+    assertEquals("one", instance.getName());
   }
 
   @Test

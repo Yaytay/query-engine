@@ -28,8 +28,8 @@ public class ProcessorQueryTest {
   
   @Test
   public void testGetId() {
-    ProcessorQuery instance = ProcessorQuery.builder().id("id").build();
-    assertEquals("id", instance.getId());
+    ProcessorQuery instance = ProcessorQuery.builder().name("id").build();
+    assertEquals("id", instance.getName());
   }
   
   @Test

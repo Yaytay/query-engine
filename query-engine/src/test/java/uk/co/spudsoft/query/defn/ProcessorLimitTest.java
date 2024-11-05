@@ -30,8 +30,8 @@ public class ProcessorLimitTest {
   
   @Test
   public void testGetId() {
-    ProcessorLimit instance = ProcessorLimit.builder().id("id").build();
-    assertEquals("id", instance.getId());
+    ProcessorLimit instance = ProcessorLimit.builder().name("id").build();
+    assertEquals("id", instance.getName());
   }
   
   @Test

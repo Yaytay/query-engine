@@ -98,7 +98,7 @@ public class ParseIssuesTest {
                                                 "condition": {
                                                   "expression": "hello"
                                                 },
-                                                "id": ""
+                                                "name": ""
                                               }
                                             ]
                                           }

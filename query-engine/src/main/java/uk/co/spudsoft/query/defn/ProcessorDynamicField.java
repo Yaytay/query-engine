@@ -118,7 +118,7 @@ public class ProcessorDynamicField implements Processor {
 
   private final ProcessorType type;
   private final Condition condition;
-  private final String id;
+  private final String name;
   
   private final boolean innerJoin;
   
@@ -135,8 +135,8 @@ public class ProcessorDynamicField implements Processor {
   private final SourcePipeline fieldValues;
   
   @Override
-  public ProcessorDynamicFieldInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context) {
-    return new ProcessorDynamicFieldInstance(vertx, sourceNameTracker, context, this);
+  public ProcessorDynamicFieldInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String name) {
+    return new ProcessorDynamicFieldInstance(vertx, sourceNameTracker, context, this, name);
   }
 
   @Override
@@ -175,8 +175,8 @@ public class ProcessorDynamicField implements Processor {
   }  
 
   @Override
-  public String getId() {
-    return id;
+  public String getName() {
+    return name;
   }
   
   /**
@@ -360,7 +360,7 @@ public class ProcessorDynamicField implements Processor {
 
     private ProcessorType type = ProcessorType.DYNAMIC_FIELD;
     private Condition condition;
-    private String id;
+    private String name;
     private boolean innerJoin;
     private String fieldIdColumn = "id";
     private String fieldNameColumn = "name";
@@ -396,12 +396,12 @@ public class ProcessorDynamicField implements Processor {
     }
     
     /**
-     * Set the {@link ProcessorDynamicField#id} value in the builder.
-     * @param value The value for the {@link ProcessorDynamicField#id}.
+     * Set the {@link ProcessorDynamicField#name} value in the builder.
+     * @param value The value for the {@link ProcessorDynamicField#name}.
      * @return this, so that this builder may be used in a fluent manner.
      */
-    public Builder id(final String value) {
-      this.id = value;
+    public Builder name(final String value) {
+      this.name = value;
       return this;
     }
 
@@ -510,7 +510,7 @@ public class ProcessorDynamicField implements Processor {
      * @return a new instance of the ProcessorDynamicField class.
      */
     public ProcessorDynamicField build() {
-      ProcessorDynamicField result = new ProcessorDynamicField(type, condition, id, innerJoin, fieldIdColumn, fieldNameColumn, fieldTypeColumn, fieldColumnColumn, parentIdColumns, valuesParentIdColumns, valuesFieldIdColumn, fieldDefns, fieldValues);
+      ProcessorDynamicField result = new ProcessorDynamicField(type, condition, name, innerJoin, fieldIdColumn, fieldNameColumn, fieldTypeColumn, fieldColumnColumn, parentIdColumns, valuesParentIdColumns, valuesFieldIdColumn, fieldDefns, fieldValues);
       result.validateType(ProcessorType.DYNAMIC_FIELD, type);
       return result;
     }
@@ -524,10 +524,10 @@ public class ProcessorDynamicField implements Processor {
     return new ProcessorDynamicField.Builder();
   }
 
-  private ProcessorDynamicField(final ProcessorType type, final Condition condition, final String id, final boolean innerJoin, final String fieldIdColumn, final String fieldNameColumn, final String fieldTypeColumn, final String fieldColumnColumn, final List<String> parentIdColumns, final List<String> valuesParentIdColumns, final String valuesFieldIdColumn, final SourcePipeline fieldDefns, final SourcePipeline fieldValues) {
+  private ProcessorDynamicField(final ProcessorType type, final Condition condition, final String name, final boolean innerJoin, final String fieldIdColumn, final String fieldNameColumn, final String fieldTypeColumn, final String fieldColumnColumn, final List<String> parentIdColumns, final List<String> valuesParentIdColumns, final String valuesFieldIdColumn, final SourcePipeline fieldDefns, final SourcePipeline fieldValues) {
     this.type = type;
     this.condition = condition;
-    this.id = id;
+    this.name = name;
     this.innerJoin = innerJoin;
     this.fieldIdColumn = fieldIdColumn;
     this.fieldNameColumn = fieldNameColumn;
