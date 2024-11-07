@@ -27,7 +27,7 @@ import java.util.Map;
 import org.slf4j.spi.MDCAdapter;
 
 /**
- * Instance of {@link org.slf4j.spi.MDCAdapter} that stores data in the Vertx local context.
+ * Instance of {@link org.slf4j.spi.MDCAdapter} that stores data in the Vertx context.
  * 
  * Logback can be configured to use this MDCAdapter by using {@link ch.qos.logback.classic.LoggerContext#setMDCAdapter(org.slf4j.spi.MDCAdapter)} 
  * but it is not currently possible to replace the MDCAdapter used by {@link org.slf4j.MDC}
@@ -61,7 +61,7 @@ public class VertxMDC implements MDCAdapter {
   private MdcData getMdcData() {
     Context context = Vertx.currentContext();
     if (context != null) {
-      return context.getLocal(VERTX_KEY);      
+      return context.get(VERTX_KEY);      
     }
     return null;
   }
@@ -69,10 +69,10 @@ public class VertxMDC implements MDCAdapter {
   private static MdcData getOrCreateMdcData() {
     Context context = Vertx.currentContext();
     if (context != null) {
-      MdcData data = context.getLocal(VERTX_KEY);
+      MdcData data = context.get(VERTX_KEY);
       if (data == null) {
         data = new MdcData();
-        context.putLocal(VERTX_KEY, data);
+        context.put(VERTX_KEY, data);
       }
       return data;
     }

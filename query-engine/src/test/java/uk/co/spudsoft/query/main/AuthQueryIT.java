@@ -109,7 +109,6 @@ public class AuthQueryIT {
       , "--baseConfigPath=" + baseConfigDir
       , "--vertxOptions.eventLoopPoolSize=5"
       , "--vertxOptions.workerPoolSize=5"
-      , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--httpServerOptions.tracingPolicy=ALWAYS"
       , "--pipelineCache.maxDurationMs=PT10M"
       , "--logging.jsonFormat=false"

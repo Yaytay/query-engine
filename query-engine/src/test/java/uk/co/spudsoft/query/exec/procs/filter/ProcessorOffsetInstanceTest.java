@@ -62,7 +62,7 @@ public class ProcessorOffsetInstanceTest {
     
     Context context = vertx.getOrCreateContext();
         
-    ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, ctx -> {}, context
+    ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, () -> {}, context
             , ProcessorOffset.builder().offset(17).build()
             , "P0-Offset"
     );
@@ -84,7 +84,7 @@ public class ProcessorOffsetInstanceTest {
     
     Context context = vertx.getOrCreateContext();
     
-    ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, ctx -> {}, context
+    ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, () -> {}, context
             , ProcessorOffset.builder().name("fred").offset(2).build()
             , "P0-Offset"
     );

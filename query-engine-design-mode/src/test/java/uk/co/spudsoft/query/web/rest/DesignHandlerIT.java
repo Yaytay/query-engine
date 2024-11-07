@@ -89,7 +89,6 @@ public class DesignHandlerIT {
       , "--audit.datasource.adminUser.password=" + postgres.getPassword()
       , "--audit.datasource.schema=public"
       , "--baseConfigPath=target/query-engine/samples-designhandlerit"
-      , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--logging.jsonFormat=true"

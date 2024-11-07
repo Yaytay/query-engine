@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
 import uk.co.spudsoft.jwtvalidatorvertx.JwtValidator;
 import uk.co.spudsoft.jwtvalidatorvertx.OpenIdDiscoveryHandler;
+import uk.co.spudsoft.query.logging.VertxMDC;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 import uk.co.spudsoft.query.web.LoginDao;
 
@@ -177,6 +178,12 @@ public class RequestContextBuilder {
    */
   public Future<RequestContext> buildRequestContext(HttpServerRequest request) {
 
+    String runId = request.params() == null ? null : request.params().get("_runid");
+    VertxMDC.INSTANCE.put("runId", runId);
+    if (!Strings.isNullOrEmpty(runId)) {
+      logger.info("RunID: {}", runId);
+    }
+    
     Cookie sessionCookie = getSessionCookie(request);
     if (sessionCookie != null) {
       

@@ -106,7 +106,7 @@ public class RequestContext {
     // this.arguments = multiMapToMap(request.params());
     this.headers = request.headers();
     this.cookies = ImmutableSet.copyOf(request.cookies());
-    this.jwt = jwt;    
+    this.jwt = jwt;
     this.runId = this.params == null ? null : this.params.get("_runid");
   }
 

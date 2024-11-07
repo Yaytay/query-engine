@@ -16,9 +16,9 @@
  */
 package uk.co.spudsoft.query.exec.sources;
 
-import io.vertx.core.Context;
 import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
+import uk.co.spudsoft.query.logging.VertxMDC;
 
 /**
  * Abstract class to aid the implementation of {@link uk.co.spudsoft.query.exec.SourceInstance} classes.
@@ -43,9 +43,7 @@ public abstract class AbstractSource implements SourceInstance, SourceNameTracke
   }
 
   @Override
-  public void addNameToContextLocalData(Context context) {
-    if (context != null) {
-      context.putLocal(SourceInstance.SOURCE_CONTEXT_KEY, name);
-    }
+  public void addNameToContextLocalData() {
+    VertxMDC.INSTANCE.put(SourceInstance.SOURCE_CONTEXT_KEY, name);
   }
 }

@@ -59,7 +59,6 @@ public class MainTest {
             , "--baseConfigPath=target/query-engine/samples-maintest"
             , "--jwt.acceptableIssuerRegexes[0]=.*"
             , "--jwt.defaultJwksCacheDuration=PT1M"
-            , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
     }, stdout);
     logger.info("testMainExitOnRun - exit");
   }

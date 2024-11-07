@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.sandbox;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import uk.co.spudsoft.query.main.*;
 import io.vertx.junit5.VertxExtension;
 import java.io.ByteArrayOutputStream;
@@ -70,6 +71,8 @@ public class RunIT {
     
   @Test
   public void testMainDaemon() throws Exception {
+    // The MySQL JDBC driver used by TestContainers will call OpenTelementry.get() :(
+    GlobalOpenTelemetry.resetForTest();
     Main main = new DesignMain();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
@@ -79,7 +82,6 @@ public class RunIT {
       , "--persistence.datasource.adminUser.password=" + postgres.getPassword()
       , "--persistence.datasource.schema=public" 
       , "--baseConfigPath=target/query-engine/samples-runit"
-      , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.jwksEndpoints[0]=" + System.getProperty("queryEngineEntraUrl").replace("v2.0", "discovery/v2.0/keys")
       , "--jwt.requiredAudiences[0]=query-engine"

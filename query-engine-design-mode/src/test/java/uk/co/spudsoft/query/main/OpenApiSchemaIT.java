@@ -90,7 +90,6 @@ public class OpenApiSchemaIT {
       , "--baseConfigPath=target/query-engine/samples-mainqueryit"
       , "--vertxOptions.eventLoopPoolSize=5"
       , "--vertxOptions.workerPoolSize=5"
-      , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--httpServerOptions.tracingPolicy=ALWAYS"
       , "--pipelineCache.maxDuration=PT10M"
       , "--logging.jsonFormat=false"

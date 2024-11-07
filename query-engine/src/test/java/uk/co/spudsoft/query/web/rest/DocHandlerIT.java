@@ -52,7 +52,6 @@ public class DocHandlerIT {
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
         "--baseConfigPath=" + baseConfigDir
-      , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--logging.jsonFormat=true"

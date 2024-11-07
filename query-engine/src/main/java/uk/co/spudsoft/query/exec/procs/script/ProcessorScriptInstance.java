@@ -104,7 +104,7 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
   }
 
   private boolean runPredicate(DataRow data) {
-    sourceNameTracker.addNameToContextLocalData(context);
+    sourceNameTracker.addNameToContextLocalData();
     return runSource(engine, "predicate", definition.getLanguage(), predicateSource, data, (returnValue, row) -> {
       logger.debug("returnValue ({}): {}", nullableClass(returnValue), returnValue);
       logger.debug("row ({}): {}", nullableClass(row), row);
@@ -121,7 +121,7 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
   }
 
   private DataRow runProcess(DataRow data) {
-    sourceNameTracker.addNameToContextLocalData(context);
+    sourceNameTracker.addNameToContextLocalData();
     return runSource(engine, "process", definition.getLanguage(), processSource, data, (returnValue, row) -> {
       logger.debug("returnValue ({}): {}", nullableClass(returnValue), returnValue);
       logger.debug("row ({}): {}", nullableClass(row), row);

@@ -157,7 +157,6 @@ public class LoginRouterWithDiscoveryWithoutPersistenceIT {
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
       "--baseConfigPath=target/query-engine/samples-loginrouterwithdiscoverywithoutpersistenceit"
-      , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--jwt.jwksEndpoints[0]=http://localhost:" + port + "/jwks_uri"

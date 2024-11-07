@@ -16,8 +16,6 @@
  */
 package uk.co.spudsoft.query.exec;
 
-import io.vertx.core.Context;
-
 /**
  * The SourceNameTracker is used to allow {@link SourceInstance} objects to record their ID in the context for logging.
  * 
@@ -27,8 +25,7 @@ public interface SourceNameTracker {
   
   /**
    * Add the Source name to the local context data map for use in logging.
-   * @param context The Vertx context.
    */
-  void addNameToContextLocalData(Context context);
+  void addNameToContextLocalData();
   
 }

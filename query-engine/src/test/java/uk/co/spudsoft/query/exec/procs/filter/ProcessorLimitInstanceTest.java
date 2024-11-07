@@ -62,7 +62,7 @@ public class ProcessorLimitInstanceTest {
     
     Context context = vertx.getOrCreateContext();
     
-    ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, ctx -> {}, context
+    ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, () -> {}, context
             , ProcessorLimit.builder().limit(17).build()
             , "P0-Limit"
     );
@@ -83,7 +83,7 @@ public class ProcessorLimitInstanceTest {
     
     Context context = vertx.getOrCreateContext();
     
-    ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, ctx -> {}, context
+    ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, () -> {}, context
             , ProcessorLimit.builder().name("fred").limit(3).build()
             , "P0-Limit"
     );

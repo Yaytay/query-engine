@@ -238,7 +238,6 @@ public class ParametersTest {
       , "baseConfigPath=target/classes/samples"
       , "vertxOptions.eventLoopPoolSize=5"
       , "vertxOptions.workerPoolSize=5"
-      , "vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "httpServerOptions.tracingPolicy=ALWAYS"
     };
     

@@ -40,6 +40,7 @@ import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
 import io.opentelemetry.extension.trace.propagation.B3Propagator;
+import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.swagger.v3.core.converter.ModelConverters;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
@@ -836,15 +837,13 @@ public class Main extends Application {
 
   static OpenTelemetry buildOpenTelemetry(TracingConfig config) {
     
-    if  (config.getProtocol() == TracingProtocol.none) {
-      return null;
-    }
-      
     ResourceBuilder resourceBuilder = Resource.getDefault().toBuilder()
             .put("service.name", config.getServiceName())
             .put("service.version", Version.MAVEN_PROJECT_VERSION)
             ;
-    SdkTracerProvider sdkTracerProvider = null;
+    
+    Sampler sampler;
+    SdkTracerProviderBuilder builder = SdkTracerProvider.builder();
     
     if (config.getProtocol() != TracingProtocol.none && !Strings.isNullOrEmpty(config.getUrl())) {
       SpanExporter spanExporter = switch (config.getProtocol()) {
@@ -858,7 +857,10 @@ public class Main extends Application {
                 .setEndpoint(config.getUrl())
                 .build();
       };
-      Sampler sampler = switch (config.getSampler()) {
+      if (spanExporter != null) {
+        builder.addSpanProcessor(BatchSpanProcessor.builder(spanExporter).build());
+      }
+      sampler = switch (config.getSampler()) {
         case alwaysOff ->
           Sampler.alwaysOff();
         case alwaysOn ->
@@ -877,14 +879,16 @@ public class Main extends Application {
         case ratio ->
           Sampler.traceIdRatioBased(config.getSampleRatio());
       };
-      
-      sdkTracerProvider = SdkTracerProvider.builder()
-              .addSpanProcessor(BatchSpanProcessor.builder(spanExporter).build())
-              .addSpanProcessor(new VertxMDCSpanProcessor())
-              .setResource(resourceBuilder.build())
-              .setSampler(sampler)
-              .build();
+    } else {
+      sampler = Sampler.alwaysOff();
     }
+    
+    SdkTracerProvider sdkTracerProvider = builder
+            .addSpanProcessor(new VertxMDCSpanProcessor())
+            .setResource(resourceBuilder.build())
+            .setSampler(sampler)
+            .build();
+
     TextMapPropagator propagator = switch (config.getPropagator()) {
       case b3 -> B3Propagator.injectingSingleHeader();
       case b3multi -> B3Propagator.injectingMultiHeaders();

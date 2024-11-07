@@ -61,7 +61,6 @@ public class UiRouterIT {
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
         "--baseConfigPath=target/classes/samples"
-      , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--logging.jsonFormat=false"

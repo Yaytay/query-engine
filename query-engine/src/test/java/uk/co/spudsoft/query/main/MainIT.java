@@ -139,7 +139,6 @@ public class MainIT {
       , "--persistence.datasource.adminUser.password=" + postgres.getPassword()
       , "--persistence.datasource.schema=public" 
       , "--baseConfigPath=target/query-engine/samples-mainit"
-      , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--jwt.jwksEndpoints[0]=http://localhost/jwks"
@@ -294,7 +293,6 @@ public class MainIT {
       , "--persistence.datasource.adminUser.password=" + postgres.getPassword()
       , "--persistence.datasource.schema=public" 
       , "--baseConfigPath=target/query-engine/samples-mainit"
-      , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--jwt.jwksEndpoints[0]=http://localhost/jwks"

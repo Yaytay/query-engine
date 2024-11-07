@@ -160,7 +160,6 @@ public class LoginRouterWithDiscoveryIT {
       , "--persistence.datasource.adminUser.password=" + postgres.getPassword()
       , "--persistence.datasource.schema=public" 
       , "--baseConfigPath=target/query-engine/samples-loginrouterwithdiscoveryit"
-      , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--jwt.jwksEndpoints[0]=http://localhost:" + port + "/jwks_uri"

@@ -68,7 +68,6 @@ public class ConcurrentRuleInMemoryIT {
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
       "--baseConfigPath=target/query-engine/samples-concurrentrulesit"
-      , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--logging.jsonFormat=false"

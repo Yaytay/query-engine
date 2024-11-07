@@ -96,12 +96,12 @@ public class ProcessorExpressionInstance implements ProcessorInstance {
   }
 
   private boolean runPredicate(DataRow data) {
-    sourceNameTracker.addNameToContextLocalData(context);
+    sourceNameTracker.addNameToContextLocalData();
     return predicate.evaluate(requestContext, data);
   }
   
   private DataRow runFieldSet(DataRow data) {
-    sourceNameTracker.addNameToContextLocalData(context);
+    sourceNameTracker.addNameToContextLocalData();
     Object result = field.evaluateAsObject(requestContext, data);
     Comparable<?> typedResult;
     try {

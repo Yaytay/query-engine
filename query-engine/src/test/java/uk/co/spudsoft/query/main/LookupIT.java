@@ -79,7 +79,6 @@ public class LookupIT {
       , "--baseConfigPath=" + baseConfigDir
       , "--vertxOptions.eventLoopPoolSize=5"
       , "--vertxOptions.workerPoolSize=5"
-      , "--vertxOptions.tracingOptions.serviceName=Query-Engine"
       , "--httpServerOptions.tracingPolicy=ALWAYS"
       , "--pipelineCache.maxDuration=PT10M"
       , "--logging.jsonFormat=false"

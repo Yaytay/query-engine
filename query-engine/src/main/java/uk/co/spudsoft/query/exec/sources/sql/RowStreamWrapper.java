@@ -95,7 +95,7 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
     });
     rowStream.pause();
     rowStream.exceptionHandler(ex -> {
-      sourceNameTracker.addNameToContextLocalData(Vertx.currentContext());
+      sourceNameTracker.addNameToContextLocalData();
       logger.warn("Exception in RowStream: ", ex);
       readyPromise.tryFail(ex);
       Handler<Throwable> capturedExceptionHandler;
@@ -149,7 +149,7 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
   
   @Override
   public RowStreamWrapper handler(Handler<DataRow> handler) {
-    sourceNameTracker.addNameToContextLocalData(Vertx.currentContext());
+    sourceNameTracker.addNameToContextLocalData();
     logger.trace("handler({})", handler);
     this.handler = handler;
     if (handler == null) {
@@ -174,7 +174,7 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
   
   @Override
   public RowStreamWrapper pause() {
-    sourceNameTracker.addNameToContextLocalData(Vertx.currentContext());
+    sourceNameTracker.addNameToContextLocalData();
     logger.trace("{} paused", this);
     rowStream.pause();
     return this;
@@ -182,7 +182,7 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
 
   @Override
   public RowStreamWrapper resume() {
-    sourceNameTracker.addNameToContextLocalData(Vertx.currentContext());
+    sourceNameTracker.addNameToContextLocalData();
     logger.trace("{} resumed", this);
     rowStream.resume();
     return this;
@@ -207,7 +207,7 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
                 return transaction.commit();
               })
               .compose(v -> {
-                sourceNameTracker.addNameToContextLocalData(Vertx.currentContext());
+                sourceNameTracker.addNameToContextLocalData();
                 if (connection != null) {
                   logger.info("Closing connection");
                   return connection.close();
@@ -216,7 +216,7 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
                 }
               })
               .onComplete(ar -> {
-                sourceNameTracker.addNameToContextLocalData(Vertx.currentContext());
+                sourceNameTracker.addNameToContextLocalData();
                 logger.info("Closed connection");
                 if (!ar.succeeded()) {
                   logger.warn("Transaction failed: ", ar.cause());

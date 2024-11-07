@@ -61,6 +61,8 @@ public class LoggingConfiguration {
 
     loggerContext.reset();
     
+    loggerContext.setMDCAdapter(new VertxMDC());
+    
     if (!Strings.isNullOrEmpty(options.getConfigFile())) {
       if (configureFromFile(loggerContext, options.getConfigFile())) {
         if (options.getLevel() != null) {
@@ -140,7 +142,7 @@ public class LoggingConfiguration {
     ConsoleAppender<ILoggingEvent> ca = createConsoleAppender(loggerContext);
 
     PatternLayout layout = new PatternLayout();
-    layout.setPattern("%date{yyyy-MM-dd HH:mm:ss.SSS, UTC} [%thread] %-5level %logger{36} %X{traceId:-#}:%X{spanId:-#} %X{source:-#} - %msg%n");
+    layout.setPattern("%date{yyyy-MM-dd HH:mm:ss.SSS, UTC} [%thread] %-5level %logger{36} %X{traceId:-#}:%X{spanId:-#} %X{runId:-#} %X{source:-#} %X{process:-#} - %msg%n");
 
     LayoutWrappingEncoder<ILoggingEvent> encoder = new LayoutWrappingEncoder<>();
     encoder.setContext(loggerContext);
