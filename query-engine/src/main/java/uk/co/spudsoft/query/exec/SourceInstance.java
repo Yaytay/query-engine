@@ -28,7 +28,7 @@ public interface SourceInstance extends SourceNameTracker {
   /**
    * The key name used in the local Vert.x context for tracking the name of the current source being processed.
    */
-  String SOURCE_CONTEXT_KEY = "uk.co.spudsoft.query.exec.source.name";
+  String SOURCE_CONTEXT_KEY = "source";
   
   /**
    * Get the name of the source, for use in logs.

@@ -84,7 +84,7 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
   @Override
   Future<ReadStream<DataRow>> initializeChild(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex) {
     
-    SourceInstance sourceInstance = definition.getFieldDefns().getSource().createInstance(vertx, context, executor, parentSource + "-" + processorIndex + "-defns");
+    SourceInstance sourceInstance = definition.getFieldDefns().getSource().createInstance(vertx, context, executor, getName() + ".fieldDefns");
     FormatCaptureInstance fieldDefnStreamCapture = new FormatCaptureInstance();
     PipelineInstance childPipeline = new PipelineInstance(
             pipeline.getArgumentInstances()
@@ -116,7 +116,7 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
               for (FieldDefn field : fields) {
                 types.putIfAbsent(field.name, field.type);
               }
-              return initializeChildStream(executor, pipeline, parentSource, processorIndex, definition.getFieldValues());
+              return initializeChildStream(executor, pipeline, "fieldValues", definition.getFieldValues());
             });
   }
   

@@ -97,7 +97,7 @@ public class ProcessorLookupInstance implements ProcessorInstance {
 
   @Override
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStreamWithTypes input) {
-    SourceInstance sourceInstance = definition.getMap().getSource().createInstance(vertx, context, executor, parentSource + "-" + processorIndex + "-lookups");
+    SourceInstance sourceInstance = definition.getMap().getSource().createInstance(vertx, context, executor, getName() + ".map");
     FormatCaptureInstance fieldDefnStreamCapture = new FormatCaptureInstance();
     PipelineInstance childPipeline = new PipelineInstance(
             pipeline.getArgumentInstances()

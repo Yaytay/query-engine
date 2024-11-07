@@ -23,7 +23,9 @@ import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.procs.AsyncHandler;
+import uk.co.spudsoft.query.logging.VertxMDC;
 
 /**
  * {@link io.vertx.core.streams.WriteStream}@lt;{@link uk.co.spudsoft.query.exec.DataRow}@gt; that formats the inbound DataRow values and writes them to a {@link io.vertx.core.streams.WriteStream}@lt;{@link io.vertx.core.buffer.Buffer}@gt;.
@@ -87,9 +89,13 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
   @Override
   public void end(Handler<AsyncResult<Void>> handler) {
     if (initialized) {
+      VertxMDC.INSTANCE.remove(SourceInstance.SOURCE_CONTEXT_KEY);
       terminate.handle(rowCount).onComplete(handler);      
     } else {
-      initialize.handle(null).compose(v -> terminate.handle(rowCount)).onComplete(handler);
+      initialize.handle(null).compose(v -> {
+        VertxMDC.INSTANCE.remove(SourceInstance.SOURCE_CONTEXT_KEY);
+        return terminate.handle(rowCount);
+      }).onComplete(handler);
     }
   }
 

@@ -75,7 +75,7 @@ public class FormatJsonInstance implements FormatInstance {
                 return outputStream.write(row.toJson().toBuffer());
               }
             }
-            , rows -> {
+            , rows -> {              
               Context vertxContext = Vertx.currentContext();
               if (vertxContext != null) {
                 RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());

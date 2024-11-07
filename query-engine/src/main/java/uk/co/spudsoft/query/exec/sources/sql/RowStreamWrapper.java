@@ -195,8 +195,9 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
   }
 
   @Override
-  public RowStreamWrapper endHandler(Handler<Void> endHandler) {    
+  public RowStreamWrapper endHandler(Handler<Void> endHandler) {
     rowStream.endHandler(ehv -> {
+      sourceNameTracker.addNameToContextLocalData();
       if (handledRows) {
         logger.trace("Finished row stream after handling some rows");
       } else {

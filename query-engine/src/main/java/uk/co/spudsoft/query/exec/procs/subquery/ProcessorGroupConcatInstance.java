@@ -68,7 +68,7 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
   @Override
   Future<ReadStream<DataRow>> initializeChild(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex) {
     types.putIfAbsent(definition.getParentValueColumn(), DataType.String);
-    return initializeChildStream(executor, pipeline, parentSource, processorIndex, definition.getInput());
+    return initializeChildStream(executor, pipeline, "input", definition.getInput());
   }  
 
   @Override

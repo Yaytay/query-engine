@@ -110,13 +110,12 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
    * 
    * @param executor The executor to use for running the child stream.
    * @param pipeline The overall pipeline instance being run.
-   * @param parentSource The name of the parent source, for tracking purposes.
-   * @param processorIndex The index of this processor, for tracking purposes.
+   * @param fieldName The name of the field in the parent processor, for tracking purposes.
    * @param sourcePipeline The child pipeline to initialize.
    * @return A Future that will be completed with a {@link io.vertx.core.streams.ReadStream}&lt;{@link uk.co.spudsoft.query.exec.DataRow}@gt; when initialization has completed.
    */
-  protected Future<ReadStream<DataRow>> initializeChildStream(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, SourcePipeline sourcePipeline) {
-    SourceInstance sourceInstance = sourcePipeline.getSource().createInstance(vertx, context, executor, parentSource + "-" + processorIndex);
+  protected Future<ReadStream<DataRow>> initializeChildStream(PipelineExecutor executor, PipelineInstance pipeline, String fieldName, SourcePipeline sourcePipeline) {
+    SourceInstance sourceInstance = sourcePipeline.getSource().createInstance(vertx, context, executor, this.getName() + "." + fieldName);
     FormatCaptureInstance sinkInstance = new FormatCaptureInstance();
     
     PipelineInstance childPipeline = new PipelineInstance(

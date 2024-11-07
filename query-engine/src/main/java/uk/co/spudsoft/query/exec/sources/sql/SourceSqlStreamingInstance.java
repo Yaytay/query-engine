@@ -123,6 +123,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
 
     RequestContext requestContext = RequestContextHandler.getRequestContext(vertx.getOrCreateContext());
+    this.addNameToContextLocalData();
     
     String endpointName = definition.getEndpoint();
     if (Strings.isNullOrEmpty(endpointName)) {
@@ -187,12 +188,15 @@ public class SourceSqlStreamingInstance extends AbstractSource {
             })
             .compose(conn -> {
               connection = conn;
+              addNameToContextLocalData();
               logger.info("Preparing SQL: {}", sql);
               return prepareSqlStatement(conn, sql);
             }).compose(ps -> {
+              addNameToContextLocalData();
               preparedStatement = ps;
               return connection.begin();
             }).compose(tran -> {
+              addNameToContextLocalData();
               transaction = tran;
               logger.debug("Executing SQL stream on {} with {}", connection, args);
               MetadataRowStreamImpl rowStream = new MetadataRowStreamImpl(preparedStatement, context, definition.getStreamingFetchSize(), args);
@@ -200,9 +204,11 @@ public class SourceSqlStreamingInstance extends AbstractSource {
               return rowStreamWrapper.ready();
             })
             .recover(ex -> {
+              addNameToContextLocalData();
               return Future.failedFuture(ServiceException.rethrowOrWrap(ex));
             })
             .onFailure(ex -> {
+              addNameToContextLocalData();
               logger.warn("SQL source failed: ", ex);
               if (connection != null) {
                 connection.close();

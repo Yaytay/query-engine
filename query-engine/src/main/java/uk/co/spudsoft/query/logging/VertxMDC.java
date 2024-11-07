@@ -83,6 +83,9 @@ public class VertxMDC implements MDCAdapter {
   public void put(String key, String value) {
     MdcData data = getOrCreateMdcData();
     if (data != null) {
+      if (value == null) {
+        data.mdcReadWriteMap.remove(key);
+      }
       data.mdcReadWriteMap.put(key, value);
       data.mdcReadOnlyMap = null;
     }
