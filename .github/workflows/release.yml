@@ -48,7 +48,7 @@ jobs:
         MAVEN_OPTS: -Djava.security.manager=allow
       run: mvn -P ui -B clean install site
 
-    - uses: codecov/codecov-action@v4
+    - uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }} 
         files: target/site/jacoco/jacoco.xml 
