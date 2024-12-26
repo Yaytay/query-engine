@@ -67,6 +67,7 @@ public final class Pipeline extends SourcePipeline {
   private final Condition condition;
   private final Duration cacheDuration;
   private final ImmutableList<RateLimitRule> rateLimitRules;
+  private final ImmutableList<ArgumentGroup> argumentGroups;
   private final ImmutableList<Argument> arguments;
   private final ImmutableList<Endpoint> sourceEndpoints;
   private final ImmutableMap<String, Endpoint> sourceEndpointsMap;
@@ -151,6 +152,25 @@ public final class Pipeline extends SourcePipeline {
               throw new IllegalArgumentException("Argument " + arg.getName() + " depends upon argument " + depend + " but there is no such argument");
             }
           }
+        }
+      }
+    }
+    if (argumentGroups != null && !argumentGroups.isEmpty()) {
+      Set<String> argGroupNames = new HashSet<>();
+      for (ArgumentGroup grp : argumentGroups) {
+        if (!argGroupNames.add(grp.getName())) {
+          throw new IllegalArgumentException("Two argument groups have the same name (" + grp.getName() + ")");
+        }
+      }
+
+      for (ArgumentGroup grp : argumentGroups) {
+        grp.validate();
+      }
+
+      for (Argument arg : arguments) {
+        String group = arg.getGroup();
+        if (!Strings.isNullOrEmpty(group) && !argGroupNames.contains(group)) {
+          throw new IllegalArgumentException("Argument " + arg.getName() + " is in the undefined group \"" + group + "\"");
         }
       }
     }
@@ -301,6 +321,32 @@ public final class Pipeline extends SourcePipeline {
   public List<RateLimitRule> getRateLimitRules() {
     return rateLimitRules;
   }    
+    
+  /**
+   * Declared argument groups to the Pipeline.
+   * <p>
+   * Arguments may be placed into groups in the user interface, outside of the user interface groups serve no purpose.
+   * 
+   * @return the declared argument groups to the Pipeline.
+   */
+  @ArraySchema(
+          arraySchema = @Schema(
+                  description = """
+                          <P>Declared arguments to the Pipeline.</P>
+                          <P>
+                          Arguments may be placed into groups in the user interface, outside of the user interface groups serve no purpose.
+                          </P>
+                          """
+          )
+          , schema = @Schema(
+                  implementation = ArgumentGroup.class
+          )
+          , minItems = 0
+          , uniqueItems = true
+  )
+  public List<ArgumentGroup> getArgumentGroups() {
+    return argumentGroups;
+  }
     
   /**
    * Declared arguments to the Pipeline.
@@ -528,6 +574,7 @@ public final class Pipeline extends SourcePipeline {
     private Condition condition;
     private Duration cacheDuration;
     private List<RateLimitRule> rateLimitRules;
+    private List<ArgumentGroup> argumentGroups;
     private List<Argument> arguments;
     private List<Endpoint> sourceEndpoints;
     private List<DynamicEndpoint> dynamicEndpoints;
@@ -542,7 +589,7 @@ public final class Pipeline extends SourcePipeline {
      */
     @Override
     public Pipeline build() {
-      return new Pipeline(title, description, condition, cacheDuration, rateLimitRules, arguments, sourceEndpoints, source, dynamicEndpoints, processors, formats);
+      return new Pipeline(title, description, condition, cacheDuration, rateLimitRules, argumentGroups, arguments, sourceEndpoints, source, dynamicEndpoints, processors, formats);
     }
 
     /**
@@ -618,6 +665,16 @@ public final class Pipeline extends SourcePipeline {
     }
 
     /**
+     * Set the {@link Pipeline#argumentGroups} value in the builder.
+     * @param value The value for the {@link Pipeline#argumentGroups}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder argumentGroups(final List<ArgumentGroup> value) {
+      this.argumentGroups = value;
+      return this;
+    }
+
+    /**
      * Set the {@link Pipeline#arguments} value in the builder.
      * @param value The value for the {@link Pipeline#arguments}.
      * @return this, so that this builder may be used in a fluent manner.
@@ -626,7 +683,7 @@ public final class Pipeline extends SourcePipeline {
       this.arguments = value;
       return this;
     }
-
+    
     /**
      * Set the {@link Pipeline#sourceEndpoints} value in the builder.
      * @param value The value for the {@link Pipeline#sourceEndpoints}
@@ -665,13 +722,14 @@ public final class Pipeline extends SourcePipeline {
     return new Pipeline.Builder();
   }
 
-  private Pipeline(String title, String description, Condition condition, Duration cacheDuration, List<RateLimitRule> rateLimitRules, List<Argument> arguments, List<Endpoint> sourceEndpoints, Source source, List<DynamicEndpoint> dynamicEndpoints, List<Processor> processors, List<Format> formats) {
+  private Pipeline(String title, String description, Condition condition, Duration cacheDuration, List<RateLimitRule> rateLimitRules, List<ArgumentGroup> argumentGroups, List<Argument> arguments, List<Endpoint> sourceEndpoints, Source source, List<DynamicEndpoint> dynamicEndpoints, List<Processor> processors, List<Format> formats) {
     super(source, processors);
     this.title = title;
     this.description = description;
     this.condition = condition;
     this.cacheDuration = cacheDuration == null ? Duration.ZERO : cacheDuration;
     this.rateLimitRules = ImmutableCollectionTools.copy(rateLimitRules);
+    this.argumentGroups = ImmutableCollectionTools.copy(argumentGroups);
     this.arguments = ImmutableCollectionTools.copy(arguments);
     Set<String> usedNames = new HashSet<>();
     for (Argument arg : this.arguments) {

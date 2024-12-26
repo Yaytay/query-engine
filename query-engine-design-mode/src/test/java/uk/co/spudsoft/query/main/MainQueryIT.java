@@ -121,7 +121,7 @@ public class MainQueryIT {
             .statusCode(200)
             .extract().body().asString();
     
-    assertThat(body, startsWith("{\"name\":\"\",\"children\":[{\"name\":\"args\",\"children\":[{\"name\":\"Args00\",\"path\":\"args/Args00\",\"title\":\"No Arguments\",\"description\":\"Test pipeline that has no arguments\",\"arguments"));
+    assertThat(body, startsWith("{\"name\":\"\",\"children\":[{\"name\":\"args\",\"children\":[{\"name\":\"Args00\",\"path\":\"args/Args00\",\"title\":\"No Arguments\",\"description\":\"Test pipeline that has no arguments\",\"argumentGroups\":[],\"arguments\":[],\"destinations\":[{\"type\":\"HTML\",\"name\":\"html\",\"extension\":\"html\",\"mediaType\":\"text/html\"},{\"type\":\"XLSX\",\"name\":\"xlsx\",\"extension\":\"xlsx\",\"mediaType\":\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\",\"sheetName\":\"data\",\"gridLines\":true,\"headers\":true,\"columns\":[]},{\"type\":\"Delimited\",\"name\":\"tab\""));
     assertThat(body, containsString("\"mediaType\":\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\""));
         
     body = given()

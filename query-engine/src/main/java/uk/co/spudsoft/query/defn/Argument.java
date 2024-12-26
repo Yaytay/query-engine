@@ -56,6 +56,7 @@ public class Argument {
   public static final Pattern VALID_NAME = Pattern.compile("\\p{Alnum}+", UNICODE_CHARACTER_CLASS);
   
   private final DataType type;
+  private final String group;
   private final String name;
   private final String title;
   private final String prompt;
@@ -125,6 +126,26 @@ public class Argument {
   )
   public DataType getType() {
     return type;
+  }
+
+  /**
+   * Return the name of the group that the argument should be presented in.
+   * The group will be used in the presentation of arguments in the UI but otherwise serves no purpose for the processing.
+   * @return the name of the group that the argument should be presented in.
+   */
+  @Schema(description = """
+                        <P>The name of the group that the argument should be presented in.</P>
+                        <P>The group will be used in the presentation of arguments in the UI but otherwise serves no purpose for the processing.</P>
+                        """
+          , pattern = "\\p{Letter}[\\p{Letter}\\p{Number}]+"
+          , type = "string"
+          , minLength = 1
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.REQUIRED
+          , extensions = {@Extension(properties = {@ExtensionProperty(name="prompt", value="name")})}
+  )
+  public String getGroup() {
+    return group;
   }
 
   /**
@@ -597,6 +618,7 @@ public class Argument {
   public static class Builder {
 
     private DataType type = DataType.String;
+    private String group;
     private String name;
     private String title;
     private String prompt;
@@ -635,6 +657,16 @@ public class Argument {
      */
     public Builder name(final String value) {
       this.name = value;
+      return this;
+    }
+
+    /**
+     * Set the group for the Argument in the builder.
+     * @param value the group for the Argument.
+     * @return this, so that the builder may be used fluently.
+     */
+    public Builder group(final String value) {
+      this.group = value;
       return this;
     }
 
@@ -810,7 +842,7 @@ public class Argument {
      * @return a new Argument object.
      */
     public Argument build() {
-      return new uk.co.spudsoft.query.defn.Argument(type, name, title, prompt, description, optional, hidden, multiValued, ignored, validate, dependsUpon, defaultValueExpression, minimumValue, maximumValue, possibleValues, possibleValuesUrl, permittedValuesRegex, condition);
+      return new uk.co.spudsoft.query.defn.Argument(type, group, name, title, prompt, description, optional, hidden, multiValued, ignored, validate, dependsUpon, defaultValueExpression, minimumValue, maximumValue, possibleValues, possibleValuesUrl, permittedValuesRegex, condition);
     }
   }
 
@@ -822,7 +854,7 @@ public class Argument {
     return new Argument.Builder();
   }
 
-  private Argument(DataType type, String name, String title, String prompt, String description
+  private Argument(DataType type, String group, String name, String title, String prompt, String description
           , boolean optional, boolean hidden, boolean multiValued, boolean ignored, boolean validate
           , List<String> dependsUpon
           , String defaultValueExpression, String minimumValue, String maximumValue
@@ -830,6 +862,7 @@ public class Argument {
           , Condition condition
   ) {
     this.type = type;
+    this.group = group;
     this.name = name;
     this.title = title;
     this.prompt = prompt;

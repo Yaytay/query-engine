@@ -333,7 +333,7 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.5.12</version>
+      <version>1.5.15</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -402,7 +402,7 @@
     <dependency>
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
-      <version>4.29.1</version>
+      <version>4.29.2</version>
     </dependency>
     <dependency>
       <groupId>com.mysql</groupId>

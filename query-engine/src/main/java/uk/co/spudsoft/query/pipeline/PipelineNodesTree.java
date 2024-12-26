@@ -25,6 +25,7 @@ import java.util.List;
 import uk.co.spudsoft.dircache.AbstractTree;
 import uk.co.spudsoft.dircache.AbstractTree.AbstractNode;
 import uk.co.spudsoft.query.defn.Argument;
+import uk.co.spudsoft.query.defn.ArgumentGroup;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 import uk.co.spudsoft.query.defn.Format;
 
@@ -216,6 +217,7 @@ public class PipelineNodesTree extends AbstractTree {
 
     private final String title;
     private final String description;
+    private final ImmutableList<ArgumentGroup> argumentGroups;
     private final ImmutableList<Argument> arguments;
     private final ImmutableList<Format> destinations;
 
@@ -225,13 +227,15 @@ public class PipelineNodesTree extends AbstractTree {
      * @param path The full path to the file.
      * @param title The title of the pipeline, extracted from the file.
      * @param description The description of the pipeline, extracted from the file.
+     * @param argumentGroups The groups of arguments to the pipeline, extracted from the file.
      * @param arguments The arguments to the pipeline, extracted from the file.
      * @param destinations The output formats that the pipeline supports, extracted from the file.
      */
-    public PipelineFile(String path, String title, String description, List<Argument> arguments, List<Format> destinations) {
+    public PipelineFile(String path, String title, String description, List<ArgumentGroup> argumentGroups, List<Argument> arguments, List<Format> destinations) {
       super(path);
       this.title = title;
       this.description = description;
+      this.argumentGroups =  ImmutableCollectionTools.copy(argumentGroups);
       this.arguments = ImmutableCollectionTools.copy(arguments);
       this.destinations = ImmutableCollectionTools.copy(destinations);
     }
@@ -264,6 +268,37 @@ public class PipelineNodesTree extends AbstractTree {
     )
     public String getDescription() {
       return description;
+    }
+
+    /**
+     * Declared argument groups in the Pipeline.
+     * <P>
+     * The UI for gathering arguments should group them into titles sets that may also have a comment.
+     * <P>
+     * Arguments with no group will always be presented first.
+     * 
+     * @return declared argument groups in the Pipeline.
+     */
+    @ArraySchema(
+            arraySchema = @Schema(
+                    description = """
+                            <P>Declared argument groups in the Pipeline.</P>
+                            <P>
+                            The UI for gathering arguments should group them into titles sets that may also have a comment.
+                            </P>
+                            <P>
+                            Arguments with no group will always be presented first.
+                            </P>
+                            """
+            )
+            , schema = @Schema(
+                    implementation = ArgumentGroup.class
+            )
+            , minItems = 0
+            , uniqueItems = true
+    )
+    public List<ArgumentGroup> getArgumentGroups() {
+      return argumentGroups;
     }
 
     /**

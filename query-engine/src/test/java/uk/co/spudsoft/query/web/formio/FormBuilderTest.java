@@ -82,6 +82,8 @@ public class FormBuilderTest {
   public void testBuildForm() throws Exception {
     PipelineFile file = new PipelineNodesTree.PipelineFile("path", "Title", "description"
             , Arrays.asList(
+            )
+            , Arrays.asList(
                     Argument.builder()
                             .name("arg1")
                             .title("First Arg")

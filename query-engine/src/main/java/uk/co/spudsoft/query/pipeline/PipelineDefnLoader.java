@@ -307,6 +307,7 @@ public final class PipelineDefnLoader {
                       filePathToUrlPath(file)
                       , pipelineAndFile.pipeline.getTitle()
                       , pipelineAndFile.pipeline.getDescription()
+                      , pipelineAndFile.pipeline.getArgumentGroups()
                       , pipelineAndFile.pipeline.getArguments()
                       , pipelineAndFile.pipeline.getFormats()
               ))

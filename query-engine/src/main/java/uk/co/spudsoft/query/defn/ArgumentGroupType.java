@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 jtalbut
+ * Copyright (C) 2024 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,29 +14,33 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-package uk.co.spudsoft.query.main;
+package uk.co.spudsoft.query.defn;
 
 /**
- * Set the version from the pom.
- * <p>
- * This file is updated by com.google.code.maven-replacer-plugin/replacer maven plugin.
- * 
- * @author jtalbut
+ * The type of ArgumentGroup.
+ * These values are specific to Form.io rendering of arguments.
+ * @author njt
  */
-public final class Version {
-
-  /**
-   * The project name, as set in the Maven pom.xml.
-   */
-  public static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
+public enum ArgumentGroupType {
   
   /**
-   * The project version, as set in the Maven pom.xml.
+   * Use a Form.io FieldSet.
+   * Just a group of fields with a label.
    */
-  public static final String MAVEN_PROJECT_VERSION = "0.0.44-7-main";
-
-  private Version() {
-  }
+  FIELD_SET
+  
+  ,
+  /**
+   * Use a Form.io Panel.
+   * Panels have larger headings than field sets.
+   */
+  PANEL
+  ,
+  
+  /**
+   * Use a Form.io Panel with the collapsible option set.
+   * Panels have larger headings than field sets, collapsible panels can be shrunk by the user.
+   */
+  COLLAPSIBLE_PANEL
   
 }

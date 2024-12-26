@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 jtalbut
+ * Copyright (C) 2024 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,10 +29,13 @@ import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Argument;
+import uk.co.spudsoft.query.defn.ArgumentGroup;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.ArgumentValue;
 import static uk.co.spudsoft.query.defn.DataType.Null;
@@ -102,13 +105,17 @@ public class FormBuilder {
             ;
         try (ComponentArray a = f.addComponents()) {
           buildDescription(generator, pipeline);
+
           buildArguments(generator, pipeline);
+          
           buildFilters(generator, pipeline);
           buildOutput(generator, pipeline);
           buildButtons(generator, pipeline);
         }
       }
-    }      
+    } catch (Throwable ex) {
+      logger.warn("Exception in form builder: ", ex);
+    }
   }
   
   void buildDescription(JsonGenerator generator, PipelineFile pipeline) throws IOException {
@@ -119,53 +126,122 @@ public class FormBuilder {
             ;
     }
   }
-  
-  void buildArguments(JsonGenerator generator, PipelineFile pipeline) throws IOException {
-    List<Argument> args = new ArrayList<>(pipeline.getArguments().size());
 
+  private Map<String, List<Argument>> collateArguments(PipelineFile pipeline) {
+    Map<String, List<Argument>> result = new HashMap<>();
+    
     for (Argument arg : pipeline.getArguments()) {
       if (arg.isHidden()) {
         continue ;
       }
+      
+      boolean add = false;
       if (arg.getCondition() == null || Strings.isNullOrEmpty(arg.getCondition().getExpression())) {
-        args.add(arg);
+        add = true;
       } else {
         ConditionInstance conditionInstance = arg.getCondition().createInstance();
         if (conditionInstance.evaluate(requestContext, null)) {
-          args.add(arg);
+          add = true;
         }
+      }
+      if (add) {
+        String group = Strings.isNullOrEmpty(arg.getGroup()) ? "" : arg.getGroup();
+        List<Argument> args = result.get(group);
+        if (args == null) {
+          args = new ArrayList<>();
+          result.put(group, args);
+        }
+        args.add(arg);
       }
     }
     
-    if (args.isEmpty()) {
+    return result;
+  }
+  
+  
+  void buildArguments(JsonGenerator generator, PipelineFile pipeline) throws IOException {
+    
+    Map<String, List<Argument>> groupedArguments = collateArguments(pipeline);
+    
+    if (groupedArguments.isEmpty()) {
       return ;
     }
-    
-    int fieldsPerColumn = Math.max(1, (int) Math.ceil((double) args.size() / columns));
     
     try (FieldSet fieldSet = new FieldSet(generator)) {
       fieldSet
             .withLegend("Arguments")
             .withCustomClass("qe-arguments border-bottom");
+      try (ComponentArray components = fieldSet.addComponents()) {
+        buildArguments(generator, pipeline, groupedArguments.get(""), null);
+        for (ArgumentGroup group : pipeline.getArgumentGroups()) {
+          buildArguments(generator, pipeline, groupedArguments.get(group.getName()), group);
+        }
+      }
+    }    
+  }
 
-      try (ComponentArray fieldSetArray = fieldSet.addComponents()) {
-        int fieldIdx = 0;
-        int colIdx = 0;
-        try (Columns columns = new Columns(generator)) {
-          try (ComponentArray columnArray = columns.addColumns()) {
-            while (fieldIdx < args.size()) {
-              try (Columns.Column col = new Columns.Column(generator)) {
-                col.withWidth(12 / this.columns);
-                col.withSize("md");
-                try (ComponentArray fieldArray = col.addComponents()) {
-                  for (; fieldIdx < (colIdx * fieldsPerColumn) + fieldsPerColumn && fieldIdx < args.size(); ++fieldIdx) {
-                    buildArgument(args.get(fieldIdx), generator);
-                  }
-                }
-              }          
-              ++colIdx;
+  void buildArguments(JsonGenerator generator, PipelineFile pipeline, List<Argument> args, ArgumentGroup group) throws IOException {
+    
+    int fieldsPerColumn = Math.max(1, (int) Math.ceil((double) args.size() / columns));
+    
+    if (group == null) {
+      addArgumentsToCurrentContainer(generator, args, fieldsPerColumn);
+    } else {
+      try (AbstractContainer<?> groupContainer = buildFieldGroup(generator, group)) {
+        try (ComponentArray fieldSetArray = groupContainer.addComponents()) {
+          if (!Strings.isNullOrEmpty(group.getDescription())) {
+            try (Content description = new Content(generator)) {
+              description
+                    .withHtml("<p>" + group.getDescription() + "</p>")
+                    .withCustomClass("border-bottom mb-3")
+                    ;
             }
           }
+          addArgumentsToCurrentContainer(generator, args, fieldsPerColumn);
+        }
+      }
+    }
+  }
+  
+  private AbstractContainer<?> buildFieldGroup(JsonGenerator generator, ArgumentGroup group) throws IOException {
+    switch (group.getType()) {
+      case FIELD_SET -> {
+        FieldSet fs = new FieldSet(generator);
+        fs.withLegend(Strings.isNullOrEmpty(group.getTitle()) ? group.getName() : group.getTitle());
+        return fs;
+      }
+      case COLLAPSIBLE_PANEL -> {
+        Panel panel = new Panel(generator);
+        panel.withTitle(Strings.isNullOrEmpty(group.getTitle()) ? group.getName() : group.getTitle());
+        panel.withCollapsible(true);
+        return panel;
+      }
+      case PANEL -> {
+        Panel panel = new Panel(generator);
+        panel.withTitle(Strings.isNullOrEmpty(group.getTitle()) ? group.getName() : group.getTitle());
+        panel.withCollapsible(false);
+        return panel;
+      }
+      default -> throw new IllegalArgumentException("Unhandled ArgumentGroup type " + group.getType());
+    }
+  }
+
+  private void addArgumentsToCurrentContainer(JsonGenerator generator, List<Argument> args, int fieldsPerColumn) throws IllegalStateException, IOException {
+    int fieldIdx = 0;
+    int colIdx = 0;
+    try (Columns columns = new Columns(generator)) {
+      try (ComponentArray columnArray = columns.addColumns()) {
+        while (fieldIdx < args.size()) {
+          try (Columns.Column col = new Columns.Column(generator)) {
+            col.withWidth(12 / this.columns);
+            col.withSize("md");
+            try (ComponentArray fieldArray = col.addComponents()) {
+              for (; fieldIdx < (colIdx * fieldsPerColumn) + fieldsPerColumn && fieldIdx < args.size(); ++fieldIdx) {
+                buildArgument(args.get(fieldIdx), generator);
+              }
+            }
+          }
+          ++colIdx;
         }
       }
     }

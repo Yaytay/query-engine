@@ -17,8 +17,6 @@
 package uk.co.spudsoft.query.defn;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.Json;
 import java.util.Arrays;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
@@ -140,6 +138,49 @@ public class PipelineTest {
             )
             .build();
     assertThrows(IllegalArgumentException.class, () -> {instance8.validate();});
+  }
+
+  @Test
+  public void testValidateArgumentGroupsDepends() {
+    Pipeline instance1 = Pipeline.builder()
+            .source(SourceTest.builder().name("test").rowCount(1).build())
+            .formats(Arrays.asList(FormatDelimited.builder().build()))
+            .build();
+    instance1.validate();
+
+    Pipeline instance2 = Pipeline.builder()
+            .source(SourceTest.builder().name("test").rowCount(1).build())
+            .formats(Arrays.asList(FormatDelimited.builder().build()))
+            .argumentGroups(
+                    Arrays.asList(
+                            ArgumentGroup.builder().name("group1").build()
+                    )
+            )
+            .arguments(
+                    Arrays.asList(
+                            Argument.builder().name("arg1").type(DataType.String).group("group1").build()
+                            , Argument.builder().name("arg").type(DataType.String).dependsUpon(Arrays.asList("arg1")).build()
+                    )
+            )
+            .build();
+    instance2.validate();
+
+    Pipeline instance3 = Pipeline.builder()
+            .source(SourceTest.builder().name("test").rowCount(1).build())
+            .formats(Arrays.asList(FormatDelimited.builder().build()))
+            .argumentGroups(
+                    Arrays.asList(
+                            ArgumentGroup.builder().name("group1").build()
+                    )
+            )
+            .arguments(
+                    Arrays.asList(
+                            Argument.builder().name("arg1").type(DataType.String).group("group2").build()
+                            , Argument.builder().name("arg").type(DataType.String).dependsUpon(Arrays.asList("arg1")).build()
+                    )
+            )
+            .build();
+    assertThrows(IllegalArgumentException.class, () -> {instance3.validate();});
   }
 
   @Test

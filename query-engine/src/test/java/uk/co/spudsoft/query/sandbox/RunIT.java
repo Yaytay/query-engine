@@ -46,7 +46,7 @@ public class RunIT {
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
   private static final ServerProviderMySQL mysql = new ServerProviderMySQL().init();
   private static final ServerProviderMsSQL mssql = new ServerProviderMsSQL().init();
-  private static final ServerProviderDistributedTracing tracing = new ServerProviderDistributedTracing().init();
+//  private static final ServerProviderDistributedTracing tracing = new ServerProviderDistributedTracing().init();
   
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(RunIT.class);
@@ -95,15 +95,15 @@ public class RunIT {
             , "--managementEndpointPort=8001"
             , "--managementEndpointUrl=http://localhost:8001/manage"
             , "--corsAllowedOriginRegex=.*"
-            , "--session.requireSession=true"
+  //         , "--session.requireSession=true"
             , "--session.codeVerifierLength=30"
-            , "--session.oauth.Microsoft.logoUrl=https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg"
-            , "--session.oauth.Microsoft.issuer=" + System.getProperty("queryEngineEntraUrl")
-            , "--session.oauth.Microsoft.credentials.id=" + System.getProperty("queryEngineEntraId")
-            , "--session.oauth.Microsoft.credentials.secret=" + System.getProperty("queryEngineEntraSecret")
-            , "--session.oauth.Microsoft.scope=openid profile api://341fde39-b5d8-4ee7-807f-813ec7bfff77/query-engine"
-            , "--tracing.protocol=" + tracing.getProtocol().name()
-            , "--tracing.url=" + tracing.getUrl()
+  //          , "--session.oauth.Microsoft.logoUrl=https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg"
+  //          , "--session.oauth.Microsoft.issuer=" + System.getProperty("queryEngineEntraUrl")
+  //          , "--session.oauth.Microsoft.credentials.id=" + System.getProperty("queryEngineEntraId")
+  //          , "--session.oauth.Microsoft.credentials.secret=" + System.getProperty("queryEngineEntraSecret")
+  //          , "--session.oauth.Microsoft.scope=openid profile api://341fde39-b5d8-4ee7-807f-813ec7bfff77/query-engine"
+  //          , "--tracing.protocol=" + tracing.getProtocol().name()
+  //          , "--tracing.url=" + tracing.getUrl()
             
     }, stdout);
     

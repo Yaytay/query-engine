@@ -134,9 +134,30 @@ public class FormBuilderIT {
     assertThat(body, startsWith("{\"type\":\"form\""));
     assertThat(body, containsString("Output"));
     assertThat(body, containsString("arg1"));
+    assertThat(body, containsString("arg2"));
+    assertThat(body, containsString("arg3"));
+    assertThat(body, containsString("arg4"));
     assertThat(body, containsString("First"));
     assertThat(body, containsString("Second"));
     assertThat(body, containsString("Third"));
+        
+    body = given()
+            .log().all()
+            .get("/api/formio/args/Args15?columns=3")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .extract().body().asString();
+    
+    assertThat(body, startsWith("{\"type\":\"form\""));
+    assertThat(body, containsString("First Group"));
+    assertThat(body, containsString("Second Group"));
+    assertThat(body, containsString("Third Group"));
+    assertThat(body, containsString("Fourth Group"));
+    assertThat(body, containsString("arg1"));
+    assertThat(body, containsString("arg2"));
+    assertThat(body, containsString("arg3"));
+    assertThat(body, containsString("arg4"));
         
     body = given()
             .log().all()
