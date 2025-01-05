@@ -59,7 +59,7 @@ services:
     - 14268:14268
 
   query-engine:
-    image: ghcr.io/yaytay/query-engine-design-mode:0.0.44-8-main
+    image: ghcr.io/yaytay/query-engine-design-mode:0.0.44-10-main
     ports:
     - 2000:8080
     volumes:
