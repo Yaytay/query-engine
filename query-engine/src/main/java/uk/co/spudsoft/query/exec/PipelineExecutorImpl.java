@@ -329,30 +329,53 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     return result;
   }  
   
-  private void progressNotification(PipelineInstance pipeline
-          , SourceInstance source
-          , ProcessorInstance processor
+  @Override
+  public void progressNotification(String pipelineTitle
+          , String sourceName
+          , String processorName
+          , Long count
+          , boolean completed
+          , Boolean succeeded
           , String message
           , Object... arguments
   ) {
-    ProgressNotificationHandler handler = pipeline.getProgressNotificationHandler();
+    ProgressNotificationHandler handler = ProgressNotificationHandler.getNotificationHandler();
     RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
-    if (requestContext != null) {
-      handler.event(requestContext.getRunID(), requestContext, pipeline, source, processor, message, arguments);
+    if (requestContext != null && handler != null) {
+      handler.event(requestContext.getRunID(), requestContext, pipelineTitle, sourceName, processorName, count, completed, succeeded, message, arguments);
+    }
+  }
+    
+  private void progressNotificationInternal(PipelineInstance pipeline
+          , SourceInstance source
+          , ProcessorInstance processor
+          , Long count
+          , boolean completed
+          , Boolean succeeded
+          , String message
+          , Object... arguments
+  ) {
+    ProgressNotificationHandler handler = ProgressNotificationHandler.getNotificationHandler();
+    RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
+    if (requestContext != null && handler != null) {
+      String pipelineTitle = pipeline == null ? null : pipeline.getDefinition().getTitle();
+      String sourceName = source == null ? null : source.getName();
+      String processorName = processor == null ? null : processor.getName();
+      handler.event(requestContext.getRunID(), requestContext, pipelineTitle, sourceName, processorName, count, completed, succeeded, message, arguments);
     }
   }
   
   private Future<ReadStreamWithTypes> initializeProcessors(PipelineInstance pipeline, String parentSource, Iterator<ProcessorInstance> iter, int index, ReadStreamWithTypes input) {
     logger.debug("initializeProcessors({}, {}, {}, {}, {})", pipeline, parentSource, iter, index, input);
     if (!iter.hasNext()) {
-      progressNotification(pipeline, null, null, "All processors initialized", null, null);
+      progressNotificationInternal(pipeline, null, null, (long) index, false, null, "All processors initialized", null, null);
       return Future.succeededFuture(input);
     } else {
       ProcessorInstance processor = iter.next();
-      progressNotification(pipeline, null, processor, "Initializing {}", processor.getName());
+      progressNotificationInternal(pipeline, null, processor, (long) index, false, null, "Initializing {}", processor.getName());
       return processor.initialize(this, pipeline, parentSource, index, input)
               .compose(streamWithTypes -> {
-                progressNotification(pipeline, null, processor, "Initialized {}", processor.getName());
+                progressNotificationInternal(pipeline, null, processor, (long) index, false, null, "Initialized {}", processor.getName());
                 return initializeProcessors(pipeline, parentSource, iter, index + 1, streamWithTypes);
               });
     }

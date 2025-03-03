@@ -470,8 +470,9 @@ public class Main extends Application {
     }
     if (ManagementRoute.mgmtEndpointPermitted(params.getManagementEndpoints(), "prometheus")) {
       mgmtRouter.get("/prometheus").handler(new PrometheusScrapingHandlerImpl()).setName("Prometheus");
-    }
-    
+    }    
+    DirCacheManagementRoute.createAndDeploy(mgmtRouter, dirCache);
+            
     CorsHandler corsHandler = CorsHandler.create();
     if (!params.getCorsAllowedOrigins().isEmpty()) {
       corsHandler.addOrigins(params.getCorsAllowedOrigins());

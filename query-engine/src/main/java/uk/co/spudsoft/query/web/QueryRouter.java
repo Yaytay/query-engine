@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.web;
 
+import com.google.common.base.Strings;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Future;
@@ -49,6 +50,8 @@ import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.ArgumentInstance;
 import uk.co.spudsoft.query.exec.CachingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
+import uk.co.spudsoft.query.exec.ProgressNotificationHandler;
+import uk.co.spudsoft.query.exec.notifications.LoggingNotificationHandler;
 
 
 /**
@@ -128,6 +131,7 @@ public class QueryRouter implements Handler<RoutingContext> {
   public void handle(RoutingContext routingContext) {
     
     HttpServerRequest request = routingContext.request();
+    String pipelineTitle[] = new String[1];
     if (request.method() == HttpMethod.GET) {
       try {
         String path = request.path();
@@ -160,6 +164,11 @@ public class QueryRouter implements Handler<RoutingContext> {
                       auditor.recordResponse(requestContext, response);
                     });
 
+                    if (!Strings.isNullOrEmpty(requestContext.getRunID())) {
+                      ProgressNotificationHandler progressNotificationHandler = new LoggingNotificationHandler();
+                      ProgressNotificationHandler.storeNotificationHandler(progressNotificationHandler);
+                    }
+                    
                     return auditor.recordRequest(requestContext).map(v -> requestContext);
                   })
                   .compose(requestContext -> {
@@ -173,12 +182,15 @@ public class QueryRouter implements Handler<RoutingContext> {
                     }
                   })
                   .compose(pipelineAndFile -> {
+                    pipelineTitle[0] = pipelineAndFile.pipeline().getTitle();
                     RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
                     
                     return auditor.recordFileDetails(requestContext, pipelineAndFile.file(), pipelineAndFile.pipeline())
                             .map(v -> pipelineAndFile.pipeline());
                   })
-                  .compose(pipeline -> pipelineExecutor.validatePipeline(pipeline))
+                  .compose(pipeline -> {
+                    return pipelineExecutor.validatePipeline(pipeline);
+                  })
                   .compose(pipeline -> {
                     RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
                     return auditor.runRateLimitRules(requestContext, pipeline);
@@ -198,12 +210,15 @@ public class QueryRouter implements Handler<RoutingContext> {
                       return runPipeline(pipeline, formatRequest, response, responseStream, routingContext);
                     }
                   })
-                  .onFailure(ex -> {
-                    RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
-                    auditor.recordException(requestContext, ex);
-                    internalError(ex, routingContext, outputAllErrorMessages);
-                  })
                   .onComplete(ar -> {
+                    if (ar.succeeded()) {
+                      pipelineExecutor.progressNotification(pipelineTitle[0], null, null, null, true, true, "Pipeline completed.");                    
+                    } else {
+                      RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
+                      auditor.recordException(requestContext, ar.cause());
+                      internalError(ar.cause(), routingContext, outputAllErrorMessages);
+                      pipelineExecutor.progressNotification(pipelineTitle[0], null, null, null, true, false, "Pipeline failed: ", ar.cause());
+                    }
                     vertx.getOrCreateContext().removeLocal(SourceInstance.SOURCE_CONTEXT_KEY);
                     logger.info("Request completed");
                   });

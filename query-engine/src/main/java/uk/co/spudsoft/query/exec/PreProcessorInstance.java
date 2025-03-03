@@ -28,7 +28,7 @@ import io.vertx.core.Future;
 public interface PreProcessorInstance {
   
   /**
-   * Return a name for this pre-processor, unique within the pipeline, used in logs an tracking.
+   * Return a name for this pre-processor, unique within the pipeline, used in logs and tracking.
    * This can either be specified in the pipeline definition, or assigned by the executor.
    * @return an ID for this processor, unique within the pipeline. 
    */

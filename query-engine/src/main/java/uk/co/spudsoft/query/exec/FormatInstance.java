@@ -34,7 +34,7 @@ public interface FormatInstance {
    * @param executor The executor that can be used by the class to initialize (and run) any sub pipelines.
    * @param pipeline Definition of the pipeline, primarily for access to arguments and sourceEndpoints.
    * @param input The ReadStream that is the input to the processor.
-   * @return a Future that will be completed when the initialization is complete.
+   * @return a Future that will be completed after the stream ends (or fails).
    */
   Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStreamWithTypes input);
   

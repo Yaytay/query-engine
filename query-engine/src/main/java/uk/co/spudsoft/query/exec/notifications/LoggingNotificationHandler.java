@@ -42,10 +42,22 @@ public class LoggingNotificationHandler implements ProgressNotificationHandler {
   }
   
   @Override
-  public void event(String runID, RequestContext requestContext, PipelineInstance pipeline, SourceInstance source, ProcessorInstance processor, String message, Object... arguments) {
+  public void event(String runID
+          , RequestContext requestContext
+          , String pipelineTitle
+          , String sourceName
+          , String processorName
+          , Long count
+          , boolean completed
+          , Boolean succeeded
+          , String message, Object... arguments) {
     
     logger.info(message, arguments);
     
+    if (completed) {
+      logger.info("Pipeline completed {}", succeeded ? "successfully" : "unsuccessfully");
+    }
+    
   }
-  
+
 }

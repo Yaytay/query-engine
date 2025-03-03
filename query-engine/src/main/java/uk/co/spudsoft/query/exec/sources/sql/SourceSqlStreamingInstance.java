@@ -21,6 +21,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.PreparedStatement;
@@ -158,6 +159,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     }
     
     SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(url);
+    connectOptions.setTracingPolicy(TracingPolicy.IGNORE);
     try {
       processCredentials(endpoint, connectOptions, executor, requestContext);
     } catch (ServiceException ex) {

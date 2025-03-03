@@ -107,4 +107,26 @@ public interface PipelineExecutor extends SharedMap {
    */
   Format getFormat(List<Format> formats, FormatRequest requested);
 
+  /**
+   * Report an event relating to the current run.
+   * 
+   * @param pipelineTitle The title of the pipeline.
+   * @param sourceName The source that this message relates to - may be null.
+   * @param processorName The processor that this message relates to - may be null.
+   * @param count Any relevant count for the source/processor.
+   * @param completed True if the entire pipeline has completed.
+   * @param succeeded True if the entire pipeline was successful.
+   * @param message The message, which may contain slf4j formatting instructions.
+   * @param arguments Arguments to the message.
+   */
+  void progressNotification(String pipelineTitle
+          , String sourceName
+          , String processorName
+          , Long count
+          , boolean completed
+          , Boolean succeeded
+          , String message
+          , Object... arguments
+  );
+
 }

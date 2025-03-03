@@ -35,8 +35,6 @@ import org.stringtemplate.v4.STGroup;
 import uk.co.spudsoft.query.defn.Endpoint;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
-import uk.co.spudsoft.query.exec.notifications.LoggingNotificationHandler;
-import uk.co.spudsoft.query.exec.notifications.NullNotificationHandler;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
@@ -62,7 +60,6 @@ public class PipelineInstance {
   private final ImmutableList<ProcessorInstance> processors;
   private final FormatInstance sink;
   private final Promise<Void> finalPromise;
-  private final ProgressNotificationHandler progressNotificationHandler;
 
   /**
    * Constructor.
@@ -91,11 +88,14 @@ public class PipelineInstance {
     this.processors = ImmutableCollectionTools.copy(processors);
     this.sink = sink;
     this.finalPromise = Promise.promise();
-    if (this.requestContext == null || Strings.isNullOrEmpty(this.requestContext.getRunID())) {
-      this.progressNotificationHandler = new NullNotificationHandler();
-    } else {
-      this.progressNotificationHandler = new LoggingNotificationHandler();
-    }
+  }
+
+  /**
+   * Get the pipeline definition.
+   * @return the pipeline definition.
+   */
+  public Pipeline getDefinition() {
+    return definition;
   }
   
   /**
@@ -179,15 +179,6 @@ public class PipelineInstance {
     return sink;
   }
 
-  /**
-   * Get the progress notification handler.
-   * Guaranteed not to be null, not guaranteed to do anything.
-   * @return the progress notification handler.
-   */
-  public ProgressNotificationHandler getProgressNotificationHandler() {
-    return progressNotificationHandler;
-  }
-  
   /**
    * Get the {@link Promise} that will be completed when the {@link PipelineInstance} has stream all the data.
    * @return the {@link Promise} that will be completed when the {@link PipelineInstance} has stream all the data.
