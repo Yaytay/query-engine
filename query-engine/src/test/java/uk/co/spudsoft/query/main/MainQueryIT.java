@@ -150,10 +150,6 @@ public class MainQueryIT {
     
     assertThat(body, startsWith("[{\"dataId\":1,\"instant\":\"1971-05-07T03:00\",\"ref\":\"antiquewhite\",\"value\":\"first\",\"children\":\"one\",\"DateField\":\"2023-05-05\",\"TimeField\":null,\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null}"));
     
-    for (int  i = 0; i < 1000000; ++i) {
-      Thread.sleep(100);
-    }
-    
     body = given()
             .queryParam("key", mysql.getName())
             .queryParam("port", mysql.getPort())
