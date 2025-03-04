@@ -243,7 +243,7 @@ public class MainIT {
             .extract().body().asString()
             ;
     ArrayNode manageEndpointsJson = Json.decodeValue(manageEndpointsString, ArrayNode.class);
-    assertEquals(3, manageEndpointsJson.size());
+    assertEquals(4, manageEndpointsJson.size());
     
     given()
             .config(RestAssuredConfig.config().redirect(redirectConfig().followRedirects(false)))
