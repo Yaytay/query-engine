@@ -42,7 +42,6 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
-import uk.co.spudsoft.query.exec.ProgressNotificationHandler;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 

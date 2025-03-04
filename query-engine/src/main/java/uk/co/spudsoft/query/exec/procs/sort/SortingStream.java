@@ -96,7 +96,7 @@ public class SortingStream<T> implements ReadStream<T> {
     private int index;
     private int count;
     private ReadStream<T> input;
-    private boolean ended = false;
+    private volatile boolean ended = false;
     private T head;
 
     private void endHandler(Void nothing) {

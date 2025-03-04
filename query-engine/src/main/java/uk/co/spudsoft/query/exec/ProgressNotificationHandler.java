@@ -30,7 +30,7 @@ public interface ProgressNotificationHandler {
   /**
    * Key for the ProgressNotificationHandler stored in the Vertx {@link Context}.
    */
-  final String HANDLER_KEY = "NOTIFICATION_HANDLER";
+  String HANDLER_KEY = "NOTIFICATION_HANDLER";
   
   /**
    * Handle an event.

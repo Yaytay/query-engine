@@ -172,7 +172,7 @@ public class Main extends Application {
   private JwtValidator jwtValidator;
 
   
-  private int port;
+  private volatile int port;
 
   /**
    * Constructor.
@@ -391,8 +391,6 @@ public class Main extends Application {
     ProcessorSortInstance.setMemoryLimit(params.getProcessors().getInMemorySortLimitBytes());
     ProcessorSortInstance.setTempDir(params.getProcessors().getTempDir());
     
-    this.port = params.getHttpServerOptions().getPort();
-    
     VertxOptions vertxOptions = params.getVertxOptions();
     vertxOptions.setMetricsOptions(
             new MicrometerMetricsOptions()
@@ -553,7 +551,7 @@ public class Main extends Application {
             .requestHandler(router)
             .listen()            
             .compose(svr -> {
-              port = svr.actualPort();
+              this.port = svr.actualPort();
               if (!params.getSampleDataLoads().isEmpty()) {
                 return performSampleDataLoads(params.getSampleDataLoads().iterator());
               } else {

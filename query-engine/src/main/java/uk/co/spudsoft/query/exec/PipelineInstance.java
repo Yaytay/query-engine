@@ -94,6 +94,7 @@ public class PipelineInstance {
    * Get the pipeline definition.
    * @return the pipeline definition.
    */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Definition should not be modified")
   public Pipeline getDefinition() {
     return definition;
   }
