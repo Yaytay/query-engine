@@ -20,7 +20,7 @@
   </module>
   <module name="RegexpHeader">
     <!--property name="header" value="/[*]\n [*] Copyright (C) 202[234] jtalbut\n [*]\n [*] This program is free software: you can redistribute it and/or modify"/-->
-    <property name="header" value="^/[*]\n [*] Copyright \(C\) 202[234] jtalbut\n [*]\n [*] This program is free software: you can redistribute it and/or modify"/>
+    <property name="header" value="^/[*]\n [*] Copyright \(C\) 202[2345] jtalbut\n [*]\n [*] This program is free software: you can redistribute it and/or modify"/>
     <property name="fileExtensions" value="java"/>
   </module>
   <module name="SuppressWarningsFilter"/>
