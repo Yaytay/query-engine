@@ -35,6 +35,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +53,8 @@ import org.slf4j.LoggerFactory;
 public class OpenApiModelConverter implements ModelConverter {
 
   private static final Logger logger = LoggerFactory.getLogger(OpenApiModelConverter.class);
+  
+  private final AtomicInteger level = new AtomicInteger();
 
   /**
    * Constructor.
@@ -63,10 +66,14 @@ public class OpenApiModelConverter implements ModelConverter {
   @SuppressWarnings({"unchecked", "rawtypes"})  
   public Schema resolve(AnnotatedType type, ModelConverterContext context, Iterator<ModelConverter> chain) {
     if (chain.hasNext()) {
+      logger.info("Resolving type: {} {}:{} ({})", level.incrementAndGet(), type.getType().getTypeName(), type.getPropertyName(), type.getName());
       Schema schema = chain.next().resolve(type, context, chain);
       if (schema == null) {
+        // logger.info("Got null type");
+        level.decrementAndGet();
         return null;
       }
+      // logger.info("Got type: {} ({})", schema.getName(), schema.getType());
       JavaType javaType = Json.mapper().constructType(type.getType());
       if (javaType != null) {
         Class<?> cls = javaType.getRawClass();
@@ -82,8 +89,10 @@ public class OpenApiModelConverter implements ModelConverter {
         }
         setSchemaType(schema);
       }
+      level.decrementAndGet();
       return schema;
     } else {
+      level.decrementAndGet();
       return null;
     }
   }

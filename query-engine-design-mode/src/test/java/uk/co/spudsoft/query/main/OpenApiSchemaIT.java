@@ -75,10 +75,10 @@ public class OpenApiSchemaIT {
   @Test
   @Timeout(value = 2400, timeUnit = TimeUnit.SECONDS)
   public void testQuery() throws Exception {
+    GlobalOpenTelemetry.resetForTest();
     Main main = new DesignMain();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
-    GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
         "--persistence.datasource.url=" + postgres.getJdbcUrl()
       , "--persistence.datasource.adminUser.username=" + postgres.getUser()
@@ -112,7 +112,7 @@ public class OpenApiSchemaIT {
     assertThat(body, containsString("SpudSoft Query Engine"));
     
     JsonObject jo = new JsonObject(body);
-    logger.debug("OpenAPI: {}", jo);
+    logger.info("OpenAPI: {}", jo);
     JsonObject schemas = jo.getJsonObject("components").getJsonObject("schemas");
     List<String> validationFailures = new ArrayList<>();
     validateRefs(validationFailures, body);
@@ -276,6 +276,9 @@ public class OpenApiSchemaIT {
     }
     
     String type = schema.getString("type");
+    if ("object".equals(type) && schema.containsKey("additionalProperties")) {
+      return name + " is a map (object with additionalProperties), please change to a List";
+    }
     if (isTopLevelSchema) {
       // Must either have a type, or have an allOf with a ref and then a type
       // In both cases the type must be "object"

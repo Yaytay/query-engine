@@ -16,7 +16,6 @@
  */
 package uk.co.spudsoft.query.main;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import io.vertx.core.Vertx;
@@ -32,12 +31,16 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 import static io.restassured.RestAssured.given;
 import static io.restassured.config.RedirectConfig.redirectConfig;
 import io.restassured.config.RestAssuredConfig;
-import io.vertx.core.json.Json;
+import io.restassured.http.ContentType;
+import io.vertx.core.json.JsonObject;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.net.URI;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import uk.co.spudsoft.query.web.LoginRouterWithDiscoveryIT;
 
 
@@ -242,8 +245,9 @@ public class MainIT {
             .log().all()
             .extract().body().asString()
             ;
-    ArrayNode manageEndpointsJson = Json.decodeValue(manageEndpointsString, ArrayNode.class);
-    assertEquals(4, manageEndpointsJson.size());
+    logger.info("Management endpoints: {}", manageEndpointsString);
+    // Note that ordering is NOT governed by the order of configuration
+    assertEquals("[{\"name\":\"Thread Dump\",\"url\":\"http://localhost:" + mgmtPort + "/manage/threads\"},{\"name\":\"Up\",\"url\":\"http://localhost:" + mgmtPort + "/manage/up\"},{\"name\":\"Prometheus\",\"url\":\"http://localhost:" + mgmtPort + "/manage/prometheus\"}]", manageEndpointsString);
     
     given()
             .config(RestAssuredConfig.config().redirect(redirectConfig().followRedirects(false)))
@@ -304,6 +308,7 @@ public class MainIT {
       , "--managementEndpoints[0]=up"
       , "--managementEndpoints[2]=prometheus"
       , "--managementEndpoints[3]=threads"
+      , "--managementEndpoints[4]=dircache"
       , "--managementEndpointPort=" + mgmtPort
       , "--managementEndpointUrl=http://localhost:" + mgmtPort + "/manage"
       , "--session.requireSession=true"
@@ -383,7 +388,65 @@ public class MainIT {
             .statusCode(401)
             .log().all()
             ;
-    
+
+    // Management endpoint does not require auth
+    String manageEndpointsString = given()
+            .log().all()
+            .get(URI.create("http://localhost:" + mgmtPort + "/manage"))
+            .then()
+            .statusCode(200)
+            .log().all()
+            .extract().body().asString()
+            ;
+    logger.info("Management endpoints: {}", manageEndpointsString);
+    // Note that ordering is NOT governed by the order of configuration
+    assertEquals("[{\"name\":\"Thread Dump\",\"url\":\"http://localhost:" + mgmtPort + "/manage/threads\"},{\"name\":\"Up\",\"url\":\"http://localhost:" + mgmtPort + "/manage/up\"},{\"name\":\"Prometheus\",\"url\":\"http://localhost:" + mgmtPort + "/manage/prometheus\"},{\"name\":\"Dir Cache\",\"url\":\"http://localhost:" + mgmtPort + "/manage/dircache\"}]", manageEndpointsString);
+        
+    String dirCacheString = given()
+            .log().all()
+            .get(URI.create("http://localhost:" + mgmtPort + "/manage/dircache"))
+            .then()
+            .statusCode(200)
+            .log().all()
+            .extract().body().asString()
+            ;
+    JsonObject dirCacheJson = new JsonObject(dirCacheString);
+    assertEquals(2, dirCacheJson.size());
+    assertNotNull(dirCacheJson.getString("LastWalkTime"));
+    assertNotNull(dirCacheJson.getJsonArray("Files"));
+
+    dirCacheString = given()
+            .accept(ContentType.HTML)
+            .log().all()
+            .get(URI.create("http://localhost:" + mgmtPort + "/manage/dircache?refresh=anythingatall"))
+            .then()
+            .statusCode(200)
+            .log().all()
+            .extract().body().asString()
+            ;
+    assertThat(dirCacheString, startsWith("<html><head><title>Dir Cache Contents</title>"));
+
+    dirCacheString = given()
+            .accept(ContentType.TEXT)
+            .log().all()
+            .get(URI.create("http://localhost:" + mgmtPort + "/manage/dircache"))
+            .then()
+            .statusCode(200)
+            .log().all()
+            .extract().body().asString()
+            ;
+    assertThat(dirCacheString, startsWith("Last walk:"));
+
+    given()
+            .accept(ContentType.TEXT)
+            .log().all()
+            .post(URI.create("http://localhost:" + mgmtPort + "/manage/dircache"))
+            .then()
+            .statusCode(405)
+            .log().all()
+            .extract().body().asString()
+            ;
+
     main.shutdown();
   }
   
