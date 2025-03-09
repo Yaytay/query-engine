@@ -130,12 +130,18 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     for (Processor processor : definition.getProcessors()) {
       Condition condition = processor.getCondition();
       if (condition == null) {
-        result.add(processor.createInstance(vertx, sourceNameTracker, context, processorName(processor.getName(), parentName, "P", index++, processor)));
+        String name = processorName(processor.getName(), parentName, "P", index++, processor);
+        logger.debug("Added {} processor named {} with no condition", processor.getType(), name);
+        result.add(processor.createInstance(vertx, sourceNameTracker, context, name));
       } else {
         ConditionInstance cond = new ConditionInstance(condition.getExpression());
         RequestContext requestContext = RequestContextHandler.getRequestContext(context);
         if (cond.evaluate(requestContext, null)) {
-          result.add(processor.createInstance(vertx, sourceNameTracker, context, processorName(processor.getName(), parentName, "P", index++, processor)));
+          String name = processorName(processor.getName(), parentName, "P", index++, processor);
+          logger.debug("Added {} processor named {} because condition {} met", processor.getType(), name, cond);
+          result.add(processor.createInstance(vertx, sourceNameTracker, context, name));
+        } else {
+          logger.debug("Skipped {} processor {} because condition {} not met", processor.getType(), processor.getName(), cond);
         }
       }
     }
