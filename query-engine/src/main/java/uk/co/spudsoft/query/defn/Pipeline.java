@@ -311,13 +311,19 @@ public final class Pipeline extends SourcePipeline {
    * Rate limit rules that constrain how frequently pipelines can be run.
    * @return rate limit rules that constrain how frequently pipelines can be run.
    */
-  @Schema(description = """
+  @ArraySchema(
+          arraySchema = @Schema(description = """
                         <P>
                         Rate limit rules that constrain how frequently pipelines can be run.
                         </P>
                         """
-            , implementation = RateLimitRule.class
-    )
+          )
+          , schema = @Schema(
+                      implementation = RateLimitRule.class
+          )
+          , minItems = 0
+          , uniqueItems = true
+  )
   public List<RateLimitRule> getRateLimitRules() {
     return rateLimitRules;
   }    
