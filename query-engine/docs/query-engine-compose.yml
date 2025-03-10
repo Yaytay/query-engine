@@ -27,7 +27,7 @@ services:
       SA_PASSWORD: T0p-Secret
 
   postgresql:
-    image: postgres:17.0-alpine
+    image: postgres:17.4-alpine
     ports:
     - 2003:5432
     command: postgres -c log_min_duration_statement=0
@@ -41,25 +41,16 @@ services:
       POSTGRES_DB: test
 
   jaeger:
-    image: jaegertracing/all-in-one:1.62.0
-    environment:
-      COLLECTOR_OTLP_ENABLED: true
+    image: jaegertracing/jaeger:2.4.0
     healthcheck:
       test: ["CMD", "/go/bin/all-in-one-linux", "status"]
       timeout: 20s
       retries: 10
     ports:
-    - 5775:5775/udp
-    - 6831:6831/udp
-    - 6832:6832/udp
-    - 5778:5778
-    - 4317:4317
-    - 4318:4318
     - 16686:16686
-    - 14268:14268
 
   query-engine:
-    image: ghcr.io/yaytay/query-engine-design-mode:0.0.45-12-main
+    image: ghcr.io/yaytay/query-engine-design-mode:0.0.46
     ports:
     - 2000:8080
     volumes:
