@@ -43,7 +43,7 @@ services:
   jaeger:
     image: jaegertracing/jaeger:2.4.0
     healthcheck:
-      test: ["CMD", "/go/bin/all-in-one-linux", "status"]
+      test: wget -q -O - http://127.0.0.1:13133/status
       timeout: 20s
       retries: 10
     ports:
