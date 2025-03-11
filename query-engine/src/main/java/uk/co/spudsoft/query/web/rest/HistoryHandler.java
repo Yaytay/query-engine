@@ -80,7 +80,14 @@ public class HistoryHandler {
   @GET
   @Path("/")
   @Produces(MediaType.APPLICATION_JSON)
-  @Operation(description = "Return details of the current user")
+  @Operation(
+          summary = "Return history rows matching the criteria."
+          , description = """
+                          Will only ever return data for the user making the request (token subject must match).
+                          <p>
+                          By default returns the first 1000000 rows sorted by timestsamp with the most recent data first.
+                          """
+  )
   @ApiResponse(
           responseCode = "200"
           , description = "Details of the current user."
@@ -91,10 +98,38 @@ public class HistoryHandler {
   )
   public void getHistory(
           @Suspended final AsyncResponse response
-          , @QueryParam("skipRows") Integer skipRows
-          , @QueryParam("maxRows") Integer maxRows
-          , @QueryParam("sort") AuditHistorySortOrder sortOrder
-          , @QueryParam("desc") Boolean sortDescending
+          , @Schema(
+                  description = "The number of rows to skip in the results, to implement paging"
+                  , minimum = "0"
+                  , maximum = "1000000"
+                  , defaultValue = "0"
+                  , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+            )
+            @QueryParam("skipRows") 
+            Integer skipRows
+          , @Schema(
+                  description = "The maximum number of rows to return, to implement paging"
+                  , minimum = "0"
+                  , maximum = "1000000"
+                  , defaultValue = "1000000"
+                  , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+            )
+            @QueryParam("maxRows") 
+            Integer maxRows
+          , @Schema(
+                  description = "Sort order for the history data."
+                  , defaultValue = "timestamp"
+                  , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+            )
+            @QueryParam("sort") 
+            AuditHistorySortOrder sortOrder
+          , @Schema(
+                  description = "Whether the sort should be in descending order or not (by default it is)."
+                  , defaultValue = "true"
+                  , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+            )
+            @QueryParam("desc") 
+            Boolean sortDescending
   ) {
     try {
       RequestContext requestContext = HandlerAuthHelper.getRequestContext(Vertx.currentContext(), true);

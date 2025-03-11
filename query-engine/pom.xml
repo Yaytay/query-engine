@@ -99,7 +99,7 @@
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>vertx-resteasy-helpers</artifactId>
-      <version>0.0.25</version>
+      <version>0.0.27</version>
       <exclusions>
         <exclusion>
           <groupId>jakarta.activation</groupId>

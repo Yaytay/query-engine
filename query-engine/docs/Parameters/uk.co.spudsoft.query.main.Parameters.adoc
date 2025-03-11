@@ -207,4 +207,10 @@ Note that the default value for the outputCacheDir is probably a bad choice for 
 | [[enableBearerAuth]]enableBearerAuth
 | boolean
 | If set to false any basic auth header will be ignored.
+| [[openApiExplorerUrl]]openApiExplorerUrl
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
+| Get the URL to the minified OpenAPI Explorer JS that is to be used for displaying The API documentation.The default value is (something like) "https://unpkg.com/openapi-explorer@2.2.733/dist/browser/openapi-explorer.min.js".
+ 
+
+It is not usually necessary to set this.
 |===

@@ -185,12 +185,16 @@ public class DocHandler {
   @Operation(description = "Return some documentation")
   @ApiResponse(
           responseCode = "200"
-          , description = "A documnent about Query Engine."
+          , description = "A document about Query Engine."
           , content = @Content(mediaType = "text/markdown")
   )
   public void getDoc(
           @Suspended final AsyncResponse response
-          , @PathParam("path") String path
+          , @Schema(
+                  description = "The path to the document, as returned by a call to get /api/docs"
+            )
+            @PathParam("path") 
+            String path
   ) {
     
     try {

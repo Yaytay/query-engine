@@ -49,10 +49,13 @@ public class PipelineNodesTree extends AbstractTree {
     @JsonSubTypes.Type(value = PipelineFile.class)
   })
   @Schema(description = """
-                        <P>
                         Base class for pipelines and the directories that contain them.
-                        </P>
-                        """)
+                        """
+          , oneOf = {
+                  PipelineDir.class
+                  , PipelineFile.class
+          }
+  )
   public static class PipelineNode extends AbstractNode<PipelineNode> {
 
     /**
@@ -103,11 +106,9 @@ public class PipelineNodesTree extends AbstractTree {
      */
     @Override
     @Schema(description = """
-                          <P>
                           The children of the node.
-                          </P>
                           <P>
-                          If this is null then the node is a file, otherwise it is a directory.
+                          If this is null then the node is a PipelineFile, otherwise it is a PipelineDir.
                           </P>
                           """)
     public List<PipelineNode> getChildren() {
@@ -195,9 +196,7 @@ public class PipelineNodesTree extends AbstractTree {
     @Schema(nullable = false
             , requiredMode = Schema.RequiredMode.REQUIRED
             , description = """
-                          <P>
                           The children of the directory.
-                          </P>
                           """)
     public List<PipelineNode> getChildren() {
       return super.getChildren(); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody

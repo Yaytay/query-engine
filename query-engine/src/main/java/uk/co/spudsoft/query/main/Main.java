@@ -514,7 +514,7 @@ public class Main extends Application {
     );
 
     OpenAPIConfiguration openApiConfig = createOpenapiConfiguration(controllers);
-    OpenApiHandler openApiHandler = new OpenApiHandler(this, openApiConfig, "/api");
+    OpenApiHandler openApiHandler = new OpenApiHandler(this, openApiConfig, "/api", params.getOpenApiExplorerUrl());
     ModelConverters.getInstance(true).addConverter(new OpenApiModelConverter());
     
     PipelineExecutor pipelineExecutor = new PipelineExecutorImpl(filterFactory, params.getSecrets());

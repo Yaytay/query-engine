@@ -48,7 +48,12 @@ public class DocNodesTree extends AbstractTree {
                         <P>
                         Base class for documentation files and the directories that contain them.
                         </P>
-                        """)
+                        """
+          , oneOf = {
+                  DocDir.class
+                  , DocFile.class
+          }
+  )
   public static class DocNode extends AbstractNode<DocNode> {
     
     private final String path; 

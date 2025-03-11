@@ -247,6 +247,15 @@ public class Parameters {
   private String managementEndpointUrl;
   
   /**
+   * The URL to the minified OpenAPI Explorer JS that is to be used for displaying The API documentation.
+   * <p>
+   * The default value is (something like) "https://unpkg.com/openapi-explorer@2.2.733/dist/browser/openapi-explorer.min.js".
+   * <p>
+   * It is not usually necessary to set this.
+   */
+  private String openApiExplorerUrl;
+  
+  /**
    * Configuration of the session management for the UI and REST API.
    */
   private SessionConfig session = new SessionConfig();
@@ -927,6 +936,29 @@ public class Parameters {
    */
   public void setEnableBearerAuth(boolean enableBearerAuth) {
     this.enableBearerAuth = enableBearerAuth;
+  }
+
+  /**
+   * Get the URL to the minified OpenAPI Explorer JS that is to be used for displaying The API documentation.
+   * The default value is (something like) "https://unpkg.com/openapi-explorer@2.2.733/dist/browser/openapi-explorer.min.js".
+   * <p>
+   * It is not usually necessary to set this.
+   * @return the URL to the minified OpenAPI Explorer JS that is to be used for displaying The API documentation.
+   */
+  public String getOpenApiExplorerUrl() {
+    return openApiExplorerUrl;
+  }
+
+  /**
+   * Get the URL to the minified OpenAPI Explorer JS that is to be used for displaying The API documentation.
+   * The default value is (something like) "https://unpkg.com/openapi-explorer@2.2.733/dist/browser/openapi-explorer.min.js".
+   * <p>
+   * It is not usually necessary to set this.
+   * 
+   * @param openApiExplorerUrl the URL to the minified OpenAPI Explorer JS that is to be used for displaying The API documentation.
+   */
+  public void setOpenApiExplorerUrl(String openApiExplorerUrl) {
+    this.openApiExplorerUrl = openApiExplorerUrl;
   }
 
   /**

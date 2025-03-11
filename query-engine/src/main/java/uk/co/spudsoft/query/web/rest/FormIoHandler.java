@@ -137,8 +137,20 @@ public class FormIoHandler {
   )
   public void getFormIO(
           @Suspended final AsyncResponse response
-          , @PathParam("path") String path
-          , @QueryParam("columns") Integer columns
+          , @Schema(
+                  description = "The path to the quiery, as returned by a call to get /api/info/available"
+            )
+            @PathParam("path")
+            String path
+          , @Schema(
+                  description = "The number of columns to use when displaying arguments"
+                  , minimum = "1"
+                  , maximum = "12"
+                  , defaultValue = "1"
+                  , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+            )
+            @QueryParam("columns") 
+            Integer columns
   ) {
     
     if (columns != null)  {
