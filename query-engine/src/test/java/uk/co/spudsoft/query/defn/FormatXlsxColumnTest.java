@@ -17,7 +17,6 @@
 package uk.co.spudsoft.query.defn;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 
@@ -32,9 +31,9 @@ public class FormatXlsxColumnTest {
    */
   @Test
   public void testToColumnDefinition() {
-    assertEquals(null, FormatXlsxColumn.builder().build().toColumnDefinition("key", DataType.String).format);
-    assertEquals("key", FormatXlsxColumn.builder().build().toColumnDefinition("key", DataType.String).name);
-    assertEquals(17.0, FormatXlsxColumn.builder().build().toColumnDefinition("key", DataType.String).width);
+    assertEquals("hh:mm", FormatXlsxColumn.builder().build().toColumnDefinition("key", DataType.String, (type) -> "hh:mm").format);
+    assertEquals("key", FormatXlsxColumn.builder().build().toColumnDefinition("key", DataType.String, (type) -> "hh:mm").name);
+    assertEquals(17.0, FormatXlsxColumn.builder().build().toColumnDefinition("key", DataType.String, (type) -> "hh:mm").width);
   }
 
   /**
@@ -52,22 +51,6 @@ public class FormatXlsxColumnTest {
     assertThrows(IllegalArgumentException.class, () -> {
       FormatXlsxColumn.builder().width(-8.0).build().validate();    
     });
-  }
-
-  /**
-   * Test of defaultFormatFor method, of class FormatXlsxColumn.
-   */
-  @Test
-  public void testDefaultFormatFor() {
-    assertNull(FormatXlsxColumn.defaultFormatFor(DataType.Boolean));
-    assertEquals("yyyy-mm-dd", FormatXlsxColumn.defaultFormatFor(DataType.Date));
-    assertEquals("hh:mm:ss", FormatXlsxColumn.defaultFormatFor(DataType.Time));
-    assertEquals("yyyy-mm-dd hh:mm:ss", FormatXlsxColumn.defaultFormatFor(DataType.DateTime));
-    assertNull(FormatXlsxColumn.defaultFormatFor(DataType.Double));
-    assertNull(FormatXlsxColumn.defaultFormatFor(DataType.Float));
-    assertNull(FormatXlsxColumn.defaultFormatFor(DataType.Integer));
-    assertNull(FormatXlsxColumn.defaultFormatFor(DataType.Long));
-    assertNull(FormatXlsxColumn.defaultFormatFor(DataType.String));
   }
 
   /**

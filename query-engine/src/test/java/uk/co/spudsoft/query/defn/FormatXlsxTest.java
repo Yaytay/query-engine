@@ -234,8 +234,8 @@ public class FormatXlsxTest {
     FormatXlsx instance = FormatXlsx.builder().build();
     assertEquals(ImmutableList.builder().build(), instance.getColumns());
     instance = FormatXlsx.builder().columns(Arrays.asList(FormatXlsxColumn.builder().name("one").header("First").build())).build();
-    assertEquals("First", instance.getColumns().get(0).toColumnDefinition("one", DataType.Time).name);
-    assertEquals("First", instance.getColumnsMap().get("one").toColumnDefinition("one", DataType.Time).name);
+    assertEquals("First", instance.getColumns().get(0).toColumnDefinition("one", DataType.Time, (type) -> "hh:mm").name);
+    assertEquals("First", instance.getColumnsMap().get("one").toColumnDefinition("one", DataType.Time, (type) -> "hh:mm").name);
   }
 
 }

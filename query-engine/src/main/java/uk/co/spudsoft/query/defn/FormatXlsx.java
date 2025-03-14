@@ -56,6 +56,11 @@ public class FormatXlsx implements Format {
   private final String creator;
   private final boolean gridLines;
   private final boolean headers;
+  
+  private final String defaultDateFormat;
+  private final String defaultDateTimeFormat;
+  private final String defaultTimeFormat;
+  
   private final FormatXlsxFont headerFont;
   private final FormatXlsxFont bodyFont;
   private final FormatXlsxColours headerColours;
@@ -75,6 +80,15 @@ public class FormatXlsx implements Format {
     if (Strings.isNullOrEmpty(name)) {
       throw new IllegalArgumentException("Format has no name");
     }
+    if (Strings.isNullOrEmpty(defaultDateFormat)) {
+      throw new IllegalArgumentException("No default date format specified");
+    }
+    if (Strings.isNullOrEmpty(defaultDateTimeFormat)) {
+      throw new IllegalArgumentException("No default date/time format specified");
+    }
+    if (Strings.isNullOrEmpty(defaultTimeFormat)) {
+      throw new IllegalArgumentException("No default time format specified");
+    }
     if (headerFont != null) {
       headerFont.validate();
     }
@@ -89,7 +103,7 @@ public class FormatXlsx implements Format {
     }
     if (oddColours != null) {
       oddColours.validate();
-    }
+    }    
     for (FormatXlsxColumn column : columns) {
       column.validate();
     }
@@ -235,6 +249,50 @@ public class FormatXlsx implements Format {
     return headers;
   }
 
+  
+  /**
+   * Get the Excel format to use for date columns if no other format is specified.
+   * @return the Excel format to use for date columns if no other format is specified.
+   */
+  @Schema(description = """
+                        The Excel format to use for date columns if no other format is specified.
+                        """
+          , maxLength = 100
+          , defaultValue = "yyyy-mm-dd"
+  )
+  public String getDefaultDateFormat() {
+    return defaultDateFormat;
+  }
+
+  /**
+   * Get the Excel format to use for date/time columns if no other format is specified.
+   * @return the Excel format to use for date/time columns if no other format is specified.
+   */
+  @Schema(description = """
+                        The Excel format to use for date/time columns if no other format is specified.
+                        """
+          , maxLength = 100
+          , defaultValue = "yyyy-mm-dd hh:mm:ss"
+  )
+  public String getDefaultDateTimeFormat() {
+    return defaultDateTimeFormat;
+  }
+
+  /**
+   * Get the Excel format to use for time columns if no other format is specified.
+   * @return the Excel format to use for time columns if no other format is specified.
+   */
+  @Schema(description = """
+                        The Excel format to use for time columns if no other format is specified.
+                        """
+          , maxLength = 100
+          , defaultValue = "hh:mm:ss"
+  )
+  public String getDefaultTimeFormat() {
+    return defaultTimeFormat;
+  }
+    
+  
   /**
    * Get the font to use for the header row.
    * @return the font to use for the header row.
@@ -362,6 +420,9 @@ public class FormatXlsx implements Format {
     private String creator;
     private boolean gridLines = true;
     private boolean headers = true;
+    private String defaultDateFormat = "yyyy-mm-dd";
+    private String defaultDateTimeFormat = "yyyy-mm-dd hh:mm:ss";
+    private String defaultTimeFormat = "hh:mm:ss";
     private FormatXlsxFont headerFont;
     private FormatXlsxFont bodyFont;
     private FormatXlsxColours headerColours;
@@ -453,6 +514,36 @@ public class FormatXlsx implements Format {
     }
 
     /**
+     * Set the {@link FormatXlsx#defaultDateFormat} value in the builder.
+     * @param value The value for the {@link FormatXlsx#defaultDateFormat}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder defaultDateFormat(final String value) {
+      this.defaultDateFormat = value;
+      return this;
+    }
+
+    /**
+     * Set the {@link FormatXlsx#defaultDateTimeFormat} value in the builder.
+     * @param value The value for the {@link FormatXlsx#defaultDateTimeFormat}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder defaultDateTimeFormat(final String value) {
+      this.defaultDateTimeFormat = value;
+      return this;
+    }
+
+    /**
+     * Set the {@link FormatXlsx#defaultTimeFormat} value in the builder.
+     * @param value The value for the {@link FormatXlsx#defaultTimeFormat}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder defaultTimeFormat(final String value) {
+      this.defaultDateTimeFormat = value;
+      return this;
+    }
+    
+    /**
      * Set the {@link FormatXlsx#headerFont} value in the builder.
      * @param value The value for the {@link FormatXlsx#headerFont}.
      * @return this, so that this builder may be used in a fluent manner.
@@ -517,7 +608,9 @@ public class FormatXlsx implements Format {
      * @return a new instance of the FormatXlsx class.
      */
     public FormatXlsx build() {
-      return new FormatXlsx(type, name, extension, mediaType, sheetName, creator, gridLines, headers, headerFont, bodyFont, headerColours, evenColours, oddColours, columns);
+      return new FormatXlsx(type, name, extension, mediaType, sheetName, creator
+              , gridLines, headers, defaultDateFormat, defaultDateTimeFormat, defaultTimeFormat
+              , headerFont, bodyFont, headerColours, evenColours, oddColours, columns);
     }
   }
 
@@ -530,7 +623,9 @@ public class FormatXlsx implements Format {
     return new FormatXlsx.Builder();
   }
 
-  private FormatXlsx(final FormatType type, final String name, final String extension, final MediaType mediaType, final String sheetName, final String creator, final boolean gridLines, final boolean headers, final FormatXlsxFont headerFont, final FormatXlsxFont bodyFont, final FormatXlsxColours headerColours, final FormatXlsxColours evenColours, final FormatXlsxColours oddColours, final List<FormatXlsxColumn> columns) {
+  private FormatXlsx(final FormatType type, final String name, final String extension, final MediaType mediaType, final String sheetName, final String creator
+          , final boolean gridLines, final boolean headers, final String defaultDateFormat, final String defaultDateTimeFormat, final String defaultTimeFormat
+          , final FormatXlsxFont headerFont, final FormatXlsxFont bodyFont, final FormatXlsxColours headerColours, final FormatXlsxColours evenColours, final FormatXlsxColours oddColours, final List<FormatXlsxColumn> columns) {
     validateType(FormatType.XLSX, type);
     this.type = type;
     this.name = name;
@@ -540,6 +635,9 @@ public class FormatXlsx implements Format {
     this.creator = creator;
     this.gridLines = gridLines;
     this.headers = headers;
+    this.defaultDateFormat = defaultDateFormat;
+    this.defaultDateTimeFormat = defaultDateTimeFormat;
+    this.defaultTimeFormat = defaultTimeFormat;
     this.headerFont = headerFont;
     this.bodyFont = bodyFont;
     this.headerColours = headerColours;
@@ -547,7 +645,6 @@ public class FormatXlsx implements Format {
     this.oddColours = oddColours;
     this.columns = ImmutableCollectionTools.copy(columns);
     this.columnsMap = ImmutableCollectionTools.listToMap(columns, c -> c.getName());
-  }
-    
+  }  
   
 }

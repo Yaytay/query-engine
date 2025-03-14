@@ -30,6 +30,16 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.defn.DataType;
+import static uk.co.spudsoft.query.defn.DataType.Boolean;
+import static uk.co.spudsoft.query.defn.DataType.Date;
+import static uk.co.spudsoft.query.defn.DataType.DateTime;
+import static uk.co.spudsoft.query.defn.DataType.Double;
+import static uk.co.spudsoft.query.defn.DataType.Float;
+import static uk.co.spudsoft.query.defn.DataType.Integer;
+import static uk.co.spudsoft.query.defn.DataType.Long;
+import static uk.co.spudsoft.query.defn.DataType.String;
+import static uk.co.spudsoft.query.defn.DataType.Time;
 import uk.co.spudsoft.query.defn.FormatXlsx;
 import uk.co.spudsoft.query.defn.FormatXlsxColours;
 import uk.co.spudsoft.query.defn.FormatXlsxColumn;
@@ -183,6 +193,24 @@ public class FormatXlsxInstance implements FormatInstance {
     }
   }
   
+  private String defaultFormatFor(DataType type) {
+    if (type == null) {
+      return null;
+    }
+    return switch (type) {
+      case Boolean -> null;
+      case Date -> definition.getDefaultDateFormat();
+      case DateTime -> definition.getDefaultDateTimeFormat();
+      case Double -> null;
+      case Float -> null;
+      case Integer -> null;
+      case Long -> null;
+      case String -> null;
+      case Time -> definition.getDefaultTimeFormat();
+      default -> null;
+    };
+  }
+    
   private TableDefinition tableDefinition() {
     List<ColumnDefinition> columns = new ArrayList<>(types.size());
     FormatXlsxColumn nonFormat = FormatXlsxColumn.builder().build();
@@ -190,9 +218,9 @@ public class FormatXlsxInstance implements FormatInstance {
       ColumnDefinition defn = null;
       FormatXlsxColumn formatColumn = definition.getColumnsMap().get(cd.name());
       if (formatColumn != null) {
-        defn = formatColumn.toColumnDefinition(cd.name(), cd.type());
+        defn = formatColumn.toColumnDefinition(cd.name(), cd.type(), this::defaultFormatFor);
       } else {
-        defn = nonFormat.toColumnDefinition(cd.name(), cd.type());
+        defn = nonFormat.toColumnDefinition(cd.name(), cd.type(), this::defaultFormatFor);
       }
       columns.add(defn);
     });

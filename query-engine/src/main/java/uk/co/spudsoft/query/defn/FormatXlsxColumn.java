@@ -22,6 +22,7 @@ import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.function.Function;
 import uk.co.spudsoft.xlsx.ColumnDefinition;
 
 /**
@@ -39,16 +40,17 @@ public class FormatXlsxColumn {
   private final String header;
   private final String format;
   private final Double width;
-
+  
   /**
    * Convert to a {@link ColumnDefinition} as used by the streaming XLSX writer.
    * @param key the field name to use if header is not set.
    * @param type the type to treat the data as (and thus to format the column as) if format is not set.
+   * @param defaultFormatFor function to use to determine the default format to use if the column does not specify one
    * @return this font converted to a {@link ColumnDefinition}.
    */  
-  public ColumnDefinition toColumnDefinition(String key, DataType type) {
+  public ColumnDefinition toColumnDefinition(String key, DataType type, Function<DataType, String> defaultFormatFor) {
     String calculatedHeader = Strings.isNullOrEmpty(header) ? key : header;
-    String calculatedFormat = Strings.isNullOrEmpty(format) ? defaultFormatFor(type) : format;
+    String calculatedFormat = Strings.isNullOrEmpty(format) ? defaultFormatFor.apply(type) : format;
     Double calculatedWidth = width == null ? defaultWidthFor(type, calculatedHeader, calculatedFormat): width;
     return new ColumnDefinition(calculatedHeader, calculatedFormat, calculatedWidth);
   }
@@ -114,25 +116,7 @@ public class FormatXlsxColumn {
   )
   public Double getWidth() {
     return width;
-  }
-    
-  static String defaultFormatFor(DataType type) {
-    if (type == null) {
-      return null;
-    }
-    return switch (type) {
-      case Boolean -> null;
-      case Date -> "yyyy-mm-dd";
-      case DateTime -> "yyyy-mm-dd hh:mm:ss";
-      case Double -> null;
-      case Float -> null;
-      case Integer -> null;
-      case Long -> null;
-      case String -> null;
-      case Time -> "hh:mm:ss";
-      default -> null;
-    };
-  }
+  }  
   
   static int formatLength(String format) {
     if (format == null) {
