@@ -88,7 +88,7 @@ public class LookupIT {
       , "--sampleDataLoads[0].user.username=" + mysql.getUser()
       , "--sampleDataLoads[0].user.password=" + mysql.getPassword()
       , "--outputCacheDir=target/temp/" + this.getClass().getSimpleName() + "/cache"
-    }, stdout);
+    }, stdout, System.getenv());
     
     RestAssured.port = main.getPort();
     

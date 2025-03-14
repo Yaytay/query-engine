@@ -99,7 +99,7 @@ public class FeatureRichQueryIT {
       , "--sampleDataLoads[2].adminUser.username=sa"
       , "--sampleDataLoads[2].adminUser.password=unknown"
       , "--sampleDataLoads[3].url=wibble"
-    }, stdout);
+    }, stdout, System.getenv());
     
     RestAssured.port = main.getPort();
     

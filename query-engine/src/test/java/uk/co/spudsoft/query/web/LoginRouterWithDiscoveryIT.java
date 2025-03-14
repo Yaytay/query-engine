@@ -179,7 +179,7 @@ public class LoginRouterWithDiscoveryIT {
       , "--session.oauth.test.credentials.id=bdab017f4732085a51f9"
       , "--session.oauth.test.credentials.secret=" + System.getProperty("queryEngineGithubSecret")
       , "--session.oauth.test.pkce=true"
-    }, stdout);
+    }, stdout, System.getenv());
     assertEquals(0, stdoutStream.size());
     
     RestAssured.port = main.getPort();

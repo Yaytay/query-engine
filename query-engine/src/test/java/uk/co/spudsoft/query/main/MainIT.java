@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.main;
 
+import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import io.vertx.core.Vertx;
@@ -73,7 +74,12 @@ public class MainIT {
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
       "--help"
-    }, stdout);
+    }
+            , stdout
+            , ImmutableMap.<String, String>builder()
+                    .put("LOGGING_AS_JSON", "tRue")
+                    .put("LOGGING_LEVEL_UK_co_sPuDsoft_query_logging", "trace")
+                    .build());
     logger.debug("Help:\n{}", stdout);
     
     main.shutdown();
@@ -88,7 +94,7 @@ public class MainIT {
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
       "--helpenv"
-    }, stdout);
+    }, stdout, System.getenv());
     logger.debug("HelpEnv:\n{}", stdout);
     
     main.shutdown();
@@ -123,7 +129,12 @@ public class MainIT {
       , "--tracing.sampler=ratio"
       , "--tracing.sampleRatio=0.5"
       , "--tracing.url=http://nonexistent/zipkin"
-    }, stdout);
+    }
+            , stdout
+            , ImmutableMap.<String, String>builder()
+                    .put("LOGGING_AS_JSON", "false")
+                    .put("LOGGING_LEVEL_UK_co_sPuDsoft_query_logging", "trace")
+                    .build());
     assertEquals(0, stdoutStream.size());
     
     main.shutdown();
@@ -164,7 +175,12 @@ public class MainIT {
       , "--tracing.protocol=otlphttp"
       , "--tracing.sampler=alwaysOn"
       , "--tracing.url=http://nonexistent/otlphttp"
-    }, stdout);
+    }
+            , stdout
+            , ImmutableMap.<String, String>builder()
+                    .put("LOGGING_AS_JSON", "tRue")
+                    .put("LOGGING_LEVEL_UK_co_sPuDsoft_query_logging", "trace")
+                    .build());
     assertEquals(0, stdoutStream.size());
     
     RestAssured.port = main.getPort();
@@ -322,7 +338,7 @@ public class MainIT {
       , "--tracing.sampler=parent"
       , "--tracing.parentSampler=alwaysOn"
       , "--tracing.url=http://nonexistent/otlphttp"
-    }, stdout);
+    }, stdout, System.getenv());
     assertEquals(0, stdoutStream.size());
     
     RestAssured.port = main.getPort();

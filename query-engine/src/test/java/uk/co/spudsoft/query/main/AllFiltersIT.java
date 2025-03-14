@@ -105,7 +105,7 @@ public class AllFiltersIT {
       , "--secrets.AllFiltersProtectedCredentials.password=" + mysql.getPassword()
       , "--secrets.AllFiltersProtectedCredentials.condition=true"
       , "--outputCacheDir=target/temp/" + this.getClass().getSimpleName() + "/cache"
-    }, stdout);
+    }, stdout, System.getenv());
     
     RestAssured.port = main.getPort();
     

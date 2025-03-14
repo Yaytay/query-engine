@@ -88,7 +88,7 @@ public class FormBuilderIT {
       , "--zipkin.baseUrl=http://localhost/wontwork"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
-    }, stdout);
+    }, stdout, System.getenv());
     
     RestAssured.port = main.getPort();
     

@@ -95,7 +95,7 @@ public class CachingIT {
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--outputCacheDir=" + cacheDir
-    }, stdout);
+    }, stdout, System.getenv());
     
     RestAssured.port = main.getPort();
     

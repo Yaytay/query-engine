@@ -28,7 +28,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
-import uk.co.spudsoft.query.testcontainers.ServerProviderDistributedTracing;
 import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
 import uk.co.spudsoft.query.testcontainers.ServerProviderMsSQL;
@@ -105,7 +104,7 @@ public class RunIT {
   //          , "--tracing.protocol=" + tracing.getProtocol().name()
   //          , "--tracing.url=" + tracing.getUrl()
             
-    }, stdout);
+    }, stdout, System.getenv());
     
     for (int i = 0; i < 14400; ++i) {
       try {

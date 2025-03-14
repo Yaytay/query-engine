@@ -81,7 +81,7 @@ public class ConcurrentRuleIT {
       , "--managementEndpoints[3]=threads"
       , "--managementEndpointPort=" + mgmtPort
       , "--managementEndpointUrl=http://localhost:" + mgmtPort + "/manage"
-    }, stdout);
+    }, stdout, System.getenv());
     assertEquals(0, stdoutStream.size());
     
     RestAssured.port = main.getPort();

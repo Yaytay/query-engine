@@ -95,7 +95,7 @@ public class OpenApiSchemaIT {
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--zipkin.baseUrl=http://localhost/wontwork"
-    }, stdout);
+    }, stdout, System.getenv());
     
     RestAssured.port = main.getPort();
     

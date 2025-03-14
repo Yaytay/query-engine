@@ -65,7 +65,7 @@ public class UiRouterIT {
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--logging.jsonFormat=false"
       , "--loadSampleData=true"
-    }, stdout);
+    }, stdout, System.getenv());
     
     RestAssured.port = main.getPort();
     

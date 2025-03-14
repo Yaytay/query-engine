@@ -88,7 +88,7 @@ public class MainAuthRequiredIT {
       , "--session.oauth.GitHub.credentials.id=bdab017f4732085a51f9"
       , "--session.oauth.GitHub.credentials.secret=" + System.getProperty("queryEngineGithubSecret")
       , "--session.oauth.GitHub.pkce=false"
-    }, stdout);
+    }, stdout, System.getenv());
     assertEquals(0, stdoutStream.size());
     
     RestAssured.port = main.getPort();

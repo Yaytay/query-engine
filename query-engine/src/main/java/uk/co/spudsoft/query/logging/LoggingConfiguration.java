@@ -31,6 +31,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import org.slf4j.LoggerFactory;
@@ -46,6 +47,56 @@ public class LoggingConfiguration {
   private static final org.slf4j.Logger logger = LoggerFactory.getLogger(LoggingConfiguration.class);
 
   private LoggingConfiguration() {
+  }
+  
+  /**
+   * Configure Logback according to the environment.
+   * 
+   * @param loggerContext the result of calling {@link org.slf4j.LoggerFactory#getILoggerFactory()} cast to (LoggerContext).
+   * @param env Map of environment variables (from {@link java.lang.System#getenv()} in a non-test environment).
+   */
+  public static void configureLogbackFromEnvironment(LoggerContext loggerContext, Map<String, String> env) {
+
+    Map<String, Level> levelEnvs = new HashMap<>();
+    env.forEach((k, v) -> {
+      if (k.startsWith("LOGGING_LEVEL_")) {
+        try {
+          String log = k.substring(14);
+          log = log.toLowerCase().replaceAll("_", ".");
+          Level level = Level.valueOf(v);
+          levelEnvs.put(log, level);
+        } catch (Throwable ex) {
+          logger.error("Failed to process environment variable {}={}:", k, v, ex);
+        }
+      }
+    });
+    
+    if  (levelEnvs.isEmpty() && !env.containsKey("LOGGING_AS_JSON")) {
+      return ;
+    }
+
+    loggerContext.reset();
+    
+    loggerContext.setMDCAdapter(new VertxMDC());
+    
+    ConsoleAppender<ILoggingEvent> appender;
+    if ("true".equalsIgnoreCase(env.get("LOGGING_AS_JSON"))) {
+      appender = configureForJson(loggerContext);
+    } else {
+      appender = configureForText(loggerContext);
+    }
+    appender.start();
+    
+    Logger rootLogger = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
+    rootLogger.addAppender(appender);
+    rootLogger.setLevel(ch.qos.logback.classic.Level.INFO);
+
+    Logger gtiLogger = loggerContext.getLogger("uk.co.spudsoft");
+    gtiLogger.addAppender(appender);
+    gtiLogger.setLevel(ch.qos.logback.classic.Level.INFO);
+    gtiLogger.setAdditive(false);
+
+    overrideLevels(levelEnvs);
   }
   
   /**

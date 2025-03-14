@@ -59,7 +59,7 @@ public class MainTest {
             , "--baseConfigPath=target/query-engine/samples-maintest"
             , "--jwt.acceptableIssuerRegexes[0]=.*"
             , "--jwt.defaultJwksCacheDuration=PT1M"
-    }, stdout);
+    }, stdout, System.getenv());
     logger.info("testMainExitOnRun - exit");
   }
   

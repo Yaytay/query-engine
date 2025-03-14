@@ -100,7 +100,7 @@ public class SortIT {
       , "--sampleDataLoads[2].adminUser.password=unknown"
       , "--sampleDataLoads[3].url=wibble"
       , "--processors.inMemorySortLimitBytes=10000"
-    }, stdout);
+    }, stdout, System.getenv());
     
     RestAssured.port = main.getPort();
     

@@ -78,6 +78,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -181,8 +182,8 @@ public class Main extends Application {
   }
   
   /**
-   * Handler for completion of the Future returned by the {@link #innerMain(java.lang.String[], java.io.PrintStream)} method.
-   * @param result the {@link AsyncResult} found in the Future returned by {@link #innerMain(java.lang.String[], java.io.PrintStream)}.
+   * Handler for completion of the Future returned by the {@link #innerMain(java.lang.String[], java.io.PrintStream, java.util.Map) } method.
+   * @param result the {@link AsyncResult} found in the Future returned by {@link #innerMain(java.lang.String[], java.io.PrintStream, java.util.Map)}.
    */
   @ExcludeFromJacocoGenerated
   protected void mainCompletion(AsyncResult<Integer> result) {
@@ -228,7 +229,7 @@ public class Main extends Application {
    */
   public static void main(String[] args) {
     Main main = new Main();
-    main.innerMain(args, System.out).onComplete(ar -> main.mainCompletion(ar));
+    main.innerMain(args, System.out, System.getenv()).onComplete(ar -> main.mainCompletion(ar));
   }
   
   /**
@@ -256,13 +257,14 @@ public class Main extends Application {
    * Method to allow test code to call main with no risk of System.exit being called.
    * @param args Command line arguments.
    * @param stdout PrintStream that would be System.out for a non-test call.
+   * @param env Map of environment variables (from {@link java.lang.System#getenv()} in a non-test environment).
    * @return The status code that would have been returned if this was a real command line execution.
    * @throws ExecutionException If the main function throws an exception.
    * @throws InterruptedException If the thread is interrupted whilst waiting for the main function to complete.
    */
-  public int testMain(String[] args, PrintStream stdout) throws ExecutionException, InterruptedException {    
+  public int testMain(String[] args, PrintStream stdout, Map<String, String> env) throws ExecutionException, InterruptedException {    
     CompletableFuture<Integer> future = new CompletableFuture<>();
-    innerMain(args, stdout)
+    innerMain(args, stdout, env)
             .onSuccess(i -> {
               future.complete(i);
             })
@@ -299,21 +301,20 @@ public class Main extends Application {
    * 
    * @param args The command line arguments.
    * @param stdout The output stream to use for messages.  Direct use of {@link System#out} is avoided for test reasons.
+   * @param env Map of environment variables (from {@link java.lang.System#getenv()} in a non-test environment).
    * @return A Future that will be completed when everything is ready.  If the result of this Future is not zero the process will be shut down.
    */
   @SuppressFBWarnings(value = {"PATH_TRAVERSAL_IN", "POTENTIAL_XML_INJECTION"}, justification = "False positive, the dirs at this stage cannot be specified by the user")
-  protected Future<Integer> innerMain(String[] args, PrintStream stdout) {
+  protected Future<Integer> innerMain(String[] args, PrintStream stdout, Map<String, String> env) {
         
     Params4J<Parameters> p4j = Params4J.<Parameters>factory()
             .withConstructor(() -> new Parameters())
             .withDirGatherer(new File(getBaseConfigDir()), FileType.Yaml)
-            .withSecretsGatherer(new File(getBaseConfigDir() + "/conf.d").toPath(), 0, 0, 0, StandardCharsets.UTF_8)
+            .withSecretsGatherer(new File(getBaseConfigDir() + "/conf.d").toPath(), 1000, 1000, 20, StandardCharsets.UTF_8)
             .withEnvironmentVariablesGatherer(NAME, false)
             .withSystemPropertiesGatherer(NAME)
             .withCommandLineArgumentsGatherer(args, "--")
             .create();
-    
-    logger.trace("Args: {}", (Object) args);
     
     for (String arg : args) {
       if ("-?".equals(arg) || "--help".equals(arg)) {
@@ -348,7 +349,8 @@ public class Main extends Application {
         return Future.succeededFuture(1);
       }
     }
-        
+     
+    LoggingConfiguration.configureLogbackFromEnvironment((LoggerContext) LoggerFactory.getILoggerFactory(), env);
     Parameters params = p4j.gatherParameters();
     LoggingConfiguration.configureLogback((LoggerContext) LoggerFactory.getILoggerFactory(), params.getLogging());
 

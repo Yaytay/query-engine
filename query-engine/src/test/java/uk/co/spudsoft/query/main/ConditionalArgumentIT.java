@@ -129,7 +129,7 @@ public class ConditionalArgumentIT {
       , "--tracing.protocol=otlphttp"
       , "--tracing.sampler=alwaysOn"
       , "--tracing.url=http://nonexistent/otlphttp"
-    }, stdout);
+    }, stdout, System.getenv());
     
     RestAssured.port = main.getPort();
     
