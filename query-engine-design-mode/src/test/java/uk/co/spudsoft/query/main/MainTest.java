@@ -20,6 +20,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +45,7 @@ public class MainTest {
             , "--baseConfigPath=target/query-engine/samples-maintest"
             , "--jwt.acceptableIssuerRegexes[0]=.*"
             , "--jwt.defaultJwksCacheDuration=PT1M"
-    }, stdout);
+    }, stdout, Collections.emptyMap());
   }
   
   @Test

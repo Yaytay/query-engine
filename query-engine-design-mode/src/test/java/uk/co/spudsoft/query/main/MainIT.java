@@ -33,6 +33,7 @@ import static io.restassured.config.RedirectConfig.redirectConfig;
 import io.restassured.config.RestAssuredConfig;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.Collections;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
@@ -79,7 +80,7 @@ public class MainIT {
       , "--session.oauth.GitHub.credentials.id=bdab017f4732085a51f9"
       , "--session.oauth.GitHub.credentials.secret=" + System.getProperty("queryEngineGithubSecret")
       , "--session.oauth.GitHub.pkce=false"
-    }, stdout);
+    }, stdout, Collections.emptyMap());
     assertEquals(0, stdoutStream.size());
     
     main.shutdown();
@@ -117,7 +118,7 @@ public class MainIT {
       , "--session.oauth.GitHub.credentials.id=bdab017f4732085a51f9"
       , "--session.oauth.GitHub.credentials.secret=" + System.getProperty("queryEngineGithubSecret")
       , "--session.oauth.GitHub.pkce=false"
-    }, stdout);
+    }, stdout, Collections.emptyMap());
     assertEquals(0, stdoutStream.size());
     
     RestAssured.port = main.getPort();

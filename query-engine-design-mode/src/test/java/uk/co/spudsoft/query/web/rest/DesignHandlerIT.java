@@ -34,6 +34,7 @@ import static io.restassured.RestAssured.given;
 import io.restassured.http.ContentType;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.Collections;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
@@ -92,7 +93,7 @@ public class DesignHandlerIT {
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--logging.jsonFormat=true"
-    }, stdout);
+    }, stdout, Collections.emptyMap());
 
     RestAssured.port = main.getPort();
 

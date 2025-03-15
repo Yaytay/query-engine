@@ -26,6 +26,7 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.Collections;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
@@ -85,7 +86,7 @@ public class MainQueryIT {
       , "--tracing.protocol=otlphttp"
       , "--tracing.sampler=alwaysOn"
       , "--tracing.url=http://nonexistent/otlphttp"
-    }, stdout);
+    }, stdout, Collections.emptyMap());
     
     RestAssured.port = main.getPort();
     

@@ -22,6 +22,7 @@ import io.vertx.junit5.VertxExtension;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
+import java.util.Collections;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -115,7 +116,7 @@ public class RunIT {
 //      , "--session.oauth.Microsoft.credentials.id=" + System.getProperty("queryEngineEntraId")
 //      , "--session.oauth.Microsoft.credentials.secret=" + System.getProperty("queryEngineEntraSecret")
 //      , "--session.oauth.Microsoft.scope=openid profile api://" + System.getProperty("queryEngineEntraId") + "/query-engine"
-    }, stdout);
+    }, stdout, Collections.emptyMap());
     
     for (int i = 0; i < 14400; ++i) {
       try {

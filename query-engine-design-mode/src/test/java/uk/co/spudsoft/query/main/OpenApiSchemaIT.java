@@ -40,6 +40,7 @@ import io.vertx.junit5.Timeout;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -96,7 +97,7 @@ public class OpenApiSchemaIT {
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--zipkin.baseUrl=http://localhost/wontwork"
-    }, stdout);
+    }, stdout, Collections.emptyMap());
     
     RestAssured.port = main.getPort();
     
