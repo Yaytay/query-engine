@@ -444,7 +444,11 @@ public class Main extends Application {
     try {
       File baseConfigFile = new File(params.getBaseConfigPath());
       prepareBaseConfigPath(baseConfigFile, params.getSampleDataLoads());
-      dirCache = DirCache.cache(baseConfigFile.toPath(), Duration.of(params.getFileStabilisationDelaySeconds(), ChronoUnit.SECONDS), Pattern.compile("\\..*"));
+      dirCache = DirCache.cache(baseConfigFile.toPath()
+              , params.getFileStabilisationDelaySeconds() >= 0 ? Duration.of(params.getFileStabilisationDelaySeconds(), ChronoUnit.SECONDS) : null
+              , Pattern.compile("\\..*")
+              , params.getFilePollPeriodSeconds() > 0 ? Duration.of(params.getFilePollPeriodSeconds(), ChronoUnit.SECONDS) : null
+      );
       defnLoader = new PipelineDefnLoader(meterRegistry, vertx, params.getPipelineCache(), dirCache);
     } catch (Throwable ex) {
       logger.error("Unable to config pipeline loader: ", ex);

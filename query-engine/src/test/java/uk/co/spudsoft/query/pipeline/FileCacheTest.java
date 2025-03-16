@@ -74,7 +74,7 @@ public class FileCacheTest {
     File file2 = create(dir, "file2", "barn");
     File file3 = create(subdir, "file3", "lower");
     
-    DirCache dirCache = DirCache.cache(dir.toPath(), Duration.ofMillis(10), Pattern.compile("\\..*"));
+    DirCache dirCache = DirCache.cache(dir.toPath(), Duration.ofMillis(10), Pattern.compile("\\..*"), null);
     Thread.sleep(100);
     assertEquals(3, dirCache.getRoot().getChildren().size());
     

@@ -49,7 +49,7 @@ public class DesignHandlerTest {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     java.io.File rootDir = new java.io.File("target/query-engine/samples-designhandlertest");
     Main.prepareBaseConfigPath(rootDir, null);
-    DirCache dirCache = DirCache.cache(rootDir.toPath(), Duration.of(1, ChronoUnit.SECONDS), Pattern.compile("\\..*"));
+    DirCache dirCache = DirCache.cache(rootDir.toPath(), Duration.of(1, ChronoUnit.SECONDS), Pattern.compile("\\..*"), null);
     PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, new CacheConfig(), dirCache);
     DesignHandler dh = new DesignHandler(vertx, loader, dirCache);
     

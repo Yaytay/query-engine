@@ -50,7 +50,7 @@ public class PipelineDefnLoaderTest {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     CacheConfig cacheConfig = new CacheConfig();
     cacheConfig.setMaxItems(10);
-    PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(1), Pattern.compile("\\..*")));
+    PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(1), Pattern.compile("\\..*"), null));
     Thread.sleep(2000);
 
     RequestContext req = new RequestContext(
@@ -123,7 +123,7 @@ public class PipelineDefnLoaderTest {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     CacheConfig cacheConfig = new CacheConfig();
     cacheConfig.setMaxItems(10);
-    PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(1), Pattern.compile("\\..*")));
+    PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(1), Pattern.compile("\\..*"), null));
     Thread.sleep(2000);
 
     RequestContext req = new RequestContext(

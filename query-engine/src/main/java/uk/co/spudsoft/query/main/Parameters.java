@@ -127,9 +127,30 @@ public class Parameters {
    * The Query Engine maintains an internal model of the files under the baseConfigPath.
    * <p>
    * When files under the baseConfigPath change this model gets updated.
-   * A delay has to be put in to avoid reading the changes whilst they are still be written.
+   * <p>
+   * There are two mechanisms by which this internal model can be maintained: file notifications and polling.
+   * File notifications is the better approach, but it does not work on some filesystems (in particular not on networked file system).
+   * <p>
+   * With file notifications, notification are fired as soon as a file change starts, so 
+   * a delay has to be put in to avoid reading the changes whilst they are still be written.
+   * <p>
+   * If this value is less than zero file notifications will be disabled.
+   * 
    */
   private int fileStabilisationDelaySeconds = 2;
+  
+  /**
+   * The Query Engine maintains an internal model of the files under the baseConfigPath.
+   * <p>
+   * When files under the baseConfigPath change this model gets updated.
+   * <p>
+   * There are two mechanisms by which this internal model can be maintained: file notifications and polling.
+   * Polling is less efficient and slower than file notifications, but will work in all circumstances.
+   * <p>
+   * If this value is less than or equal to zero polling will be disabled.
+   * 
+   */
+  private int filePollPeriodSeconds = 0;
 
   /**
    * Credentials that can be used in Source definitions.
@@ -356,6 +377,26 @@ public class Parameters {
    */
   public Parameters setFileStabilisationDelaySeconds(int fileStabilisationDelaySeconds) {
     this.fileStabilisationDelaySeconds = fileStabilisationDelaySeconds;
+    return this;
+  }
+
+  /**
+   * Get the delay between initiating scans for query config changes.
+   * 
+   * @return the delay between initiating scans for query config changes.
+   */
+  public int getFilePollPeriodSeconds() {
+    return filePollPeriodSeconds;
+  }
+
+  /**
+   * The delay between initiating scans for query config changes.
+   * 
+   * @param filePollPeriodSeconds the delay between initiating scans for query config changes.
+   * @return this, so that the method may be called in a fluent manner.
+   */
+  public Parameters setFilePollPeriodSeconds(int filePollPeriodSeconds) {
+    this.filePollPeriodSeconds = filePollPeriodSeconds;
     return this;
   }
   

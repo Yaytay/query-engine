@@ -113,7 +113,7 @@ public class DynamicEndpointPipelineIT {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     CacheConfig cacheConfig = new CacheConfig();
     cacheConfig.setMaxDuration(Duration.ZERO);
-    PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*")));
+    PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*"), null));
     PipelineExecutorImpl executor = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList())
             , ImmutableMap.<String, ProtectedCredentials>builder().put("cred", new ProtectedCredentials(serverProviderMy.getUser(), serverProviderMy.getPassword(), null)).build()
     );
@@ -210,7 +210,7 @@ public class DynamicEndpointPipelineIT {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     CacheConfig cacheConfig = new CacheConfig();
     cacheConfig.setMaxDuration(Duration.ZERO);
-    PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*")));
+    PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*"), null));
     PipelineExecutorImpl executor = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList())
             , ImmutableMap.<String, ProtectedCredentials>builder().put("cred", new ProtectedCredentials(serverProviderMy.getUser(), serverProviderMy.getPassword(), null)).build()
     );
@@ -305,7 +305,7 @@ public class DynamicEndpointPipelineIT {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     CacheConfig cacheConfig = new CacheConfig();
     cacheConfig.setMaxDuration(Duration.ZERO);
-    PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*")));
+    PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*"), null));
     PipelineExecutorImpl executor = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList())
             , ImmutableMap.<String, ProtectedCredentials>builder().put("cred", new ProtectedCredentials(serverProviderMy.getUser(), serverProviderMy.getPassword(), null)).build()
     );
@@ -399,7 +399,7 @@ public class DynamicEndpointPipelineIT {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     CacheConfig cacheConfig = new CacheConfig();
     cacheConfig.setMaxDuration(Duration.ZERO);
-    PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*")));
+    PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*"), null));
     PipelineExecutorImpl executor = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
 
     MultiMap args = MultiMap.caseInsensitiveMultiMap();

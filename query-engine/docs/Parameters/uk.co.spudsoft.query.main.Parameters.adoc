@@ -15,6 +15,9 @@ Top level configuration options for Query Engine.
 | [[fileStabilisationDelaySeconds]]fileStabilisationDelaySeconds
 | int
 | The seconds to wait after being notified or a file change to allow all file writes to complete.
+| [[filePollPeriodSeconds]]filePollPeriodSeconds
+| int
+| The delay between initiating scans for query config changes.
 | [[vertxOptions]]vertxOptions
 | link:https://vertx.io/docs/apidocs/io/vertx/core/VertxOptions.html[VertxOptions]
 | The VertxOptions that will be used when creating the Vertx instance.
