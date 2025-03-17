@@ -783,7 +783,7 @@ public class Main extends Application {
       }
       
     } catch (Throwable ex) {
-      logger.warn("Failed to copy sample {}: ", ex);
+      logger.warn("Failed to copy sample {}: ", path, ex);
     }
   }
   
