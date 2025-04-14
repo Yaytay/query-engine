@@ -20,7 +20,7 @@
       <url>https://opensource.org/licenses/GPL-3.0</url>
     </license>
   </licenses>
-  
+
   <developers>
     <developer>
       <id>yaytay</id>
@@ -33,14 +33,14 @@
     <connection>scm:git@github.com:Yaytay/query-engine.git</connection>
     <developerConnection>scm:git@github.com:Yaytay/query-engine.git</developerConnection>
     <url>https://github.com/Yaytay/vertx-resteasy-helpers.git</url>
-  </scm>  
+  </scm>
 
   <properties>
     <fork.count>4</fork.count>
     <compiler.dir>target/compiler</compiler.dir>
     <mainClass>uk.co.spudsoft.query.main.Main</mainClass>
   </properties>
-  
+
 
   <dependencyManagement>
     <dependencies>
@@ -59,7 +59,7 @@
         <scope>import</scope>
       </dependency>
     </dependencies>
-  </dependencyManagement>  
+  </dependencyManagement>
 
   <dependencies>
     <dependency>
@@ -111,7 +111,7 @@
         </exclusion>
       </exclusions>
     </dependency>
-    
+
     <dependency>
       <groupId>io.swagger.core.v3</groupId>
       <artifactId>swagger-jaxrs2-jakarta</artifactId>
@@ -341,14 +341,14 @@
       <version>${slf4j.version}</version>
       <scope>test</scope>
     </dependency>
-    <dependency> 
-      <groupId>org.graalvm.polyglot</groupId> 
-      <artifactId>polyglot</artifactId> 
+    <dependency>
+      <groupId>org.graalvm.polyglot</groupId>
+      <artifactId>polyglot</artifactId>
       <version>${graalvm.version}</version>
     </dependency>
-    <dependency> 
-      <groupId>org.graalvm.polyglot</groupId> 
-      <artifactId>js</artifactId> 
+    <dependency>
+      <groupId>org.graalvm.polyglot</groupId>
+      <artifactId>js</artifactId>
       <version>${graalvm.version}</version>
       <type>pom</type>
     </dependency>
@@ -413,13 +413,13 @@
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
       <version>42.7.5</version>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>io.github.nstdio</groupId>
       <artifactId>rsql-parser</artifactId>
       <version>2.3.3</version>
-    </dependency>   
-    
+    </dependency>
+
     <!-- Testing -->
     <dependency>
       <groupId>io.rest-assured</groupId>
@@ -512,6 +512,11 @@
       <artifactId>jakarta.validation-api</artifactId>
       <version>3.1.1</version>
     </dependency>
+    <dependency>
+      <groupId>com.fasterxml.woodstox</groupId>
+      <artifactId>woodstox-core</artifactId>
+      <version>7.1.0</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -534,10 +539,10 @@
                 <additionalJOption>1000</additionalJOption>
               </additionalJOptions>
             </configuration>
-          </execution>      
+          </execution>
           <execution>
             <id>generate-parameter-asciidocs</id>
-            <phase>generate-resources</phase> 
+            <phase>generate-resources</phase>
             <goals>
               <goal>javadoc</goal>
             </goals>
@@ -587,17 +592,17 @@
                 <additionalOption>uk.co.spudsoft.query.main.TracingConfig</additionalOption>
                 <additionalOption>--include-classes</additionalOption>
                 <additionalOption>uk.co.spudsoft.query.logging.LogbackOptions</additionalOption>
-                <additionalOption>--include-classes</additionalOption>                	
+                <additionalOption>--include-classes</additionalOption>
                 <additionalOption>uk.co.spudsoft.query.main.Audit</additionalOption>
-                <additionalOption>--include-classes</additionalOption>                	
+                <additionalOption>--include-classes</additionalOption>
                 <additionalOption>uk.co.spudsoft.query.defn.Condition</additionalOption>
-                <additionalOption>--include-classes</additionalOption>                	
+                <additionalOption>--include-classes</additionalOption>
                 <additionalOption>uk.co.spudsoft.query.defn.DataType</additionalOption>
               </additionalOptions>
             </configuration>
-          </execution>      
-        </executions>      
-      </plugin>    
+          </execution>
+        </executions>
+      </plugin>
 
       <plugin>
         <groupId>org.asciidoctor</groupId>
@@ -606,9 +611,9 @@
         <executions>
           <execution>
             <id>output-html</id>
-            <phase>generate-resources</phase> 
+            <phase>generate-resources</phase>
             <goals>
-              <goal>process-asciidoc</goal> 
+              <goal>process-asciidoc</goal>
             </goals>
             <configuration>
               <sourceDirectory>${basedir}/docs</sourceDirectory>
@@ -621,7 +626,7 @@
           </execution>
         </executions>
       </plugin>
-      
+
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
       </plugin>
@@ -634,7 +639,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-      </plugin>        
+      </plugin>
 
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
@@ -669,7 +674,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-      </plugin>    
+      </plugin>
 
       <plugin>
         <groupId>org.jacoco</groupId>
@@ -710,7 +715,7 @@
         <groupId>org.cyclonedx</groupId>
         <artifactId>cyclonedx-maven-plugin</artifactId>
       </plugin>
-      
+
       <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
@@ -749,7 +754,7 @@
               <outputDirectory>target/ui-build</outputDirectory>
             </configuration>
           </plugin>
-                      
+
           <plugin>
             <artifactId>maven-resources-plugin</artifactId>
             <version>3.3.1</version>
@@ -764,19 +769,19 @@
                 <configuration>
                   <outputDirectory>${basedir}/target/classes/www</outputDirectory>
                   <includeEmptyDirs>true</includeEmptyDirs>
-                  <resources>          
+                  <resources>
                     <resource>
                       <directory>${basedir}/target/ui-build/dist</directory>
                     </resource>
-                  </resources>              
-                </configuration>            
+                  </resources>
+                </configuration>
               </execution>
             </executions>
           </plugin>
         </plugins>
       </build>
     </profile>
-    
+
   </profiles>
 
 </project>

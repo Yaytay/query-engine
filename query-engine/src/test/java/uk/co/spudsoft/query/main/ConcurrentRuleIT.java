@@ -37,6 +37,7 @@ import java.util.List;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 import uk.co.spudsoft.query.web.LoginRouterWithDiscoveryIT;
 
 
@@ -54,10 +55,16 @@ public class ConcurrentRuleIT {
   
   private final int mgmtPort = LoginRouterWithDiscoveryIT.findUnusedPort();
   
+  private static final String CONFS_DIR = "target/query-engine/samples-concurrentruleit";
+  
   @BeforeAll
   public static void createDirs(Vertx vertx) {
-    File paramsDir = new File("target/query-engine/samples-mainit");
-    paramsDir.mkdirs();
+    File confsDir = new File(CONFS_DIR);
+    try {
+      FileUtils.deleteDirectory(confsDir);
+    } catch (Throwable ex) {
+    }
+    confsDir.mkdirs();
   }
       
   @Test
@@ -71,7 +78,7 @@ public class ConcurrentRuleIT {
       , "--persistence.datasource.adminUser.username=" + postgres.getUser()
       , "--persistence.datasource.adminUser.password=" + postgres.getPassword()
       , "--persistence.datasource.schema=public" 
-      , "--baseConfigPath=target/query-engine/samples-concurrentrulesit"
+      , "--baseConfigPath=" + CONFS_DIR
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--logging.jsonFormat=false"

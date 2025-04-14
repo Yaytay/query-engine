@@ -5,11 +5,11 @@
 
   <groupId>uk.co.spudsoft</groupId>
   <artifactId>query-engine-parent</artifactId>
-  <version>0.0.0</version>  
+  <version>0.0.0</version>
   <name>SpudSoft Query Engine - Parent</name>
 
   <packaging>pom</packaging>
-  
+
   <modules>
     <module>query-engine</module>
     <module>query-engine-design-mode</module>
@@ -21,7 +21,7 @@
       <url>https://opensource.org/licenses/GPL-3.0</url>
     </license>
   </licenses>
-  
+
   <developers>
     <developer>
       <id>yaytay</id>
@@ -43,7 +43,7 @@
     <testcontainers.version>1.20.6</testcontainers.version>
     <graalvm.version>24.1.2</graalvm.version>
     <jackson.version>2.18.3</jackson.version>
-    
+
     <!-- The qe-version property exists so that the design mode project can override it to run with a specific version -->
     <qe-version>${project.version}</qe-version>
   </properties>
@@ -52,7 +52,7 @@
     <connection>scm:git@github.com:Yaytay/query-engine.git</connection>
     <developerConnection>scm:git@github.com:Yaytay/query-engine.git</developerConnection>
     <url>https://github.com/Yaytay/query-engine.git</url>
-  </scm>  
+  </scm>
 
   <build>
     <pluginManagement>
@@ -82,15 +82,15 @@
               <goals>
                 <goal>display-plugin-updates</goal>
               </goals>
-            </execution>      
+            </execution>
             <execution>
               <id>display-dependency-updates</id>
               <phase>validate</phase>
               <goals>
                 <goal>display-dependency-updates</goal>
               </goals>
-            </execution>      
-          </executions>      
+            </execution>
+          </executions>
         </plugin>
 
         <plugin>
@@ -115,7 +115,7 @@
               </configuration>
             </execution>
           </executions>
-        </plugin>        
+        </plugin>
 
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
@@ -249,7 +249,7 @@
             </dependency>
           </dependencies>
         </plugin>
-        
+
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
@@ -258,22 +258,24 @@
             <forkCount>1</forkCount>
             <reuseForks>true</reuseForks>
             <argLine>
-              @{argLine} 
-              -Dfile.encoding=UTF-8 
+              @{argLine}
+              -Dfile.encoding=UTF-8
               -XX:+UnlockExperimentalVMOptions
               -XX:+EnableJVMCI
-              --module-path=${compiler.dir} 
+              --module-path=${compiler.dir}
               --upgrade-module-path=${project.build.directory}/compiler
-              --add-exports org.graalvm.polyglot/org.graalvm.polyglot.impl=ALL-UNNAMED
-              --add-exports org.graalvm.truffle.compiler/com.oracle.truffle.compiler=ALL-UNNAMED
             </argLine>
+            <!--
+              -add-exports org.graalvm.polyglot/org.graalvm.polyglot.impl=ALL-UNNAMED
+              -add-exports org.graalvm.truffle.compiler/com.oracle.truffle.compiler=ALL-UNNAMED
+            -->
             <trimStackTrace>false</trimStackTrace>
             <excludes>
               <exclude>**/sandbox/**</exclude>
             </excludes>
           </configuration>
         </plugin>
-        
+
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-failsafe-plugin</artifactId>
@@ -290,28 +292,30 @@
               <goals>
                 <goal>verify</goal>
               </goals>
-            </execution>        
-          </executions>            
+            </execution>
+          </executions>
           <configuration>
             <forkCount>1</forkCount>
             <useModulePath>false</useModulePath>
             <reuseForks>false</reuseForks>
             <argLine>@{argLine} -Dfile.encoding=UTF-8 -XX:+UnlockExperimentalVMOptions -XX:+UseJVMCICompiler --module-path=${compiler.dir} --upgrade-module-path=${compiler.dir}</argLine>
             <argLine>
-              @{argLine} 
-              -Dfile.encoding=UTF-8 
+              @{argLine}
+              -Dfile.encoding=UTF-8
               -XX:+UnlockExperimentalVMOptions
               -XX:+EnableJVMCI
-              --module-path=${compiler.dir} 
+              --module-path=${compiler.dir}
               --upgrade-module-path=${project.build.directory}/compiler
-              --add-exports org.graalvm.polyglot/org.graalvm.polyglot.impl=ALL-UNNAMED
-              --add-exports org.graalvm.truffle.compiler/com.oracle.truffle.compiler=ALL-UNNAMED
             </argLine>
+            <!--
+              -add-exports org.graalvm.polyglot/org.graalvm.polyglot.impl=ALL-UNNAMED
+              -add-exports org.graalvm.truffle.compiler/com.oracle.truffle.compiler=ALL-UNNAMED
+            -->
             <excludes>
               <exclude>**/sandbox/**</exclude>
             </excludes>
           </configuration>
-        </plugin>    
+        </plugin>
 
         <plugin>
           <groupId>org.jacoco</groupId>
@@ -481,12 +485,12 @@
               <goals>
                 <goal>jar</goal>
               </goals>
-            </execution>      
-          </executions>      
+            </execution>
+          </executions>
           <configuration>
             <quiet>true</quiet>
           </configuration>
-        </plugin>    
+        </plugin>
 
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -539,9 +543,9 @@
             <outputReactorProjects>true</outputReactorProjects>
             <outputFormat>json</outputFormat>
             <outputName>${project.artifactId}-${project.version}-cyclonedx.cdx</outputName>
-          </configuration>        
+          </configuration>
         </plugin>
-              
+
         <plugin>
           <groupId>io.fabric8</groupId>
           <artifactId>docker-maven-plugin</artifactId>
@@ -578,7 +582,7 @@
             <dockerHost>${env.DOCKER_HOST}</dockerHost>
           </configuration>
         </plugin>
-        
+
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-deploy-plugin</artifactId>
@@ -586,7 +590,7 @@
         </plugin>
       </plugins>
     </pluginManagement>
-    
+
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -598,7 +602,7 @@
         </configuration>
       </plugin>
     </plugins>
-      
+
   </build>
 
   <reporting>
@@ -606,8 +610,8 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-project-info-reports-plugin</artifactId>
-      </plugin> 
-         
+      </plugin>
+
       <plugin>
         <groupId>org.owasp</groupId>
         <artifactId>dependency-check-maven</artifactId>
@@ -621,12 +625,12 @@
           <nvdApiKey>${NVD_API_KEY}</nvdApiKey>
         </configuration>
       </plugin>
-      
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
         <configuration>
-          <detectJavaApiLink>false</detectJavaApiLink> 
+          <detectJavaApiLink>false</detectJavaApiLink>
         </configuration>
         <reportSets>
           <reportSet>
@@ -639,8 +643,8 @@
             </reports>
           </reportSet>
         </reportSets>
-      </plugin>  
-          
+      </plugin>
+
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
@@ -649,15 +653,15 @@
           <dataFile>${project.build.directory}/jacoco-merged.exec</dataFile>
         </configuration>
       </plugin>
-          
+
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>license-maven-plugin</artifactId>
       </plugin>
     </plugins>
-    
+
   </reporting>
- 
+
   <profiles>
     <profile>
       <id>ui</id>

@@ -186,6 +186,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     
     return pool.getConnection()
             .recover(ex -> {
+              logger.warn("Failed to connect to data source: ", ex);
               return Future.failedFuture(new ServiceException(500, "Failed to connect to data source", ex));
             })
             .compose(conn -> {

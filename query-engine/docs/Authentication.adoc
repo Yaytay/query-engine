@@ -71,3 +71,33 @@ When a user attempts to login (which will happen on first access to the UI if xr
 
 After authenticating with their chosen provider the generated JWT will be stored in the Query Engine database and a random cookie (configured at xref:Parameters/uk.co.spudsoft.query.main.SessionConfig.adoc#sessionCookie[sessionCookie]) will be generated to refer to it.
 
+
+
+==  Custom Certificates
+
+It is quite likely that a secure configuration of the Query Engine will be required to trust custom root certificates (e.g. for JWT endpoints, especially in test environments).
+
+It is recommended by CIS that all containers by run with a read only root filesystem, so updating the castore on startup is awkward.
+
+My preferred approach is to us this script:
+
+```bash
+image=query-engine-design-mode:0.0.48
+javahome=/qe-java
+
+docker run -it --entrypoint /bin/ash -v $(pwd):/out query-engine-design-mode:0.0.48-main -c "cp /qe-java/lib/security/cacerts /out"
+
+docker run -it --entrypoint /bin/ash -v $(pwd):/out query-engine-design-mode:0.0.48-main -c 'for cert in /out/*.crt; do alias=${cert##*/} ; /qe-java/bin/keytool -keystore /out/cacerts -import -trustcacerts -storepass changeit -noprompt -alias ${alias%.*} -file ${cert} ; done'
+```
+
+Simply place all required certificates into the current directory, edit that script to have the correct image name, and then run the script.
+The result will be the cacerts file in the current directory containing all the CA certificates known to the JDK that Query Engines uses, with all your custom certs added to it.
+
+Copy the resulting castore file somewhere safe and mount it over the top of the original castore file in your Query Engine compose file.
+My preferred way to do this is with a Docker Config:
+```yaml
+    configs:
+      - source: cacerts
+        target: /qe-java/lib/security/cacerts 
+        mode: 0400
+```

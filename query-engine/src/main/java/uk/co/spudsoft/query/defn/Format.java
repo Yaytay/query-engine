@@ -30,9 +30,9 @@ import uk.co.spudsoft.query.exec.FormatInstance;
 
 /**
  * The configuration for the final WriteStream of a pipeline.
- * 
+ *
  * Typically the final WriteStream is the HttpResponse, but it can be something else entirely.
- * 
+ *
  * The format to use for a pipeline is chosen by iterating through the formats defined for the pipeline and choosing the first that
  * matches any of the selection criteria:
  * <ol>
@@ -42,7 +42,7 @@ import uk.co.spudsoft.query.exec.FormatInstance;
  * The first matching Format will be returned.
  * If no matching Format is found an error will be returned.
  * <li>Path extension.<br>
- * If the path in the HTTP request includes a '.' (U+002E, Unicode FULL STOP) after the last '/' (U+002F, Unicode SOLIDUS) character everything following that 
+ * If the path in the HTTP request includes a '.' (U+002E, Unicode FULL STOP) after the last '/' (U+002F, Unicode SOLIDUS) character everything following that
  * character will be considered to be the extension, furthermore the extension (and full stop character) will be removed from the filename being sought.
  * If an extension is found each Format specified in the Pipeline will be checked (in order)
  * for a matching response from the {@link uk.co.spudsoft.query.defn.Format#getExtension()} method.
@@ -57,17 +57,18 @@ import uk.co.spudsoft.query.exec.FormatInstance;
  * <li>Default<br>
  * If the request does not use any of these mechanisms then the first Format specified in the Pipeline will be used.
  * </ol>
- * 
+ *
  * @author jtalbut
  */
 @JsonTypeInfo(
-  use = JsonTypeInfo.Id.NAME, 
-  include = JsonTypeInfo.As.EXISTING_PROPERTY,   
+  use = JsonTypeInfo.Id.NAME,
+  include = JsonTypeInfo.As.EXISTING_PROPERTY,
   property = "type")
-@JsonSubTypes({ 
-  @JsonSubTypes.Type(value = FormatJson.class, name = "JSON"), 
-  @JsonSubTypes.Type(value = FormatHtml.class, name = "HTML"), 
-  @JsonSubTypes.Type(value = FormatXlsx.class, name = "XLSX"), 
+@JsonSubTypes({
+  @JsonSubTypes.Type(value = FormatJson.class, name = "JSON"),
+  @JsonSubTypes.Type(value = FormatHtml.class, name = "HTML"),
+  @JsonSubTypes.Type(value = FormatXlsx.class, name = "XLSX"),
+  @JsonSubTypes.Type(value = FormatXml.class, name = "XML"),
   @JsonSubTypes.Type(value = FormatDelimited.class, name = "Delimited")
 })
 @Schema(
@@ -112,17 +113,18 @@ import uk.co.spudsoft.query.exec.FormatInstance;
           @DiscriminatorMapping(schema = FormatJson.class, value = "JSON")
           , @DiscriminatorMapping(schema = FormatHtml.class, value = "HTML")
           , @DiscriminatorMapping(schema = FormatXlsx.class, value = "XLSX")
+          , @DiscriminatorMapping(schema = FormatXml.class, value = "XML")
           , @DiscriminatorMapping(schema = FormatDelimited.class, value = "Delimited")
         }
 )
 public interface Format {
-  
+
   /**
    * Throw an IllegalArgumentException if the Format is not usable.
    * @throws IllegalArgumentException if the Format is not usable.
    */
-  void validate();
-  
+  void validate() throws IllegalArgumentException;
+
   /**
    * Create a FormatInstance.
    * Each implementation of a FormatInstance should subclass this class and provide a concrete implementation of this method.
@@ -134,7 +136,7 @@ public interface Format {
    */
   @JsonIgnore
   FormatInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream);
-  
+
   /**
    * Get the type of Format being configured.
    * @return the type of Format being configured.
@@ -145,7 +147,7 @@ public interface Format {
           , requiredMode = Schema.RequiredMode.REQUIRED
   )
   FormatType getType();
-  
+
   /**
    * Get the name of the format, as will be used on query string parameters.
    * No two formats in a single pipeline should have the same name.
@@ -167,7 +169,7 @@ public interface Format {
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
   String getName();
-  
+
   /**
    * Get the extension of the format.
    * The extension is used to determine the format based upon the URL path and also to set the default filename for the content-disposition header.
@@ -185,7 +187,7 @@ public interface Format {
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
   String getExtension();
-  
+
   /**
    * Get the media type of the format.
    * The media type is used to determine the format based upon the Accept header in the request.
@@ -211,7 +213,7 @@ public interface Format {
    * Helper method for implementation to validate that they have been configured with the required {@link FormatType}.
    * <p>
    * There is no reason for users to specify the format type, but they can, so it is necessary to validate it.
-   * 
+   *
    * @param required the {@link FormatType} that the {@link Format} requires.
    * @param actual the {@link FormatType} configured.
    */
@@ -220,5 +222,5 @@ public interface Format {
       throw new IllegalArgumentException("Format of type " + required + " configured with type " + actual);
     }
   }
-  
+
 }

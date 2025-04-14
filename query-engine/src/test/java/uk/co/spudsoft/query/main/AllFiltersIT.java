@@ -39,6 +39,7 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
 
 /**
@@ -60,19 +61,23 @@ public class AllFiltersIT {
   
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(AllFiltersIT.class);
+
+  private static final String CONFS_DIR = "target/query-engine/samples-allfiltersit";
   
   @BeforeAll
   public static void createDirs(Vertx vertx) {
-    File paramsDir = new File("target/query-engine/samples-allfiltersit");
-    paramsDir.mkdirs();
-    new File("target/classes/samples/sub1/sub2").mkdirs();
+    File confsDir = new File(CONFS_DIR);
+    try {
+      FileUtils.deleteDirectory(confsDir);
+    } catch (Throwable ex) {
+    }
+    confsDir.mkdirs();
   }
   
   @Test
   public void testQuery() throws Exception {
     GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
-    String baseConfigDir = "target/query-engine/samples-alldynamicit";
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
@@ -82,7 +87,7 @@ public class AllFiltersIT {
       , "--persistence.datasource.user.username=" + mysql.getUser()
       , "--persistence.datasource.user.password=" + mysql.getPassword()
       , "--persistence.retryLimit=100"
-      , "--baseConfigPath=" + baseConfigDir
+      , "--baseConfigPath=" + CONFS_DIR
       , "--vertxOptions.eventLoopPoolSize=5"
       , "--vertxOptions.workerPoolSize=5"
       , "--httpServerOptions.tracingPolicy=ALWAYS"

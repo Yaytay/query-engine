@@ -28,6 +28,11 @@ public enum FormatType {
   JSON
   , 
   /**
+   * Output the data as XML.
+   */
+  XML
+  , 
+  /**
    * Output the data as an XLSX file.
    */
   XLSX

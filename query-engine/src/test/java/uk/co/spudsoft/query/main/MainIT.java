@@ -42,6 +42,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 import uk.co.spudsoft.query.web.LoginRouterWithDiscoveryIT;
 
 
@@ -59,10 +60,16 @@ public class MainIT {
   
   private final int mgmtPort = LoginRouterWithDiscoveryIT.findUnusedPort();
   
+  private static final String CONFS_DIR = "target/query-engine/samples-mainit";
+  
   @BeforeAll
   public static void createDirs(Vertx vertx) {
-    File paramsDir = new File("target/query-engine/sammainit");
-    paramsDir.mkdirs();
+    File confsDir = new File(CONFS_DIR);
+    try {
+      FileUtils.deleteDirectory(confsDir);
+    } catch (Throwable ex) {
+    }
+    confsDir.mkdirs();
   }
     
   @Test
@@ -109,7 +116,7 @@ public class MainIT {
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
       "--persistence.datasource.url=wibble"
-      , "--baseConfigPath=target/query-engine/samples-mainit"
+      , "--baseConfigPath=" + CONFS_DIR
       , "--query-engine.tracing.serviceName=query-engine2"
       , "--query-engine.tracing.protocol=otlphttp"
       , "--query-engine.tracing.url=http://jaeger:4318/v1/traces"
@@ -152,7 +159,7 @@ public class MainIT {
       , "--persistence.datasource.adminUser.username=" + postgres.getUser()
       , "--persistence.datasource.adminUser.password=" + postgres.getPassword()
       , "--persistence.datasource.schema=public" 
-      , "--baseConfigPath=target/query-engine/samples-mainit"
+      , "--baseConfigPath=" + CONFS_DIR
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--jwt.jwksEndpoints[0]=http://localhost/jwks"
@@ -312,7 +319,7 @@ public class MainIT {
       , "--persistence.datasource.adminUser.username=" + postgres.getUser()
       , "--persistence.datasource.adminUser.password=" + postgres.getPassword()
       , "--persistence.datasource.schema=public" 
-      , "--baseConfigPath=target/query-engine/samples-mainit"
+      , "--baseConfigPath=" + CONFS_DIR
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--jwt.jwksEndpoints[0]=http://localhost/jwks"
