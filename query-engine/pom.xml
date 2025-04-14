@@ -47,14 +47,14 @@
       <dependency>
         <groupId>io.opentelemetry</groupId>
         <artifactId>opentelemetry-bom</artifactId>
-        <version>1.48.0</version>
+        <version>1.49.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>io.opentelemetry</groupId>
         <artifactId>opentelemetry-bom-alpha</artifactId>
-        <version>1.48.0-alpha</version>
+        <version>1.49.0-alpha</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -80,7 +80,7 @@
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>params4j</artifactId>
-      <version>0.0.26</version>
+      <version>0.0.27</version>
       <exclusions>
       </exclusions>
     </dependency>
@@ -115,12 +115,12 @@
     <dependency>
       <groupId>io.swagger.core.v3</groupId>
       <artifactId>swagger-jaxrs2-jakarta</artifactId>
-      <version>2.2.27</version>
+      <version>2.2.30</version>
     </dependency>
     <dependency>
       <groupId>io.swagger.core.v3</groupId>
       <artifactId>swagger-annotations-jakarta</artifactId>
-      <version>2.2.27</version>
+      <version>2.2.30</version>
     </dependency>
     <dependency>
       <groupId>com.github.seancfoley</groupId>
@@ -130,7 +130,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>33.4.0-jre</version>
+      <version>33.4.7-jre</version>
       <exclusions>
         <exclusion>
           <groupId>org.checkerframework</groupId>
@@ -333,7 +333,7 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.5.17</version>
+      <version>1.5.18</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -391,18 +391,18 @@
     <dependency>
       <groupId>com.zaxxer</groupId>
       <artifactId>HikariCP</artifactId>
-      <version>6.2.1</version>
+      <version>6.3.0</version>
     </dependency>
     <dependency>
       <groupId>com.microsoft.sqlserver</groupId>
       <artifactId>mssql-jdbc</artifactId>
-      <version>12.8.1.jre11</version>
+      <version>12.10.0.jre11</version>
     </dependency>
     <!-- Just to get mysql-connector-j up to a version without CVE-2024-7254 -->
     <dependency>
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
-      <version>4.30.1</version>
+      <version>4.30.2</version>
     </dependency>
     <dependency>
       <groupId>com.mysql</groupId>
@@ -462,13 +462,13 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>5.16.0</version>
+      <version>5.17.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-junit-jupiter</artifactId>
-      <version>5.16.0</version>
+      <version>5.17.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -553,7 +553,7 @@
                 <docletArtifact>
                   <groupId>uk.co.spudsoft</groupId>
                   <artifactId>params4j</artifactId>
-                  <version>0.0.24</version>
+                  <version>0.0.27</version>
                   <classifier>doclet</classifier>
                 </docletArtifact>
               </docletArtifacts>
@@ -607,7 +607,7 @@
       <plugin>
         <groupId>org.asciidoctor</groupId>
         <artifactId>asciidoctor-maven-plugin</artifactId>
-        <version>3.1.1</version>
+        <version>3.2.0</version>
         <executions>
           <execution>
             <id>output-html</id>

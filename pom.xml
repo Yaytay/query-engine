@@ -41,7 +41,7 @@
     <junit-jupiter.version>5.12.1</junit-jupiter.version>
     <junit-platform.version>1.12.1</junit-platform.version>
     <testcontainers.version>1.20.6</testcontainers.version>
-    <graalvm.version>24.1.2</graalvm.version>
+    <graalvm.version>24.2.0</graalvm.version>
     <jackson.version>2.18.3</jackson.version>
 
     <!-- The qe-version property exists so that the design mode project can override it to run with a specific version -->
@@ -245,7 +245,7 @@
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>10.21.4</version>
+              <version>10.23.0</version>
             </dependency>
           </dependencies>
         </plugin>
