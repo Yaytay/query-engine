@@ -66,7 +66,7 @@ public class OpenApiModelConverter implements ModelConverter {
   @SuppressWarnings({"unchecked", "rawtypes"})  
   public Schema resolve(AnnotatedType type, ModelConverterContext context, Iterator<ModelConverter> chain) {
     if (chain.hasNext()) {
-      logger.info("Resolving type: {} {}:{} ({})", level.incrementAndGet(), type.getType().getTypeName(), type.getPropertyName(), type.getName());
+      logger.trace("Resolving type: {} {}:{} ({})", level.incrementAndGet(), type.getType().getTypeName(), type.getPropertyName(), type.getName());
       Schema schema = chain.next().resolve(type, context, chain);
       if (schema == null) {
         // logger.info("Got null type");
