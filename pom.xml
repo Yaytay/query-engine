@@ -264,6 +264,8 @@
               -XX:+EnableJVMCI
               --module-path=${compiler.dir}
               --upgrade-module-path=${project.build.directory}/compiler
+              --add-exports org.graalvm.polyglot/org.graalvm.polyglot.impl=ALL-UNNAMED
+              --add-exports org.graalvm.truffle.compiler/com.oracle.truffle.compiler=ALL-UNNAMED
             </argLine>
             <!--
               -add-exports org.graalvm.polyglot/org.graalvm.polyglot.impl=ALL-UNNAMED

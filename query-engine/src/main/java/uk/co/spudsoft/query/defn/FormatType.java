@@ -18,7 +18,7 @@ package uk.co.spudsoft.query.defn;
 
 /**
  * The generic format of the output.
- * 
+ *
  * @author jtalbut
  */
 public enum FormatType {
@@ -26,24 +26,29 @@ public enum FormatType {
    * Output the data as Json.
    */
   JSON
-  , 
+  ,
   /**
    * Output the data as XML.
    */
   XML
-  , 
+  ,
   /**
    * Output the data as an XLSX file.
    */
   XLSX
-  , 
+  ,
   /**
    * Output the data as a delimited text file.
    */
   Delimited
-  , 
+  ,
   /**
    * Output the data as an HTML table.
    */
   HTML
+  ,
+  /**
+   * Output the data as an Atom feed.
+   */
+  Atom
 }

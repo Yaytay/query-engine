@@ -114,6 +114,7 @@ import uk.co.spudsoft.query.exec.FormatInstance;
           , @DiscriminatorMapping(schema = FormatHtml.class, value = "HTML")
           , @DiscriminatorMapping(schema = FormatXlsx.class, value = "XLSX")
           , @DiscriminatorMapping(schema = FormatXml.class, value = "XML")
+          , @DiscriminatorMapping(schema = FormatAtom.class, value = "Atom")
           , @DiscriminatorMapping(schema = FormatDelimited.class, value = "Delimited")
         }
 )

@@ -1,0 +1,150 @@
+/*
+ * Copyright (C) 2022 jtalbut
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package uk.co.spudsoft.query.exec.fmts.xml;
+
+import inet.ipaddr.IPAddressString;
+import io.vertx.core.Context;
+import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.file.FileSystem;
+import io.vertx.core.file.OpenOptions;
+import io.vertx.core.http.impl.headers.HeadersMultiMap;
+import io.vertx.core.streams.WriteStream;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
+import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.extension.ExtendWith;
+import uk.co.spudsoft.query.defn.DataType;
+import uk.co.spudsoft.query.defn.FormatAtom;
+import uk.co.spudsoft.query.exec.ColumnDefn;
+import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
+import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
+import uk.co.spudsoft.query.exec.procs.ListReadStream;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.Month;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.hamcrest.CoreMatchers.startsWith;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+/**
+ *
+ * @author jtalbut
+ */
+@ExtendWith(VertxExtension.class)
+public class FormatAtomInstanceTest {
+
+
+  private List<ColumnDefn> buildTypes() {
+    return Arrays.asList(
+      new ColumnDefn("Boolean", DataType.Boolean)
+      , new ColumnDefn("Date", DataType.Date)
+      , new ColumnDefn("DateTime", DataType.DateTime)
+      , new ColumnDefn("Double", DataType.Double)
+      , new ColumnDefn("Float", DataType.Float)
+      , new ColumnDefn("Integer", DataType.Integer)
+      , new ColumnDefn("Long", DataType.Long)
+      , new ColumnDefn("String", DataType.String)
+      , new ColumnDefn("Time", DataType.Time)
+    );
+  }
+
+  @Test
+  public void testDefaultStream(Vertx vertx, VertxTestContext testContext, TestInfo testInfo) throws IOException {
+
+    String outfile = "target/temp/" + testInfo.getTestClass().get().getSimpleName() + "_" + testInfo.getTestMethod().get().getName() + ".xml";
+
+    FormatAtom defn = FormatAtom.builder()
+      .build();
+
+    FileSystem fs = vertx.fileSystem();
+    if (!fs.existsBlocking("target/temp")) {
+      fs.mkdirBlocking("target/temp");
+    }
+    WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setCreate(true));
+    RequestContext req = new RequestContext(
+      null
+      , null
+      , "localhost"
+      , "/data/atom"
+      , new HeadersMultiMap()
+      , new HeadersMultiMap().add("Host", "localhost:123")
+      , null
+      , new IPAddressString("127.0.0.1")
+      , null
+    );
+    Context context = mock(Context.class);
+    when(context.getLocal("req")).thenReturn(req);
+
+    FormatAtomInstance instance = (FormatAtomInstance) defn.createInstance(vertx, context, writeStream);
+
+    Types types = new Types(buildTypes());
+    List<DataRow> rowsList = new ArrayList<>();
+    for (int i = 0; i < 10; ++i) {
+      rowsList.add(createDataRow(types, i));
+    }
+
+    instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
+      .onComplete(ar -> {
+        if (ar.failed()) {
+          testContext.failNow(ar.cause());
+        } else {
+          testContext.verify(() -> {
+            String outstring = FileUtils.readFileToString(new File(outfile), StandardCharsets.UTF_8);
+            outstring = outstring.replaceAll("<updated>[-0-9T:.Z]+</updated>", "<updated>recently</updated>");
+            assertThat(outstring, startsWith(
+              """
+              <?xml version='1.0' encoding='utf-8'?><feed xmlns="http://www.w3.org/2005/Atom" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices"><id>/data/atom</id><title>Atom</title><updated>recently</updated><entry><id>/data/atom/1</id><title>Atom</title><updated>recently</updated><content type="application/xml"><m:properties><d:Boolean m:null="true"/><d:Date>1971-05-01</d:Date><d:DateTime m:type="Edm.DateTime">1971-05-01T00:00</d:DateTime><d:Double m:type="Edm.Double">0.0</d:Double><d:Float>0.0</d:Float><d:Integer m:type="Edm.Int32">0</d:Integer><d:Long m:type="Edm.Int64">0</d:Long><d:String>This is row 0</d:String><d:Time>00:00</d:Time></m:properties></content></entry><entry><id>/data/atom/2</id><title>Atom</title><updated>recently</updated><content type="application/xml"><m:properties><d:Boolean m:type="Edm.Boolean">false</d:Boolean><d:Date m:null="true"/><d:DateTime m:type="Edm.DateTime">1971-05-02T01:01</d:DateTime><d:Double m:type="Edm.Double">1.1</d:Double><d:Float>1.1</d:Float><d:Integer m:type="Edm.Int32">1</d:Integer><d:Long m:type="Edm.Int64">10000000</d:Long><d:String>This is row 1</d:String><d:Time>01:01</d:Time></m:properties></content></entry>
+              """.trim()
+            ));
+          });
+          testContext.completeNow();
+        }
+      });
+
+  }
+
+  private DataRow createDataRow(Types types, int rowNum) {
+    DataRow row = DataRow.create(types);
+    row.put("Boolean", rowNum % 9 == 0 ? null : (rowNum % 2 == 0 ? Boolean.TRUE : Boolean.FALSE));
+    row.put("Date", rowNum % 9 == 1 ? null : LocalDate.of(1971, Month.MAY, 1 + rowNum));
+    row.put("DateTime", rowNum % 9 == 2 ? null : LocalDateTime.of(1971, Month.MAY, 1 + rowNum, rowNum, rowNum));
+    row.put("Double", rowNum % 9 == 3 ? null : rowNum + (double) rowNum / 10);
+    row.put("Float", rowNum % 9 == 4 ? null : rowNum + (float) rowNum / 10);
+    row.put("Integer", rowNum % 9 == 5 ? null : rowNum);
+    row.put("Long", rowNum % 9 == 6 ? null : rowNum * 10000000L);
+    row.put("String", rowNum % 9 == 7 ? null : "This is row " + rowNum);
+    row.put("Time", rowNum % 9 == 8 ? null : LocalTime.of(rowNum, rowNum));
+    return row;
+  }
+
+}

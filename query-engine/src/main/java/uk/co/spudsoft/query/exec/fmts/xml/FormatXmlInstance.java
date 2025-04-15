@@ -54,7 +54,7 @@ import static uk.co.spudsoft.query.defn.FormatXml.NAME_START_REGEX;
 
 /**
  * Handles the formatting of data into XML format as part of a data processing pipeline.
- * This class implements the FormatInstance interface to define the behavior required for formatting data output.
+ * This class implements the FormatInstance interface to define the behaviour required for formatting data output.
  * It uses XML writing utilities to generate structured XML documents based on the provided definition and data rows.
  */
 public class FormatXmlInstance implements FormatInstance {
@@ -157,6 +157,9 @@ public class FormatXmlInstance implements FormatInstance {
   private void close() throws Exception {
     if (!closed) {
       closed = true;
+      if (defn.isIndent()) {
+        writer.writeCharacters("\n");
+      }
       writer.writeEndElement();
       writer.writeEndDocument();
       writer.close();
@@ -182,6 +185,7 @@ public class FormatXmlInstance implements FormatInstance {
   }
 
   static String getName(Map<String, String> nameMap, String fieldInitialLetterFix, String fieldInvalidLetterFix, String original, String defaultValue) {
+    logger.warn("getName({}, \"{}\", \"{}\", \"{}\", \"{}\")", nameMap, original, fieldInitialLetterFix, fieldInvalidLetterFix, defaultValue);
     if (original == null) {
       return defaultValue;
     }
@@ -224,6 +228,9 @@ public class FormatXmlInstance implements FormatInstance {
 
   private void outputRow(DataRow row) throws Throwable {
       try {
+        if (defn.isIndent()) {
+          writer.writeCharacters("\n  ");
+        }
         writer.writeStartElement(getName(defn.getRowName(), "row"));
         int fieldNumber = 0;
         for (Iterator<ColumnDefn> iter = types.iterator(); iter.hasNext();) {
@@ -234,11 +241,17 @@ public class FormatXmlInstance implements FormatInstance {
             if (defn.isFieldsAsAttributes()) {
               writer.writeAttribute(getName(columnDefn.name(), "field" +  fieldNumber), formatValue(v));
             } else {
+              if (defn.isIndent()) {
+                writer.writeCharacters("\n    ");
+              }
               writer.writeStartElement(getName(columnDefn.name(), "field" + fieldNumber));
               writer.writeCharacters(formatValue(v));
               writer.writeEndElement();
             }
           }
+        }
+        if (defn.isIndent()) {
+          writer.writeCharacters("\n  ");
         }
         writer.writeEndElement();
       } catch (Throwable ex) {
