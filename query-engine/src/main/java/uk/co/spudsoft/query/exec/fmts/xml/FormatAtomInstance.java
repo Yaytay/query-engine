@@ -42,7 +42,6 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -241,7 +240,7 @@ public final class FormatAtomInstance implements FormatInstance {
   }
 
   static String getType(DataType type) {
-    return switch(type) {
+    return switch (type) {
       case Null -> "Null";
       case Integer -> "Edm.Int32";
       case Long -> "Edm.Int64";
