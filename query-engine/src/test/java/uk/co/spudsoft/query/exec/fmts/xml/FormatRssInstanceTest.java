@@ -86,7 +86,7 @@ public class FormatRssInstanceTest {
     if (!fs.existsBlocking("target/temp")) {
       fs.mkdirBlocking("target/temp");
     }
-    WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setCreate(true));
+    WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setCreate(true).setSync(true));
     FormatRssInstance instance = (FormatRssInstance) defn.createInstance(vertx, null, writeStream);
 
     Types types = new Types(buildTypes());

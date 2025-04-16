@@ -95,7 +95,7 @@ public class FormatAtomInstanceTest {
     if (!fs.existsBlocking("target/temp")) {
       fs.mkdirBlocking("target/temp");
     }
-    WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setCreate(true));
+    WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setCreate(true).setSync(true));
     RequestContext req = new RequestContext(
       null
       , null
