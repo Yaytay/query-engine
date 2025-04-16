@@ -29,14 +29,14 @@ import uk.co.spudsoft.dircache.AbstractTree;
 import uk.co.spudsoft.dircache.DirCacheTree;
 
 /**
- *
+ * Representation of directories of files that can be edited in DesignMode.
  * @author jtalbut
  */
 public class DesignNodesTree extends AbstractTree {
 
   private DesignNodesTree() {
   }
-  
+
   @JsonSubTypes({
     @JsonSubTypes.Type(value = DesignNodesTree.DesignDir.class),
     @JsonSubTypes.Type(value = DesignNodesTree.DesignFile.class)
@@ -53,7 +53,7 @@ public class DesignNodesTree extends AbstractTree {
 
     /**
      * File constructor.
-     * 
+     *
      * @param path The path represented by this Node.
      * @param modified The modified timestamp.
      * @param name The leaf name of the node.
@@ -66,7 +66,7 @@ public class DesignNodesTree extends AbstractTree {
 
     /**
      * Directory constructor.
-     * 
+     *
      * @param path The path represented by this Node.
      * @param modified The modified timestamp.
      * @param name The leaf name of the node.
@@ -133,7 +133,7 @@ public class DesignNodesTree extends AbstractTree {
      * Get the modified timestamp.
      * @return the modified timestamp.
      */
-    @NotNull 
+    @NotNull
     @Schema(description = """
                           <P>
                           The time that the design file was last modified, as reported by the underlying filesystem.
@@ -168,10 +168,10 @@ public class DesignNodesTree extends AbstractTree {
           children.add(new DesignFile(root, f));
         }
       }
-      
+
       return children;
     }
-    
+
     /**
      * Constructor.
      * @param path The path represented by this Node.
@@ -183,11 +183,11 @@ public class DesignNodesTree extends AbstractTree {
     public DesignDir(String path, LocalDateTime modified, String name, List<DesignNode> children) {
       super(path, modified, name, List.copyOf(children));
     }
-    
+
     public DesignDir(java.nio.file.Path root, DirCacheTree.Directory src, String name) {
       super(relativize(File.separator, root, src), src.getModified(), name, buildChildren(root, src));
     }
-    
+
     /**
      * Get the children of the Directory.
      * @return the children of the Directory.
@@ -207,18 +207,18 @@ public class DesignNodesTree extends AbstractTree {
     public List<DesignNodesTree.DesignNode> getChildren() {
       return super.getChildren(); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
     }
-    
+
 
   }
-  
+
   static String relativize(String separator, java.nio.file.Path root, DirCacheTree.Node node) {
     String relativePath = root.relativize(node.getPath()).toString();
     if (!"/".equals(separator)) {
       relativePath = relativePath.replaceAll(Pattern.quote(separator), "/");
     }
-    return relativePath;    
+    return relativePath;
   }
-  
+
   @Schema(description = """
                         <P>
                         A pipeline definition file.
@@ -239,7 +239,7 @@ public class DesignNodesTree extends AbstractTree {
       super(path, modified, name);
       this.size = size;
     }
-    
+
     public DesignFile(java.nio.file.Path root, DirCacheTree.File src) {
       super(relativize(File.separator, root, src), src.getModified(), src.getName());
       this.size = src.getSize();
@@ -249,7 +249,7 @@ public class DesignNodesTree extends AbstractTree {
      * Get the size of the file on disc, in bytes.
      * @return the size of the file on disc, in bytes.
      */
-    @NotNull 
+    @NotNull
     @Schema(description = """
                           <P>
                           The size of the file on disc, in bytes.
