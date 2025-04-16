@@ -3,7 +3,6 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>uk.co.spudsoft</groupId>
   <artifactId>query-engine</artifactId>
   <version>0.0.0</version>
   <name>SpudSoft Query Engine</name>
@@ -39,7 +38,7 @@
     <fork.count>4</fork.count>
     <compiler.dir>target/compiler</compiler.dir>
     <mainClass>uk.co.spudsoft.query.main.Main</mainClass>
-    <rootdir>${project.parent.basedir}</rootdir>
+    <rootdir>${project.basedir}/..</rootdir>
   </properties>
 
 

@@ -43,15 +43,11 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -97,11 +93,7 @@ public final class FormatAtomInstance implements FormatInstance {
   public FormatAtomInstance(FormatAtom definition, String requestUrl, WriteStream<Buffer> outputStream) {
     this.defn = definition.withDefaults();
     this.requestUrl = requestUrl;
-    if (requestUrl.endsWith("/")) {
-      this.baseUrl = requestUrl;
-    } else {
-      this.baseUrl = requestUrl + "/";
-    }
+    this.baseUrl = endsWith(requestUrl, "/");
     this.streamWrapper = new OutputWriteStreamWrapper(outputStream);
     this.formattingStream = new FormattingWriteStream(outputStream,
              v -> Future.succeededFuture(),
@@ -154,6 +146,16 @@ public final class FormatAtomInstance implements FormatInstance {
     );
   }
 
+  static String endsWith(String s, String suffix) {
+    if (s == null) {
+      return null;
+    } else if (s.endsWith(suffix)) {
+      return s;
+    } else {
+      return s + suffix;
+    }
+  }
+
   private void start() throws IOException {
     started.set(true);
 
@@ -202,29 +204,17 @@ public final class FormatAtomInstance implements FormatInstance {
   static String formatValue(Comparable<?> value) {
     if (value == null) {
       return null;
-    } else if (value instanceof Timestamp) {
-      return formatValue((Timestamp) value);
     } else if (value instanceof LocalDateTime) {
       return formatValue((LocalDateTime) value);
     } else if (value instanceof LocalDate) {
       return formatValue((LocalDate) value);
     } else if (value instanceof LocalTime) {
       return formatValue((LocalTime) value);
-    } else if (value instanceof Time) {
-      return formatValue(((Time) value).toLocalTime());
-    } else if (value instanceof java.sql.Date) {
-      return formatValue(((java.sql.Date) value).toLocalDate());
-    } else if (value instanceof Date) {
-      return formatValue(LocalDateTime.ofInstant(((Date) value).toInstant(), ZoneOffset.UTC));
     } else if (value instanceof Boolean) {
       return ((Boolean) value) ? "true" : "false";
     } else {
       return value.toString();
     }
-  }
-
-  static String formatValue(Timestamp ts) {
-    return formatValue(ts.toLocalDateTime());
   }
 
   static String formatValue(LocalTime lt) {

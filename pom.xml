@@ -230,6 +230,8 @@
           <version>3.6.0</version>
           <configuration>
             <configLocation>${rootdir}/checkstyle.xml</configLocation>
+            <suppressionsLocation>${rootdir}/checkstyle-suppressions.xml</suppressionsLocation>
+            <suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>
             <consoleOutput>true</consoleOutput>
             <failsOnError>true</failsOnError>
             <linkXRef>false</linkXRef>

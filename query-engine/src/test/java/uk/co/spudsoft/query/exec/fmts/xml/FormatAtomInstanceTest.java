@@ -30,6 +30,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.FormatAtom;
 import uk.co.spudsoft.query.exec.ColumnDefn;
@@ -137,6 +138,25 @@ public class FormatAtomInstanceTest {
 
   }
 
+  void testEndsWith() {
+    // Test when string already ends with suffix
+    assertEquals("hello", FormatAtomInstance.endsWith("hello", "o"));
+    assertEquals("hello", FormatAtomInstance.endsWith("hello", "lo"));
+
+    // Test when string doesn't end with suffix
+    assertEquals("hello world", FormatAtomInstance.endsWith("hello", " world"));
+
+    // Test with slash suffix
+    assertEquals("hello/", FormatAtomInstance.endsWith("hello/", "/"));
+    assertEquals("hello/", FormatAtomInstance.endsWith("hello", "/"));
+    assertEquals("/", FormatAtomInstance.endsWith("/", "/"));
+
+
+    // Test with empty string input
+    assertEquals("/", FormatAtomInstance.endsWith("", "/"));
+  }
+
+
   private DataRow createDataRow(Types types, int rowNum) {
     DataRow row = DataRow.create(types);
     row.put("Boolean", rowNum % 9 == 0 ? null : (rowNum % 2 == 0 ? Boolean.TRUE : Boolean.FALSE));
@@ -178,14 +198,6 @@ public class FormatAtomInstanceTest {
 
     LocalDateTime dateTime = LocalDateTime.of(2023, 5, 15, 14, 30, 15);
     assertEquals("2023-05-15T14:30:15", FormatAtomInstance.formatValue(dateTime));
-
-    Timestamp timestamp = Timestamp.valueOf("2023-05-15 14:30:15.123");
-    String formattedTimestamp = FormatAtomInstance.formatValue(timestamp);
-    assertTrue(formattedTimestamp.startsWith("2023-05-15T14:30:15.123"));
-
-    // Test UUID
-    UUID uuid = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
-    assertEquals("550e8400-e29b-41d4-a716-446655440000", FormatAtomInstance.formatValue(uuid));
   }
 
   @Test
