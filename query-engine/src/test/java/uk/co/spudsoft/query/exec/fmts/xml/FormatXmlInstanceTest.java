@@ -87,7 +87,7 @@ public class FormatXmlInstanceTest {
     if (!fs.existsBlocking("target/temp")) {
       fs.mkdirBlocking("target/temp");
     }
-    WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setCreate(true));
+    WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setCreate(true).setSync(true));
 
     FormatXmlInstance instance = (FormatXmlInstance) defn.createInstance(vertx, null, writeStream);
 
