@@ -17,7 +17,9 @@
 package uk.co.spudsoft.query.exec.fmts.xlsx;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import java.io.IOException;
@@ -27,12 +29,17 @@ import java.io.OutputStream;
  * A mapper between the Vert.x {@link io.vertx.core.streams.WriteStream} and the JDK {@link java.io.OutputStream}.
  * <P>
  * This is used by the {@link FormatXlsxInstance} because the {@link uk.co.spudsoft.xlsx.XlsxWriter} requires an OutputStream for its input.
- * 
+ * <P>
+ * Note that this class offers a synchronous "close" method, but can only call an asynchronous end() method.
+ * This means that it may not be clear when the file has actually closed.
+ * In most (HTTP) cases this doesn't matter, but for those cases where it does matter the finalPromise will complete when the file is closed.
+ *
  * @author jtalbut
  */
 public class OutputWriteStreamWrapper extends OutputStream {
 
   private final WriteStream<Buffer> outputStream;
+  private final Promise<Void> finalPromise;
 
   /**
    * Constructor.
@@ -41,6 +48,7 @@ public class OutputWriteStreamWrapper extends OutputStream {
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "OutputWriteStreamWrapper is a wrapper around WriteStream<Buffer>, it will make mutating calls to it")
   public OutputWriteStreamWrapper(WriteStream<Buffer> outputStream) {
     this.outputStream = outputStream;
+    this.finalPromise = Promise.promise();
   }
 
   /**
@@ -58,7 +66,7 @@ public class OutputWriteStreamWrapper extends OutputStream {
   public void drainHandler(Handler<Void> handler) {
     outputStream.drainHandler(handler);
   }
-  
+
   @Override
   public void write(int b) throws IOException {
     outputStream.write(Buffer.buffer(new byte[]{(byte) b}));
@@ -66,7 +74,7 @@ public class OutputWriteStreamWrapper extends OutputStream {
 
   @Override
   public void close() throws IOException {
-    outputStream.end();
+    outputStream.end(finalPromise);
   }
 
   @Override
@@ -79,6 +87,17 @@ public class OutputWriteStreamWrapper extends OutputStream {
   @Override
   public void write(byte[] b) throws IOException {
     outputStream.write(Buffer.buffer(b));
+  }
+
+
+  /**
+   * Returns a future that completes when the {@link WriteStream} has reached its final state,
+   * i.e., when the stream has been closed or finished writing.
+   *
+   * @return a {@code Future<Void>} that is completed when the final operation on the stream is done.
+   */
+  public Future<Void> getFinalFuture() {
+    return finalPromise.future();
   }
 
 }

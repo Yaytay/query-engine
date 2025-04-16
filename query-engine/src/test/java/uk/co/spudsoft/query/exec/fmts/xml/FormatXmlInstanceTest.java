@@ -98,6 +98,9 @@ public class FormatXmlInstanceTest {
     }
 
     instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
+      .compose(v -> {
+        return instance.getFinalFuture();
+      })
       .onComplete(ar -> {
         if (ar.failed()) {
           testContext.failNow(ar.cause());
@@ -139,6 +142,9 @@ public class FormatXmlInstanceTest {
     }
 
     instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
+      .compose(v -> {
+        return instance.getFinalFuture();
+      })
       .onComplete(ar -> {
         if (ar.failed()) {
           testContext.failNow(ar.cause());
@@ -202,6 +208,9 @@ public class FormatXmlInstanceTest {
     }
 
     instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
+      .compose(v -> {
+        return instance.getFinalFuture();
+      })
       .onComplete(ar -> {
         if (ar.failed()) {
           testContext.failNow(ar.cause());

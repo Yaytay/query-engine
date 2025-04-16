@@ -181,6 +181,16 @@ public final class FormatRssInstance implements FormatInstance {
     }
   }
 
+  /**
+   * Returns a future that completes when the associated {@code WriteStream} has reached its final state,
+   * indicating that the stream has either been closed or finished writing.
+   *
+   * @return a {@code Future<Void>} that completes when the final operation on the stream is complete.
+   */
+  public Future<Void> getFinalFuture() {
+    return streamWrapper.getFinalFuture();
+  }
+
   private String getName(String original, String defaultValue) {
     return FormatXmlInstance.getName(nameMap, this.defn.getFieldInitialLetterFix(), this.defn.getFieldInvalidLetterFix(), original, defaultValue);
   }

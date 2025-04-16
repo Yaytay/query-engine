@@ -146,6 +146,16 @@ public final class FormatAtomInstance implements FormatInstance {
     );
   }
 
+  /**
+   * Returns a future that completes when the associated {@code WriteStream} has reached its final state,
+   * indicating that the stream has either been closed or finished writing.
+   *
+   * @return a {@code Future<Void>} that completes when the final operation on the stream is complete.
+   */
+  public Future<Void> getFinalFuture() {
+    return streamWrapper.getFinalFuture();
+  }
+
   static String endsWith(String s, String suffix) {
     if (s == null) {
       return null;
