@@ -27,26 +27,23 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
-
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
-import uk.co.spudsoft.query.exec.fmts.xml.FormatAtomInstance;
-import uk.co.spudsoft.query.web.RequestContextHandler;
+import uk.co.spudsoft.query.exec.fmts.xml.FormatRssInstance;
 
 import static uk.co.spudsoft.query.defn.FormatXml.NAME_CHAR_REGEX;
 import static uk.co.spudsoft.query.defn.FormatXml.NAME_START_REGEX;
 
 /**
- * Output the data stream in Atom.
+ * Output the data stream in RSS.
  * This format has no specific configuration options.
  *
  * @author jtalbut
  */
-@JsonDeserialize(builder = FormatAtom.Builder.class)
+@JsonDeserialize(builder = FormatRss.Builder.class)
 @Schema(description = """
-                      Configuration for an output format of Atom.
-                      There are no formatting options for Atom output.
+                      Configuration for an output format of RSS.
+                      There are no formatting options for RSS output.
                       """)
-public class FormatAtom implements Format {
+public class FormatRss implements Format {
 
   private final FormatType type;
   private final String name;
@@ -57,9 +54,9 @@ public class FormatAtom implements Format {
   private final String fieldInvalidLetterFix;
 
   /**
-   * Constructor for FormatAtom, using the Builder class for initialization.
+   * Constructor for FormatRss, using the Builder class for initialization.
    */
-  private FormatAtom(Builder builder) {
+  private FormatRss(Builder builder) {
     this.type = builder.type;
     this.name = builder.name;
     this.extension = builder.extension;
@@ -69,19 +66,19 @@ public class FormatAtom implements Format {
   }
 
   /**
-   * Construct a new instance of the FormatAtom.Builder class.
-   * @return a new instance of the FormatAtom.Builder class.
+   * Construct a new instance of the FormatRss.Builder class.
+   * @return a new instance of the FormatRss.Builder class.
    */
-  public static FormatAtom.Builder builder() {
-    return new FormatAtom.Builder();
+  public static FormatRss.Builder builder() {
+    return new FormatRss.Builder();
   }
 
 
   /**
-   * Creates a new FormatAtom instance with values replaced by defaults it they are not set.
-   * @return a newly created FormatAtom instance in which all fields have values.
+   * Creates a new FormatRss instance with values replaced by defaults it they are not set.
+   * @return a newly created FormatRss instance in which all fields have values.
    */
-  public FormatAtom withDefaults() {
+  public FormatRss withDefaults() {
     Builder builder = new Builder();
     builder.type(type);
     builder.name(name);
@@ -94,13 +91,12 @@ public class FormatAtom implements Format {
 
   @Override
   public FormatInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
-    RequestContext reqCtx = RequestContextHandler.getRequestContext(context);
-    return new FormatAtomInstance(this, reqCtx.getPath(), writeStream);
+    return new FormatRssInstance(this, writeStream);
   }
 
   @Override
   public void validate() {
-    validateType(FormatType.Atom, type);
+    validateType(FormatType.RSS, type);
     if (Strings.isNullOrEmpty(name)) {
       throw new IllegalArgumentException("Format has no name");
     }
@@ -198,19 +194,19 @@ public class FormatAtom implements Format {
   }
 
   /**
-   * Builder class for creating instances of the FormatAtom class.
+   * Builder class for creating instances of the FormatRss class.
    *
    * The Builder pattern allows for the incremental construction and customization
-   * of the FormatAtom class by setting various properties related to the format,
+   * of the FormatRss class by setting various properties related to the format,
    * such as format type, name, extension, media type, and additional attributes specific to XML formatting.
    */
   @JsonPOJOBuilder(withPrefix = "")
   public static class Builder {
 
-    private FormatType type = FormatType.Atom;
-    private String name = "Atom";
+    private FormatType type = FormatType.RSS;
+    private String name = "RSS";
     private String extension = "xml";
-    private MediaType mediaType = MediaType.parse("application/atom+xml");
+    private MediaType mediaType = MediaType.parse("application/rss+xml");
 
     private String fieldInitialLetterFix;
     private String fieldInvalidLetterFix;
@@ -288,12 +284,12 @@ public class FormatAtom implements Format {
     }
 
     /**
-     * Build an instance of {@link FormatAtom}.
+     * Build an instance of {@link FormatRss}.
      *
-     * @return a new FormatAtom instance.
+     * @return a new FormatRss instance.
      */
-    public FormatAtom build() {
-      return new FormatAtom(this);
+    public FormatRss build() {
+      return new FormatRss(this);
     }
   }
 }

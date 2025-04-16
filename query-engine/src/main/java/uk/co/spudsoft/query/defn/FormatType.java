@@ -51,4 +51,10 @@ public enum FormatType {
    * Output the data as an Atom feed.
    */
   Atom
+  ,
+  /**
+   * Output the data as an RSS feed.
+   * Atom feeds should be used in preference when possible.
+   */
+  RSS
 }

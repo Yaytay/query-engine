@@ -33,15 +33,15 @@ import java.nio.charset.Charset;
 import java.util.regex.Pattern;
 
 /**
- * Output the data stream in JSON.
+ * Output the data stream in XML.
  * This format has no specific configuration options.
  *
  * @author jtalbut
  */
 @JsonDeserialize(builder = FormatXml.Builder.class)
 @Schema(description = """
-                      Configuration for an output format of JSON.
-                      There are no formatting options for JSON output.
+                      Configuration for an output format of XML.
+                      There are no formatting options for XML output.
                       """)
 public class FormatXml implements Format {
 
