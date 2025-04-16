@@ -37,12 +37,12 @@ import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
-import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
 import java.io.File;
-import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -50,9 +50,13 @@ import java.time.Month;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -79,7 +83,7 @@ public class FormatAtomInstanceTest {
   }
 
   @Test
-  public void testDefaultStream(Vertx vertx, VertxTestContext testContext, TestInfo testInfo) throws IOException {
+  public void testDefaultStream(Vertx vertx, VertxTestContext testContext, TestInfo testInfo) {
 
     String outfile = "target/temp/" + testInfo.getTestClass().get().getSimpleName() + "_" + testInfo.getTestMethod().get().getName() + ".xml";
 
@@ -123,7 +127,7 @@ public class FormatAtomInstanceTest {
             outstring = outstring.replaceAll("<updated>[-0-9T:.Z]+</updated>", "<updated>recently</updated>");
             assertThat(outstring, startsWith(
               """
-              <?xml version='1.0' encoding='utf-8'?><feed xmlns="http://www.w3.org/2005/Atom" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices"><id>/data/atom</id><title>Atom</title><updated>recently</updated><entry><id>/data/atom/1</id><title>Atom</title><updated>recently</updated><content type="application/xml"><m:properties><d:Boolean m:null="true"/><d:Date>1971-05-01</d:Date><d:DateTime m:type="Edm.DateTime">1971-05-01T00:00</d:DateTime><d:Double m:type="Edm.Double">0.0</d:Double><d:Float>0.0</d:Float><d:Integer m:type="Edm.Int32">0</d:Integer><d:Long m:type="Edm.Int64">0</d:Long><d:String>This is row 0</d:String><d:Time>00:00</d:Time></m:properties></content></entry><entry><id>/data/atom/2</id><title>Atom</title><updated>recently</updated><content type="application/xml"><m:properties><d:Boolean m:type="Edm.Boolean">false</d:Boolean><d:Date m:null="true"/><d:DateTime m:type="Edm.DateTime">1971-05-02T01:01</d:DateTime><d:Double m:type="Edm.Double">1.1</d:Double><d:Float>1.1</d:Float><d:Integer m:type="Edm.Int32">1</d:Integer><d:Long m:type="Edm.Int64">10000000</d:Long><d:String>This is row 1</d:String><d:Time>01:01</d:Time></m:properties></content></entry>
+              <?xml version='1.0' encoding='utf-8'?><feed xmlns="http://www.w3.org/2005/Atom" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices"><id>/data/atom</id><title>Atom</title><updated>recently</updated><entry><id>/data/atom/1</id><title>Atom</title><updated>recently</updated><content type="application/xml"><m:properties><d:Boolean m:type="Edm.Boolean" m:null="true"/><d:Date m:type="Edm.Date">1971-05-01</d:Date><d:DateTime m:type="Edm.DateTime">1971-05-01T00:00</d:DateTime><d:Double m:type="Edm.Double">0.0</d:Double><d:Float m:type="Edm.Single">0.0</d:Float><d:Integer m:type="Edm.Int32">0</d:Integer><d:Long m:type="Edm.Int64">0</d:Long><d:String m:type="Edm.String">This is row 0</d:String><d:Time m:type="Edm.Time">00:00</d:Time></m:properties></content></entry><entry><id>/data/atom/2</id><title>Atom</title><updated>recently</updated><content type="application/xml"><m:properties><d:Boolean m:type="Edm.Boolean">false</d:Boolean><d:Date m:type="Edm.Date" m:null="true"/><d:DateTime m:type="Edm.DateTime">1971-05-02T01:01</d:DateTime><d:Double m:type="Edm.Double">1.1</d:Double><d:Float m:type="Edm.Single">1.1</d:Float><d:Integer m:type="Edm.Int32">1</d:Integer><d:Long m:type="Edm.Int64">10000000</d:Long><d:String m:type="Edm.String">This is row 1</d:String><d:Time m:type="Edm.Time">01:01</d:Time></m:properties></content></entry>
               """.trim()
             ));
           });
@@ -145,6 +149,59 @@ public class FormatAtomInstanceTest {
     row.put("String", rowNum % 9 == 7 ? null : "This is row " + rowNum);
     row.put("Time", rowNum % 9 == 8 ? null : LocalTime.of(rowNum, rowNum));
     return row;
+  }
+
+  @Test
+  void testFormatValue() {
+    // Test null value
+    assertNull(FormatAtomInstance.formatValue((String) null));
+
+    // Test String value
+    assertEquals("Hello World", FormatAtomInstance.formatValue("Hello World"));
+
+    // Test numeric values
+    assertEquals("42", FormatAtomInstance.formatValue(42));
+    assertEquals("42.5", FormatAtomInstance.formatValue(42.5));
+    assertEquals("123456789", FormatAtomInstance.formatValue(123456789L));
+    assertEquals("123.456", FormatAtomInstance.formatValue(new BigDecimal("123.456")));
+
+    // Test boolean values
+    assertEquals("true", FormatAtomInstance.formatValue(true));
+    assertEquals("false", FormatAtomInstance.formatValue(false));
+
+    // Test date/time values
+    LocalDate date = LocalDate.of(2023, 5, 15);
+    assertEquals("2023-05-15", FormatAtomInstance.formatValue(date));
+
+    LocalTime time = LocalTime.of(14, 30, 15);
+    assertEquals("14:30:15", FormatAtomInstance.formatValue(time));
+
+    LocalDateTime dateTime = LocalDateTime.of(2023, 5, 15, 14, 30, 15);
+    assertEquals("2023-05-15T14:30:15", FormatAtomInstance.formatValue(dateTime));
+
+    Timestamp timestamp = Timestamp.valueOf("2023-05-15 14:30:15.123");
+    String formattedTimestamp = FormatAtomInstance.formatValue(timestamp);
+    assertTrue(formattedTimestamp.startsWith("2023-05-15T14:30:15.123"));
+
+    // Test UUID
+    UUID uuid = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+    assertEquals("550e8400-e29b-41d4-a716-446655440000", FormatAtomInstance.formatValue(uuid));
+  }
+
+  @Test
+  void testGetType() {
+    // Test basic data types
+    assertEquals("Null", FormatAtomInstance.getType(DataType.Null));
+    assertEquals("Edm.Int32", FormatAtomInstance.getType(DataType.Integer));
+    assertEquals("Edm.Int64", FormatAtomInstance.getType(DataType.Long));
+    assertEquals("Edm.Single", FormatAtomInstance.getType(DataType.Float));
+    assertEquals("Edm.Double", FormatAtomInstance.getType(DataType.Double));
+    assertEquals("Edm.Boolean", FormatAtomInstance.getType(DataType.Boolean));
+
+    // Test date/time types
+    assertEquals("Edm.Date", FormatAtomInstance.getType(DataType.Date));
+    assertEquals("Edm.Time", FormatAtomInstance.getType(DataType.Time));
+    assertEquals("Edm.DateTime", FormatAtomInstance.getType(DataType.DateTime));
   }
 
 }

@@ -25,6 +25,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.FormatAtom;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.FormatInstance;
@@ -206,14 +207,16 @@ public final class FormatAtomInstance implements FormatInstance {
       return formatValue((Timestamp) value);
     } else if (value instanceof LocalDateTime) {
       return formatValue((LocalDateTime) value);
+    } else if (value instanceof LocalDate) {
+      return formatValue((LocalDate) value);
     } else if (value instanceof LocalTime) {
       return formatValue((LocalTime) value);
     } else if (value instanceof Time) {
       return formatValue(((Time) value).toLocalTime());
     } else if (value instanceof java.sql.Date) {
       return formatValue(((java.sql.Date) value).toLocalDate());
-    } else if (value instanceof java.util.Date) {
-      return formatValue(LocalDateTime.ofInstant(((java.util.Date) value).toInstant(), ZoneOffset.UTC));
+    } else if (value instanceof Date) {
+      return formatValue(LocalDateTime.ofInstant(((Date) value).toInstant(), ZoneOffset.UTC));
     } else if (value instanceof Boolean) {
       return ((Boolean) value) ? "true" : "false";
     } else {
@@ -237,31 +240,19 @@ public final class FormatAtomInstance implements FormatInstance {
     return ld.toString();
   }
 
-  private String getType(Object value) {
-    if (value == null) {
-      return null;
-    } else if (value instanceof Integer) {
-      return "Edm.Int32";
-    } else if (value instanceof Long) {
-      return "Edm.Int64";
-    } else if (value instanceof Double) {
-      return "Edm.Double";
-    } else if (value instanceof String) {
-      return null;
-    } else if (value instanceof LocalDateTime) {
-      return "Edm.DateTime";
-    } else if (value instanceof Timestamp) {
-      return "Edm.DateTime";
-    } else if (value instanceof BigDecimal) {
-      return "Edm.Decimal";
-    } else if (value instanceof Date) {
-      return "Edm.DateTime";
-    } else if (value instanceof Boolean) {
-      return "Edm.Boolean";
-    } else {
-      logger.debug("Atom Data type: {}", value.getClass());
-      return null;
-    }
+  static String getType(DataType type) {
+    return switch(type) {
+      case Null -> "Null";
+      case Integer -> "Edm.Int32";
+      case Long -> "Edm.Int64";
+      case Float -> "Edm.Single";
+      case Double -> "Edm.Double";
+      case String -> "Edm.String";
+      case Boolean -> "Edm.Boolean";
+      case Date -> "Edm.Date";
+      case DateTime -> "Edm.DateTime";
+      case Time -> "Edm.Time";
+    };
   }
 
   private void outputRow(DataRow row) throws Throwable {
@@ -280,7 +271,7 @@ public final class FormatAtomInstance implements FormatInstance {
       row.forEach((k, v) -> {
         try {
           writer.writeStartElement("d", getName(k.name(), "field"), DATASERVICES_NAMESPACE);
-          String type = getType(v);
+          String type = getType(k.type());
           if (type != null) {
             writer.writeAttribute("m", METADATA_NAMESPACE, "type", type);
           }

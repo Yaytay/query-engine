@@ -185,7 +185,6 @@ public class FormatXmlInstance implements FormatInstance {
   }
 
   static String getName(Map<String, String> nameMap, String fieldInitialLetterFix, String fieldInvalidLetterFix, String original, String defaultValue) {
-    logger.warn("getName({}, \"{}\", \"{}\", \"{}\", \"{}\")", nameMap, original, fieldInitialLetterFix, fieldInvalidLetterFix, defaultValue);
     if (original == null) {
       return defaultValue;
     }

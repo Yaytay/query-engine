@@ -41,11 +41,13 @@
     <junit-jupiter.version>5.12.1</junit-jupiter.version>
     <junit-platform.version>1.12.1</junit-platform.version>
     <testcontainers.version>1.20.6</testcontainers.version>
-    <graalvm.version>24.2.0</graalvm.version>
+    <graalvm.version>24.2.1</graalvm.version>
     <jackson.version>2.18.3</jackson.version>
 
     <!-- The qe-version property exists so that the design mode project can override it to run with a specific version -->
     <qe-version>${project.version}</qe-version>
+
+    <rootdir>${project.basedir}</rootdir>
   </properties>
 
   <scm>
@@ -227,7 +229,7 @@
           <artifactId>maven-checkstyle-plugin</artifactId>
           <version>3.6.0</version>
           <configuration>
-            <configLocation>${basedir}/../checkstyle.xml</configLocation>
+            <configLocation>${rootdir}/checkstyle.xml</configLocation>
             <consoleOutput>true</consoleOutput>
             <failsOnError>true</failsOnError>
             <linkXRef>false</linkXRef>

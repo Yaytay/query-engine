@@ -16,7 +16,6 @@
  */
 package uk.co.spudsoft.query.defn;
 
-import com.google.common.base.Strings;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -25,13 +24,13 @@ import jakarta.ws.rs.core.MediaType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.Mockito;
 import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.exec.fmts.xml.FormatXmlInstance;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import org.mockito.Mockito;
 import static org.mockito.Mockito.mock;
 
 class FormatXmlTest {
@@ -149,6 +148,7 @@ class FormatXmlTest {
 
     Vertx vertx = mock(Vertx.class);
     Context context = mock(Context.class);
+    @SuppressWarnings("unchecked")
     WriteStream<Buffer> writeStream = mock(WriteStream.class);
 
     // Act

@@ -28,9 +28,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
 
-import java.util.regex.Pattern;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
-import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 import uk.co.spudsoft.query.exec.fmts.xml.FormatAtomInstance;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
@@ -89,8 +87,8 @@ public class FormatAtom implements Format {
     builder.name(name);
     builder.extension(extension);
     builder.mediaType(mediaType);
-    builder.fieldInitialLetterFix(fieldInitialLetterFix == null ? "" : fieldInitialLetterFix);
-    builder.fieldInvalidLetterFix(fieldInvalidLetterFix == null ? "" : fieldInvalidLetterFix);
+    builder.fieldInitialLetterFix(fieldInitialLetterFix == null ? "F" : fieldInitialLetterFix);
+    builder.fieldInvalidLetterFix(fieldInvalidLetterFix == null ? "_" : fieldInvalidLetterFix);
     return builder.build();
   }
 

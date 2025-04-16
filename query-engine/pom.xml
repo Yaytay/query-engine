@@ -39,6 +39,7 @@
     <fork.count>4</fork.count>
     <compiler.dir>target/compiler</compiler.dir>
     <mainClass>uk.co.spudsoft.query.main.Main</mainClass>
+    <rootdir>${project.parent.basedir}</rootdir>
   </properties>
 
 
@@ -130,7 +131,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>33.4.7-jre</version>
+      <version>33.4.8-jre</version>
       <exclusions>
         <exclusion>
           <groupId>org.checkerframework</groupId>

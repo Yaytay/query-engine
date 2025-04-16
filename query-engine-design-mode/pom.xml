@@ -38,6 +38,7 @@
   <properties>
     <compiler.dir>target/compiler</compiler.dir>
     <mainClass>uk.co.spudsoft.query.main.DesignMain</mainClass>
+    <rootdir>${project.parent.basedir}</rootdir>
 
     <!-- Usually this should be commented out and the value (which is ${project.version}) from the parent will be used -->
     <!--qe-version>0.0.11</qe-version-->

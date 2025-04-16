@@ -16,14 +16,8 @@
  */
 package uk.co.spudsoft.query.defn;
 
-import io.vertx.core.Context;
-import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.streams.WriteStream;
 import jakarta.ws.rs.core.MediaType;
 import org.junit.jupiter.api.Test;
-import uk.co.spudsoft.query.exec.FormatInstance;
-import uk.co.spudsoft.query.exec.fmts.xml.FormatAtomInstance;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,7 +26,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
 
 class FormatAtomTest {
 
@@ -71,15 +64,20 @@ class FormatAtomTest {
     assertNull(formatAtom.getFieldInvalidLetterFix());
 
     formatAtom = formatAtom.withDefaults();
-    assertEquals("", formatAtom.getFieldInitialLetterFix());
-    assertEquals("", formatAtom.getFieldInvalidLetterFix());
+    assertEquals("F", formatAtom.getFieldInitialLetterFix());
+    assertEquals("_", formatAtom.getFieldInvalidLetterFix());
 
     formatAtom = new FormatAtom.Builder()
       .fieldInitialLetterFix("Z")
-      .fieldInvalidLetterFix("_")
+      .fieldInvalidLetterFix("X")
       .build();
     assertEquals("Z", formatAtom.getFieldInitialLetterFix());
-    assertEquals("_", formatAtom.getFieldInvalidLetterFix());
+    assertEquals("X", formatAtom.getFieldInvalidLetterFix());
+
+    formatAtom = formatAtom.withDefaults();
+    assertEquals("Z", formatAtom.getFieldInitialLetterFix());
+    assertEquals("X", formatAtom.getFieldInvalidLetterFix());
+
   }
 
   @Test
@@ -119,6 +117,16 @@ class FormatAtomTest {
 
     // Act & Assert - should not throw exception
     assertDoesNotThrow(() -> validFormat.validate());
+
+    // Arrange
+    FormatAtom validFormat2 = new FormatAtom.Builder()
+      .name("TestFormat")
+      .fieldInitialLetterFix(null)
+      .fieldInvalidLetterFix(null)
+      .build();
+
+    // Act & Assert - should not throw exception
+    assertDoesNotThrow(() -> validFormat2.validate());
 
     // Invalid format name
     FormatAtom invalidFormatName = new FormatAtom.Builder()
