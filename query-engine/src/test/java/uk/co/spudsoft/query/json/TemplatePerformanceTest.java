@@ -69,8 +69,8 @@ public class TemplatePerformanceTest {
    * Velocity                                 Zulu21.38+21-CA           10000      0.393      25445.293
    * 
    */
-  private final static int WARMUPS = 100;
-  private final static int TIMED = 100;
+  private final static int WARMUPS = TemplatePerformanceTest.class.getCanonicalName().equals(System.getProperty("test")) ? 10000 : 100;
+  private final static int TIMED = TemplatePerformanceTest.class.getCanonicalName().equals(System.getProperty("test")) ? 10000 : 100;
   
   private final static List<String> EXPECTED_RESULTS = buildExpectedResults();
 
