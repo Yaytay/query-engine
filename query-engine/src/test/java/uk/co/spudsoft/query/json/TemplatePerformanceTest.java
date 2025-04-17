@@ -53,8 +53,24 @@ public class TemplatePerformanceTest {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(TemplatePerformanceTest.class);
   
-  private final static int WARMUPS = 10000;
-  private final static int TIMED = 10000;
+  /**
+   * Counts of iterations for the tests.
+   * These values are too low to be meaningful, use much larger values for reasonable testing (10000+).
+   * For reference, these figures were just generated on an Intel i(-12900HK:
+   * Method                                   JVM                  Iterations Duration/s Rate (iters/s)
+   * Jexl                                     Zulu21.38+21-CA           10000      0.480      20833.333
+   * JexlCachedExpression                     Zulu21.38+21-CA           10000      0.004    2500000.000
+   * Polyglot                                 Zulu21.38+21-CA           10000     18.910        528.821
+   * PolyglotEngineSourceCache                Zulu21.38+21-CA           10000      4.191       2386.065
+   * PolyglotLatencyModeEngine                Zulu21.38+21-CA           10000      4.368       2289.377
+   * PolyglotThroughputModeEngine             Zulu21.38+21-CA           10000      4.912       2035.831
+   * PolyglotThroughputModeEngineSourceCache  Zulu21.38+21-CA           10000      4.209       2375.861
+   * StringTemplate                           Zulu21.38+21-CA           10000      0.108      92592.593
+   * Velocity                                 Zulu21.38+21-CA           10000      0.393      25445.293
+   * 
+   */
+  private final static int WARMUPS = 100;
+  private final static int TIMED = 100;
   
   private final static List<String> EXPECTED_RESULTS = buildExpectedResults();
 
@@ -76,9 +92,13 @@ public class TemplatePerformanceTest {
     return methodName.get().substring(4);
   }
   
+  /**
+   * Output the headers.
+   * To be honest, this javadoc only exists to push the log line down to > line 100 so that the output lines up with the rest.
+   */
   @BeforeAll
   public static void headers() {
-    logger.debug("{}\t{}\t{}\t{}\t{}", " Method", "JVM", "Iterations", "Duration/s", "Rate (iterations/second)");
+    logger.info("{}", String.format("%-40s %-20s %10s %10s %14s", "Method", "JVM", "Iterations", "Duration/s", "Rate (iters/s)"));
   }
   
   @Test
@@ -100,7 +120,7 @@ public class TemplatePerformanceTest {
       results.add(result);
     }
     long duration = System.currentTimeMillis() - start;
-    logger.debug("{}\t{}\t{}\t{}\t{}", findTidyName(), System.getProperty("java.vendor.version"), TIMED, duration / 1000.0, TIMED / (duration / 1000.0));
+    logger.info("{}", String.format("%-40s %-20s %10d %10.3f %14.3f", findTidyName(), System.getProperty("java.vendor.version"), TIMED, duration / 1000.0, TIMED / (duration / 1000.0)));
     assertEquals(EXPECTED_RESULTS, results);
   }
     
@@ -127,7 +147,7 @@ public class TemplatePerformanceTest {
       results.add(result);
     }
     long duration = System.currentTimeMillis() - start;
-    logger.debug("{}\t{}\t{}\t{}\t{}", findTidyName(), System.getProperty("java.vendor.version"), TIMED, duration / 1000.0, TIMED / (duration / 1000.0));
+    logger.info("{}", String.format("%-40s %-20s %10d %10.3f %14.3f", findTidyName(), System.getProperty("java.vendor.version"), TIMED, duration / 1000.0, TIMED / (duration / 1000.0)));
     assertEquals(EXPECTED_RESULTS, results);
   }
   
@@ -153,7 +173,7 @@ public class TemplatePerformanceTest {
       results.add(result);
     }
     long duration = System.currentTimeMillis() - start;
-    logger.debug("{}\t{}\t{}\t{}\t{}", findTidyName(), System.getProperty("java.vendor.version"), TIMED, duration / 1000.0, TIMED / (duration / 1000.0));
+    logger.info("{}", String.format("%-40s %-20s %10d %10.3f %14.3f", findTidyName(), System.getProperty("java.vendor.version"), TIMED, duration / 1000.0, TIMED / (duration / 1000.0)));
     assertEquals(EXPECTED_RESULTS, results);
   }
   
@@ -193,7 +213,7 @@ public class TemplatePerformanceTest {
       results.add(result);
     }
     long duration = System.currentTimeMillis() - start;
-    logger.debug("{}\t{}\t{}\t{}\t{}", findTidyName(), System.getProperty("java.vendor.version"), TIMED, duration / 1000.0, TIMED / (duration / 1000.0));
+    logger.info("{}", String.format("%-40s %-20s %10d %10.3f %14.3f", findTidyName(), System.getProperty("java.vendor.version"), TIMED, duration / 1000.0, TIMED / (duration / 1000.0)));
     assertEquals(EXPECTED_RESULTS, results);
   }
   
@@ -217,7 +237,7 @@ public class TemplatePerformanceTest {
       }
     }
     long duration = System.currentTimeMillis() - start;
-    logger.debug("{}\t{}\t{}\t{}\t{}", findTidyName(), System.getProperty("java.vendor.version"), TIMED, duration / 1000.0, TIMED / (duration / 1000.0));
+    logger.info("{}", String.format("%-40s %-20s %10d %10.3f %14.3f", findTidyName(), System.getProperty("java.vendor.version"), TIMED, duration / 1000.0, TIMED / (duration / 1000.0)));
     assertEquals(EXPECTED_RESULTS, results);
   }  
     
@@ -248,7 +268,7 @@ public class TemplatePerformanceTest {
       }
     }
     long duration = System.currentTimeMillis() - start;
-    logger.debug("{}\t{}\t{}\t{}\t{}", findTidyName(), System.getProperty("java.vendor.version"), TIMED, duration / 1000.0, TIMED / (duration / 1000.0));
+    logger.info("{}", String.format("%-40s %-20s %10d %10.3f %14.3f", findTidyName(), System.getProperty("java.vendor.version"), TIMED, duration / 1000.0, TIMED / (duration / 1000.0)));
     assertEquals(EXPECTED_RESULTS, results);
   }
   
@@ -279,7 +299,7 @@ public class TemplatePerformanceTest {
       }
     }
     long duration = System.currentTimeMillis() - start;
-    logger.debug("{}\t{}\t{}\t{}\t{}", findTidyName(), System.getProperty("java.vendor.version"), TIMED, duration / 1000.0, TIMED / (duration / 1000.0));
+    logger.info("{}", String.format("%-40s %-20s %10d %10.3f %14.3f", findTidyName(), System.getProperty("java.vendor.version"), TIMED, duration / 1000.0, TIMED / (duration / 1000.0)));
     assertEquals(EXPECTED_RESULTS, results);
   }
   
@@ -310,7 +330,7 @@ public class TemplatePerformanceTest {
       }
     }
     long duration = System.currentTimeMillis() - start;
-    logger.debug("{}\t{}\t{}\t{}\t{}", findTidyName(), System.getProperty("java.vendor.version"), TIMED, duration / 1000.0, TIMED / (duration / 1000.0));
+    logger.info("{}", String.format("%-40s %-20s %10d %10.3f %14.3f", findTidyName(), System.getProperty("java.vendor.version"), TIMED, duration / 1000.0, TIMED / (duration / 1000.0)));
     assertEquals(EXPECTED_RESULTS, results);
   }
   
@@ -337,7 +357,7 @@ public class TemplatePerformanceTest {
       }
     }
     long duration = System.currentTimeMillis() - start;
-    logger.debug("{}\t{}\t{}\t{}\t{}", findTidyName(), System.getProperty("java.vendor.version"), TIMED, duration / 1000.0, TIMED / (duration / 1000.0));
+    logger.info("{}", String.format("%-40s %-20s %10d %10.3f %14.3f", findTidyName(), System.getProperty("java.vendor.version"), TIMED, duration / 1000.0, TIMED / (duration / 1000.0)));
     assertEquals(EXPECTED_RESULTS, results);
   }
   

@@ -70,24 +70,24 @@
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>dir-cache</artifactId>
-      <version>0.0.26</version>
+      <version>0.0.27</version>
     </dependency>
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>jwt-validator-vertx</artifactId>
-      <version>0.0.35</version>
+      <version>0.0.38</version>
     </dependency>
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>params4j</artifactId>
-      <version>0.0.27</version>
+      <version>0.0.28</version>
       <exclusions>
       </exclusions>
     </dependency>
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>xlsx-writer</artifactId>
-      <version>0.0.23</version>
+      <version>0.0.24</version>
     </dependency>
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
@@ -99,7 +99,7 @@
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>vertx-resteasy-helpers</artifactId>
-      <version>0.0.27</version>
+      <version>0.0.29</version>
       <exclusions>
         <exclusion>
           <groupId>jakarta.activation</groupId>
@@ -265,7 +265,7 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-jexl3</artifactId>
-      <version>3.4.0</version>
+      <version>3.5.0</version>
     </dependency>
     <dependency>
       <!-- Required for sasl SCRAM-SHA-256 authentication against PostgreSQL with vertx client -->
@@ -348,7 +348,7 @@
     </dependency>
     <dependency>
       <groupId>org.graalvm.polyglot</groupId>
-      <artifactId>js</artifactId>
+      <artifactId>js-community</artifactId>
       <version>${graalvm.version}</version>
       <type>pom</type>
     </dependency>

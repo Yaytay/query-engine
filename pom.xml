@@ -36,12 +36,16 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <argLine></argLine>
-    <vertx.version>4.5.13</vertx.version>
+    <vertx.version>4.5.14</vertx.version>
     <slf4j.version>2.0.17</slf4j.version>
-    <junit-jupiter.version>5.12.1</junit-jupiter.version>
-    <junit-platform.version>1.12.1</junit-platform.version>
+    <junit-jupiter.version>5.12.2</junit-jupiter.version>
+    <junit-platform.version>1.12.2</junit-platform.version>
     <testcontainers.version>1.20.6</testcontainers.version>
-    <graalvm.version>24.2.1</graalvm.version>
+    <!-- 
+      Graal versions are often tied in to JDK versions, cannot upgrade to 24+ until using JDK 22+ 
+      See https://github.com/oracle/graal/issues/7651
+    -->
+    <graalvm.version>23.1.2</graalvm.version>
     <jackson.version>2.18.3</jackson.version>
 
     <!-- The qe-version property exists so that the design mode project can override it to run with a specific version -->
@@ -69,6 +73,7 @@
             <encoding>${project.build.sourceEncoding}</encoding>
             <compilerArgs>
               <arg>-Xlint:all</arg>
+              <arg>-proc:none</arg>
             </compilerArgs>
           </configuration>
         </plugin>
@@ -257,7 +262,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.5.2</version>
+          <version>3.5.3</version>
           <configuration>
             <forkCount>1</forkCount>
             <reuseForks>true</reuseForks>
@@ -266,15 +271,11 @@
               -Dfile.encoding=UTF-8
               -XX:+UnlockExperimentalVMOptions
               -XX:+EnableJVMCI
-              --module-path=${compiler.dir}
               --upgrade-module-path=${project.build.directory}/compiler
+              --add-exports org.graalvm.nativeimage/org.graalvm.nativeimage.impl=ALL-UNNAMED
               --add-exports org.graalvm.polyglot/org.graalvm.polyglot.impl=ALL-UNNAMED
               --add-exports org.graalvm.truffle.compiler/com.oracle.truffle.compiler=ALL-UNNAMED
             </argLine>
-            <!--
-              -add-exports org.graalvm.polyglot/org.graalvm.polyglot.impl=ALL-UNNAMED
-              -add-exports org.graalvm.truffle.compiler/com.oracle.truffle.compiler=ALL-UNNAMED
-            -->
             <trimStackTrace>false</trimStackTrace>
             <excludes>
               <exclude>**/sandbox/**</exclude>
@@ -285,7 +286,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-failsafe-plugin</artifactId>
-          <version>3.5.2</version>
+          <version>3.5.3</version>
           <executions>
             <execution>
               <goals>
@@ -312,11 +313,10 @@
               -XX:+EnableJVMCI
               --module-path=${compiler.dir}
               --upgrade-module-path=${project.build.directory}/compiler
+              --add-exports org.graalvm.nativeimage/org.graalvm.polyglot.impl=ALL-UNNAMED
+              --add-exports org.graalvm.polyglot/org.graalvm.polyglot.impl=ALL-UNNAMED
+              --add-exports org.graalvm.truffle.compiler/com.oracle.truffle.compiler=ALL-UNNAMED
             </argLine>
-            <!--
-              -add-exports org.graalvm.polyglot/org.graalvm.polyglot.impl=ALL-UNNAMED
-              -add-exports org.graalvm.truffle.compiler/com.oracle.truffle.compiler=ALL-UNNAMED
-            -->
             <excludes>
               <exclude>**/sandbox/**</exclude>
             </excludes>
@@ -422,8 +422,8 @@
               dependency-check-supressions.xml
             </suppressionFiles>
             <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
-			<nvdApiKey>${NVD_API_KEY}</nvdApiKey>
-		  </configuration>
+            <nvdApiKey>${NVD_API_KEY}</nvdApiKey>
+          </configuration>
           <executions>
             <execution>
               <goals>
@@ -464,6 +464,63 @@
                 <outputProperty>dependencies-class-path</outputProperty>
               </configuration>
             </execution>
+            
+            <execution>
+              <id>copy-graalvm</id>
+              <phase>process-resources</phase>
+              <goals>
+                <goal>copy</goal>
+              </goals>
+              <configuration>
+                <outputDirectory>
+                  ${project.build.directory}/compiler
+                </outputDirectory>
+                <overWriteReleases>true</overWriteReleases>
+                <overWriteSnapshots>true</overWriteSnapshots>
+                <artifactItems>
+                  <!--
+                  Unfortunately Maven does not support resolving transitive dependencies
+                  here automatically. So the list of dependencies might need to be updated when upgrading
+                  to new versions of GraalVM.
+                  -->
+                  <artifactItem>
+                    <groupId>org.graalvm.sdk</groupId>
+                    <artifactId>collections</artifactId>
+                    <version>${graalvm.version}</version>
+                    <type>jar</type>
+                    <destFileName>collections.jar</destFileName>
+                  </artifactItem>
+                  <artifactItem>
+                    <groupId>org.graalvm.sdk</groupId>
+                    <artifactId>nativeimage</artifactId>
+                    <version>${graalvm.version}</version>
+                    <type>jar</type>
+                    <destFileName>nativeimage.jar</destFileName>
+                  </artifactItem>
+                  <artifactItem>
+                    <groupId>org.graalvm.sdk</groupId>
+                    <artifactId>word</artifactId>
+                    <version>${graalvm.version}</version>
+                    <type>jar</type>
+                    <destFileName>word.jar</destFileName>
+                  </artifactItem>
+                  <artifactItem>
+                    <groupId>org.graalvm.truffle</groupId>
+                    <artifactId>truffle-compiler</artifactId>
+                    <version>${graalvm.version}</version>
+                    <type>jar</type>
+                    <destFileName>truffle-compiler.jar</destFileName>
+                  </artifactItem>
+                  <artifactItem>
+                    <groupId>org.graalvm.compiler</groupId>
+                    <artifactId>compiler</artifactId>
+                    <version>${graalvm.version}</version>
+                    <type>jar</type>
+                    <destFileName>compiler.jar</destFileName>
+                  </artifactItem>
+                </artifactItems>
+              </configuration>
+            </execution>            
           </executions>
         </plugin>
 

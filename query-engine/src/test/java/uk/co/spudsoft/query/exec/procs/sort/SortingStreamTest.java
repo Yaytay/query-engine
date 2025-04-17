@@ -138,7 +138,7 @@ public class SortingStreamTest {
       testContext.verify(() -> {
         assertEquals(total, count.get());
       });
-      vertx.fileSystem().deleteRecursiveBlocking(tempDir, true);
+      vertx.fileSystem().deleteRecursiveBlocking(tempDir);
       testContext.completeNow();
     });
     ss.exceptionHandler(ex -> {
@@ -192,7 +192,7 @@ public class SortingStreamTest {
       testContext.verify(() -> {
         assertEquals(total, count.get());
       });
-      vertx.fileSystem().deleteRecursiveBlocking(tempDir, true);
+      vertx.fileSystem().deleteRecursiveBlocking(tempDir);
       testContext.completeNow();
     });
     ss.exceptionHandler(ex -> {
