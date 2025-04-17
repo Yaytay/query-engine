@@ -18,3 +18,4 @@ node_modules
 /query-engine/targetquery-enginesamples/
 
 **/nbactions*.xml
+/.idea/
