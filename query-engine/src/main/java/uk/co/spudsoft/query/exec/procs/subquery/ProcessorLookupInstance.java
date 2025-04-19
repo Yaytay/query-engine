@@ -126,7 +126,7 @@ public class ProcessorLookupInstance implements ProcessorInstance {
     return executor.initializePipeline(childPipeline)
             .compose(v -> {
               return ReadStreamToList.map(
-                      fieldDefnStreamCapture.getReadStream()
+                      fieldDefnStreamCapture.getReadStream().getStream()
                       , row -> {
                         if (row.isEmpty()) {
                           return null;

@@ -170,7 +170,7 @@ public class EmptyQueryIT {
             .statusCode(200)
             .extract().body().asString();
 
-    assertThat(body, equalTo("\"dataId\"\t\"instant\"\t\"colour\"\t\"value\"\t\"children\"\t\"DateField\"\t\"TimeField\"\t\"DateTimeField\"\t\"LongField\"\t\"DoubleField\"\t\"BoolField\"\t\"TextField\"\n"));
+    assertThat(body, equalTo("\"dataId\"\t\"instant\"\t\"colour\"\t\"value\"\t\"children\"\t\"DateField\"\t\"TimeField\"\t\"DateTimeField\"\t\"LongField\"\t\"DoubleField\"\t\"BoolField\"\t\"TextField\"\t\"child2\"\t\"child3\"\t\"child5\"\n"));
     assertThat(body, not(containsString("\t\t")));
 
     body = given()

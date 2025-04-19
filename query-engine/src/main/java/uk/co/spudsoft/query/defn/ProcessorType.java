@@ -37,11 +37,15 @@ public enum ProcessorType {
    */
   OFFSET, 
   /**
+   * The {@link Processor} is a {@link ProcessorMerge} that adds all the fields from a child query.
+   */
+  MERGE, 
+  /**
    * The {@link Processor} is a {@link ProcessorGroupConcat} that concatenates fields from multiple rows in a child query.
    */
   GROUP_CONCAT, 
   /**
-   * The {@link Processor} is a {@link ProcessorDynamicField} that create news fields from multiple rows in a child query.
+   * The {@link Processor} is a {@link ProcessorDynamicField} that create new fields from multiple rows in a child query.
    */
   DYNAMIC_FIELD, 
   /**

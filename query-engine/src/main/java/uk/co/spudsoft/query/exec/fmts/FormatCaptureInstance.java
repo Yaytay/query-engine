@@ -17,8 +17,6 @@
 package uk.co.spudsoft.query.exec.fmts;
 
 import io.vertx.core.Future;
-import io.vertx.core.streams.ReadStream;
-import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.FormatInstance;
@@ -50,11 +48,11 @@ public class FormatCaptureInstance implements FormatInstance {
   }
 
   /**
-   * Return the internal {@link ReadStream} that was captured by {@link #initialize(uk.co.spudsoft.query.exec.PipelineExecutor, uk.co.spudsoft.query.exec.PipelineInstance, uk.co.spudsoft.query.exec.ReadStreamWithTypes)}.
-   * @return the internal {@link ReadStream} that was captured by {@link #initialize(uk.co.spudsoft.query.exec.PipelineExecutor, uk.co.spudsoft.query.exec.PipelineInstance, uk.co.spudsoft.query.exec.ReadStreamWithTypes)}.
+   * Return the internal {@link ReadStreamWithTypes} that was captured by {@link #initialize(uk.co.spudsoft.query.exec.PipelineExecutor, uk.co.spudsoft.query.exec.PipelineInstance, uk.co.spudsoft.query.exec.ReadStreamWithTypes)}.
+   * @return the internal {@link ReadStreamWithTypes} that was captured by {@link #initialize(uk.co.spudsoft.query.exec.PipelineExecutor, uk.co.spudsoft.query.exec.PipelineInstance, uk.co.spudsoft.query.exec.ReadStreamWithTypes)}.
    */
-  public ReadStream<DataRow> getReadStream() {
-    return streamWithTypes.getStream();
+  public ReadStreamWithTypes getReadStream() {
+    return streamWithTypes;
   }
-
+  
 }

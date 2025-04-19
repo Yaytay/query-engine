@@ -127,7 +127,6 @@ public class FeatureRichQueryIT {
             .extract().body().asString();
     
     assertThat(body, startsWith("\"dataId\"\t\"instant\""));
-    assertThat(body, not(containsString("\t\t\t\t\t\t\t")));
     
     body = given()
             .queryParam("minDate", "2971-05-06")

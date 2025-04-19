@@ -38,7 +38,7 @@ public class ProcessorGroupConcatInstanceTest {
   }
 
   @Test
-  public void testProcessChildren() {
+  public void testProcessChildrenBothValueColumns() {
     ProcessorGroupConcat defn = ProcessorGroupConcat.builder()
             .childValueColumn("value")
             .delimiter("#")
@@ -61,6 +61,58 @@ public class ProcessorGroupConcatInstanceTest {
     assertEquals(2, result.size());
     assertEquals("one", result.get("id"));
     assertEquals("1#3", result.get("kids"));
+  }
+  
+  @Test
+  public void testProcessChildrenChildValueColumnOnly() {
+    ProcessorGroupConcat defn = ProcessorGroupConcat.builder()
+            .childValueColumn("value")
+            .delimiter("#")
+            .build();
+    ProcessorGroupConcatInstance instance = new ProcessorGroupConcatInstance(null, null, null, defn, "P0-GroupConcat");
+    
+    Types parentTypes = new Types();
+    DataRow parent = DataRow.create(parentTypes).put("id", "one");
+    
+    Types childTypes = new Types();
+    List<DataRow> children = Arrays.asList(
+            DataRow.create(childTypes).put("id", "one").put("value", 1)
+            , DataRow.create(childTypes).put("id", "one").put("value", null)
+            , DataRow.create(childTypes).put("id", "one")
+            , DataRow.create(childTypes).put("id", "one").put("value", 3)
+    );
+    
+    DataRow result = instance.processChildren(parent, children);
+    assertEquals(2, result.size());
+    assertEquals("one", result.get("id"));
+    assertEquals("1#3", result.get("value"));
+  }
+  
+  @Test
+  public void testProcessChildrenMultipleColumns() {
+    ProcessorGroupConcat defn = ProcessorGroupConcat.builder()
+            .delimiter("#")
+            .childIdColumns(Arrays.asList("id"))
+            .build();
+    ProcessorGroupConcatInstance instance = new ProcessorGroupConcatInstance(null, null, null, defn, "P0-GroupConcat");
+    
+    Types parentTypes = new Types();
+    DataRow parent = DataRow.create(parentTypes).put("id", "one");
+    
+    Types childTypes = new Types();
+    List<DataRow> children = Arrays.asList(
+            DataRow.create(childTypes).put("id", "one").put("value", 1).put("other", false)
+            , DataRow.create(childTypes).put("id", "one").put("value", null).put("other", "no")
+            , DataRow.create(childTypes).put("id", "one")
+            , DataRow.create(childTypes).put("id", "one").put("value", 3).put("other", -1)
+    );
+    
+    instance.setChildTypes(childTypes);
+    DataRow result = instance.processChildren(parent, children);
+    assertEquals(3, result.size());
+    assertEquals("one", result.get("id"));
+    assertEquals("1#3", result.get("value"));
+    assertEquals("false#no#-1", result.get("other"));
   }
   
 }

@@ -21,7 +21,6 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.streams.ReadStream;
-import java.util.Collection;
 import java.util.List;
 import org.slf4j.Logger;
 import uk.co.spudsoft.query.defn.SourcePipeline;
@@ -112,9 +111,9 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
    * @param pipeline The overall pipeline instance being run.
    * @param fieldName The name of the field in the parent processor, for tracking purposes.
    * @param sourcePipeline The child pipeline to initialize.
-   * @return A Future that will be completed with a {@link io.vertx.core.streams.ReadStream}&lt;{@link uk.co.spudsoft.query.exec.DataRow}@gt; when initialization has completed.
+   * @return A Future that will be completed with a {@link ReadStreamWithTypes} when initialization has completed.
    */
-  protected Future<ReadStream<DataRow>> initializeChildStream(PipelineExecutor executor, PipelineInstance pipeline, String fieldName, SourcePipeline sourcePipeline) {
+  protected Future<ReadStreamWithTypes> initializeChildStream(PipelineExecutor executor, PipelineInstance pipeline, String fieldName, SourcePipeline sourcePipeline) {
     SourceInstance sourceInstance = sourcePipeline.getSource().createInstance(vertx, context, executor, this.getName() + "." + fieldName);
     FormatCaptureInstance sinkInstance = new FormatCaptureInstance();
     
@@ -126,17 +125,17 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
             , executor.createProcessors(vertx, sourceInstance, context, sourcePipeline, null, name)
             , sinkInstance
     );
-    return executor.initializePipeline(childPipeline)
+    return executor.initializePipeline(childPipeline)            
             .map(v -> sinkInstance.getReadStream());
   }
 
   /**
    * Abstract method that specializations must implement to process one parent row and a collection of related child rows.
    * @param parentRow The single DataRow from the parent stream.
-   * @param childRows A collection of matching DataRows from the child stream.
+   * @param childRows A list of matching DataRows from the child stream.
    * @return The resultant row - typically this is the modified ParentRow.
    */
-  abstract DataRow processChildren(DataRow parentRow, Collection<DataRow> childRows);
+  abstract DataRow processChildren(DataRow parentRow, List<DataRow> childRows);
 
   /**
    * Compare two DataRows by the {@link #parentIdColumns} and {@link #childIdColumns}.

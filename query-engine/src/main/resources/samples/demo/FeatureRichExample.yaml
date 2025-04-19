@@ -99,6 +99,7 @@ processors:
       replaceDoubleQuotes: true  
       query: select "dataId", value from "ManyData" m join "RefData" r on r."refId" = m."refId" where "dataId" < :maxId order by "dataId", sort
       
+      
 - type: DYNAMIC_FIELD
   innerJoin: false
   parentIdColumns:
@@ -121,6 +122,49 @@ processors:
       streamingFetchSize: 10
       replaceDoubleQuotes: true  
       query:  select dataId, "fieldId", "dateValue", "timeValue", "dateTimeValue", "longValue", "doubleValue", "boolValue", "textValue" from "FieldValues" order by "dataId", "fieldId"
+       
+- type: GROUP_CONCAT
+  delimiter: ","
+  parentIdColumns:
+  - dataId
+  innerJoin: false
+  childIdColumns: 
+  - dataId
+  childValueColumn: child2
+  input:
+    source:
+      endpoint: MySQL
+      streamingFetchSize: 10
+      replaceDoubleQuotes: true  
+      query: select "dataId", value as child2 from "ManyData" m join "RefData" r on r."refId" = m."refId" where "dataId" < :maxId order by "dataId", sort
+       
+- type: GROUP_CONCAT
+  delimiter: ","
+  parentIdColumns:
+  - dataId
+  innerJoin: false
+  childIdColumns: 
+  - dataId
+  input:
+    source:
+      endpoint: MySQL
+      streamingFetchSize: 10
+      replaceDoubleQuotes: true  
+      query: select "dataId", value as child3, r."refId" as child4 from "ManyData" m join "RefData" r on r."refId" = m."refId" where "dataId" < :maxId order by "dataId", sort
+       
+- type: MERGE
+  parentIdColumns:
+  - dataId
+  innerJoin: false
+  childIdColumns: 
+  - dataId
+  input:
+    source:
+      endpoint: MySQL
+      streamingFetchSize: 10
+      replaceDoubleQuotes: true  
+      query: select "dataId", value as child5, r."refId" as child4 from "ManyData" m join "RefData" r on r."refId" = m."refId" where "dataId" < :maxId order by "dataId", sort
+      
 - type: LIMIT
   limit: 1000
 formats:

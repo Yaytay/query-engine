@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 jtalbut
+ * Copyright (C) 2025 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@ package uk.co.spudsoft.query.defn;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -26,28 +25,23 @@ import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import java.util.List;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
-import uk.co.spudsoft.query.exec.procs.subquery.ProcessorGroupConcatInstance;
+import uk.co.spudsoft.query.exec.procs.subquery.ProcessorMergeInstance;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
- * Processor that combines multiple values from a child query into a single concatenated string value.
+ * Processor that adds all fields from a child query into the primary stream.
+ * 
+ * If there are multiple rows in the child stream that match the parent row all except the first will be ignored.
+ * 
  * @author jtalbut
  */
-@JsonDeserialize(builder = ProcessorGroupConcat.Builder.class)
+@JsonDeserialize(builder = ProcessorMerge.Builder.class)
 @Schema(description = """
-                      Processor that combines multiple values from a child query into a single concatenated string value.
+                      Processor that adds all fields from a child query into the primary stream.
                       <P>
-                      There are three ways that the group concat can be performed:
-                      <OL>
-                      <LI>Specify the childValueColumn and the parentValueColumn.
-                      A single field will be added to the parent stream, the value will be taken from the childValueColumns and the new field will be named parentValueColumn.
-                      <LI>Specify only childValueColumn, do not specify parentValueColumn.
-                      A single field will be added to the parent stream, the value will be taken from the childValueColumns and the new field will be named childValueColumn.
-                      <LI>Do not specify childValueColumn.
-                      All fields from the child stream will be (indepdently) concatenated and added to the parent stream (with the same names).
-                      </OL>
+                      If there are multiple rows in the child stream that match the parent row all except the first will be ignored.
                       """)
-public class ProcessorGroupConcat implements Processor {
+public class ProcessorMerge implements Processor {
 
   private final ProcessorType type;
   private final Condition condition;
@@ -56,21 +50,16 @@ public class ProcessorGroupConcat implements Processor {
   private final boolean innerJoin;
   private final ImmutableList<String> parentIdColumns;
   private final ImmutableList<String> childIdColumns;
-  private final String childValueColumn;
-  private final String parentValueColumn;
   private final String delimiter;
   
   @Override
-  public ProcessorGroupConcatInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String name) {
-    return new ProcessorGroupConcatInstance(vertx, sourceNameTracker, context, this, name);
+  public ProcessorMergeInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String name) {
+    return new ProcessorMergeInstance(vertx, sourceNameTracker, context, this, name);
   }
 
   @Override
   public void validate() {
-    validateType(ProcessorType.GROUP_CONCAT, type);
-    if (Strings.isNullOrEmpty(childValueColumn) && !Strings.isNullOrEmpty(parentValueColumn)) {
-      throw new IllegalArgumentException("The parentValueColumn name is specified, but the childValueColumn is not");
-    }
+    validateType(ProcessorType.MERGE, type);
     if (parentIdColumns == null || parentIdColumns.isEmpty()) {
       throw new IllegalArgumentException("ID column(s) not specified for parent stream");      
     }
@@ -79,9 +68,6 @@ public class ProcessorGroupConcat implements Processor {
     }
     if (parentIdColumns.size() != childIdColumns.size()) {
       throw new IllegalArgumentException("ID column(s) specified for parent stream does not have the same number of fields as those specified for input stream");
-    }
-    if (condition != null) {
-      condition.validate();
     }
     
   }
@@ -114,7 +100,10 @@ public class ProcessorGroupConcat implements Processor {
   @Schema(description = """
                         The data feed.
                         <P>
-                        The data must be sorted by the childIdColumns (and the parent feed should be sorted by the parentIdColumns).
+                        This data feed should result in two columns childIdColumn and childValueColumn (any other columns will be ignored).
+                        The data should be sorted by childIdColumn (and the parent feed should be sorted by parentIdColumn).
+                        <P>
+                        The values in childValueColumn for each value of childIdColumn will be concatenated together using delimiter as a delimiter and the result will be set as parentValueColumn in the parent feed.
                         """
   )
   public SourcePipeline getInput() {
@@ -175,49 +164,6 @@ public class ProcessorGroupConcat implements Processor {
   public List<String> getChildIdColumns() {
     return childIdColumns;
   }
-
-  /**
-   * Get the child value column.
-   * 
-   * This is the name of the field in the child stream that contains the data to be extracted.
-   * 
-   * @return the child value column.
-   */
-  @Schema(description = """
-                        The child value column.
-                        <P>
-                        This is the name of the field in the child stream that contains the data to be extracted.
-                        <P>
-                        If this is not provided all fields in the child stream that are not in the childIdColumns will be individually concatenated and brought over.
-                        """
-          , maxLength = 100
-          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
-  )
-  public String getChildValueColumn() {
-    return childValueColumn;
-  }
-
-  /**
-   * Get the parent value column.
-   * 
-   * This is the name of the field that will be created in the parent stream to contain the data from the child stream.
-   * 
-   * @return the parent value column.
-   */
-  @Schema(description = """
-                        The parent value column.
-                        <P>
-                        This is the name of the field that will be created in the parent stream to contain the data from the child stream.
-                        <P>
-                        If this is not provided the parent stream fields will have the same name(s) as the child stream fields.
-                        It is an error to provide this and not to provide childValueColumn.
-                        """
-          , maxLength = 100
-          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
-  )
-  public String getParentValueColumn() {
-    return parentValueColumn;
-  }
   
   /**
    * Get the delimiter to place between each value returned.
@@ -233,29 +179,27 @@ public class ProcessorGroupConcat implements Processor {
   }
 
   /**
-   * Builder class for ProcessorGroupConcat.
+   * Builder class for ProcessorMerge.
    */
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "Builder class should result in all instances being immutable when object is built")
   public static class Builder {
 
-    private ProcessorType type = ProcessorType.GROUP_CONCAT;
+    private ProcessorType type = ProcessorType.MERGE;
     private Condition condition;
     private String name;
     private SourcePipeline input;
     private boolean innerJoin;
     private List<String> parentIdColumns;
     private List<String> childIdColumns;
-    private String childValueColumn;
-    private String parentValueColumn;
     private String delimiter;
 
     private Builder() {
     }
 
     /**
-     * Set the {@link ProcessorGroupConcat#type} value in the builder.
-     * @param value The value for the {@link ProcessorGroupConcat#type}, must be {@link ProcessorType#DYNAMIC_FIELD}.
+     * Set the {@link ProcessorMerge#type} value in the builder.
+     * @param value The value for the {@link ProcessorMerge#type}, must be {@link ProcessorType#DYNAMIC_FIELD}.
      * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder type(final ProcessorType value) {
@@ -264,8 +208,8 @@ public class ProcessorGroupConcat implements Processor {
     }
 
     /**
-     * Set the {@link ProcessorGroupConcat#condition} value in the builder.
-     * @param value The value for the {@link ProcessorGroupConcat#condition}.
+     * Set the {@link ProcessorMerge#condition} value in the builder.
+     * @param value The value for the {@link ProcessorMerge#condition}.
      * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder condition(final Condition value) {
@@ -274,8 +218,8 @@ public class ProcessorGroupConcat implements Processor {
     }
     
     /**
-     * Set the {@link ProcessorGroupConcat#name} value in the builder.
-     * @param value The value for the {@link ProcessorGroupConcat#name}.
+     * Set the {@link ProcessorMerge#name} value in the builder.
+     * @param value The value for the {@link ProcessorMerge#name}.
      * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder name(final String value) {
@@ -284,8 +228,8 @@ public class ProcessorGroupConcat implements Processor {
     }
 
     /**
-     * Set the {@link ProcessorGroupConcat#input} value in the builder.
-     * @param value The value for the {@link ProcessorGroupConcat#input}.
+     * Set the {@link ProcessorMerge#input} value in the builder.
+     * @param value The value for the {@link ProcessorMerge#input}.
      * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder input(final SourcePipeline value) {
@@ -294,8 +238,8 @@ public class ProcessorGroupConcat implements Processor {
     }
 
     /**
-     * Set the {@link ProcessorGroupConcat#innerJoin} value in the builder.
-     * @param value The value for the {@link ProcessorGroupConcat#innerJoin}.
+     * Set the {@link ProcessorMerge#innerJoin} value in the builder.
+     * @param value The value for the {@link ProcessorMerge#innerJoin}.
      * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder innerJoin(final boolean value) {
@@ -304,8 +248,8 @@ public class ProcessorGroupConcat implements Processor {
     }
 
     /**
-     * Set the {@link ProcessorGroupConcat#parentIdColumns} value in the builder.
-     * @param value The value for the {@link ProcessorGroupConcat#parentIdColumns}.
+     * Set the {@link ProcessorMerge#parentIdColumns} value in the builder.
+     * @param value The value for the {@link ProcessorMerge#parentIdColumns}.
      * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder parentIdColumns(final List<String> value) {
@@ -314,8 +258,8 @@ public class ProcessorGroupConcat implements Processor {
     }
 
     /**
-     * Set the {@link ProcessorGroupConcat#childIdColumns} value in the builder.
-     * @param value The value for the {@link ProcessorGroupConcat#childIdColumns}.
+     * Set the {@link ProcessorMerge#childIdColumns} value in the builder.
+     * @param value The value for the {@link ProcessorMerge#childIdColumns}.
      * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder childIdColumns(final List<String> value) {
@@ -324,28 +268,8 @@ public class ProcessorGroupConcat implements Processor {
     }
 
     /**
-     * Set the {@link ProcessorGroupConcat#childValueColumn} value in the builder.
-     * @param value The value for the {@link ProcessorGroupConcat#childValueColumn}.
-     * @return this, so that this builder may be used in a fluent manner.
-     */
-    public Builder childValueColumn(final String value) {
-      this.childValueColumn = value;
-      return this;
-    }
-
-    /**
-     * Set the {@link ProcessorGroupConcat#parentValueColumn} value in the builder.
-     * @param value The value for the {@link ProcessorGroupConcat#parentValueColumn}.
-     * @return this, so that this builder may be used in a fluent manner.
-     */
-    public Builder parentValueColumn(final String value) {
-      this.parentValueColumn = value;
-      return this;
-    }
-
-    /**
-     * Set the {@link ProcessorGroupConcat#delimiter} value in the builder.
-     * @param value The value for the {@link ProcessorGroupConcat#delimiter}.
+     * Set the {@link ProcessorMerge#delimiter} value in the builder.
+     * @param value The value for the {@link ProcessorMerge#delimiter}.
      * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder delimiter(final String value) {
@@ -354,34 +278,32 @@ public class ProcessorGroupConcat implements Processor {
     }
     
     /**
-     * Construct a new instance of the ProcessorGroupConcat class.
-     * @return a new instance of the ProcessorGroupConcat class.
+     * Construct a new instance of the ProcessorMerge class.
+     * @return a new instance of the ProcessorMerge class.
      */
-    public ProcessorGroupConcat build() {
-      ProcessorGroupConcat result = new ProcessorGroupConcat(type, condition, name, input, innerJoin, parentIdColumns, childIdColumns, childValueColumn, parentValueColumn, delimiter);
-      result.validateType(ProcessorType.GROUP_CONCAT, type);
+    public ProcessorMerge build() {
+      ProcessorMerge result = new ProcessorMerge(type, condition, name, input, innerJoin, parentIdColumns, childIdColumns, delimiter);
+      result.validateType(ProcessorType.MERGE, type);
       return result;
     }
     
   }
 
   /**
-   * Construct a new instance of the ProcessorGroupConcat.Builder class.
-   * @return a new instance of the ProcessorGroupConcat.Builder class.
+   * Construct a new instance of the ProcessorMerge.Builder class.
+   * @return a new instance of the ProcessorMerge.Builder class.
    */
-  public static ProcessorGroupConcat.Builder builder() {
-    return new ProcessorGroupConcat.Builder();
+  public static ProcessorMerge.Builder builder() {
+    return new ProcessorMerge.Builder();
   }
 
-  private ProcessorGroupConcat(ProcessorType type
+  private ProcessorMerge(ProcessorType type
           , final Condition condition
           , final String name
           , SourcePipeline input
           , boolean innerJoin
           , List<String> parentIdColumns
           , List<String> childIdColumns
-          , String childValueColumn
-          , String parentValueColumn
           , String delimiter
   ) {
     this.type = type;
@@ -391,8 +313,6 @@ public class ProcessorGroupConcat implements Processor {
     this.innerJoin = innerJoin;
     this.parentIdColumns = ImmutableCollectionTools.copy(parentIdColumns);
     this.childIdColumns = ImmutableCollectionTools.copy(childIdColumns);
-    this.childValueColumn = childValueColumn;
-    this.parentValueColumn = parentValueColumn;
     this.delimiter = delimiter == null ? ", " : delimiter;
   }
     

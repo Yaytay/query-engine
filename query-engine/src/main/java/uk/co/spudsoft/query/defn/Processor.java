@@ -45,6 +45,7 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
   , @JsonSubTypes.Type(value = ProcessorGroupConcat.class, name = "GROUP_CONCAT") 
   , @JsonSubTypes.Type(value = ProcessorLookup.class, name = "LOOKUP") 
   , @JsonSubTypes.Type(value = ProcessorMap.class, name = "MAP") 
+  , @JsonSubTypes.Type(value = ProcessorMerge.class, name = "MERGE") 
   , @JsonSubTypes.Type(value = ProcessorOffset.class, name = "OFFSET") 
   , @JsonSubTypes.Type(value = ProcessorQuery.class, name = "QUERY") 
   , @JsonSubTypes.Type(value = ProcessorScript.class, name = "SCRIPT") 

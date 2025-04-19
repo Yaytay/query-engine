@@ -21,7 +21,6 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.streams.ReadStream;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import org.slf4j.Logger;
@@ -98,7 +97,7 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
     return executor.initializePipeline(childPipeline)
             .compose(v -> {
               return ReadStreamToList.map(
-                      fieldDefnStreamCapture.getReadStream()
+                      fieldDefnStreamCapture.getReadStream().getStream()
                       , row -> {
                         if (row.isEmpty()) {
                           return null;
@@ -116,12 +115,12 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
               for (FieldDefn field : fields) {
                 types.putIfAbsent(field.name, field.type);
               }
-              return initializeChildStream(executor, pipeline, "fieldValues", definition.getFieldValues());
+              return initializeChildStream(executor, pipeline, "fieldValues", definition.getFieldValues()).map(rswt -> rswt.getStream());
             });
   }
   
   @Override
-  DataRow processChildren(DataRow parentRow, Collection<DataRow> childRows) {
+  DataRow processChildren(DataRow parentRow, List<DataRow> childRows) {
     logger.debug("Got child rows: {}", childRows);
     if (parentRow == null) {
       logger.warn("No parentRow matching {}", childRows);

@@ -20,6 +20,7 @@ import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -43,6 +44,28 @@ public class ProcessorGroupConcatTest {
       fail("Expected IllegalArgumentException");
     } catch (IllegalArgumentException ex) {
     }
+  }
+
+  @Test
+  public void testValidate() {
+    assertEquals("Processor of type GROUP_CONCAT configured with type MERGE", assertThrows(IllegalArgumentException.class, () -> {
+      ProcessorGroupConcat.builder().type(ProcessorType.MERGE).build().validate();
+    }).getMessage());
+    assertEquals("ID column(s) not specified for parent stream", assertThrows(IllegalArgumentException.class, () -> {
+      ProcessorGroupConcat.builder().build().validate();
+    }).getMessage());
+    assertEquals("ID column(s) not specified for child stream", assertThrows(IllegalArgumentException.class, () -> {
+      ProcessorGroupConcat.builder().parentIdColumns(Arrays.asList("one")).build().validate();
+    }).getMessage());
+    assertEquals("ID column(s) specified for parent stream does not have the same number of fields as those specified for input stream", assertThrows(IllegalArgumentException.class, () -> {
+      ProcessorGroupConcat.builder().parentIdColumns(Arrays.asList("one")).childIdColumns(Arrays.asList("two", "three")).build().validate();
+    }).getMessage());
+    assertEquals("The parentValueColumn name is specified, but the childValueColumn is not", assertThrows(IllegalArgumentException.class, () -> {
+      ProcessorGroupConcat.builder().parentIdColumns(Arrays.asList("one")).childIdColumns(Arrays.asList("one")).parentValueColumn("parentValue").build().validate();
+    }).getMessage());
+    ProcessorGroupConcat.builder().parentIdColumns(Arrays.asList("one")).childIdColumns(Arrays.asList("two")).build().validate();
+    ProcessorGroupConcat.builder().parentIdColumns(Arrays.asList("one")).childIdColumns(Arrays.asList("two")).childValueColumn("childValue").build().validate();
+    ProcessorGroupConcat.builder().parentIdColumns(Arrays.asList("one")).childIdColumns(Arrays.asList("two")).childValueColumn("childValue").parentValueColumn("parentValue").build().validate();
   }
 
   @Test

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 jtalbut
+ * Copyright (C) 2025 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  */
 package uk.co.spudsoft.query.exec.procs.subquery;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
@@ -25,11 +24,9 @@ import io.vertx.core.Vertx;
 import io.vertx.core.streams.ReadStream;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.defn.DataType;
-import uk.co.spudsoft.query.defn.ProcessorGroupConcat;
+import uk.co.spudsoft.query.defn.ProcessorMerge;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.DataRow;
@@ -40,22 +37,23 @@ import uk.co.spudsoft.query.exec.Types;
  * {@link uk.co.spudsoft.query.exec.ProcessorInstance} that acts similarly to the MySQL <a href="https://dev.mysql.com/doc/refman/8.0/en/aggregate-functions.html#function_group-concat">GROUP_CONCAT</A> aggregate function.
  * 
  * A sub query is run and merged with the primary query.
- * The join is always a merge join, so the primary query must be sorted by the {@link uk.co.spudsoft.query.defn.ProcessorGroupConcat#parentIdColumns} and the sub query 
- * must be sorted by the {@link uk.co.spudsoft.query.defn.ProcessorGroupConcat#childIdColumns}.
- * 
+ * The join is always a merge join, so the primary query must be sorted by the {@link uk.co.spudsoft.query.defn.ProcessorMerge#parentIdColumns} and the sub query 
+ * must be sorted by the {@link uk.co.spudsoft.query.defn.ProcessorMerge#childIdColumns}.
+ * Every field from the child stream is added to the primary stream.
+ * If there are multiple child rows matching a single parent row only the first will be processed.
  * 
  * 
  * @author jtalbut
  */
- public class ProcessorGroupConcatInstance extends AbstractJoiningProcessor {
+ public class ProcessorMergeInstance extends AbstractJoiningProcessor {
 
   @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(ProcessorGroupConcatInstance.class);
+  private static final Logger logger = LoggerFactory.getLogger(ProcessorMergeInstance.class);
   
-  private final ProcessorGroupConcat definition;
+  private final ProcessorMerge definition;
   private final Set<String> childIdColumns;
   private Types childTypes;
-
+  
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
@@ -65,7 +63,7 @@ import uk.co.spudsoft.query.exec.Types;
    * @param name the name of this processor, used in tracking and logging.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
-  public ProcessorGroupConcatInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorGroupConcat definition, String name) {
+  public ProcessorMergeInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorMerge definition, String name) {
     super(logger, vertx, sourceNameTracker, context, name, definition.getParentIdColumns(), definition.getChildIdColumns(), definition.isInnerJoin());
     this.definition = definition;
     this.childIdColumns = ImmutableSet.copyOf(definition.getChildIdColumns());
@@ -78,27 +76,20 @@ import uk.co.spudsoft.query.exec.Types;
   void setChildTypes(Types childTypes) {
     this.childTypes = childTypes;
   }
-  
+
   @Override
   Future<ReadStream<DataRow>> initializeChild(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex) {
-    
     return initializeChildStream(executor, pipeline, "input", definition.getInput())
             .compose(rswt -> {
-              if (Strings.isNullOrEmpty(definition.getChildValueColumn())) {
-                childTypes = rswt.getTypes();
-                childTypes.forEach(cd -> {
-                  if (!childIdColumns.contains(cd.name())) {
-                    types.putIfAbsent(cd.name(), DataType.String);
-                  }
-                });
-              } else if (Strings.isNullOrEmpty(definition.getParentValueColumn())) {
-                types.putIfAbsent(definition.getChildValueColumn(), DataType.String);
-              } else {
-                types.putIfAbsent(definition.getParentValueColumn(), DataType.String);
-              }
+              childTypes = rswt.getTypes();
+              childTypes.forEach(cd -> {
+                if (!childIdColumns.contains(cd.name())) {
+                  types.putIfAbsent(cd.name(), cd.type());
+                }
+              });
               return Future.succeededFuture(rswt.getStream());
             });
-  }  
+  }
 
   @Override
   protected DataRow processChildren(DataRow parentRow, List<DataRow> childRows) {
@@ -114,31 +105,13 @@ import uk.co.spudsoft.query.exec.Types;
      *    Bring over all child fields that aren't in the ID without renaming
      * Evaluated in reverse order :)
      */
-    if (Strings.isNullOrEmpty(definition.getChildValueColumn())) {
+    if (!childRows.isEmpty()) {
+      DataRow childRow = childRows.get(0);
       childTypes.forEach(cd -> {
         if (!childIdColumns.contains(cd.name())) {
-          String result = childRows.stream()
-                  .map(r -> r.get(cd.name()))
-                  .filter(o -> o != null)
-                  .map(o -> o.toString())
-                  .collect(Collectors.joining(definition.getDelimiter()));
-          parentRow.put(cd.name(), result);
+          parentRow.put(cd.name(), childRow.get(cd.name()));
         }
       });
-    } else if (Strings.isNullOrEmpty(definition.getParentValueColumn())) {
-      String result = childRows.stream()
-              .map(r -> r.get(definition.getChildValueColumn()))
-              .filter(o -> o != null)
-              .map(o -> o.toString())
-              .collect(Collectors.joining(definition.getDelimiter()));
-      parentRow.put(definition.getChildValueColumn(), result);
-    } else {
-      String result = childRows.stream()
-              .map(r -> r.get(definition.getChildValueColumn()))
-              .filter(o -> o != null)
-              .map(o -> o.toString())
-              .collect(Collectors.joining(definition.getDelimiter()));
-      parentRow.put(definition.getParentValueColumn(), result);
     }
     return parentRow;
   }

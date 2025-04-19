@@ -21,7 +21,6 @@ import io.vertx.core.Handler;
 import io.vertx.core.streams.ReadStream;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -73,7 +72,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
   private final Context context;
   private final ReadStream<T> primaryStream;
   private final ReadStream<U> secondaryStream;
-  private final BiFunction<T, Collection<U>, V> merger;
+  private final BiFunction<T, List<U>, V> merger;
   private final BiComparator<T, U> comparator;
   private final boolean innerJoin;
 
@@ -108,7 +107,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
   public MergeStream(Context context
           , ReadStream<T> primaryStream
           , ReadStream<U> secondaryStream
-          , BiFunction<T, Collection<U>, V> merger
+          , BiFunction<T, List<U>, V> merger
           , BiComparator<T, U> comparator
           , boolean innerJoin
           , int primaryStreamBufferHighThreshold
