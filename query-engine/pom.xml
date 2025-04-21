@@ -92,7 +92,7 @@
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>vertx-management-endpoints</artifactId>
-      <version>0.0.21</version>
+      <version>0.0.22</version>
       <exclusions>
       </exclusions>
     </dependency>
