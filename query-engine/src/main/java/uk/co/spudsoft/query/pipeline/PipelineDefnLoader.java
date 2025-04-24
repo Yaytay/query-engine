@@ -30,6 +30,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.FileSystem;
+import io.vertx.core.json.Json;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -302,7 +303,22 @@ public final class PipelineDefnLoader {
     if (PERMISSIONS_FILENAME.equals(file.getName())) {
       return Future.succeededFuture();
     } else {
+      logger.debug("Loading {}", file);
       return readPipelineFromFile(file, req)
+              .onSuccess(paf -> {
+                if (logger.isDebugEnabled()) {
+                  logger.debug("Loaded {} as {}", file, Json.encode(paf.pipeline));
+                }
+                try {
+                  paf.pipeline.validate();
+                } catch (Throwable ex) {
+                  logger.warn("File {} invalid: {}", file, ex.getMessage());
+                }
+              })
+              .recover(ex -> {
+                logger.warn("Failed to parse file {}: ", file, ex);
+                return Future.failedFuture(ex);
+              })
               .map(pipelineAndFile -> new PipelineNodesTree.PipelineFile(
                       filePathToUrlPath(file)
                       , pipelineAndFile.pipeline.getTitle()
@@ -500,8 +516,21 @@ public final class PipelineDefnLoader {
     return findSource(context, path)
             .compose(file -> {
               try {
-                return readPipelineFromFile(file, context);
+                return readPipelineFromFile(file, context)
+                        .onSuccess(paf -> {
+                          if (logger.isDebugEnabled()) {
+                            logger.debug("Loaded {} as {}", srcPath, Json.encode(paf.pipeline));
+                          }
+                        })
+                        .recover(ex -> {
+                          logger.warn("Failed to parse file {}: ", srcPath, ex);
+                          if (parseErrorHandler != null) {
+                            parseErrorHandler.accept(file, ex);
+                          }
+                          return Future.failedFuture(ex);
+                        });
               } catch (Throwable ex) {
+                logger.warn("Failed to parse file {}: ", srcPath, ex);
                 if (parseErrorHandler != null) {
                   parseErrorHandler.accept(file, ex);
                 }

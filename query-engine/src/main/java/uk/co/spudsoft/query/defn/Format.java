@@ -69,7 +69,9 @@ import uk.co.spudsoft.query.exec.FormatInstance;
   @JsonSubTypes.Type(value = FormatHtml.class, name = "HTML"),
   @JsonSubTypes.Type(value = FormatXlsx.class, name = "XLSX"),
   @JsonSubTypes.Type(value = FormatXml.class, name = "XML"),
-  @JsonSubTypes.Type(value = FormatDelimited.class, name = "Delimited")
+  @JsonSubTypes.Type(value = FormatDelimited.class, name = "Delimited"),
+  @JsonSubTypes.Type(value = FormatAtom.class, name = "Atom"),
+  @JsonSubTypes.Type(value = FormatRss.class, name = "RSS")
 })
 @Schema(
         description = """

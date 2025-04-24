@@ -86,6 +86,18 @@ public class PipelineTest {
             .build();
     instance3.validate();
 
+    // Does not fail on construction
+    Pipeline.builder()
+          .source(SourceTest.builder().name("test").rowCount(1).build())
+          .formats(Arrays.asList(FormatDelimited.builder().build()))
+          .arguments(
+                  Arrays.asList(
+                          Argument.builder().name("arg1").type(DataType.String).build()
+                          , Argument.builder().name("arg1").type(DataType.String).build()
+                  )
+          )
+          .build();
+    // Does fail on validate
     assertThrows(IllegalArgumentException.class, () -> {
             Pipeline.builder()
                   .source(SourceTest.builder().name("test").rowCount(1).build())
@@ -96,15 +108,21 @@ public class PipelineTest {
                                   , Argument.builder().name("arg1").type(DataType.String).build()
                           )
                   )
-                  .build();
+                  .build()
+                  .validate();
     });
     
 
+    Pipeline.builder()
+          .source(SourceTest.builder().name("test").rowCount(1).build())
+          .formats(Arrays.asList(FormatDelimited.builder().build(), FormatDelimited.builder().build()))
+          .build();
     assertThrows(IllegalArgumentException.class, () -> {
             Pipeline.builder()
                   .source(SourceTest.builder().name("test").rowCount(1).build())
                   .formats(Arrays.asList(FormatDelimited.builder().build(), FormatDelimited.builder().build()))
-                  .build();
+                  .build()
+                  .validate();
     });
     
     Pipeline instance4 = Pipeline.builder()
@@ -248,7 +266,8 @@ public class PipelineTest {
                                       Argument.builder().type(DataType.Long).name("a b").build()
                               )
                       )
-                      .build();
+                      .build()
+                      .validate();
             });
   }
   

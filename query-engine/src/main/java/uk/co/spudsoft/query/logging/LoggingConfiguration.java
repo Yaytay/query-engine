@@ -91,11 +91,6 @@ public class LoggingConfiguration {
     rootLogger.addAppender(appender);
     rootLogger.setLevel(ch.qos.logback.classic.Level.INFO);
 
-    Logger gtiLogger = loggerContext.getLogger("uk.co.spudsoft");
-    gtiLogger.addAppender(appender);
-    gtiLogger.setLevel(ch.qos.logback.classic.Level.INFO);
-    gtiLogger.setAdditive(false);
-
     overrideLevels(levelEnvs);
   }
   
@@ -134,11 +129,6 @@ public class LoggingConfiguration {
     Logger rootLogger = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
     rootLogger.addAppender(appender);
     rootLogger.setLevel(ch.qos.logback.classic.Level.INFO);
-
-    Logger gtiLogger = loggerContext.getLogger("uk.co.spudsoft");
-    gtiLogger.addAppender(appender);
-    gtiLogger.setLevel(ch.qos.logback.classic.Level.INFO);
-    gtiLogger.setAdditive(false);
 
     if (options.getLevel() != null) {
       overrideLevels(options.getLevel());

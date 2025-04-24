@@ -63,10 +63,12 @@ public class RunIT {
   @BeforeAll
   public static void createDirs() {
     File paramsDir = new File("target/query-engine/samples-runit");
+    /*
     try {
       FileUtils.deleteDirectory(paramsDir);
     } catch (Exception ex) {
     }
+    */
     paramsDir.mkdirs();
 }
     

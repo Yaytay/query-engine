@@ -737,26 +737,10 @@ public final class Pipeline extends SourcePipeline {
     this.rateLimitRules = ImmutableCollectionTools.copy(rateLimitRules);
     this.argumentGroups = ImmutableCollectionTools.copy(argumentGroups);
     this.arguments = ImmutableCollectionTools.copy(arguments);
-    Set<String> usedNames = new HashSet<>();
-    for (Argument arg : this.arguments) {
-      arg.validate();
-      if (usedNames.contains(arg.getName())) {
-        throw new IllegalArgumentException("Multiple arguments have the name \"" + arg.getName() + "\", names must be unique");
-      }
-      usedNames.add(arg.getName());
-    }
     this.sourceEndpoints = ImmutableCollectionTools.copy(sourceEndpoints);    
     this.sourceEndpointsMap = ImmutableCollectionTools.listToMap(sourceEndpoints, e -> e.getName());
     this.dynamicEndpoints = ImmutableCollectionTools.copy(dynamicEndpoints);
     this.formats = ImmutableCollectionTools.copy(formats);
-    usedNames.clear();
-    for (Format dest : this.formats) {
-      dest.validate();
-      if (usedNames.contains(dest.getName())) {
-        throw new IllegalArgumentException("Multiple arguments have the name \"" + dest.getName() + "\", names must be unique");
-      }
-      usedNames.add(dest.getName());
-    }
   }  
   
 }

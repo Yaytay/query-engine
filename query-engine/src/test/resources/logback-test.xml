@@ -8,21 +8,8 @@
   </appender>
   <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator" />
 
-  <logger name="uk.co.spudsoft.query" level="DEBUG" additivity="false">
-    <appender-ref ref="STDOUTPUT" />
-  </logger>
-
-  <logger name="ContainerOutput" level="WARN" additivity="false">
-    <appender-ref ref="STDOUTPUT" />
-  </logger>
-
-  <logger name="io" level="INFO" additivity="false">
-    <appender-ref ref="STDOUTPUT" />
-  </logger>
-
-  <logger name="liquibase" level="INFO" additivity="false">
-    <appender-ref ref="STDOUTPUT" />
-  </logger>
+  <logger name="uk.co.spudsoft.query" level="DEBUG" additivity="false"/>
+  <logger name="ContainerOutput" level="WARN" additivity="false"/>
 
   <root level="INFO">
     <appender-ref ref="STDOUTPUT"/>
