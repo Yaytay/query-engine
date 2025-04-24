@@ -19,3 +19,4 @@ node_modules
 
 **/nbactions*.xml
 /.idea/
+.LCKpom.xml*

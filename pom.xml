@@ -205,7 +205,7 @@
         <plugin>
           <groupId>com.github.spotbugs</groupId>
           <artifactId>spotbugs-maven-plugin</artifactId>
-          <version>4.9.2.0</version>
+          <version>4.9.3.0</version>
           <configuration>
             <fork>true</fork>
             <effort>Max</effort>
@@ -615,7 +615,7 @@
         <plugin>
           <groupId>io.fabric8</groupId>
           <artifactId>docker-maven-plugin</artifactId>
-          <version>0.45.1</version>
+          <version>0.46.0</version>
           <executions>
             <execution>
               <phase>install</phase>
