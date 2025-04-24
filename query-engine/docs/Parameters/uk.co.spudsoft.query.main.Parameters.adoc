@@ -75,7 +75,7 @@ The query engine is provided with some example queries that will be deployed to 
  If loadSampleData is true, and the targets databases can be accessed, then will be loaded with the sample data on startup.
  
 
-The sample data is loaded using three SQL scripts (one per database engine) and it is perfectly acceptable to run those queries manually 
+The sample data is loaded using three SQL scripts (one per database engine) and it is perfectly acceptable to run those queries manually
  instead of using loadSampleData.
  
 
@@ -204,9 +204,12 @@ Note that the fileHash must also match, but isn't built into the key (should usu
  
 
 Note that the default value for the outputCacheDir is probably a bad choice for anything other than the simplest setups.
-| [[enableBasicAuth]]enableBasicAuth
-| boolean
-| If set to false any basic auth header will be ignored.
+| [[basicAuth]]basicAuth
+| uk.co.spudsoft.query.main.BasicAuthConfig
+| Set the configuration of the handling of requests using basic authentication for data requests.
+
+Note that when the IdP to use for validating the credentials is determined by the OpenID Discovery the
+ path from jwt.issuerHostPath will be appended to the host used to make the request.
 | [[enableBearerAuth]]enableBearerAuth
 | boolean
 | If set to false any basic auth header will be ignored.

@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author jtalbut
  */
 public class ParametersTest {
-  
+
   @Test
   public void testGetVertxOptions() {
     Parameters instance = new Parameters();
@@ -84,7 +84,7 @@ public class ParametersTest {
     instance = new Parameters().setPersistence(audit);
     assertEquals(17, instance.getPersistence().getRetryBase().toMillis());
   }
-  
+
   @Test
   public void testIsExitOnRun() {
     Parameters instance = new Parameters();
@@ -96,17 +96,15 @@ public class ParametersTest {
   @Test
   public void testEnableAuth() {
     Parameters instance = new Parameters();
-    assertTrue(instance.isEnableBasicAuth());
+    assertNull(instance.getBasicAuth());
+    instance.setBasicAuth(new BasicAuthConfig());
+    assertNotNull(instance.getBasicAuth());
+
     assertTrue(instance.isEnableBearerAuth());
-    instance.setEnableBasicAuth(false);
-    assertFalse(instance.isEnableBasicAuth());
-    assertTrue(instance.isEnableBearerAuth());
-    instance.setEnableBasicAuth(true);
     instance.setEnableBearerAuth(false);
-    assertTrue(instance.isEnableBasicAuth());
     assertFalse(instance.isEnableBearerAuth());
   }
-  
+
   @Test
   public void testGetPipelineCache() {
     Parameters instance = new Parameters();
@@ -117,7 +115,7 @@ public class ParametersTest {
     instance.setPipelineCache(cc);
     assertEquals(12, instance.getPipelineCache().getMaxDuration().toMillis());
   }
-  
+
   @Test
   public void testGetBaseConfigPath() {
     Parameters instance = new Parameters();
@@ -125,7 +123,7 @@ public class ParametersTest {
     instance = new Parameters().setBaseConfigPath("baseConfigPath");
     assertEquals("baseConfigPath", instance.getBaseConfigPath());
   }
-  
+
   @Test
   public void testGetAudience() {
     Parameters instance = new Parameters();
@@ -133,7 +131,7 @@ public class ParametersTest {
     instance.getJwt().setRequiredAudiences(Collections.singletonList("aud"));
     assertEquals("[aud]", instance.getJwt().getRequiredAudiences().toString());
   }
-  
+
   @Test
   public void testGetCorsAllowedOrigins() {
     Parameters instance = new Parameters();
@@ -142,7 +140,7 @@ public class ParametersTest {
     assertEquals(1, instance.getCorsAllowedOrigins().size());
     assertEquals("http://bob", instance.getCorsAllowedOrigins().get(0));
   }
-  
+
   @Test
   public void testGetDefaultJwksCacheDurationSeconds() {
     Parameters instance = new Parameters();
@@ -150,7 +148,7 @@ public class ParametersTest {
     instance.getJwt().setDefaultJwksCacheDuration(Duration.parse("PT27S"));
     assertEquals(27, instance.getJwt().getDefaultJwksCacheDuration().toSeconds());
   }
-  
+
   @Test
   public void testGetOpenIdIntrospectionHeaderName() {
     Parameters instance = new Parameters();
@@ -158,7 +156,7 @@ public class ParametersTest {
     instance = new Parameters().setOpenIdIntrospectionHeaderName("OpenIdIntrospectionHeaderName");
     assertEquals("OpenIdIntrospectionHeaderName", instance.getOpenIdIntrospectionHeaderName());
   }
-  
+
   @Test
   public void testGetAcceptableIssuerRegexes() {
     Parameters instance = new Parameters();
@@ -166,7 +164,7 @@ public class ParametersTest {
     instance.getJwt().setAcceptableIssuerRegexes(Arrays.asList(".*"));
     assertEquals(Arrays.asList(".*"), instance.getJwt().getAcceptableIssuerRegexes());
   }
-  
+
   @Test
   public void testGetSecrets() {
     Parameters instance = new Parameters();
@@ -176,7 +174,7 @@ public class ParametersTest {
     assertNotNull(instance.getSecrets());
     assertEquals("password", instance.getSecrets().get("first").getPassword());
   }
-  
+
   @Test
   public void testGetSampleDataLoads() {
     Parameters instance = new Parameters();
@@ -190,7 +188,7 @@ public class ParametersTest {
     assertNotNull(instance.getSampleDataLoads());
     assertEquals(1, instance.getSampleDataLoads().size());
   }
-  
+
   @Test
   public void testGetFileStabilisationDelaySeconds() {
     Parameters instance = new Parameters();
@@ -198,7 +196,7 @@ public class ParametersTest {
     instance.setFileStabilisationDelaySeconds(23);
     assertEquals(23, instance.getFileStabilisationDelaySeconds());
   }
-  
+
   @Test
   public void testGetManagementEndpointPort() {
     Parameters instance = new Parameters();
@@ -206,7 +204,7 @@ public class ParametersTest {
     instance.setManagementEndpointPort(23);
     assertEquals(23, instance.getManagementEndpointPort());
   }
-  
+
   @Test
   public void testGetManagementEndpoints() {
     Parameters instance = new Parameters();
@@ -217,7 +215,7 @@ public class ParametersTest {
     assertEquals("one", instance.getManagementEndpoints().get(0));
     assertEquals("two", instance.getManagementEndpoints().get(1));
   }
-  
+
   @Test
   public void testGetOutputCacheDir() {
     Parameters instance = new Parameters();
@@ -230,7 +228,7 @@ public class ParametersTest {
     instance.setOutputCacheDir("temp/");
     assertEquals("temp/", instance.getOutputCacheDir());
   }
-  
+
   @Test
   public void testProps() {
     String[] args = new String[]{
@@ -240,7 +238,7 @@ public class ParametersTest {
       , "vertxOptions.workerPoolSize=5"
       , "httpServerOptions.tracingPolicy=ALWAYS"
     };
-    
+
     Params4J<Parameters> p4j = Params4J.<Parameters>factory()
             .withConstructor(() -> new Parameters())
             .withCommandLineArgumentsGatherer(args, null)
@@ -252,7 +250,7 @@ public class ParametersTest {
     assertEquals(5, p.getVertxOptions().getEventLoopPoolSize());
     assertEquals(5, p.getVertxOptions().getWorkerPoolSize());
     assertEquals(TracingPolicy.ALWAYS, p.getHttpServerOptions().getTracingPolicy());
-    
+
   }
 
   @Test
@@ -260,7 +258,7 @@ public class ParametersTest {
     File outputDir = new  File("target/parameters-test");
     outputDir.mkdirs();
     File jsonFile = new File(outputDir, "config.json");
-    
+
     String json = """
                   {
                       "vertxOptions": {
@@ -284,7 +282,7 @@ public class ParametersTest {
     try (FileOutputStream fos = new FileOutputStream(jsonFile)) {
       fos.write(json.getBytes(StandardCharsets.UTF_8));
     }
-    
+
     Params4J<Parameters> p4j = Params4J.<Parameters>factory()
             .withConstructor(() -> new Parameters())
             .withDirGatherer(outputDir, FileType.Json)
@@ -296,14 +294,14 @@ public class ParametersTest {
     assertEquals(5, p.getVertxOptions().getEventLoopPoolSize());
     assertEquals(8, p.getVertxOptions().getWorkerPoolSize());
     assertEquals(TracingPolicy.ALWAYS, p.getHttpServerOptions().getTracingPolicy());
-    
+
   }
-  
+
   @Test
   public void testValidate() throws Exception {
     Parameters instance = new Parameters();
     instance.validate();
-    
+
     String msg = assertThrows(IllegalArgumentException.class, () -> {
       Parameters config = new Parameters();
       config.getSession().getOauth().put("one", new AuthEndpoint());
@@ -318,7 +316,7 @@ public class ParametersTest {
       config.validate();
     }).getMessage();
     assertEquals("Sessions are configured with oauth without known JWKS endpoints being configured, please set jwt.jwksEndpoints.", msg);
-    
+
     msg = assertThrows(IllegalArgumentException.class, () -> {
       Parameters config = new Parameters();
       config.getSession().getOauth().put("one", new AuthEndpoint());
@@ -326,14 +324,14 @@ public class ParametersTest {
       config.validate();
     }).getMessage();
     assertEquals("Sessions are configured with oauth without known JWKS endpoints being configured, please set jwt.jwksEndpoints.", msg);
-    
+
     instance.setLogging(null);
     instance.setTracing(null);
     instance.setSession(null);
     instance.setPipelineCache(null);
     instance.setPersistence(null);
     instance.validate();
-    
+
   }
 
 }

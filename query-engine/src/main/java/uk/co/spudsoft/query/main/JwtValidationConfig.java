@@ -24,7 +24,7 @@ import java.util.List;
 
 /**
  * JWT validation configuration.
- * 
+ *
  * The JWT validator can be configured with either a dynamic or a static configuration.
  * <p>
  * With a dynamic configuration the issuer is derived from the Host (or X-Forwarded-Host) header (with a fixed suffix appended) and OpenID Discovery is used to determine the JWKS endpoint to use.
@@ -32,13 +32,11 @@ import java.util.List;
  * <p>
  * With a static configuration the issuer is not derived and any key from any of the configured JWKS endpoints may be used.
  * Key IDs (kid) only have to be unique across all JWKS endpoints.
- * 
+ *
  * @author jtalbut
  */
 public class JwtValidationConfig {
-  
-  
-  
+
   /**
    * Path to be appended to the Host to derive the issuer.
    * <p>
@@ -49,7 +47,7 @@ public class JwtValidationConfig {
    * This value is used to signify that the issuer should be derived from the header.
    */
   private String issuerHostPath;
-  
+
   /**
    * JWKS endpoints.
    * <P>
@@ -62,7 +60,7 @@ public class JwtValidationConfig {
    * Regardless of how the JWKS endpoints are found, the acceptable issuers must be configured as tightly as possible.
    */
   private List<String> jwksEndpoints = new ArrayList<>();
-  
+
   /**
    * Path to a file that may contain acceptable issuers to validate token issuers.
    * <p>
@@ -79,7 +77,7 @@ public class JwtValidationConfig {
   /**
    * Time between checks of the file, and also the time that the file must stabilise before it is re-read.
    * <p>
-   * Thus the delay between a change to the file being made and being picked up will be 
+   * Thus the delay between a change to the file being made and being picked up will be
    * between filePollPeriodMs and 2 * filePollPeriodMs.
    * <p>
    * Checks of the file are based entirely on the last-modified timestamp - if the file is on a filesystem that
@@ -88,7 +86,7 @@ public class JwtValidationConfig {
    * Configuration files should specify this using <a href="https://en.wikipedia.org/wiki/ISO_8601#Durations">ISO860 Duration</a> format, i.e. PT10S.
    */
   private Duration filePollPeriodDuration = Duration.ofMinutes(2);
-  
+
   /**
    * The list of regular expressions that are used to define acceptable token issuers.
    * <p>
@@ -105,7 +103,7 @@ public class JwtValidationConfig {
    * The token validation requires a non-empty intersection of the required audiences with the provided audiences.
    */
   private List<String> requiredAudiences = new ArrayList<>(Arrays.asList("query-engine"));
-  
+
   /**
    * The default period to cache JWKS data for.
    * <p>
@@ -128,7 +126,7 @@ public class JwtValidationConfig {
    * to have a path as long as, when ".well-known/openid-configuration" is appended to it it results in a valid URL
    * to the OpenID configuration for that issuer.
    * <p>
-   * This value is <i>not</i> used to signify that the issuer should be derived from the header, that indication is driven entirely 
+   * This value is <i>not</i> used to signify that the issuer should be derived from the header, that indication is driven entirely
    * by the {@link jwksEndpoints} value.
    * @return the path to be appended to the Host to derive the issuer.
    */
@@ -143,9 +141,9 @@ public class JwtValidationConfig {
    * to have a path as long as, when ".well-known/openid-configuration" is appended to it it results in a valid URL
    * to the OpenID configuration for that issuer.
    * <p>
-   * This value is <em>not</em> used to signify that the issuer should be derived from the header, that indication is driven entirely 
+   * This value is <em>not</em> used to signify that the issuer should be derived from the header, that indication is driven entirely
    * by the {@link jwksEndpoints} value.
-   * @param issuerHostPath the path to be appended to the Host to derive the issuer. 
+   * @param issuerHostPath the path to be appended to the Host to derive the issuer.
    * @return this, so that the method may be called in a fluent manner.
    */
   public JwtValidationConfig setIssuerHostPath(String issuerHostPath) {
@@ -175,7 +173,7 @@ public class JwtValidationConfig {
     this.requiredAudiences = requiredAudiences;
     return this;
   }
-  
+
   /**
    * Get that path to the acceptable issuers file.
    * <p>
@@ -209,7 +207,7 @@ public class JwtValidationConfig {
   /**
    * Get the time between checks of the file (also the time that the file must stabilise before it is re-read).
    * <p>
-   * Thus the delay between a change to the file being made and being picked up will be 
+   * Thus the delay between a change to the file being made and being picked up will be
    * between filePollPeriodMs and 2 * filePollPeriodMs.
    * <p>
    * Checks of the file are based entirely on the last-modified timestamp - if the file is on a filesystem that
@@ -225,7 +223,7 @@ public class JwtValidationConfig {
   /**
    * Get the time between checks of the file (also the time that the file must stabilise before it is re-read).
    * <p>
-   * Thus the delay between a change to the file being made and being picked up will be 
+   * Thus the delay between a change to the file being made and being picked up will be
    * between filePollPeriodMs and 2 * filePollPeriodMs.
    * <p>
    * Checks of the file are based entirely on the last-modified timestamp - if the file is on a filesystem that
@@ -246,7 +244,7 @@ public class JwtValidationConfig {
    * This is a core security control and must be set as tightly as possible.
    * <p>
    * An issuer is considered acceptable if it matches one of these regular expressions, OR it matches an entry in the acceptableIssuersFile.
-   * 
+   *
    * @return the list of regular expressions that are used to define acceptable token issuers.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
@@ -260,7 +258,7 @@ public class JwtValidationConfig {
    * This is a core security control and must be set as tightly as possible.
    * <p>
    * An issuer is considered acceptable if it matches one of these regular expressions, OR it matches an entry in the acceptableIssuersFile.
-   * 
+   *
    * @param acceptableIssuerRegexes the list of regular expressions that are used to define acceptable token issuers.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -269,7 +267,7 @@ public class JwtValidationConfig {
     this.acceptableIssuerRegexes = acceptableIssuerRegexes;
     return this;
   }
-  
+
   /**
    * Get the default period to cache JWKS data for.
    * <p>
@@ -306,7 +304,7 @@ public class JwtValidationConfig {
    * If the JWKS is shared the URL for it should be provided here, if there is a separate pool of keys for each client then this setting should be left empty and OpenID Discovery will be used for each issuer.
    * <P>
    * Regardless of how the JWKS endpoints are found, the acceptable issuers must be configured as tightly as possible.
-   * 
+   *
    * @return the explicitly configured endpoints that will be used to download JWK sets.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
@@ -324,7 +322,7 @@ public class JwtValidationConfig {
    * If the JWKS is shared the URL for it should be provided here, if there is a separate pool of keys for each client then this setting should be left empty and OpenID Discovery will be used for each issuer.
    * <P>
    * Regardless of how the JWKS endpoints are found, the acceptable issuers must be configured as tightly as possible.
-   * 
+   *
    * @param jwksEndpoints the explicitly configured endpoints that will be used to download JWK sets.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -333,13 +331,13 @@ public class JwtValidationConfig {
     this.jwksEndpoints = jwksEndpoints;
     return this;
   }
-  
+
   /**
    * Validate the provided parameters.
-   * 
+   *
    * @param path The configuration path to this item, for reporting.
    * @throws IllegalArgumentException if anything in the parameters is invalid.
    */
   public void validate(String path) throws IllegalArgumentException {
-  }  
+  }
 }

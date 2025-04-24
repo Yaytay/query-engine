@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 jtalbut
+ * Copyright (C) 2025 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,29 +14,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package uk.co.spudsoft.query.main;
 
 /**
- * Set the version from the pom.
- * <p>
- * This file is updated by com.google.code.maven-replacer-plugin/replacer maven plugin.
- * 
- * @author jtalbut
+ * Represents the types of OAuth 2.0 grant types that utilize basic authentication credentials.
  */
-public final class Version {
+public enum BasicAuthGrantType {
 
   /**
-   * The project name, as set in the Maven pom.xml.
+   * Basic Auth credentials will be used to make a <a href="https://datatracker.ietf.org/doc/html/rfc6749#section-4.4">client credentials grant</a> request  to an IdP.
    */
-  public static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-  
+  clientCredentials
+  ,
   /**
-   * The project version, as set in the Maven pom.xml.
+   * Basic Auth credentials will be used to make a <a href="https://datatracker.ietf.org/doc/html/rfc6749#section-4.3">resource owner password credentials grant</a> request  to an IdP.
    */
-  public static final String MAVEN_PROJECT_VERSION = "0.0.50-main";
-
-  private Version() {
-  }
-  
+  resourceOwnerPasswordCredentials
 }

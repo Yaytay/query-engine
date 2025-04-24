@@ -39,7 +39,7 @@ import uk.co.spudsoft.query.web.LoginDaoMemoryImpl;
  * @author jtalbut
  */
 public class ConditionInstanceTest {
-  
+
   @Test
   public void testEvaluate() {
     assertFalse(new ConditionInstance("").evaluate(null, null));
@@ -50,8 +50,8 @@ public class ConditionInstanceTest {
     assertFalse(new ConditionInstance("false && false").evaluate(null, null));
     assertTrue(new ConditionInstance("true || true").evaluate(null, null));
   }
-  
-  
+
+
   static MultiMap params(String uri) {
     QueryStringDecoder queryStringDecoder = new QueryStringDecoder(uri);
     Map<String, List<String>> prms = queryStringDecoder.parameters();
@@ -63,19 +63,19 @@ public class ConditionInstanceTest {
     }
     return params;
   }
-  
+
   private static final String OPENID = Base64.getEncoder().encodeToString("{\"jti\":\"a28849b9-3624-42c3-aaad-21c5f80ffc55\",\"exp\":1653142100,\"nbf\":0,\"iat\":1653142040,\"iss\":\"http://ca.localtest.me\",\"aud\":\"security-admin-console\",\"sub\":\"af78202f-b54a-439d-913c-0bbe99ba6bf8\",\"typ\":\"Bearer\",\"azp\":\"QE2\",\"scope\":\"openid profile email qe2\",\"email_verified\":false,\"name\":\"Bob Fred\",\"preferred_username\":\"bob.fred\",\"given_name\":\"Bob\",\"family_name\":\"Fred\",\"email\":\"bob@localtest.me\",\"groups\":[\"group1\",\"group2\",\"group3\"]}".getBytes(StandardCharsets.UTF_8));
-  
+
   @Test
   public void testWithRequestContext() {
     HttpServerRequest req = mock(HttpServerRequest.class);
     when(req.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3&param3=true"));
-    
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), true, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
-    
+
     assertFalse(new ConditionInstance("request").evaluate(ctx, DataRow.EMPTY_ROW));
     assertTrue(new ConditionInstance("request.jwt.hasGroup('group1')").evaluate(ctx, DataRow.EMPTY_ROW));
     assertFalse(new ConditionInstance("request.jwt.hasGroup(\"group7\")").evaluate(ctx, DataRow.EMPTY_ROW));
@@ -85,10 +85,10 @@ public class ConditionInstanceTest {
     assertFalse(new ConditionInstance("request.jwt.getClaim(\"scope\") =~ '.*[^q]?qe3[^3]?.*'").evaluate(ctx, DataRow.EMPTY_ROW));
     assertTrue(new ConditionInstance("request.jwt.scope.contains(\"qe2\")").evaluate(ctx, DataRow.EMPTY_ROW));
     assertFalse(new ConditionInstance("request.jwt.scope.contains(\"qe1\")").evaluate(ctx, DataRow.EMPTY_ROW));
-    
+
     assertTrue(new ConditionInstance("params.get('param3')").evaluate(ctx, null));
     assertTrue(new ConditionInstance("params['param3']").evaluate(ctx, null));
     assertFalse(new ConditionInstance("params['param4']").evaluate(ctx, null));
   }
-  
+
 }

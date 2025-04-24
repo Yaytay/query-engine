@@ -143,36 +143,36 @@ import zipkin2.reporter.urlconnection.URLConnectionSender;
 
 /**
  * The main entry point for the Query Engine.
- * 
+ *
  * The Query Engine uses dependency inversion as much as it can, but does not use any third party libraries for wiring everything together
  * (because wiring based on reflection is magic and slow).
  * So this class is mainly concerned with connecting all the components together.
- * 
+ *
  * @author jtalbut
  */
 @OpenAPIDefinition
 public class Main extends Application {
-  
+
   private static final Logger logger = LoggerFactory.getLogger(Main.class);
-  
+
   private static final String NAME = "query-engine";
-  
+
   private MeterRegistry meterRegistry;
   private Vertx vertx;
   private HttpServer httpServer;
-  
+
   private DirCache dirCache;
   private PipelineDefnLoader defnLoader;
   private Auditor auditor;
-  
+
   private HealthCheckHandler healthCheckHandler;
   private HealthCheckHandler upCheckHandler;
   private final AtomicBoolean up = new AtomicBoolean();
-  
+
   private OpenIdDiscoveryHandler openIdDiscoveryHandler;
   private JwtValidator jwtValidator;
 
-  
+
   private volatile int port;
 
   /**
@@ -180,7 +180,7 @@ public class Main extends Application {
    */
   public Main() {
   }
-  
+
   /**
    * Handler for completion of the Future returned by the {@link #innerMain(java.lang.String[], java.io.PrintStream, java.util.Map) } method.
    * @param result the {@link AsyncResult} found in the Future returned by {@link #innerMain(java.lang.String[], java.io.PrintStream, java.util.Map)}.
@@ -221,17 +221,17 @@ public class Main extends Application {
   protected PipelineDefnLoader getDefnLoader() {
     return defnLoader;
   }
-  
+
   /**
    * Main method.
    * @param args Command line arguments that should have the same form as properties with the query-engine prefix, no dashes are required.
-   *   
+   *
    */
   public static void main(String[] args) {
     Main main = new Main();
     main.innerMain(args, System.out, System.getenv()).onComplete(ar -> main.mainCompletion(ar));
   }
-  
+
   /**
    * Shutdown the entire process.
    * <p>
@@ -240,9 +240,9 @@ public class Main extends Application {
    */
   protected void shutdown(int statusCode) {
     shutdown();
-    System.exit(statusCode);                
+    System.exit(statusCode);
   }
-  
+
   /**
    * Shutdown Vert.x, but not the entire process.
    */
@@ -252,7 +252,7 @@ public class Main extends Application {
       v.close();
     }
   }
-  
+
   /**
    * Method to allow test code to call main with no risk of System.exit being called.
    * @param args Command line arguments.
@@ -262,7 +262,7 @@ public class Main extends Application {
    * @throws ExecutionException If the main function throws an exception.
    * @throws InterruptedException If the thread is interrupted whilst waiting for the main function to complete.
    */
-  public int testMain(String[] args, PrintStream stdout, Map<String, String> env) throws ExecutionException, InterruptedException {    
+  public int testMain(String[] args, PrintStream stdout, Map<String, String> env) throws ExecutionException, InterruptedException {
     CompletableFuture<Integer> future = new CompletableFuture<>();
     innerMain(args, stdout, env)
             .onSuccess(i -> {
@@ -277,7 +277,7 @@ public class Main extends Application {
     }
     return statusCode;
   }
-  
+
   String getBaseConfigDir() {
     if (System.getProperty("os.name").toLowerCase().contains("win")) {
       return "target\\" + NAME;
@@ -293,12 +293,12 @@ public class Main extends Application {
   public int getPort() {
     return port;
   }
-      
+
   /**
    * The actual, non-static, main method that sets up the Query Engine.
    * <p>
    * The static method {@link Main#main(java.lang.String[])} just creates a {@link Main} instance and calls this method on it.
-   * 
+   *
    * @param args The command line arguments.
    * @param stdout The output stream to use for messages.  Direct use of {@link System#out} is avoided for test reasons.
    * @param env Map of environment variables (from {@link java.lang.System#getenv()} in a non-test environment).
@@ -306,7 +306,7 @@ public class Main extends Application {
    */
   @SuppressFBWarnings(value = {"PATH_TRAVERSAL_IN", "POTENTIAL_XML_INJECTION"}, justification = "False positive, the dirs at this stage cannot be specified by the user")
   protected Future<Integer> innerMain(String[] args, PrintStream stdout, Map<String, String> env) {
-        
+
     Params4J<Parameters> p4j = Params4J.<Parameters>factory()
             .withConstructor(() -> new Parameters())
             .withDirGatherer(new File(getBaseConfigDir()), FileType.Yaml)
@@ -315,7 +315,7 @@ public class Main extends Application {
             .withSystemPropertiesGatherer(NAME)
             .withCommandLineArgumentsGatherer(args, "--")
             .create();
-    
+
     for (String arg : args) {
       if ("-?".equals(arg) || "--help".equals(arg)) {
         StringBuilder usage = new StringBuilder();
@@ -349,7 +349,7 @@ public class Main extends Application {
         return Future.succeededFuture(1);
       }
     }
-     
+
     LoggingConfiguration.configureLogbackFromEnvironment((LoggerContext) LoggerFactory.getILoggerFactory(), env);
     Parameters params = p4j.gatherParameters();
     LoggingConfiguration.configureLogback((LoggerContext) LoggerFactory.getILoggerFactory(), params.getLogging());
@@ -361,7 +361,7 @@ public class Main extends Application {
     ObjectMapperConfiguration.configureObjectMapper(DatabindCodec.mapper());
 
     try {
-      logger.info("Params: {}", DatabindCodec.mapper().writeValueAsString(params));    
+      logger.info("Params: {}", DatabindCodec.mapper().writeValueAsString(params));
     } catch (JsonProcessingException ex) {
       logger.error("Failed to convert params to json: ", ex);
     }
@@ -389,10 +389,10 @@ public class Main extends Application {
       stdout.println(usage.toString());
       return Future.succeededFuture(1);
     }
-    
+
     ProcessorSortInstance.setMemoryLimit(params.getProcessors().getInMemorySortLimitBytes());
     ProcessorSortInstance.setTempDir(params.getProcessors().getTempDir());
-    
+
     VertxOptions vertxOptions = params.getVertxOptions();
     vertxOptions.setMetricsOptions(
             new MicrometerMetricsOptions()
@@ -411,12 +411,12 @@ public class Main extends Application {
     if (openTelemetry != null) {
       vertxBuilder = vertxBuilder.withTracer(new OpenTelemetryTracingFactory(openTelemetry));
     }
-   
+
     vertx = vertxBuilder.build();
     meterRegistry = (PrometheusMeterRegistry) BackendRegistries.getDefaultNow();
-    
+
     LoginDao loginDao;
-    if (params.getPersistence().getDataSource() != null 
+    if (params.getPersistence().getDataSource() != null
             && !Strings.isNullOrEmpty(params.getPersistence().getDataSource().getUrl())) {
       auditor = new AuditorPersistenceImpl(vertx, meterRegistry, params.getPersistence());
       loginDao = new LoginDaoPersistenceImpl(vertx, meterRegistry, params.getPersistence(), params.getSession().getPurgeDelay());
@@ -432,14 +432,14 @@ public class Main extends Application {
       logger.error("Failed to prepare audit database: ", ex);
       return Future.succeededFuture(-2);
     }
- 
+
     try {
       loginDao.prepare();
     } catch (Throwable ex) {
       logger.error("Failed to prepare login data: ", ex);
       return Future.succeededFuture(-2);
     }
-    
+
     httpServer = vertx.createHttpServer(params.getHttpServerOptions());
     try {
       File baseConfigFile = new File(params.getBaseConfigPath());
@@ -461,10 +461,10 @@ public class Main extends Application {
     healthCheckHandler.register("Auditor", auditor::healthCheck);
     upCheckHandler = HealthCheckHandler.create(vertx);
     upCheckHandler.register("Up", upCheck);
-    
+
     Router router = Router.router(vertx);
     Router mgmtRouter = Router.router(vertx);
-    
+
     ManagementRoute.deployStandardMgmtEndpoints(mgmtRouter, router, params.getManagementEndpoints(), new AtomicReference<>(params));
     if (ManagementRoute.mgmtEndpointPermitted(params.getManagementEndpoints(), "up")) {
       mgmtRouter.get("/up").handler(upCheckHandler).setName("Up");
@@ -474,11 +474,11 @@ public class Main extends Application {
     }
     if (ManagementRoute.mgmtEndpointPermitted(params.getManagementEndpoints(), "prometheus")) {
       mgmtRouter.get("/prometheus").handler(new PrometheusScrapingHandlerImpl()).setName("Prometheus");
-    }    
+    }
     if (ManagementRoute.mgmtEndpointPermitted(params.getManagementEndpoints(), "dircache")) {
       DirCacheManagementRoute.createAndDeploy(mgmtRouter, dirCache);
     }
-            
+
     CorsHandler corsHandler = CorsHandler.create();
     if (!params.getCorsAllowedOrigins().isEmpty()) {
       corsHandler.addOrigins(params.getCorsAllowedOrigins());
@@ -493,8 +493,8 @@ public class Main extends Application {
                     .build()
     );
     corsHandler.allowCredentials(true);
-    router.route("/*").handler(corsHandler); 
-    
+    router.route("/*").handler(corsHandler);
+
     RequestContextBuilder rcb;
     try {
       rcb = createRequestContextBuilder(params, loginDao);
@@ -502,9 +502,9 @@ public class Main extends Application {
       logger.error("Failed to create request context builder: ", ex);
       return Future.succeededFuture(-2);
     }
-    
+
     FilterFactory filterFactory = createFilterFactory();
-    
+
     List<Object> controllers = new ArrayList<>();
     boolean requireSession = params.getSession().isRequireSession();
     controllers.add(new InfoHandler(defnLoader, outputAllErrorMessages(), requireSession));
@@ -512,7 +512,7 @@ public class Main extends Application {
     controllers.add(new FormIoHandler(defnLoader, filterFactory, outputAllErrorMessages(), requireSession));
     controllers.add(new AuthConfigHandler(params.getSession().getOauth()));
     controllers.add(new SessionHandler(outputAllErrorMessages(), requireSession));
-    
+
     controllers.add(new HistoryHandler(auditor, outputAllErrorMessages()));
     addExtraControllers(params, controllers);
     List<Object> providers = Arrays.asList(
@@ -522,11 +522,11 @@ public class Main extends Application {
     OpenAPIConfiguration openApiConfig = createOpenapiConfiguration(controllers);
     OpenApiHandler openApiHandler = new OpenApiHandler(this, openApiConfig, "/api", params.getOpenApiExplorerUrl());
     ModelConverters.getInstance(true).addConverter(new OpenApiModelConverter());
-    
+
     PipelineExecutor pipelineExecutor = new PipelineExecutorImpl(filterFactory, params.getSecrets());
     vertx.fileSystem().mkdirs(params.getOutputCacheDir());
     router.route(QueryRouter.PATH_ROOT + "/*").handler(new QueryRouter(vertx, auditor, rcb, defnLoader, pipelineExecutor, params.getOutputCacheDir(), outputAllErrorMessages()));
-    
+
     ManagementRoute.createAndDeploy(vertx
             , router, params.getHttpServerOptions()
             , params.getManagementEndpointPort()
@@ -557,7 +557,7 @@ public class Main extends Application {
 
     return httpServer
             .requestHandler(router)
-            .listen()            
+            .listen()
             .compose(svr -> {
               this.port = svr.actualPort();
               if (!params.getSampleDataLoads().isEmpty()) {
@@ -575,8 +575,8 @@ public class Main extends Application {
             })
             .onSuccess(i -> up.set(true))
             ;
-    
-  }  
+
+  }
 
   @SuppressFBWarnings("POTENTIAL_XML_INJECTION")
   void buildUsage(StringBuilder usage, Params4J<Parameters> p4j, boolean withProps) {
@@ -684,7 +684,7 @@ public class Main extends Application {
       return "does not exist";
     }
   }
-  
+
   /**
    * Create the base config directory, and fill it with the sample files if it is currently empty.
    * <p>
@@ -743,22 +743,22 @@ public class Main extends Application {
       }
     }
   }
-  
+
   @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_BAD_PRACTICE")
   private static void extractSampleFile(File baseConfigDir, String path, List<DataSourceConfig> sampleDataLoads) {
     try {
       File destFile = new File(baseConfigDir, path.substring(8));
       File destParent = destFile.getParentFile();
-      
+
       if (!destParent.exists()) {
         destParent.mkdirs();
       }
-      
+
       String fileContents;
       try (InputStream is = Main.class.getResourceAsStream("/" + path)) {
         fileContents = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       }
-            
+
       if (sampleDataLoads != null) {
         for (DataSourceConfig sampleDataLoad : sampleDataLoads) {
           String destUrl = sampleDataLoad.getUrl();
@@ -767,7 +767,7 @@ public class Main extends Application {
             if (idx > 0) {
               String scheme = destUrl.substring(0, idx);
               fileContents = fileContents.replaceAll(scheme + "://localhost:[0-9]+/test", destUrl);
-              
+
               int idx2 = destUrl.indexOf(":", idx + 1);
               if (idx2 > 0) {
                 String urlWithoutPort = destUrl.substring(0, idx2) + ":";
@@ -777,29 +777,29 @@ public class Main extends Application {
           }
         }
       }
-      
+
       try (OutputStream os = new FileOutputStream(destFile)) {
         os.write(fileContents.getBytes(StandardCharsets.UTF_8));
       }
-      
+
     } catch (Throwable ex) {
       logger.warn("Failed to copy sample {}: ", path, ex);
     }
   }
-  
+
   /**
    * Create the {@link RequestContextBuilder} that will be used for creating {@link uk.co.spudsoft.query.exec.conditions.RequestContext} instances.
    * @param params the {@link Parameters} for configuring the {@link RequestContextBuilder}.
    * @param loginDao this {@link LoginDao} passed to the {@link RequestContextBuilder}.
    * @return a newly created {@link RequestContextBuilder}.
    */
-  protected RequestContextBuilder createRequestContextBuilder(Parameters params, LoginDao loginDao) {    
+  protected RequestContextBuilder createRequestContextBuilder(Parameters params, LoginDao loginDao) {
     JwtValidationConfig jwtConfig = params.getJwt();
     IssuerAcceptabilityHandler iah = IssuerAcceptabilityHandler.create(jwtConfig.getAcceptableIssuerRegexes()
                     , jwtConfig.getAcceptableIssuersFile()
                     , jwtConfig.getFilePollPeriodDuration()
             );
-    
+
     WebClient webClient = WebClient.create(vertx);
     if (!jwtConfig.getJwksEndpoints().isEmpty()) {
       openIdDiscoveryHandler = JsonWebKeySetOpenIdDiscoveryHandler.create(webClient, iah, jwtConfig.getDefaultJwksCacheDuration());
@@ -809,12 +809,12 @@ public class Main extends Application {
       openIdDiscoveryHandler = jsonWebKeySetHandler;
       jwtValidator = JwtValidator.create(jsonWebKeySetHandler, iah);
     }
-    
+
     RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx)
             , jwtValidator
             , openIdDiscoveryHandler
             , loginDao
-            , params.isEnableBasicAuth()
+            , params.getBasicAuth()
             , params.isEnableBearerAuth()
             , params.getOpenIdIntrospectionHeaderName()
             , jwtConfig.getJwksEndpoints() == null || jwtConfig.getJwksEndpoints().isEmpty()
@@ -824,7 +824,7 @@ public class Main extends Application {
     );
     return rcb;
   }
-  
+
   private OpenAPIConfiguration createOpenapiConfiguration(List<Object> resources) {
     return new SwaggerConfiguration()
             .resourceClasses(Stream.concat(resources.stream(), Stream.of(this)).map(r -> r.getClass().getCanonicalName())
@@ -843,15 +843,15 @@ public class Main extends Application {
   }
 
   static OpenTelemetry buildOpenTelemetry(TracingConfig config) {
-    
+
     ResourceBuilder resourceBuilder = Resource.getDefault().toBuilder()
             .put("service.name", config.getServiceName())
             .put("service.version", Version.MAVEN_PROJECT_VERSION)
             ;
-    
+
     Sampler sampler;
     SdkTracerProviderBuilder builder = SdkTracerProvider.builder();
-    
+
     if (config.getProtocol() != TracingProtocol.none && !Strings.isNullOrEmpty(config.getUrl())) {
       SpanExporter spanExporter = switch (config.getProtocol()) {
         case none -> null;
@@ -889,7 +889,7 @@ public class Main extends Application {
     } else {
       sampler = Sampler.alwaysOff();
     }
-    
+
     SdkTracerProvider sdkTracerProvider = builder
             .addSpanProcessor(new VertxMDCSpanProcessor())
             .setResource(resourceBuilder.build())
@@ -905,8 +905,8 @@ public class Main extends Application {
             .setTracerProvider(sdkTracerProvider)
             .setPropagators(ContextPropagators.create(propagator))
             ;
-    
-    logger.debug("Building OpenTelemetry");    
+
+    logger.debug("Building OpenTelemetry");
     return openTelemetryBuilder.buildAndRegisterGlobal();
   }
 
@@ -915,18 +915,18 @@ public class Main extends Application {
    * <p>
    * For a production deployment the answer is always no.
    * In Design Mode it is useful to output all full details of errors because it should only be used in a trusted environment.
-   * 
+   *
    * @return false.
    */
   protected boolean outputAllErrorMessages() {
     return false;
   }
-  
+
   /**
    * Allow subclasses to provide additional JAX-RS controllers.
    * <p>
    * This is used by Design Mode to provide write access to the pipeline definitions.
-   * 
+   *
    * @param params the Parameters object that may be required to configure the additional controllers.
    * @param controllers the {@link List} of JAX-RS controllers that will be appended to.
    */

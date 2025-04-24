@@ -30,7 +30,7 @@ import uk.co.spudsoft.params4j.JavadocCapture;
 
 /**
  * Top level configuration options for Query Engine.
- * 
+ *
  * @author jtalbut
  */
 @JavadocCapture
@@ -40,60 +40,60 @@ public class Parameters {
    * The options that will be used to configure Logback.
    */
   private LogbackOptions logging = new LogbackOptions();
-  
+
   /**
    * The VertxOptions that will be used when creating the Vertx instance.
    */
   private VertxOptions vertxOptions = new VertxOptions();
-  
+
   /**
    * The HttpServerOptions that will be used when creating the HTTP server.
-   */ 
+   */
   private HttpServerOptions httpServerOptions = new HttpServerOptions().setPort(0);
-  
+
   /**
    * The default Allowed-Origin.
    */
   private List<String> corsAllowedOrigins = new ArrayList<>();
-  
+
   /**
    * The configuration to use for distributed tracing.
    * If the base URL is not set tracing will be disabled.
    */
   private TracingConfig tracing = new TracingConfig();
-  
+
   /**
    * if true the process will end rather than waiting for requests.
    */
   private boolean exitOnRun = false;
-  
+
   /**
    * The path to the root of the configuration files.
    */
   private String baseConfigPath = "/var/query-engine";
-  
+
   /**
    * Persistence is used for both audit and state management of logins.
    * Persistence is optional, without it there will be no audit and login state
    * will be scoped to the current process.
    */
   private Persistence persistence = new Persistence();
-  
+
   /**
    * Configuration of the JWT validator.
    */
   private JwtValidationConfig jwt = new JwtValidationConfig();
-  
+
   /**
    * Configuration of the pipeline cache.
    * This is the in-memory cache of parsed pipelines.
    */
   private CacheConfig pipelineCache = new CacheConfig();
-  
+
   /**
    * The directory to contain cached output.
    * This is the on-disc caching of stream output, controlled by the cacheDuration value in individual pipelines.
-   * 
+   *
    * The cache key is based on:
    * <UL>
    * <LI>The full request URL.
@@ -111,18 +111,18 @@ public class Parameters {
    * <LI>roles
    * </UL>
    * </UL>
-   * 
+   *
    * Note that the fileHash must also match, but isn't built into the key (should usually match because of the use of the inclusion of full URL).
-   * 
+   *
    * Note that the default value for the outputCacheDir is probably a bad choice for anything other than the simplest setups.
    */
   private String outputCacheDir = System.getProperty("java.io.tmpdir");
-  
+
   /**
    * Configuration of specific processors.
    */
   private ProcessorConfig processors = new ProcessorConfig();
-  
+
   /**
    * The Query Engine maintains an internal model of the files under the baseConfigPath.
    * <p>
@@ -131,14 +131,14 @@ public class Parameters {
    * There are two mechanisms by which this internal model can be maintained: file notifications and polling.
    * File notifications is the better approach, but it does not work on some filesystems (in particular not on networked file system).
    * <p>
-   * With file notifications, notification are fired as soon as a file change starts, so 
+   * With file notifications, notification are fired as soon as a file change starts, so
    * a delay has to be put in to avoid reading the changes whilst they are still be written.
    * <p>
    * If this value is less than zero file notifications will be disabled.
-   * 
+   *
    */
   private int fileStabilisationDelaySeconds = 2;
-  
+
   /**
    * The Query Engine maintains an internal model of the files under the baseConfigPath.
    * <p>
@@ -148,7 +148,7 @@ public class Parameters {
    * Polling is less efficient and slower than file notifications, but will work in all circumstances.
    * <p>
    * If this value is less than or equal to zero polling will be disabled.
-   * 
+   *
    */
   private int filePollPeriodSeconds = 0;
 
@@ -159,12 +159,12 @@ public class Parameters {
    * and developers do not need access to live credentials.
    */
   private Map<String, ProtectedCredentials> secrets = new HashMap<>();
-    
+
   /**
-   * If set to false any basic auth header will be ignored.
+   * Configuration of the handling of requests using basic authentication for data requests.
    */
-  private boolean enableBasicAuth = true;
-    
+  private BasicAuthConfig basicAuth;
+
   /**
    * If set to false any bearer auth header will be ignored.
    */
@@ -176,7 +176,7 @@ public class Parameters {
    * If this is used the query engine will not attempt to validate tokens itself, the header will be trusted implicitly.
    */
   private String openIdIntrospectionHeaderName;
-    
+
   /**
    * The query engine is provided with some example queries that will be deployed to the baseConfigPath one startup if the directory is empty.
    * <p>
@@ -185,7 +185,7 @@ public class Parameters {
    * An attempt will be made to load each data source configured here with the sample data.
    * If loadSampleData is true, and the targets databases can be accessed, then will be loaded with the sample data on startup.
    * <p>
-   * The sample data is loaded using three SQL scripts (one per database engine) and it is perfectly acceptable to run those queries manually 
+   * The sample data is loaded using three SQL scripts (one per database engine) and it is perfectly acceptable to run those queries manually
    * instead of using loadSampleData.
    * <p>
    * Note that the URLs here must be vertx sql URLs, not JDBC URLs, for example:
@@ -197,7 +197,7 @@ public class Parameters {
    * The leading component of the URL (the scheme) will be used to determine which script to run.
    */
   private List<DataSourceConfig> sampleDataLoads = new ArrayList<>();
-  
+
   /**
    * The management endpoints (all under /manage) that should be enabled.
    * <p>
@@ -235,11 +235,11 @@ public class Parameters {
    * <p>
    * Unless you are sure that you have secured your /manage endpoint adequately it is strongly recommended that production systems only
    * enable the up; health and prometheus endpoints.
-   * 
+   *
    * @see Parameters#managementEndpointPort
    */
   private List<String> managementEndpoints = new ArrayList<>();
-  
+
   /**
    * The port that the should be used for the management endpoints.
    * <p>
@@ -247,7 +247,7 @@ public class Parameters {
    * Set negative to disable the management endpoints completely (not recommended, as they include health check and metrics).
    */
   private Integer managementEndpointPort;
-  
+
   /**
    * The URL that clients should be using to access the management endpoints.
    * <p>
@@ -262,11 +262,11 @@ public class Parameters {
    * The value provided must be the full URL to the /manage path.
    * <p>
    * If not set, and managementEndpointPort is positive, users will have no way to discover the management endpoint URL (which may be the intention).
-   * 
+   *
    * @param managementEndpointUrl the URL that clients should be using to access the management endpoints.
    */
   private String managementEndpointUrl;
-  
+
   /**
    * The URL to the minified OpenAPI Explorer JS that is to be used for displaying The API documentation.
    * <p>
@@ -275,7 +275,7 @@ public class Parameters {
    * It is not usually necessary to set this.
    */
   private String openApiExplorerUrl;
-  
+
   /**
    * Configuration of the session management for the UI and REST API.
    */
@@ -286,10 +286,10 @@ public class Parameters {
    */
   public Parameters() {
   }
-  
+
   /**
    * Get the options for configuring logback.
-   * 
+   *
    * @return the options for configuring logback.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
@@ -299,7 +299,7 @@ public class Parameters {
 
   /**
    * The options for configuring logback.
-   * 
+   *
    * @param logging the options for configuring logback.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -308,11 +308,11 @@ public class Parameters {
     this.logging = logging;
     return this;
   }
-  
-  
+
+
   /**
    * Get the VertxOptions that will be used when creating the Vertx instance.
-   * 
+   *
    * These values do not usually need to be altered.
    * @return the VertxOptions that will be used when creating the Vertx instance.
    */
@@ -322,7 +322,7 @@ public class Parameters {
 
   /**
    * Get the HttpServerOptions that will be used when creating the HTTP server.
-   * 
+   *
    * The {@link io.vertx.core.http.HttpServerOptions#setMaxHeaderSize(int)} method should be particularly useful when running behind a proxy that passes large JSON headers.
    * @return the HttpServerOptions that will be used when creating the HTTP server.
    */
@@ -333,7 +333,7 @@ public class Parameters {
 
   /**
    * Get the configuration to use for distributed tracing.
-   * 
+   *
    * @return the configuration to use for distributed tracing.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
@@ -343,7 +343,7 @@ public class Parameters {
 
   /**
    * Get whether the process will end rather than waiting for requests
-   * 
+   *
    * This is useful for things such as JIT compilers or CDS preparation.
    * @return the exitOnRun value.
    */
@@ -353,7 +353,7 @@ public class Parameters {
 
   /**
    * Get the path to the root of the configuration files.
-   * 
+   *
    * @return the path to the root of the configuration files.
    */
   public String getBaseConfigPath() {
@@ -362,7 +362,7 @@ public class Parameters {
 
   /**
    * Get the seconds to wait after being notified or a file change to allow all file writes to complete.
-   * 
+   *
    * @return the seconds to wait after being notified or a file change to allow all file writes to complete.
    */
   public int getFileStabilisationDelaySeconds() {
@@ -371,7 +371,7 @@ public class Parameters {
 
   /**
    * The seconds to wait after being notified or a file change to allow all file writes to complete.
-   * 
+   *
    * @param fileStabilisationDelaySeconds the seconds to wait after being notified or a file change to allow all file writes to complete.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -382,7 +382,7 @@ public class Parameters {
 
   /**
    * Get the delay between initiating scans for query config changes.
-   * 
+   *
    * @return the delay between initiating scans for query config changes.
    */
   public int getFilePollPeriodSeconds() {
@@ -391,7 +391,7 @@ public class Parameters {
 
   /**
    * The delay between initiating scans for query config changes.
-   * 
+   *
    * @param filePollPeriodSeconds the delay between initiating scans for query config changes.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -399,7 +399,7 @@ public class Parameters {
     this.filePollPeriodSeconds = filePollPeriodSeconds;
     return this;
   }
-  
+
   /**
    * Get the persistence configuration.
    * Persistence is used for both audit and state management of logins.
@@ -411,7 +411,7 @@ public class Parameters {
     return persistence;
   }
 
-  
+
   /**
    * Get the configuration of the pipeline cache.
    * @return Configuration of the pipeline cache.
@@ -449,7 +449,7 @@ public class Parameters {
 
   /**
    * The configuration to use for distributed tracing.
-   * 
+   *
    * @param tracing the configuration to use for distributed tracing.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -458,10 +458,10 @@ public class Parameters {
     this.tracing = tracing;
     return this;
   }
-  
+
   /**
    * Whether the process will end rather than waiting for requests.
-   * 
+   *
    * This is useful for things such as JIT compilers or CDS preparation.
    * @param exitOnRun if true process will end rather than waiting for requests.
    * @return this, so that the method may be called in a fluent manner.
@@ -473,7 +473,7 @@ public class Parameters {
 
   /**
    * The path to the root of the configuration files.
-   * 
+   *
    * @param baseConfigPath the path to the root of the configuration files.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -497,7 +497,7 @@ public class Parameters {
 
   /**
    * The configuration of the pipeline cache.
-   * 
+   *
    * @param pipelineCache the configuration of the pipeline cache.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -509,7 +509,7 @@ public class Parameters {
 
   /**
    * Get the Allowed-Origin-Regex to use for CORS.
-   * 
+   *
    * @return the Allowed-Origin-Regex to use for CORS.
    */
   @SuppressFBWarnings("EI_EXPOSE_REP")
@@ -519,7 +519,7 @@ public class Parameters {
 
   /**
    * The Allowed-Origin-Regex to use for CORS.
-   * 
+   *
    * @param corsAllowedOrigins the Allowed-Origin valuess to use for CORS.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -535,7 +535,7 @@ public class Parameters {
    * Credentials that can be used in Source definitions.
    * Externalising credentials is much more secure - the credentials do not need to be committed to the query definition repository
    * and developers do not need access to live credentials.
-   * 
+   *
    * @return the externalized credentials map.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
@@ -551,7 +551,7 @@ public class Parameters {
    * and developers do not need access to live credentials.
    * <p>
    * Kubernetes secrets can be mounted as volumes directly into the externalized credentials map, keeping them out of all configuration.
-   * 
+   *
    * @param secrets the externalized credentials map.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -593,9 +593,9 @@ public class Parameters {
    * An attempt will be made to load each data source configured here with the sample data.
    * If loadSampleData is true, and the targets databases can be accessed, then will be loaded with the sample data on startup.
    * <p>
-   * The sample data is loaded using three SQL scripts (one per database engine) and it is perfectly acceptable to run those queries manually 
+   * The sample data is loaded using three SQL scripts (one per database engine) and it is perfectly acceptable to run those queries manually
    * instead of using loadSampleData.
-   * 
+   *
    * Note that the URLs here must be vertx sql URLs, not JDBC URLs, for example:
    * <ul>
    * <li>mysql://localhost:2001/test
@@ -603,11 +603,11 @@ public class Parameters {
    * <li>postgresql://localhost:2003/test
    * </ul>
    * The leading component of the URL (the scheme) will be used to determine which script to run.
-   * 
+   *
    * Only the URL and adminUser values from the DataSourceConfig are used.
    *
    * This is unlikely to be useful unless the example compose file is used to start the Query Engine and the different database engines.
-   * 
+   *
    * @return data sources to use attempt to initialize with the sample data.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
@@ -624,7 +624,7 @@ public class Parameters {
    * An attempt will be made to load each data source configured here with the sample data.
    * If loadSampleData is true, and the targets databases can be accessed, then will be loaded with the sample data on startup.
    * <p>
-   * The sample data is loaded using three SQL scripts (one per database engine) and it is perfectly acceptable to run those queries manually 
+   * The sample data is loaded using three SQL scripts (one per database engine) and it is perfectly acceptable to run those queries manually
    * instead of using loadSampleData.
    * <p>
    * Note that the URLs here must be vertx sql URLs, not JDBC URLs, for example:
@@ -636,7 +636,7 @@ public class Parameters {
    * The leading component of the URL (the scheme) will be used to determine which script to run.
    * <p>
    * This is unlikely to be useful unless the example compose file is used to start the Query Engine and the different database engines.
-   * 
+   *
    * @param sampleDataLoads data sources to use attempt to initialize with the sample data.
    * @return this, so that the method may be called in a fluent manner.
    */
@@ -701,10 +701,10 @@ public class Parameters {
    * <p>
    * Unless you are sure that you have secured your /manage endpoint adequately it is strongly recommended that production systems only
    * enable the up; health and prometheus endpoints.
-   * 
+   *
    * @return managementEndpoints the management endpoints (all under /manage) that should be enabled.
    * @see Parameters#setManagementEndpointPort
-   * 
+   *
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public List<String> getManagementEndpoints() {
@@ -748,10 +748,10 @@ public class Parameters {
    * <p>
    * Unless you are sure that you have secured your /manage endpoint adequately it is strongly recommended that production systems only
    * enable the up; health and prometheus endpoints.
-   * 
+   *
    * @param managementEndpoints the management endpoints (all under /manage) that should be enabled.
    * @see Parameters#setManagementEndpointPort
-   * 
+   *
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public void setManagementEndpoints(List<String> managementEndpoints) {
@@ -767,7 +767,7 @@ public class Parameters {
    * This is the least secure option (but most convenient for the UI).
    * <p>
    * It the managementEndpointPort is negative the entire management endpoint setup will be disabled.
-   * 
+   *
    * @return the port that the /manage endpoints should listen on.
    */
   public Integer getManagementEndpointPort() {
@@ -783,7 +783,7 @@ public class Parameters {
    * This is the least secure option (but most convenient for the UI).
    * <p>
    * It the managementEndpointPort is negative the entire management endpoint setup will be disabled.
-   * 
+   *
    * @param managementEndpointPort The port to listen on for the management endpoints.
    * @see Parameters#setManagementEndpoints
    */
@@ -805,7 +805,7 @@ public class Parameters {
    * The value provided must be the full URL to the /manage path.
    * <p>
    * If not set, and managementEndpointPort is positive, users will have no way to discover the management endpoint URL (which may be the intention).
-   * 
+   *
    * @return the URL that clients should be using to access the management endpoints.
    */
   public String getManagementEndpointUrl() {
@@ -826,7 +826,7 @@ public class Parameters {
    * The value provided must be the full URL to the /manage path.
    * <p>
    * If not set, and managementEndpointPort is positive, users will have no way to discover the management endpoint URL (which may be the intention).
-   * 
+   *
    * @param managementEndpointUrl the URL that clients should be using to access the management endpoints.
    */
   public void setManagementEndpointUrl(String managementEndpointUrl) {
@@ -835,7 +835,7 @@ public class Parameters {
 
   /**
    * Get the authentication configuration of the UI and REST API.
-   * 
+   *
    * @return the authentication configuration of the UI and REST API.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
@@ -845,7 +845,7 @@ public class Parameters {
 
   /**
    * Set the authentication configuration of the UI and REST API.
-   * 
+   *
    * @param session the authentication configuration of the UI and REST API.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
@@ -857,7 +857,7 @@ public class Parameters {
    * Get the configuration for individual processors.
    * <p>
    * Some processors have specific configuration options that are not appropriate for configuration in pipeline definitions, they are  controlled here.
-   * 
+   *
    * @return the configuration for individual processors.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
@@ -869,7 +869,7 @@ public class Parameters {
    * Set the configuration for individual processors.
    * <p>
    * Some processors have specific configuration options that are not appropriate for configuration in pipeline definitions, they are  controlled here.
-   * 
+   *
    * @param processors set the configuration for individual processors.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
@@ -899,11 +899,11 @@ public class Parameters {
    * <LI>roles
    * </UL>
    * </UL>
-   * 
+   *
    * Note that the fileHash must also match, but isn't built into the key (should usually match because of the use of the inclusion of full URL).
    * <p>
    * Note that the default value for the outputCacheDir is probably a bad choice for anything other than the simplest setups.
-   * 
+   *
    * @return the directory to contain cached output.
    */
   public String getOutputCacheDir() {
@@ -932,38 +932,47 @@ public class Parameters {
    * <LI>roles
    * </UL>
    * </UL>
-   * 
+   *
    * Note that the fileHash must also match, but isn't built into the key (should usually match because of the use of the inclusion of full URL).
    * <p>
    * Note that the default value for the outputCacheDir is probably a bad choice for anything other than the simplest setups.
-   * 
+   *
    * @param outputCacheDir the directory to contain cached output.
    */
   public void setOutputCacheDir(String outputCacheDir) {
     this.outputCacheDir = outputCacheDir.endsWith("/") || outputCacheDir.endsWith("\\") ? outputCacheDir : outputCacheDir + File.separator;
   }
 
+
   /**
-   * If set to false any basic auth header will be ignored.
-   * 
-   * @return false if any basic auth header will be ignored.
+   * Get the configuration of the handling of requests using basic authentication for data requests.
+   * <P>
+   * Note that when the IdP to use for validating the credentials is determined by the OpenID Discovery the
+   * path from jwt.issuerHostPath will be appended to the host used to make the request.
+   *
+   * @return the configuration of the handling of requests using basic authentication for data requests.
    */
-  public boolean isEnableBasicAuth() {
-    return enableBasicAuth;
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
+  public BasicAuthConfig getBasicAuth() {
+    return basicAuth;
+  }
+
+  /**
+   * Set the configuration of the handling of requests using basic authentication for data requests.
+   * <P>
+   * Note that when the IdP to use for validating the credentials is determined by the OpenID Discovery the
+   * path from jwt.issuerHostPath will be appended to the host used to make the request.
+   *
+   * @param basicAuth the configuration of the handling of requests using basic authentication for data requests.
+   */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
+  public void setBasicAuth(BasicAuthConfig basicAuth) {
+    this.basicAuth = basicAuth;
   }
 
   /**
    * If set to false any basic auth header will be ignored.
-   * 
-   * @param enableBasicAuth  false if any basic auth header will be ignored.
-   */
-  public void setEnableBasicAuth(boolean enableBasicAuth) {
-    this.enableBasicAuth = enableBasicAuth;
-  }
-
-  /**
-   * If set to false any basic auth header will be ignored.
-   * 
+   *
    * @return false if any basic auth header will be ignored.
    */
   public boolean isEnableBearerAuth() {
@@ -972,7 +981,7 @@ public class Parameters {
 
   /**
    * If set to false any basic auth header will be ignored.
-   * 
+   *
    * @param enableBearerAuth false if any basic auth header will be ignored.
    */
   public void setEnableBearerAuth(boolean enableBearerAuth) {
@@ -995,7 +1004,7 @@ public class Parameters {
    * The default value is (something like) "https://unpkg.com/openapi-explorer@2.2.733/dist/browser/openapi-explorer.min.js".
    * <p>
    * It is not usually necessary to set this.
-   * 
+   *
    * @param openApiExplorerUrl the URL to the minified OpenAPI Explorer JS that is to be used for displaying The API documentation.
    */
   public void setOpenApiExplorerUrl(String openApiExplorerUrl) {
@@ -1004,7 +1013,7 @@ public class Parameters {
 
   /**
    * Validate the provided parameters.
-   * 
+   *
    * @throws IllegalArgumentException if anything in the parameters is invalid.
    */
   public void validate() throws IllegalArgumentException {
@@ -1031,6 +1040,9 @@ public class Parameters {
     }
     if (persistence != null) {
       persistence.validate("persistence");
+    }
+    if (basicAuth != null) {
+      basicAuth.validate("basicAuth");
     }
   }
 

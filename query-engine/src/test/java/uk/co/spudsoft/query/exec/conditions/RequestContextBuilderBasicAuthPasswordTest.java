@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.exec.conditions;
 
 import com.google.common.cache.Cache;
 import io.vertx.core.Future;
+import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
@@ -27,6 +28,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.codec.BodyCodec;
+import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.io.IOException;
@@ -50,6 +52,8 @@ import uk.co.spudsoft.jwtvalidatorvertx.JwtValidator;
 import uk.co.spudsoft.jwtvalidatorvertx.OpenIdDiscoveryHandler;
 import uk.co.spudsoft.jwtvalidatorvertx.impl.JWKSOpenIdDiscoveryHandlerImpl;
 import uk.co.spudsoft.jwtvalidatorvertx.jdk.JdkTokenBuilder;
+import uk.co.spudsoft.query.main.BasicAuthConfig;
+import uk.co.spudsoft.query.main.BasicAuthGrantType;
 import uk.co.spudsoft.query.web.LoginDaoMemoryImpl;
 
 /**
@@ -58,9 +62,9 @@ import uk.co.spudsoft.query.web.LoginDaoMemoryImpl;
  */
 @ExtendWith(VertxExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class RequestContextBuilderBearerAuthTest {
+public class RequestContextBuilderBasicAuthPasswordTest {
 
-  private static final Logger logger = LoggerFactory.getLogger(RequestContextBuilderBearerAuthTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(RequestContextBuilderBasicAuthPasswordTest.class);
 
   private OpenIdDiscoveryHandler discoverer;
   private JwtValidator validator;
@@ -82,7 +86,9 @@ public class RequestContextBuilderBearerAuthTest {
 
   @Test
   public void testBuildRequestContext(Vertx vertx, VertxTestContext testContext) throws Exception {
-    RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx), validator, discoverer, new LoginDaoMemoryImpl(Duration.ZERO), null, true, null, true, null, Collections.singletonList("aud"), null);
+    BasicAuthConfig authConfig = new BasicAuthConfig();
+    authConfig.setGrantType(BasicAuthGrantType.resourceOwnerPasswordCredentials);
+    RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx), validator, discoverer, new LoginDaoMemoryImpl(Duration.ZERO), authConfig, true, null, true, null, Collections.singletonList("aud"), null);
 
     destServer = vertx.createHttpServer();
     Router router = Router.router(vertx);
@@ -93,7 +99,8 @@ public class RequestContextBuilderBearerAuthTest {
     router.route(HttpMethod.GET, "/.well-known/openid-configuration").handler(ctx -> {
       logger.info("Got request to {}", ctx.request().uri());
       JsonObject result = new JsonObject();
-      result.put("jwks_uri", ctx.request().scheme() + "://" + ctx.request().authority().toString() + "/jwks");
+      result.put("authorization_endpoint", RequestContextBuilder.baseRequestUrl(ctx.request()) + "/auth");
+      result.put("jwks_uri", RequestContextBuilder.baseRequestUrl(ctx.request()) + "/jwks");
       HttpServerResponse response = ctx.response();
       response.setStatusCode(200);
       response.end(result.toBuffer());
@@ -125,6 +132,33 @@ public class RequestContextBuilderBearerAuthTest {
       response.end(jwkSet.toBuffer());
     });
 
+    router.route(HttpMethod.POST, "/auth")
+            .handler(BodyHandler.create().setUploadsDirectory("target/file-uploads"))
+            .handler(ctx -> {
+      logger.info("Got request to {}", ctx.request().uri());
+      MultiMap form = ctx.request().formAttributes();
+      if ("password".equals(form.get("grant_type")) && "username".equals(form.get("username")) && "password".equals(form.get("password"))) {
+        JsonObject result = new JsonObject();
+        long now = System.currentTimeMillis() / 1000;
+        try {
+          String token = tokenBuilder.buildToken(JsonWebAlgorithm.RS256, "kid", ctx.request().scheme() + "://" + ctx.request().authority().toString(), "username", Arrays.asList("aud"), now - 1, now + 60, null);
+          result.put("access_token", token);
+        } catch (Throwable ex) {
+          HttpServerResponse response = ctx.response();
+          response.setStatusCode(500);
+          response.end("Failed to generate token");
+          return;
+        }
+        HttpServerResponse response = ctx.response();
+        response.setStatusCode(200);
+        response.end(result.toBuffer());
+      } else {
+        HttpServerResponse response = ctx.response();
+        response.setStatusCode(401);
+        response.end("Bad credentials");
+      }
+    });
+
     router.route(HttpMethod.GET, "/dest")
             .handler(ctx -> {
               logger.info("Got request to {}", ctx.request().uri());
@@ -149,17 +183,10 @@ public class RequestContextBuilderBearerAuthTest {
               destPort = srv.actualPort();
             })
             .compose(srv -> {
-              long now = System.currentTimeMillis() / 1000;
-              String token;
-              try {
-                token = tokenBuilder.buildToken(JsonWebAlgorithm.RS256, "kid", "http://localhost:" + destPort, "username", Arrays.asList("aud"), now - 1, now + 60, null);
-              } catch(Throwable ex) {
-                return Future.failedFuture(ex);
-              }
               String url = "http://localhost:" + destPort + "/dest";
               logger.debug("Making request to {}", url);
               return webClient.getAbs(url)
-                      .putHeader("Authorization", "Bearer " + token)
+                      .putHeader("Authorization", "Basic dXNlcm5hbWU6cGFzc3dvcmQ")
                       .as(BodyCodec.string())
                       .send();
             })

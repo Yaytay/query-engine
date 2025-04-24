@@ -52,6 +52,8 @@ import uk.co.spudsoft.jwtvalidatorvertx.JwtValidator;
 import uk.co.spudsoft.jwtvalidatorvertx.OpenIdDiscoveryHandler;
 import uk.co.spudsoft.jwtvalidatorvertx.impl.JWKSOpenIdDiscoveryHandlerImpl;
 import uk.co.spudsoft.jwtvalidatorvertx.jdk.JdkTokenBuilder;
+import uk.co.spudsoft.query.main.BasicAuthConfig;
+import uk.co.spudsoft.query.main.BasicAuthGrantType;
 import uk.co.spudsoft.query.web.LoginDaoMemoryImpl;
 
 /**
@@ -60,15 +62,15 @@ import uk.co.spudsoft.query.web.LoginDaoMemoryImpl;
  */
 @ExtendWith(VertxExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class RequestContextBuilderBasicAuthTest {
-  
-  private static final Logger logger = LoggerFactory.getLogger(RequestContextBuilderBasicAuthTest.class);
-  
+public class RequestContextBuilderBasicAuthClientCredentialsTest {
+
+  private static final Logger logger = LoggerFactory.getLogger(RequestContextBuilderBasicAuthClientCredentialsTest.class);
+
   private OpenIdDiscoveryHandler discoverer;
   private JwtValidator validator;
   private Cache<String, AlgorithmAndKeyPair> cache;
   private JdkTokenBuilder tokenBuilder;
-  
+
   private HttpServer destServer;
   private int destPort;
 
@@ -84,13 +86,15 @@ public class RequestContextBuilderBasicAuthTest {
 
   @Test
   public void testBuildRequestContext(Vertx vertx, VertxTestContext testContext) throws Exception {
-    RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx), validator, discoverer, new LoginDaoMemoryImpl(Duration.ZERO), true, true, null, true, null, Collections.singletonList("aud"), null);
-          
-    destServer = vertx.createHttpServer();    
+    BasicAuthConfig authConfig = new BasicAuthConfig();
+    authConfig.setGrantType(BasicAuthGrantType.clientCredentials);
+    RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx), validator, discoverer, new LoginDaoMemoryImpl(Duration.ZERO), authConfig, true, null, true, null, Collections.singletonList("aud"), null);
+
+    destServer = vertx.createHttpServer();
     Router router = Router.router(vertx);
 
     WebClient webClient = WebClient.create(vertx);
-    
+
     // Set up the test routes as a mock version of the real setup
     router.route(HttpMethod.GET, "/.well-known/openid-configuration").handler(ctx -> {
       logger.info("Got request to {}", ctx.request().uri());
@@ -120,9 +124,9 @@ public class RequestContextBuilderBasicAuthTest {
         } catch(Throwable ex) {
           logger.error("Failed to create JWK from key: ", ex);
         }
-      }      
+      }
 
-      HttpServerResponse response = ctx.response();      
+      HttpServerResponse response = ctx.response();
       response.setStatusCode(200);
       response.putHeader("cache-control", "max-age=100");
       response.end(jwkSet.toBuffer());
@@ -133,7 +137,7 @@ public class RequestContextBuilderBasicAuthTest {
             .handler(ctx -> {
       logger.info("Got request to {}", ctx.request().uri());
       MultiMap form = ctx.request().formAttributes();
-      if ("username".equals(form.get("client_id")) && "password".equals(form.get("client_secret"))) {
+      if ("client_credentials".equals(form.get("grant_type")) && "username".equals(form.get("client_id")) && "password".equals(form.get("client_secret"))) {
         JsonObject result = new JsonObject();
         long now = System.currentTimeMillis() / 1000;
         try {
@@ -154,7 +158,7 @@ public class RequestContextBuilderBasicAuthTest {
         response.end("Bad credentials");
       }
     });
-    
+
     router.route(HttpMethod.GET, "/dest")
             .handler(ctx -> {
               logger.info("Got request to {}", ctx.request().uri());
@@ -169,11 +173,11 @@ public class RequestContextBuilderBasicAuthTest {
                         logger.info("Request context: {}", requestContext);
                         HttpServerResponse response = ctx.response();
                         response.setStatusCode(200);
-                        response.end("Hello " + requestContext.getName());                        
+                        response.end("Hello " + requestContext.getName());
                       });
             });
-    
-    // Start the test server and then make request    
+
+    // Start the test server and then make request
     destServer.requestHandler(router).listen(0)
             .onSuccess(srv -> {
               destPort = srv.actualPort();
@@ -202,7 +206,7 @@ public class RequestContextBuilderBasicAuthTest {
               logger.error("Failed: ", ex);
               testContext.failNow(ex);
             });
-    
+
   }
-  
+
 }

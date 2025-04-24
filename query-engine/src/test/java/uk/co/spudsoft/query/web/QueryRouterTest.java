@@ -44,31 +44,31 @@ import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
  */
 @ExtendWith(VertxExtension.class)
 public class QueryRouterTest {
-  
+
   @Test
   public void testBadMethod(Vertx vertx) {
-    
+
     PipelineDefnLoader loader = mock(PipelineDefnLoader.class);
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, null, true, true, null, false, null, Collections.singletonList("aud"), null);
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, null, null, true, null, false, null, Collections.singletonList("aud"), null);
     QueryRouter router = new QueryRouter(vertx, new AuditorMemoryImpl(), rcb, loader, null, System.getProperty("java.io.tmpdir"), true);
-    
+
     RoutingContext routingContext = mock(RoutingContext.class);
     HttpServerRequest request = mock(HttpServerRequest.class);
     when(routingContext.request()).thenReturn(request);
     when(request.method()).thenReturn(HttpMethod.HEAD);
-    
+
     router.handle(routingContext);
-    
+
     verify(routingContext).next();
   }
-  
+
   @Test
   public void testShortPath(Vertx vertx) {
-    
+
     PipelineDefnLoader loader = mock(PipelineDefnLoader.class);
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, null, true, true, null, false, null, Collections.singletonList("aud"), null);
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, null, null, true, null, false, null, Collections.singletonList("aud"), null);
     QueryRouter router = new QueryRouter(vertx, new AuditorMemoryImpl(), rcb, loader, null, System.getProperty("java.io.tmpdir"), true);
-    
+
     RoutingContext routingContext = mock(RoutingContext.class);
     HttpServerRequest request = mock(HttpServerRequest.class);
     when(routingContext.request()).thenReturn(request);
@@ -77,140 +77,140 @@ public class QueryRouterTest {
     HttpServerResponse response = mock(HttpServerResponse.class);
     when(routingContext.response()).thenReturn(response);
     when(response.setStatusCode(400)).thenReturn(response);
-    
+
     router.handle(routingContext);
-    
+
     verify(response).setStatusCode(400);
-    verify(response).send("Invalid path");    
+    verify(response).send("Invalid path");
   }
-  
+
   @Test
   public void testErrorReportIllegalArgumentExceptionWithStack() {
     Throwable ex = new IllegalArgumentException("Bad arg");
-    
+
     RoutingContext routingContext = mock(RoutingContext.class);
     HttpServerResponse response = mock(HttpServerResponse.class);
     when(routingContext.response()).thenReturn(response);
-    
+
     ArgumentCaptor<Integer> statusCaptor = ArgumentCaptor.forClass(Integer.class);
     ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
-    
+
     when(response.setStatusCode(statusCaptor.capture())).thenReturn(response);
-    
+
     QueryRouter.internalError(ex, routingContext, true);
     verify(response).setStatusCode(statusCaptor.capture());
     verify(response).end(messageCaptor.capture());
-    
+
     assertEquals(400, statusCaptor.getValue());
     assertThat(messageCaptor.getValue(), startsWith("Bad arg (from"));
-    assertThat(messageCaptor.getValue(), containsString("IllegalArgumentException"));    
+    assertThat(messageCaptor.getValue(), containsString("IllegalArgumentException"));
   }
-  
+
   @Test
   public void testErrorReportIllegalArgumentExceptionWithoutStack() {
     Throwable ex = new IllegalArgumentException("Bad arg");
-    
+
     RoutingContext routingContext = mock(RoutingContext.class);
     HttpServerResponse response = mock(HttpServerResponse.class);
     when(routingContext.response()).thenReturn(response);
-    
+
     ArgumentCaptor<Integer> statusCaptor = ArgumentCaptor.forClass(Integer.class);
     ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
-    
+
     when(response.setStatusCode(statusCaptor.capture())).thenReturn(response);
-    
+
     QueryRouter.internalError(ex, routingContext, false);
     verify(response).setStatusCode(statusCaptor.capture());
     verify(response).end(messageCaptor.capture());
-    
+
     assertEquals(400, statusCaptor.getValue());
     assertEquals("Bad arg", messageCaptor.getValue());
   }
-  
+
   @Test
   public void testErrorReportIllegalStateExceptionWithStack() {
     Throwable ex = new IllegalStateException("Bad state");
-    
+
     RoutingContext routingContext = mock(RoutingContext.class);
     HttpServerResponse response = mock(HttpServerResponse.class);
     when(routingContext.response()).thenReturn(response);
-    
+
     ArgumentCaptor<Integer> statusCaptor = ArgumentCaptor.forClass(Integer.class);
     ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
-    
+
     when(response.setStatusCode(statusCaptor.capture())).thenReturn(response);
-    
+
     QueryRouter.internalError(ex, routingContext, true);
     verify(response).setStatusCode(statusCaptor.capture());
     verify(response).end(messageCaptor.capture());
-    
+
     assertEquals(500, statusCaptor.getValue());
     assertThat(messageCaptor.getValue(), startsWith("Bad state (from"));
-    assertThat(messageCaptor.getValue(), containsString("IllegalStateException"));    
+    assertThat(messageCaptor.getValue(), containsString("IllegalStateException"));
   }
-  
+
   @Test
   public void testErrorReportIllegalStateExceptionWithoutStack() {
     Throwable ex = new IllegalStateException("Bad state");
-    
+
     RoutingContext routingContext = mock(RoutingContext.class);
     HttpServerResponse response = mock(HttpServerResponse.class);
     when(routingContext.response()).thenReturn(response);
-    
+
     ArgumentCaptor<Integer> statusCaptor = ArgumentCaptor.forClass(Integer.class);
     ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
-    
+
     when(response.setStatusCode(statusCaptor.capture())).thenReturn(response);
-    
+
     QueryRouter.internalError(ex, routingContext, false);
     verify(response).setStatusCode(statusCaptor.capture());
     verify(response).end(messageCaptor.capture());
-    
+
     assertEquals(500, statusCaptor.getValue());
     assertEquals("Failed", messageCaptor.getValue());
   }
-  
+
   @Test
   public void testErrorReportServiceExceptionWithStack() {
     Throwable ex = new ServiceException(123, "Something special went wrong");
-    
+
     RoutingContext routingContext = mock(RoutingContext.class);
     HttpServerResponse response = mock(HttpServerResponse.class);
     when(routingContext.response()).thenReturn(response);
-    
+
     ArgumentCaptor<Integer> statusCaptor = ArgumentCaptor.forClass(Integer.class);
     ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
-    
+
     when(response.setStatusCode(statusCaptor.capture())).thenReturn(response);
-    
+
     QueryRouter.internalError(ex, routingContext, true);
     verify(response).setStatusCode(statusCaptor.capture());
     verify(response).end(messageCaptor.capture());
-    
+
     assertEquals(123, statusCaptor.getValue());
     assertThat(messageCaptor.getValue(), startsWith("Something special went wrong (from"));
-    assertThat(messageCaptor.getValue(), containsString("ServiceException"));    
+    assertThat(messageCaptor.getValue(), containsString("ServiceException"));
   }
-  
+
   @Test
   public void testErrorReportServiceExceptionWithoutStack() {
     Throwable ex = new ServiceException(123, "Something special went wrong");
-    
+
     RoutingContext routingContext = mock(RoutingContext.class);
     HttpServerResponse response = mock(HttpServerResponse.class);
     when(routingContext.response()).thenReturn(response);
-    
+
     ArgumentCaptor<Integer> statusCaptor = ArgumentCaptor.forClass(Integer.class);
     ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
-    
+
     when(response.setStatusCode(statusCaptor.capture())).thenReturn(response);
-    
+
     QueryRouter.internalError(ex, routingContext, false);
     verify(response).setStatusCode(statusCaptor.capture());
     verify(response).end(messageCaptor.capture());
-    
+
     assertEquals(123, statusCaptor.getValue());
     assertEquals("Something special went wrong", messageCaptor.getValue());
   }
-  
+
 }

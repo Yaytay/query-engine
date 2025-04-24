@@ -42,7 +42,7 @@ import uk.co.spudsoft.query.web.LoginDaoMemoryImpl;
  * @author jtalbut
  */
 public class RequestContextTest {
-  
+
   @Test
   public void testAttemptBase64Decode() {
     assertEquals("Hello", RequestContext.attemptBase64Decode("SGVsbG8="));
@@ -56,7 +56,7 @@ public class RequestContextTest {
     HttpServerRequest request = mock(HttpServerRequest.class);
     when(request.getHeader("X-Cluster-Client-IP")).thenReturn("111.122.133.144");
     assertEquals(new IPAddressString("111.122.133.144"), RequestContext.extractRemoteIp(request));
-    
+
     request = mock(HttpServerRequest.class);
     when(request.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
     assertEquals(new IPAddressString("111.122.133.144"), RequestContext.extractRemoteIp(request));
@@ -72,7 +72,7 @@ public class RequestContextTest {
     request = mock(HttpServerRequest.class);
     assertNull(RequestContext.extractRemoteIp(request));
   }
-  
+
   @Test
   public void testExtractHost() {
     assertNull(RequestContext.extractHost(null));
@@ -83,37 +83,37 @@ public class RequestContextTest {
 
     request = mock(HttpServerRequest.class);
     when(request.authority()).thenReturn(new HostAndPortImpl("bob", 1234));
-    assertEquals("bob", RequestContext.extractHost(request));    
+    assertEquals("bob", RequestContext.extractHost(request));
   }
 
   private static final String OPENID = Base64.getEncoder().encodeToString("{\"jti\":\"a28849b9-3624-42c3-aaad-21c5f80ffc55\",\"exp\":1653142100,\"nbf\":0,\"iat\":1653142040,\"iss\":\"http://ca.localtest.me\",\"aud\":\"security-admin-console\",\"sub\":\"af78202f-b54a-439d-913c-0bbe99ba6bf8\",\"typ\":\"Bearer\",\"azp\":\"QE2\",\"scope\":\"openid profile email qe2\",\"email_verified\":false,\"name\":\"Bob Fred\",\"preferred_username\":\"bob.fred\",\"given_name\":\"Bob\",\"family_name\":\"Fred\",\"email\":\"bob@localtest.me\",\"groups\":[\"group1\",\"group2\",\"group3\"]}".getBytes(StandardCharsets.UTF_8));
-  
+
   @Test
   public void testGetUser() {
     HttpServerRequest req = mock(HttpServerRequest.class);
     when(req.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
-    
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), true, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
 
     assertEquals("bob.fred", ctx.getJwt().getClaim("preferred_username"));
     assertEquals("{\"clientIp\":\"111.122.133.144\", \"params\":{\"param1\":[\"value1\", \"value3\"], \"param2\":\"value2\"}, \"iss\":\"http://ca.localtest.me\", \"sub\":\"af78202f-b54a-439d-913c-0bbe99ba6bf8\"}", ctx.toString());
-    
+
     assertEquals(Arrays.asList("value1", "value3"), ctx.getParams().getAll("param1"));
     assertEquals("value2", ctx.getParams().get("param2"));
     assertEquals(Arrays.asList("value1", "value3"), ctx.getParams().getAll("param1"));
   }
-  
+
   @Test
   public void textGetAud() {
     HttpServerRequest req = mock(HttpServerRequest.class);
     when(req.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
-    
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), true, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
 
     assertEquals("security-admin-console", ctx.getJwt().getClaim("aud"));
@@ -139,7 +139,7 @@ public class RequestContextTest {
 
     assertEquals("{\"clientIp\":\"111.122.133.144\"}", ctx.toString());
   }
-  
+
   @Test
   public void testClientIpIsInV4() {
     HttpServerRequest request = mock(HttpServerRequest.class);
@@ -155,7 +155,7 @@ public class RequestContextTest {
     assertTrue(requestContext.clientIpIsIn("0.0.0.0/0"));
     assertFalse(requestContext.clientIpIsIn("xxxxxxxxxxx"));
   }
-  
+
   @Test
   public void testClientIpIsInV6() {
     HttpServerRequest request = mock(HttpServerRequest.class);
@@ -175,72 +175,72 @@ public class RequestContextTest {
     when(req.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
-    
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), true, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
 
     assertEquals("Bob Fred", ctx.getName());
   }
 
   private static final String OPENID_GIVENNAME_FAMILYNAME = Base64.getEncoder().encodeToString("{\"jti\":\"a28849b9-3624-42c3-aaad-21c5f80ffc55\",\"exp\":1653142100,\"nbf\":0,\"iat\":1653142040,\"iss\":\"http://ca.localtest.me\",\"aud\":\"security-admin-console\",\"sub\":\"af78202f-b54a-439d-913c-0bbe99ba6bf8\",\"typ\":\"Bearer\",\"azp\":\"QE2\",\"scope\":\"openid profile email qe2\",\"email_verified\":false,\"given_name\":\"Bob\",\"family_name\":\"Fred\",\"email\":\"bob@localtest.me\",\"groups\":[\"group1\",\"group2\",\"group3\"]}".getBytes(StandardCharsets.UTF_8));
-  
+
   @Test
   public void testGetNameGivenNameAndFamilyName() {
     HttpServerRequest req = mock(HttpServerRequest.class);
     when(req.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_GIVENNAME_FAMILYNAME);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
-    
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), true, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
 
     assertEquals("Bob Fred", ctx.getName());
   }
 
   private static final String OPENID_GIVENNAME = Base64.getEncoder().encodeToString("{\"jti\":\"a28849b9-3624-42c3-aaad-21c5f80ffc55\",\"exp\":1653142100,\"nbf\":0,\"iat\":1653142040,\"iss\":\"http://ca.localtest.me\",\"aud\":\"security-admin-console\",\"sub\":\"af78202f-b54a-439d-913c-0bbe99ba6bf8\",\"typ\":\"Bearer\",\"azp\":\"QE2\",\"scope\":\"openid profile email qe2\",\"email_verified\":false,\"given_name\":\"Bob\",\"email\":\"bob@localtest.me\",\"groups\":[\"group1\",\"group2\",\"group3\"]}".getBytes(StandardCharsets.UTF_8));
-  
+
   @Test
   public void testGetNameGivenName() {
     HttpServerRequest req = mock(HttpServerRequest.class);
     when(req.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_GIVENNAME);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
-    
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), true, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
 
     assertEquals("Bob", ctx.getName());
   }
 
   private static final String OPENID_FAMILYNAME = Base64.getEncoder().encodeToString("{\"jti\":\"a28849b9-3624-42c3-aaad-21c5f80ffc55\",\"exp\":1653142100,\"nbf\":0,\"iat\":1653142040,\"iss\":\"http://ca.localtest.me\",\"aud\":\"security-admin-console\",\"sub\":\"af78202f-b54a-439d-913c-0bbe99ba6bf8\",\"typ\":\"Bearer\",\"azp\":\"QE2\",\"scope\":\"openid profile email qe2\",\"email_verified\":false,\"family_name\":\"Fred\",\"email\":\"bob@localtest.me\",\"groups\":[\"group1\",\"group2\",\"group3\"]}".getBytes(StandardCharsets.UTF_8));
-  
+
   @Test
   public void testGetNameFamilyName() {
     HttpServerRequest req = mock(HttpServerRequest.class);
     when(req.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_FAMILYNAME);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
-    
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), true, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
 
     assertEquals("Fred", ctx.getName());
   }
 
   private static final String OPENID_PREFERREDUSERNAME = Base64.getEncoder().encodeToString("{\"jti\":\"a28849b9-3624-42c3-aaad-21c5f80ffc55\",\"exp\":1653142100,\"nbf\":0,\"iat\":1653142040,\"iss\":\"http://ca.localtest.me\",\"aud\":\"security-admin-console\",\"sub\":\"af78202f-b54a-439d-913c-0bbe99ba6bf8\",\"typ\":\"Bearer\",\"azp\":\"QE2\",\"scope\":\"openid profile email qe2\",\"email_verified\":false,\"preferred_username\":\"bob.fred\",\"email\":\"bob@localtest.me\",\"groups\":[\"group1\",\"group2\",\"group3\"]}".getBytes(StandardCharsets.UTF_8));
-  
+
   @Test
   public void testGetNamePreferredUsername() {
     HttpServerRequest req = mock(HttpServerRequest.class);
     when(req.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_PREFERREDUSERNAME);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
-    
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), true, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
 
     assertEquals("bob.fred", ctx.getName());
   }
-  
-  
+
+
 }
