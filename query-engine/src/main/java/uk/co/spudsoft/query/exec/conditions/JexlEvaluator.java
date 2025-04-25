@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 jtalbut
+ * Copyright (C) 2025 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +16,8 @@
  */
 package uk.co.spudsoft.query.exec.conditions;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.jexl3.JexlBuilder;
 import org.apache.commons.jexl3.JexlContext;
@@ -66,7 +68,13 @@ public class JexlEvaluator {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(JexlEvaluator.class);
   
-  private static final JexlEngine JEXL = new JexlBuilder()
+  private static final JexlEngine JEXL = createJexlEngine();
+          
+  static JexlEngine createJexlEngine() {
+    Map<String, Object> namespaces = new HashMap<>();
+    namespaces.put(null, new TopLevelJexlFunctions());
+    
+    JexlEngine jexl = new JexlBuilder()
           .permissions(
                   JexlPermissions.RESTRICTED
                           .compose(
@@ -78,7 +86,11 @@ public class JexlEvaluator {
           )
           .strict(false)
           .silent(true)
+          .namespaces(namespaces)
           .create();
+    return jexl;
+  }
+
   
   private final JexlExpression expression;
   private final AtomicInteger iteration = new AtomicInteger();

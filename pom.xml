@@ -46,7 +46,7 @@
       See https://github.com/oracle/graal/issues/7651
     -->
     <graalvm.version>23.1.2</graalvm.version>
-    <jackson.version>2.18.3</jackson.version>
+    <jackson.version>2.19.0</jackson.version>
 
     <!-- The qe-version property exists so that the design mode project can override it to run with a specific version -->
     <qe-version>${project.version}</qe-version>

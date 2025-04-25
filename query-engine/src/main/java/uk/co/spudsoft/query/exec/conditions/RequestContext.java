@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 jtalbut
+ * Copyright (C) 2025 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,52 +47,52 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
  * Contextual information about the request used to provide this data to {@link uk.co.spudsoft.query.defn.Condition}s and script processors.
- * 
+ *
  * @author jtalbut
  */
 public class RequestContext {
-  
+
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(RequestContext.class);
 
   private static final Base64.Decoder B64 = Base64.getDecoder();
 
   private final long startTime;
-  
+
   private final String requestId;
-  
+
   private final String url;
-  
+
   private final URI uri;
-  
+
   private final String host;
-  
+
   private final String path;
-  
+
   private final String runId;
-  
+
   private final MultiMap params;
-  
+
   private ImmutableMap<String, Object> arguments;
-  
+
   private final MultiMap headers;
-  
+
   private final ImmutableSet<Cookie> cookies;
 
   private final IPAddressString clientIp;
-  
+
   private final Jwt jwt;
-  
+
   private long headersSentTime;
-  
+
   private long rowsWritten;
-  
+
   /**
    * Constructor.
    *
    * @param request HttpServerRequest to extract the context from.
    * @param jwt JsonWebToken extracted from the request.
-   * 
+   *
    */
   public RequestContext(HttpServerRequest request, Jwt jwt) {
     this.startTime = System.currentTimeMillis();
@@ -137,7 +137,7 @@ public class RequestContext {
     this.jwt = jwt;
     this.runId = params == null ? null : params.get("_runid");
   }
-  
+
   private static URI parseURI(String url) {
     if (url == null) {
       return null;
@@ -145,7 +145,7 @@ public class RequestContext {
       return URI.create(url);
     }
   }
-  
+
   @SuppressWarnings({"unchecked", "rawtypes"})
   private ImmutableMap<String, Object> multiMapToMap(MultiMap params) {
     Map<String, Object> result = new HashMap<>();
@@ -168,7 +168,7 @@ public class RequestContext {
     }
     return ImmutableCollectionTools.copy(result);
   }
-  
+
   /**
    * Perform a UTF8 base64 decode of the value, returning the original value if any error occurs.
    * @param value The value.
@@ -181,7 +181,7 @@ public class RequestContext {
       return value;
     }
   }
-  
+
   /**
    * true if the context includes a JWT.
    * @return true if the context includes a JWT.
@@ -232,7 +232,7 @@ public class RequestContext {
     this.rowsWritten = rowsWritten;
   }
 
-  
+
   /**
    * Get an ID that is unique to this request.
    * This will be either built from OpenTelemetry/Zipkin trace/span IDs or a random GUID.
@@ -265,7 +265,7 @@ public class RequestContext {
   public URI getUri() {
     return uri;
   }
-  
+
   /**
    * The RunID is a caller allocated value that can be used to track requests.
    * Every RunID must be unique and it is up to the caller to guarantee that.
@@ -274,7 +274,7 @@ public class RequestContext {
   public String getRunID() {
     return runId;
   }
-  
+
   /**
    * Either use the zipkin span ID (combined with the trace ID if they are not the same) or a random UUID as a unique ID for this request.
    * @return either the zipkin span ID (combined with the trace ID if they are not the same) or a random UUID as a unique ID for this request.
@@ -294,9 +294,9 @@ public class RequestContext {
         }
       }
     }
-    return UUID.randomUUID().toString();    
+    return UUID.randomUUID().toString();
   }
-  
+
   /**
    * Get the Host of the original request from an HttpServerRequest.
    * @param request the HttpServerRequest.
@@ -329,7 +329,7 @@ public class RequestContext {
     }
     return host;
   }
-  
+
   /**
    * Get the remote IP address from an HttpServerRequest.
    * @param request the HttpServerRequest.
@@ -361,7 +361,7 @@ public class RequestContext {
     } else {
       logger.trace("IP address of {} found from {}", ipAddress, source);
     }
-    
+
     return new IPAddressString(ipAddress);
   }
 
@@ -371,8 +371,8 @@ public class RequestContext {
    */
   public IPAddressString getClientIp() {
     return clientIp;
-  }  
-  
+  }
+
   /**
    * Check whether the client IP is in any of the given ranges.
    * @param subnets Any number of IPv4 or IPv6 addresses in the form "X.X.X.X" or subnets in the form "X.X.X.X/M".
@@ -411,7 +411,7 @@ public class RequestContext {
    * <P>
    * The values here are set in {@link uk.co.spudsoft.query.exec.PipelineExecutor#prepareArguments(uk.co.spudsoft.query.exec.conditions.RequestContext, java.util.List, io.vertx.core.MultiMap)}
    * until that has been called the values in this map will all be Strings (or Lists or Strings) reflecting the query string.
-   * 
+   *
    * @return the result of processing the arguments that were defined on the pipeline with the values provided in the query string.
    */
   public Map<String, Object> getArguments() {
@@ -423,7 +423,7 @@ public class RequestContext {
    * <P>
    * The values here are set in {@link uk.co.spudsoft.query.exec.PipelineExecutor#prepareArguments(uk.co.spudsoft.query.exec.conditions.RequestContext, java.util.List, io.vertx.core.MultiMap)}
    * until that has been called the values in this map will all be Strings (or Lists or Strings) reflecting the query string.
-   * 
+   *
    * @param arguments the result of processing the arguments that were defined on the pipeline with the values provided in the query string.
    */
   public void setArguments(Map<String, Object> arguments) {
@@ -445,7 +445,7 @@ public class RequestContext {
   public String getHost() {
     return host;
   }
-  
+
   /**
    * Get the path part of the URL.
    * @return the path part of the URL.
@@ -453,7 +453,7 @@ public class RequestContext {
   public String getPath() {
     return path;
   }
-  
+
   /**
    * Get the cookies from the request.
    * @return the cookies from the request.
@@ -461,7 +461,7 @@ public class RequestContext {
   public Set<Cookie> getCookies() {
     return cookies;
   }
-  
+
   @Override
   public String toString() {
     StringBuilder response = new StringBuilder();
@@ -511,7 +511,7 @@ public class RequestContext {
         }
         response.append("\"iss\":\"").append(iss).append('"');
       }
-      
+
       String sub = jwt.getSubject();
       if (!Strings.isNullOrEmpty(sub)) {
         if (!response.isEmpty()) {
@@ -524,7 +524,7 @@ public class RequestContext {
     response.append("}");
     return response.toString();
   }
-  
+
   /**
    * Get the audience ('aud' claim) from the JWT, or null if there is no JWT.
    * @return the audience ('aud' claim) from the JWT, or null if there is no JWT.
@@ -532,10 +532,10 @@ public class RequestContext {
   public List<String> getAudience() {
     if (jwt != null) {
       return jwt.getAudience();
-    } 
+    }
     return null;
   }
-  
+
   /**
    * Get the issuer ('iss' claim) from the JWT, or null if there is no JWT.
    * @return the issuer ('iss' claim) from the JWT, or null if there is no JWT.
@@ -543,10 +543,10 @@ public class RequestContext {
   public String getIssuer() {
     if (jwt != null) {
       return jwt.getIssuer();
-    } 
+    }
     return null;
   }
-  
+
   /**
    * Get the subject ('sub' claim) from the JWT, or null if there is no JWT.
    * @return the subject ('sub' claim) from the JWT, or null if there is no JWT.
@@ -554,10 +554,10 @@ public class RequestContext {
   public String getSubject() {
     if (jwt != null) {
       return jwt.getSubject();
-    } 
+    }
     return null;
   }
-  
+
   /**
    * Get the groups ('groups' claim) from the JWT, or null if there is no JWT.
    * @return the groups ('groups' claim) from the JWT, or null if there is no JWT.
@@ -565,10 +565,33 @@ public class RequestContext {
   public List<String> getGroups() {
     if (jwt != null) {
       return jwt.getGroups();
-    } 
+    }
     return null;
   }
-  
+
+  /**
+   * Checks if the current user belongs to at least one of the specified groups.
+   *
+   * @param requirements the group names to check against, provided as a variable number of arguments
+   * @return true if the user is part of at least one of the specified groups, false otherwise
+   */
+  public boolean isInGroup(String... requirements) {
+    if (jwt != null) {
+      List<String> groups = jwt.getGroups();
+      if (groups == null) {
+        return false;
+      }
+      for (String group : groups) {
+        for (String requirement : requirements) {
+          if (requirement != null && requirement.equals(group)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
   /**
    * Get the roles ('roles' claim) from the JWT, or null if there is no JWT.
    * @return the roles ('roles' claim) from the JWT, or null if there is no JWT.
@@ -576,14 +599,14 @@ public class RequestContext {
   public List<String> getRoles() {
     if (jwt != null) {
       return jwt.getRoles();
-    } 
+    }
     return null;
   }
-  
+
   /**
    * Append a Map to a StringBuilder as JSON.
    * @param builder the StringBuilder that is used to build up the JSON.
-   * 
+   *
    * @param map the map that is to be written to the build.
    */
   private static void appendMap(StringBuilder builder, Map<String, Object> map) {
@@ -591,7 +614,7 @@ public class RequestContext {
     builder.append("{");
     for (Map.Entry<String, Object> entry : map.entrySet()) {
       if (started) {
-        builder.append(", ");          
+        builder.append(", ");
       }
       started = true;
       builder.append('"').append(entry.getKey()).append("\":");
@@ -604,7 +627,7 @@ public class RequestContext {
    * Append a value to a StringBuilder to build up a JSON structure.
    * <P>
    * The value is either a List or a single value.
-   * 
+   *
    * @param builder the StringBuilder that is used to build up the JSON.
    * @param map the map that is to be written to the build.
    */
@@ -631,11 +654,11 @@ public class RequestContext {
       }
     }
   }
-  
+
   /**
    * Append a MuiltiMap to a StringBuilder as JSON.
    * @param builder the StringBuilder that is used to build up the JSON.
-   * 
+   *
    * @param map the map that is to be written to the build.
    */
   private static void appendMultiMap(StringBuilder builder, MultiMap map) {
@@ -643,7 +666,7 @@ public class RequestContext {
     builder.append("{");
     for (String key : map.names()) {
       if (started) {
-        builder.append(", ");          
+        builder.append(", ");
       }
       started = true;
       List<String> values = map.getAll(key);
@@ -656,7 +679,7 @@ public class RequestContext {
     }
     builder.append("}");
   }
-  
+
   /**
    * Get the username (either the 'preferred_username' claim or the 'sub' claim) from the JWT, or null if there is no JWT.
    * @return the username (either the 'preferred_username' claim or the 'sub' claim) from the JWT, or null if there is no JWT.
@@ -668,15 +691,15 @@ public class RequestContext {
     Object node = jwt.getClaim("preferred_username");
     if (node instanceof String s) {
       return s;
-    }    
+    }
     node = jwt.getClaim("sub");
     if (node instanceof String s) {
       return s;
     }
-    
+
     return null;
   }
-  
+
   /**
    * Get the users human name (either the 'name' claim, a combination of the 'given_name' and 'family_name' claims, the 'preferred_username' claim, or the 'sub' claim) from the JWT, or null if there is no JWT.
    * @return the users human name (either the 'name' claim, a combination of the 'given_name' and 'family_name' claims, the 'preferred_username' claim, or the 'sub' claim) from the JWT, or null if there is no JWT.
@@ -707,16 +730,16 @@ public class RequestContext {
       } else {
         return givenName + " " + familyName;
       }
-    }    
+    }
     node = jwt.getClaim("preferred_username");
     if (node instanceof String s) {
       return s;
-    }    
+    }
     node = jwt.getClaim("sub");
     if (node instanceof String s) {
       return s;
     }
-    
+
     return null;
   }
 

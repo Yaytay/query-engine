@@ -108,9 +108,8 @@ public final class Pipeline extends SourcePipeline {
    * 
    * @throws IllegalArgumentException if anything is unacceptable in the definition.
    */
-  @Override
   public void validate() throws IllegalArgumentException {
-    super.validate();
+    super.validate("root");
     if (condition != null) {
       condition.validate();
     }

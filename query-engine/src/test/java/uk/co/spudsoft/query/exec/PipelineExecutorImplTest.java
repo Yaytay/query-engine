@@ -304,7 +304,7 @@ public class PipelineExecutorImplTest {
     Future<Pipeline> future = instance.validatePipeline(pipeline);
     assertTrue(future.failed());
     assertThat(future.cause(), instanceOf(IllegalArgumentException.class));
-    assertEquals("Source not specified in pipeline", future.cause().getMessage());
+    assertEquals("Source not specified in root pipeline", future.cause().getMessage());
   }
 
   @Test

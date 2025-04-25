@@ -68,6 +68,12 @@ public class ProcessorGroupConcat implements Processor {
   @Override
   public void validate() {
     validateType(ProcessorType.GROUP_CONCAT, type);
+    
+    if (input == null) {
+      throw new IllegalArgumentException("Input (input) pipeline not provided");
+    }
+    input.validate((Strings.isNullOrEmpty(name) ? "GroupConcat" : "GroupConcat " + name) + " fieldDefns");
+    
     if (Strings.isNullOrEmpty(childValueColumn) && !Strings.isNullOrEmpty(parentValueColumn)) {
       throw new IllegalArgumentException("The parentValueColumn name is specified, but the childValueColumn is not");
     }

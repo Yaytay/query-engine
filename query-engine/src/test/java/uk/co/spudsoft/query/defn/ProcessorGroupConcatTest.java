@@ -52,20 +52,20 @@ public class ProcessorGroupConcatTest {
       ProcessorGroupConcat.builder().type(ProcessorType.MERGE).build().validate();
     }).getMessage());
     assertEquals("ID column(s) not specified for parent stream", assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorGroupConcat.builder().build().validate();
+      ProcessorGroupConcat.builder().input(SourcePipeline.builder().source(SourceTest.builder().build()).build()).build().validate();
     }).getMessage());
     assertEquals("ID column(s) not specified for child stream", assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorGroupConcat.builder().parentIdColumns(Arrays.asList("one")).build().validate();
+      ProcessorGroupConcat.builder().parentIdColumns(Arrays.asList("one")).input(SourcePipeline.builder().source(SourceTest.builder().build()).build()).build().validate();
     }).getMessage());
     assertEquals("ID column(s) specified for parent stream does not have the same number of fields as those specified for input stream", assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorGroupConcat.builder().parentIdColumns(Arrays.asList("one")).childIdColumns(Arrays.asList("two", "three")).build().validate();
+      ProcessorGroupConcat.builder().parentIdColumns(Arrays.asList("one")).childIdColumns(Arrays.asList("two", "three")).input(SourcePipeline.builder().source(SourceTest.builder().build()).build()).build().validate();
     }).getMessage());
     assertEquals("The parentValueColumn name is specified, but the childValueColumn is not", assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorGroupConcat.builder().parentIdColumns(Arrays.asList("one")).childIdColumns(Arrays.asList("one")).parentValueColumn("parentValue").build().validate();
+      ProcessorGroupConcat.builder().parentIdColumns(Arrays.asList("one")).childIdColumns(Arrays.asList("one")).parentValueColumn("parentValue").input(SourcePipeline.builder().source(SourceTest.builder().build()).build()).build().validate();
     }).getMessage());
-    ProcessorGroupConcat.builder().parentIdColumns(Arrays.asList("one")).childIdColumns(Arrays.asList("two")).build().validate();
-    ProcessorGroupConcat.builder().parentIdColumns(Arrays.asList("one")).childIdColumns(Arrays.asList("two")).childValueColumn("childValue").build().validate();
-    ProcessorGroupConcat.builder().parentIdColumns(Arrays.asList("one")).childIdColumns(Arrays.asList("two")).childValueColumn("childValue").parentValueColumn("parentValue").build().validate();
+    ProcessorGroupConcat.builder().parentIdColumns(Arrays.asList("one")).childIdColumns(Arrays.asList("two")).input(SourcePipeline.builder().source(SourceTest.builder().build()).build()).build().validate();
+    ProcessorGroupConcat.builder().parentIdColumns(Arrays.asList("one")).childIdColumns(Arrays.asList("two")).childValueColumn("childValue").input(SourcePipeline.builder().source(SourceTest.builder().build()).build()).build().validate();
+    ProcessorGroupConcat.builder().parentIdColumns(Arrays.asList("one")).childIdColumns(Arrays.asList("two")).childValueColumn("childValue").parentValueColumn("parentValue").input(SourcePipeline.builder().source(SourceTest.builder().build()).build()).build().validate();
   }
 
   @Test

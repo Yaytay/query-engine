@@ -145,10 +145,11 @@ public class ProcessorDynamicField implements Processor {
     if (fieldDefns == null) {
       throw new IllegalArgumentException("Field definitions (fieldDefns) pipeline not provided");
     }
-    fieldDefns.validate();
+    fieldDefns.validate((Strings.isNullOrEmpty(name) ? "DynamicField" : "DynamicField " + name) + " fieldDefns");
     if (fieldValues == null) {
       throw new IllegalArgumentException("Field values (fieldValues) pipeline not provided");
     }
+    fieldValues.validate((Strings.isNullOrEmpty(name) ? "DynamicField" : "DynamicField " + name) + " fieldValues");
     if (parentIdColumns == null || parentIdColumns.isEmpty()) {
       throw new IllegalArgumentException("ID column(s) not specified for parent stream");      
     }
@@ -161,7 +162,6 @@ public class ProcessorDynamicField implements Processor {
     if (Strings.isNullOrEmpty(fieldTypeColumn)) {
       throw new IllegalArgumentException("Type column not set (fieldTypeColumn)");
     }
-    fieldValues.validate();
   }
   
   @Override

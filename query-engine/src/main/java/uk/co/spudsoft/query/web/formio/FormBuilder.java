@@ -118,10 +118,25 @@ public class FormBuilder {
     }
   }
   
+  @SuppressFBWarnings("POTENTIAL_XML_INJECTION")
   void buildDescription(JsonGenerator generator, PipelineFile pipeline) throws IOException {
     try (Content description = new Content(generator)) {
+      
+      StringBuilder header = new StringBuilder();
+      header.append("<p>");
+      if (!Strings.isNullOrEmpty(pipeline.getTitle())) {
+        header.append("<h2>").append(pipeline.getTitle()).append("</h2>");
+      } else if (!Strings.isNullOrEmpty(pipeline.getName())) {
+        header.append("<h2>").append(pipeline.getName()).append("</h2>");
+      }
+      header.append("</p>");
+      
+      if (!Strings.isNullOrEmpty(pipeline.getDescription())) {
+        header.append("<p>").append(pipeline.getDescription()).append("</p>");
+      }
+      
       description
-            .withHtml("<p><h2>" + pipeline.getTitle() + "</h2></p><p>" + pipeline.getDescription() + "</p>")
+            .withHtml(header.toString())
             .withCustomClass("border-bottom mb-3")
             ;
     }

@@ -242,5 +242,19 @@ public class RequestContextTest {
     assertEquals("bob.fred", ctx.getName());
   }
 
+  @Test
+  public void testIsInGroup() {
+    HttpServerRequest req = mock(HttpServerRequest.class);
+    when(req.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
+    when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_PREFERREDUSERNAME);
+    when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
+   
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+    RequestContext ctx = rcb.buildRequestContext(req).result();
+    
+    assertTrue(ctx.isInGroup("group1"));
+    assertFalse(ctx.isInGroup("group4"));
+    assertTrue(ctx.isInGroup("group4", "group2"));
+  }
 
 }

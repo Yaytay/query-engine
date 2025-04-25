@@ -26,11 +26,13 @@ import org.apache.commons.jexl3.JexlEngine;
 import org.apache.commons.jexl3.JexlExpression;
 import org.apache.commons.jexl3.MapContext;
 import org.apache.commons.jexl3.introspection.JexlPermissions;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static uk.co.spudsoft.query.exec.conditions.JexlEvaluator.createJexlEngine;
 
 /**
  *
@@ -41,19 +43,7 @@ public class JexlTest {
 
   private static final Logger logger = LoggerFactory.getLogger(JexlTest.class);
 
-  private static final JexlEngine JEXL = new JexlBuilder()
-          .permissions(
-                  JexlPermissions.RESTRICTED
-                          .compose(
-                                  "io.vertx.core.http.impl.headers.*"
-                                  , "uk.co.spudsoft.jwtvalidatorvertx.*"
-                                  , "uk.co.spudsoft.query.exec.conditions.*"
-                                   
-                          )
-          )
-          .strict(false)
-          .silent(true)
-          .create();
+  private static final JexlEngine JEXL = createJexlEngine();
 
   static String getCurrentMethodName() {
     return StackWalker.getInstance()
@@ -199,4 +189,104 @@ public class JexlTest {
     logger.debug("{} {}: result: {} ({})", getCurrentMethodName(), exp, result, result == null ? null : result.getClass());
 
   }
+
+  @Test
+  public void testAnd() {
+
+    String exp = "andFn(true, true)";
+    JexlExpression expression = JEXL.createExpression(exp);
+    JexlContext context = new MapContext();
+    Object result = expression.evaluate(context);
+    logger.debug("{} {}: result: {} ({})", getCurrentMethodName(), exp, result, result == null ? null : result.getClass());
+    assertEquals(Boolean.TRUE, result);
+
+    exp = "andFn(true, false)";
+    expression = JEXL.createExpression(exp);
+    context = new MapContext();
+    result = expression.evaluate(context);
+    logger.debug("{} {}: result: {} ({})", getCurrentMethodName(), exp, result, result == null ? null : result.getClass());
+    assertEquals(Boolean.FALSE, result);
+
+    exp = "andFn(false, true)";
+    expression = JEXL.createExpression(exp);
+    context = new MapContext();
+    result = expression.evaluate(context);
+    logger.debug("{} {}: result: {} ({})", getCurrentMethodName(), exp, result, result == null ? null : result.getClass());
+    assertEquals(Boolean.FALSE, result);
+
+    exp = "andFn(false, false)";
+    expression = JEXL.createExpression(exp);
+    context = new MapContext();
+    result = expression.evaluate(context);
+    logger.debug("{} {}: result: {} ({})", getCurrentMethodName(), exp, result, result == null ? null : result.getClass());
+    assertEquals(Boolean.FALSE, result);
+  }
+
+  @Test
+  public void testOr() {
+
+    String exp = "orFn(true, true)";
+    JexlExpression expression = JEXL.createExpression(exp);
+    JexlContext context = new MapContext();
+    Object result = expression.evaluate(context);
+    logger.debug("{} {}: result: {} ({})", getCurrentMethodName(), exp, result, result == null ? null : result.getClass());
+    assertEquals(Boolean.TRUE, result);
+
+    exp = "orFn(true, false)";
+    expression = JEXL.createExpression(exp);
+    context = new MapContext();
+    result = expression.evaluate(context);
+    logger.debug("{} {}: result: {} ({})", getCurrentMethodName(), exp, result, result == null ? null : result.getClass());
+    assertEquals(Boolean.TRUE, result);
+
+    exp = "orFn(false, true)";
+    expression = JEXL.createExpression(exp);
+    context = new MapContext();
+    result = expression.evaluate(context);
+    logger.debug("{} {}: result: {} ({})", getCurrentMethodName(), exp, result, result == null ? null : result.getClass());
+    assertEquals(Boolean.TRUE, result);
+
+    exp = "orFn(false, false)";
+    expression = JEXL.createExpression(exp);
+    context = new MapContext();
+    result = expression.evaluate(context);
+    logger.debug("{} {}: result: {} ({})", getCurrentMethodName(), exp, result, result == null ? null : result.getClass());
+    assertEquals(Boolean.FALSE, result);
+  }
+  
+  public static class MyMath {
+    public double cos(final double x) {
+      return Math.cos(x);
+    }
+  }
+
+  /**
+   * User namespace needs to be allowed through permissions.
+   */
+  @Test
+  public void testCustomFunctionPermissions() {
+      final Map<String, Object> funcs = new HashMap<>();
+      funcs.put("math", new MyMath());
+      final JexlEngine jexl = new JexlBuilder()
+          .permissions(
+                  JexlPermissions.RESTRICTED
+                          .compose(
+                                  "io.vertx.core.http.impl.headers.*"
+                                  , "uk.co.spudsoft.jwtvalidatorvertx.*"
+                                  , "uk.co.spudsoft.query.exec.conditions.*"
+                                   
+                          )
+          )
+          .strict(false)
+          .silent(false)
+          .namespaces(funcs)
+          .create();
+      
+      final JexlContext jc = new MapContext();
+      jc.set("pi", Math.PI);
+      final JexlExpression e = jexl.createExpression("math:cos(pi)");
+      final Number result = (Number) e.evaluate(jc);
+      assertEquals(-1, result.intValue());
+  }
+  
 }

@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.defn;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -87,7 +88,7 @@ public class ProcessorLookup implements Processor {
     if (map == null) {
       throw new IllegalArgumentException("Lookup source (lookupSource) pipeline not provided");
     }
-    map.validate();
+    map.validate(Strings.isNullOrEmpty(name) ? "ProcessorLookup" : "ProcessorLookup " + name);
     if (lookupFields == null || lookupFields.isEmpty()) {
       throw new IllegalArgumentException("No fields provided to lookup (lookupFields)");
     }

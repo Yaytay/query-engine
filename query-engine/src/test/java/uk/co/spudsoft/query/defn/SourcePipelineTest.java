@@ -40,7 +40,7 @@ public class SourcePipelineTest {
     assertThrows(IllegalArgumentException.class
             ,
             () -> {
-              pipeline.validate();
+              pipeline.validate("test");
             }
     );
   }
@@ -54,7 +54,7 @@ public class SourcePipelineTest {
     assertEquals(SourceType.TEST, pipeline.getSource().getType());
     assertEquals(4, ((SourceTest) pipeline.getSource()).getRowCount());
     assertNotNull(pipeline.getProcessors());
-    pipeline.validate();
+    pipeline.validate("test");
     
     pipeline = SourcePipeline.builder()
             .source(SourceTest.builder().name("test").build())
@@ -62,6 +62,6 @@ public class SourcePipelineTest {
             .build();
     assertNotNull(pipeline.getSource());
     assertNotNull(pipeline.getProcessors());
-    pipeline.validate();
+    pipeline.validate("test");
   }
 }

@@ -49,11 +49,12 @@ public class SourcePipeline {
 
   /**
    * Validate the definition.
+   * @param name The name of the pipeline, to include in failure messages.
    * @throws IllegalArgumentException if the definition is not valid.
    */
-  public void validate() throws IllegalArgumentException {
+  public void validate(String name) throws IllegalArgumentException {
     if (source == null) {
-      throw new IllegalArgumentException("Source not specified in pipeline");
+      throw new IllegalArgumentException("Source not specified in " + name + " pipeline");
     }
     source.validate();
     processors.forEach(Processor::validate);

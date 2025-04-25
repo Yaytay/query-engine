@@ -103,7 +103,7 @@ public class DynamicEndpoint {
     if (input == null) {
       throw new IllegalArgumentException("Input not specified in dynamic endpoint");
     }
-    input.validate();
+    input.validate(Strings.isNullOrEmpty(name) ? "DynamicEndpoint" : "DynamicEndpoint " + name);
     if (Strings.isNullOrEmpty(key) && Strings.isNullOrEmpty(keyField)) {
       throw new IllegalArgumentException("Neither key nor keyField specified in dynamic endpoint");
     }
