@@ -250,7 +250,7 @@ public enum DataType {
           return LocalDate.ofInstant(tv.toInstant(), ZoneOffset.UTC);
         }
         case String tv -> {
-          return LocalDate.parse(tv);
+          return LocalDate.parse(tv.substring(0, 10));
         }
         default -> {
           return LocalDate.parse(value.toString());

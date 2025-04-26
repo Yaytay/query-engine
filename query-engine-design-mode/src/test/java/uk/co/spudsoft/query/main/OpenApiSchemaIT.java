@@ -242,8 +242,7 @@ public class OpenApiSchemaIT {
       JsonNode keyValue = parent.get(key);
       // Skip anything that might have used the key for something else (mainly because we have classes with "type" fields
       if (keyValue.isTextual()) { 
-        for (Iterator<Entry<String, JsonNode>> iter = parent.fields(); iter.hasNext();){
-          Entry<String, JsonNode> entry = iter.next();
+        for (Entry<String, JsonNode> entry: parent.properties()) {
           String field = entry.getKey();
           props.add(field);
           if (entry.getValue() instanceof ObjectNode fieldObject) {

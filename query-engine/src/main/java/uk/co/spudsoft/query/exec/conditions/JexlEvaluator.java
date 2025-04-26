@@ -81,6 +81,7 @@ public class JexlEvaluator {
                                   "io.vertx.core.http.impl.headers.*"
                                   , "uk.co.spudsoft.jwtvalidatorvertx.*"
                                   , "uk.co.spudsoft.query.exec.conditions.*"
+                                  , "java.time.*"
                                    
                           )
           )

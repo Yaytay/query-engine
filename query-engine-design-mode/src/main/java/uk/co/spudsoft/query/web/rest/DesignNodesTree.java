@@ -151,6 +151,10 @@ public class DesignNodesTree extends AbstractTree {
 
   }
 
+  /**
+   * Represents a directory containing pipeline design files and potentially other directories.
+   * This is a subclass of {@link DesignNode}, specifically tailored to represent directories and manage their child nodes.
+   */
   @Schema(description = """
                         <P>
                         A directory containing pipeline files.
@@ -219,6 +223,13 @@ public class DesignNodesTree extends AbstractTree {
     return relativePath;
   }
 
+  /**
+   * Represents a pipeline design file, which is a specific type of node
+   * in the overall design structure.
+   *
+   * This class extends the {@link DesignNode} to include additional
+   * properties and behavior specific to files.
+   */
   @Schema(description = """
                         <P>
                         A pipeline definition file.
@@ -229,9 +240,10 @@ public class DesignNodesTree extends AbstractTree {
     private final long size;
 
     /**
-     * Constructor.
+     * Constructs a DesignFile instance representing a file in the pipeline design structure.
+     *
      * @param path The path represented by this Node.
-     * @param modified The modified timestamp.
+     * @param modified The modified timestamp of the file.
      * @param name The name of the file in the parent directory.
      * @param size The size of the file, in bytes.
      */
@@ -240,6 +252,12 @@ public class DesignNodesTree extends AbstractTree {
       this.size = size;
     }
 
+    /**
+     * Constructs a DesignFile instance representing a specific file in the pipeline design structure.
+     *
+     * @param root The root path against which the file's path is resolved.
+     * @param src The source file object, providing file metadata such as path, modified timestamp, name, and size.
+     */
     public DesignFile(java.nio.file.Path root, DirCacheTree.File src) {
       super(relativize(File.separator, root, src), src.getModified(), src.getName());
       this.size = src.getSize();
