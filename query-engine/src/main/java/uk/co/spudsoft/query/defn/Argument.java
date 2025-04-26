@@ -28,6 +28,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import java.util.regex.Pattern;
 import static java.util.regex.Pattern.UNICODE_CHARACTER_CLASS;
+import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
@@ -93,8 +94,15 @@ public class Argument {
         throw new IllegalArgumentException("The argument \"" + name + "\" does not have a valid permittedValuesRegex." + ex.getMessage());
       }
     }
-    if (!Strings.isNullOrEmpty(defaultValueExpression) && !optional && !hidden && condition == null) {
-      throw new IllegalArgumentException("The argument \"" + name + "\" has a default value specified, but is not optional, hidden or conditional.");
+    if (!Strings.isNullOrEmpty(defaultValueExpression)) {
+      if (!optional && !hidden && condition == null) {
+        throw new IllegalArgumentException("The argument \"" + name + "\" has a default value specified, but is not optional, hidden or conditional.");
+      }
+      try {
+        JexlEvaluator.parse(defaultValueExpression);
+      } catch (Throwable ex) {
+        throw new IllegalArgumentException("The argument \"" + name + "\" default value \"" + defaultValueExpression + "\" is not valid: " + ex.getMessage());
+      }
     }
     if (!Strings.isNullOrEmpty(minimumValue)) {
       try {

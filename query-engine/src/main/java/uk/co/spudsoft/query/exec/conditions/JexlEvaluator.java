@@ -115,6 +115,15 @@ public class JexlEvaluator {
   public JexlEvaluator(String expression) {
     this.expression = JEXL.createExpression(expression);
   }
+  
+  /**
+   * Parse the JEXL expression and throw away the result.
+   * This is for validation.
+   * @param expression The <a href="https://commons.apache.org/proper/commons-jexl/">JEXL</a> expression to validate.
+   */
+  public static void parse(String expression) {
+    JEXL.createExpression(expression);
+  }
 
   /**
    * Get the source text of the expression.
