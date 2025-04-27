@@ -93,12 +93,14 @@ public class TopLevelJexlFunctions {
    *         prefix removed based on the removePrefix flag, or null if no such string is found.
    */
   public String firstMatchingStringWithPrefix(List<String> strings, String prefix, boolean removePrefix) {
-    for (String string : strings) {
-      if (string != null && string.startsWith(prefix)) {
-        if (removePrefix) {
-          return string.substring(prefix.length());
-        } else {
-          return string;
+    if (strings != null) {
+      for (String string : strings) {
+        if (string != null && string.startsWith(prefix)) {
+          if (removePrefix) {
+            return string.substring(prefix.length());
+          } else {
+            return string;
+          }
         }
       }
     }
