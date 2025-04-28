@@ -86,4 +86,28 @@ In a SAAS deployment the appropriate setting depends on whether the clients shar
  
 
 Regardless of how the JWKS endpoints are found, the acceptable issuers must be configured as tightly as possible.
+| [[requireExp]]requireExp
+| boolean
+| Set whether or tokens are required to have an exp (expiry timestamp) value.
+
+If a token has an exp value it must be valid.
+ 
+
+Defaults to true.
+| [[requireNbf]]requireNbf
+| boolean
+| Set whether or tokens are required to have an nbf (not valid before timestamp) value.
+
+If a token has an nbf value it must be valid.
+ 
+
+Defaults to true.
+| [[permittedTimeSkew]]permittedTimeSkew
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/time/Duration.html[Duration]
+| Set a value to enable systems to permit clock skew between (or just delay) between time values in tokens and the current wall time.
+
+As an example, if it takes 10ms to get a token to the validation code it is possible that a token that was valid when it was given out is no longer valid.
+ 
+
+The default value is 0 and this should not usually be changed.
 |===

@@ -257,7 +257,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
   void timezoneHandlingTest() throws Exception {
     
     int purgedTokens = jdbcHelper.runSqlUpdateSynchronously("purgeLogins", purgeLogins, ps -> {
-      JdbcHelper.setLocalDateTimeUTC(ps, 1, LocalDateTime.now(ZoneOffset.UTC));
+      JdbcHelper.setLocalDateTimeUTC(ps, 1, LocalDateTime.now(ZoneOffset.UTC).minusMonths(1));
     });
     logger.info("Purged {} expired tokens on startup", purgedTokens);
     

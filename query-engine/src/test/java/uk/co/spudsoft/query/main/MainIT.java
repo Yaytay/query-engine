@@ -126,6 +126,7 @@ public class MainIT {
       , "--pipelineCache.maxDurationMs=0"
       , "--pipelineCache.purgePeriodMs=10"
       , "--session.requireSession=false"
+      , "--enableBearerAuth=false"
       , "--session.oauth.GitHub.logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
       , "--session.oauth.GitHub.authorizationEndpoint=https://github.com/login/oauth/authorize"
       , "--session.oauth.GitHub.tokenEndpoint=https://github.com/login/oauth/access_token"
@@ -164,6 +165,7 @@ public class MainIT {
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--jwt.jwksEndpoints[0]=http://localhost/jwks"
       , "--logging.jsonFormat=true"
+      , "--enableBearerAuth=false"
       , "--sampleDataLoads[0].url=" + postgres.getVertxUrl()
       , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()
       , "--sampleDataLoads[0].adminUser.password=" + postgres.getPassword()
@@ -205,6 +207,46 @@ public class MainIT {
             .post("/query/sub1/sub2/TemplatedJsonToPipelineIT.json.vm")
             .then()
             .statusCode(404)
+            .log().all()
+            ;
+    
+    // Basic auth passed in but not configured
+    given()
+            .log().all()
+            .header("Authorization", "Basic bm9ib2R5OmlycmVsZXZhbnQ")
+            .get("/api/openapi.yaml")
+            .then()
+            .statusCode(401)
+            .log().all()
+            ;
+    
+    // Basic auth passed in but not configured
+    given()
+            .log().all()
+            .header("Authorization", "Basic bm9ib2R5OmlycmVsZXZhbnQ")
+            .get("/api/formio/demo/FeatureRichExample")
+            .then()
+            .statusCode(401)
+            .log().all()
+            ;
+    
+    // Bearer auth passed in but not configured
+    given()
+            .log().all()
+            .header("Authorization", "Bearer non.access.token")
+            .get("/api/openapi.yaml")
+            .then()
+            .statusCode(401)
+            .log().all()
+            ;
+    
+    // Bearer auth passed in but not configured
+    given()
+            .log().all()
+            .header("Authorization", "Bearer non.access.token")
+            .get("/api/formio/demo/FeatureRichExample")
+            .then()
+            .statusCode(401)
             .log().all()
             ;
     
@@ -324,6 +366,7 @@ public class MainIT {
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--jwt.jwksEndpoints[0]=http://localhost/jwks"
       , "--logging.jsonFormat=true"
+      , "--enableBearerAuth=false"
       , "--sampleDataLoads[0].url=" + postgres.getVertxUrl()
       , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()
       , "--sampleDataLoads[0].adminUser.password=" + postgres.getPassword()

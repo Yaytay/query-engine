@@ -650,6 +650,7 @@ public class Parameters {
    * Get the configuration of the JWT validator.
    * @return the configuration of the JWT validator.
    */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public JwtValidationConfig getJwt() {
     return jwt;
   }
@@ -659,6 +660,7 @@ public class Parameters {
    * @param jwt the configuration of the JWT validator.
    * @return this, so that the method may be called in a fluent manner.
    */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public Parameters setJwt(JwtValidationConfig jwt) {
     this.jwt = jwt;
     return this;

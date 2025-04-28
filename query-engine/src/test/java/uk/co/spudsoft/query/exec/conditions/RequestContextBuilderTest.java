@@ -31,6 +31,7 @@ import uk.co.spudsoft.query.main.BasicAuthConfig;
 import java.util.HashMap;
 import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import uk.co.spudsoft.query.main.Endpoint;
 
 /**
  *
@@ -38,6 +39,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  */
 public class RequestContextBuilderTest {
 
+  @Test
+  public void testEnsureNonBlankStartsWith() {
+    assertEquals("", RequestContextBuilder.ensureNonBlankStartsWith(null, "/"));
+    assertEquals("", RequestContextBuilder.ensureNonBlankStartsWith("", "/"));
+    assertEquals("/bob", RequestContextBuilder.ensureNonBlankStartsWith("bob", "/"));
+    assertEquals("/fred", RequestContextBuilder.ensureNonBlankStartsWith("/fred", "/"));
+  }
+  
   @Test
   public void testBuildRequestContextAllNulls() {
     RequestContextBuilder builder = new RequestContextBuilder(null, null, null, null, null, true, null, false, null, null, null);
@@ -66,6 +75,10 @@ public class RequestContextBuilderTest {
     when(request.authority()).thenReturn(new HostAndPortImpl("bob", 443));
     when(request.scheme()).thenReturn("https");
     assertEquals("https://bob", RequestContextBuilder.baseRequestUrl(request));
+
+    when(request.authority()).thenReturn(null);
+    when(request.scheme()).thenReturn("https");
+    assertEquals("https://", RequestContextBuilder.baseRequestUrl(request));
   }
 
   @Test
@@ -75,13 +88,13 @@ public class RequestContextBuilderTest {
 
     // Configure mock to return null/empty IdpMap and a valid default IdP
     when(basicAuthConfig.getIdpMap()).thenReturn(null);
-    when(basicAuthConfig.getDefaultIdp()).thenReturn("https://default-idp.example.com");
+    when(basicAuthConfig.getDefaultIdp()).thenReturn(new Endpoint("https://default-idp.example.com", null));
 
     // Call the method with any domain (should use default IdP)
-    String result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "example.com");
+    Endpoint result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "example.com", false);
 
     // Verify result
-    assertEquals("https://default-idp.example.com", result);
+    assertEquals("https://default-idp.example.com", result.getUrl());
   }
 
   @Test
@@ -91,13 +104,13 @@ public class RequestContextBuilderTest {
 
     // Configure mock to return empty IdpMap and a valid default IdP
     when(basicAuthConfig.getIdpMap()).thenReturn(new HashMap<>());
-    when(basicAuthConfig.getDefaultIdp()).thenReturn("https://default-idp.example.com");
+    when(basicAuthConfig.getDefaultIdp()).thenReturn(new Endpoint("https://default-idp.example.com", null));
 
     // Call the method with any domain (should use default IdP)
-    String result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "example.com");
+    Endpoint result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "example.com", false);
 
     // Verify result
-    assertEquals("https://default-idp.example.com", result);
+    assertEquals("https://default-idp.example.com", result.getUrl());
   }
 
   @Test
@@ -111,7 +124,7 @@ public class RequestContextBuilderTest {
 
     // Call the method - should throw IllegalStateException
     IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-      RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "example.com");
+      RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "example.com", false);
     });
 
     // Verify exception message
@@ -124,18 +137,18 @@ public class RequestContextBuilderTest {
     BasicAuthConfig basicAuthConfig = mock(BasicAuthConfig.class);
 
     // Create a non-empty IdpMap
-    Map<String, String> idpMap = new HashMap<>();
-    idpMap.put("example.com", "https://example-idp.com");
+    Map<String, Endpoint> idpMap = new HashMap<>();
+    idpMap.put("example.com", new Endpoint("https://example-idp.com", null));
 
     // Configure mock to return IdpMap and default IdP
     when(basicAuthConfig.getIdpMap()).thenReturn(idpMap);
-    when(basicAuthConfig.getDefaultIdp()).thenReturn("https://default-idp.example.com");
+    when(basicAuthConfig.getDefaultIdp()).thenReturn(new Endpoint("https://default-idp.example.com", null));
 
     // Call the method with empty domain (should use default IdP)
-    String result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "");
+    Endpoint result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "", false);
 
     // Verify result
-    assertEquals("https://default-idp.example.com", result);
+    assertEquals("https://default-idp.example.com", result.getUrl());
   }
 
   @Test
@@ -144,18 +157,18 @@ public class RequestContextBuilderTest {
     BasicAuthConfig basicAuthConfig = mock(BasicAuthConfig.class);
 
     // Create a non-empty IdpMap
-    Map<String, String> idpMap = new HashMap<>();
-    idpMap.put("example.com", "https://example-idp.com");
+    Map<String, Endpoint> idpMap = new HashMap<>();
+    idpMap.put("example.com", new Endpoint("https://example-idp.com", null));
 
     // Configure mock to return IdpMap and default IdP
     when(basicAuthConfig.getIdpMap()).thenReturn(idpMap);
-    when(basicAuthConfig.getDefaultIdp()).thenReturn("https://default-idp.example.com");
+    when(basicAuthConfig.getDefaultIdp()).thenReturn(new Endpoint("https://default-idp.example.com", null));
 
     // Call the method with null domain (should use default IdP)
-    String result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, null);
+    Endpoint result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, null, false);
 
     // Verify result
-    assertEquals("https://default-idp.example.com", result);
+    assertEquals("https://default-idp.example.com", result.getUrl());
   }
 
   @Test
@@ -164,8 +177,8 @@ public class RequestContextBuilderTest {
     BasicAuthConfig basicAuthConfig = mock(BasicAuthConfig.class);
 
     // Create a non-empty IdpMap
-    Map<String, String> idpMap = new HashMap<>();
-    idpMap.put("example.com", "https://example-idp.com");
+    Map<String, Endpoint> idpMap = new HashMap<>();
+    idpMap.put("example.com", new Endpoint("https://example-idp.com", null));
 
     // Configure mock to return IdpMap but no default IdP
     when(basicAuthConfig.getIdpMap()).thenReturn(idpMap);
@@ -173,7 +186,7 @@ public class RequestContextBuilderTest {
 
     // Call the method with empty domain - should throw IllegalStateException
     IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-      RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "");
+      RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "", false);
     });
 
     // Verify exception message
@@ -186,18 +199,18 @@ public class RequestContextBuilderTest {
     BasicAuthConfig basicAuthConfig = mock(BasicAuthConfig.class);
 
     // Create a non-empty IdpMap
-    Map<String, String> idpMap = new HashMap<>();
-    idpMap.put("example.com", "https://example-idp.com");
-    idpMap.put("other.com", "https://other-idp.com");
+    Map<String, Endpoint> idpMap = new HashMap<>();
+    idpMap.put("example.com", new Endpoint("https://example-idp.com", null));
+    idpMap.put("other.com", new Endpoint("https://other-idp.com", null));
 
     // Configure mock to return IdpMap
     when(basicAuthConfig.getIdpMap()).thenReturn(idpMap);
 
     // Call the method with a domain that exists in the map
-    String result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "example.com");
+    Endpoint result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "example.com", false);
 
     // Verify result
-    assertEquals("https://example-idp.com", result);
+    assertEquals("https://example-idp.com", result.getUrl());
   }
 
   @Test
@@ -206,18 +219,18 @@ public class RequestContextBuilderTest {
     BasicAuthConfig basicAuthConfig = mock(BasicAuthConfig.class);
 
     // Create a non-empty IdpMap
-    Map<String, String> idpMap = new HashMap<>();
-    idpMap.put("example.com", "https://example-idp.com");
+    Map<String, Endpoint> idpMap = new HashMap<>();
+    idpMap.put("example.com", new Endpoint("https://example-idp.com", null));
 
     // Configure mock to return IdpMap and default IdP
     when(basicAuthConfig.getIdpMap()).thenReturn(idpMap);
-    when(basicAuthConfig.getDefaultIdp()).thenReturn("https://default-idp.example.com");
+    when(basicAuthConfig.getDefaultIdp()).thenReturn(new Endpoint("https://default-idp.example.com", null));
 
     // Call the method with domain not in the map (should use default IdP)
-    String result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "unmapped.com");
+    Endpoint result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "unmapped.com", false);
 
     // Verify result
-    assertEquals("https://default-idp.example.com", result);
+    assertEquals("https://default-idp.example.com", result.getUrl());
   }
 
   @Test
@@ -226,8 +239,8 @@ public class RequestContextBuilderTest {
     BasicAuthConfig basicAuthConfig = mock(BasicAuthConfig.class);
 
     // Create a non-empty IdpMap
-    Map<String, String> idpMap = new HashMap<>();
-    idpMap.put("example.com", "https://example-idp.com");
+    Map<String, Endpoint> idpMap = new HashMap<>();
+    idpMap.put("example.com", new Endpoint("https://example-idp.com", null));
 
     // Configure mock to return IdpMap but no default IdP
     when(basicAuthConfig.getIdpMap()).thenReturn(idpMap);
@@ -235,7 +248,7 @@ public class RequestContextBuilderTest {
 
     // Call the method with domain not in the map - should throw IllegalStateException
     IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-      RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "unmapped.com");
+      RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "unmapped.com", false);
     });
 
     // Verify exception message
@@ -248,25 +261,25 @@ public class RequestContextBuilderTest {
     BasicAuthConfig basicAuthConfig = mock(BasicAuthConfig.class);
 
     // Create a non-empty IdpMap with one domain mapped to empty string
-    Map<String, String> idpMap = new HashMap<>();
-    idpMap.put("example.com", "");
+    Map<String, Endpoint> idpMap = new HashMap<>();
+    idpMap.put("example.com", new Endpoint("", null));
 
     // Configure mock to return IdpMap and default IdP
     when(basicAuthConfig.getIdpMap()).thenReturn(idpMap);
-    when(basicAuthConfig.getDefaultIdp()).thenReturn("https://default-idp.example.com");
+    when(basicAuthConfig.getDefaultIdp()).thenReturn(new Endpoint("https://default-idp.example.com", null));
 
     // Call the method with domain mapped to empty string (should use default IdP)
-    String result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "example.com");
+    Endpoint result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "example.com", false);
 
     // Verify result
-    assertEquals("https://default-idp.example.com", result);
+    assertEquals("https://default-idp.example.com", result.getUrl());
   }
 
   @Test
   void testFindAuthEndpoint_NullConfig() {
     // Call the method with null config - should throw NullPointerException
     assertThrows(NullPointerException.class, () -> {
-      RequestContextBuilder.findAuthEndpoint(null, "example.com");
+      RequestContextBuilder.findAuthEndpoint(null, "example.com", false);
     });
   }
 }

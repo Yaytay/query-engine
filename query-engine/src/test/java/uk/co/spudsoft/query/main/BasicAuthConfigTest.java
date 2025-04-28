@@ -49,18 +49,18 @@ public class BasicAuthConfigTest {
 
     // Test default IdP
     String defaultIdp = "https://default.auth.example.com/token";
-    config.setDefaultIdp(defaultIdp);
-    assertEquals(defaultIdp, config.getDefaultIdp());
+    config.setDefaultIdp(new Endpoint(defaultIdp, null));
+    assertEquals(defaultIdp, config.getDefaultIdp().getUrl());
 
     // Test IdP map
-    ImmutableMap<String, String> idpMap = ImmutableMap.of(
-      "domain1.com", "https://idp1.example.com/token",
-      "domain2.com", "https://idp2.example.com/token"
+    ImmutableMap<String, Endpoint> idpMap = ImmutableMap.of(
+      "domain1.com", new Endpoint("https://idp1.example.com/token", null),
+      "domain2.com", new Endpoint("https://idp2.example.com/token", null)
     );
     config.setIdpMap(idpMap);
     assertEquals(idpMap, config.getIdpMap());
-    assertEquals("https://idp1.example.com/token", config.getIdpMap().get("domain1.com"));
-    assertEquals("https://idp2.example.com/token", config.getIdpMap().get("domain2.com"));
+    assertEquals("https://idp1.example.com/token", config.getIdpMap().get("domain1.com").getUrl());
+    assertEquals("https://idp2.example.com/token", config.getIdpMap().get("domain2.com").getUrl());
   }
 
   /**
@@ -91,11 +91,11 @@ public class BasicAuthConfigTest {
     BasicAuthConfig config = new BasicAuthConfig();
 
     // Test with empty default IdP
-    config.setDefaultIdp("");
-    assertEquals("", config.getDefaultIdp());
+    config.setDefaultIdp(new Endpoint("", null));
+    assertEquals("", config.getDefaultIdp().getUrl());
 
     // Test with empty IdP map
-    ImmutableMap<String, String> emptyMap = ImmutableMap.of();
+    ImmutableMap<String, Endpoint> emptyMap = ImmutableMap.of();
     config.setIdpMap(emptyMap);
     assertTrue(config.getIdpMap().isEmpty());
   }

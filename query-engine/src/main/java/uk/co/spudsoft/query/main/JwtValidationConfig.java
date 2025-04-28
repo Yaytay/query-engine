@@ -113,6 +113,12 @@ public class JwtValidationConfig {
    */
   private Duration defaultJwksCacheDuration = Duration.ofMinutes(1);
 
+  
+  private boolean requireExp = true;
+  private boolean requireNbf = true;
+  
+  private Duration permittedTimeSkew = Duration.ZERO;
+  
   /**
    * Constructor.
    */
@@ -331,6 +337,84 @@ public class JwtValidationConfig {
     this.jwksEndpoints = jwksEndpoints;
     return this;
   }
+
+  /**
+   * Get whether or tokens are required to have an exp (expiry timestamp) value.
+   * <P>
+   * If a token has an exp value it must be valid.
+   * <P>
+   * Defaults to true.
+   * 
+   * @return true if tokens are required to have an exp (expiry timestamp) value.
+   */
+  public boolean isRequireExp() {
+    return requireExp;
+  }
+
+  /**
+   * Set whether or tokens are required to have an exp (expiry timestamp) value.
+   * <P>
+   * If a token has an exp value it must be valid.
+   * <P>
+   * Defaults to true.
+   * 
+   * @param requireExp true if tokens are required to have an exp (expiry timestamp) value.
+   */
+  public void setRequireExp(boolean requireExp) {
+    this.requireExp = requireExp;
+  }
+
+  /**
+   * Get whether or tokens are required to have an nbf (not valid before timestamp) value.
+   * <P>
+   * If a token has an nbf value it must be valid.
+   * <P>
+   * Defaults to true.
+   * @return true if tokens are required to have an nbf (not valid before timestamp) value.
+   */
+  public boolean isRequireNbf() {
+    return requireNbf;
+  }
+
+  /**
+   * Set whether or tokens are required to have an nbf (not valid before timestamp) value.
+   * <P>
+   * If a token has an nbf value it must be valid.
+   * <P>
+   * Defaults to true.
+   * @param requireNbf true if tokens are required to have an nbf (not valid before timestamp) value.
+   */
+  public void setRequireNbf(boolean requireNbf) {
+    this.requireNbf = requireNbf;
+  }
+
+  /**
+   * Get a value to enable systems to permit clock skew between (or just delay) between time values in tokens and the current wall time.
+   * <P>
+   * As an example, if it takes 10ms to get a token to the validation code it is possible that a token that was valid when it was given out is no longer valid.
+   * <P>
+   * The default value is 0 and this should not usually be changed.
+   * 
+   * @return the maximum time difference between the current UTC and the exp or nbf in a token for the token to still be considered valid.
+   */
+  public Duration getPermittedTimeSkew() {
+    return permittedTimeSkew;
+  }
+
+  /**
+   * Set a value to enable systems to permit clock skew between (or just delay) between time values in tokens and the current wall time.
+   * <P>
+   * As an example, if it takes 10ms to get a token to the validation code it is possible that a token that was valid when it was given out is no longer valid.
+   * <P>
+   * The default value is 0 and this should not usually be changed.
+   * 
+   * @param permittedTimeSkew the maximum time difference between the current UTC and the exp or nbf in a token for the token to still be considered valid.
+   */
+  public void setPermittedTimeSkew(Duration permittedTimeSkew) {
+    this.permittedTimeSkew = permittedTimeSkew;
+  }
+  
+  
 
   /**
    * Validate the provided parameters.

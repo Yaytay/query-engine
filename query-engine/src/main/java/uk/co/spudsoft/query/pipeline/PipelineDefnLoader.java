@@ -22,6 +22,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.hash.Hashing;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -109,6 +110,7 @@ public final class PipelineDefnLoader {
     mapper.setDefaultMergeable(Boolean.TRUE);
     mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     mapper.addHandler(PROBLEM_HANDLER);
+    mapper.registerModule(new JavaTimeModule());
     return mapper;
   }
 

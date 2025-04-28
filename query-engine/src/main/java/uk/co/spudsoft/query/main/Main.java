@@ -809,6 +809,11 @@ public class Main extends Application {
       openIdDiscoveryHandler = jsonWebKeySetHandler;
       jwtValidator = JwtValidator.create(jsonWebKeySetHandler, iah);
     }
+    jwtValidator.setRequireExp(jwtConfig.isRequireExp());
+    jwtValidator.setRequireNbf(jwtConfig.isRequireNbf());
+    if (jwtConfig.getPermittedTimeSkew() != null) {
+      jwtValidator.setTimeLeeway(jwtConfig.getPermittedTimeSkew());
+    }
 
     RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx)
             , jwtValidator

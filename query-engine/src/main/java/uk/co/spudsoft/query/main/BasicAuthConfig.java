@@ -16,7 +16,8 @@
  */
 package uk.co.spudsoft.query.main;
 
-import com.google.common.collect.ImmutableMap;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.HashMap;
 
 import java.util.Map;
 
@@ -36,9 +37,11 @@ public class BasicAuthConfig {
 
   private BasicAuthGrantType grantType = BasicAuthGrantType.clientCredentials;
 
-  private String defaultIdp;
+  private Credentials discoveryEndpointCredentials;
 
-  private ImmutableMap<String, String> idpMap = ImmutableMap.of();
+  private Endpoint defaultIdp;
+
+  private Map<String, Endpoint> idpMap = new HashMap<>();
 
   /**
    * Default constructor for the BasicAuthConfig class.
@@ -63,6 +66,29 @@ public class BasicAuthConfig {
   }
 
   /**
+   * Retrieves the credentials used for connecting to the authorization endpoint when OpenID Discovery is used.
+   * 
+   * This only needs to be set when OpenID Discovery is used with {@link BasicAuthGrantType#resourceOwnerPasswordCredentials}.
+   *
+   * @return the {@link Credentials} instance containing the username and password for the discovery endpoint.
+   */
+  public Credentials getDiscoveryEndpointCredentials() {
+    return discoveryEndpointCredentials;
+  }
+
+  /**
+   * Sets the credentials used for connecting to the authorization endpoint when OpenID Discovery is used.
+   *
+   * This only needs to be set when OpenID Discovery is used with {@link BasicAuthGrantType#resourceOwnerPasswordCredentials}.
+   *
+   * @param discoveryEndpointCredentials the {@link Credentials} instance containing the username and password
+   *                                     for the discovery endpoint.
+   */
+  public void setDiscoveryEndpointCredentials(Credentials discoveryEndpointCredentials) {
+    this.discoveryEndpointCredentials = discoveryEndpointCredentials;
+  }
+
+  /**
    * Get the IdP to use when no "domain" is specified in the username.
    * <P>
    * Note that this IdP will also be used for all requests if the IdMap is empty.
@@ -70,7 +96,8 @@ public class BasicAuthConfig {
    * This should be the full URL to which the grant request will be POSTed.
    * @return the IdP to use when no "domain" is specified in the username (or when the IdpMap is empty).
    */
-  public String getDefaultIdp() {
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
+  public Endpoint getDefaultIdp() {
     return defaultIdp;
   }
 
@@ -82,7 +109,8 @@ public class BasicAuthConfig {
    * This should be the full URL to which the grant request will be POSTed.
    * @param defaultIdp the IdP to use when no "domain" is specified in the username (or when the IdpMap is empty).
    */
-  public void setDefaultIdp(String defaultIdp) {
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
+  public void setDefaultIdp(Endpoint defaultIdp) {
     this.defaultIdp = defaultIdp;
   }
 
@@ -97,7 +125,8 @@ public class BasicAuthConfig {
    *
    * @return a map of "domains" to IdP URLs that will be consulted if the username in the request is of the form "user@domain".
    */
-  public Map<String, String> getIdpMap() {
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
+  public Map<String, Endpoint> getIdpMap() {
     return idpMap;
   }
 
@@ -108,7 +137,8 @@ public class BasicAuthConfig {
    *
    * @param idpMap a map of "domains" to IdP URLs that will be consulted if the username in the request is of the form "user@domain".
    */
-  public void setIdpMap(Map<String, String> idpMap) {
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
+  public void setIdpMap(Map<String, Endpoint> idpMap) {
     this.idpMap = ImmutableCollectionTools.copy(idpMap);
   }
 

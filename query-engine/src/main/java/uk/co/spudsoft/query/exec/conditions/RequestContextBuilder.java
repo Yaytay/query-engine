@@ -21,12 +21,14 @@ import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.Cookie;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.HostAndPort;
+import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -37,11 +39,13 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
 import uk.co.spudsoft.jwtvalidatorvertx.JwtValidator;
 import uk.co.spudsoft.jwtvalidatorvertx.OpenIdDiscoveryHandler;
+import uk.co.spudsoft.query.main.Endpoint;
 import uk.co.spudsoft.query.logging.VertxMDC;
 import uk.co.spudsoft.query.main.BasicAuthConfig;
 import uk.co.spudsoft.query.main.BasicAuthGrantType;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 import uk.co.spudsoft.query.web.LoginDao;
+import uk.co.spudsoft.query.web.ServiceException;
 
 /**
  * Factory object for constructing filled-in {@link RequestContext} objects.
@@ -112,9 +116,13 @@ public class RequestContextBuilder {
     this.enableBearerAuth = enableBearerAuth;
     this.openIdIntrospectionHeaderName = openIdIntrospectionHeaderName;
     this.deriveIssuerFromHost = deriveIssuerFromHost;
-    this.issuerHostPath = Strings.isNullOrEmpty(issuerHostPath) ? "" : issuerHostPath.startsWith("/") ? issuerHostPath : ("/" + issuerHostPath);
+    this.issuerHostPath = ensureNonBlankStartsWith(issuerHostPath, "/");
     this.audList = ImmutableCollectionTools.copy(requiredAuds);
     this.sessionCookieName = sessionCookie;
+  }
+
+  static String ensureNonBlankStartsWith(String path, String start) {
+    return Strings.isNullOrEmpty(path) ? "" : path.startsWith(start) ? path : (start + path);
   }
 
   static String baseRequestUrl(HttpServerRequest request) {
@@ -247,7 +255,8 @@ public class RequestContextBuilder {
     } else if (authHeader.startsWith(BASIC)) {
 
       if (basicAuthConfig == null || (basicAuthConfig.getGrantType() == null)) {
-        return build(request, null);
+        logger.warn("Request includes basic authentication credentials but system is not configured to handle them.");
+        return Future.failedFuture(new ServiceException(401, "Forbidden"));
       }
 
       String credentials = authHeader.substring(BASIC.length());
@@ -261,27 +270,30 @@ public class RequestContextBuilder {
 
       Future<String> tokenFuture = null;
       if (basicAuthConfig.getIdpMap() == null || basicAuthConfig.getIdpMap().isEmpty()) {
-        if (Strings.isNullOrEmpty(basicAuthConfig.getDefaultIdp())) {
+        if (basicAuthConfig.getDefaultIdp() == null) {
           tokenFuture = discoverer.performOpenIdDiscovery(baseRequestUrl(request))
                   .compose(dd -> {
-                    String authEndpoint = dd.getAuthorizationEndpoint();
+                    String authUrl = dd.getAuthorizationEndpoint();
                     if (basicAuthConfig.getGrantType() == BasicAuthGrantType.clientCredentials) {
-                      return performClientCredentialsGrant(authEndpoint, username, password);
+                      return performClientCredentialsGrant(authUrl, username, password);
                     } else {
-                      return performResourceOwnerPasswordCredentials(authEndpoint, username, password);
+                      Endpoint endpoint = new Endpoint();
+                      endpoint.setUrl(authUrl);
+                      endpoint.setCredentials(basicAuthConfig.getDiscoveryEndpointCredentials());
+                      return performResourceOwnerPasswordCredentials(endpoint, username, password);
                     }
                   });
         }
       }
       if (tokenFuture == null) {
-        String authEndpoint;
+        Endpoint authEndpoint;
         try {
-          authEndpoint = findAuthEndpoint(basicAuthConfig, domain);
+          authEndpoint = findAuthEndpoint(basicAuthConfig, domain, basicAuthConfig.getGrantType() == BasicAuthGrantType.resourceOwnerPasswordCredentials);
         } catch (Throwable ex) {
           return Future.failedFuture(ex);
         }
         if (basicAuthConfig.getGrantType() == BasicAuthGrantType.clientCredentials) {
-          tokenFuture = performClientCredentialsGrant(authEndpoint, username, password);
+          tokenFuture = performClientCredentialsGrant(authEndpoint.getUrl(), username, password);
         } else {
           tokenFuture = performResourceOwnerPasswordCredentials(authEndpoint, username, password);
         }
@@ -303,9 +315,11 @@ public class RequestContextBuilder {
     } else if (authHeader.startsWith(BEARER)) {
 
       if (!enableBearerAuth) {
-        return build(request, null);
+        logger.warn("Request includes bearer authentication but system is not configured to handle them.");
+        return Future.failedFuture(new ServiceException(401, "Forbiedden"));
       }
 
+      
       String token = authHeader.substring(BEARER.length());
       request.pause();
       return validator.validateToken(issuer(request), token, audList, false)
@@ -362,27 +376,33 @@ public class RequestContextBuilder {
    * @return The authentication endpoint URL as a String.
    * @throws IllegalStateException If no valid IdP configuration can be determined.
    */
-  static String findAuthEndpoint(BasicAuthConfig basicAuthConfig, String domain) throws IllegalStateException {
-    String authEndpoint;
+  static Endpoint findAuthEndpoint(BasicAuthConfig basicAuthConfig, String domain, boolean requireCredentials) throws IllegalStateException {
+    Endpoint authEndpoint;
     if (basicAuthConfig.getIdpMap() == null || basicAuthConfig.getIdpMap().isEmpty()) {
       authEndpoint = basicAuthConfig.getDefaultIdp();
-      if (Strings.isNullOrEmpty(authEndpoint)) {
+      if (authEndpoint == null || Strings.isNullOrEmpty(authEndpoint.getUrl())) {
         throw new IllegalStateException("No default IdP configured");
       }
     } else {
       if (Strings.isNullOrEmpty(domain)) {
         authEndpoint = basicAuthConfig.getDefaultIdp();
-        if (Strings.isNullOrEmpty(authEndpoint)) {
+        if (authEndpoint == null || Strings.isNullOrEmpty(authEndpoint.getUrl())) {
           throw new IllegalStateException("No default IdP configured for no domain");
         }
       } else {
         authEndpoint = basicAuthConfig.getIdpMap().get(domain);
-        if (Strings.isNullOrEmpty(authEndpoint)) {
+        if (authEndpoint == null || Strings.isNullOrEmpty(authEndpoint.getUrl())) {
           authEndpoint = basicAuthConfig.getDefaultIdp();
-          if (Strings.isNullOrEmpty(authEndpoint)) {
+          if (authEndpoint == null || Strings.isNullOrEmpty(authEndpoint.getUrl())) {
             throw new IllegalStateException("No default IdP configured and no mapped IdP configured");
           }
         }
+      }
+    }
+    if (requireCredentials) {
+      if ((authEndpoint.getCredentials() == null) || (Strings.isNullOrEmpty(authEndpoint.getCredentials().getUsername()))) {
+        logger.debug("No credentials found for {}", authEndpoint.getUrl());
+        throw new IllegalStateException("No credentials configured for IdP");
       }
     }
     return authEndpoint;
@@ -398,6 +418,7 @@ public class RequestContextBuilder {
             .sendForm(form)
             .compose(response -> {
               try {
+                logger.trace("CCG request to {} returned: {} {}", authEndpoint, response.statusCode(), response.bodyAsString());
                 JsonObject body = response.bodyAsJsonObject();
                 String token = body.getString("access_token");
                 logger.debug("Client {}@{} got token {}", clientId, authEndpoint, token);
@@ -409,16 +430,21 @@ public class RequestContextBuilder {
             });
   }
 
-  private Future<String> performResourceOwnerPasswordCredentials(String authEndpoint, String username, String password) {
+  private Future<String> performResourceOwnerPasswordCredentials(Endpoint authEndpoint, String username, String password) {
     logger.debug("Performing password request to {}", authEndpoint);
     MultiMap form = new HeadersMultiMap();
     form.add("grant_type", "password");
     form.add("username", username);
     form.add("password", password);
-    return webClient.postAbs(authEndpoint)
+    HttpRequest<Buffer> request = webClient.postAbs(authEndpoint.getUrl());
+    if (authEndpoint.getCredentials() != null) {
+      request.basicAuthentication(authEndpoint.getCredentials().getUsername(), authEndpoint.getCredentials().getPassword());
+    }
+    return request
             .sendForm(form)
             .compose(response -> {
               try {
+                logger.trace("ROPC request to {} returned: {} {}", authEndpoint, response.statusCode(), response.bodyAsString());
                 JsonObject body = response.bodyAsJsonObject();
                 String token = body.getString("access_token");
                 logger.debug("Client {}@{} got token {}", username, authEndpoint, token);

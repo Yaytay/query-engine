@@ -57,8 +57,13 @@ public class JexlEvaluatorTest {
     
     assertEquals(1, new JexlEvaluator("1").evaluateAsObject(request, null));
     assertEquals(28, new JexlEvaluator("28").evaluateAsObject(request, null));
+    assertEquals(Boolean.FALSE, new JexlEvaluator("andFn(true, null)").evaluateAsObject(request, null));
+    assertEquals(Boolean.TRUE, new JexlEvaluator("orFn(null, true)").evaluateAsObject(request, null));
     assertEquals("snooty", new JexlEvaluator("coalesce(request.jwt.getClaim('thingCustomerKey'), request.jwt.getClaim('rootCustomerKey'))").evaluateAsObject(request, null));
+    assertNull(new JexlEvaluator("coalesce(request.jwt.getClaim('thingCustomerKey'), request.jwt.getClaim('badCustomerKey'))").evaluateAsObject(request, null));
     assertEquals("Fred", new JexlEvaluator("firstMatchingStringWithPrefix(request.jwt.groups, '/Department_', true)").evaluateAsObject(request, null));
+    assertEquals("/Department_Fred", new JexlEvaluator("firstMatchingStringWithPrefix(request.jwt.groups, '/Department_', false)").evaluateAsObject(request, null));
+    assertNull(new JexlEvaluator("firstMatchingStringWithPrefix(request.jwt.stuff, '/Department_', false)").evaluateAsObject(request, null));
     assertEquals("OurClient", new JexlEvaluator("request.jwt.claim[\"client\"]").evaluateAsObject(request, null));
     assertEquals("Feed", new JexlEvaluator("\"Feed\"").evaluateAsObject(request, null));
     assertEquals("Feed", new JexlEvaluator("'Feed'").evaluateAsObject(request, null));

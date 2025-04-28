@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
@@ -571,7 +572,9 @@ public class RequestContext {
 
   /**
    * Checks if the current user belongs to at least one of the specified groups.
-   *
+   * <P>
+   * Each listed group will be treated as a regular expression.
+   * 
    * @param requirements the group names to check against, provided as a variable number of arguments
    * @return true if the user is part of at least one of the specified groups, false otherwise
    */
@@ -581,10 +584,25 @@ public class RequestContext {
       if (groups == null) {
         return false;
       }
-      for (String group : groups) {
-        for (String requirement : requirements) {
-          if (requirement != null && requirement.equals(group)) {
-            return true;
+      for (String requirement : requirements) {
+        if (Strings.isNullOrEmpty(requirement)) {
+          continue ;
+        }
+        Pattern pat = null;
+        try {
+          pat = Pattern.compile(requirement);
+        } catch (Throwable ex) {
+          logger.warn("Unable to trest required group \"{}\" as a regular expression: ", requirement, ex.getMessage());
+        }
+        for (String group : groups) {
+          if (pat != null) {
+            if (pat.matcher(group).matches()) {
+              return true;
+            }
+          } else {
+            if (requirement.equals(group)) {
+              return true;
+            }
           }
         }
       }
