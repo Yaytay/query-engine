@@ -161,14 +161,14 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
             try {
               parentKeyItem = target.cast(parentKeyItem);
             } catch (Exception ex) {
-              logger.warn("parentKeyItem {}:{} cannot be converted to {}", parentType, parentKeyItem, target);
+              logger.warn("parentKeyItem {}/{}:{} cannot be converted to {}", parentIdColumns.get(i), parentType, parentKeyItem, target);
             }
           }
           if (target != childType) {
             try {
               childKeyItem = target.cast(childKeyItem);
             } catch (Exception ex) {
-              logger.warn("childKeyItem {}:{} cannot be converted to {}", parentType, parentKeyItem, target);
+              logger.warn("childKeyItem {}/{}:{} cannot be converted to {}", childIdColumns.get(i), childType, childKeyItem, target);
             }
           }
         }
