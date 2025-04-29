@@ -91,6 +91,7 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
           }
         }
       }
+      logger.debug("Got types: {}", types);
       readyPromise.complete();
     });
     rowStream.pause();

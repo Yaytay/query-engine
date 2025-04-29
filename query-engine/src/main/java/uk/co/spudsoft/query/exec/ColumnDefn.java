@@ -69,5 +69,10 @@ public class ColumnDefn implements ColumnDescriptor {
   public DataType type() {
     return type;
   }
+
+  @Override
+  public String toString() {
+    return name + ":" + type;
+  }
   
 }

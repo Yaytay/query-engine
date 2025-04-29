@@ -152,4 +152,10 @@ public class Types {
   public int size() {
     return defns.size();
   }
+
+  @Override
+  public String toString() {
+    return "{" + defns + '}';
+  }
+  
 }
