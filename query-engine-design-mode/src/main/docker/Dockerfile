@@ -1,6 +1,6 @@
 FROM azul/zulu-openjdk-alpine:21.0.7-jdk
 
-RUN jlink --output /qe-java --add-modules java.base,java.compiler,java.management,java.net.http,jdk.management,jdk.unsupported,java.sql.rowset,java.desktop,jdk.naming.dns,java.security.gss,java.security.sasl,jdk.crypto.ac,jdk.crypto.cryptoki,jdk.security.auth
+RUN jlink --output /qe-java --add-modules java.base,java.compiler,java.management,java.net.http,jdk.management,jdk.unsupported,java.sql.rowset,java.desktop,jdk.naming.dns,java.naming,java.security.jgss,java.security.sasl,java.smartcardio,java.xml.crypto,jdk.crypto.cryptoki,jdk.crypto.ec,jdk.security.jgss 
 
 FROM alpine:3.21.3
 
