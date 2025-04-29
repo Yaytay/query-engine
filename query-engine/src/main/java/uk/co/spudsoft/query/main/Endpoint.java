@@ -76,6 +76,19 @@ public class Endpoint {
     this.credentials = credentials;
   }
 
-
+  @Override
+  public String toString() {
+    if (credentials != null && url != null) {
+      if (url.startsWith("https://")) {
+        return "https://" + credentials.getUsername() + "@" + url.substring(8);
+      } else if (url.startsWith("http://")) {
+        return "http://" + credentials.getUsername() + "@" + url.substring(7);
+      } else {
+        return credentials.getUsername() + "@" + url;
+      }
+    } else {
+      return url;
+    }
+  }
 
 }
