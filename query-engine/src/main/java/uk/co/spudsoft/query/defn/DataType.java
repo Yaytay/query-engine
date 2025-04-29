@@ -23,6 +23,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
+import java.util.Date;
 
 /**
  * The basic data types that values can have in Query Engine.
@@ -42,23 +43,23 @@ public enum DataType {
   /**
    * The value is a java.lang.Integer.
    */
-  Integer(JDBCType.INTEGER, 16), 
+  Integer(JDBCType.INTEGER, 16),
   /**
    * The value is a java.lang.Long.
    */
-  Long(JDBCType.BIGINT, 24), 
+  Long(JDBCType.BIGINT, 24),
   /**
    * The value is a java.lang.Float.
    */
-  Float(JDBCType.FLOAT, 16), 
+  Float(JDBCType.FLOAT, 16),
   /**
    * The value is a java.lang.Double.
    */
-  Double(JDBCType.DOUBLE, 24), 
+  Double(JDBCType.DOUBLE, 24),
   /**
    * The value is a java.lang.String.
    */
-  String(JDBCType.NVARCHAR, -1), 
+  String(JDBCType.NVARCHAR, -1),
   /**
    * The value is a java.lang.Boolean.
    */
@@ -66,11 +67,11 @@ public enum DataType {
   /**
    * The value is a java.time.LocalDate.
    */
-  Date(JDBCType.DATE, 24), 
+  Date(JDBCType.DATE, 24),
   /**
    * The value is a java.time.LocalDateTime.
    */
-  DateTime(JDBCType.TIMESTAMP, 24), 
+  DateTime(JDBCType.TIMESTAMP, 24),
   /**
    * The value is a java.time.LocalTime.
    */
@@ -140,10 +141,10 @@ public enum DataType {
    * <p>
    * If the value is already in the appropriate type it will be returned as is
    * ; if it's a compatible type if will be converted; if it's a string it will be parsed; otherwise it will be converted to a string and then parsed.
-   * 
+   *
    * @param value the value to be cast.
    * @return the passed in value in this data type.
-   * @throws java.lang.Exception if the value cannot be converted to this type.
+   * @throws Exception if the value cannot be converted to this type.
    */
   public Comparable<?> cast(Object value) throws Exception {
     if (value == null) {
@@ -246,7 +247,7 @@ public enum DataType {
         case Instant tv -> {
           return LocalDate.ofInstant(tv, ZoneOffset.UTC);
         }
-        case java.util.Date tv -> {
+        case Date tv -> {
           return LocalDate.ofInstant(tv.toInstant(), ZoneOffset.UTC);
         }
         case String tv -> {
@@ -267,7 +268,7 @@ public enum DataType {
         case Instant tv -> {
           return LocalDateTime.ofInstant(tv, ZoneOffset.UTC);
         }
-        case java.util.Date tv -> {
+        case Date tv -> {
           return LocalDateTime.ofInstant(tv.toInstant(), ZoneOffset.UTC);
         }
         case String tv -> {
@@ -288,7 +289,7 @@ public enum DataType {
         case Instant tv -> {
           return LocalTime.ofInstant(tv, ZoneOffset.UTC);
         }
-        case java.util.Date tv -> {
+        case Date tv -> {
           return LocalTime.ofInstant(tv.toInstant(), ZoneOffset.UTC);
         }
         case String tv -> {
@@ -302,7 +303,111 @@ public enum DataType {
       throw new IllegalArgumentException("Unhandled value type: " + value.getClass());
     }
   }
-  
+
+  /**
+   * Determines the common data type between the current instance and another specified data type.
+   *
+   * @param other the {@code DataType} to be compared with the current instance.
+   *              Must not be null.
+   * @return the common {@code DataType} between the current instance and the specified {@code other},
+   *         based on compatibility rules.
+   * @throws IllegalArgumentException if no common data type exists between the two {@code DataType} instances,
+   *                                  or if the {@code other} parameter is null.
+   */
+  public DataType commonType(DataType other) {
+    if (other == null) {
+      throw new IllegalArgumentException("No common type between " + this.name() + " and null");
+    }
+    return switch (this) {
+      case Null -> other;
+      case Integer -> switch (other) {
+        case Null -> DataType.Integer;
+        case Boolean -> DataType.Integer;
+        case Integer -> DataType.Integer;
+        case Long -> DataType.Long;
+        case Float -> DataType.Float;
+        case Double -> DataType.Double;
+        case String -> DataType.String;
+        default -> {
+          throw new IllegalArgumentException("No common type between " + this.name() + " and " + other.name());
+        }
+      };
+      case Long -> switch (other) {
+        case Null -> DataType.Long;
+        case Boolean -> DataType.Long;
+        case Integer -> DataType.Long;
+        case Long -> DataType.Long;
+        case Float -> DataType.Float;
+        case Double -> DataType.Double;
+        case String -> DataType.String;
+        default -> {
+          throw new IllegalArgumentException("No common type between " + this.name() + " and " + other.name());
+        }
+      };
+      case Float -> switch (other) {
+        case Null -> DataType.Float;
+        case Boolean -> DataType.Float;
+        case Integer -> DataType.Float;
+        case Long -> DataType.Float;
+        case Float -> DataType.Float;
+        case Double -> DataType.Double;
+        case String -> DataType.String;
+        default -> {
+          throw new IllegalArgumentException("No common type between " + this.name() + " and " + other.name());
+        }
+      };
+      case Double -> switch (other) {
+        case Null -> DataType.Double;
+        case Boolean -> DataType.Double;
+        case Integer -> DataType.Double;
+        case Long -> DataType.Double;
+        case Float -> DataType.Double;
+        case Double -> DataType.Double;
+        case String -> DataType.String;
+        default -> {
+          throw new IllegalArgumentException("No common type between " + this.name() + " and " + other.name());
+        }
+      };
+      case String -> DataType.String;
+      case Boolean -> switch (other) {
+        case Null -> DataType.Boolean;
+        case Boolean -> DataType.Boolean;
+        case Integer -> DataType.Integer;
+        case Long -> DataType.Long;
+        case Float -> DataType.Float;
+        case Double -> DataType.Double;
+        case String -> DataType.String;
+        default -> {
+          throw new IllegalArgumentException("No common type between " + this.name() + " and " + other.name());
+        }
+      };
+      case Date -> switch (other) {
+        case Null -> DataType.Date;
+        case Date -> DataType.Date;
+        case String -> DataType.String;
+        default -> {
+          throw new IllegalArgumentException("No common type between " + this.name() + " and " + other.name());
+        }
+      };
+      case DateTime -> switch (other) {
+        case Null -> DataType.DateTime;
+        case DateTime -> DataType.DateTime;
+        case String -> DataType.String;
+        default -> {
+          throw new IllegalArgumentException("No common type between " + this.name() + " and " + other.name());
+        }
+      };
+      case Time -> switch (other) {
+        case Null -> DataType.Time;
+        case Time -> DataType.Time;
+        case String -> DataType.String;
+        default -> {
+          throw new IllegalArgumentException("No common type between " + this.name() + " and " + other.name());
+        }
+      };
+    };
+  }
+
   /**
    * Get the value uses to represent this datatype in JDBC.
    * @return the value uses to represent this datatype in JDBC.

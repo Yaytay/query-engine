@@ -23,6 +23,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.streams.ReadStream;
 import java.util.List;
 import org.slf4j.Logger;
+import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
@@ -149,6 +150,30 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
     for (int i = 0; i < parentIdColumns.size(); ++i) {
       Comparable parentKeyItem = parentRow.get(parentIdColumns.get(i));
       Comparable childKeyItem = childRow.get(childIdColumns.get(i));
+      
+      if (childKeyItem != null) {
+        if (parentKeyItem.getClass() != childKeyItem.getClass()) {
+          // Items are not of compatible types, if possible, extend them to the larger
+          DataType parentType = parentRow.getType(parentIdColumns.get(i));
+          DataType childType = childRow.getType(childIdColumns.get(i));
+          DataType target = parentType.commonType(childType);
+          if (target != parentType) {
+            try {
+              parentKeyItem = target.cast(parentKeyItem);
+            } catch (Exception ex) {
+              logger.warn("parentKeyItem {}:{} cannot be converted to {}", parentType, parentKeyItem, target);
+            }
+          }
+          if (target != childType) {
+            try {
+              childKeyItem = target.cast(childKeyItem);
+            } catch (Exception ex) {
+              logger.warn("childKeyItem {}:{} cannot be converted to {}", parentType, parentKeyItem, target);
+            }
+          }
+        }
+      }
+      
       int compareResult = parentKeyItem.compareTo(childKeyItem);
       if (compareResult != 0) {
         return compareResult;
