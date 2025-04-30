@@ -16,21 +16,27 @@
  */
 package uk.co.spudsoft.query.exec.fmts.json;
 
+import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.defn.DataType;
+import uk.co.spudsoft.query.defn.FormatJson;
+import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormattingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
+import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
 
@@ -46,22 +52,29 @@ public class FormatJsonInstance implements FormatInstance {
   private static final Logger logger = LoggerFactory.getLogger(FormatJsonInstance.class);
  
   private final WriteStream<Buffer> outputStream;
+  private final FormatJson defn;
   private final FormattingWriteStream formattingStream;
   
-  private static final Buffer OPEN = Buffer.buffer("[");
+  private static final Buffer OPEN_ARRAY = Buffer.buffer("[");
   private static final Buffer COMMA = Buffer.buffer(",");
-  private static final Buffer CLOSE = Buffer.buffer("]");
+  private static final Buffer CLOSE_ARRAY = Buffer.buffer("]");
+  private static final Buffer CLOSE_ARRAY_AND_OBJECT = Buffer.buffer("]}");
   private final AtomicBoolean started = new AtomicBoolean();
+  private Types types;
   
   /**
    * Constructor.
    * @param outputStream The WriteStream that the data is to be sent to.
+   * @param defn The definition of the output.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "FormatJsonInstance is a wrapper around WriteStream<Buffer>, it will make mutating calls to it")
-  public FormatJsonInstance(WriteStream<Buffer> outputStream) {
+  public FormatJsonInstance(WriteStream<Buffer> outputStream, FormatJson defn) {
     this.outputStream = outputStream;
+    this.defn = defn;
     this.formattingStream = new FormattingWriteStream(outputStream
-            , v -> outputStream.write(OPEN)
+            , v -> {
+              return start();
+            }
             , row -> {
               logger.debug("Outputting row: {}", row);
               if (row.isEmpty()) {
@@ -83,15 +96,50 @@ public class FormatJsonInstance implements FormatInstance {
                   requestContext.setRowsWritten(rows);
                 }
               }
-              return outputStream.write(CLOSE)
+              return end()
                       .compose(v2 -> outputStream.end())
                       ;
             }
     );
   }
+  
+  private Future<Void> start() {
+    if (Strings.isNullOrEmpty(defn.getDataName())) {
+      return outputStream.write(OPEN_ARRAY);
+    } else {
+      String start;
+      if (Strings.isNullOrEmpty(defn.getMetadataName())) {
+        start = "{\"" + defn.getDataName() + "\":";
+      } else {
+        DataRow row = DataRow.create(types);
+        types.forEach(cd -> {
+          String typeName = cd.typeName();
+          if (defn.isCompatibleTypeNames()) {
+            if (cd.type() == DataType.Boolean) {
+              typeName = "bool";
+            } else {
+              typeName = typeName.toLowerCase(Locale.ROOT);
+            }
+          }
+          row.put(cd.name(), typeName);
+        });
+        start = "{\"" + defn.getMetadataName() + "\":" + row.toJson().toString() + ", \"" + defn.getDataName() + "\":";
+      }
+      return outputStream.write(Buffer.buffer(start));
+    }
+  }
+  
+  private Future<Void> end() {
+    if (Strings.isNullOrEmpty(defn.getDataName())) {
+      return outputStream.write(CLOSE_ARRAY);
+    } else {
+      return outputStream.write(CLOSE_ARRAY_AND_OBJECT);
+    }
+  }
 
   @Override
   public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStreamWithTypes input) {
+    this.types = input.getTypes();
     return input.getStream().pipeTo(formattingStream);
   }
   

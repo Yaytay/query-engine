@@ -20,7 +20,10 @@ import com.google.common.net.MediaType;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 
@@ -48,6 +51,21 @@ public class FormatJsonTest {
     assertEquals("format", dj.getName());
     dj = FormatJson.builder().mediaType("image/gif").build();
     assertEquals(MediaType.GIF, dj.getMediaType());
+    
+    assertNull(dj.getDataName());
+    assertNull(dj.getMetadataName());
+    assertFalse(dj.isCompatibleTypeNames());
+    
+    dj = FormatJson.builder().dataName("ddata").build();
+    assertEquals("ddata", dj.getDataName());
+    
+    dj = FormatJson.builder().metadataName("mmeta").build();
+    assertEquals("mmeta", dj.getMetadataName());
+    
+    dj = FormatJson.builder().compatibleTypeNames(Boolean.FALSE).build();
+    assertFalse(dj.isCompatibleTypeNames());
+    dj = FormatJson.builder().compatibleTypeNames(Boolean.TRUE).build();
+    assertTrue(dj.isCompatibleTypeNames());
   }
   
   @Test
@@ -56,7 +74,12 @@ public class FormatJsonTest {
     assertThrows(IllegalArgumentException.class, () -> {
       FormatJson.builder().name(null).build().validate();
     });
+    assertThrows(IllegalArgumentException.class, () -> {
+      FormatJson.builder().name("json").metadataName("meta").build().validate();
+    });
     FormatJson.builder().name("name").build().validate();
+    FormatJson.builder().name("json").dataName("data").build().validate();
+    FormatJson.builder().name("json").dataName("data").metadataName("meta").build().validate();    
   }
   
 }
