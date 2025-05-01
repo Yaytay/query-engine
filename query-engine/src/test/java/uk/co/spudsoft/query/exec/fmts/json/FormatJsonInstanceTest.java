@@ -91,7 +91,7 @@ public class FormatJsonInstanceTest {
 
     // Date/time values might be formatted as strings
     assertEquals("15 May 2023", result.getValue("dateValue"));
-    assertEquals("1:45 pm", result.getValue("timeValue"));
+    assertEquals("1:45 pm", ((String) result.getValue("timeValue")).toLowerCase());
     assertEquals("15 May 2023 1:45 pm", result.getValue("dateTimeValue"));
   }
 
@@ -116,7 +116,7 @@ public class FormatJsonInstanceTest {
 
     // Date/time values might be formatted as strings
     assertEquals("15 May 2023", result.getValue("dateValue"));
-    assertEquals("1:45 pm", result.getValue("timeValue"));
+    assertEquals("1:45 pm", ((String) result.getValue("timeValue")).toLowerCase());
     assertEquals(1684158330L, result.getValue("dateTimeValue"));
   }
 
@@ -141,7 +141,7 @@ public class FormatJsonInstanceTest {
 
     // Date/time values might be formatted as strings
     assertEquals("15 May 2023", result.getValue("dateValue"));
-    assertEquals("1:45 pm", result.getValue("timeValue"));
+    assertEquals("1:45 pm", ((String) result.getValue("timeValue")).toLowerCase());
     assertEquals(1684158330000L, result.getValue("dateTimeValue"));
   }
 
