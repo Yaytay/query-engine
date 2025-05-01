@@ -25,6 +25,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
+import java.time.format.DateTimeFormatter;
 import uk.co.spudsoft.query.exec.fmts.json.FormatJsonInstance;
 import uk.co.spudsoft.query.exec.FormatInstance;
 
@@ -44,10 +45,16 @@ public class FormatJson implements Format {
   private final String name;
   private final String extension;
   private final MediaType mediaType;
+  private final boolean hidden;
   
   private final String dataName;
   private final String metadataName;
   private final boolean compatibleTypeNames;
+  private final String dateFormat;
+  private final String dateTimeFormat;
+  private final String timeFormat;
+  
+  
 
   @Override
   public FormatInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
@@ -62,6 +69,27 @@ public class FormatJson implements Format {
     }
     if (!Strings.isNullOrEmpty(metadataName) && Strings.isNullOrEmpty(dataName)) {
       throw new IllegalArgumentException("metadataName is set, but dataName is not");
+    }
+    if (!Strings.isNullOrEmpty(dateFormat)) {
+      try {
+        DateTimeFormatter.ofPattern(dateFormat);
+      } catch (Throwable ex) {
+        throw new IllegalArgumentException("Invalid dateFormat: " + ex.getMessage());
+      }
+    }
+    if (!Strings.isNullOrEmpty(dateTimeFormat)) {
+      try {
+        DateTimeFormatter.ofPattern(dateTimeFormat);
+      } catch (Throwable ex) {
+        throw new IllegalArgumentException("Invalid dateTimeFormat: " + ex.getMessage());
+      }
+    }
+    if (!Strings.isNullOrEmpty(timeFormat)) {
+      try {
+        DateTimeFormatter.ofPattern(timeFormat);
+      } catch (Throwable ex) {
+        throw new IllegalArgumentException("Invalid timeFormat: " + ex.getMessage());
+      }
     }
   }
   
@@ -139,6 +167,22 @@ public class FormatJson implements Format {
   )
   public MediaType getMediaType() {
     return mediaType;
+  }
+
+  @Schema(description = """
+                        <P>Whether the format should be removed from the list when presented as an option to users.
+                        <P>
+                        This has no effect on processing and is purely a UI hint.
+                        <P>
+                        When hidden is true the format should removed from any UI presenting formats to the user.
+                        </P>
+                        """
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+          , defaultValue = "false"
+  )
+  @Override
+  public boolean isHidden() {
+    return hidden;
   }
 
   /**
@@ -238,6 +282,69 @@ public class FormatJson implements Format {
   }
 
   /**
+   * Get the Java format to use for date fields.
+   * <P>
+   * To be processed by a Java {@link DateTimeFormatter}.
+   * 
+   * @return the Java format to use for date fields.
+   */
+  @Schema(description = """
+                        The Java format to use for date fields.
+                        <P>
+                        This value will be used by the Java DateTimeFormatter to format dates.
+                        """
+          , maxLength = 100
+          , defaultValue = "yyyy-mm-dd"
+  )
+  public String getDateFormat() {
+    return dateFormat;
+  }
+
+  /**
+   * Get the Java format to use for date/time columns.
+   * <P>
+   * To be processed by a Java {@link DateTimeFormatter}.
+   * <P>
+   * Many JSON users expect timestamps as time since epoch, for their benefit
+   * the special values "EPOCH_SECONDS" and "EPOCH_MILLISECONDS" can be used to output date/time values as seconds (or milliseconds) since the epoch.
+   * 
+   * @return the Java format to use for date/time columns.
+   */
+  @Schema(description = """
+                        The Java format to use for date/time columns.
+                        <P>
+                        This value will be used by the Java DateTimeFormatter to format datetimes.
+                        <P>
+                        Many JSON users expect timestamps as time since epoch, for their benefit
+                        the special values "EPOCH_SECONDS" and "EPOCH_MILLISECONDS" can be used to output date/time values as seconds (or milliseconds) since the epoch.
+                        """
+          , maxLength = 100
+          , defaultValue = "yyyy-mm-ddThh:mm:ss"
+  )
+  public String getDateTimeFormat() {
+    return dateTimeFormat;
+  }
+
+  /**
+   * Get the Java format to use for time columns.
+   * <P>
+   * To be processed by a Java {@link DateTimeFormatter}.
+   * 
+   * @return the Java format to use for time columns.
+   */
+  @Schema(description = """
+                        The Java format to use for time columns.
+                        <P>
+                        This value will be used by the Java DateTimeFormatter to format times.
+                        """
+          , maxLength = 100
+          , defaultValue = "hh:mm:ss"
+  )
+  public String getTimeFormat() {
+    return timeFormat;
+  }
+  
+  /**
    * Builder class for FormatJson.
    */
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
@@ -247,10 +354,14 @@ public class FormatJson implements Format {
     private String name = "json";
     private String extension = "json";
     private MediaType mediaType = MediaType.parse("application/json");
+    private boolean hidden = false;
 
     private String dataName;
     private String metadataName;
     private boolean compatibleTypeNames;
+    private String dateFormat;
+    private String dateTimeFormat;
+    private String timeFormat;
     
     private Builder() {
     }
@@ -296,6 +407,17 @@ public class FormatJson implements Format {
     }
 
     /**
+     * Set the hidden property of the format.
+     *
+     * @param hidden the {@link Format#isHidden()} property of the format.
+     * @return this Builder instance.
+     */
+    public Builder hidden(final boolean hidden) {
+      this.hidden = hidden;
+      return this;
+    }
+
+    /**
      * Set the {@link FormatJson#dataName} value in the builder.
      * @param value The value for the {@link FormatJson#dataName}.
      * @return this, so that this builder may be used in a fluent manner.
@@ -326,11 +448,44 @@ public class FormatJson implements Format {
     }
     
     /**
+     * Set the {@link FormatJson#dateFormat} value in the builder.
+     * @param value The value for the {@link FormatJson#dateFormat}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder dateFormat(final String value) {
+      this.dateFormat = value;
+      return this;
+    }
+
+    /**
+     * Set the {@link FormatJson#dateTimeFormat} value in the builder.
+     * @param value The value for the {@link FormatJson#metadataName}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder dateTimeFormat(final String value) {
+      this.dateTimeFormat = value;
+      return this;
+    }
+
+    /**
+     * Set the {@link FormatJson#timeFormat} value in the builder.
+     * @param value The value for the {@link FormatJson#metadataName}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder timeFormat(final String value) {
+      this.timeFormat = value;
+      return this;
+    }
+
+    /**
      * Construct a new instance of the FormatJson class.
      * @return a new instance of the FormatJson class.
      */
     public FormatJson build() {
-      return new uk.co.spudsoft.query.defn.FormatJson(type, name, extension, mediaType, dataName, metadataName, compatibleTypeNames);
+      return new uk.co.spudsoft.query.defn.FormatJson(type, name, extension, mediaType
+              , hidden, dataName, metadataName, compatibleTypeNames
+              , dateFormat, dateTimeFormat, timeFormat
+      );
     }
   }
 
@@ -342,15 +497,22 @@ public class FormatJson implements Format {
     return new FormatJson.Builder();
   }
 
-  private FormatJson(final FormatType type, final String name, final String extension, final MediaType mediaType, String dataName, String metadataName, Boolean compatibleTypeNames) {
+  private FormatJson(final FormatType type, final String name, final String extension, final MediaType mediaType
+          , final boolean hidden, String dataName, String metadataName, Boolean compatibleTypeNames
+          , final String dateFormat, final String dateTimeFormat, final String timeFormat
+  ) {
     validateType(FormatType.JSON, type);
     this.type = type;
     this.name = name;
     this.extension = extension;
     this.mediaType = mediaType;
+    this.hidden = hidden;
     this.dataName = dataName;
     this.metadataName = metadataName;
     this.compatibleTypeNames = compatibleTypeNames == null ? false : compatibleTypeNames;
+    this.dateFormat = dateFormat;
+    this.dateTimeFormat = dateTimeFormat;
+    this.timeFormat = timeFormat;
   }
   
 }

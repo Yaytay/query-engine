@@ -65,6 +65,7 @@ public class FormatHtml implements Format {
   private final String name;
   private final String extension;
   private final MediaType mediaType;
+  private final boolean hidden;
 
   @Override
   public FormatInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
@@ -157,6 +158,22 @@ public class FormatHtml implements Format {
   public MediaType getMediaType() {
     return mediaType;
   }
+
+  @Schema(description = """
+                        <P>Whether the format should be removed from the list when presented as an option to users.
+                        <P>
+                        This has no effect on processing and is purely a UI hint.
+                        <P>
+                        When hidden is true the format should removed from any UI presenting formats to the user.
+                        </P>
+                        """
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+          , defaultValue = "false"
+  )
+  @Override
+  public boolean isHidden() {
+    return hidden;
+  }
   
   /**
    * Builder class for FormatJson.
@@ -168,6 +185,7 @@ public class FormatHtml implements Format {
     private String name = "html";
     private String extension = "html";
     private MediaType mediaType = MediaType.parse("text/html");
+    private boolean hidden = false;
 
     private Builder() {
     }
@@ -213,11 +231,22 @@ public class FormatHtml implements Format {
     }
 
     /**
+     * Set the hidden property of the format.
+     *
+     * @param hidden the {@link Format#isHidden()} property of the format.
+     * @return this Builder instance.
+     */
+    public Builder hidden(final boolean hidden) {
+      this.hidden = hidden;
+      return this;
+    }
+
+    /**
      * Construct a new instance of the FormatHtml class.
      * @return a new instance of the FormatHtml class.
      */
     public FormatHtml build() {
-      return new uk.co.spudsoft.query.defn.FormatHtml(type, name, extension, mediaType);
+      return new uk.co.spudsoft.query.defn.FormatHtml(type, name, extension, mediaType, hidden);
     }
   }
 
@@ -229,12 +258,13 @@ public class FormatHtml implements Format {
     return new FormatHtml.Builder();
   }
 
-  private FormatHtml(final FormatType type, final String name, final String extension, final MediaType mediaType) {
+  private FormatHtml(final FormatType type, final String name, final String extension, final MediaType mediaType, final boolean hidden) {
     validateType(FormatType.HTML, type);
     this.type = type;
     this.name = name;
     this.extension = extension;
     this.mediaType = mediaType;
+    this.hidden = hidden;
   }
   
 }

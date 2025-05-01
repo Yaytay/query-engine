@@ -521,7 +521,11 @@ public final class PipelineDefnLoader {
                 return readPipelineFromFile(file, context)
                         .onSuccess(paf -> {
                           if (logger.isDebugEnabled()) {
-                            logger.debug("Loaded {} as {}", srcPath, Json.encode(paf.pipeline));
+                            try {
+                              logger.debug("Loaded {} as {}", srcPath, JSON_OBJECT_MAPPER.writeValueAsString(paf.pipeline));
+                            } catch (Throwable ex) {
+                              logger.debug("Loaded {} but failed to convert it to JSON: ", srcPath, ex);
+                            }
                           }
                         })
                         .recover(ex -> {

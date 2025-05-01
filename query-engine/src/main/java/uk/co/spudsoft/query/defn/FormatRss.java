@@ -49,6 +49,7 @@ public class FormatRss implements Format {
   private final String name;
   private final String extension;
   private final MediaType mediaType;
+  private final boolean hidden;
 
   private final String fieldInitialLetterFix;
   private final String fieldInvalidLetterFix;
@@ -61,6 +62,7 @@ public class FormatRss implements Format {
     this.name = builder.name;
     this.extension = builder.extension;
     this.mediaType = builder.mediaType;
+    this.hidden = builder.hidden;
     this.fieldInitialLetterFix = builder.fieldInitialLetterFix;
     this.fieldInvalidLetterFix = builder.fieldInvalidLetterFix;
   }
@@ -168,6 +170,22 @@ public class FormatRss implements Format {
     return mediaType;
   }
 
+  @Schema(description = """
+                        <P>Whether the format should be removed from the list when presented as an option to users.
+                        <P>
+                        This has no effect on processing and is purely a UI hint.
+                        <P>
+                        When hidden is true the format should removed from any UI presenting formats to the user.
+                        </P>
+                        """
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+          , defaultValue = "false"
+  )
+  @Override
+  public boolean isHidden() {
+    return hidden;
+  }
+
   /**
    * Get the field initial letter fix to adjust XML field names.
    *
@@ -207,6 +225,7 @@ public class FormatRss implements Format {
     private String name = "RSS";
     private String extension = "xml";
     private MediaType mediaType = MediaType.parse("application/rss+xml");
+    private boolean hidden = false;
 
     private String fieldInitialLetterFix;
     private String fieldInvalidLetterFix;
@@ -258,6 +277,17 @@ public class FormatRss implements Format {
      */
     public Builder mediaType(MediaType mediaType) {
       this.mediaType = mediaType;
+      return this;
+    }
+
+    /**
+     * Set the hidden property of the format.
+     *
+     * @param hidden the {@link Format#isHidden()} property of the format.
+     * @return this Builder instance.
+     */
+    public Builder hidden(final boolean hidden) {
+      this.hidden = hidden;
       return this;
     }
 

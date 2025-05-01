@@ -61,3 +61,13 @@ formats:
   headerRow: false
 - type: HTML
   name: table
+- type: JSON
+  name: json1
+- type: JSON
+  name: json2
+  metadataName: meta
+  dataName: data
+  dateTimeFormat: yyyy-MM-dd HH:mm:ss
+  compatibleTypeNames: true
+  hidden: true
+  

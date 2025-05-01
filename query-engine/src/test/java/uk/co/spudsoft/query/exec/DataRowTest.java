@@ -48,24 +48,6 @@ public class DataRowTest {
   }
   
   @Test
-  public void testToJson() {
-    DataRow row = create();
-    row.bytesSize();
-    JsonObject jo = row.toJson();
-    assertEquals(10, jo.size());
-    assertEquals(null, jo.getValue("nullValue"));
-    assertEquals(7, jo.getValue("intValue"));
-    assertEquals(1099511627776L, jo.getValue("longValue"));
-    assertEquals(3.4f, jo.getValue("floatValue"));
-    assertEquals(3.1415926, jo.getValue("doubleValue"));
-    assertEquals("wibble", jo.getValue("stringValue"));
-    assertEquals(true, jo.getValue("boolValue"));
-    assertEquals("12:34", jo.getValue("timeValue"));
-    assertEquals("1971-05-06", jo.getValue("dateValue"));
-    assertEquals("1971-05-06T12:34", jo.getValue("dateTimeValue"));
-  }
-
-  @Test
   public void testGet() {
     DataRow row = create();
     assertThrows(IllegalArgumentException.class, () -> row.put("sqlDate", new java.sql.Date(42336000000L)));

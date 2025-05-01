@@ -41,6 +41,8 @@ public class FormatDelimited implements Format {
   private final String name;
   private final String extension;
   private final MediaType mediaType;
+  private final boolean hidden;
+
   private final boolean headerRow;
   private final String delimiter;
   private final String openQuote;
@@ -138,6 +140,22 @@ public class FormatDelimited implements Format {
   )
   public MediaType getMediaType() {
     return mediaType;
+  }
+
+  @Schema(description = """
+                        <P>Whether the format should be removed from the list when presented as an option to users.
+                        <P>
+                        This has no effect on processing and is purely a UI hint.
+                        <P>
+                        When hidden is true the format should removed from any UI presenting formats to the user.
+                        </P>
+                        """
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+          , defaultValue = "false"
+  )
+  @Override
+  public boolean isHidden() {
+    return hidden;
   }
   
   /**
@@ -239,6 +257,7 @@ public class FormatDelimited implements Format {
     private String name = "csv";
     private String extension = "csv";
     private MediaType mediaType = MediaType.parse("text/csv");
+    private boolean hidden = false;
     private boolean headerRow = true;
     private String delimiter = ",";
     private String openQuote = "\"";
@@ -286,6 +305,17 @@ public class FormatDelimited implements Format {
      */
     public Builder mediaType(final String value) {
       this.mediaType = MediaType.parse(value);
+      return this;
+    }
+
+    /**
+     * Set the hidden property of the format.
+     *
+     * @param hidden the {@link Format#isHidden()} property of the format.
+     * @return this Builder instance.
+     */
+    public Builder hidden(final boolean hidden) {
+      this.hidden = hidden;
       return this;
     }
 
@@ -354,7 +384,7 @@ public class FormatDelimited implements Format {
      * @return a new instance of the FormatDelimited class.
      */
     public FormatDelimited build() {
-      return new FormatDelimited(type, name, extension, mediaType, headerRow, delimiter, openQuote, closeQuote, escapeCloseQuote, newline);
+      return new FormatDelimited(type, name, extension, mediaType, hidden, headerRow, delimiter, openQuote, closeQuote, escapeCloseQuote, newline);
     }
   }
 
@@ -370,6 +400,7 @@ public class FormatDelimited implements Format {
           , final String name
           , final String extension
           , final MediaType mediaType
+          , final boolean hidden
           , final boolean headerRow
           , final String delimiter
           , final String openQuote
@@ -382,6 +413,7 @@ public class FormatDelimited implements Format {
     this.name = name;
     this.extension = extension;
     this.mediaType = mediaType;
+    this.hidden = hidden;
     this.headerRow = headerRow;
     this.delimiter = delimiter;
     this.openQuote = openQuote;

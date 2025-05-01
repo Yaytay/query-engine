@@ -16,7 +16,10 @@
  */
 package uk.co.spudsoft.query.defn;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -24,6 +27,23 @@ import org.junit.jupiter.api.Test;
  * @author jtalbut
  */
 public class FormatDelimitedTest {
+  
+  @Test
+  public void testBuilder() {
+    assertEquals(FormatType.Delimited, FormatDelimited.builder().build().getType());
+
+    assertFalse(FormatDelimited.builder().build().isHidden());
+    assertTrue(FormatDelimited.builder().hidden(true).build().isHidden());
+
+    assertEquals("\"", FormatDelimited.builder().build().getOpenQuote());
+    assertEquals("$", FormatDelimited.builder().openQuote("$").build().getOpenQuote());
+
+    assertEquals("\"", FormatDelimited.builder().build().getCloseQuote());
+    assertEquals("$", FormatDelimited.builder().closeQuote("$").build().getCloseQuote());
+
+    assertEquals("\"", FormatDelimited.builder().build().getEscapeCloseQuote());
+    assertEquals("$", FormatDelimited.builder().escapeCloseQuote("$").build().getEscapeCloseQuote());
+  }
   
   @Test
   public void testValidate() {

@@ -22,7 +22,13 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.WriteStream;
+import io.vertx.sqlclient.impl.Utils;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
@@ -62,6 +68,13 @@ public class FormatJsonInstance implements FormatInstance {
   private final AtomicBoolean started = new AtomicBoolean();
   private Types types;
   
+  private final DateTimeFormatter dateFormatter;
+  private final DateTimeFormatter dateTimeFormatter;
+  private final DateTimeFormatter timeFormatter;
+  
+  private boolean dateTimeAsEpochSeconds = false;
+  private boolean dateTimeAsEpochMillis = false;
+  
   /**
    * Constructor.
    * @param outputStream The WriteStream that the data is to be sent to.
@@ -71,6 +84,31 @@ public class FormatJsonInstance implements FormatInstance {
   public FormatJsonInstance(WriteStream<Buffer> outputStream, FormatJson defn) {
     this.outputStream = outputStream;
     this.defn = defn;
+    
+    if (Strings.isNullOrEmpty(defn.getDateFormat())) {
+      this.dateFormatter = null;
+    } else {
+      this.dateFormatter = DateTimeFormatter.ofPattern(defn.getDateFormat());
+    }
+    
+    if (Strings.isNullOrEmpty(defn.getDateTimeFormat())) {
+      this.dateTimeFormatter = null;
+    } else if ("EPOCH_SECONDS".equals(defn.getDateTimeFormat())) {
+      this.dateTimeFormatter = null;
+      this.dateTimeAsEpochSeconds = true;
+    } else if ("EPOCH_MILLISECONDS".equals(defn.getDateTimeFormat())) {
+      this.dateTimeFormatter = null;
+      this.dateTimeAsEpochMillis = true;
+    } else {
+      this.dateTimeFormatter = DateTimeFormatter.ofPattern(defn.getDateTimeFormat());
+    }
+    
+    if (Strings.isNullOrEmpty(defn.getTimeFormat())) {
+      this.timeFormatter = null;
+    } else {
+      this.timeFormatter = DateTimeFormatter.ofPattern(defn.getTimeFormat());
+    }
+    
     this.formattingStream = new FormattingWriteStream(outputStream
             , v -> {
               return start();
@@ -81,11 +119,11 @@ public class FormatJsonInstance implements FormatInstance {
                 return Future.succeededFuture();
               } else if (started.get()) {
                 return outputStream.write(COMMA)
-                        .compose(v -> outputStream.write(row.toJson().toBuffer()))
+                        .compose(v -> outputStream.write(toJson(row).toBuffer()))
                         ;
               } else {
                 started.set(true);
-                return outputStream.write(row.toJson().toBuffer());
+                return outputStream.write(toJson(row).toBuffer());
               }
             }
             , rows -> {              
@@ -101,6 +139,54 @@ public class FormatJsonInstance implements FormatInstance {
                       ;
             }
     );
+  }
+  
+  JsonObject toJson(DataRow row) {
+    JsonObject json = new JsonObject();
+    row.forEach((cd, value) -> {
+      switch (cd.type()) {
+        case Date:
+          if (dateFormatter == null) {
+            json.put(cd.name(), Utils.toJson(value));
+          } else {
+            if (value instanceof TemporalAccessor ta) {
+              json.put(cd.name(), dateFormatter.format(ta));
+            }
+          }
+          break ;
+        case DateTime:
+          if (dateTimeAsEpochMillis) {
+            if (value instanceof LocalDateTime ldt) {
+              json.put(cd.name(), (Long) ldt.toInstant(ZoneOffset.UTC).toEpochMilli());
+            }            
+          } else if (dateTimeAsEpochSeconds) {
+            if (value instanceof LocalDateTime ldt) {
+              json.put(cd.name(), ldt.toEpochSecond(ZoneOffset.UTC));
+            }            
+          } else if (dateTimeFormatter == null) {
+            json.put(cd.name(), Utils.toJson(value));
+          } else {
+            if (value instanceof TemporalAccessor ta) {
+              json.put(cd.name(), dateTimeFormatter.format(ta));
+            }
+          }
+          break ;
+          
+        case Time:
+          if (timeFormatter == null) {
+            json.put(cd.name(), Utils.toJson(value));
+          } else {
+            if (value instanceof TemporalAccessor ta) {
+              json.put(cd.name(), timeFormatter.format(ta));
+            }
+          }
+          break ;
+        default:
+          json.put(cd.name(), Utils.toJson(value));
+          break;
+      }
+    });
+    return json;
   }
   
   private Future<Void> start() {
@@ -123,7 +209,7 @@ public class FormatJsonInstance implements FormatInstance {
           }
           row.put(cd.name(), typeName);
         });
-        start = "{\"" + defn.getMetadataName() + "\":" + row.toJson().toString() + ", \"" + defn.getDataName() + "\":";
+        start = "{\"" + defn.getMetadataName() + "\":" + toJson(row).toString() + ", \"" + defn.getDataName() + "\":";
       }
       return outputStream.write(Buffer.buffer(start));
     }

@@ -377,6 +377,9 @@ public class FormBuilder {
       try (Select.DataValues dv = select.addDataValues()) {
         try (ComponentArray a = dv.addValues()) {
           for (Format f : pipeline.getDestinations()) {
+            if (f.isHidden()) {
+              continue ;
+            }
             try (Select.DataValue value = new Select.DataValue(generator)) {
               value
                       .withLabel(f.getName())

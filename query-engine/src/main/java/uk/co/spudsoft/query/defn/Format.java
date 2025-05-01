@@ -209,9 +209,29 @@ public interface Format {
                         </P>
                         """
             , requiredMode = Schema.RequiredMode.NOT_REQUIRED
-)
+  )
   MediaType getMediaType();
 
+  /**
+   * Get whether the format should be removed from the list when presented as an option to users.
+   * This has no effect on processing and is purely a UI hint.
+   * When hidden is true the format should removed from any UI presenting formats to the user.
+   * 
+   * @return whether the format should be removed from the list when presented as an option to users.
+   */
+  @Schema(description = """
+                        <P>Whether the format should be removed from the list when presented as an option to users.
+                        <P>
+                        This has no effect on processing and is purely a UI hint.
+                        <P>
+                        When hidden is true the format should removed from any UI presenting formats to the user.
+                        </P>
+                        """
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+          , defaultValue = "false"
+  )
+  boolean isHidden();
+  
   /**
    * Helper method for implementation to validate that they have been configured with the required {@link FormatType}.
    * <p>

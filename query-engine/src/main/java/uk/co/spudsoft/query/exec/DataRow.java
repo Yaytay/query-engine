@@ -117,19 +117,11 @@ public class DataRow {
     return data.isEmpty();
   }
 
-  /**
-   * Output a JsonObject containing the same data as the DataRow.
-   * @return a newly created JsonObject containing the same data as the DataRow. 
-   */
-  public JsonObject toJson() {
-    JsonObject json = new JsonObject();
-    data.forEach((k, v) -> json.put(k, Utils.toJson(v)));
-    return json;
-  }
-
   @Override
   public String toString() {
-    return toJson().toString();
+    JsonObject json = new JsonObject();
+    data.forEach((k, v) -> json.put(k, Utils.toJson(v)));
+    return json.toString();
   }
 
   /**

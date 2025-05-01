@@ -51,6 +51,7 @@ public class FormatXlsx implements Format {
   private final String name;
   private final String extension;
   private final MediaType mediaType;
+  private final boolean hidden;
   
   private final String sheetName;
   private final String creator;
@@ -185,6 +186,22 @@ public class FormatXlsx implements Format {
     return mediaType;
   }
 
+  @Schema(description = """
+                        <P>Whether the format should be removed from the list when presented as an option to users.
+                        <P>
+                        This has no effect on processing and is purely a UI hint.
+                        <P>
+                        When hidden is true the format should removed from any UI presenting formats to the user.
+                        </P>
+                        """
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+          , defaultValue = "false"
+  )
+  @Override
+  public boolean isHidden() {
+    return hidden;
+  }
+
   /**
    * Get the name of the sheet that will contain the data in the Excel Workbook.
    * @return the name of the sheet that will contain the data in the Excel Workbook.
@@ -292,7 +309,6 @@ public class FormatXlsx implements Format {
     return defaultTimeFormat;
   }
     
-  
   /**
    * Get the font to use for the header row.
    * @return the font to use for the header row.
@@ -416,6 +432,8 @@ public class FormatXlsx implements Format {
     private String name = "xlsx";
     private String extension = "xlsx";
     private MediaType mediaType = MediaType.parse("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    private boolean hidden = false;
+
     private String sheetName = "data";
     private String creator;
     private boolean gridLines = true;
@@ -470,6 +488,17 @@ public class FormatXlsx implements Format {
      */
     public Builder mediaType(final String value) {
       this.mediaType = MediaType.parse(value);
+      return this;
+    }
+
+    /**
+     * Set the hidden property of the format.
+     *
+     * @param hidden the {@link Format#isHidden()} property of the format.
+     * @return this Builder instance.
+     */
+    public Builder hidden(final boolean hidden) {
+      this.hidden = hidden;
       return this;
     }
 
@@ -608,7 +637,7 @@ public class FormatXlsx implements Format {
      * @return a new instance of the FormatXlsx class.
      */
     public FormatXlsx build() {
-      return new FormatXlsx(type, name, extension, mediaType, sheetName, creator
+      return new FormatXlsx(type, name, extension, mediaType, hidden, sheetName, creator
               , gridLines, headers, defaultDateFormat, defaultDateTimeFormat, defaultTimeFormat
               , headerFont, bodyFont, headerColours, evenColours, oddColours, columns);
     }
@@ -623,7 +652,8 @@ public class FormatXlsx implements Format {
     return new FormatXlsx.Builder();
   }
 
-  private FormatXlsx(final FormatType type, final String name, final String extension, final MediaType mediaType, final String sheetName, final String creator
+  private FormatXlsx(final FormatType type, final String name, final String extension, final MediaType mediaType, final boolean hidden
+          , final String sheetName, final String creator
           , final boolean gridLines, final boolean headers, final String defaultDateFormat, final String defaultDateTimeFormat, final String defaultTimeFormat
           , final FormatXlsxFont headerFont, final FormatXlsxFont bodyFont, final FormatXlsxColours headerColours, final FormatXlsxColours evenColours, final FormatXlsxColours oddColours, final List<FormatXlsxColumn> columns) {
     validateType(FormatType.XLSX, type);
@@ -631,6 +661,7 @@ public class FormatXlsx implements Format {
     this.name = name;
     this.extension = extension;
     this.mediaType = mediaType;
+    this.hidden = hidden;
     this.sheetName = sheetName;
     this.creator = creator;
     this.gridLines = gridLines;
