@@ -92,7 +92,7 @@ public class FormatJsonInstanceTest {
     // Date/time values might be formatted as strings
     assertEquals("15 May 2023", result.getValue("dateValue"));
     assertEquals("1:45 pm", ((String) result.getValue("timeValue")).toLowerCase());
-    assertEquals("15 May 2023 1:45 pm", ((String) result.getValue("dateTimeValue")).toLowerCase());
+    assertEquals("15 May 2023 1:45 pm", ((String) result.getValue("dateTimeValue")).replace("PM", "pm"));
   }
 
   @Test
