@@ -263,6 +263,11 @@ public class QueryRouter implements Handler<RoutingContext> {
                   response.setStatusCode(304);
                   return response.end();
                 } else {
+                  Format chosenFormat = pipelineExecutor.getFormat(pipeline.getFormats(), formatRequest);
+                  String filename = buildDesiredFilename(chosenFormat);
+                  if (filename != null) {
+                    response.headers().set("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+                  }
                   return vertx.fileSystem().open(cacheDetails.cacheFile(), new OpenOptions().setRead(true).setCreate(false))
                           .transform(ar -> {
                             if (ar.succeeded()) {
@@ -321,6 +326,10 @@ public class QueryRouter implements Handler<RoutingContext> {
       
       Format chosenFormat = pipelineExecutor.getFormat(pipeline.getFormats(), formatRequest);
       response.headers().set("content-type", chosenFormat.getMediaType().toString());
+      String filename = buildDesiredFilename(chosenFormat);
+      if (filename != null) {
+        response.headers().set("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+      }
       if (pipeline.supportsCaching()) {
         routingContext.lastModified(Instant.ofEpochMilli(requestContext.getStartTime()));
       }
@@ -374,4 +383,19 @@ public class QueryRouter implements Handler<RoutingContext> {
             .setStatusCode(statusCode)
             .end(message);
   }
+
+  static String buildDesiredFilename(Format chosenFormat) {
+    String fmtFilename = chosenFormat.getFilename();
+    String fmtExtention = chosenFormat.getExtension();
+    
+    if (Strings.isNullOrEmpty(fmtFilename)) {
+      return null;
+    } else {
+      if (!fmtFilename.contains(".") && !Strings.isNullOrEmpty(fmtExtention)) {
+        fmtFilename = fmtFilename + "." + fmtExtention;
+      }
+      return fmtFilename;
+    }
+  }
+
 }

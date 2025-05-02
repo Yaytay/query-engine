@@ -97,6 +97,10 @@ public class FormatDelimitedInstance implements FormatInstance {
     if (defn.hasHeaderRow()) {
       StringBuilder headerRow = new StringBuilder();
       
+      if (defn.hasBom()) {
+        headerRow.append("\uFEFF");
+      }
+      
       AtomicBoolean first = new AtomicBoolean(true);
       types.forEach(cd-> {
         if (!first.compareAndSet(true, false)) {
@@ -108,6 +112,8 @@ public class FormatDelimitedInstance implements FormatInstance {
       });
       headerRow.append(defn.getNewline());
       return outputStream.write(Buffer.buffer(headerRow.toString()));
+    } else if (defn.hasBom()) { 
+      return outputStream.write(Buffer.buffer("\uFEFF"));
     } else {
       return Future.succeededFuture();
     }

@@ -40,9 +40,11 @@ public class FormatDelimited implements Format {
   private final FormatType type;
   private final String name;
   private final String extension;
+  private final String filename;
   private final MediaType mediaType;
   private final boolean hidden;
 
+  private final boolean bom;
   private final boolean headerRow;
   private final String delimiter;
   private final String openQuote;
@@ -115,6 +117,27 @@ public class FormatDelimited implements Format {
   public String getExtension() {
     return extension;
   }
+  
+    /**
+   * Get the filename to use in the Content-Disposition header.
+   * 
+   * If not specified then the leaf name of the pipeline (with extension the value of {@link #getExtension()} appended) will be used.
+   *
+   * @return the filename of the format.
+   */
+  @Schema(description = """
+                        <P>The filename to specify in the Content-Disposition header.</P>
+                        <P>
+                        If not specified then the leaf name of the pipeline (with extension the value of {@link #getExtension()} appended) will be used.
+                        </P>
+                        """
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  @Override
+  public String getFilename() {
+    return filename;
+  }
 
   /**
    * Get the media type of the format.
@@ -156,6 +179,20 @@ public class FormatDelimited implements Format {
   @Override
   public boolean isHidden() {
     return hidden;
+  }
+  
+  /**
+   * If true the output will have a BOM as the first byte(s) of the stream.
+   * @return true true the output should have a BOM as the first byte(s) of the stream.
+   */
+  @Schema(description = """
+                        If true the output will have a BOM as the first byte(s) of the stream.
+                        """
+          , defaultValue = "false"
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  public boolean hasBom() {
+    return bom;
   }
   
   /**
@@ -256,8 +293,10 @@ public class FormatDelimited implements Format {
     private FormatType type = FormatType.Delimited;
     private String name = "csv";
     private String extension = "csv";
+    private String filename = null;
     private MediaType mediaType = MediaType.parse("text/csv");
     private boolean hidden = false;
+    private boolean bom = false;
     private boolean headerRow = true;
     private String delimiter = ",";
     private String openQuote = "\"";
@@ -299,6 +338,17 @@ public class FormatDelimited implements Format {
     }
 
     /**
+     * Set the filename for the format.
+     *
+     * @param filename the default filename for the format.
+     * @return this Builder instance.
+     */
+    public Builder filename(String filename) {
+      this.filename = filename;
+      return this;
+    }
+
+    /**
      * Set the {@link FormatDelimited#mediaType} value in the builder.
      * @param value The value for the {@link FormatDelimited#mediaType}.
      * @return this, so that this builder may be used in a fluent manner.
@@ -316,6 +366,16 @@ public class FormatDelimited implements Format {
      */
     public Builder hidden(final boolean hidden) {
       this.hidden = hidden;
+      return this;
+    }
+
+    /**
+     * Set the {@link FormatDelimited#bom} value in the builder.
+     * @param value The value for the {@link FormatDelimited#bom}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder bom(final boolean value) {
+      this.bom = value;
       return this;
     }
 
@@ -384,7 +444,7 @@ public class FormatDelimited implements Format {
      * @return a new instance of the FormatDelimited class.
      */
     public FormatDelimited build() {
-      return new FormatDelimited(type, name, extension, mediaType, hidden, headerRow, delimiter, openQuote, closeQuote, escapeCloseQuote, newline);
+      return new FormatDelimited(type, name, extension, filename, mediaType, hidden, bom, headerRow, delimiter, openQuote, closeQuote, escapeCloseQuote, newline);
     }
   }
 
@@ -399,8 +459,10 @@ public class FormatDelimited implements Format {
   private FormatDelimited(final FormatType type
           , final String name
           , final String extension
+          , final String filename
           , final MediaType mediaType
           , final boolean hidden
+          , final boolean bom
           , final boolean headerRow
           , final String delimiter
           , final String openQuote
@@ -412,8 +474,10 @@ public class FormatDelimited implements Format {
     this.type = type;
     this.name = name;
     this.extension = extension;
+    this.filename = filename;
     this.mediaType = mediaType;
     this.hidden = hidden;
+    this.bom = bom;
     this.headerRow = headerRow;
     this.delimiter = delimiter;
     this.openQuote = openQuote;

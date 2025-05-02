@@ -50,6 +50,7 @@ public class FormatXlsx implements Format {
   private final FormatType type;
   private final String name;
   private final String extension;
+  private final String filename;
   private final MediaType mediaType;
   private final boolean hidden;
   
@@ -159,6 +160,27 @@ public class FormatXlsx implements Format {
   )
   public String getExtension() {
     return extension;
+  }
+
+    /**
+   * Get the filename to use in the Content-Disposition header.
+   * 
+   * If not specified then the leaf name of the pipeline (with extension the value of {@link #getExtension()} appended) will be used.
+   *
+   * @return the filename of the format.
+   */
+  @Schema(description = """
+                        <P>The filename to specify in the Content-Disposition header.</P>
+                        <P>
+                        If not specified then the leaf name of the pipeline (with extension the value of {@link #getExtension()} appended) will be used.
+                        </P>
+                        """
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  @Override
+  public String getFilename() {
+    return filename;
   }
 
   /**
@@ -431,6 +453,7 @@ public class FormatXlsx implements Format {
     private FormatType type = FormatType.XLSX;
     private String name = "xlsx";
     private String extension = "xlsx";
+    private String filename = null;
     private MediaType mediaType = MediaType.parse("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     private boolean hidden = false;
 
@@ -478,6 +501,17 @@ public class FormatXlsx implements Format {
      */
     public Builder extension(final String value) {
       this.extension = value;
+      return this;
+    }
+
+    /**
+     * Set the filename for the format.
+     *
+     * @param filename the default filename for the format.
+     * @return this Builder instance.
+     */
+    public Builder filename(String filename) {
+      this.filename = filename;
       return this;
     }
 
@@ -637,7 +671,7 @@ public class FormatXlsx implements Format {
      * @return a new instance of the FormatXlsx class.
      */
     public FormatXlsx build() {
-      return new FormatXlsx(type, name, extension, mediaType, hidden, sheetName, creator
+      return new FormatXlsx(type, name, extension, filename, mediaType, hidden, sheetName, creator
               , gridLines, headers, defaultDateFormat, defaultDateTimeFormat, defaultTimeFormat
               , headerFont, bodyFont, headerColours, evenColours, oddColours, columns);
     }
@@ -652,7 +686,7 @@ public class FormatXlsx implements Format {
     return new FormatXlsx.Builder();
   }
 
-  private FormatXlsx(final FormatType type, final String name, final String extension, final MediaType mediaType, final boolean hidden
+  private FormatXlsx(final FormatType type, final String name, final String extension, final String filename, final MediaType mediaType, final boolean hidden
           , final String sheetName, final String creator
           , final boolean gridLines, final boolean headers, final String defaultDateFormat, final String defaultDateTimeFormat, final String defaultTimeFormat
           , final FormatXlsxFont headerFont, final FormatXlsxFont bodyFont, final FormatXlsxColours headerColours, final FormatXlsxColours evenColours, final FormatXlsxColours oddColours, final List<FormatXlsxColumn> columns) {
@@ -660,6 +694,7 @@ public class FormatXlsx implements Format {
     this.type = type;
     this.name = name;
     this.extension = extension;
+    this.filename = filename;
     this.mediaType = mediaType;
     this.hidden = hidden;
     this.sheetName = sheetName;

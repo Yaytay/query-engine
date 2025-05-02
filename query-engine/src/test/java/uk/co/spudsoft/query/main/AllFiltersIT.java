@@ -120,6 +120,7 @@ public class AllFiltersIT {
             .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
             .then()
+            .header("Content-Disposition", equalTo("attachment; filename=\"dynamism.txt\""))
             .log().all()
             .statusCode(200)
             .extract().body().asString();

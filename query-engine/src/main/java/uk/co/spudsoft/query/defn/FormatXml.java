@@ -48,6 +48,7 @@ public class FormatXml implements Format {
   private final FormatType type;
   private final String name;
   private final String extension;
+  private final String filename;
   private final MediaType mediaType;
   private final boolean hidden;
 
@@ -121,6 +122,7 @@ public class FormatXml implements Format {
     this.type = builder.type;
     this.name = builder.name;
     this.extension = builder.extension;
+    this.filename = builder.filename;
     this.mediaType = builder.mediaType;
     this.hidden = builder.hidden;
     
@@ -240,8 +242,30 @@ public class FormatXml implements Format {
                           """,
     maxLength = 100,
     defaultValue = ".xml")
+  @Override
   public String getExtension() {
     return extension;
+  }
+
+    /**
+   * Get the filename to use in the Content-Disposition header.
+   * 
+   * If not specified then the leaf name of the pipeline (with extension the value of {@link #getExtension()} appended) will be used.
+   *
+   * @return the filename of the format.
+   */
+  @Schema(description = """
+                        <P>The filename to specify in the Content-Disposition header.</P>
+                        <P>
+                        If not specified then the leaf name of the pipeline (with extension the value of {@link #getExtension()} appended) will be used.
+                        </P>
+                        """
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  @Override
+  public String getFilename() {
+    return filename;
   }
 
   /**
@@ -379,6 +403,7 @@ public class FormatXml implements Format {
     private FormatType type = FormatType.XML;
     private String name = "xml";
     private String extension = "xml";
+    private String filename = null;
     private MediaType mediaType = MediaType.parse("application/xml");
     private boolean hidden = false;
 
@@ -427,6 +452,17 @@ public class FormatXml implements Format {
      */
     public Builder extension(String extension) {
       this.extension = extension;
+      return this;
+    }
+
+    /**
+     * Set the filename for the format.
+     *
+     * @param filename the default filename for the format.
+     * @return this Builder instance.
+     */
+    public Builder filename(String filename) {
+      this.filename = filename;
       return this;
     }
 

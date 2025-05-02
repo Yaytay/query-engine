@@ -64,6 +64,7 @@ public class FormatHtml implements Format {
   private final FormatType type;
   private final String name;
   private final String extension;
+  private final String filename;
   private final MediaType mediaType;
   private final boolean hidden;
 
@@ -133,6 +134,27 @@ public class FormatHtml implements Format {
     return extension;
   }
 
+    /**
+   * Get the filename to use in the Content-Disposition header.
+   * 
+   * If not specified then the leaf name of the pipeline (with extension the value of {@link #getExtension()} appended) will be used.
+   *
+   * @return the filename of the format.
+   */
+  @Schema(description = """
+                        <P>The filename to specify in the Content-Disposition header.</P>
+                        <P>
+                        If not specified then the leaf name of the pipeline (with extension the value of {@link #getExtension()} appended) will be used.
+                        </P>
+                        """
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  @Override
+  public String getFilename() {
+    return filename;
+  }
+
   /**
    * Get the media type of the format.
    * The media type is used to determine the format based upon the Accept header in the request.
@@ -184,6 +206,7 @@ public class FormatHtml implements Format {
     private FormatType type = FormatType.HTML;
     private String name = "html";
     private String extension = "html";
+    private String filename = null;
     private MediaType mediaType = MediaType.parse("text/html");
     private boolean hidden = false;
 
@@ -221,6 +244,17 @@ public class FormatHtml implements Format {
     }
 
     /**
+     * Set the filename for the format.
+     *
+     * @param filename the default filename for the format.
+     * @return this Builder instance.
+     */
+    public Builder filename(String filename) {
+      this.filename = filename;
+      return this;
+    }
+
+    /**
      * Set the {@link FormatHtml#mediaType} value in the builder.
      * @param value The value for the {@link FormatHtml#mediaType}.
      * @return this, so that this builder may be used in a fluent manner.
@@ -246,7 +280,7 @@ public class FormatHtml implements Format {
      * @return a new instance of the FormatHtml class.
      */
     public FormatHtml build() {
-      return new uk.co.spudsoft.query.defn.FormatHtml(type, name, extension, mediaType, hidden);
+      return new uk.co.spudsoft.query.defn.FormatHtml(type, name, extension, filename, mediaType, hidden);
     }
   }
 
@@ -258,11 +292,12 @@ public class FormatHtml implements Format {
     return new FormatHtml.Builder();
   }
 
-  private FormatHtml(final FormatType type, final String name, final String extension, final MediaType mediaType, final boolean hidden) {
+  private FormatHtml(final FormatType type, final String name, final String extension, final String filename, final MediaType mediaType, final boolean hidden) {
     validateType(FormatType.HTML, type);
     this.type = type;
     this.name = name;
     this.extension = extension;
+    this.filename = filename;
     this.mediaType = mediaType;
     this.hidden = hidden;
   }

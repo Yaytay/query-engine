@@ -44,6 +44,7 @@ public class FormatJson implements Format {
   private final FormatType type;
   private final String name;
   private final String extension;
+  private final String filename;
   private final MediaType mediaType;
   private final boolean hidden;
   
@@ -142,6 +143,27 @@ public class FormatJson implements Format {
   )
   public String getExtension() {
     return extension;
+  }
+
+    /**
+   * Get the filename to use in the Content-Disposition header.
+   * 
+   * If not specified then the leaf name of the pipeline (with extension the value of {@link #getExtension()} appended) will be used.
+   *
+   * @return the filename of the format.
+   */
+  @Schema(description = """
+                        <P>The filename to specify in the Content-Disposition header.</P>
+                        <P>
+                        If not specified then the leaf name of the pipeline (with extension the value of {@link #getExtension()} appended) will be used.
+                        </P>
+                        """
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  @Override
+  public String getFilename() {
+    return filename;
   }
 
   /**
@@ -353,6 +375,7 @@ public class FormatJson implements Format {
     private FormatType type = FormatType.JSON;
     private String name = "json";
     private String extension = "json";
+    private String filename = null;
     private MediaType mediaType = MediaType.parse("application/json");
     private boolean hidden = false;
 
@@ -393,6 +416,17 @@ public class FormatJson implements Format {
      */
     public Builder extension(final String value) {
       this.extension = value;
+      return this;
+    }
+
+    /**
+     * Set the filename for the format.
+     *
+     * @param filename the default filename for the format.
+     * @return this Builder instance.
+     */
+    public Builder filename(String filename) {
+      this.filename = filename;
       return this;
     }
 
@@ -482,7 +516,7 @@ public class FormatJson implements Format {
      * @return a new instance of the FormatJson class.
      */
     public FormatJson build() {
-      return new uk.co.spudsoft.query.defn.FormatJson(type, name, extension, mediaType
+      return new uk.co.spudsoft.query.defn.FormatJson(type, name, extension, filename, mediaType
               , hidden, dataName, metadataName, compatibleTypeNames
               , dateFormat, dateTimeFormat, timeFormat
       );
@@ -497,7 +531,7 @@ public class FormatJson implements Format {
     return new FormatJson.Builder();
   }
 
-  private FormatJson(final FormatType type, final String name, final String extension, final MediaType mediaType
+  private FormatJson(final FormatType type, final String name, final String extension, final String filename, final MediaType mediaType
           , final boolean hidden, String dataName, String metadataName, Boolean compatibleTypeNames
           , final String dateFormat, final String dateTimeFormat, final String timeFormat
   ) {
@@ -505,6 +539,7 @@ public class FormatJson implements Format {
     this.type = type;
     this.name = name;
     this.extension = extension;
+    this.filename = filename;
     this.mediaType = mediaType;
     this.hidden = hidden;
     this.dataName = dataName;

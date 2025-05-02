@@ -120,6 +120,7 @@ formats:
   newline: "\n"
   extension: tsv
   headerRow: true
+  filename: dynamism.txt
   mediaType: text/tsv
 - type: Delimited
   headerRow: false

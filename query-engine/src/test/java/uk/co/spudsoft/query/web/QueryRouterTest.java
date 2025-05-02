@@ -35,6 +35,7 @@ import org.mockito.ArgumentCaptor;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import uk.co.spudsoft.query.defn.FormatDelimited;
 import uk.co.spudsoft.query.exec.AuditorMemoryImpl;
 import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 
@@ -213,4 +214,17 @@ public class QueryRouterTest {
     assertEquals("Something special went wrong", messageCaptor.getValue());
   }
 
+  @Test
+  public void testGetFilename() {
+    
+    assertEquals(null, QueryRouter.buildDesiredFilename(FormatDelimited.builder().build()));
+    assertEquals(null, QueryRouter.buildDesiredFilename(FormatDelimited.builder().extension(".txt").build()));
+    assertEquals("Bob.csv", QueryRouter.buildDesiredFilename(FormatDelimited.builder().filename("Bob").build()));
+    assertEquals("Bob", QueryRouter.buildDesiredFilename(FormatDelimited.builder().filename("Bob").extension("").build()));
+    assertEquals("Bob.thing", QueryRouter.buildDesiredFilename(FormatDelimited.builder().filename("Bob.thing").extension("txt").build()));
+    assertEquals("Bob.txt", QueryRouter.buildDesiredFilename(FormatDelimited.builder().filename("Bob").extension("txt").build()));
+    
+  }
+  
 }
+

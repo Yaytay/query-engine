@@ -175,14 +175,15 @@ public interface Format {
 
   /**
    * Get the extension of the format.
-   * The extension is used to determine the format based upon the URL path and also to set the default filename for the content-disposition header.
+   * The extension is used to determine the format based upon the URL path.
    * If multiple formats have the same extension the first in the list will be used.
+   * 
    * @return the extension of the format.
    */
   @Schema(description = """
                         <P>The extension of the format.</P>
                         <P>
-                        The extension is used to determine the format based upon the URL path and also to set the default filename for the content-disposition header.
+                        The extension is used to determine the format based upon the URL path and also to set the default filename for the Content-Disposition header.
                         If multiple formats have the same extension the first in the list will be used.
                         </P>
                         """
@@ -190,6 +191,24 @@ public interface Format {
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
   String getExtension();
+
+  /**
+   * Get the filename to use in the Content-Disposition header.
+   * 
+   * If not specified then the leaf name of the pipeline (with extension the value of {@link #getExtension()} appended) will be used.
+   *
+   * @return the filename of the format.
+   */
+  @Schema(description = """
+                        <P>The filename to specify in the Content-Disposition header.</P>
+                        <P>
+                        If not specified then the leaf name of the pipeline (with extension the value of {@link #getExtension()} appended) will be used.
+                        </P>
+                        """
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  String getFilename();
 
   /**
    * Get the media type of the format.
