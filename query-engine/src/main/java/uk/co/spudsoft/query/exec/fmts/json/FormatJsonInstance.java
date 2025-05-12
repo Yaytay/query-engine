@@ -53,7 +53,7 @@ import uk.co.spudsoft.query.web.RequestContextHandler;
  * 
  * @author jtalbut
  */
-public class FormatJsonInstance implements FormatInstance {
+public final class FormatJsonInstance implements FormatInstance {
   
   private static final Logger logger = LoggerFactory.getLogger(FormatJsonInstance.class);
  
