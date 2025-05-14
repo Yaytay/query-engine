@@ -172,7 +172,7 @@ public class DocHandlerTest {
 
     DocNodesTree.DocNode args00Node = argsNode.getChildren().stream().filter(n -> n.getName().endsWith("Args00")).findFirst().get();
 
-    assertEquals("args" + File.separator + "Args00", args00Node.getName());
+    assertEquals("Args00", args00Node.getName());
     assertEquals("args" + File.separator + "Args00.yaml", args00Node.getPath());
     assertEquals("Args00", ((DocNodesTree.DocFile) args00Node).getTitle());
 
@@ -183,17 +183,17 @@ public class DocHandlerTest {
 
     DocNodesTree.DocNode sub2Node = sub1Node.getChildren().stream().filter(n -> n.getName().endsWith("sub2")).findFirst().get();
 
-    assertEquals("sub1" + File.separator + "sub2", sub2Node.getName());
+    assertEquals("sub2", sub2Node.getName());
     assertEquals("sub1" + File.separator + "sub2", sub2Node.getPath());
 
     DocNodesTree.DocNode sub1PermsNode = sub1Node.getChildren().stream().filter(n -> n.getName().endsWith("permissions")).findFirst().get();
 
-    assertEquals("sub1" + File.separator + "permissions", sub1PermsNode.getName());
+    assertEquals("permissions", sub1PermsNode.getName());
     assertEquals("sub1" + File.separator + "permissions.jexl", sub1PermsNode.getPath());
 
     DocNodesTree.DocNode dynNode = sub2Node.getChildren().stream().filter(n -> n.getName().endsWith("AllDynamicIT")).findFirst().get();
 
-    assertEquals("sub1" + File.separator + "sub2" + File.separator + "AllDynamicIT", dynNode.getName());
+    assertEquals("AllDynamicIT", dynNode.getName());
     assertEquals("sub1" + File.separator + "sub2" + File.separator + "AllDynamicIT.yaml", dynNode.getPath());
     assertEquals("AllDynamicIT", ((DocNodesTree.DocFile) dynNode).getTitle());
   }

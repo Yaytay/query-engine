@@ -134,6 +134,9 @@ public class DocNodesTree extends AbstractTree {
         return null;
       } else {
         int slashPos = path.lastIndexOf("/");
+        if (slashPos < 0) {
+          slashPos = path.lastIndexOf("\\");
+        }
         if (slashPos > 0) {
           path = path.substring(slashPos + 1);
         }
