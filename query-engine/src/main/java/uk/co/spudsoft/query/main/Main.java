@@ -508,7 +508,7 @@ public class Main extends Application {
     List<Object> controllers = new ArrayList<>();
     boolean requireSession = params.getSession().isRequireSession();
     controllers.add(new InfoHandler(defnLoader, outputAllErrorMessages(), requireSession));
-    controllers.add(new DocHandler(outputAllErrorMessages(), requireSession));
+    controllers.add(new DocHandler(params.getAlternativeDocumentation(), outputAllErrorMessages(), requireSession));
     controllers.add(new FormIoHandler(defnLoader, filterFactory, outputAllErrorMessages(), requireSession));
     controllers.add(new AuthConfigHandler(params.getSession().getOauth()));
     controllers.add(new SessionHandler(outputAllErrorMessages(), requireSession));

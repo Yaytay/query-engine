@@ -129,6 +129,20 @@ public class FeatureRichQueryIT {
     assertThat(body, startsWith("\"dataId\"\t\"instant\""));
     
     body = given()
+            .queryParam("minDate", "1971-05-06")
+            .queryParam("maxId", "20")
+            .queryParam("_fmt", "metajson")
+            .accept("text/html")
+            .log().all()
+            .get("/query/demo/FeatureRichExample")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .extract().body().asString();
+    
+    assertThat(body, startsWith("{\"meta\":{\"name\":\"Feature Rich Example\",\"fields\":{\"dataId\":\"integer\",\"instant\":\"datetime\",\"colour\":\"string\",\"value\":\"string\",\"children\":\"string\",\"DateField\":\"date\",\"TimeField\":\"time\",\"DateTimeField\":\"datetime\",\"LongField\":\"long\",\"DoubleField\":\"double\",\"BoolField\":\"bool\",\"TextField\":\"string\",\"child2\":\"string\",\"child3\":\"string\",\"child5\":\"string\",\"child4\":\"string\"}},\"data\":[{\"dataId\":"));
+    
+    body = given()
             .queryParam("minDate", "2971-05-06")
             .queryParam("_fmt", "json")
             .accept("text/html")

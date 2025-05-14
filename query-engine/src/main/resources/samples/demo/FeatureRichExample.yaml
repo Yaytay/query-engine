@@ -194,4 +194,9 @@ formats:
   headerRow: false
 - type: HTML
   name: table
+- type: JSON
+  name: metajson
+  dataName: data
+  metadataName: meta
+  compatibleTypeNames: true
 

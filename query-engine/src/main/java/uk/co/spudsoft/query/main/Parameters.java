@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.main;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import uk.co.spudsoft.query.logging.LogbackOptions;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -281,6 +282,23 @@ public class Parameters {
    */
   private SessionConfig session = new SessionConfig();
 
+  /**
+   * Path to alternative documentation to make available.
+   * <p>
+   * Documentation for Query Engine is built in, but documents how to deploy Query Engine and configure its security.
+   * In deployments aimed at clients it may be inappropriate to display this information.
+   * <p>
+   * This configuration allows for the built in documentation to be replaced with an alternative set aimed at your clients.
+   * <p>
+   * The alternativeDocumentation should be a directory containing a hierarchy of HTML files (and supporting resources).
+   * The entire hierarchy will be read on startup and then served by the DocHandler - any changes to the contents of the directory will be ignored.
+   * <p>
+   * Soft links will not be followed.
+   * <p>
+   * The path must be valid (Query Engine will not start if it is not), but may be set to "/dev/null" in which case no documentation will be served at all.
+   */
+  private String alternativeDocumentation;
+  
   /**
    * Constructor.
    */
@@ -1014,10 +1032,51 @@ public class Parameters {
   }
 
   /**
+   * Get the path to alternative documentation to make available.
+   * <p>
+   * Documentation for Query Engine is built in, but documents how to deploy Query Engine and configure its security.
+   * In deployments aimed at clients it may be inappropriate to display this information.
+   * <p>
+   * This configuration allows for the built in documentation to be replaced with an alternative set aimed at your clients.
+   * <p>
+   * The alternativeDocumentation should be a directory containing a hierarchy of HTML files (and supporting resources).
+   * The entire hierarchy will be read on startup and then served by the DocHandler - any changes to the contents of the directory will be ignored.
+   * <p>
+   * Soft links will not be followed.
+   * <p>
+   * The path must be valid (Query Engine will not start if it is not), but may be set to "/dev/null" in which case no documentation will be served at all.
+   * @return the path to alternative documentation to make available.
+   */  
+  public String getAlternativeDocumentation() {
+    return alternativeDocumentation;
+  }
+
+  /**
+   * Set the path to alternative documentation to make available.
+   * <p>
+   * Documentation for Query Engine is built in, but documents how to deploy Query Engine and configure its security.
+   * In deployments aimed at clients it may be inappropriate to display this information.
+   * <p>
+   * This configuration allows for the built in documentation to be replaced with an alternative set aimed at your clients.
+   * <p>
+   * The alternativeDocumentation should be a directory containing a hierarchy of HTML files (and supporting resources).
+   * The entire hierarchy will be read on startup and then served by the DocHandler - any changes to the contents of the directory will be ignored.
+   * <p>
+   * Soft links will not be followed.
+   * <p>
+   * The path must be valid (Query Engine will not start if it is not), but may be set to "/dev/null" in which case no documentation will be served at all.
+   * @param alternativeDocumentation the path to alternative documentation to make available.
+   */
+  public void setAlternativeDocumentation(String alternativeDocumentation) {
+    this.alternativeDocumentation = alternativeDocumentation;
+  }
+
+  /**
    * Validate the provided parameters.
    *
    * @throws IllegalArgumentException if anything in the parameters is invalid.
    */
+  @SuppressFBWarnings(value = "PATH_TRAVERSAL_IN", justification = "User has specified the path to use for alternative documentation")
   public void validate() throws IllegalArgumentException {
     if (logging != null) {
       logging.validate("logging");
@@ -1045,6 +1104,14 @@ public class Parameters {
     }
     if (basicAuth != null) {
       basicAuth.validate("basicAuth");
+    }
+    if (!Strings.isNullOrEmpty(alternativeDocumentation)) {
+      if (!"/dev/null".equals(alternativeDocumentation)) {        
+        File altDocFile = new File(alternativeDocumentation);
+        if (!altDocFile.isDirectory()) {
+          throw new IllegalArgumentException("The alternativeDocumentation value does not point to a directory.");
+        }
+      }
     }
   }
 

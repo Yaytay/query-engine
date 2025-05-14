@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.FormatJson;
+import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
@@ -67,6 +68,7 @@ public final class FormatJsonInstance implements FormatInstance {
   private static final Buffer CLOSE_ARRAY_AND_OBJECT = Buffer.buffer("]}");
   private final AtomicBoolean started = new AtomicBoolean();
   private Types types;
+  private String title;
   
   private final DateTimeFormatter dateFormatter;
   private final DateTimeFormatter dateTimeFormatter;
@@ -209,7 +211,11 @@ public final class FormatJsonInstance implements FormatInstance {
           }
           row.put(cd.name(), typeName);
         });
-        start = "{\"" + defn.getMetadataName() + "\":" + toJson(row).toString() + ", \"" + defn.getDataName() + "\":";
+        if (Strings.isNullOrEmpty(title)) {
+          start = "{\"" + defn.getMetadataName() + "\":{\"fields\":" + toJson(row).toString() + "},\"" + defn.getDataName() + "\":" + OPEN_ARRAY;
+        } else {
+          start = "{\"" + defn.getMetadataName() + "\":{\"name\":\"" + title + "\",\"fields\":" + toJson(row).toString() + "},\"" + defn.getDataName() + "\":" + OPEN_ARRAY;
+        }
       }
       return outputStream.write(Buffer.buffer(start));
     }
@@ -226,6 +232,10 @@ public final class FormatJsonInstance implements FormatInstance {
   @Override
   public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStreamWithTypes input) {
     this.types = input.getTypes();
+    Pipeline pipelineDefn = pipeline.getDefinition();
+    if (pipelineDefn != null) {
+      this.title = pipelineDefn.getTitle();
+    }
     return input.getStream().pipeTo(formattingStream);
   }
   

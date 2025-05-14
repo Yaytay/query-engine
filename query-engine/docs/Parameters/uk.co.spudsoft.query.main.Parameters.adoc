@@ -219,4 +219,23 @@ Note that when the IdP to use for validating the credentials is determined by th
  
 
 It is not usually necessary to set this.
+| [[alternativeDocumentation]]alternativeDocumentation
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
+| Set the path to alternative documentation to make available.
+
+Documentation for Query Engine is built in, but documents how to deploy Query Engine and configure its security.
+ In deployments aimed at clients it may be inappropriate to display this information.
+ 
+
+This configuration allows for the built in documentation to be replaced with an alternative set aimed at your clients.
+ 
+
+The alternativeDocumentation should be a directory containing a hierarchy of HTML files (and supporting resources).
+ The entire hierarchy will be read on startup and then served by the DocHandler - any changes to the contents of the directory will be ignored.
+ 
+
+Soft links will not be followed.
+ 
+
+The path must be valid (Query Engine will not start if it is not), but may be set to "/dev/null" in which case no documentation will be served at all.
 |===
