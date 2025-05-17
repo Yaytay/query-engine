@@ -482,43 +482,23 @@ public class FormBuilder {
   
   void buildDateTime(JsonGenerator generator, Argument arg) throws IOException {    
     try (DateTime dateTime = new DateTime(generator)) {
+      String description = arg.getDescription();
+      if (!Strings.isNullOrEmpty(arg.getDefaultValueExpression())) {
+        JexlEvaluator evaluator = new JexlEvaluator(arg.getDefaultValueExpression());
+        Object result = evaluator.evaluateAsObject(requestContext, null);
+        if (result != null) {
+          description = description + "<p>Default: " + result.toString();
+        }
+      }
       dateTime
               .withLabel(arg.getTitle())
-              .withDescription(arg.getDescription())
+              .withDescription(description)
               .withPlaceholder(arg.getPrompt())
               .withKey(arg.getName())
               .withMultiple(arg.isMultiValued())
               .withEnableDate(arg.getType() == DataType.Date || arg.getType() == DataType.DateTime)
               .withEnableTime(arg.getType() == DataType.Time || arg.getType() == DataType.DateTime)              
             ;
-      if (!Strings.isNullOrEmpty(arg.getDefaultValueExpression())) {
-        JexlEvaluator evaluator = new JexlEvaluator(arg.getDefaultValueExpression());
-        Object result = evaluator.evaluateAsObject(requestContext, null);
-        if (result != null) {
-          if (arg.getType() == DataType.Date) {
-            try {
-              LocalDate defaultDate = (LocalDate) DataType.Date.cast(result);
-              dateTime.withDefaultDate(defaultDate);
-            } catch (Throwable ex) {
-              dateTime.withDefaultValue(result.toString());
-            }
-          } else if (arg.getType() == DataType.DateTime) {
-            try {
-              LocalDateTime defaultDateTime = (LocalDateTime) DataType.DateTime.cast(result);
-              dateTime.withDefaultDate(defaultDateTime);
-            } catch (Throwable ex) {
-              dateTime.withDefaultValue(result.toString());
-            }
-          } else if (arg.getType() == DataType.Time) {
-            try {
-              LocalTime defaultTime = (LocalTime) DataType.Time.cast(result);
-              dateTime.withDefaultDate(defaultTime);
-            } catch (Throwable ex) {
-              dateTime.withDefaultValue(result.toString());
-            }
-          }
-        }
-      }
       
       try (Validation v = dateTime.addValidate()) {
         v.withRequired(!arg.isOptional());
@@ -533,48 +513,21 @@ public class FormBuilder {
 
   void buildNumber(JsonGenerator generator, Argument arg) throws IOException {
     try (Number number = new Number(generator)) {
-      number
-            .withLabel(arg.getTitle())
-            .withDescription(arg.getDescription())
-            .withPlaceholder(arg.getPrompt())
-            .withKey(arg.getName())
-            .withMultiple(arg.isMultiValued())
-            ;
+      String description = arg.getDescription();
       if (!Strings.isNullOrEmpty(arg.getDefaultValueExpression())) {
         JexlEvaluator evaluator = new JexlEvaluator(arg.getDefaultValueExpression());
         Object result = evaluator.evaluateAsObject(requestContext, null);
         if (result != null) {
-          if (arg.getType() == DataType.Double) {
-            try {
-              Double defaultNum = (Double) DataType.Double.cast(result);
-              number.withDefaultValue(defaultNum.toString());
-            } catch (Throwable ex) {
-              number.withDefaultValue(result.toString());
-            }
-          } else if (arg.getType() == DataType.Float) {
-            try {
-              Float defaultNum = (Float) DataType.Float.cast(result);
-              number.withDefaultValue(defaultNum.toString());
-            } catch (Throwable ex) {
-              number.withDefaultValue(result.toString());
-            }
-          } else if (arg.getType() == DataType.Integer) {
-            try {
-              Integer defaultNum = (Integer) DataType.Integer.cast(result);
-              number.withDefaultValue(defaultNum.toString());
-            } catch (Throwable ex) {
-              number.withDefaultValue(result.toString());
-            }
-          } else if (arg.getType() == DataType.Long) {
-            try {
-              Long defaultNum = (Long) DataType.Long.cast(result);
-              number.withDefaultValue(defaultNum.toString());
-            } catch (Throwable ex) {
-              number.withDefaultValue(result.toString());
-            }
-          }
+          description = description + "<p>Default: " + result.toString();
         }        
       }
+      number
+            .withLabel(arg.getTitle())
+            .withDescription(description)
+            .withPlaceholder(arg.getPrompt())
+            .withKey(arg.getName())
+            .withMultiple(arg.isMultiValued())
+            ;
       
       try (Number.NumberValidation v = number.addNumberValidate()) {
         v
@@ -623,25 +576,21 @@ public class FormBuilder {
 
   void buildTextField(JsonGenerator generator, Argument arg) throws IOException {
     try (TextField textField = new TextField(generator)) {
-      textField
-            .withLabel(arg.getTitle())
-            .withPlaceholder(arg.getPrompt())
-            .withDescription(arg.getDescription())
-            .withKey(arg.getName())
-            .withMultiple(arg.isMultiValued())
-            ;
+      String description = arg.getDescription();
       if (!Strings.isNullOrEmpty(arg.getDefaultValueExpression())) {
         JexlEvaluator evaluator = new JexlEvaluator(arg.getDefaultValueExpression());
         Object result = evaluator.evaluateAsObject(requestContext, null);
         if (result != null) {
-          try {
-            String defaultString = (String) DataType.String.cast(result);
-            textField.withDefaultValue(defaultString);
-          } catch (Throwable ex) {
-            textField.withDefaultValue(result.toString());
-          }
-        }        
+          description = description + "<p>Default: " + result.toString();
+        }
       }
+      textField
+            .withLabel(arg.getTitle())
+            .withPlaceholder(arg.getPrompt())
+            .withDescription(description)
+            .withKey(arg.getName())
+            .withMultiple(arg.isMultiValued())
+            ;
       
       try (Validation v = textField.addValidate()) {
         v.withRequired(!arg.isOptional());
@@ -649,11 +598,19 @@ public class FormBuilder {
     }
   }
 
-  void buildSelect(JsonGenerator generator, Argument arg) throws IOException {
+  void buildSelect(JsonGenerator generator, Argument arg) throws IOException {    
     try (Select select = new Select(generator)) {
+      String description = arg.getDescription();
+      if (!Strings.isNullOrEmpty(arg.getDefaultValueExpression())) {
+        JexlEvaluator evaluator = new JexlEvaluator(arg.getDefaultValueExpression());
+        Object result = evaluator.evaluateAsObject(requestContext, null);
+        if (result != null) {
+          description = description + "<p>Default: " + result.toString();
+        }        
+      }
       select 
             .withLabel(arg.getTitle())
-            .withDescription(arg.getDescription())
+            .withDescription(description)
             .withPlaceholder(arg.getPrompt())
             .withKey(arg.getName())
             .withMultiple(arg.isMultiValued())
@@ -661,18 +618,6 @@ public class FormBuilder {
             ;
       try (Validation v = select.addValidate()) {
         v.withRequired(!arg.isOptional());
-      }
-      if (!Strings.isNullOrEmpty(arg.getDefaultValueExpression())) {
-        JexlEvaluator evaluator = new JexlEvaluator(arg.getDefaultValueExpression());
-        Object result = evaluator.evaluateAsObject(requestContext, null);
-        if (result != null) {
-          try {
-            String defaultString = (String) DataType.String.cast(result);
-            select.withDefaultValue(defaultString);
-          } catch (Throwable ex) {
-            select.withDefaultValue(result.toString());
-          }
-        }        
       }
       if (isNullOrEmpty(arg.getPossibleValues())) {
         try (Select.DataUrl url = select.addDataUrl()) {
