@@ -136,7 +136,7 @@ public class InfoHandler {
     } else if (ex instanceof FileSystemException) {
       if (ex.getCause() instanceof NoSuchFileException) {
         statusCode = 404;
-        message = "File not found";
+        message = "Not found";
       }
     }
 

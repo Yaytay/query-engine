@@ -34,17 +34,19 @@ import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.dircache.DirCacheTree.File;
 import uk.co.spudsoft.query.defn.Argument;
 import uk.co.spudsoft.query.defn.ArgumentGroup;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.ArgumentValue;
 import static uk.co.spudsoft.query.defn.DataType.Null;
 import uk.co.spudsoft.query.defn.Format;
+import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.FilterFactory;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
 import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
-import uk.co.spudsoft.query.pipeline.PipelineNodesTree.PipelineFile;
+import uk.co.spudsoft.query.pipeline.PipelineDefnLoader.PipelineAndFile;
 import uk.co.spudsoft.query.web.formio.DateTime.DatePicker;
 
 /**
@@ -90,21 +92,23 @@ public class FormBuilder {
   
   /**
    * Build a form definition from a pipeline to an {@link OutputStream}.
-   * @param pipeline the {@link PipelineFile} that contains enough of a {@link uk.co.spudsoft.query.defn.Pipeline} definition to build the input form.
+   * @param pipelineAndFile the {@link PipelineAndFile} that contains the {@link uk.co.spudsoft.query.defn.Pipeline} definition to build the input form.
    * @param stream the {@link OutputStream} to which the formio form will be written.
    * @throws IOException if anything goes wrong.
    */
-  public void buildForm(PipelineFile pipeline, OutputStream stream) throws IOException {
+  public void buildForm(PipelineAndFile pipelineAndFile, OutputStream stream) throws IOException {
     
     try (JsonGenerator generator = factory.createGenerator(stream, JsonEncoding.UTF8)) {
+      File file = pipelineAndFile.file();
+      Pipeline pipeline = pipelineAndFile.pipeline();
       try (Form f = new Form(generator)) {        
-        f.withName(pipeline.getName())
+        f.withName(file.getName())
             .withTitle(pipeline.getTitle())
-            .withPath(pipeline.getPath())
+            .withPath(file.getPath().toString())
             .withDisplay("form")
             ;
         try (ComponentArray a = f.addComponents()) {
-          buildDescription(generator, pipeline);
+          buildDescription(generator, pipeline, file);
 
           buildArguments(generator, pipeline);
           
@@ -119,15 +123,15 @@ public class FormBuilder {
   }
   
   @SuppressFBWarnings("POTENTIAL_XML_INJECTION")
-  void buildDescription(JsonGenerator generator, PipelineFile pipeline) throws IOException {
+  void buildDescription(JsonGenerator generator, Pipeline pipeline, File file) throws IOException {
     try (Content description = new Content(generator)) {
       
       StringBuilder header = new StringBuilder();
       header.append("<p>");
       if (!Strings.isNullOrEmpty(pipeline.getTitle())) {
         header.append("<h2>").append(pipeline.getTitle()).append("</h2>");
-      } else if (!Strings.isNullOrEmpty(pipeline.getName())) {
-        header.append("<h2>").append(pipeline.getName()).append("</h2>");
+      } else if (!Strings.isNullOrEmpty(file.getName())) {
+        header.append("<h2>").append(file.getName()).append("</h2>");
       }
       header.append("</p>");
       
@@ -142,7 +146,7 @@ public class FormBuilder {
     }
   }
 
-  private Map<String, List<Argument>> collateArguments(PipelineFile pipeline) {
+  private Map<String, List<Argument>> collateArguments(Pipeline pipeline) {
     Map<String, List<Argument>> result = new HashMap<>();
     
     for (Argument arg : pipeline.getArguments()) {
@@ -174,7 +178,7 @@ public class FormBuilder {
   }
   
   
-  void buildArguments(JsonGenerator generator, PipelineFile pipeline) throws IOException {
+  void buildArguments(JsonGenerator generator, Pipeline pipeline) throws IOException {
     
     Map<String, List<Argument>> groupedArguments = collateArguments(pipeline);
     
@@ -195,7 +199,7 @@ public class FormBuilder {
     }    
   }
 
-  void buildArguments(JsonGenerator generator, PipelineFile pipeline, List<Argument> args, ArgumentGroup group) throws IOException {
+  void buildArguments(JsonGenerator generator, Pipeline pipeline, List<Argument> args, ArgumentGroup group) throws IOException {
     
     int fieldsPerColumn = Math.max(1, (int) Math.ceil((double) args.size() / columns));
     
@@ -283,7 +287,7 @@ public class FormBuilder {
     }
   }
   
-  void buildFilters(JsonGenerator generator, PipelineFile pipeline) throws IOException {
+  void buildFilters(JsonGenerator generator, Pipeline pipeline) throws IOException {
     if (filterFactory != null && !filterFactory.getSortedKeys().isEmpty()) {
       try (FieldSet output = new FieldSet(generator)) {
         output
@@ -296,7 +300,7 @@ public class FormBuilder {
     }
   }
   
-  void buildFiltersDataGrid(JsonGenerator generator, PipelineFile pipeline) throws IOException {
+  void buildFiltersDataGrid(JsonGenerator generator, Pipeline pipeline) throws IOException {
     try (DataGrid output = new DataGrid(generator)) {
       output.withCustomClass("qe-filters-datagrid")
               .withKey("_filters")
@@ -311,7 +315,7 @@ public class FormBuilder {
     }
   }
   
-  void buildFiltersFilterSelect(JsonGenerator generator, PipelineFile pipeline) throws IOException {
+  void buildFiltersFilterSelect(JsonGenerator generator, Pipeline pipeline) throws IOException {
     try (Select select = new Select(generator)) {
       select 
             .withDescription(null)
@@ -342,7 +346,7 @@ public class FormBuilder {
     }
   }
   
-  void buildFiltersValue(JsonGenerator generator, PipelineFile pipeline) throws IOException {
+  void buildFiltersValue(JsonGenerator generator, Pipeline pipeline) throws IOException {
     try (TextField textField = new TextField(generator)) {
       textField
               .withHideLabel(Boolean.TRUE)
@@ -351,7 +355,7 @@ public class FormBuilder {
     }
   }
   
-  void buildOutput(JsonGenerator generator, PipelineFile pipeline) throws IOException {
+  void buildOutput(JsonGenerator generator, Pipeline pipeline) throws IOException {
     try (FieldSet output = new FieldSet(generator)) {
       output.withCustomClass("qe-output");
       output.withLegend("Output");
@@ -361,13 +365,13 @@ public class FormBuilder {
     }
   }
   
-  void buildOutputSelect(JsonGenerator generator, PipelineFile pipeline) throws IOException {
+  void buildOutputSelect(JsonGenerator generator, Pipeline pipeline) throws IOException {
     try (Select select = new Select(generator)) {
       select 
             .withDescription(null)
             .withKey("_fmt")
             .withClearOnHide(false)
-            .withDefaultValue(pipeline.getDestinations().get(0).getName())
+            .withDefaultValue(pipeline.getFormats().get(0).getName())
       ;
       try (Select.SelectValidation v = select.addValidate()) {
         v.withOnlyAvailableItems(Boolean.TRUE);
@@ -376,7 +380,7 @@ public class FormBuilder {
 
       try (Select.DataValues dv = select.addDataValues()) {
         try (ComponentArray a = dv.addValues()) {
-          for (Format f : pipeline.getDestinations()) {
+          for (Format f : pipeline.getFormats()) {
             if (f.isHidden()) {
               continue ;
             }
@@ -392,7 +396,7 @@ public class FormBuilder {
     }
   }
 
-  void buildButtons(JsonGenerator generator, PipelineFile pipeline) throws IOException {
+  void buildButtons(JsonGenerator generator, Pipeline pipeline) throws IOException {
     try (FieldSet fs = new FieldSet(generator)) {
       try (ComponentArray a1 = fs.addComponents()) {
         try (Columns columns = new Columns(generator)) {

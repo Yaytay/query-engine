@@ -325,9 +325,6 @@ public final class PipelineDefnLoader {
                       filePathToUrlPath(file)
                       , pipelineAndFile.pipeline.getTitle()
                       , pipelineAndFile.pipeline.getDescription()
-                      , pipelineAndFile.pipeline.getArgumentGroups()
-                      , pipelineAndFile.pipeline.getArguments()
-                      , pipelineAndFile.pipeline.getFormats()
               ))
               ;
     }
@@ -378,7 +375,7 @@ public final class PipelineDefnLoader {
                   }
                 }
               }    
-              return Future.failedFuture(new ServiceException(404, "File not found"));
+              return Future.failedFuture(new ServiceException(404, "Not found"));
             });
   }
   

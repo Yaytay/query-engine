@@ -17,17 +17,11 @@
 package uk.co.spudsoft.query.pipeline;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.google.common.collect.ImmutableList;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import uk.co.spudsoft.dircache.AbstractTree;
 import uk.co.spudsoft.dircache.AbstractTree.AbstractNode;
-import uk.co.spudsoft.query.defn.Argument;
-import uk.co.spudsoft.query.defn.ArgumentGroup;
-import uk.co.spudsoft.query.main.ImmutableCollectionTools;
-import uk.co.spudsoft.query.defn.Format;
 
 /**
  * Tree of {@link uk.co.spudsoft.dircache.AbstractTree} specialized for pipelines.
@@ -216,9 +210,6 @@ public class PipelineNodesTree extends AbstractTree {
 
     private final String title;
     private final String description;
-    private final ImmutableList<ArgumentGroup> argumentGroups;
-    private final ImmutableList<Argument> arguments;
-    private final ImmutableList<Format> destinations;
 
     /**
      * Constructor.
@@ -226,17 +217,11 @@ public class PipelineNodesTree extends AbstractTree {
      * @param path The full path to the file.
      * @param title The title of the pipeline, extracted from the file.
      * @param description The description of the pipeline, extracted from the file.
-     * @param argumentGroups The groups of arguments to the pipeline, extracted from the file.
-     * @param arguments The arguments to the pipeline, extracted from the file.
-     * @param destinations The output formats that the pipeline supports, extracted from the file.
      */
-    public PipelineFile(String path, String title, String description, List<ArgumentGroup> argumentGroups, List<Argument> arguments, List<Format> destinations) {
+    public PipelineFile(String path, String title, String description) {
       super(path);
       this.title = title;
       this.description = description;
-      this.argumentGroups =  ImmutableCollectionTools.copy(argumentGroups);
-      this.arguments = ImmutableCollectionTools.copy(arguments);
-      this.destinations = ImmutableCollectionTools.copy(destinations);
     }
 
     /**
@@ -267,156 +252,6 @@ public class PipelineNodesTree extends AbstractTree {
     )
     public String getDescription() {
       return description;
-    }
-
-    /**
-     * Declared argument groups in the Pipeline.
-     * <P>
-     * The UI for gathering arguments should group them into titles sets that may also have a comment.
-     * <P>
-     * Arguments with no group will always be presented first.
-     * 
-     * @return declared argument groups in the Pipeline.
-     */
-    @ArraySchema(
-            arraySchema = @Schema(
-                    description = """
-                            <P>Declared argument groups in the Pipeline.</P>
-                            <P>
-                            The UI for gathering arguments should group them into titles sets that may also have a comment.
-                            </P>
-                            <P>
-                            Arguments with no group will always be presented first.
-                            </P>
-                            """
-            )
-            , schema = @Schema(
-                    implementation = ArgumentGroup.class
-            )
-            , minItems = 0
-            , uniqueItems = true
-    )
-    public List<ArgumentGroup> getArgumentGroups() {
-      return argumentGroups;
-    }
-
-    /**
-     * Declared arguments to the Pipeline.
-     * <P>
-     * Pipelines can receive arguments via the HTTP query string.
-     * Any arguments may be provided and may be processed by the templates of the pipeline, even if they are not
-     * declared here.
-     * Declare all arguments here, otherwise no-one will know that they exist unless they read the pipeline definition.
-     * <P>
-     * The order in which Arguments are defined here is relevant as it affects the order in which they will be displayed for
-     * Interactive Pipelines.
-     * The order in which Arguments are provided in the query string is only relevant if an Argument can take multiple values (in which
-     * case they will be presented to the query in the order that they appear in the query string, regardless of any other arguments appearing
-     * between them).
-     * @return declared arguments to the Pipeline.
-     */
-    @ArraySchema(
-            arraySchema = @Schema(
-                    description = """
-                            <P>Declared arguments to the Pipeline.</P>
-                            <P>
-                            Pipelines can receive arguments via the HTTP query string.
-                            Any arguments may be provided and may be processed by the templates of the pipeline, even if they are not
-                            declared here.
-                            Declare all arguments here, otherwise no-one will know that they exist unless they read the pipeline definition.
-                            </P>
-                            <P>
-                            The order in which Arguments are defined here is relevant as it affects the order in which they will be displayed for
-                            Interactive Pipelines.
-                            The order in which Arguments are provided in the query string is only relevant if an Argument can take multiple values (in which
-                            case they will be presented to the query in the order that they appear in the query string, regardless of any other arguments appearing
-                            between them).
-                            </P>
-                            """
-            )
-            , schema = @Schema(
-                    implementation = Argument.class
-            )
-            , minItems = 0
-            , uniqueItems = true
-    )
-    public List<Argument> getArguments() {
-      return arguments;
-    }
-
-    /**
-     * The outputs that this Pipeline supports.
-     * The format to use for a pipeline is chosen by according to the following rules:
-     * <ol>
-     * <li><pre>_fmt</pre> query string.<br>
-     * If the HTTP request includes a <pre>_fmt</pre> query string argument each Format specified in the Pipeline will be checked (in order)
-     * for a matching response from the {@link uk.co.spudsoft.query.defn.Format#getName()} method.
-     * The first matching Format will be returned.
-     * If no matching Format is found an error will be returned.
-     * 
-     * <li>Path extension.<br>
-     * If the path in the HTTP request includes a '.' (U+002E, Unicode FULL STOP) after the last '/' (U+002F, Unicode SOLIDUS) character everything following that
-     * character will be considered to be the extension, furthermore the extension (and full stop character) will be removed from the filename being sought.
-     * If an extension is found each Format specified in the Pipeline will be checked (in order)
-     * for a matching response from the {@link uk.co.spudsoft.query.defn.Format#getExtension()} method.
-     * The first matching Format will be returned.
-     * If no matching Format is found an error will be returned.
-     * 
-     * <li>Accept header.<br>
-     * If the HTTP request includes an 'Accept' header each Format specified in the Pipeline will be checked (in order)
-     * for a matching response from the {@link uk.co.spudsoft.query.defn.Format#getMediaType() ()} method.
-     * Note that most web browsers include "*\\/*" in their default Accept headers, which will match any Format that specifies a MediaType.
-     * The first matching Format will be returned.
-     * If no matching Format is found an error will be returned.
-     * 
-     * <li>Default<br>
-     * If the request does not use any of these mechanisms then the first Format specified in the Pipeline will be used.
-     * </ol>
-     * @return the outputs that this Pipeline supports.
-     */
-    @ArraySchema(
-            arraySchema = @Schema(
-                    description = """
-                                    <P>The outputs that this Pipeline supports.</P>
-                                    <P>
-                                    The format to use for a pipeline is chosen by according to the following rules:
-                                    <ol>
-
-                                    <li><pre>_fmt</pre> query string.<br>
-                                    If the HTTP request includes a <pre>_fmt</pre> query string argument each Format specified in the Pipeline will be checked (in order)
-                                    for a matching response from the {@link uk.co.spudsoft.query.defn.Format#getName()} method.
-                                    The first matching Format will be returned.
-                                    If no matching Format is found an error will be returned.
-
-                                    <li>Path extension.<br>
-                                    If the path in the HTTP request includes a '.' (U+002E, Unicode FULL STOP) after the last '/' (U+002F, Unicode SOLIDUS) character everything following that
-                                    character will be considered to be the extension, furthermore the extension (and full stop character) will be removed from the filename being sought.
-                                    If an extension is found each Format specified in the Pipeline will be checked (in order)
-                                    for a matching response from the {@link uk.co.spudsoft.query.defn.Format#getExtension()} method.
-                                    The first matching Format will be returned.
-                                    If no matching Format is found an error will be returned.
-
-                                    <li>Accept header.<br>
-                                    If the HTTP request includes an 'Accept' header each Format specified in the Pipeline will be checked (in order)
-                                    for a matching response from the {@link uk.co.spudsoft.query.defn.Format#getMediaType() ()} method.
-                                    Note that most web browsers include "*\\/*" in their default Accept headers, which will match any Format that specifies a MediaType.
-                                    The first matching Format will be returned.
-                                    If no matching Format is found an error will be returned.
-
-                                    <li>Default<br>
-                                    If the request does not use any of these mechanisms then the first Format specified in the Pipeline will be used.
-                                    </ol>
-                                    <p>
-                                    """
-            )
-            , schema = @Schema(
-                    implementation = Format.class
-            )
-            , minItems = 1
-            , uniqueItems = true
-    )
-    public List<Format> getDestinations() {
-      return destinations;
     }
 
   }

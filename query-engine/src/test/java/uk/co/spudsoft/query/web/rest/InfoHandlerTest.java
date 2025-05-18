@@ -86,7 +86,7 @@ public class InfoHandlerTest {
     InfoHandler.reportError(logger, log, response, ex, false);
     verify(response).resume(responseCaptor.capture());
     assertEquals(404, responseCaptor.getValue().getStatus());
-    assertEquals("File not found", responseCaptor.getValue().getEntity());
+    assertEquals("Not found", responseCaptor.getValue().getEntity());
   }
   
   @Test

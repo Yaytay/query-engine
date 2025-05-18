@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.FilterFactory;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
+import uk.co.spudsoft.query.pipeline.PipelineDefnLoader.PipelineAndFile;
 import uk.co.spudsoft.query.pipeline.PipelineNodesTree.PipelineDir;
 import uk.co.spudsoft.query.pipeline.PipelineNodesTree.PipelineFile;
 import uk.co.spudsoft.query.pipeline.PipelineNodesTree.PipelineNode;
@@ -71,18 +72,18 @@ public class FormIoHandler {
 
   static class PipelineStreamer implements StreamingOutput {
     
-    private final PipelineFile pipeline;
+    private final PipelineAndFile pipelineAndFile;
     private final FormBuilder builder;
 
-    PipelineStreamer(RequestContext requestContext, PipelineFile pipeline, int columns, FilterFactory filterFactory) {
-      this.pipeline = pipeline;
+    PipelineStreamer(RequestContext requestContext, PipelineAndFile pipelineAndFile, int columns, FilterFactory filterFactory) {
+      this.pipelineAndFile = pipelineAndFile;
       this.builder = new FormBuilder(requestContext, columns, filterFactory);
     }
 
     @Override
     public void write(OutputStream output) throws IOException, WebApplicationException {
       try {
-        builder.buildForm(pipeline, output);
+        builder.buildForm(pipelineAndFile, output);
       } catch (Throwable ex) {
         logger.error("Failed to build form: ", ex);
       }
@@ -165,11 +166,10 @@ public class FormIoHandler {
     try {
       RequestContext requestContext = HandlerAuthHelper.getRequestContext(Vertx.currentContext(), requireSession);
 
-      loader.getAccessible(requestContext)
-              .compose(root -> {
+      loader.loadPipeline(path, requestContext, null)
+              .compose(pipelineAndFile -> {
                 try {
-                  PipelineFile file = findFile(root, path);
-                  return Future.succeededFuture(new PipelineStreamer(requestContext, file, colCount, filterFactory));
+                  return Future.succeededFuture(new PipelineStreamer(requestContext, pipelineAndFile, colCount, filterFactory));
                 } catch (Throwable ex) {
                   return Future.failedFuture(ex);
                 }
