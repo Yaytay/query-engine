@@ -151,7 +151,7 @@ public class InfoHandler {
                   return Future.succeededFuture(
                           new PipelineDetails(
                                   pipelineAndFile.file().getName()
-                                  , pipelineAndFile.file().getPath().toString()
+                                  , path
                                   , pipelineAndFile.pipeline().getTitle()
                                   , pipelineAndFile.pipeline().getDescription()
                                   , pipelineAndFile.pipeline().getArgumentGroups()

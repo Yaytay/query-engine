@@ -542,6 +542,7 @@ public final class PipelineDefnLoader {
             });
   }
 
+
   private Future<PipelineAndFile> readPipelineFromFile(DirCacheTree.File file, RequestContext context) {
     logger.trace("Reading pipeline {}", file);
     if (file.getName().endsWith(".json")) {

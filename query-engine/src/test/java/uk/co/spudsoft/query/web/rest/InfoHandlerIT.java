@@ -132,6 +132,7 @@ public class InfoHandlerIT {
     assertThat(body, not(containsString("condition")));
     assertThat(body, not(containsString("37-17")));
     assertThat(body, not(containsString("\"20\"")));
+    assertThat(body, not(containsString("target")));
     
     main.shutdown();
   }

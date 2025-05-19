@@ -100,7 +100,7 @@ After authenticating with their chosen provider the generated JWT will be stored
 
 It is quite likely that a secure configuration of the Query Engine will be required to trust custom root certificates (e.g. for JWT endpoints, especially in test environments).
 
-It is recommended by CIS that all containers by run with a read only root filesystem, so updating the castore on startup is awkward.
+It is recommended by CIS that all containers by run with a read only root filesystem, so updating the CA store on startup is awkward.
 
 My preferred approach is to us this script:
 
@@ -116,7 +116,7 @@ docker run -it --entrypoint /bin/ash -v $(pwd):/out query-engine-design-mode:0.0
 Simply place all required certificates into the current directory, edit that script to have the correct image name, and then run the script.
 The result will be the cacerts file in the current directory containing all the CA certificates known to the JDK that Query Engines uses, with all your custom certs added to it.
 
-Copy the resulting castore file somewhere safe and mount it over the top of the original castore file in your Query Engine compose file.
+Copy the resulting cacerts file somewhere safe and mount it over the top of the original cacerts file in your Query Engine compose file.
 My preferred way to do this is with a Docker Config:
 ```yaml
     configs:
