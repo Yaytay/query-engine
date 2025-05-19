@@ -43,6 +43,7 @@ public class FormatJson implements Format {
 
   private final FormatType type;
   private final String name;
+  private final String description;
   private final String extension;
   private final String filename;
   private final MediaType mediaType;
@@ -122,6 +123,24 @@ public class FormatJson implements Format {
   )
   public String getName() {
     return name;
+  }
+
+  /**
+   * Get the description of the format, optional value to help UI users choose which format to use.
+   * @return the description of the format.
+   */
+  @Schema(description = """
+                        <P>The description of the format.</P>
+                        <P>
+                        The description is used in UIs to help users choose which format to use.
+                        </P>
+                        """
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  @Override
+  public String getDescription() {
+    return description;
   }
 
   /**
@@ -374,6 +393,7 @@ public class FormatJson implements Format {
 
     private FormatType type = FormatType.JSON;
     private String name = "json";
+    private String description;
     private String extension = "json";
     private String filename = null;
     private MediaType mediaType = MediaType.parse("application/json");
@@ -406,6 +426,17 @@ public class FormatJson implements Format {
      */
     public Builder name(final String value) {
       this.name = value;
+      return this;
+    }
+
+    /**
+     * Set the description of the format.
+     *
+     * @param description the description of the format.
+     * @return this Builder instance.
+     */
+    public Builder description(String description) {
+      this.description = description;
       return this;
     }
 
@@ -516,7 +547,7 @@ public class FormatJson implements Format {
      * @return a new instance of the FormatJson class.
      */
     public FormatJson build() {
-      return new uk.co.spudsoft.query.defn.FormatJson(type, name, extension, filename, mediaType
+      return new uk.co.spudsoft.query.defn.FormatJson(type, name, description, extension, filename, mediaType
               , hidden, dataName, metadataName, compatibleTypeNames
               , dateFormat, dateTimeFormat, timeFormat
       );
@@ -531,13 +562,15 @@ public class FormatJson implements Format {
     return new FormatJson.Builder();
   }
 
-  private FormatJson(final FormatType type, final String name, final String extension, final String filename, final MediaType mediaType
+  private FormatJson(final FormatType type, final String name, final String description
+          , final String extension, final String filename, final MediaType mediaType
           , final boolean hidden, String dataName, String metadataName, Boolean compatibleTypeNames
           , final String dateFormat, final String dateTimeFormat, final String timeFormat
   ) {
     validateType(FormatType.JSON, type);
     this.type = type;
     this.name = name;
+    this.description = description;
     this.extension = extension;
     this.filename = filename;
     this.mediaType = mediaType;

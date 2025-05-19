@@ -37,17 +37,12 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.StreamingOutput;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.FilterFactory;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader.PipelineAndFile;
-import uk.co.spudsoft.query.pipeline.PipelineNodesTree.PipelineDir;
-import uk.co.spudsoft.query.pipeline.PipelineNodesTree.PipelineFile;
-import uk.co.spudsoft.query.pipeline.PipelineNodesTree.PipelineNode;
-import uk.co.spudsoft.query.web.ServiceException;
 import uk.co.spudsoft.query.web.formio.FormBuilder;
 import static uk.co.spudsoft.query.web.rest.InfoHandler.reportError;
 
@@ -185,34 +180,4 @@ public class FormIoHandler {
     }    
 
   }
-  
-  private PipelineFile findFile(PipelineDir root, String path) throws ServiceException {
-    String parts[] = path.split("/");
-    PipelineDir current = root;
-    for (int i = 0; i < parts.length; ++i) {
-      int idx = i;
-      Optional<PipelineNode> node = current.getChildren().stream().filter(n -> n.getName().equals(parts[idx])).findFirst();
-      if (node.isEmpty()) {
-        logger.warn("Path part {} from {} not found in available pipelines", parts[i], path);
-        throw new ServiceException(404, "Not found");
-      } else if (i < parts.length - 1) {
-        if (node.get() instanceof PipelineDir dir) {
-          current = dir;
-        } else {
-          logger.warn("Path part {} from {} is not a dir", parts[i], path);
-          throw new ServiceException(404, "Not found");          
-        }
-      } else {
-        if (node.get() instanceof PipelineFile file) {
-          return file;
-        } else {
-          logger.warn("Path part {} from {} is not a file", parts[i], path);
-          throw new ServiceException(404, "Not found");          
-        }
-      }
-    }
-    logger.warn("No parts in path \"{}\"!", path);
-    throw new ServiceException(404, "Not found");          
-  }
-  
 }

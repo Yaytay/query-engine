@@ -24,10 +24,12 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.file.FileSystemException;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.container.Suspended;
@@ -109,6 +111,70 @@ public class InfoHandler {
     }    
   }
   
+  
+  
+  /**
+   * Get details of a pipeline that would be needed for a UI to run the pipeline without using formio.
+   * 
+   * @param response JAX-RS Asynchronous response, connected to the Vertx request by the RESTeasy JAX-RS implementation.
+   * @param path The path to the pipeline that is to be loaded and have it's arguments converted to a form.
+   */
+  @GET
+  @Path("/details/{path:.*}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(description = "Return a form.io definition for a given document")
+  @ApiResponse(
+          responseCode = "200"
+          , description = "A form.io definition for a given document."
+          , content = @Content(
+                  mediaType = MediaType.APPLICATION_JSON
+                  , schema = @Schema(
+                          implementation = PipelineDetails.class
+                  )
+          )
+  )
+  public void getDetails(
+          @Suspended final AsyncResponse response
+          , @Schema(
+                  description = "The path to the quiery, as returned by a call to get /api/info/available"
+            )
+            @PathParam("path")
+            String path
+  ) {
+    
+    try {
+      RequestContext requestContext = HandlerAuthHelper.getRequestContext(Vertx.currentContext(), requireSession);
+
+      loader.loadPipeline(path, requestContext, null)
+              .compose(pipelineAndFile -> {
+                try {
+                  return Future.succeededFuture(
+                          new PipelineDetails(
+                                  pipelineAndFile.file().getName()
+                                  , pipelineAndFile.file().getPath().toString()
+                                  , pipelineAndFile.pipeline().getTitle()
+                                  , pipelineAndFile.pipeline().getDescription()
+                                  , pipelineAndFile.pipeline().getArgumentGroups()
+                                  , pipelineAndFile.pipeline().getArguments()
+                                  , pipelineAndFile.pipeline().getFormats()
+                          )
+                  );
+                } catch (Throwable ex) {
+                  return Future.failedFuture(ex);
+                }
+              })
+              .onSuccess(fd -> {
+                response.resume(Response.ok(fd, MediaType.APPLICATION_JSON).build());
+              })
+              .onFailure(ex -> {
+                reportError(logger, "Failed to generate list of available pipelines: ", response, ex, outputAllErrorMessages);
+              });
+    } catch (Throwable ex) {
+      reportError(logger, "Failed to get FormIO data: ", response, ex, outputAllErrorMessages);
+    }    
+
+  }
+    
   /**
    * Report an error to the JAX-RS {@link jakarta.ws.rs.container.AsyncResponse}.
    * 

@@ -49,6 +49,7 @@ public class FormatXlsx implements Format {
 
   private final FormatType type;
   private final String name;
+  private final String description;
   private final String extension;
   private final String filename;
   private final MediaType mediaType;
@@ -139,6 +140,24 @@ public class FormatXlsx implements Format {
   )
   public String getName() {
     return name;
+  }
+
+  /**
+   * Get the description of the format, optional value to help UI users choose which format to use.
+   * @return the description of the format.
+   */
+  @Schema(description = """
+                        <P>The description of the format.</P>
+                        <P>
+                        The description is used in UIs to help users choose which format to use.
+                        </P>
+                        """
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  @Override
+  public String getDescription() {
+    return description;
   }
 
   /**
@@ -452,6 +471,7 @@ public class FormatXlsx implements Format {
 
     private FormatType type = FormatType.XLSX;
     private String name = "xlsx";
+    private String description;
     private String extension = "xlsx";
     private String filename = null;
     private MediaType mediaType = MediaType.parse("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
@@ -491,6 +511,17 @@ public class FormatXlsx implements Format {
      */
     public Builder name(final String value) {
       this.name = value;
+      return this;
+    }
+
+    /**
+     * Set the description of the format.
+     *
+     * @param description the description of the format.
+     * @return this Builder instance.
+     */
+    public Builder description(String description) {
+      this.description = description;
       return this;
     }
 
@@ -602,7 +633,7 @@ public class FormatXlsx implements Format {
      * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder defaultTimeFormat(final String value) {
-      this.defaultDateTimeFormat = value;
+      this.defaultTimeFormat = value;
       return this;
     }
     
@@ -671,7 +702,7 @@ public class FormatXlsx implements Format {
      * @return a new instance of the FormatXlsx class.
      */
     public FormatXlsx build() {
-      return new FormatXlsx(type, name, extension, filename, mediaType, hidden, sheetName, creator
+      return new FormatXlsx(type, name, description, extension, filename, mediaType, hidden, sheetName, creator
               , gridLines, headers, defaultDateFormat, defaultDateTimeFormat, defaultTimeFormat
               , headerFont, bodyFont, headerColours, evenColours, oddColours, columns);
     }
@@ -686,13 +717,14 @@ public class FormatXlsx implements Format {
     return new FormatXlsx.Builder();
   }
 
-  private FormatXlsx(final FormatType type, final String name, final String extension, final String filename, final MediaType mediaType, final boolean hidden
+  private FormatXlsx(final FormatType type, final String name, final String description, final String extension, final String filename, final MediaType mediaType, final boolean hidden
           , final String sheetName, final String creator
           , final boolean gridLines, final boolean headers, final String defaultDateFormat, final String defaultDateTimeFormat, final String defaultTimeFormat
           , final FormatXlsxFont headerFont, final FormatXlsxFont bodyFont, final FormatXlsxColours headerColours, final FormatXlsxColours evenColours, final FormatXlsxColours oddColours, final List<FormatXlsxColumn> columns) {
     validateType(FormatType.XLSX, type);
     this.type = type;
     this.name = name;
+    this.description = description;
     this.extension = extension;
     this.filename = filename;
     this.mediaType = mediaType;

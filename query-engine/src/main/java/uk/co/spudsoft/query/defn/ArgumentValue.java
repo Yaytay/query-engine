@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.defn;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Objects;
 
 /**
  * An ArgumentValue represents a possible value for an Argument to a Pipeline.
@@ -144,5 +145,30 @@ public class ArgumentValue {
     this.value = value;
     this.label = label;
   }
-  
+
+  @Override
+  public int hashCode() {
+    int hash = 7;
+    hash = 17 * hash + Objects.hashCode(this.value);
+    hash = 17 * hash + Objects.hashCode(this.label);
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    final ArgumentValue other = (ArgumentValue) obj;
+    if (!Objects.equals(this.value, other.value)) {
+      return false;
+    }
+    return Objects.equals(this.label, other.label);
+  }
 }

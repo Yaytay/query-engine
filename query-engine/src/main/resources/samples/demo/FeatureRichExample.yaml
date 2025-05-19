@@ -29,7 +29,7 @@ arguments:
     optional: true
     prompt: max id
     description: Maximum values for the dataId.
-    defaultValueExpression: 20
+    defaultValueExpression: 37 - 17
   - name: maxLong
     type: Long
     title: Maximum Long Value
@@ -192,6 +192,7 @@ formats:
   mediaType: text/tsv
 - type: Delimited
   headerRow: false
+  hidden: true
 - type: HTML
   name: table
 - type: JSON

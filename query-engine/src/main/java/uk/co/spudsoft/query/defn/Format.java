@@ -174,6 +174,21 @@ public interface Format {
   String getName();
 
   /**
+   * Get the description of the format, optional value to help UI users choose which format to use.
+   * @return the description of the format.
+   */
+  @Schema(description = """
+                        <P>The description of the format.</P>
+                        <P>
+                        The description is used in UIs to help users choose which format to use.
+                        </P>
+                        """
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  String getDescription();
+
+  /**
    * Get the extension of the format.
    * The extension is used to determine the format based upon the URL path.
    * If multiple formats have the same extension the first in the list will be used.

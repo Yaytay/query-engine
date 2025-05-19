@@ -47,6 +47,7 @@ public class FormatRss implements Format {
 
   private final FormatType type;
   private final String name;
+  private final String description;
   private final String extension;
   private final String filename;
   private final MediaType mediaType;
@@ -61,6 +62,7 @@ public class FormatRss implements Format {
   private FormatRss(Builder builder) {
     this.type = builder.type;
     this.name = builder.name;
+    this.description = builder.description;
     this.extension = builder.extension;
     this.filename = builder.filename;
     this.mediaType = builder.mediaType;
@@ -86,6 +88,7 @@ public class FormatRss implements Format {
     Builder builder = new Builder();
     builder.type(type);
     builder.name(name);
+    builder.description(description);
     builder.extension(extension);
     builder.mediaType(mediaType);
     builder.fieldInitialLetterFix(fieldInitialLetterFix == null ? "F" : fieldInitialLetterFix);
@@ -142,6 +145,24 @@ public class FormatRss implements Format {
     defaultValue = "XML")
   public String getName() {
     return name;
+  }
+
+  /**
+   * Get the description of the format, optional value to help UI users choose which format to use.
+   * @return the description of the format.
+   */
+  @Schema(description = """
+                        <P>The description of the format.</P>
+                        <P>
+                        The description is used in UIs to help users choose which format to use.
+                        </P>
+                        """
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  @Override
+  public String getDescription() {
+    return description;
   }
 
   /**
@@ -246,6 +267,7 @@ public class FormatRss implements Format {
 
     private FormatType type = FormatType.RSS;
     private String name = "RSS";
+    private String description;
     private String extension = "xml";
     private String filename = null;
     private MediaType mediaType = MediaType.parse("application/rss+xml");
@@ -279,6 +301,17 @@ public class FormatRss implements Format {
      */
     public Builder name(String name) {
       this.name = name;
+      return this;
+    }
+
+    /**
+     * Set the description of the format.
+     *
+     * @param description the description of the format.
+     * @return this Builder instance.
+     */
+    public Builder description(String description) {
+      this.description = description;
       return this;
     }
 
