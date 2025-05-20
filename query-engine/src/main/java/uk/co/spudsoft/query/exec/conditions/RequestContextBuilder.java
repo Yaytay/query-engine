@@ -260,7 +260,12 @@ public class RequestContextBuilder {
       }
 
       String credentials = authHeader.substring(BASIC.length());
-      credentials = new String(Base64.getUrlDecoder().decode(credentials), StandardCharsets.UTF_8);
+      try {
+        credentials = new String(Base64.getDecoder().decode(credentials), StandardCharsets.UTF_8);
+      } catch (Throwable ex) {
+        logger.warn("Failed to decode credentials using base64, will try again with base64url: ", ex);
+        credentials = new String(Base64.getUrlDecoder().decode(credentials), StandardCharsets.UTF_8);
+      }
       int colon = credentials.indexOf(":");
       String username = credentials.substring(0, colon);
       String password = credentials.substring(colon + 1);
