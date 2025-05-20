@@ -198,7 +198,7 @@ public class MainQueryIT {
             .statusCode(200)
             .extract().body().asString();
     
-    assertThat(body, startsWith("[{\"dataId\":1,\"instant\":\"1971-05-07T03:00\",\"ref\":\"antiquewhite\",\"value\":\"first\",\"children\":\"one\"},"));
+    assertThat(body, startsWith("[{\"dataId\":1,\"instant\":\"1971-05-07T03:00:00Z\",\"ref\":\"antiquewhite\",\"value\":\"first\",\"children\":\"one\"},"));
     
     body = given()
             .queryParam("key", postgres.getName())
@@ -210,7 +210,7 @@ public class MainQueryIT {
             .statusCode(200)
             .extract().body().asString();
     
-    assertThat(body, startsWith("{\"meta\":{\"fields\":{\"dataId\":\"integer\",\"ref\":\"string\",\"value\":\"string\",\"children\":\"string\"}},\"data\":[{\"dataId\":1,\"instant\":\"1971-05-07 03:00:00\",\"ref\":\"antiquewhite\",\"value\":\"first\",\"children\":\"one\"}"));
+    assertThat(body, startsWith("{\"meta\":{\"fields\":{\"dataId\":\"bool\",\"ref\":\"string\",\"value\":\"string\",\"children\":\"string\"}},\"data\":[{\"dataId\":1,\"instant\":\"1971-05-07 03:00:00\",\"ref\":\"antiquewhite\",\"value\":\"first\",\"children\":\"one\"},"));
     assertThat(body, endsWith(",{\"dataId\":13,\"instant\":\"1971-05-20 15:00:00\",\"ref\":\"cadetblue\",\"value\":\"thirteenth\",\"children\":\"thirteen,twenty six,thirty nine,fifty two,sixty five,seventy eight\"}]}"));
     
     body = given()

@@ -93,7 +93,7 @@ jobs:
       if: success()
       with:
         name: reports
-        retention-days: 90
+        retention-days: 10
         path: |
           query-engine/target/site
           query-engine-design-mode/target/site
@@ -103,7 +103,7 @@ jobs:
       if: failure()
       with:
         name: reports
-        retention-days: 3
+        retention-days: 2
         path: |
           query-engine/target/site
           query-engine-design-mode/target/site
