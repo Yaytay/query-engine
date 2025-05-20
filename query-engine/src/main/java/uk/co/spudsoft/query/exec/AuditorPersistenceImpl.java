@@ -97,8 +97,8 @@ public class AuditorPersistenceImpl implements Auditor {
   private static final String CHANGESET_RESOURCE_PATH = "/db/changelog/query-engine.yaml";
 
   private static final String PROCESS_ID = ManagementFactory.getRuntimeMXBean().getName();
-  private static final Base64.Encoder ENCODER = java.util.Base64.getUrlEncoder();
-  private static final Base64.Decoder DECODER = java.util.Base64.getUrlDecoder();
+  private static final Base64.Encoder ENCODER = java.util.Base64.getEncoder();
+  private static final Base64.Decoder DECODER = java.util.Base64.getDecoder();
 
   private static final EnumMap<AuditHistorySortOrder, String> SORT_COLUMN_NAMES = prepareSortColumnNames();
 
