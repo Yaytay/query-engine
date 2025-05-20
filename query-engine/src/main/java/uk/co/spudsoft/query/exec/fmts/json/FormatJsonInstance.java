@@ -167,7 +167,11 @@ public final class FormatJsonInstance implements FormatInstance {
               json.put(cd.name(), ldt.toEpochSecond(ZoneOffset.UTC));
             }            
           } else if (dateTimeFormatter == null) {
-            json.put(cd.name(), Utils.toJson(value));
+            if (value instanceof LocalDateTime ldt) {
+              json.put(cd.name(), Utils.toJson(ldt.toInstant(ZoneOffset.UTC)));
+            } else {
+              json.put(cd.name(), Utils.toJson(value));
+            }
           } else {
             if (value instanceof TemporalAccessor ta) {
               json.put(cd.name(), dateTimeFormatter.format(ta));
@@ -205,6 +209,8 @@ public final class FormatJsonInstance implements FormatInstance {
           String typeName = cd.typeName();
           if (defn.isCompatibleTypeNames()) {
             if (cd.type() == DataType.Boolean) {
+              typeName = "bool";
+            } if (cd.type() == DataType.Integer || cd.type() == DataType.Long) {
               typeName = "bool";
             } else {
               typeName = typeName.toLowerCase(Locale.ROOT);

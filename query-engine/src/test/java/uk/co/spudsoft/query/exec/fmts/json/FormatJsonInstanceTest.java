@@ -16,7 +16,6 @@
  */
 package uk.co.spudsoft.query.exec.fmts.json;
 
-import static com.fasterxml.jackson.databind.deser.std.StringDeserializer.instance;
 import io.vertx.core.json.JsonObject;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -48,6 +47,7 @@ public class FormatJsonInstanceTest {
             "dateValue", LocalDate.of(2023, 5, 15),
             "timeValue", LocalTime.of(13, 45, 30),
             "dateTimeValue", LocalDateTime.of(2023, 5, 15, 13, 45, 30),
+            "dateTimeValueZeroSeconds", LocalDateTime.of(2023, 5, 15, 13, 45, 0),
             "nullValue", null
     );
 
@@ -63,7 +63,8 @@ public class FormatJsonInstanceTest {
     // Date/time values might be formatted as strings
     assertEquals("2023-05-15", result.getValue("dateValue"));
     assertEquals("13:45:30", result.getValue("timeValue"));
-    assertEquals("2023-05-15T13:45:30", result.getValue("dateTimeValue"));
+    assertEquals("2023-05-15T13:45:30Z", result.getValue("dateTimeValue"));
+    assertEquals("2023-05-15T13:45:00Z", result.getValue("dateTimeValueZeroSeconds"));
 
     // Null value should be present but null
     assertTrue(result.containsKey("nullValue"));
@@ -93,6 +94,33 @@ public class FormatJsonInstanceTest {
     assertEquals("15 May 2023", result.getValue("dateValue"));
     assertEquals("1:45 pm", ((String) result.getValue("timeValue")).toLowerCase());
     assertEquals("15 May 2023 1:45 pm", ((String) result.getValue("dateTimeValue")).replace("PM", "pm"));
+  }
+
+  @Test
+  public void testToJsonWithIso8601FormatWithoutZ() {
+    FormatJson definition = FormatJson.builder()
+            .dateFormat("uuuu-MM-dd")
+            .dateTimeFormat("uuuu-MM-dd'T'HH:mm:ss")
+            .timeFormat("HH:mm:ss")
+            .build();
+    FormatJsonInstance instance = new FormatJsonInstance(null, definition);
+    // Create a test DataRow with different types of data
+    Types types = new Types();
+    DataRow row = DataRow.create(types,
+            "dateValue", LocalDate.of(2023, 5, 15),
+            "timeValue", LocalTime.of(13, 45, 30),
+            "dateTimeValue", LocalDateTime.of(2023, 5, 15, 13, 45, 30),
+            "dateTimeValueNoSecs", LocalDateTime.of(2023, 5, 15, 13, 45, 00)
+    );
+
+    // Convert to JSON
+    JsonObject result = instance.toJson(row);
+
+    // Date/time values might be formatted as strings
+    assertEquals("2023-05-15", result.getValue("dateValue"));
+    assertEquals("13:45:30", ((String) result.getValue("timeValue")).toLowerCase());
+    assertEquals("2023-05-15T13:45:30", ((String) result.getValue("dateTimeValue")));
+    assertEquals("2023-05-15T13:45:00", ((String) result.getValue("dateTimeValueNoSecs")));
   }
 
   @Test
