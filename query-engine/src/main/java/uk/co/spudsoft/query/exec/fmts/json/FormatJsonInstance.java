@@ -69,6 +69,7 @@ public final class FormatJsonInstance implements FormatInstance {
   private final AtomicBoolean started = new AtomicBoolean();
   private Types types;
   private String title;
+  private String description;
   
   private final DateTimeFormatter dateFormatter;
   private final DateTimeFormatter dateTimeFormatter;
@@ -211,11 +212,15 @@ public final class FormatJsonInstance implements FormatInstance {
           }
           row.put(cd.name(), typeName);
         });
-        if (Strings.isNullOrEmpty(title)) {
-          start = "{\"" + defn.getMetadataName() + "\":{\"fields\":" + toJson(row).toString() + "},\"" + defn.getDataName() + "\":" + OPEN_ARRAY;
-        } else {
-          start = "{\"" + defn.getMetadataName() + "\":{\"name\":\"" + title + "\",\"fields\":" + toJson(row).toString() + "},\"" + defn.getDataName() + "\":" + OPEN_ARRAY;
+        String insertTitle = "";
+        if (!Strings.isNullOrEmpty(title)) {
+          insertTitle = "\"name\":\"" + title + "\",";
         }
+        String insertDesc = "";
+        if (!Strings.isNullOrEmpty(description)) {
+          insertTitle = "\"description\":\"" + description.trim() + "\",";
+        }
+        start = "{\"" + defn.getMetadataName() + "\":{" + insertTitle + insertDesc + "\"fields\":" + toJson(row).toString() + "},\"" + defn.getDataName() + "\":" + OPEN_ARRAY;
       }
       return outputStream.write(Buffer.buffer(start));
     }
@@ -235,6 +240,7 @@ public final class FormatJsonInstance implements FormatInstance {
     Pipeline pipelineDefn = pipeline.getDefinition();
     if (pipelineDefn != null) {
       this.title = pipelineDefn.getTitle();
+      this.description = pipelineDefn.getDescription();
     }
     return input.getStream().pipeTo(formattingStream);
   }
