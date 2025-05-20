@@ -210,7 +210,7 @@ public final class FormatJsonInstance implements FormatInstance {
           if (defn.isCompatibleTypeNames()) {
             if (cd.type() == DataType.Boolean) {
               typeName = "bool";
-            } if (cd.type() == DataType.Integer || cd.type() == DataType.Long) {
+            } else if (cd.type() == DataType.Integer || cd.type() == DataType.Long) {
               typeName = "bool";
             } else {
               typeName = typeName.toLowerCase(Locale.ROOT);

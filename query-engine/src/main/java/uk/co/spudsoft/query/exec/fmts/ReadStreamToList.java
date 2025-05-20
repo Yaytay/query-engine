@@ -62,11 +62,17 @@ public class ReadStreamToList {
     List<U> collected = new ArrayList<>();
     
     input.endHandler(v -> {
-      promise.complete(collected);
+      promise.tryComplete(collected);
     }).exceptionHandler(ex -> {
-      promise.fail(ex);
+      logger.warn("Exception capturing stream: {}", ex);
+      promise.tryFail(ex);
     }).handler(item -> {
-      collected.add(mapper.apply(item));
+      try {
+        U value = mapper.apply(item);
+        collected.add(value);
+      } catch (Throwable ex) {
+        logger.warn("Failed to map value ({}): ", item, ex);
+      }
     });
     
     input.resume();
@@ -87,9 +93,9 @@ public class ReadStreamToList {
     List<T> collected = new ArrayList<>();
     
     input.endHandler(v -> {
-      promise.complete(collected);
+      promise.tryComplete(collected);
     }).exceptionHandler(ex -> {
-      promise.fail(ex);
+      promise.tryFail(ex);
     }).handler(item -> {
       logger.debug("Got item: {}", item);
       collected.add(item);
