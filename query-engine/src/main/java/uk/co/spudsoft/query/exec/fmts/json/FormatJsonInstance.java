@@ -117,7 +117,6 @@ public final class FormatJsonInstance implements FormatInstance {
               return start();
             }
             , row -> {
-              logger.debug("Outputting row: {}", row);
               if (row.isEmpty()) {
                 return Future.succeededFuture();
               } else if (started.get()) {
@@ -204,7 +203,13 @@ public final class FormatJsonInstance implements FormatInstance {
       if (Strings.isNullOrEmpty(defn.getMetadataName())) {
         start = "{\"" + defn.getDataName() + "\":";
       } else {
-        DataRow row = DataRow.create(types);
+        logger.debug("Data types: {}", types);
+        Types metaTypes = new Types();
+        types.forEach((cd -> {
+          metaTypes.putIfAbsent(cd.name(), DataType.String);
+        }));
+        logger.debug("Meta types: {}", metaTypes);
+        DataRow metaRow = DataRow.create(metaTypes);
         types.forEach(cd -> {
           String typeName = cd.typeName();
           if (defn.isCompatibleTypeNames()) {
@@ -216,7 +221,7 @@ public final class FormatJsonInstance implements FormatInstance {
               typeName = typeName.toLowerCase(Locale.ROOT);
             }
           }
-          row.put(cd.name(), typeName);
+          metaRow.put(cd.name(), typeName);
         });
         String insertTitle = "";
         if (!Strings.isNullOrEmpty(title)) {
@@ -226,7 +231,7 @@ public final class FormatJsonInstance implements FormatInstance {
         if (!Strings.isNullOrEmpty(description)) {
           insertTitle = "\"description\":\"" + description.trim() + "\",";
         }
-        start = "{\"" + defn.getMetadataName() + "\":{" + insertTitle + insertDesc + "\"fields\":" + toJson(row).toString() + "},\"" + defn.getDataName() + "\":" + OPEN_ARRAY;
+        start = "{\"" + defn.getMetadataName() + "\":{" + insertTitle + insertDesc + "\"fields\":" + toJson(metaRow).toString() + "},\"" + defn.getDataName() + "\":" + OPEN_ARRAY;
       }
       return outputStream.write(Buffer.buffer(start));
     }
