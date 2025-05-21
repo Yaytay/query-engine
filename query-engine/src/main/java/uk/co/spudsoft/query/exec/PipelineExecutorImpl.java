@@ -332,6 +332,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
       result.put(arg.getName(), instance);
     }
     requestContext.setArguments(arguments);
+    logger.debug("Prepared arguments: {}", arguments);
     return result;
   }  
   

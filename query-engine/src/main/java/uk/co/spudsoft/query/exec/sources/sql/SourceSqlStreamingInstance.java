@@ -137,7 +137,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     }    
     Endpoint endpoint = pipeline.getSourceEndpoints().get(endpointName);
     if (endpoint == null) {
-      return Future.failedFuture(new ServiceException(400, "Endpoint \"" + definition.getEndpoint() + "\" not found in " + pipeline.getSourceEndpoints().keySet()));
+      return Future.failedFuture(new ServiceException(400, "Endpoint \"" + endpointName + "\" not found in " + pipeline.getSourceEndpoints().keySet()));
     }
     if (!JexlEvaluator.isNullOrBlank(endpoint.getCondition())) {
       ConditionInstance cond = endpoint.getCondition().createInstance();

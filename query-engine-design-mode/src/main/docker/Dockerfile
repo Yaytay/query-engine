@@ -28,4 +28,4 @@ ENV CLASSPATH=${DEPS}
 # See https://blog.codefx.org/java/application-class-data-sharing/#Working-With-A-JDK-Class-Data-Archive
 RUN mkdir /cds && /qe-java/bin/java -XX:ArchiveClassesAtExit=/cds/shared.jsa -XX:-OmitStackTraceInFastThrow ${mainClass} '--jwt.acceptableIssuerRegexes[0]=.*' --ExitOnRun || rm -Rf /var/query-engine/* 
 
-ENTRYPOINT ["/qe-java/bin/java", "-XX:SharedArchiveFile=/cds/shared.jsa", "-XX:-OmitStackTraceInFastThrow", "-Djavax.net.debug=ssl,handshake", "${mainClass}"]
+ENTRYPOINT ["/qe-java/bin/java", "-XX:SharedArchiveFile=/cds/shared.jsa", "-XX:-OmitStackTraceInFastThrow", "${mainClass}"]
