@@ -142,9 +142,9 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     if (!JexlEvaluator.isNullOrBlank(endpoint.getCondition())) {
       ConditionInstance cond = endpoint.getCondition().createInstance();
       if (!cond.evaluate(requestContext, null)) {
-        String message = String.format("Endpoint %s (%s) rejected by condition (%s)", definition.getEndpoint(), endpoint.getUrl(), endpoint.getCondition());
-        logger.warn(message);
-        return Future.failedFuture(new ServiceException(503, "Endpoint \"" + definition.getEndpoint() + "\" not accessible", new IllegalStateException(message)));
+        String message = String.format("Endpoint %s (%s) rejected by condition (%s)", endpointName, endpoint.getUrl(), endpoint.getCondition());
+        logger.warn("Endpoint {} ({}) rejected by condition ({})", endpointName, endpoint.getUrl(), endpoint.getCondition());
+        return Future.failedFuture(new ServiceException(503, "Endpoint \"" + endpointName + "\" not accessible", new IllegalStateException(message)));
       }
     }
     
