@@ -270,7 +270,12 @@ public class RequestContextBuilder {
       String username = credentials.substring(0, colon);
       String password = credentials.substring(colon + 1);
       int at = username.indexOf("@");
-      String domain = at > 0 ? username.substring(at + 1) : null;
+      String domain = null;
+      String usernameWithoutDomain = username;
+      if (at > 0) {
+        domain = username.substring(at + 1);
+        usernameWithoutDomain = username.substring(0, at);
+      }
       request.pause();
 
       Future<String> tokenFuture = null;
@@ -298,9 +303,9 @@ public class RequestContextBuilder {
           return Future.failedFuture(ex);
         }
         if (basicAuthConfig.getGrantType() == BasicAuthGrantType.clientCredentials) {
-          tokenFuture = performClientCredentialsGrant(authEndpoint.getUrl(), username, password);
+          tokenFuture = performClientCredentialsGrant(authEndpoint.getUrl(), usernameWithoutDomain, password);
         } else {
-          tokenFuture = performResourceOwnerPasswordCredentials(authEndpoint, username, password);
+          tokenFuture = performResourceOwnerPasswordCredentials(authEndpoint, usernameWithoutDomain, password);
         }
       }
 
@@ -452,7 +457,7 @@ public class RequestContextBuilder {
                 logger.trace("ROPC request to {} returned: {} {}", authEndpoint, response.statusCode(), response.bodyAsString());
                 JsonObject body = response.bodyAsJsonObject();
                 String token = body.getString("access_token");
-                logger.debug("Client {}@{} got token {}", username, authEndpoint, token);
+                logger.debug("User {}@{} got token {}", username, authEndpoint, token);
                 return Future.succeededFuture(token);
               } catch (Throwable ex) {
                 logger.warn("Failed to process client credentials grant for {}@{}: ", username, authEndpoint, ex);
