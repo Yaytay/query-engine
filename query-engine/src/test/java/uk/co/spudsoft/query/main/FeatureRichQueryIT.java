@@ -35,7 +35,6 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
 

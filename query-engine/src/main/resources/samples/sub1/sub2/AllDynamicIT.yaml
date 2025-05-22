@@ -54,7 +54,7 @@ source:
         , d.value 
     from 
         "Data" d 
-        join "Colours" c on c.colourId = d.colourId 
+        join "Colours" c on c."colourId" = d."colourId"
         /* BIND join "FieldValues" fv1 on fv1."dataId" = d."dataId" and fv1."fieldId" = 1 and fv1."dateValue" >= :minDate */
         /* BIND join "FieldValues" fv2 on fv2."dataId" = d."dataId" and fv2."fieldId" = 4 and fv2."longValue" <= :maxLong */
         /* BIND join "FieldValues" fv3 on fv3."dataId" = d."dataId" and fv3."fieldId" = 7 and fv3."textValue" like :textLike */
@@ -88,13 +88,14 @@ processors:
   valuesParentIdColumns:
   - dataId
   valuesFieldIdColumn: fieldId
+  fieldValueColumnName: badField,textValue
   fieldDefns: 
     source:
       type: SQL
       endpoint: MySQL
       streamingFetchSize: 10
       replaceDoubleQuotes: true  
-      query: select "fieldId" as id, name, type, "valueField" from "Fields" order by "fieldId"
+      query: select "fieldId" as id, name, type, case when "name" = 'TextField' then null else "valueField" end as "valueField" from "Fields" order by "fieldId"
   fieldValues: 
     source:    
       type: SQL

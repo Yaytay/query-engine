@@ -115,7 +115,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
           , int secondaryStreamBufferHighThreshold
           , int secondaryStreamBufferLowThreshold
   ) {
-    logger.debug("Constructor streams: {} and {}; inner join: {}; primary thresholds: {}/{}; secondary thresholds: {}/{}"
+    logger.trace("Constructor streams: {} and {}; inner join: {}; primary thresholds: {}/{}; secondary thresholds: {}/{}"
             , primaryStream, secondaryStream
             , innerJoin
             , primaryStreamBufferHighThreshold, primaryStreamBufferLowThreshold
@@ -157,14 +157,14 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
               .handler(null);
     } else {
       primaryStream.endHandler(v -> {
-        logger.debug("Ending primary stream");
+        logger.trace("Ending primary stream");
         synchronized (lock) {
           primaryEnded = true;
         }
         doEmit();
       });
       secondaryStream.endHandler(v -> {
-        logger.debug("Ending secondary stream");
+        logger.trace("Ending secondary stream");
         synchronized (lock) {
           secondaryEnded = true;
         }
@@ -186,10 +186,10 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
         primaryRows.add(item);
         if (!secondaryEnded) {
           if (primaryRows.size() > this.primaryStreamBufferHighThreshold) {
-            logger.debug("Pausing primary stream at {} (childStream at {})", primaryRows.size(), secondaryRows.size());
+            logger.trace("Pausing primary stream at {} (childStream at {})", primaryRows.size(), secondaryRows.size());
             primaryStream.pause();
             if (secondaryRows.size() < this.secondaryStreamBufferLowThreshold) {
-              logger.debug("Resuming secondary stream at {}", secondaryRows.size());
+              logger.trace("Resuming secondary stream at {}", secondaryRows.size());
               secondaryStream.resume();
             }
           }
@@ -217,10 +217,10 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
         }
       }
       if (secondaryRows.size() > this.secondaryStreamBufferHighThreshold) {
-        logger.debug("Pausing secondary stream at {}", secondaryRows.size());
+        logger.trace("Pausing secondary stream at {}", secondaryRows.size());
         secondaryStream.pause();
       } else if (secondaryRows.size() < this.secondaryStreamBufferLowThreshold) {
-        logger.debug("Resuming secondary stream at {}", secondaryRows.size());
+        logger.trace("Resuming secondary stream at {}", secondaryRows.size());
         secondaryStream.resume();
       }
     }
@@ -238,7 +238,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
         U curSec = secondaryRows.peek();
         int compare = this.comparator.compare(currentPrimary, curSec);
         if (compare > 0) {
-          logger.debug("Skipping secondary row {} because it is before {}", curSec, currentPrimary);
+          logger.trace("Skipping secondary row {} because it is before {}", curSec, currentPrimary);
           secondaryRows.pop();
         } else if (compare == 0) {
           currentSecondaryRows.add(secondaryRows.pop());
@@ -324,12 +324,12 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
       if (capturedHandler != null) {
         if (!innerJoin || !mergeSecondary.isEmpty()) {
           V result = merger.apply(mergePrimary, mergeSecondary);
-          logger.debug("Outputting {}", result);
+          logger.trace("Outputting {}", result);
           capturedHandler.handle(result);
         }
       }
       if (capturedEndHandler != null) {
-        logger.debug("Ending");
+        logger.trace("Ending");
         capturedEndHandler.handle(null);
         primaryStream.handler(null);
         secondaryStream.handler(null);

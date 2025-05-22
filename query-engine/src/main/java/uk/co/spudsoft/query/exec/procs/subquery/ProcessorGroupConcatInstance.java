@@ -102,7 +102,7 @@ import uk.co.spudsoft.query.exec.Types;
 
   @Override
   protected DataRow processChildren(DataRow parentRow, List<DataRow> childRows) {
-    logger.debug("Got child rows: {}", childRows);
+    logger.trace("Got child rows: {}", childRows);
     
     /**
      * Three options:

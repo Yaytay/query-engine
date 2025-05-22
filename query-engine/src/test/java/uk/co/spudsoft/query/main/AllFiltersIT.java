@@ -129,6 +129,7 @@ public class AllFiltersIT {
     assertThat(body, not(containsString("\t\t\t\t\t\t\t")));
     assertThat(body, containsString("BoolField"));
     assertThat(body, containsString("TextField"));
+    assertThat(body, containsString("\"seven\""));
     int rows1 = body.split("\n").length;
     assertEquals(21, rows1);
             

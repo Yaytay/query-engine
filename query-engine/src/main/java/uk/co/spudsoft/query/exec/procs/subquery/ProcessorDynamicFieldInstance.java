@@ -16,11 +16,15 @@
  */
 package uk.co.spudsoft.query.exec.procs.subquery;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.Json;
 import io.vertx.core.streams.ReadStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import org.slf4j.Logger;
@@ -65,6 +69,7 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
   }
   
   private List<FieldDefn> fields;
+  private List<String> fieldValueColumnNames;
   
   /**
    * Constructor.
@@ -78,6 +83,11 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
   public ProcessorDynamicFieldInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorDynamicField definition, String name) {
     super(logger, vertx, sourceNameTracker, context, name, definition.getParentIdColumns(), definition.getValuesParentIdColumns(), definition.isInnerJoin());
     this.definition = definition;    
+    if (Strings.isNullOrEmpty(definition.getFieldValueColumnName())) {
+      this.fieldValueColumnNames = Collections.emptyList();
+    } else {
+      this.fieldValueColumnNames = ImmutableList.copyOf(definition.getFieldValueColumnName().split(","));
+    }
   }
 
   @Override
@@ -105,7 +115,8 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
                           Object id = row.get(definition.getFieldIdColumn());
                           String name = Objects.toString(row.get(definition.getFieldNameColumn()));
                           DataType type = DataType.valueOf(Objects.toString(row.get(definition.getFieldTypeColumn())));
-                          String column = Objects.toString(row.get(definition.getFieldColumnColumn()));              
+                          Comparable<?> valueColumn = row.get(definition.getFieldColumnColumn());
+                          String column = valueColumn == null ? null : Objects.toString(valueColumn);
                           return new FieldDefn(id, name, type, column);
                         }
                       });
@@ -115,13 +126,16 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
               for (FieldDefn field : fields) {
                 types.putIfAbsent(field.name, field.type);
               }
+              if (logger.isTraceEnabled()) {
+                logger.trace("Defined dynamic fields: {}", Json.encode(fields));
+              }
               return initializeChildStream(executor, pipeline, "fieldValues", definition.getFieldValues()).map(rswt -> rswt.getStream());
             });
   }
   
   @Override
   DataRow processChildren(DataRow parentRow, List<DataRow> childRows) {
-    logger.debug("Got child rows: {}", childRows);
+    logger.trace("Got child rows: {}", childRows);
     if (parentRow == null) {
       logger.warn("No parentRow matching {}", childRows);
       return null;
@@ -131,7 +145,17 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
       parentRow.putTypeIfAbsent(fieldDefn.name, fieldDefn.type);
       for (DataRow row : childRows) {
         if (fieldDefn.id.equals(row.get(definition.getValuesFieldIdColumn()))) {
-          parentRow.put(fieldDefn.name, row.get(fieldDefn.column));
+          if (Strings.isNullOrEmpty(fieldDefn.column)) {
+            for (String valueFieldName : this.fieldValueColumnNames) {
+              Comparable<?> value = row.get(valueFieldName);
+              if (value != null) {
+                parentRow.put(fieldDefn.name, value);
+                break;
+              }
+            }
+          } else {
+            parentRow.put(fieldDefn.name, row.get(fieldDefn.column));
+          }
           added = true;
           break;
         }

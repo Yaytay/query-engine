@@ -156,25 +156,23 @@ public final class FormatJsonInstance implements FormatInstance {
             }
           }
           break ;
+          
         case DateTime:
-          if (dateTimeAsEpochMillis) {
-            if (value instanceof LocalDateTime ldt) {
+          if (value == null) {
+            json.put(cd.name(), null);
+          } else if (value instanceof LocalDateTime ldt) {
+            if (dateTimeAsEpochMillis) {
               json.put(cd.name(), (Long) ldt.toInstant(ZoneOffset.UTC).toEpochMilli());
-            }            
-          } else if (dateTimeAsEpochSeconds) {
-            if (value instanceof LocalDateTime ldt) {
+            } else if (dateTimeAsEpochSeconds) {
               json.put(cd.name(), ldt.toEpochSecond(ZoneOffset.UTC));
-            }            
-          } else if (dateTimeFormatter == null) {
-            if (value instanceof LocalDateTime ldt) {
+            } else if (dateTimeFormatter == null) {
               json.put(cd.name(), Utils.toJson(ldt.toInstant(ZoneOffset.UTC)));
             } else {
-              json.put(cd.name(), Utils.toJson(value));
+              json.put(cd.name(), dateTimeFormatter.format(ldt));
             }
           } else {
-            if (value instanceof TemporalAccessor ta) {
-              json.put(cd.name(), dateTimeFormatter.format(ta));
-            }
+            logger.warn("DateTime value is not LocalDateTime (it's {} of {})", value.getClass(), value);
+            json.put(cd.name(), Utils.toJson(value));
           }
           break ;
           

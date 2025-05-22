@@ -107,7 +107,7 @@ processors:
   fieldColumnColumn: valueField
   valuesParentIdColumns:
   - dataId
-  valuesFieldIdColumn: fieldId
+  valuesFieldIdColumn: fieldId  
   fieldDefns: 
     source:
       type: SQL

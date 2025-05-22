@@ -131,6 +131,8 @@ public class ProcessorDynamicField implements Processor {
   private final ImmutableList<String> valuesParentIdColumns;
   private final String valuesFieldIdColumn;
   
+  private final String fieldValueColumnName;
+  
   private final SourcePipeline fieldDefns;
   private final SourcePipeline fieldValues;
   
@@ -352,6 +354,31 @@ public class ProcessorDynamicField implements Processor {
   }
 
   /**
+   * Get the list of fields to look in for the field value.
+   * This should not be used, the correct approach is to identify the field value column in the field definition query - this approach only exists for backwards compatibility.
+   * 
+   * When set, this should be a comma separate list of field names from the values stream. 
+   * Even if this value is set, it will only be used if the field value column in the field definition query is not set.
+   * At runtime the named columns in the values stream will be checked in order and the first one that is not null be be taken.
+   * 
+   * @return the list of fields to look in for the field value.
+   */
+  @Schema(description = """
+                        The list of fields to look in for the field value.
+                        <P>
+                        This should not be used, the correct approach is to identify the field value column in the field definition query - this approach only exists for backwards compatibility.
+                        <P>
+                        When set, this should be a comma separate list of field names from the values stream.
+                        Even if this value is set, it will only be used if the field value column in the field definition query is not set.
+                        At runtime the named columns in the values stream will be checked in order and the first one that is not null be be taken.
+                        """
+          , maxLength = 200
+  )
+  public String getFieldValueColumnName() {
+    return fieldValueColumnName;
+  }
+
+  /**
    * Builder class for ProcessorDynamicField.
    */
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
@@ -369,6 +396,7 @@ public class ProcessorDynamicField implements Processor {
     private List<String> parentIdColumns;
     private List<String> valuesParentIdColumns;
     private String valuesFieldIdColumn;
+    private String fieldValueColumnName;
     private SourcePipeline fieldDefns;
     private SourcePipeline fieldValues;
 
@@ -486,6 +514,16 @@ public class ProcessorDynamicField implements Processor {
     }
 
     /**
+     * Set the {@link ProcessorDynamicField#fieldValueColumnName} value in the builder.
+     * @param value The value for the {@link ProcessorDynamicField#fieldValueColumnName}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder fieldValueColumnName(final String value) {
+      this.fieldValueColumnName = value;
+      return this;
+    }
+
+    /**
      * Set the {@link ProcessorDynamicField#fieldDefns} value in the builder.
      * @param value The value for the {@link ProcessorDynamicField#fieldDefns}.
      * @return this, so that this builder may be used in a fluent manner.
@@ -510,7 +548,7 @@ public class ProcessorDynamicField implements Processor {
      * @return a new instance of the ProcessorDynamicField class.
      */
     public ProcessorDynamicField build() {
-      ProcessorDynamicField result = new ProcessorDynamicField(type, condition, name, innerJoin, fieldIdColumn, fieldNameColumn, fieldTypeColumn, fieldColumnColumn, parentIdColumns, valuesParentIdColumns, valuesFieldIdColumn, fieldDefns, fieldValues);
+      ProcessorDynamicField result = new ProcessorDynamicField(type, condition, name, innerJoin, fieldIdColumn, fieldNameColumn, fieldTypeColumn, fieldColumnColumn, parentIdColumns, valuesParentIdColumns, valuesFieldIdColumn, fieldValueColumnName, fieldDefns, fieldValues);
       result.validateType(ProcessorType.DYNAMIC_FIELD, type);
       return result;
     }
@@ -524,7 +562,7 @@ public class ProcessorDynamicField implements Processor {
     return new ProcessorDynamicField.Builder();
   }
 
-  private ProcessorDynamicField(final ProcessorType type, final Condition condition, final String name, final boolean innerJoin, final String fieldIdColumn, final String fieldNameColumn, final String fieldTypeColumn, final String fieldColumnColumn, final List<String> parentIdColumns, final List<String> valuesParentIdColumns, final String valuesFieldIdColumn, final SourcePipeline fieldDefns, final SourcePipeline fieldValues) {
+  private ProcessorDynamicField(final ProcessorType type, final Condition condition, final String name, final boolean innerJoin, final String fieldIdColumn, final String fieldNameColumn, final String fieldTypeColumn, final String fieldColumnColumn, final List<String> parentIdColumns, final List<String> valuesParentIdColumns, final String valuesFieldIdColumn, final String fieldValueColumnName, final SourcePipeline fieldDefns, final SourcePipeline fieldValues) {
     this.type = type;
     this.condition = condition;
     this.name = name;
@@ -536,11 +574,8 @@ public class ProcessorDynamicField implements Processor {
     this.parentIdColumns = ImmutableCollectionTools.copy(parentIdColumns);
     this.valuesParentIdColumns = ImmutableCollectionTools.copy(valuesParentIdColumns);
     this.valuesFieldIdColumn = valuesFieldIdColumn;
+    this.fieldValueColumnName = fieldValueColumnName;
     this.fieldDefns = fieldDefns;
     this.fieldValues = fieldValues;
   }
-    
-  
-  
-  
 }
