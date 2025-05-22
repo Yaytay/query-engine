@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonFormat.Shape;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
@@ -29,6 +30,7 @@ import java.util.Map;
 import uk.co.spudsoft.query.exec.SharedMap;
 import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.sources.sql.SourceSqlStreamingInstance;
+import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
  * Pipeline data source that gets data from a SQL database.
@@ -70,7 +72,7 @@ public final class SourceSql implements Source {
   private final Duration idleTimeout;
   private final Duration connectionTimeout;
   private final Boolean replaceDoubleQuotes;
-  private final Map<String, DataType> columnTypeOverrides;
+  private final ImmutableMap<String, DataType> columnTypeOverrides;
   
   
   @Override
@@ -447,7 +449,7 @@ public final class SourceSql implements Source {
     private Duration idleTimeout;
     private Duration connectionTimeout;
     private Boolean replaceDoubleQuotes;
-    private Map<String, DataType> columnTypeOverrides;
+    private ImmutableMap<String, DataType> columnTypeOverrides;
 
     private Builder() {
     }
@@ -578,7 +580,7 @@ public final class SourceSql implements Source {
      * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder columnTypeOverrides(final Map<String, DataType> value) {
-      this.columnTypeOverrides = value;
+      this.columnTypeOverrides = ImmutableCollectionTools.copy(value);
       return this;
     }
 
@@ -648,7 +650,7 @@ public final class SourceSql implements Source {
     this.idleTimeout = idleTimeout;
     this.connectionTimeout = connectionTimeout;
     this.replaceDoubleQuotes = replaceDoubleQuotes;
-    this.columnTypeOverrides = columnTypeOverrides;
+    this.columnTypeOverrides = ImmutableCollectionTools.copy(columnTypeOverrides);
   }
 
   
