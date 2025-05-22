@@ -63,6 +63,10 @@ source:
         d."dataId" <= :maxId
     order by 
         d."dataId"
+  columnTypeOverrides:
+    - column: LongField
+      type: Double
+    
 processors:
 - type: GROUP_CONCAT
   delimiter: ","

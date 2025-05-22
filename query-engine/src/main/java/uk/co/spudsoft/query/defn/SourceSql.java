@@ -18,14 +18,17 @@ package uk.co.spudsoft.query.defn;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonFormat.Shape;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import uk.co.spudsoft.query.exec.SharedMap;
 import uk.co.spudsoft.query.exec.SourceInstance;
@@ -72,7 +75,8 @@ public final class SourceSql implements Source {
   private final Duration idleTimeout;
   private final Duration connectionTimeout;
   private final Boolean replaceDoubleQuotes;
-  private final ImmutableMap<String, DataType> columnTypeOverrides;
+  private final ImmutableList<ColumnTypeOverride> columnTypeOverrides;
+  private final ImmutableMap<String, DataType> columnTypeOverrideMap;
   
   
   @Override
@@ -427,8 +431,17 @@ public final class SourceSql implements Source {
                         Setting a column to use a type that the result does not fit is going to cause problems (loss of data or errors) - so be sure you do this with care.
                         """
   )
-  public Map<String, DataType> getColumnTypeOverrides() {
+  public List<ColumnTypeOverride> getColumnTypeOverrides() {
     return columnTypeOverrides;
+  }
+  
+  /**
+   * Get the defined {@link #columnTypeOverrides} as a map.
+   * @return the defined {@link #columnTypeOverrides} as a map.
+   */
+  @JsonIgnore
+  public Map<String, DataType> getColumnTypeOverrideMap() {
+    return columnTypeOverrideMap;
   }
   
   /**
@@ -449,7 +462,7 @@ public final class SourceSql implements Source {
     private Duration idleTimeout;
     private Duration connectionTimeout;
     private Boolean replaceDoubleQuotes;
-    private ImmutableMap<String, DataType> columnTypeOverrides;
+    private ImmutableList<ColumnTypeOverride> columnTypeOverrides;
 
     private Builder() {
     }
@@ -579,7 +592,7 @@ public final class SourceSql implements Source {
      * @param value The value for the {@link SourceSql#replaceDoubleQuotes}.
      * @return this, so that this builder may be used in a fluent manner.
      */
-    public Builder columnTypeOverrides(final Map<String, DataType> value) {
+    public Builder columnTypeOverrides(final List<ColumnTypeOverride> value) {
       this.columnTypeOverrides = ImmutableCollectionTools.copy(value);
       return this;
     }
@@ -635,7 +648,7 @@ public final class SourceSql implements Source {
           , final Duration idleTimeout
           , final Duration connectionTimeout
           , final Boolean replaceDoubleQuotes
-          , final Map<String, DataType> columnTypeOverrides
+          , final List<ColumnTypeOverride> columnTypeOverrides
   ) {
     validateType(SourceType.SQL, type);
     this.type = type;
@@ -650,8 +663,16 @@ public final class SourceSql implements Source {
     this.idleTimeout = idleTimeout;
     this.connectionTimeout = connectionTimeout;
     this.replaceDoubleQuotes = replaceDoubleQuotes;
-    this.columnTypeOverrides = ImmutableCollectionTools.copy(columnTypeOverrides);
+    if (columnTypeOverrides == null || columnTypeOverrides.isEmpty()) {
+      this.columnTypeOverrides = null;
+      this.columnTypeOverrideMap = null;
+    } else {
+      ImmutableMap.Builder<String, DataType> builder = ImmutableMap.<String, DataType>builder();
+      columnTypeOverrides.forEach(cto -> {
+        builder.put(cto.getColumn(), cto.getType());
+      });
+      this.columnTypeOverrides = ImmutableCollectionTools.copy(columnTypeOverrides);
+      this.columnTypeOverrideMap = builder.build();
+    }
   }
-
-  
 }

@@ -80,11 +80,7 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
         if (columnTypeOverrides != null && columnTypeOverrides.containsKey(cd.name())) {
           types.putIfAbsent(cd.name(), columnTypeOverrides.get(cd.name()));
         } else {
-          try {
-            types.putIfAbsent(cd.name(), DataType.fromJdbcType(cd.jdbcType()));
-          } catch (Throwable ex) {
-            logger.warn("Failed to process column {}: ", cd.name(), ex);
-          }
+          types.putIfAbsent(cd.name(), DataType.fromJdbcType(cd.jdbcType()));
         }
       }
       logger.debug("Got types: {}", types);
