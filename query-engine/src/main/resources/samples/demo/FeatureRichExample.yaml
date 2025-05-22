@@ -163,7 +163,7 @@ processors:
       endpoint: MySQL
       streamingFetchSize: 10
       replaceDoubleQuotes: true  
-      query: select "dataId", value as child5, r."refId" as child4 from "ManyData" m join "RefData" r on r."refId" = m."refId" where "dataId" < :maxId order by "dataId", sort
+      query: select "dataId", value as child5, r."refId" as child6 from "ManyData" m join "RefData" r on r."refId" = m."refId" where "dataId" < :maxId order by "dataId", sort
       
 - type: LIMIT
   limit: 1000
