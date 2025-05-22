@@ -25,6 +25,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import java.time.Duration;
+import java.util.Map;
 import uk.co.spudsoft.query.exec.SharedMap;
 import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.sources.sql.SourceSqlStreamingInstance;
@@ -69,6 +70,7 @@ public final class SourceSql implements Source {
   private final Duration idleTimeout;
   private final Duration connectionTimeout;
   private final Boolean replaceDoubleQuotes;
+  private final Map<String, DataType> columnTypeOverrides;
   
   
   @Override
@@ -395,6 +397,37 @@ public final class SourceSql implements Source {
     return connectionTimeout;
   }
 
+  /**
+   * Get the overrides for column types.
+   * 
+   * This is a map of column names (from the results for this query) to the Query Engine {@link DataType} that should be used in the
+   * result stream.
+   * 
+   * This facility is rarely required, but can be useful when a data base does not provide adequate information for Query Engine to correctly identify the type of a field.
+   * 
+   * This is known to be useful for boolean fields with MySQL.
+   * 
+   * Setting a column to use a type that the result does not fit is going to cause problems (loss of data or errors) - so be sure you do this with care.
+   * 
+   * @return the overrides for column types.
+   */
+  @Schema(
+          description = """
+                        Get the overrides for column types.
+                        <P>
+                        This is a map of column names (from the results for this query) to the Query Engine {@link DataType} that should be used in the
+                        result stream.
+                        <P>
+                        This facility is rarely required, but can be useful when a data base does not provide adequate information for Query Engine to correctly identify the type of a field.
+                        <P>
+                        This is known to be useful for boolean fields with MySQL.
+                        <P>
+                        Setting a column to use a type that the result does not fit is going to cause problems (loss of data or errors) - so be sure you do this with care.
+                        """
+  )
+  public Map<String, DataType> getColumnTypeOverrides() {
+    return columnTypeOverrides;
+  }
   
   /**
    * Builder class for SourceSql.
@@ -414,6 +447,7 @@ public final class SourceSql implements Source {
     private Duration idleTimeout;
     private Duration connectionTimeout;
     private Boolean replaceDoubleQuotes;
+    private Map<String, DataType> columnTypeOverrides;
 
     private Builder() {
     }
@@ -539,6 +573,16 @@ public final class SourceSql implements Source {
     }
 
     /**
+     * Set the {@link SourceSql#replaceDoubleQuotes} value in the builder.
+     * @param value The value for the {@link SourceSql#replaceDoubleQuotes}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder columnTypeOverrides(final Map<String, DataType> value) {
+      this.columnTypeOverrides = value;
+      return this;
+    }
+
+    /**
      * Construct a new instance of the SourceSql class.
      * @return a new instance of the SourceSql class.
      */
@@ -548,6 +592,7 @@ public final class SourceSql implements Source {
             , streamingFetchSize
             , maxPoolSize, maxPoolWaitQueueSize, idleTimeout, connectionTimeout
             , replaceDoubleQuotes
+            , columnTypeOverrides
       );
     }
   }
@@ -574,6 +619,7 @@ public final class SourceSql implements Source {
    * @param idleTimeout {@link SourceSql#idleTimeout}
    * @param connectionTimeout {@link SourceSql#connectionTimeout}
    * @param replaceDoubleQuotes  {@link SourceSql#replaceDoubleQuotes}
+   * @param columnTypeOverrides {@link SourceSql#columnTypeOverrides}
    */
   public SourceSql(final SourceType type
           , final String name
@@ -587,6 +633,7 @@ public final class SourceSql implements Source {
           , final Duration idleTimeout
           , final Duration connectionTimeout
           , final Boolean replaceDoubleQuotes
+          , final Map<String, DataType> columnTypeOverrides
   ) {
     validateType(SourceType.SQL, type);
     this.type = type;
@@ -601,6 +648,7 @@ public final class SourceSql implements Source {
     this.idleTimeout = idleTimeout;
     this.connectionTimeout = connectionTimeout;
     this.replaceDoubleQuotes = replaceDoubleQuotes;
+    this.columnTypeOverrides = columnTypeOverrides;
   }
 
   

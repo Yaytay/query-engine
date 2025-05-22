@@ -24,6 +24,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.Date;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The basic data types that values can have in Query Engine.
@@ -35,7 +37,7 @@ import java.util.Date;
                       """
 )
 public enum DataType {
-
+  
   /**
    * The value is null.
    */
@@ -424,6 +426,8 @@ public enum DataType {
     return bytes;
   }
 
+  private static final Logger logger = LoggerFactory.getLogger(DataType.class);
+  
   /**
    * Get the appropriate DataType for any JDBCType.
    * @param jdbcType The JDBCType being sought.
@@ -480,7 +484,8 @@ public enum DataType {
       case ROWID:
       case SQLXML:
       default:
-        throw new IllegalArgumentException("Cannot process fields of type " + jdbcType.getName());
+        logger.warn("Cannot process fields of type {} will attempt to output as string", jdbcType);
+        return String;
     }
   }
 }

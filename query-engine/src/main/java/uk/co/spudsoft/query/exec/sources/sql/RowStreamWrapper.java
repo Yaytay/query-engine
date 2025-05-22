@@ -16,7 +16,6 @@
  */
 package uk.co.spudsoft.query.exec.sources.sql;
 
-import com.google.common.collect.ImmutableSet;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -28,7 +27,7 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Transaction;
 import io.vertx.sqlclient.desc.ColumnDescriptor;
-import java.sql.JDBCType;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.DataType;
@@ -59,10 +58,6 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
   
   private final Promise<Void> readyPromise = Promise.promise();
   
-  private static final ImmutableSet<String> OTHER_TYPES_TO_TREAT_AS_STRING = ImmutableSet.<String>builder()
-          .add("UUID")
-          .build();
-  
   /**
    * Constructor.
    * 
@@ -70,9 +65,10 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
    * @param connection The connection to the data source.
    * @param transaction The database transaction.
    * @param rowStream The output row stream.
+   * @param columnTypeOverrides Manually overridden types for columns.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
-  public RowStreamWrapper(SourceNameTracker sourceNameTracker, SqlConnection connection, Transaction transaction, MetadataRowStreamImpl rowStream) {
+  public RowStreamWrapper(SourceNameTracker sourceNameTracker, SqlConnection connection, Transaction transaction, MetadataRowStreamImpl rowStream, Map<String, DataType> columnTypeOverrides) {
     this.sourceNameTracker = sourceNameTracker;
     this.connection = connection;
     this.transaction = transaction;
@@ -81,8 +77,8 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
     rowStream.coloumnDescriptorHandler(columnDescriptors -> {
       for (ColumnDescriptor cd : columnDescriptors) {
         logger.trace("Field {} is of JDBC type {} (aka {})", cd.name(), cd.jdbcType(), cd.typeName());
-        if (cd.jdbcType() == JDBCType.OTHER && OTHER_TYPES_TO_TREAT_AS_STRING.contains(cd.typeName())) {
-          types.putIfAbsent(cd.name(), DataType.String);
+        if (columnTypeOverrides != null && columnTypeOverrides.containsKey(cd.name())) {
+          types.putIfAbsent(cd.name(), columnTypeOverrides.get(cd.name()));
         } else {
           try {
             types.putIfAbsent(cd.name(), DataType.fromJdbcType(cd.jdbcType()));

@@ -74,45 +74,19 @@ public class DataTypeTest {
 
     assertEquals(DataType.Null, DataType.fromJdbcType(JDBCType.NULL));
 
-    assertThrows(IllegalArgumentException.class, () -> {
-      DataType.fromJdbcType(JDBCType.BINARY);
-    });
-    assertThrows(IllegalArgumentException.class, () -> {
-      DataType.fromJdbcType(JDBCType.VARBINARY);
-    });
-    assertThrows(IllegalArgumentException.class, () -> {
-      DataType.fromJdbcType(JDBCType.LONGVARBINARY);
-    });
-    assertThrows(IllegalArgumentException.class, () -> {
-      DataType.fromJdbcType(JDBCType.OTHER);
-    });
-    assertThrows(IllegalArgumentException.class, () -> {
-      DataType.fromJdbcType(JDBCType.JAVA_OBJECT);
-    });
-    assertThrows(IllegalArgumentException.class, () -> {
-      DataType.fromJdbcType(JDBCType.DISTINCT);
-    });
-    assertThrows(IllegalArgumentException.class, () -> {
-      DataType.fromJdbcType(JDBCType.STRUCT);
-    });
-    assertThrows(IllegalArgumentException.class, () -> {
-      DataType.fromJdbcType(JDBCType.ARRAY);
-    });
-    assertThrows(IllegalArgumentException.class, () -> {
-      DataType.fromJdbcType(JDBCType.BLOB);
-    });
-    assertThrows(IllegalArgumentException.class, () -> {
-      DataType.fromJdbcType(JDBCType.REF);
-    });
-    assertThrows(IllegalArgumentException.class, () -> {
-      DataType.fromJdbcType(JDBCType.DATALINK);
-    });
-    assertThrows(IllegalArgumentException.class, () -> {
-      DataType.fromJdbcType(JDBCType.ROWID);
-    });
-    assertThrows(IllegalArgumentException.class, () -> {
-      DataType.fromJdbcType(JDBCType.SQLXML);
-    });
+    assertEquals(DataType.String, DataType.fromJdbcType(JDBCType.BINARY));
+    assertEquals(DataType.String, DataType.fromJdbcType(JDBCType.VARBINARY));
+    assertEquals(DataType.String, DataType.fromJdbcType(JDBCType.LONGVARBINARY));
+    assertEquals(DataType.String, DataType.fromJdbcType(JDBCType.OTHER));
+    assertEquals(DataType.String, DataType.fromJdbcType(JDBCType.JAVA_OBJECT));
+    assertEquals(DataType.String, DataType.fromJdbcType(JDBCType.DISTINCT));
+    assertEquals(DataType.String, DataType.fromJdbcType(JDBCType.STRUCT));
+    assertEquals(DataType.String, DataType.fromJdbcType(JDBCType.ARRAY));
+    assertEquals(DataType.String, DataType.fromJdbcType(JDBCType.BLOB));
+    assertEquals(DataType.String, DataType.fromJdbcType(JDBCType.REF));
+    assertEquals(DataType.String, DataType.fromJdbcType(JDBCType.DATALINK));
+    assertEquals(DataType.String, DataType.fromJdbcType(JDBCType.ROWID));
+    assertEquals(DataType.String, DataType.fromJdbcType(JDBCType.SQLXML));
   }
 
   @Test

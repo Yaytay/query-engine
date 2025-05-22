@@ -203,7 +203,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
               transaction = tran;
               logger.debug("Executing SQL stream on {} with {}", connection, args);
               MetadataRowStreamImpl rowStream = new MetadataRowStreamImpl(preparedStatement, context, definition.getStreamingFetchSize(), args);
-              rowStreamWrapper = new RowStreamWrapper(this, connection, transaction, rowStream);
+              rowStreamWrapper = new RowStreamWrapper(this, connection, transaction, rowStream, definition.getColumnTypeOverrides());
               return rowStreamWrapper.ready();
             })
             .recover(ex -> {

@@ -110,8 +110,8 @@ public class DataRow {
   }
   
   /**
-   * Return true if not fields have been set on this DataRow.
-   * @return true if not fields have been set on this DataRow.
+   * Return true if no fields have been set on this DataRow.
+   * @return true if no fields have been set on this DataRow.
    */
   public boolean isEmpty() {
     return data.isEmpty();
