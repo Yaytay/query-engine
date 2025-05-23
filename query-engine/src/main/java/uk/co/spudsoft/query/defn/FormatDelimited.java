@@ -47,6 +47,7 @@ public class FormatDelimited implements Format {
 
   private final boolean bom;
   private final boolean headerRow;
+  private final boolean quoteTemporal;
   private final String delimiter;
   private final String openQuote;
   private final String closeQuote;
@@ -230,6 +231,20 @@ public class FormatDelimited implements Format {
   }
 
   /**
+   * If true (the default) date/time values will be surrounded by quotes, otherwise they will not.
+   * @return true if date/time values should be surrounded by quotes, otherwise they will not.
+   */
+  @Schema(description = """
+                        If true date/time values will be surrounded by quotes, otherwise they will not.
+                        """
+          , defaultValue = "true"
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  public boolean isQuoteTemporal() {
+    return quoteTemporal;
+  }
+  
+  /**
    * The delimiter between field values in the output.
    * @return the delimiter between field values in the output.
    */
@@ -340,6 +355,7 @@ public class FormatDelimited implements Format {
     private boolean hidden = false;
     private boolean bom = false;
     private boolean headerRow = true;
+    private boolean quoteTemporal = true;
     private String delimiter = ",";
     private String openQuote = "\"";
     private String closeQuote = "\"";
@@ -420,6 +436,17 @@ public class FormatDelimited implements Format {
      */
     public Builder hidden(final boolean hidden) {
       this.hidden = hidden;
+      return this;
+    }
+
+    /**
+     * Set the quoteTemporal property of the format.
+     *
+     * @param quoteTemporal the {@link FormatDelimited#isQuoteTemporal()} property of the format.
+     * @return this Builder instance.
+     */
+    public Builder quoteTemporal(final boolean quoteTemporal) {
+      this.quoteTemporal = quoteTemporal;
       return this;
     }
 
@@ -508,7 +535,7 @@ public class FormatDelimited implements Format {
      * @return a new instance of the FormatDelimited class.
      */
     public FormatDelimited build() {
-      return new FormatDelimited(type, name, description, extension, filename, mediaType, hidden, bom, headerRow, delimiter, openQuote, closeQuote, escapeCloseQuote, replaceCloseQuote, newline);
+      return new FormatDelimited(type, name, description, extension, filename, mediaType, hidden, bom, headerRow, quoteTemporal, delimiter, openQuote, closeQuote, escapeCloseQuote, replaceCloseQuote, newline);
     }
   }
 
@@ -529,6 +556,7 @@ public class FormatDelimited implements Format {
           , final boolean hidden
           , final boolean bom
           , final boolean headerRow
+          , final boolean quoteTemporal
           , final String delimiter
           , final String openQuote
           , final String closeQuote
@@ -546,6 +574,7 @@ public class FormatDelimited implements Format {
     this.hidden = hidden;
     this.bom = bom;
     this.headerRow = headerRow;
+    this.quoteTemporal = quoteTemporal;
     this.delimiter = delimiter;
     this.openQuote = openQuote;
     this.closeQuote = closeQuote;

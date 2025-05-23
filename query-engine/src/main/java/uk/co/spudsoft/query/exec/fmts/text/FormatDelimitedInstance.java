@@ -146,12 +146,18 @@ public class FormatDelimitedInstance implements FormatInstance {
             case Date:
             case DateTime:
             case Time:
+              if (defn.isQuoteTemporal()) {
+                outputRow.append(defn.getOpenQuote());
+                outputRow.append(encodeCloseQuote(defn, v.toString()));
+                outputRow.append(defn.getCloseQuote());
+              } else {
+                outputRow.append(v.toString());
+              }
+              break;
             case String:
             default:
               outputRow.append(defn.getOpenQuote());
-              String string = v.toString();
-              string = encodeCloseQuote(defn, string);
-              outputRow.append(string);
+              outputRow.append(encodeCloseQuote(defn, v.toString()));
               outputRow.append(defn.getCloseQuote());
               break;
           }
