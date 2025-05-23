@@ -23,6 +23,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -148,7 +149,7 @@ public class FormatDelimitedInstance implements FormatInstance {
             case String:
             default:
               outputRow.append(defn.getOpenQuote());
-              String string = v.toString();              
+              String string = v.toString();
               string = encodeCloseQuote(defn, string);
               outputRow.append(string);
               outputRow.append(defn.getCloseQuote());
@@ -160,7 +161,7 @@ public class FormatDelimitedInstance implements FormatInstance {
       }
     });
     outputRow.append(defn.getNewline());
-    return outputStream.write(Buffer.buffer(outputRow.toString()));
+    return outputStream.write(Buffer.buffer(outputRow.toString().getBytes(StandardCharsets.UTF_8)));
   }
   
   static String encodeCloseQuote(FormatDelimited defn, String string) {

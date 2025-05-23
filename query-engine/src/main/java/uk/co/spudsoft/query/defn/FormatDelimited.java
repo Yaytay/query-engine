@@ -336,7 +336,7 @@ public class FormatDelimited implements Format {
     private String description;
     private String extension = "csv";
     private String filename = null;
-    private MediaType mediaType = MediaType.parse("text/csv");
+    private MediaType mediaType = MediaType.parse("text/csv;charset=UTF-8");
     private boolean hidden = false;
     private boolean bom = false;
     private boolean headerRow = true;

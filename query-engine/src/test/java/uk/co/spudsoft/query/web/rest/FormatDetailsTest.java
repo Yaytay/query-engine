@@ -32,7 +32,7 @@ public class FormatDetailsTest {
   public void testConstructor() {
     Format fmt1 = FormatDelimited.builder().build();
     FormatDetails fd = new FormatDetails(fmt1);
-    assertEquals("text/csv", fd.getMediaType().toString());
+    assertEquals("text/csv; charset=utf-8", fd.getMediaType().toString());
     
     Format fmt2 = FormatDelimited.builder().hidden(true).build();
     assertEquals("Attempt to output hidden format", assertThrows(IllegalStateException.class, () -> {
