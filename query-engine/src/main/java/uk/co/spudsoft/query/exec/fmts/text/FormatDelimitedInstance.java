@@ -24,6 +24,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -147,10 +148,8 @@ public class FormatDelimitedInstance implements FormatInstance {
             case String:
             default:
               outputRow.append(defn.getOpenQuote());
-              String string = v.toString();
-              if (!Strings.isNullOrEmpty(defn.getCloseQuote()) && !Strings.isNullOrEmpty(defn.getEscapeCloseQuote())) {
-                string = string.replaceAll(Pattern.quote(defn.getCloseQuote()), defn.getEscapeCloseQuote() + defn.getCloseQuote());
-              }
+              String string = v.toString();              
+              string = encodeCloseQuote(defn, string);
               outputRow.append(string);
               outputRow.append(defn.getCloseQuote());
               break;
@@ -162,6 +161,22 @@ public class FormatDelimitedInstance implements FormatInstance {
     });
     outputRow.append(defn.getNewline());
     return outputStream.write(Buffer.buffer(outputRow.toString()));
+  }
+  
+  static String encodeCloseQuote(FormatDelimited defn, String string) {
+    if (!Strings.isNullOrEmpty(defn.getCloseQuote())) {
+      String replacement = null;
+      if (!Strings.isNullOrEmpty(defn.getEscapeCloseQuote())) {
+        replacement = defn.getEscapeCloseQuote() + defn.getCloseQuote();
+      } else if (!Strings.isNullOrEmpty(defn.getReplaceCloseQuote())) {
+        replacement = defn.getReplaceCloseQuote();
+      }
+      if (replacement != null) {
+        replacement = Matcher.quoteReplacement(replacement);
+        string = string.replaceAll(Pattern.quote(defn.getCloseQuote()), replacement);
+      }
+    }
+    return string;
   }
   
   @Override

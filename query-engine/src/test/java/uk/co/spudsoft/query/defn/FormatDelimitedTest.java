@@ -41,8 +41,11 @@ public class FormatDelimitedTest {
     assertEquals("\"", FormatDelimited.builder().build().getCloseQuote());
     assertEquals("$", FormatDelimited.builder().closeQuote("$").build().getCloseQuote());
 
-    assertEquals("\"", FormatDelimited.builder().build().getEscapeCloseQuote());
+    assertEquals("", FormatDelimited.builder().build().getEscapeCloseQuote());
     assertEquals("$", FormatDelimited.builder().escapeCloseQuote("$").build().getEscapeCloseQuote());
+
+    assertEquals("", FormatDelimited.builder().build().getReplaceCloseQuote());
+    assertEquals("$", FormatDelimited.builder().replaceCloseQuote("$").build().getReplaceCloseQuote());
   }
   
   @Test

@@ -51,6 +51,7 @@ public class FormatDelimited implements Format {
   private final String openQuote;
   private final String closeQuote;
   private final String escapeCloseQuote;
+  private final String replaceCloseQuote;
   private final String newline;
 
   @Override
@@ -275,10 +276,13 @@ public class FormatDelimited implements Format {
 
   /**
    * Value with which to prefix any occurrence of the {@link #closeQuote} string in an output string value.
+   * Do not set both this and replaceCloseQuote, this value will take preference.
    * @return the value with which to prefix any occurrence of the {@link #closeQuote} string in an output string value.
    */
   @Schema(description = """
                         If a string value contains the close quote string it will be prefixed by this string.
+                        <P>
+                        Do not set both this and replaceCloseQuote, this value will take preference.
                         """
           , defaultValue = "\""
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
@@ -286,6 +290,24 @@ public class FormatDelimited implements Format {
   )
   public String getEscapeCloseQuote() {
     return escapeCloseQuote;
+  }
+
+  /**
+   * Value with which to replace any occurrence of the {@link #closeQuote} string in an output string value.
+   * Do not set both this and escapeCloseQuote, the value of escapeCloseQuote will take preference.
+   * @return the value with which to replace any occurrence of the {@link #closeQuote} string in an output string value.
+   */
+  @Schema(description = """
+                        If a string value contains the close quote string it will be replaced by this string.
+                        <P>
+                        Do not set both this and escapeCloseQuote, the value of escapeCloseQuote will take preference.
+                        """
+          , defaultValue = "\""
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+          , maxLength = 10
+  )
+  public String getReplaceCloseQuote() {
+    return replaceCloseQuote;
   }
   
   /**
@@ -321,7 +343,8 @@ public class FormatDelimited implements Format {
     private String delimiter = ",";
     private String openQuote = "\"";
     private String closeQuote = "\"";
-    private String escapeCloseQuote = "\"";
+    private String escapeCloseQuote = "";
+    private String replaceCloseQuote = "";
     private String newline = "\r\n";
 
     private Builder() {
@@ -461,6 +484,16 @@ public class FormatDelimited implements Format {
     }
 
     /**
+     * Set the {@link FormatDelimited#replaceCloseQuote} value in the builder.
+     * @param value The value for the {@link FormatDelimited#replaceCloseQuote}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder replaceCloseQuote(final String value) {
+      this.replaceCloseQuote = value;
+      return this;
+    }
+
+    /**
      * Set the {@link FormatDelimited#newline} value in the builder.
      * @param value The value for the {@link FormatDelimited#newline}.
      * @return this, so that this builder may be used in a fluent manner.
@@ -475,7 +508,7 @@ public class FormatDelimited implements Format {
      * @return a new instance of the FormatDelimited class.
      */
     public FormatDelimited build() {
-      return new FormatDelimited(type, name, description, extension, filename, mediaType, hidden, bom, headerRow, delimiter, openQuote, closeQuote, escapeCloseQuote, newline);
+      return new FormatDelimited(type, name, description, extension, filename, mediaType, hidden, bom, headerRow, delimiter, openQuote, closeQuote, escapeCloseQuote, replaceCloseQuote, newline);
     }
   }
 
@@ -500,6 +533,7 @@ public class FormatDelimited implements Format {
           , final String openQuote
           , final String closeQuote
           , final String escapeCloseQuote
+          , final String replaceCloseQuote
           , final String newline          
   ) {
     validateType(FormatType.Delimited, type);
@@ -516,6 +550,7 @@ public class FormatDelimited implements Format {
     this.openQuote = openQuote;
     this.closeQuote = closeQuote;
     this.escapeCloseQuote = escapeCloseQuote;
+    this.replaceCloseQuote = replaceCloseQuote;
     this.newline = newline;
   }
     
