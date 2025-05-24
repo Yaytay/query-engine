@@ -266,7 +266,7 @@ public final class FormatRssInstance implements FormatInstance {
         if (STD_ITEM_ELEMENTS.contains(fieldName)) {
           writer.writeStartElement(fieldName);
         } else {
-          writer.writeStartElement("custom", customNamespace);
+          writer.writeStartElement(customNamespace, fieldName);
         }
         if (v != null) {
           writer.writeCharacters(formatValue(v));
