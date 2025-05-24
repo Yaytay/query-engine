@@ -226,7 +226,7 @@ public final class FormatJsonInstance implements FormatInstance {
         }
         String insertDesc = "";
         if (!Strings.isNullOrEmpty(description)) {
-          insertTitle = "\"description\":\"" + description.trim() + "\",";
+          insertDesc = "\"description\":\"" + description.trim() + "\",";
         }
         start = "{\"" + defn.getMetadataName() + "\":{" + insertTitle + insertDesc + "\"fields\":" + toJson(metaRow).toString() + "},\"" + defn.getDataName() + "\":" + OPEN_ARRAY;
       }
