@@ -87,7 +87,7 @@ public class FormatRssInstanceTest {
       fs.mkdirBlocking("target/temp");
     }
     WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setCreate(true).setSync(true));
-    FormatRssInstance instance = (FormatRssInstance) defn.createInstance(vertx, null, writeStream);
+    FormatRssInstance instance = defn.createInstance(vertx, null, writeStream);
 
     Types types = new Types(buildTypes());
     List<DataRow> rowsList = new ArrayList<>();
@@ -160,31 +160,53 @@ public class FormatRssInstanceTest {
 
   @Test
   void testFormatValue() {
+    FormatRssInstance instance = new FormatRssInstance(FormatRss.builder().build(), null);
+            
     // Test null value
-    assertNull(FormatRssInstance.formatValue((String) null));
+    assertNull(instance.formatValue((String) null));
 
     // Test String value
-    assertEquals("Hello World", FormatRssInstance.formatValue("Hello World"));
+    assertEquals("Hello World", instance.formatValue("Hello World"));
 
     // Test numeric values
-    assertEquals("42", FormatRssInstance.formatValue(42));
-    assertEquals("42.5", FormatRssInstance.formatValue(42.5));
-    assertEquals("123456789", FormatRssInstance.formatValue(123456789L));
-    assertEquals("123.456", FormatRssInstance.formatValue(new BigDecimal("123.456")));
+    assertEquals("42", instance.formatValue(42));
+    assertEquals("42.5", instance.formatValue(42.5));
+    assertEquals("123456789", instance.formatValue(123456789L));
+    assertEquals("123.456", instance.formatValue(new BigDecimal("123.456")));
 
     // Test boolean values
-    assertEquals("true", FormatRssInstance.formatValue(true));
-    assertEquals("false", FormatRssInstance.formatValue(false));
+    assertEquals("true", instance.formatValue(true));
+    assertEquals("false", instance.formatValue(false));
 
     // Test date/time values
     LocalDate date = LocalDate.of(2023, 5, 15);
-    assertEquals("2023-05-15", FormatRssInstance.formatValue(date));
+    assertEquals("2023-05-15", instance.formatValue(date));
 
     LocalTime time = LocalTime.of(14, 30, 15);
-    assertEquals("14:30:15", FormatRssInstance.formatValue(time));
+    assertEquals("14:30:15", instance.formatValue(time));
 
     LocalDateTime dateTime = LocalDateTime.of(2023, 5, 15, 14, 30, 15);
-    assertEquals("2023-05-15T14:30:15", FormatRssInstance.formatValue(dateTime));
+    assertEquals("2023-05-15T14:30:15", instance.formatValue(dateTime));
   }
 
+
+  @Test
+  void testFormatTemporalValues() {
+    FormatRssInstance instance = new FormatRssInstance(FormatRss.builder()
+            .dateFormat("yyyy")
+            .dateTimeFormat("HH yyyy")
+            .timeFormat("mm")
+            .build(), null);
+            
+    // Test date/time values
+    LocalDate date = LocalDate.of(2023, 5, 15);
+    assertEquals("2023", instance.formatValue(date));
+
+    LocalTime time = LocalTime.of(14, 30, 15);
+    assertEquals("30", instance.formatValue(time));
+
+    LocalDateTime dateTime = LocalDateTime.of(2023, 5, 15, 14, 30, 15);
+    assertEquals("14 2023", instance.formatValue(dateTime));
+  }
+  
 }

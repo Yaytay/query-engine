@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.exec.fmts.xml;
 
 import com.ctc.wstx.stax.WstxOutputFactory;
+import com.google.common.base.Strings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -48,6 +49,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -73,6 +75,10 @@ public final class FormatAtomInstance implements FormatInstance {
   private final String requestUrl;
   private final String baseUrl;
 
+  private final DateTimeFormatter dateFormatter;
+  private final DateTimeFormatter dateTimeFormatter;
+  private final DateTimeFormatter timeFormatter;
+
   private final AtomicBoolean started = new AtomicBoolean();
   private XMLStreamWriter writer;
 
@@ -82,7 +88,7 @@ public final class FormatAtomInstance implements FormatInstance {
   private final Map<String, String> nameMap = new HashMap<>();
 
   private Types types;
-
+ 
   /**
    * Constructor.
    *
@@ -95,6 +101,9 @@ public final class FormatAtomInstance implements FormatInstance {
     this.requestUrl = requestUrl;
     this.baseUrl = endsWith(requestUrl, "/");
     this.streamWrapper = new OutputWriteStreamWrapper(outputStream);
+    this.dateFormatter = Strings.isNullOrEmpty(definition.getDateFormat()) ? null : DateTimeFormatter.ofPattern(definition.getDateFormat());
+    this.dateTimeFormatter = Strings.isNullOrEmpty(definition.getDateTimeFormat()) ? null : DateTimeFormatter.ofPattern(definition.getDateTimeFormat());
+    this.timeFormatter = Strings.isNullOrEmpty(definition.getTimeFormat()) ? null : DateTimeFormatter.ofPattern(definition.getTimeFormat());
     this.formattingStream = new FormattingWriteStream(outputStream,
              v -> Future.succeededFuture(),
              row -> {
@@ -211,32 +220,44 @@ public final class FormatAtomInstance implements FormatInstance {
     }
   }
 
-  static String formatValue(Comparable<?> value) {
+  String formatValue(Comparable<?> value) {
     if (value == null) {
       return null;
-    } else if (value instanceof LocalDateTime) {
-      return formatValue((LocalDateTime) value);
-    } else if (value instanceof LocalDate) {
-      return formatValue((LocalDate) value);
-    } else if (value instanceof LocalTime) {
-      return formatValue((LocalTime) value);
-    } else if (value instanceof Boolean) {
-      return ((Boolean) value) ? "true" : "false";
+    } else if (value instanceof LocalDateTime ldt) {
+      return formatValue(ldt);
+    } else if (value instanceof LocalDate ld) {
+      return formatValue(ld);
+    } else if (value instanceof LocalTime lt) {
+      return formatValue(lt);
+    } else if (value instanceof Boolean b) {
+      return b ? "true" : "false";
     } else {
       return value.toString();
     }
   }
 
-  static String formatValue(LocalTime lt) {
-    return lt.toString();
+  String formatValue(LocalTime lt) {
+    if (timeFormatter == null) {
+      return lt.toString();
+    } else {
+      return timeFormatter.format(lt);
+    }
   }
 
-  static String formatValue(LocalDateTime ldt) {
-    return ldt.toString();
+  String formatValue(LocalDateTime ldt) {
+    if (dateTimeFormatter == null) {
+      return ldt.toString();
+    } else {
+      return dateTimeFormatter.format(ldt);
+    }
   }
 
-  static String formatValue(LocalDate ld) {
-    return ld.toString();
+  String formatValue(LocalDate ld) {
+    if (dateFormatter == null) {
+      return ld.toString();
+    } else {
+      return dateFormatter.format(ld);
+    }
   }
 
   static String getType(DataType type) {

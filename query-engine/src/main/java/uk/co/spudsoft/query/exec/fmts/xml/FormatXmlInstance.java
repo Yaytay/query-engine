@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.exec.fmts.xml;
 
 import com.ctc.wstx.stax.WstxOutputFactory;
+import com.google.common.base.Strings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -43,6 +44,10 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -57,7 +62,7 @@ import static uk.co.spudsoft.query.defn.FormatXml.NAME_START_REGEX;
  * This class implements the FormatInstance interface to define the behaviour required for formatting data output.
  * It uses XML writing utilities to generate structured XML documents based on the provided definition and data rows.
  */
-public class FormatXmlInstance implements FormatInstance {
+public final class FormatXmlInstance implements FormatInstance {
 
   private static final Logger logger = LoggerFactory.getLogger(FormatXmlInstance.class);
   @SuppressWarnings("ConstantName")
@@ -67,6 +72,10 @@ public class FormatXmlInstance implements FormatInstance {
   private final OutputWriteStreamWrapper streamWrapper;
   private final FormattingWriteStream formattingStream;
 
+  private final DateTimeFormatter dateFormatter;
+  private final DateTimeFormatter dateTimeFormatter;
+  private final DateTimeFormatter timeFormatter;
+
   private final AtomicBoolean started = new AtomicBoolean();
   private XMLStreamWriter writer;
 
@@ -75,7 +84,7 @@ public class FormatXmlInstance implements FormatInstance {
   private final Map<String, String> nameMap = new HashMap<>();
 
   private Types types;
-
+  
   /**
    * Constructor.
    * @param definition The formatting definition for the output.
@@ -84,6 +93,9 @@ public class FormatXmlInstance implements FormatInstance {
   public FormatXmlInstance(FormatXml definition, WriteStream<Buffer> outputStream) {
     this.defn = definition.withDefaults();
     this.streamWrapper = new OutputWriteStreamWrapper(outputStream);
+    this.dateFormatter = Strings.isNullOrEmpty(definition.getDateFormat()) ? null : DateTimeFormatter.ofPattern(definition.getDateFormat());
+    this.dateTimeFormatter = Strings.isNullOrEmpty(definition.getDateTimeFormat()) ? null : DateTimeFormatter.ofPattern(definition.getDateTimeFormat());
+    this.timeFormatter = Strings.isNullOrEmpty(definition.getTimeFormat()) ? null : DateTimeFormatter.ofPattern(definition.getTimeFormat());
     this.formattingStream = new FormattingWriteStream(outputStream
       , v -> Future.succeededFuture()
       , row -> {
@@ -227,11 +239,43 @@ public class FormatXmlInstance implements FormatInstance {
     return result;
   }
 
-  static String formatValue(Comparable<?> value) {
+  String formatValue(Comparable<?> value) {
     if (value == null) {
       return null;
+    } else if (value instanceof LocalDateTime ldt) {
+      return formatValue(ldt);
+    } else if (value instanceof LocalDate ld) {
+      return formatValue(ld);
+    } else if (value instanceof LocalTime lt) {
+      return formatValue(lt);
+    } else if (value instanceof Boolean b) {
+      return b ? "true" : "false";
     } else {
       return value.toString();
+    }
+  }
+
+  String formatValue(LocalTime lt) {
+    if (timeFormatter == null) {
+      return lt.toString();
+    } else {
+      return timeFormatter.format(lt);
+    }
+  }
+
+  String formatValue(LocalDateTime ldt) {
+    if (dateTimeFormatter == null) {
+      return ldt.toString();
+    } else {
+      return dateTimeFormatter.format(ldt);
+    }
+  }
+
+  String formatValue(LocalDate ld) {
+    if (dateFormatter == null) {
+      return ld.toString();
+    } else {
+      return dateFormatter.format(ld);
     }
   }
 

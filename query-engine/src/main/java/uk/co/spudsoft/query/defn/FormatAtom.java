@@ -26,7 +26,6 @@ import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
-import uk.co.spudsoft.query.exec.FormatInstance;
 
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.xml.FormatAtomInstance;
@@ -58,6 +57,9 @@ public class FormatAtom implements Format {
 
   private final String fieldInitialLetterFix;
   private final String fieldInvalidLetterFix;
+  private final String dateFormat;
+  private final String dateTimeFormat;
+  private final String timeFormat;
 
   /**
    * Constructor for FormatAtom, using the Builder class for initialization.
@@ -72,6 +74,9 @@ public class FormatAtom implements Format {
     this.hidden = builder.hidden;
     this.fieldInitialLetterFix = builder.fieldInitialLetterFix;
     this.fieldInvalidLetterFix = builder.fieldInvalidLetterFix;
+    this.dateFormat = builder.dateFormat;
+    this.dateTimeFormat = builder.dateTimeFormat;
+    this.timeFormat = builder.timeFormat;
   }
 
   /**
@@ -96,11 +101,15 @@ public class FormatAtom implements Format {
     builder.mediaType(mediaType);
     builder.fieldInitialLetterFix(fieldInitialLetterFix == null ? "F" : fieldInitialLetterFix);
     builder.fieldInvalidLetterFix(fieldInvalidLetterFix == null ? "_" : fieldInvalidLetterFix);
+    builder.dateFormat(dateFormat);
+    builder.dateTimeFormat(dateTimeFormat);
+    builder.timeFormat(timeFormat);
+    
     return builder.build();
   }
 
   @Override
-  public FormatInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
+  public FormatAtomInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
     RequestContext reqCtx = RequestContextHandler.getRequestContext(context);
     return new FormatAtomInstance(this, reqCtx.getPath(), writeStream);
   }
@@ -262,6 +271,75 @@ public class FormatAtom implements Format {
   }
 
   /**
+   * Get the Java format to use for date fields.
+   * <P>
+   * To be processed by a Java {@link java.time.format.DateTimeFormatter}.
+   * <P>
+   * The default behaviour is to use {@link java.time.LocalDate#toString()}, which will output in accordance with ISO 8601.
+   * 
+   * @return the Java format to use for date fields.
+   */
+  @Schema(description = """
+                        The Java format to use for date fields.
+                        <P>
+                        This value will be used by the Java DateTimeFormatter to format dates.
+                        <P>
+                        The default behaviour is to use java.time.LocalDate#toString(), which will output in accordance with ISO 8601.
+                        """
+          , maxLength = 100
+          , defaultValue = "yyyy-mm-dd"
+  )
+  public String getDateFormat() {
+    return dateFormat;
+  }
+
+  /**
+   * Get the Java format to use for date/time columns.
+   * <P>
+   * To be processed by a Java {@link java.time.format.DateTimeFormatter}.
+   * <P>
+   * The default behaviour is to use {@link java.time.LocalDateTime#toString()}, which will output in accordance with ISO 8601..
+   * 
+   * @return the Java format to use for date/time columns.
+   */
+  @Schema(description = """
+                        The Java format to use for date/time columns.
+                        <P>
+                        This value will be used by the Java DateTimeFormatter to format datetimes.
+                        <P>
+                        The default behaviour is to use java.time.LocalDateTime#toString(), which will output in accordance with ISO 8601.
+                        """
+          , maxLength = 100
+          , defaultValue = "yyyy-mm-ddThh:mm:ss"
+  )
+  public String getDateTimeFormat() {
+    return dateTimeFormat;
+  }
+
+  /**
+   * Get the Java format to use for time columns.
+   * <P>
+   * To be processed by a Java {@link java.time.format.DateTimeFormatter}.
+   * <P>
+   * The default behaviour is to use {@link java.time.LocalTime#toString()}, which will output in accordance with ISO 8601.
+   * 
+   * @return the Java format to use for time columns.
+   */
+  @Schema(description = """
+                        The Java format to use for time columns.
+                        <P>
+                        This value will be used by the Java DateTimeFormatter to format times.
+                        <P>
+                        The default behaviour is to use java.time.LocalTime#toString(), which will output in accordance with ISO 8601.
+                        """
+          , maxLength = 100
+          , defaultValue = "hh:mm:ss"
+  )
+  public String getTimeFormat() {
+    return timeFormat;
+  }
+
+  /**
    * Builder class for creating instances of the FormatAtom class.
    *
    * The Builder pattern allows for the incremental construction and customization
@@ -281,6 +359,9 @@ public class FormatAtom implements Format {
 
     private String fieldInitialLetterFix;
     private String fieldInvalidLetterFix;
+    private String dateFormat;
+    private String dateTimeFormat;
+    private String timeFormat;
 
     /**
      * Default constructor.
@@ -387,6 +468,39 @@ public class FormatAtom implements Format {
       return this;
     }
 
+    /**
+     * Set the Java format to use for formatting Date values.
+     *
+     * @param dateFormat the Java format to use for formatting Date values.
+     * @return this Builder instance.
+     */
+    public Builder dateFormat(String dateFormat) {
+      this.dateFormat = dateFormat;
+      return this;
+    }
+    
+    /**
+     * Set the Java format to use for formatting DateTime values.
+     *
+     * @param dateTimeFormat the Java format to use for formatting DateTime values.
+     * @return this Builder instance.
+     */
+    public Builder dateTimeFormat(String dateTimeFormat) {
+      this.dateTimeFormat = dateTimeFormat;
+      return this;
+    }
+    
+    /**
+     * Set the Java format to use for formatting Time values.
+     *
+     * @param timeFormat the Java format to use for formatting Time values.
+     * @return this Builder instance.
+     */
+    public Builder timeFormat(String timeFormat) {
+      this.timeFormat = timeFormat;
+      return this;
+    }
+    
     /**
      * Build an instance of {@link FormatAtom}.
      *

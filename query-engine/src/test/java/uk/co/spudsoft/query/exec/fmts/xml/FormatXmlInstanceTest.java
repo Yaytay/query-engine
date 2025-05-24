@@ -26,6 +26,7 @@ import io.vertx.junit5.VertxTestContext;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -51,7 +52,8 @@ import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  *
@@ -89,7 +91,7 @@ public class FormatXmlInstanceTest {
     }
     WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setCreate(true).setSync(true));
 
-    FormatXmlInstance instance = (FormatXmlInstance) defn.createInstance(vertx, null, writeStream);
+    FormatXmlInstance instance = defn.createInstance(vertx, null, writeStream);
 
     Types types = new Types(buildTypes());
     List<DataRow> rowsList = new ArrayList<>();
@@ -133,7 +135,7 @@ public class FormatXmlInstanceTest {
     }
     WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setSync(true));
 
-    FormatXmlInstance instance = (FormatXmlInstance) defn.createInstance(vertx, null, writeStream);
+    FormatXmlInstance instance = defn.createInstance(vertx, null, writeStream);
 
     Types types = new Types(buildTypes());
     List<DataRow> rowsList = new ArrayList<>();
@@ -199,7 +201,7 @@ public class FormatXmlInstanceTest {
     }
     WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setCreate(true).setSync(true));
 
-    FormatXmlInstance instance = (FormatXmlInstance) defn.createInstance(vertx, null, writeStream);
+    FormatXmlInstance instance = defn.createInstance(vertx, null, writeStream);
 
     Types types = new Types(buildTypes());
     List<DataRow> rowsList = new ArrayList<>();
@@ -261,4 +263,54 @@ public class FormatXmlInstanceTest {
     assertEquals("FA_", FormatXmlInstance.getName(nameMap, "F", "_", "  A ", "default"));
   }
 
+  @Test
+  void testFormatValue() {
+    FormatXmlInstance instance = new FormatXmlInstance(FormatXml.builder().build(), null);
+            
+    // Test null value
+    assertNull(instance.formatValue((String) null));
+
+    // Test String value
+    assertEquals("Hello World", instance.formatValue("Hello World"));
+
+    // Test numeric values
+    assertEquals("42", instance.formatValue(42));
+    assertEquals("42.5", instance.formatValue(42.5));
+    assertEquals("123456789", instance.formatValue(123456789L));
+    assertEquals("123.456", instance.formatValue(new BigDecimal("123.456")));
+
+    // Test boolean values
+    assertEquals("true", instance.formatValue(true));
+    assertEquals("false", instance.formatValue(false));
+
+    // Test date/time values
+    LocalDate date = LocalDate.of(2023, 5, 15);
+    assertEquals("2023-05-15", instance.formatValue(date));
+
+    LocalTime time = LocalTime.of(14, 30, 15);
+    assertEquals("14:30:15", instance.formatValue(time));
+
+    LocalDateTime dateTime = LocalDateTime.of(2023, 5, 15, 14, 30, 15);
+    assertEquals("2023-05-15T14:30:15", instance.formatValue(dateTime));
+  }
+
+  @Test
+  void testFormatTemporalValues() {
+    FormatXmlInstance instance = new FormatXmlInstance(FormatXml.builder()
+            .dateFormat("yyyy")
+            .dateTimeFormat("HH yyyy")
+            .timeFormat("mm")
+            .build(), null);
+            
+    // Test date/time values
+    LocalDate date = LocalDate.of(2023, 5, 15);
+    assertEquals("2023", instance.formatValue(date));
+
+    LocalTime time = LocalTime.of(14, 30, 15);
+    assertEquals("30", instance.formatValue(time));
+
+    LocalDateTime dateTime = LocalDateTime.of(2023, 5, 15, 14, 30, 15);
+    assertEquals("14 2023", instance.formatValue(dateTime));
+  }
+  
 }
