@@ -263,7 +263,7 @@ public final class FormatRssInstance implements FormatInstance {
         if (STD_ITEM_ELEMENTS.contains(fieldName)) {
           writer.writeStartElement(fieldName);
         } else {
-          writer.writeStartElement("custom", fieldName, CUSTOM_NAMESPACE);
+          writer.writeStartElement("custom", fieldName, Strings.isNullOrEmpty(defn.getCustomNamespace()) ? CUSTOM_NAMESPACE : defn.getCustomNamespace());
         }
         if (v != null) {
           writer.writeCharacters(formatValue(v));
