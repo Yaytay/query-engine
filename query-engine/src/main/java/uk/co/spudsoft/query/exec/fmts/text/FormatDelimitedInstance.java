@@ -108,9 +108,7 @@ public class FormatDelimitedInstance implements FormatInstance {
         if (!first.compareAndSet(true, false)) {
           headerRow.append(defn.getDelimiter());
         }
-        headerRow.append(defn.getOpenQuote());
-        headerRow.append(cd.name());
-        headerRow.append(defn.getCloseQuote());
+        outputEncodedQuotedString(headerRow, cd.name());
       });
       headerRow.append(defn.getNewline());
       return outputStream.write(Buffer.buffer(headerRow.toString()));
@@ -119,6 +117,12 @@ public class FormatDelimitedInstance implements FormatInstance {
     } else {
       return Future.succeededFuture();
     }
+  }
+  
+  private void outputEncodedQuotedString(StringBuilder row, String value) {
+    row.append(defn.getOpenQuote());
+    row.append(encodeCloseQuote(defn, value));
+    row.append(defn.getCloseQuote());
   }
 
   private Future<Void> outputRow(DataRow row) {
@@ -147,18 +151,14 @@ public class FormatDelimitedInstance implements FormatInstance {
             case DateTime:
             case Time:
               if (defn.isQuoteTemporal()) {
-                outputRow.append(defn.getOpenQuote());
-                outputRow.append(encodeCloseQuote(defn, v.toString()));
-                outputRow.append(defn.getCloseQuote());
+                outputEncodedQuotedString(outputRow, v.toString());
               } else {
                 outputRow.append(v.toString());
               }
               break;
             case String:
             default:
-              outputRow.append(defn.getOpenQuote());
-              outputRow.append(encodeCloseQuote(defn, v.toString()));
-              outputRow.append(defn.getCloseQuote());
+              outputEncodedQuotedString(outputRow, v.toString());
               break;
           }
         }

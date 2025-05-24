@@ -76,7 +76,7 @@ class FormatXmlTest {
     // Assert
     assertEquals("xml", formatXml.getName());
     assertEquals("xml", formatXml.getExtension());
-    assertEquals(MediaType.APPLICATION_XML, formatXml.getMediaType().toString());
+    assertEquals(MediaType.APPLICATION_XML + "; charset=utf-8", formatXml.getMediaType().toString());
     assertEquals(FormatType.XML, formatXml.getType());
     assertTrue(formatXml.isXmlDeclaration());
     assertNull(formatXml.getEncoding());

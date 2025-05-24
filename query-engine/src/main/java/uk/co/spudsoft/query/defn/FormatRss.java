@@ -53,6 +53,7 @@ public class FormatRss implements Format {
   private final MediaType mediaType;
   private final boolean hidden;
 
+  private final String customNamespace;
   private final String fieldInitialLetterFix;
   private final String fieldInvalidLetterFix;
 
@@ -67,6 +68,7 @@ public class FormatRss implements Format {
     this.filename = builder.filename;
     this.mediaType = builder.mediaType;
     this.hidden = builder.hidden;
+    this.customNamespace = builder.customNamespace;
     this.fieldInitialLetterFix = builder.fieldInitialLetterFix;
     this.fieldInvalidLetterFix = builder.fieldInvalidLetterFix;
   }
@@ -177,6 +179,7 @@ public class FormatRss implements Format {
                           """,
     maxLength = 100,
     defaultValue = ".xml")
+  @Override
   public String getExtension() {
     return extension;
   }
@@ -209,7 +212,8 @@ public class FormatRss implements Format {
    */
   @Schema(description = "The media type (e.g., application/xml).",
     maxLength = 100,
-    defaultValue = "application/xml")
+    defaultValue = "application/rss+xml; charset=utf-8")
+  @Override
   public MediaType getMediaType() {
     return mediaType;
   }
@@ -230,6 +234,20 @@ public class FormatRss implements Format {
     return hidden;
   }
 
+  /**
+   * Get the XML namespace to use for custom fields in the RSS output.
+   * 
+   * @return  the XML namespace to use for custom fields in the RSS output.
+   */
+  @Schema(description = "The XML namespace to use for custom fields in the RSS output.",
+    maxLength = 100,
+    requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+    defaultValue = "https://yaytay.github.io/query-engine/rss"
+  )
+  public String getCustomNamespace() {
+    return customNamespace;
+  }
+  
   /**
    * Get the field initial letter fix to adjust XML field names.
    *
@@ -270,9 +288,10 @@ public class FormatRss implements Format {
     private String description;
     private String extension = "xml";
     private String filename = null;
-    private MediaType mediaType = MediaType.parse("application/rss+xml");
+    private MediaType mediaType = MediaType.parse("application/rss+xml; charset=utf-8");
     private boolean hidden = false;
 
+    private String customNamespace;
     private String fieldInitialLetterFix;
     private String fieldInvalidLetterFix;
 
@@ -370,6 +389,17 @@ public class FormatRss implements Format {
       return this;
     }
 
+    /**
+     * Set the custom namespace to declare in the RSS preamble.
+     *
+     * @param customNamespace the custom namespace to declare in the RSS preamble.
+     * @return this Builder instance.
+     */
+    public Builder customNamespace(String customNamespace) {
+      this.customNamespace = customNamespace;
+      return this;
+    }
+    
     /**
      * Set the strategy for handling invalid letters in field names.
      *

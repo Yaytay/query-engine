@@ -45,7 +45,7 @@ class FormatRssTest {
     assertEquals(FormatType.RSS, formatRss.getType());
     assertEquals("TestFormat", formatRss.getName());
     assertEquals("xml", formatRss.getExtension());
-    assertEquals(com.google.common.net.MediaType.parse(MediaType.APPLICATION_XML), formatRss.getMediaType());
+    assertEquals(com.google.common.net.MediaType.parse("application/xml"), formatRss.getMediaType());
     assertEquals("_", formatRss.getFieldInitialLetterFix());
     assertEquals("-", formatRss.getFieldInvalidLetterFix());
   }
@@ -58,7 +58,7 @@ class FormatRssTest {
     // Assert
     assertEquals("RSS", formatRss.getName());
     assertEquals("xml", formatRss.getExtension());
-    assertEquals("application/rss+xml", formatRss.getMediaType().toString());
+    assertEquals("application/rss+xml; charset=utf-8", formatRss.getMediaType().toString());
     assertEquals(FormatType.RSS, formatRss.getType());
     assertNull(formatRss.getFieldInitialLetterFix());
     assertNull(formatRss.getFieldInvalidLetterFix());

@@ -58,7 +58,7 @@ class FormatAtomTest {
     // Assert
     assertEquals("Atom", formatAtom.getName());
     assertEquals("xml", formatAtom.getExtension());
-    assertEquals(MediaType.APPLICATION_ATOM_XML, formatAtom.getMediaType().toString());
+    assertEquals(MediaType.APPLICATION_ATOM_XML + "; charset=utf-8", formatAtom.getMediaType().toString());
     assertEquals(FormatType.Atom, formatAtom.getType());
     assertNull(formatAtom.getFieldInitialLetterFix());
     assertNull(formatAtom.getFieldInvalidLetterFix());

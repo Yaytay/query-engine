@@ -296,7 +296,7 @@ public class FormatXml implements Format {
    */
   @Schema(description = "The media type (e.g., application/xml).",
     maxLength = 100,
-    defaultValue = "application/xml")
+    defaultValue = "application/xml; charset=utf-8")
   public MediaType getMediaType() {
     return mediaType;
   }
@@ -426,7 +426,7 @@ public class FormatXml implements Format {
     private String description;
     private String extension = "xml";
     private String filename = null;
-    private MediaType mediaType = MediaType.parse("application/xml");
+    private MediaType mediaType = MediaType.parse("application/xml; charset=utf-8");
     private boolean hidden = false;
 
     private boolean xmlDeclaration = true;

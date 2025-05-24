@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.exec.fmts.xml;
 
 import com.ctc.wstx.stax.WstxOutputFactory;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -158,7 +159,7 @@ public final class FormatRssInstance implements FormatInstance {
     try {
       writer = xmlOutputFactory.createXMLStreamWriter(streamWrapper, StandardCharsets.UTF_8.name());
       writer.writeStartElement("rss");
-      writer.writeNamespace("custom", CUSTOM_NAMESPACE);
+      writer.writeNamespace("custom", Strings.isNullOrEmpty(defn.getCustomNamespace()) ? CUSTOM_NAMESPACE : defn.getCustomNamespace());
       writer.writeAttribute("version", "2.0");
       writer.writeCharacters("\n  ");
       writer.writeStartElement("channel");

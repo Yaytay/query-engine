@@ -142,7 +142,7 @@ public class UiRouter implements Handler<RoutingContext> {
     MultiMap headers = response.headers();
     
     if (contentType != null) {
-      if (contentType.startsWith("text")) {
+      if (contentType.startsWith("text") && !contentType.contains("charset")) {
         headers.add(HttpHeaders.CONTENT_TYPE, contentType + ";charset=utf-8");
       } else {
         headers.add(HttpHeaders.CONTENT_TYPE, contentType);

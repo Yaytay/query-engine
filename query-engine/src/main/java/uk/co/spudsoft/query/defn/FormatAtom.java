@@ -212,9 +212,9 @@ public class FormatAtom implements Format {
    *
    * @return the {@link MediaType}, which maps to Content-Type in HTTP headers.
    */
-  @Schema(description = "The media type (e.g., application/xml).",
+  @Schema(description = "The media type (e.g., application/atom+xml; charset=utf-8).",
     maxLength = 100,
-    defaultValue = "application/xml")
+    defaultValue = "application/atom+xml; charset=utf-8")
   @Override
   public MediaType getMediaType() {
     return mediaType;
@@ -276,7 +276,7 @@ public class FormatAtom implements Format {
     private String description;
     private String extension = "xml";
     private String filename = null;
-    private MediaType mediaType = MediaType.parse("application/atom+xml");
+    private MediaType mediaType = MediaType.parse("application/atom+xml; charset=utf-8");
     private boolean hidden = false;
 
     private String fieldInitialLetterFix;
@@ -346,7 +346,7 @@ public class FormatAtom implements Format {
     /**
      * Set the media type of the format.
      *
-     * @param mediaType the media type (e.g., application/json).
+     * @param mediaType the media type (e.g., application/atom+xml; charset=utf-8).
      * @return this Builder instance.
      */
     public Builder mediaType(MediaType mediaType) {
