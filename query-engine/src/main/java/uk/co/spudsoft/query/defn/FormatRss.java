@@ -103,6 +103,7 @@ public class FormatRss implements Format {
     builder.dateFormat(dateFormat);
     builder.dateTimeFormat(dateTimeFormat);
     builder.timeFormat(timeFormat);
+    builder.customNamespace(customNamespace);
     return builder.build();
   }
 

@@ -67,7 +67,7 @@ public final class FormatRssInstance implements FormatInstance {
   @SuppressWarnings("ConstantName")
   private static final XMLOutputFactory xmlOutputFactory = WstxOutputFactory.newFactory();
 
-  private static final String CUSTOM_NAMESPACE = "https://yaytay.github.io/query-engine/rss";
+  private static final String DEFAULT_CUSTOM_NAMESPACE = "https://yaytay.github.io/query-engine/rss";
 
   private static final Set<String> STD_ITEM_ELEMENTS = ImmutableSet.<String>builder()
     .add("title")
@@ -89,6 +89,8 @@ public final class FormatRssInstance implements FormatInstance {
   private final DateTimeFormatter dateFormatter;
   private final DateTimeFormatter dateTimeFormatter;
   private final DateTimeFormatter timeFormatter;
+  
+  private final String customNamespace;
   
   private final AtomicBoolean started = new AtomicBoolean();
   private XMLStreamWriter writer;
@@ -112,6 +114,7 @@ public final class FormatRssInstance implements FormatInstance {
     this.dateFormatter = Strings.isNullOrEmpty(definition.getDateFormat()) ? null : DateTimeFormatter.ofPattern(definition.getDateFormat());
     this.dateTimeFormatter = Strings.isNullOrEmpty(definition.getDateTimeFormat()) ? null : DateTimeFormatter.ofPattern(definition.getDateTimeFormat());
     this.timeFormatter = Strings.isNullOrEmpty(definition.getTimeFormat()) ? null : DateTimeFormatter.ofPattern(definition.getTimeFormat());
+    this.customNamespace = Strings.isNullOrEmpty(definition.getCustomNamespace()) ? DEFAULT_CUSTOM_NAMESPACE : definition.getCustomNamespace();
     this.formattingStream = new FormattingWriteStream(outputStream,
              v -> Future.succeededFuture(),
              row -> {
@@ -169,7 +172,7 @@ public final class FormatRssInstance implements FormatInstance {
     try {
       writer = xmlOutputFactory.createXMLStreamWriter(streamWrapper, StandardCharsets.UTF_8.name());
       writer.writeStartElement("rss");
-      writer.writeNamespace("custom", Strings.isNullOrEmpty(defn.getCustomNamespace()) ? CUSTOM_NAMESPACE : defn.getCustomNamespace());
+      writer.writeNamespace("custom", customNamespace);
       writer.writeAttribute("version", "2.0");
       writer.writeCharacters("\n  ");
       writer.writeStartElement("channel");
@@ -263,7 +266,7 @@ public final class FormatRssInstance implements FormatInstance {
         if (STD_ITEM_ELEMENTS.contains(fieldName)) {
           writer.writeStartElement(fieldName);
         } else {
-          writer.writeStartElement("custom", fieldName, Strings.isNullOrEmpty(defn.getCustomNamespace()) ? CUSTOM_NAMESPACE : defn.getCustomNamespace());
+          writer.writeStartElement("custom", customNamespace);
         }
         if (v != null) {
           writer.writeCharacters(formatValue(v));
