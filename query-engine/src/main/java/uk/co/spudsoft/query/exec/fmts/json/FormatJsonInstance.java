@@ -120,9 +120,8 @@ public final class FormatJsonInstance implements FormatInstance {
               if (row.isEmpty()) {
                 return Future.succeededFuture();
               } else if (started.get()) {
-                return outputStream.write(COMMA)
-                        .compose(v -> outputStream.write(toJson(row).toBuffer()))
-                        ;
+                Buffer buffer = COMMA.copy().appendBuffer(toJson(row).toBuffer());
+                return outputStream.write(buffer);
               } else {
                 started.set(true);
                 return outputStream.write(toJson(row).toBuffer());
