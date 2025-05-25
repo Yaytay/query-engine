@@ -198,7 +198,7 @@ public final class FormatJsonInstance implements FormatInstance {
     } else {
       String start;
       if (Strings.isNullOrEmpty(defn.getMetadataName())) {
-        start = "{\"" + defn.getDataName() + "\":";
+        start = "{\"" + defn.getDataName() + "\":" + OPEN_ARRAY;
       } else {
         logger.debug("Data types: {}", types);
         Types metaTypes = new Types();

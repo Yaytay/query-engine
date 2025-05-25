@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.defn;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.sql.JDBCType;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -166,6 +167,7 @@ public enum DataType {
           return java.lang.Integer.valueOf(tv);
         }
         default -> {
+          logger.info("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
           return java.lang.Integer.valueOf(value.toString());
         }
       }
@@ -181,6 +183,7 @@ public enum DataType {
           return java.lang.Long.valueOf(tv);
         }
         default -> {
+          logger.info("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
           return java.lang.Long.valueOf(value.toString());
         }
       }
@@ -196,6 +199,7 @@ public enum DataType {
           return java.lang.Float.valueOf(tv);
         }
         default -> {
+          logger.info("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
           return java.lang.Float.valueOf(value.toString());
         }
       }
@@ -211,6 +215,7 @@ public enum DataType {
           return java.lang.Double.valueOf(tv);
         }
         default -> {
+          logger.info("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
           return java.lang.Double.valueOf(value.toString());
         }
       }
@@ -235,6 +240,7 @@ public enum DataType {
           return java.lang.Boolean.valueOf(tv);
         }
         default -> {
+          logger.info("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
           return java.lang.Boolean.valueOf(value.toString());
         }
       }
@@ -256,6 +262,7 @@ public enum DataType {
           return LocalDate.parse(tv.substring(0, 10));
         }
         default -> {
+          logger.info("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
           return LocalDate.parse(value.toString());
         }
       }
@@ -277,6 +284,7 @@ public enum DataType {
           return LocalDateTime.parse(tv);
         }
         default -> {
+          logger.info("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
           return LocalDateTime.parse(value.toString());
         }
       }
@@ -284,6 +292,14 @@ public enum DataType {
       switch (value) {
         case LocalTime tv -> {
           return tv;
+        }
+        case Duration tv -> {
+          return LocalTime.of(
+                  tv.toHoursPart()
+                  , tv.toMinutesPart()
+                  , tv.toSecondsPart()
+                  , tv.toNanosPart()
+          );
         }
         case LocalDateTime tv -> {
           return tv.toLocalTime();
@@ -298,6 +314,7 @@ public enum DataType {
           return LocalTime.parse(tv);
         }
         default -> {
+          logger.info("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
           return LocalTime.parse(value.toString());
         }
       }

@@ -159,13 +159,12 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
     for (int col = 0; col < size; col++) {
       String name = row.getColumnName(col);
       Object value = row.getValue(col);
-      Comparable<?> compValue = DataRow.convert(value);
       DataType type = types.get(name);
       try {
-        Comparable<?> typedValue = type.cast(compValue);
+        Comparable<?> typedValue = type.cast(value);
         result.put(name, typedValue);
       } catch (Exception ex) {
-        logger.warn("Unable to convert {} to {}: ", compValue, type, ex);
+        logger.warn("Unable to convert {} to {}: ", value, type, ex);
       }
     }
     return result;

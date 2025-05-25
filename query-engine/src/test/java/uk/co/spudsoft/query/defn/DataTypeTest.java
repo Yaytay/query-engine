@@ -98,6 +98,12 @@ public class DataTypeTest {
     assertEquals(Boolean.TRUE, DataType.Boolean.cast("true"));
     assertEquals(Boolean.TRUE, DataType.Boolean.cast(7.5));
     assertEquals(Boolean.TRUE, DataType.Boolean.cast(new StringBuilder("true")));
+    assertEquals(Boolean.TRUE, DataType.Boolean.cast(1));
+    assertEquals(Boolean.FALSE, DataType.Boolean.cast(0));
+    assertEquals(Boolean.TRUE, DataType.Boolean.cast(1L));
+    assertEquals(Boolean.FALSE, DataType.Boolean.cast(0L));
+    assertEquals(Boolean.TRUE, DataType.Boolean.cast((byte) 1));
+    assertEquals(Boolean.FALSE, DataType.Boolean.cast((byte) 0));
 
     assertEquals(null, DataType.Date.cast(null));
     assertEquals(LocalDate.of(1971, 5, 6), DataType.Date.cast(LocalDate.of(1971, 5, 6)));
