@@ -36,7 +36,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <argLine></argLine>
-    <vertx.version>4.5.14</vertx.version>
+    <vertx.version>5.0.0</vertx.version>
     <slf4j.version>2.0.17</slf4j.version>
     <junit-jupiter.version>5.12.2</junit-jupiter.version>
     <junit-platform.version>1.12.2</junit-platform.version>
