@@ -34,6 +34,8 @@ import io.vertx.sqlclient.desc.ColumnDescriptor;
 import io.vertx.sqlclient.impl.RowStreamInternal;
 import java.util.Iterator;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Capture the metadata returned by a SQL statement even when there are no rows returned.
@@ -41,6 +43,8 @@ import java.util.List;
  * @author jtalbut
  */
 public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncResult<RowSet<Row>>>, ReadStream<Row> {
+  
+  private static final Logger logger = LoggerFactory.getLogger(MetadataRowStreamImpl.class);
 
   private final PreparedStatement ps;
   private final ContextInternal context;
@@ -194,6 +198,7 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
 
   @Override
   public Future<Void> close() {
+    logger.info("close()");
     Cursor c;
     synchronized (this) {
       c = cursor;
@@ -233,24 +238,30 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
         if (result != null) {
           handler = rowHandler;
           event = result.next();
+          logger.debug("got row: ", event);
           if (demand != Long.MAX_VALUE) {
             demand--;
           }
           if (!result.hasNext()) {
+            logger.debug("result does not have next");
             result = null;
           }
         } else {
           emitting = false;
           if (readInProgress) {
+            logger.debug("readInProgress");
             break;
           } else {
             if (cursor == null) {
+              logger.debug("cursor not set");
               break;
             } else if (cursor.hasMore()) {
+              logger.debug("cursor has more, reading another {} rows", fetch);
               readInProgress = true;
               cursor.read(fetch, this);
               break;
             } else {
+              logger.debug("cursor does not have more, closing");
               cursor.close();
               cursor = null;
               handler = endHandler;
