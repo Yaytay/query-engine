@@ -108,6 +108,7 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
         logger.trace("{} Received row: {}", this, dataRow);
         handler.handle(dataRow);
       } catch (Throwable ex) {
+        logger.warn("Exception processing row (with types {}): ", types, ex);
         if (exceptionHandler != null) {
           exceptionHandler.handle(ex);
         }
