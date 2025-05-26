@@ -117,14 +117,18 @@ public final class FormatJsonInstance implements FormatInstance {
               return start();
             }
             , row -> {
-              if (row.isEmpty()) {
-                return Future.succeededFuture();
-              } else if (started.get()) {
-                Buffer buffer = COMMA.copy().appendBuffer(toJson(row).toBuffer());
-                return outputStream.write(buffer);
-              } else {
-                started.set(true);
-                return outputStream.write(toJson(row).toBuffer());
+              try {
+                if (row.isEmpty()) {
+                  return Future.succeededFuture();
+                } else if (started.get()) {
+                  Buffer buffer = COMMA.copy().appendBuffer(toJson(row).toBuffer());
+                  return outputStream.write(buffer);
+                } else {
+                  started.set(true);
+                  return outputStream.write(toJson(row).toBuffer());
+                }
+              } catch (Throwable ex) {
+                return Future.failedFuture(ex);
               }
             }
             , rows -> {              
