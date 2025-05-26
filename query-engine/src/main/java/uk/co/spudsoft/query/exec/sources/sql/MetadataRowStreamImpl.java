@@ -118,6 +118,7 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
       } else {
         rowHandler = null;
         if (cursor != null) {
+          logger.debug("no handler, so closing cursor");
           cursor.close();
           readInProgress = false;
           cursor = null;
@@ -238,7 +239,7 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
         if (result != null) {
           handler = rowHandler;
           event = result.next();
-          logger.debug("got row: ", event);
+          logger.debug("got row: {}", event);
           if (demand != Long.MAX_VALUE) {
             demand--;
           }
