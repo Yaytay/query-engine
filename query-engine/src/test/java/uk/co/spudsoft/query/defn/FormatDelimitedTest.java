@@ -63,6 +63,11 @@ public class FormatDelimitedTest {
   @Test
   public void testValidate() {
     FormatDelimited.builder().build().validate();
+
+    assertThrows(IllegalArgumentException.class, () -> {
+      FormatDelimited.builder().type(FormatType.Atom).build().validate();
+    });
+
     assertThrows(IllegalArgumentException.class, () -> {
       FormatDelimited.builder().name(null).build().validate();
     });
@@ -77,6 +82,16 @@ public class FormatDelimitedTest {
     assertThrows(IllegalArgumentException.class, () -> {
       FormatDelimited.builder().timeFormat("T").build().validate();
     });
+    FormatDelimited.builder()
+            .dateFormat(null)
+            .dateTimeFormat(null)
+            .timeFormat(null)
+            .build().validate();
+    FormatDelimited.builder()
+            .dateFormat("")
+            .dateTimeFormat("")
+            .timeFormat("")
+            .build().validate();
   }
     
 }

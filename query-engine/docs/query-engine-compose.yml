@@ -50,7 +50,7 @@ services:
     - 16686:16686
 
   query-engine:
-    image: ghcr.io/yaytay/query-engine-design-mode:0.0.81-main
+    image: ghcr.io/yaytay/query-engine-design-mode:0.0.81-1-main
     ports:
     - 2000:8080
     volumes:
