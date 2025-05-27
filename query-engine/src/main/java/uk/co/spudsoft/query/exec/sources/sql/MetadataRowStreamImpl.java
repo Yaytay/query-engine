@@ -118,7 +118,7 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
       } else {
         rowHandler = null;
         if (cursor != null) {
-          logger.debug("no handler, so closing cursor");
+          logger.trace("no handler, so closing cursor");
           cursor.close();
           readInProgress = false;
           cursor = null;
@@ -199,7 +199,7 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
 
   @Override
   public Future<Void> close() {
-    logger.info("close()");
+    logger.trace("close()");
     Cursor c;
     synchronized (this) {
       c = cursor;
@@ -239,30 +239,32 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
         if (result != null) {
           handler = rowHandler;
           event = result.next();
-          logger.debug("got row: {}", event);
+          if (logger.isTraceEnabled()) {
+            logger.trace("got row: {}", io.vertx.core.json.Json.encode(event));
+          }
           if (demand != Long.MAX_VALUE) {
             demand--;
           }
           if (!result.hasNext()) {
-            logger.debug("result does not have next");
+            logger.trace("result does not have next");
             result = null;
           }
         } else {
           emitting = false;
           if (readInProgress) {
-            logger.debug("readInProgress");
+            logger.trace("readInProgress");
             break;
           } else {
             if (cursor == null) {
-              logger.debug("cursor not set");
+              logger.trace("cursor not set");
               break;
             } else if (cursor.hasMore()) {
-              logger.debug("cursor has more, reading another {} rows", fetch);
+              logger.trace("cursor has more, reading another {} rows", fetch);
               readInProgress = true;
               cursor.read(fetch, this);
               break;
             } else {
-              logger.debug("cursor does not have more, closing");
+              logger.trace("cursor does not have more, closing");
               cursor.close();
               cursor = null;
               handler = endHandler;

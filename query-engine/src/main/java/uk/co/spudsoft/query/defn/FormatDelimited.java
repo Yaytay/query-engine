@@ -25,6 +25,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
+import java.time.format.DateTimeFormatter;
 import uk.co.spudsoft.query.exec.fmts.text.FormatDelimitedInstance;
 
 /**
@@ -55,6 +56,10 @@ public class FormatDelimited implements Format {
   private final String replaceCloseQuote;
   private final String newline;
 
+  private final String dateFormat;
+  private final String dateTimeFormat;
+  private final String timeFormat;
+  
   @Override
   public FormatDelimitedInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
     return new FormatDelimitedInstance(this, writeStream);
@@ -65,6 +70,27 @@ public class FormatDelimited implements Format {
     validateType(FormatType.Delimited, type);
     if (Strings.isNullOrEmpty(name)) {
       throw new IllegalArgumentException("Format has no name");
+    }
+    if (!Strings.isNullOrEmpty(dateFormat)) {
+      try {
+        DateTimeFormatter.ofPattern(dateFormat);
+      } catch (Throwable ex) {
+        throw new IllegalArgumentException("Invalid dateFormat: " + ex.getMessage());
+      }
+    }
+    if (!Strings.isNullOrEmpty(dateTimeFormat)) {
+      try {
+        DateTimeFormatter.ofPattern(dateTimeFormat);
+      } catch (Throwable ex) {
+        throw new IllegalArgumentException("Invalid dateTimeFormat: " + ex.getMessage());
+      }
+    }
+    if (!Strings.isNullOrEmpty(timeFormat)) {
+      try {
+        DateTimeFormatter.ofPattern(timeFormat);
+      } catch (Throwable ex) {
+        throw new IllegalArgumentException("Invalid timeFormat: " + ex.getMessage());
+      }
     }
   }
   
@@ -339,6 +365,64 @@ public class FormatDelimited implements Format {
   public String getNewline() {
     return newline;
   }
+  
+  /**
+   * Get the Java format to use for date fields.
+   * <P>
+   * To be processed by a Java {@link DateTimeFormatter}.
+   * 
+   * @return the Java format to use for date fields.
+   */
+  @Schema(description = """
+                        The Java format to use for date fields.
+                        <P>
+                        This value will be used by the Java DateTimeFormatter to format dates.
+                        """
+          , maxLength = 100
+          , defaultValue = "yyyy-MM-dd"
+  )
+  public String getDateFormat() {
+    return dateFormat;
+  }
+
+  /**
+   * Get the Java format to use for date/time columns.
+   * <P>
+   * To be processed by a Java {@link DateTimeFormatter}.
+   * 
+   * @return the Java format to use for date/time columns.
+   */
+  @Schema(description = """
+                        The Java format to use for date/time columns.
+                        <P>
+                        This value will be used by the Java DateTimeFormatter to format datetimes.
+                        """
+          , maxLength = 100
+          , defaultValue = "yyyy-MM-dd'T'HH:mm"
+  )
+  public String getDateTimeFormat() {
+    return dateTimeFormat;
+  }
+
+  /**
+   * Get the Java format to use for time columns.
+   * <P>
+   * To be processed by a Java {@link DateTimeFormatter}.
+   * 
+   * @return the Java format to use for time columns.
+   */
+  @Schema(description = """
+                        The Java format to use for time columns.
+                        <P>
+                        This value will be used by the Java DateTimeFormatter to format times.
+                        """
+          , maxLength = 100
+          , defaultValue = "HH:mm"
+  )
+  public String getTimeFormat() {
+    return timeFormat;
+  }
+  
  
   /**
    * Builder class for FormatJson.
@@ -362,6 +446,9 @@ public class FormatDelimited implements Format {
     private String escapeCloseQuote = "";
     private String replaceCloseQuote = "";
     private String newline = "\r\n";
+    private String dateFormat = "yyyy-MM-dd";
+    private String dateTimeFormat = "yyyy-MM-dd'T'HH:mm";
+    private String timeFormat = "HH:mm";
 
     private Builder() {
     }
@@ -531,11 +618,40 @@ public class FormatDelimited implements Format {
     }
     
     /**
+     * Set the {@link FormatDelimited#dateFormat} value in the builder.
+     * @param value The value for the {@link FormatDelimited#dateFormat}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder dateFormat(final String value) {
+      this.dateFormat = value;
+      return this;
+    }
+
+    /**
+     * Set the {@link FormatDelimited#dateTimeFormat} value in the builder.
+     * @param value The value for the {@link FormatDelimited#dateTimeFormat}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder dateTimeFormat(final String value) {
+      this.dateTimeFormat = value;
+      return this;
+    }
+
+    /**
+     * Set the {@link FormatDelimited#timeFormat} value in the builder.
+     * @param value The value for the {@link FormatDelimited#timeFormat}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder timeFormat(final String value) {
+      this.timeFormat = value;
+      return this;
+    }
+    /**
      * Construct a new instance of the FormatDelimited class.
      * @return a new instance of the FormatDelimited class.
      */
     public FormatDelimited build() {
-      return new FormatDelimited(type, name, description, extension, filename, mediaType, hidden, bom, headerRow, quoteTemporal, delimiter, openQuote, closeQuote, escapeCloseQuote, replaceCloseQuote, newline);
+      return new FormatDelimited(type, name, description, extension, filename, mediaType, hidden, bom, headerRow, quoteTemporal, delimiter, openQuote, closeQuote, escapeCloseQuote, replaceCloseQuote, newline, dateFormat, dateTimeFormat, timeFormat);
     }
   }
 
@@ -563,6 +679,9 @@ public class FormatDelimited implements Format {
           , final String escapeCloseQuote
           , final String replaceCloseQuote
           , final String newline          
+          , final String dateFormat
+          , final String dateTimeFormat
+          , final String timeFormat          
   ) {
     validateType(FormatType.Delimited, type);
     this.type = type;
@@ -581,6 +700,9 @@ public class FormatDelimited implements Format {
     this.escapeCloseQuote = escapeCloseQuote;
     this.replaceCloseQuote = replaceCloseQuote;
     this.newline = newline;
+    this.dateFormat = dateFormat;
+    this.dateTimeFormat = dateTimeFormat;
+    this.timeFormat = timeFormat;
   }
     
   

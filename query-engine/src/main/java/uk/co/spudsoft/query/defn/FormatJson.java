@@ -524,7 +524,7 @@ public class FormatJson implements Format {
 
     /**
      * Set the {@link FormatJson#dateTimeFormat} value in the builder.
-     * @param value The value for the {@link FormatJson#metadataName}.
+     * @param value The value for the {@link FormatJson#dateTimeFormat}.
      * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder dateTimeFormat(final String value) {
@@ -534,7 +534,7 @@ public class FormatJson implements Format {
 
     /**
      * Set the {@link FormatJson#timeFormat} value in the builder.
-     * @param value The value for the {@link FormatJson#metadataName}.
+     * @param value The value for the {@link FormatJson#timeFormat}.
      * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder timeFormat(final String value) {

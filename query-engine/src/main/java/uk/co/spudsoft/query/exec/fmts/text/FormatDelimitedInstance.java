@@ -20,10 +20,13 @@ import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import java.nio.charset.StandardCharsets;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.Temporal;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -58,6 +61,12 @@ public class FormatDelimitedInstance implements FormatInstance {
   private final WriteStream<Buffer> outputStream;
   private final FormattingWriteStream formattingStream;
   private final AtomicBoolean started = new AtomicBoolean();
+
+  private final DateTimeFormatter dateFormatter;
+  private final DateTimeFormatter dateTimeFormatter;
+  private final DateTimeFormatter timeFormatter;
+  
+  private final Promise<Void> finalPromise;
   
   private Types types;
 
@@ -70,6 +79,27 @@ public class FormatDelimitedInstance implements FormatInstance {
   public FormatDelimitedInstance(FormatDelimited defn, WriteStream<Buffer> outputStream) {
     this.defn = defn;
     this.outputStream = outputStream;
+    this.finalPromise = Promise.<Void>promise();
+    
+    if (Strings.isNullOrEmpty(defn.getDateFormat())) {
+      this.dateFormatter = null;
+    } else {
+      this.dateFormatter = DateTimeFormatter.ofPattern(defn.getDateFormat());
+    }
+    
+    if (Strings.isNullOrEmpty(defn.getDateTimeFormat())) {
+      this.dateTimeFormatter = null;
+    } else {
+      this.dateTimeFormatter = DateTimeFormatter.ofPattern(defn.getDateTimeFormat());
+    }
+    
+    if (Strings.isNullOrEmpty(defn.getTimeFormat())) {
+      this.timeFormatter = null;
+    } else {
+      this.timeFormatter = DateTimeFormatter.ofPattern(defn.getTimeFormat());
+    }
+    
+    
     this.formattingStream = new FormattingWriteStream(outputStream
             , v -> Future.succeededFuture()
             , row -> {
@@ -89,12 +119,25 @@ public class FormatDelimitedInstance implements FormatInstance {
                 if (requestContext != null) {
                   requestContext.setRowsWritten(rowCount);
                 }
-              }
-              return outputStream.end();
+              }              
+              return outputStream.end()
+                      .andThen(ar -> {
+                        finalPromise.handle(ar);
+                      });
             }
     );
   }
 
+  /**
+   * Returns a future that completes when the associated {@code WriteStream} has reached its final state,
+   * indicating that the stream has either been closed or finished writing.
+   *
+   * @return a {@code Future<Void>} that completes when the final operation on the stream is complete.
+   */
+  public Future<Void> getFinalFuture() {
+    return finalPromise.future();
+  }
+  
   private Future<Void> outputHeader() {
     if (defn.hasHeaderRow()) {
       StringBuilder headerRow = new StringBuilder();
@@ -139,6 +182,7 @@ public class FormatDelimitedInstance implements FormatInstance {
       }
       try {
         if (v != null) {
+          String stringValue;
           switch (cd.type()) {
             case Boolean:
             case Double:
@@ -148,12 +192,39 @@ public class FormatDelimitedInstance implements FormatInstance {
               outputRow.append(v);
               break;
             case Date:
-            case DateTime:
-            case Time:
-              if (defn.isQuoteTemporal()) {
-                outputEncodedQuotedString(outputRow, v.toString());
+              if (dateFormatter != null && v instanceof Temporal t) {
+                stringValue = dateFormatter.format(t);
               } else {
-                outputRow.append(v.toString());
+                stringValue = v.toString();
+              }
+              if (defn.isQuoteTemporal()) {
+                outputEncodedQuotedString(outputRow, stringValue);
+              } else {
+                outputRow.append(stringValue);
+              }
+              break;
+            case DateTime:
+              if (dateTimeFormatter != null && v instanceof Temporal t) {
+                stringValue = dateTimeFormatter.format(t);
+              } else {
+                stringValue = v.toString();
+              }
+              if (defn.isQuoteTemporal()) {
+                outputEncodedQuotedString(outputRow, stringValue);
+              } else {
+                outputRow.append(stringValue);
+              }
+              break;              
+            case Time:
+              if (timeFormatter != null && v instanceof Temporal t) {
+                stringValue = timeFormatter.format(t);
+              } else {
+                stringValue = v.toString();
+              }
+              if (defn.isQuoteTemporal()) {
+                outputEncodedQuotedString(outputRow, stringValue);
+              } else {
+                outputRow.append(stringValue);
               }
               break;
             case String:

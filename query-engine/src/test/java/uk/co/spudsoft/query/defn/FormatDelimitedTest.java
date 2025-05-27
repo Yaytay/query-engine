@@ -35,6 +35,9 @@ public class FormatDelimitedTest {
     assertFalse(FormatDelimited.builder().build().isHidden());
     assertTrue(FormatDelimited.builder().hidden(true).build().isHidden());
 
+    assertEquals(null, FormatDelimited.builder().build().getDescription());
+    assertEquals("Stuff", FormatDelimited.builder().description("Stuff").build().getDescription());
+
     assertEquals("\"", FormatDelimited.builder().build().getOpenQuote());
     assertEquals("$", FormatDelimited.builder().openQuote("$").build().getOpenQuote());
 
@@ -45,7 +48,16 @@ public class FormatDelimitedTest {
     assertEquals("$", FormatDelimited.builder().escapeCloseQuote("$").build().getEscapeCloseQuote());
 
     assertEquals("", FormatDelimited.builder().build().getReplaceCloseQuote());
-    assertEquals("$", FormatDelimited.builder().replaceCloseQuote("$").build().getReplaceCloseQuote());
+    assertEquals("S", FormatDelimited.builder().replaceCloseQuote("S").build().getReplaceCloseQuote());
+
+    assertEquals("yyyy-MM-dd", FormatDelimited.builder().build().getDateFormat());
+    assertEquals("S", FormatDelimited.builder().dateFormat("S").build().getDateFormat());
+
+    assertEquals("yyyy-MM-dd'T'HH:mm", FormatDelimited.builder().build().getDateTimeFormat());
+    assertEquals("S", FormatDelimited.builder().dateTimeFormat("S").build().getDateTimeFormat());
+
+    assertEquals("HH:mm", FormatDelimited.builder().build().getTimeFormat());
+    assertEquals("S", FormatDelimited.builder().timeFormat("S").build().getTimeFormat());
   }
   
   @Test
@@ -55,6 +67,16 @@ public class FormatDelimitedTest {
       FormatDelimited.builder().name(null).build().validate();
     });
     FormatDelimited.builder().name("name").build().validate();
+    
+    assertThrows(IllegalArgumentException.class, () -> {
+      FormatDelimited.builder().dateFormat("T").build().validate();
+    });
+    assertThrows(IllegalArgumentException.class, () -> {
+      FormatDelimited.builder().dateTimeFormat("T").build().validate();
+    });
+    assertThrows(IllegalArgumentException.class, () -> {
+      FormatDelimited.builder().timeFormat("T").build().validate();
+    });
   }
     
 }
