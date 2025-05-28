@@ -28,6 +28,7 @@ import io.vertx.core.streams.WriteStream;
 import java.time.format.DateTimeFormatter;
 import uk.co.spudsoft.query.exec.fmts.json.FormatJsonInstance;
 import uk.co.spudsoft.query.exec.FormatInstance;
+import uk.co.spudsoft.query.exec.fmts.CustomDateTimeFormatter;
 
 /**
  * Output the data stream in JSON.
@@ -81,7 +82,7 @@ public class FormatJson implements Format {
     }
     if (!Strings.isNullOrEmpty(dateTimeFormat)) {
       try {
-        DateTimeFormatter.ofPattern(dateTimeFormat);
+        new CustomDateTimeFormatter(dateTimeFormat);
       } catch (Throwable ex) {
         throw new IllegalArgumentException("Invalid dateTimeFormat: " + ex.getMessage());
       }
@@ -406,9 +407,16 @@ public class FormatJson implements Format {
    * </tr>
    * </tbody>
    * </table>
-   * 
-   * Many JSON users expect timestamps as time since epoch, for their benefit
-   * the special values "EPOCH_SECONDS" and "EPOCH_MILLISECONDS" can be used to output date/time values as seconds (or milliseconds) since the epoch.
+   * <p>
+   * The default output (when the format is not set) is that of {@link java.time.LocalDateTime#toString()} method, specifically, the output will be one of the following ISO-8601 formats:
+   * <ul>
+   * <li>uuuu-MM-dd'T'HH:mm
+   * <li>uuuu-MM-dd'T'HH:mm:ss
+   * <li>uuuu-MM-dd'T'HH:mm:ss.SSS
+   * <li>uuuu-MM-dd'T'HH:mm:ss.SSSSSS
+   * <li>uuuu-MM-dd'T'HH:mm:ss.SSSSSSSSS
+   * </ul>
+   * The format used will be the shortest that outputs the full value of the time where the omitted parts are implied to be zero.
    * 
    * @return the Java format to use for date/time columns.
    */
@@ -471,9 +479,19 @@ public class FormatJson implements Format {
                         <P>
                         The predefined formatters have capabilities that the pattern formatting does not, specifically, if you want to output an ISO8601
                         date time with fractional seconds but only showing signficant figures in the fractional seconds, use ISO_LOCAL_DATE_TIME.
+                        <P>
+                        The default output (when the format is not set) is that of the java LocalDateTime.toString() method, specifically, the output will be one of the following ISO-8601 formats:
+                        <ul>
+                        <li>uuuu-MM-dd'T'HH:mm
+                        <li>uuuu-MM-dd'T'HH:mm:ss
+                        <li>uuuu-MM-dd'T'HH:mm:ss.SSS
+                        <li>uuuu-MM-dd'T'HH:mm:ss.SSSSSS
+                        <li>uuuu-MM-dd'T'HH:mm:ss.SSSSSSSSS
+                        </ul>
+                        The format used will be the shortest that outputs the full value of the time where the omitted parts are implied to be zero.
                         """
           , maxLength = 100
-          , defaultValue = "yyyy-mm-ddThh:mm:ss"
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
   public String getDateTimeFormat() {
     return dateTimeFormat;

@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.fmts;
 
+import com.google.common.base.Strings;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -40,7 +41,7 @@ public class CustomDateTimeFormatter {
    */
   public CustomDateTimeFormatter(String format) {
     
-    if (format == null) {
+    if (Strings.isNullOrEmpty(format)) {
       formatter = null;
       dateTimeAsEpochSeconds = false;
       dateTimeAsEpochMillis = false;

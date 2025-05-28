@@ -26,6 +26,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import java.time.format.DateTimeFormatter;
+import uk.co.spudsoft.query.exec.fmts.CustomDateTimeFormatter;
 import uk.co.spudsoft.query.exec.fmts.text.FormatDelimitedInstance;
 
 /**
@@ -80,7 +81,7 @@ public class FormatDelimited implements Format {
     }
     if (!Strings.isNullOrEmpty(dateTimeFormat)) {
       try {
-        DateTimeFormatter.ofPattern(dateTimeFormat);
+        new CustomDateTimeFormatter(dateTimeFormat);
       } catch (Throwable ex) {
         throw new IllegalArgumentException("Invalid dateTimeFormat: " + ex.getMessage());
       }
@@ -388,7 +389,78 @@ public class FormatDelimited implements Format {
   /**
    * Get the Java format to use for date/time columns.
    * <P>
-   * To be processed by a Java {@link DateTimeFormatter}.
+   * To be processed by a Java {@link DateTimeFormatter}, this can either be a DateTimeFormatter pattern or one of the predefined formats.
+   * <table class="striped" style="text-align:left">
+   * <caption>Predefined Formatters</caption>
+   * <thead>
+   * <tr>
+   * <th scope="col">Formatter</th>
+   * <th scope="col">Description</th>
+   * <th scope="col">Example</th>
+   * </tr>
+   * </thead>
+   * <tbody>
+   * <tr>
+   * <th scope="row"> {@link DateTimeFormatter#BASIC_ISO_DATE}</th>
+   * <td>Basic ISO date </td> <td>'20111203'</td>
+   * </tr>
+   * <tr>
+   * <th scope="row"> {@link DateTimeFormatter#ISO_LOCAL_DATE}</th>
+   * <td> ISO Local Date </td>
+   * <td>'2011-12-03'</td>
+   * </tr>
+   * <tr>
+   * <th scope="row"> {@link DateTimeFormatter#ISO_DATE}</th>
+   * <td> ISO Date with or without offset </td>
+   * <td> '2011-12-03+01:00'; '2011-12-03'</td>
+   * </tr>
+   * <tr>
+   * <th scope="row"> {@link DateTimeFormatter#ISO_LOCAL_TIME}</th>
+   * <td> Time without offset </td>
+   * <td>'10:15:30'</td>
+   * </tr>
+   * <tr>
+   * <th scope="row"> {@link DateTimeFormatter#ISO_TIME}</th>
+   * <td> Time with or without offset </td>
+   * <td>'10:15:30+01:00'; '10:15:30'</td>
+   * </tr>
+   * <tr>
+   * <th scope="row"> {@link DateTimeFormatter#ISO_LOCAL_DATE_TIME}</th>
+   * <td> ISO Local Date and Time </td>
+   * <td>'2011-12-03T10:15:30'</td>
+   * </tr>
+   * <tr>
+   * <th scope="row"> {@link DateTimeFormatter#ISO_ORDINAL_DATE}</th>
+   * <td> Year and day of year </td>
+   * <td>'2012-337'</td>
+   * </tr>
+   * <tr>
+   * <th scope="row"> {@link DateTimeFormatter#ISO_WEEK_DATE}</th>
+   * <td> Year and Week </td>
+   * <td>'2012-W48-6'</td>
+   * </tr>
+   * <tr>
+   * <th scope="row"> EPOCH_SECONDS</th>
+   * <td> Seconds since the epoch (1970-01-01)</td>
+   * <td>1684158330L</td>
+   * </tr>
+   * <tr>
+   * <th scope="row"> EPOCH_MILLISECONDS</th>
+   * <td> Milliseconds since the epoch (1970-01-01)</td>
+   * <td>1684158330120L</td>
+   * </tr>
+   * </tbody>
+   * </table>
+   * <p>
+   * The default output (when the format is not set) is that of {@link java.time.LocalDateTime#toString()} method, specifically, the output will be one of the following ISO-8601 formats:
+   * <ul>
+   * <li>uuuu-MM-dd'T'HH:mm
+   * <li>uuuu-MM-dd'T'HH:mm:ss
+   * <li>uuuu-MM-dd'T'HH:mm:ss.SSS
+   * <li>uuuu-MM-dd'T'HH:mm:ss.SSSSSS
+   * <li>uuuu-MM-dd'T'HH:mm:ss.SSSSSSSSS
+   * </ul>
+   * The format used will be the shortest that outputs the full value of the time where the omitted parts are implied to be zero.
    * 
    * @return the Java format to use for date/time columns.
    */
@@ -396,9 +468,74 @@ public class FormatDelimited implements Format {
                         The Java format to use for date/time columns.
                         <P>
                         This value will be used by the Java DateTimeFormatter to format datetimes.
+                        <P>
+                        To value may be either a DateTimeFormatter pattern or one of the predefined formats:
+                        <table class="striped" style="text-align:left">
+                        <caption>Predefined Formatters</caption>
+                        <thead>
+                        <tr>
+                        <th scope="col">Formatter</th>
+                        <th scope="col">Description</th>
+                        <th scope="col">Example</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                        <th scope="row"> BASIC_ISO_DATE</th>
+                        <td>Basic ISO date </td> <td>'20111203'</td>
+                        </tr>
+                        <tr>
+                        <th scope="row"> ISO_LOCAL_DATE</th>
+                        <td> ISO Local Date </td>
+                        <td>'2011-12-03'</td>
+                        </tr>
+                        <tr>
+                        <th scope="row"> ISO_LOCAL_TIME</th>
+                        <td> Time without offset </td>
+                        <td>'10:15:30'</td>
+                        </tr>
+                        <tr>
+                        <th scope="row"> ISO_TIME</th>
+                        <td> Time with or without offset </td>
+                        <td>'10:15:30+01:00'; '10:15:30'</td>
+                        </tr>
+                        <tr>
+                        <th scope="row"> ISO_LOCAL_DATE_TIME</th>
+                        <td> ISO Local Date and Time </td>
+                        <td>'2011-12-03T10:15:30'</td>
+                        </tr>
+                        <tr>
+                        <th scope="row"> ISO_ORDINAL_DATE</th>
+                        <td> Year and day of year </td>
+                        <td>'2012-337'</td>
+                        </tr>
+                        <tr>
+                        <th scope="row"> EPOCH_SECONDS</th>
+                        <td> Seconds since the epoch (1970-01-01)</td>
+                        <td>1684158330L</td>
+                        </tr>
+                        <tr>
+                        <th scope="row"> EPOCH_MILLISECONDS</th>
+                        <td> Milliseconds since the epoch (1970-01-01)</td>
+                        <td>1684158330120L</td>
+                        </tr>
+                        </table>
+                        <P>
+                        The predefined formatters have capabilities that the pattern formatting does not, specifically, if you want to output an ISO8601
+                        date time with fractional seconds but only showing signficant figures in the fractional seconds, use ISO_LOCAL_DATE_TIME.
+                        <P>
+                        The default output (when the format is not set) is that of the java LocalDateTime.toString() method, specifically, the output will be one of the following ISO-8601 formats:
+                        <ul>
+                        <li>uuuu-MM-dd'T'HH:mm
+                        <li>uuuu-MM-dd'T'HH:mm:ss
+                        <li>uuuu-MM-dd'T'HH:mm:ss.SSS
+                        <li>uuuu-MM-dd'T'HH:mm:ss.SSSSSS
+                        <li>uuuu-MM-dd'T'HH:mm:ss.SSSSSSSSS
+                        </ul>
+                        The format used will be the shortest that outputs the full value of the time where the omitted parts are implied to be zero.
                         """
           , maxLength = 100
-          , defaultValue = "yyyy-MM-dd'T'HH:mm"
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
   public String getDateTimeFormat() {
     return dateTimeFormat;
