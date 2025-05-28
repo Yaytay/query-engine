@@ -25,6 +25,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -41,6 +42,7 @@ import uk.co.spudsoft.query.exec.fmts.FormattingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.fmts.CustomDateTimeFormatter;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
 /**
@@ -63,7 +65,7 @@ public class FormatDelimitedInstance implements FormatInstance {
   private final AtomicBoolean started = new AtomicBoolean();
 
   private final DateTimeFormatter dateFormatter;
-  private final DateTimeFormatter dateTimeFormatter;
+  private final CustomDateTimeFormatter dateTimeFormatter;
   private final DateTimeFormatter timeFormatter;
   
   private final Promise<Void> finalPromise;
@@ -87,11 +89,7 @@ public class FormatDelimitedInstance implements FormatInstance {
       this.dateFormatter = DateTimeFormatter.ofPattern(defn.getDateFormat());
     }
     
-    if (Strings.isNullOrEmpty(defn.getDateTimeFormat())) {
-      this.dateTimeFormatter = null;
-    } else {
-      this.dateTimeFormatter = DateTimeFormatter.ofPattern(defn.getDateTimeFormat());
-    }
+    this.dateTimeFormatter = new CustomDateTimeFormatter(defn.getDateTimeFormat());
     
     if (Strings.isNullOrEmpty(defn.getTimeFormat())) {
       this.timeFormatter = null;
@@ -204,8 +202,13 @@ public class FormatDelimitedInstance implements FormatInstance {
               }
               break;
             case DateTime:
-              if (dateTimeFormatter != null && v instanceof Temporal t) {
-                stringValue = dateTimeFormatter.format(t);
+              if (dateTimeFormatter != null && v instanceof LocalDateTime t) {
+                Object objectValue = dateTimeFormatter.format(t);
+                if (objectValue instanceof String s) {
+                  stringValue = s;
+                } else {
+                  stringValue = objectValue == null ? null : objectValue.toString();
+                }
               } else {
                 stringValue = v.toString();
               }

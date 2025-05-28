@@ -26,7 +26,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.WriteStream;
 import io.vertx.sqlclient.impl.Utils;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 import java.util.Locale;
@@ -44,6 +43,7 @@ import uk.co.spudsoft.query.exec.fmts.FormattingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.fmts.CustomDateTimeFormatter;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
 
@@ -72,12 +72,9 @@ public final class FormatJsonInstance implements FormatInstance {
   private String description;
   
   private final DateTimeFormatter dateFormatter;
-  private final DateTimeFormatter dateTimeFormatter;
+  private final CustomDateTimeFormatter dateTimeFormatter;
   private final DateTimeFormatter timeFormatter;
-  
-  private boolean dateTimeAsEpochSeconds = false;
-  private boolean dateTimeAsEpochMillis = false;
-  
+    
   /**
    * Constructor.
    * @param outputStream The WriteStream that the data is to be sent to.
@@ -94,17 +91,7 @@ public final class FormatJsonInstance implements FormatInstance {
       this.dateFormatter = DateTimeFormatter.ofPattern(defn.getDateFormat());
     }
     
-    if (Strings.isNullOrEmpty(defn.getDateTimeFormat())) {
-      this.dateTimeFormatter = null;
-    } else if ("EPOCH_SECONDS".equals(defn.getDateTimeFormat())) {
-      this.dateTimeFormatter = null;
-      this.dateTimeAsEpochSeconds = true;
-    } else if ("EPOCH_MILLISECONDS".equals(defn.getDateTimeFormat())) {
-      this.dateTimeFormatter = null;
-      this.dateTimeAsEpochMillis = true;
-    } else {
-      this.dateTimeFormatter = DateTimeFormatter.ofPattern(defn.getDateTimeFormat());
-    }
+    dateTimeFormatter = new CustomDateTimeFormatter(defn.getDateTimeFormat());
     
     if (Strings.isNullOrEmpty(defn.getTimeFormat())) {
       this.timeFormatter = null;
@@ -164,15 +151,7 @@ public final class FormatJsonInstance implements FormatInstance {
           if (value == null) {
             json.put(cd.name(), null);
           } else if (value instanceof LocalDateTime ldt) {
-            if (dateTimeAsEpochMillis) {
-              json.put(cd.name(), (Long) ldt.toInstant(ZoneOffset.UTC).toEpochMilli());
-            } else if (dateTimeAsEpochSeconds) {
-              json.put(cd.name(), ldt.toEpochSecond(ZoneOffset.UTC));
-            } else if (dateTimeFormatter == null) {
-              json.put(cd.name(), Utils.toJson(ldt.toInstant(ZoneOffset.UTC)));
-            } else {
-              json.put(cd.name(), dateTimeFormatter.format(ldt));
-            }
+            json.put(cd.name(), dateTimeFormatter.format(ldt));
           } else {
             logger.warn("DateTime value is not LocalDateTime (it's {} of {})", value.getClass(), value);
             json.put(cd.name(), Utils.toJson(value));

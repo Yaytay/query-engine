@@ -16,15 +16,20 @@
  */
 package uk.co.spudsoft.query.exec.fmts.json;
 
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.json.jackson.DatabindCodec;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import uk.co.spudsoft.query.defn.FormatJson;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.json.ObjectMapperConfiguration;
 
 /**
  *
@@ -63,8 +68,8 @@ public class FormatJsonInstanceTest {
     // Date/time values might be formatted as strings
     assertEquals("2023-05-15", result.getValue("dateValue"));
     assertEquals("13:45:30", result.getValue("timeValue"));
-    assertEquals("2023-05-15T13:45:30Z", result.getValue("dateTimeValue"));
-    assertEquals("2023-05-15T13:45:00Z", result.getValue("dateTimeValueZeroSeconds"));
+    assertEquals("2023-05-15T13:45:30", result.getValue("dateTimeValue"));
+    assertEquals("2023-05-15T13:45", result.getValue("dateTimeValueZeroSeconds"));
 
     // Null value should be present but null
     assertTrue(result.containsKey("nullValue"));
@@ -184,5 +189,43 @@ public class FormatJsonInstanceTest {
 
     // Result should be an empty JSON object
     assertEquals(0, result.size());
+  }
+  
+  @Test
+  public void testPredefinedFormat() {
+    ObjectMapperConfiguration.configureObjectMapper(DatabindCodec.mapper());
+    
+    assertEquals("\"2023-05-15T13:45:30\"", Json.encode(LocalDateTime.of(2023, 5, 15, 13, 45, 30)));
+    assertEquals("\"2023-05-15T13:45:30.000123\"", Json.encode(LocalDateTime.of(2023, 5, 15, 13, 45, 30, 123000)));
+    assertEquals("\"2023-05-15T13:45:30.123\"", Json.encode(LocalDateTime.of(2023, 5, 15, 13, 45, 30, 123000000)));
+    assertEquals("\"2023-05-15T13:45:30.12\"", Json.encode(LocalDateTime.of(2023, 5, 15, 13, 45, 30, 120000000)));
+    assertEquals("\"2023-05-15T13:45:30.1\"", Json.encode(LocalDateTime.of(2023, 5, 15, 13, 45, 30, 100000000)));
+    assertEquals("\"2023-05-15T13:45:00\"", Json.encode(LocalDateTime.of(2023, 5, 15, 13, 45, 0)));
+    
+    
+    assertEquals("2023-05-15T13:45:30", DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.of(2023, 5, 15, 13, 45, 30)));
+    assertEquals("2023-05-15T13:45:30.000123", DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.of(2023, 5, 15, 13, 45, 30, 123000)));
+    assertEquals("2023-05-15T13:45:30.123", DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.of(2023, 5, 15, 13, 45, 30, 123000000)));
+    assertEquals("2023-05-15T13:45:30.12", DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.of(2023, 5, 15, 13, 45, 30, 120000000)));
+    assertEquals("2023-05-15T13:45:30.1", DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.of(2023, 5, 15, 13, 45, 30, 100000000)));
+    assertEquals("2023-05-15T13:45:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.of(2023, 5, 15, 13, 45, 0)));
+    
+    
+    FormatJson definition = FormatJson.builder()
+            .dateTimeFormat("ISO_LOCAL_DATE_TIME")
+            .build();
+    FormatJsonInstance instance = new FormatJsonInstance(null, definition);
+    // Create a test DataRow with different types of data
+    Types types = new Types();
+    DataRow row = DataRow.create(types,
+            "dateTimeValue", LocalDateTime.of(2023, 5, 15, 13, 45, 30, 120000000)
+    );
+
+    // Convert to JSON
+    JsonObject result = instance.toJson(row);
+
+    // Date/time values might be formatted as strings
+    assertEquals("2023-05-15T13:45:30.12", result.getValue("dateTimeValue"));
+    
   }
 }

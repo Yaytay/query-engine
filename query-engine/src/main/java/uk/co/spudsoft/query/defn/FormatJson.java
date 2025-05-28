@@ -344,8 +344,69 @@ public class FormatJson implements Format {
   /**
    * Get the Java format to use for date/time columns.
    * <P>
-   * To be processed by a Java {@link DateTimeFormatter}.
-   * <P>
+   * To be processed by a Java {@link DateTimeFormatter}, this can either be a DateTimeFormatter pattern or one of the predefined formats.
+   * <table class="striped" style="text-align:left">
+   * <caption>Predefined Formatters</caption>
+   * <thead>
+   * <tr>
+   * <th scope="col">Formatter</th>
+   * <th scope="col">Description</th>
+   * <th scope="col">Example</th>
+   * </tr>
+   * </thead>
+   * <tbody>
+   * <tr>
+   * <th scope="row"> {@link DateTimeFormatter#BASIC_ISO_DATE}</th>
+   * <td>Basic ISO date </td> <td>'20111203'</td>
+   * </tr>
+   * <tr>
+   * <th scope="row"> {@link DateTimeFormatter#ISO_LOCAL_DATE}</th>
+   * <td> ISO Local Date </td>
+   * <td>'2011-12-03'</td>
+   * </tr>
+   * <tr>
+   * <th scope="row"> {@link DateTimeFormatter#ISO_DATE}</th>
+   * <td> ISO Date with or without offset </td>
+   * <td> '2011-12-03+01:00'; '2011-12-03'</td>
+   * </tr>
+   * <tr>
+   * <th scope="row"> {@link DateTimeFormatter#ISO_LOCAL_TIME}</th>
+   * <td> Time without offset </td>
+   * <td>'10:15:30'</td>
+   * </tr>
+   * <tr>
+   * <th scope="row"> {@link DateTimeFormatter#ISO_TIME}</th>
+   * <td> Time with or without offset </td>
+   * <td>'10:15:30+01:00'; '10:15:30'</td>
+   * </tr>
+   * <tr>
+   * <th scope="row"> {@link DateTimeFormatter#ISO_LOCAL_DATE_TIME}</th>
+   * <td> ISO Local Date and Time </td>
+   * <td>'2011-12-03T10:15:30'</td>
+   * </tr>
+   * <tr>
+   * <th scope="row"> {@link DateTimeFormatter#ISO_ORDINAL_DATE}</th>
+   * <td> Year and day of year </td>
+   * <td>'2012-337'</td>
+   * </tr>
+   * <tr>
+   * <th scope="row"> {@link DateTimeFormatter#ISO_WEEK_DATE}</th>
+   * <td> Year and Week </td>
+   * <td>'2012-W48-6'</td>
+   * </tr>
+   * <tr>
+   * <th scope="row"> EPOCH_SECONDS</th>
+   * <td> Seconds since the epoch (1970-01-01)</td>
+   * <td>1684158330L</td>
+   * </tr>
+   * <tr>
+   * <th scope="row"> EPOCH_MILLISECONDS</th>
+   * <td> Milliseconds since the epoch (1970-01-01)</td>
+   * <td>1684158330120L</td>
+   * </tr>
+   * </tbody>
+   * </table>
+   * 
    * Many JSON users expect timestamps as time since epoch, for their benefit
    * the special values "EPOCH_SECONDS" and "EPOCH_MILLISECONDS" can be used to output date/time values as seconds (or milliseconds) since the epoch.
    * 
@@ -356,8 +417,60 @@ public class FormatJson implements Format {
                         <P>
                         This value will be used by the Java DateTimeFormatter to format datetimes.
                         <P>
-                        Many JSON users expect timestamps as time since epoch, for their benefit
-                        the special values "EPOCH_SECONDS" and "EPOCH_MILLISECONDS" can be used to output date/time values as seconds (or milliseconds) since the epoch.
+                        To value may be either a DateTimeFormatter pattern or one of the predefined formats:
+                        <table class="striped" style="text-align:left">
+                        <caption>Predefined Formatters</caption>
+                        <thead>
+                        <tr>
+                        <th scope="col">Formatter</th>
+                        <th scope="col">Description</th>
+                        <th scope="col">Example</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                        <th scope="row"> BASIC_ISO_DATE</th>
+                        <td>Basic ISO date </td> <td>'20111203'</td>
+                        </tr>
+                        <tr>
+                        <th scope="row"> ISO_LOCAL_DATE</th>
+                        <td> ISO Local Date </td>
+                        <td>'2011-12-03'</td>
+                        </tr>
+                        <tr>
+                        <th scope="row"> ISO_LOCAL_TIME</th>
+                        <td> Time without offset </td>
+                        <td>'10:15:30'</td>
+                        </tr>
+                        <tr>
+                        <th scope="row"> ISO_TIME</th>
+                        <td> Time with or without offset </td>
+                        <td>'10:15:30+01:00'; '10:15:30'</td>
+                        </tr>
+                        <tr>
+                        <th scope="row"> ISO_LOCAL_DATE_TIME</th>
+                        <td> ISO Local Date and Time </td>
+                        <td>'2011-12-03T10:15:30'</td>
+                        </tr>
+                        <tr>
+                        <th scope="row"> ISO_ORDINAL_DATE</th>
+                        <td> Year and day of year </td>
+                        <td>'2012-337'</td>
+                        </tr>
+                        <tr>
+                        <th scope="row"> EPOCH_SECONDS</th>
+                        <td> Seconds since the epoch (1970-01-01)</td>
+                        <td>1684158330L</td>
+                        </tr>
+                        <tr>
+                        <th scope="row"> EPOCH_MILLISECONDS</th>
+                        <td> Milliseconds since the epoch (1970-01-01)</td>
+                        <td>1684158330120L</td>
+                        </tr>
+                        </table>
+                        <P>
+                        The predefined formatters have capabilities that the pattern formatting does not, specifically, if you want to output an ISO8601
+                        date time with fractional seconds but only showing signficant figures in the fractional seconds, use ISO_LOCAL_DATE_TIME.
                         """
           , maxLength = 100
           , defaultValue = "yyyy-mm-ddThh:mm:ss"
