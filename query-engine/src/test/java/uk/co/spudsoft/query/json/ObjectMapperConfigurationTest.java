@@ -56,6 +56,28 @@ public class ObjectMapperConfigurationTest {
             )
     );
     
+    assertEquals(
+            "{\"float\":-3.4028235E38,\"double\":-1.7976931348623157E308,\"type\":\"*/*\"}"
+            , mapper.writeValueAsString(
+                    ImmutableMap.<String, Object>builder()
+                            .put("float", 0 - Float.MAX_VALUE)
+                            .put("double", 0 - Double.MAX_VALUE)
+                            .put("type", MediaType.ANY_TYPE)
+                            .build()
+            )
+    );
+    
+    assertEquals(
+            "{\"float\":3.4028235E38,\"double\":1.7976931348623157E308,\"type\":\"*/*\"}"
+            , mapper.writeValueAsString(
+                    ImmutableMap.<String, Object>builder()
+                            .put("float", Float.MAX_VALUE)
+                            .put("double", Double.MAX_VALUE)
+                            .put("type", MediaType.ANY_TYPE)
+                            .build()
+            )
+    );
+    
   }
   
 }
