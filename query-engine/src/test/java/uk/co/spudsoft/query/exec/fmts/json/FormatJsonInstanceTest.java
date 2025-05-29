@@ -19,11 +19,11 @@ package uk.co.spudsoft.query.exec.fmts.json;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.jackson.DatabindCodec;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import uk.co.spudsoft.query.defn.FormatJson;
@@ -38,7 +38,7 @@ import uk.co.spudsoft.query.json.ObjectMapperConfiguration;
 public class FormatJsonInstanceTest {
 
   @Test
-  public void testToJson() {
+  public void testToJson() throws IOException {
     FormatJson definition = FormatJson.builder()
             .build();
     FormatJsonInstance instance = new FormatJsonInstance(null, definition);
@@ -57,7 +57,7 @@ public class FormatJsonInstanceTest {
     );
 
     // Convert to JSON
-    JsonObject result = instance.toJson(row);
+    JsonObject result = new JsonObject(instance.toJsonBuffer(row));
 
     // Verify the JSON object contains all expected entries
     assertEquals("test string", result.getString("stringValue"));
@@ -77,7 +77,7 @@ public class FormatJsonInstanceTest {
   }
 
   @Test
-  public void testToJsonWithFormats() {
+  public void testToJsonWithFormats() throws IOException {
     FormatJson definition = FormatJson.builder()
             .dateFormat("d MMMM uuuu")
             .dateTimeFormat("d MMMM uuuu h:mm a")
@@ -93,7 +93,7 @@ public class FormatJsonInstanceTest {
     );
 
     // Convert to JSON
-    JsonObject result = instance.toJson(row);
+    JsonObject result = new JsonObject(instance.toJsonBuffer(row));
 
     // Date/time values might be formatted as strings
     assertEquals("15 May 2023", result.getValue("dateValue"));
@@ -102,7 +102,7 @@ public class FormatJsonInstanceTest {
   }
 
   @Test
-  public void testToJsonWithIso8601FormatWithoutZ() {
+  public void testToJsonWithIso8601FormatWithoutZ() throws IOException {
     FormatJson definition = FormatJson.builder()
             .dateFormat("uuuu-MM-dd")
             .dateTimeFormat("uuuu-MM-dd'T'HH:mm:ss")
@@ -119,7 +119,7 @@ public class FormatJsonInstanceTest {
     );
 
     // Convert to JSON
-    JsonObject result = instance.toJson(row);
+    JsonObject result = new JsonObject(instance.toJsonBuffer(row));
 
     // Date/time values might be formatted as strings
     assertEquals("2023-05-15", result.getValue("dateValue"));
@@ -129,7 +129,7 @@ public class FormatJsonInstanceTest {
   }
 
   @Test
-  public void testToJsonWithSecondsSinceEpoch() {
+  public void testToJsonWithSecondsSinceEpoch() throws IOException {
     FormatJson definition = FormatJson.builder()
             .dateFormat("d MMMM uuuu")
             .dateTimeFormat("EPOCH_SECONDS")
@@ -145,16 +145,16 @@ public class FormatJsonInstanceTest {
     );
 
     // Convert to JSON
-    JsonObject result = instance.toJson(row);
+    JsonObject result = new JsonObject(instance.toJsonBuffer(row));
 
     // Date/time values might be formatted as strings
     assertEquals("15 May 2023", result.getValue("dateValue"));
     assertEquals("1:45 pm", ((String) result.getValue("timeValue")).toLowerCase());
-    assertEquals(1684158330L, result.getValue("dateTimeValue"));
+    assertEquals(1684158330, result.getValue("dateTimeValue"));
   }
 
   @Test
-  public void testToJsonWithMillisecondsSinceEpoch() {
+  public void testToJsonWithMillisecondsSinceEpoch() throws IOException {
     FormatJson definition = FormatJson.builder()
             .dateFormat("d MMMM uuuu")
             .dateTimeFormat("EPOCH_MILLISECONDS")
@@ -170,7 +170,7 @@ public class FormatJsonInstanceTest {
     );
 
     // Convert to JSON
-    JsonObject result = instance.toJson(row);
+    JsonObject result = new JsonObject(instance.toJsonBuffer(row));
 
     // Date/time values might be formatted as strings
     assertEquals("15 May 2023", result.getValue("dateValue"));
@@ -179,20 +179,20 @@ public class FormatJsonInstanceTest {
   }
 
   @Test
-  public void testToJsonWithEmptyRow() {
+  public void testToJsonWithEmptyRow() throws IOException {
     FormatJson definition = FormatJson.builder()
             .build();
     FormatJsonInstance instance = new FormatJsonInstance(null, definition);
 
     // Test with an empty row
-    JsonObject result = instance.toJson(DataRow.EMPTY_ROW);
+    JsonObject result = new JsonObject(instance.toJsonBuffer(DataRow.EMPTY_ROW));
 
     // Result should be an empty JSON object
     assertEquals(0, result.size());
   }
   
   @Test
-  public void testPredefinedFormat() {
+  public void testPredefinedFormat() throws IOException {
     ObjectMapperConfiguration.configureObjectMapper(DatabindCodec.mapper());
     
     assertEquals("\"2023-05-15T13:45:30\"", Json.encode(LocalDateTime.of(2023, 5, 15, 13, 45, 30)));
@@ -222,7 +222,7 @@ public class FormatJsonInstanceTest {
     );
 
     // Convert to JSON
-    JsonObject result = instance.toJson(row);
+    JsonObject result = new JsonObject(instance.toJsonBuffer(row));
 
     // Date/time values might be formatted as strings
     assertEquals("2023-05-15T13:45:30.12", result.getValue("dateTimeValue"));

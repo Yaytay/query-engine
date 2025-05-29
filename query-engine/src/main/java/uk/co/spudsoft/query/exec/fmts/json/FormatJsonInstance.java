@@ -16,15 +16,18 @@
  */
 package uk.co.spudsoft.query.exec.fmts.json;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.streams.WriteStream;
-import io.vertx.sqlclient.impl.Utils;
+import static io.vertx.sqlclient.impl.Utils.toJson;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
@@ -33,6 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.DataType;
+import static uk.co.spudsoft.query.defn.DataType.Double;
 import uk.co.spudsoft.query.defn.FormatJson;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.DataRow;
@@ -44,6 +48,7 @@ import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.fmts.CustomDateTimeFormatter;
+import uk.co.spudsoft.query.exec.fmts.CustomDecimalFormatter;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
 
@@ -57,6 +62,7 @@ import uk.co.spudsoft.query.web.RequestContextHandler;
 public final class FormatJsonInstance implements FormatInstance {
   
   private static final Logger logger = LoggerFactory.getLogger(FormatJsonInstance.class);
+  private static final JsonFactory JSON_FACTORY = new JsonFactory(); 
  
   private final WriteStream<Buffer> outputStream;
   private final FormatJson defn;
@@ -75,6 +81,8 @@ public final class FormatJsonInstance implements FormatInstance {
   private final CustomDateTimeFormatter dateTimeFormatter;
   private final DateTimeFormatter timeFormatter;
     
+  private final CustomDecimalFormatter decimalFormat;
+  
   /**
    * Constructor.
    * @param outputStream The WriteStream that the data is to be sent to.
@@ -99,6 +107,8 @@ public final class FormatJsonInstance implements FormatInstance {
       this.timeFormatter = DateTimeFormatter.ofPattern(defn.getTimeFormat());
     }
     
+    this.decimalFormat = new CustomDecimalFormatter(defn.getDecimalFormat());
+    
     this.formattingStream = new FormattingWriteStream(outputStream
             , v -> {
               return start();
@@ -108,11 +118,11 @@ public final class FormatJsonInstance implements FormatInstance {
                 if (row.isEmpty()) {
                   return Future.succeededFuture();
                 } else if (started.get()) {
-                  Buffer buffer = COMMA.copy().appendBuffer(toJson(row).toBuffer());
+                  Buffer buffer = COMMA.copy().appendBuffer(toJsonBuffer(row));
                   return outputStream.write(buffer);
                 } else {
                   started.set(true);
-                  return outputStream.write(toJson(row).toBuffer());
+                  return outputStream.write(toJsonBuffer(row));
                 }
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);
@@ -133,48 +143,106 @@ public final class FormatJsonInstance implements FormatInstance {
     );
   }
   
-  JsonObject toJson(DataRow row) {
-    JsonObject json = new JsonObject();
-    row.forEach((cd, value) -> {
-      switch (cd.type()) {
-        case Date:
-          if (dateFormatter == null) {
-            json.put(cd.name(), Utils.toJson(value));
-          } else {
-            if (value instanceof TemporalAccessor ta) {
-              json.put(cd.name(), dateFormatter.format(ta));
-            }
-          }
-          break ;
-          
-        case DateTime:
+  Buffer toJsonBuffer(DataRow row) throws IOException {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    
+    try (JsonGenerator gen = JSON_FACTORY.createGenerator(out)) {
+      gen.writeStartObject();
+      
+      row.forEach((cd, value) -> {
+        try {
           if (value == null) {
-            json.put(cd.name(), null);
-          } else if (value instanceof LocalDateTime ldt) {
-            json.put(cd.name(), dateTimeFormatter.format(ldt));
+            gen.writeNullField(cd.name());
           } else {
-            logger.warn("DateTime value is not LocalDateTime (it's {} of {})", value.getClass(), value);
-            json.put(cd.name(), Utils.toJson(value));
-          }
-          break ;
-          
-        case Time:
-          if (timeFormatter == null) {
-            json.put(cd.name(), Utils.toJson(value));
-          } else {
-            if (value instanceof TemporalAccessor ta) {
-              json.put(cd.name(), timeFormatter.format(ta));
+            switch (cd.type()) {
+              case Boolean:
+                if (value instanceof Boolean booleanValue) {
+                  gen.writeBooleanField(cd.name(), booleanValue);
+                } else {
+                  gen.writeBooleanField(cd.name(), Boolean.parseBoolean(value.toString()));
+                }
+                break ;
+                
+              case Double:
+              case Float:
+                if (value instanceof Number numberValue) {
+                  gen.writeFieldName(cd.name());
+                  if (decimalFormat.mustBeEncodedAsString()) {
+                    gen.writeString(decimalFormat.format(numberValue));
+                  } else {
+                    gen.writeRawValue(decimalFormat.format(numberValue));
+                  }
+                }
+                break ;
+                
+              case Integer:
+              case Long:
+                if (value instanceof Number numValue) {
+                  gen.writeNumberField(cd.name(), numValue.longValue());
+                }
+                break ;
+                
+              case Null:
+                gen.writeNullField(cd.name());
+                break ;
+                
+              case String:
+                if (value instanceof String stringValue) {
+                  gen.writeStringField(cd.name(), stringValue);
+                } else {
+                  gen.writeStringField(cd.name(), value.toString());
+                }
+                break ;
+                
+              case Date:
+                if (dateFormatter == null) {
+                  gen.writeStringField(cd.name(), value.toString());
+                } else {
+                  if (value instanceof TemporalAccessor ta) {
+                    gen.writeStringField(cd.name(), dateFormatter.format(ta));
+                  }
+                }
+                break ;
+                
+              case DateTime:
+                if (value instanceof LocalDateTime ldt) {
+                  Object formatted = dateTimeFormatter.format(ldt);
+                  if (formatted instanceof String stringFormatted) {
+                    gen.writeStringField(cd.name(), stringFormatted);
+                  } else if (formatted instanceof Long longFormatted) {
+                    gen.writeNumberField(cd.name(), longFormatted);
+                  }
+                } else {
+                  logger.warn("DateTime value is not LocalDateTime (it's {} of {})", value.getClass(), value);
+                  gen.writeStringField(cd.name(), value.toString());
+                }
+                break ;
+                
+              case Time:
+                if (timeFormatter == null) {
+                  gen.writeStringField(cd.name(), value.toString());
+                } else {
+                  if (value instanceof TemporalAccessor ta) {
+                    gen.writeStringField(cd.name(), timeFormatter.format(ta));
+                  }
+                }
+                break ;
+                
+              default:
+                logger.warn("Field {} if of unknown type {} with value {} ({})", cd.name(), cd.type(), value, value.getClass());
+                throw new IllegalStateException("Field of unknown type " + cd.type());
             }
           }
-          break ;
+        } catch (Throwable ex) {
+          logger.warn("Failed to write JSON field {} with value {} ({})", cd.name(), value, value == null ? null : value.getClass());
+        }
         
-        
-        default:
-          json.put(cd.name(), Utils.toJson(value));
-          break;
-      }
-    });
-    return json;
+      });
+      
+      gen.writeEndObject();
+    }
+    
+    return Buffer.buffer(out.toByteArray());
   }
   
   private Future<Void> start() {

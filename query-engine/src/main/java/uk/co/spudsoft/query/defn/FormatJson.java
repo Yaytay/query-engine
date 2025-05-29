@@ -56,6 +56,7 @@ public class FormatJson implements Format {
   private final String dateFormat;
   private final String dateTimeFormat;
   private final String timeFormat;
+  private final String decimalFormat;
   
   
 
@@ -336,6 +337,7 @@ public class FormatJson implements Format {
                         This value will be used by the Java DateTimeFormatter to format dates.
                         """
           , maxLength = 100
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           , defaultValue = "yyyy-mm-dd"
   )
   public String getDateFormat() {
@@ -604,10 +606,33 @@ public class FormatJson implements Format {
                         This value will be used by the Java DateTimeFormatter to format times.
                         """
           , maxLength = 100
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           , defaultValue = "hh:mm:ss"
   )
   public String getTimeFormat() {
     return timeFormat;
+  }
+
+  /**
+   * Get the Java {@link java.text.DecimalFormat} to use for float and double columns.
+   * <P>
+   * If not set the default toString() method will be called, which will result in a format equivalent to "0.0" 
+   * (i.e. it will include at least one digit after the decimal point).
+   * 
+   * @return the Java format to use for floating point columns.
+   */
+  @Schema(description = """
+                        The Java format to use for float and double columns.
+                        <P>
+                        This value will be used by the Java DecimalFormat to format floating point values.
+                        <P>
+                        If not set the default toString() method will be called, which will result in a format equivalent to "0.0"
+                        (i.e. it will include at least one digit after the decimal point).
+                        """
+          , maxLength = 100
+  )
+  public String getDecimalFormat() {
+    return decimalFormat;
   }
   
   /**
@@ -630,6 +655,7 @@ public class FormatJson implements Format {
     private String dateFormat;
     private String dateTimeFormat;
     private String timeFormat;
+    private String decimalFormat;
     
     private Builder() {
     }
@@ -768,13 +794,23 @@ public class FormatJson implements Format {
     }
 
     /**
+     * Set the {@link FormatJson#decimalFormat} value in the builder.
+     * @param value The value for the {@link FormatJson#decimalFormat}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder decimalFormat(final String value) {
+      this.decimalFormat = value;
+      return this;
+    }
+
+    /**
      * Construct a new instance of the FormatJson class.
      * @return a new instance of the FormatJson class.
      */
     public FormatJson build() {
       return new uk.co.spudsoft.query.defn.FormatJson(type, name, description, extension, filename, mediaType
               , hidden, dataName, metadataName, compatibleTypeNames
-              , dateFormat, dateTimeFormat, timeFormat
+              , dateFormat, dateTimeFormat, timeFormat, decimalFormat
       );
     }
   }
@@ -790,7 +826,7 @@ public class FormatJson implements Format {
   private FormatJson(final FormatType type, final String name, final String description
           , final String extension, final String filename, final MediaType mediaType
           , final boolean hidden, String dataName, String metadataName, Boolean compatibleTypeNames
-          , final String dateFormat, final String dateTimeFormat, final String timeFormat
+          , final String dateFormat, final String dateTimeFormat, final String timeFormat, final String decimalFormat
   ) {
     validateType(FormatType.JSON, type);
     this.type = type;
@@ -806,6 +842,7 @@ public class FormatJson implements Format {
     this.dateFormat = dateFormat;
     this.dateTimeFormat = dateTimeFormat;
     this.timeFormat = timeFormat;
+    this.decimalFormat = decimalFormat;
   }
   
 }

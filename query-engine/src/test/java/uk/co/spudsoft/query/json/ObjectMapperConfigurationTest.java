@@ -35,45 +35,12 @@ public class ObjectMapperConfigurationTest {
     ObjectMapperConfiguration.configureObjectMapper(mapper);
         
     assertEquals(
-            "{\"float\":1,\"double\":2,\"type\":\"application/x-bzip2\"}"
+            "{\"float\":1.0,\"double\":2.0,\"type\":\"application/x-bzip2\"}"
             , mapper.writeValueAsString(
                     ImmutableMap.<String, Object>builder()
                             .put("float", 1.0F)
                             .put("double", 2.0)
                             .put("type", MediaType.BZIP2)
-                            .build()
-            )
-    );
-    
-    assertEquals(
-            "{\"float\":1.7,\"double\":2.7,\"type\":\"*/*\"}"
-            , mapper.writeValueAsString(
-                    ImmutableMap.<String, Object>builder()
-                            .put("float", 1.7F)
-                            .put("double", 2.7)
-                            .put("type", MediaType.ANY_TYPE)
-                            .build()
-            )
-    );
-    
-    assertEquals(
-            "{\"float\":-3.4028235E38,\"double\":-1.7976931348623157E308,\"type\":\"*/*\"}"
-            , mapper.writeValueAsString(
-                    ImmutableMap.<String, Object>builder()
-                            .put("float", 0 - Float.MAX_VALUE)
-                            .put("double", 0 - Double.MAX_VALUE)
-                            .put("type", MediaType.ANY_TYPE)
-                            .build()
-            )
-    );
-    
-    assertEquals(
-            "{\"float\":3.4028235E38,\"double\":1.7976931348623157E308,\"type\":\"*/*\"}"
-            , mapper.writeValueAsString(
-                    ImmutableMap.<String, Object>builder()
-                            .put("float", Float.MAX_VALUE)
-                            .put("double", Double.MAX_VALUE)
-                            .put("type", MediaType.ANY_TYPE)
                             .build()
             )
     );

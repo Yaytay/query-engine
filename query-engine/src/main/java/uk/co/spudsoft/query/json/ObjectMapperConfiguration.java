@@ -45,8 +45,6 @@ public class ObjectMapperConfiguration {
   public static ObjectMapper configureObjectMapper(ObjectMapper mapper) {
     SimpleModule queryEngineModule = new SimpleModule("QueryEngineModule", new Version(1, 0, 0, null, "co.uk.spudsoft", "query-engine"));
     queryEngineModule.addSerializer(MediaType.class, new MediaTypeSerializer());
-    queryEngineModule.addSerializer(Float.class, new FloatSerializer());
-    queryEngineModule.addSerializer(Double.class, new DoubleSerializer());
     
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true);
     mapper.registerModules(
