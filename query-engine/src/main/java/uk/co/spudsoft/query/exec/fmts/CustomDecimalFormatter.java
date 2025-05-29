@@ -73,7 +73,6 @@ public class CustomDecimalFormatter {
           } 
           break;
         case (int) 'E':
-        case (int) 'e':
           if (++eCount > 1) {
             return true;
           } 
