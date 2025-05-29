@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.exec.fmts;
 import com.google.common.base.Strings;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -31,6 +32,7 @@ import java.time.format.DateTimeFormatter;
 public class CustomDateTimeFormatter {
   
   private final DateTimeFormatter formatter;
+  private final boolean convertToUtcZone;
   private final boolean dateTimeAsEpochSeconds;
   private final boolean dateTimeAsEpochMillis;
 
@@ -43,82 +45,133 @@ public class CustomDateTimeFormatter {
     
     if (Strings.isNullOrEmpty(format)) {
       formatter = null;
+      convertToUtcZone = false;
       dateTimeAsEpochSeconds = false;
       dateTimeAsEpochMillis = false;
     } else {
       switch (format) {
         case "EPOCH_SECONDS":
           formatter = null;
+          convertToUtcZone = false;
           dateTimeAsEpochSeconds = true;
           dateTimeAsEpochMillis = false;
           break;
+          
         case "EPOCH_MILLISECONDS":
           formatter = null;
+          convertToUtcZone = false;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = true;
           break;
+          
         case "BASIC_ISO_DATE":
           formatter = DateTimeFormatter.BASIC_ISO_DATE;
+          convertToUtcZone = false;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
           break;
           
         case "ISO_LOCAL_DATE":
           formatter = DateTimeFormatter.ISO_LOCAL_DATE;
+          convertToUtcZone = false;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
           break;
           
         case "ISO_DATE":
           formatter = DateTimeFormatter.ISO_DATE;
+          convertToUtcZone = false;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
           break;
           
         case "ISO_LOCAL_TIME":
           formatter = DateTimeFormatter.ISO_LOCAL_TIME;
+          convertToUtcZone = false;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
           break;
           
         case "ISO_TIME":
           formatter = DateTimeFormatter.ISO_TIME;
+          convertToUtcZone = false;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
           break;
           
         case "ISO_LOCAL_DATE_TIME":
           formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+          convertToUtcZone = false;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
           break;
           
         case "ISO_ORDINAL_DATE":
           formatter = DateTimeFormatter.ISO_ORDINAL_DATE;
+          convertToUtcZone = false;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
           break;
           
         case "ISO_WEEK_DATE":
           formatter = DateTimeFormatter.ISO_WEEK_DATE;
+          convertToUtcZone = false;
+          dateTimeAsEpochSeconds = false;
+          dateTimeAsEpochMillis = false;
+          break;
+          
+        case "ISO_OFFSET_DATE":
+          formatter = DateTimeFormatter.ISO_OFFSET_DATE;
+          convertToUtcZone = true;
+          dateTimeAsEpochSeconds = false;
+          dateTimeAsEpochMillis = false;
+          break;
+          
+        case "ISO_OFFSET_TIME":
+          formatter = DateTimeFormatter.ISO_OFFSET_TIME;
+          convertToUtcZone = true;
+          dateTimeAsEpochSeconds = false;
+          dateTimeAsEpochMillis = false;
+          break;
+          
+        case "ISO_OFFSET_DATE_TIME":
+          formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+          convertToUtcZone = true;
+          dateTimeAsEpochSeconds = false;
+          dateTimeAsEpochMillis = false;
+          break;
+          
+        case "ISO_ZONED_DATE_TIME":
+          formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
+          convertToUtcZone = true;
+          dateTimeAsEpochSeconds = false;
+          dateTimeAsEpochMillis = false;
+          break;
+          
+        case "ISO_DATE_TIME":
+          formatter = DateTimeFormatter.ISO_DATE_TIME;
+          convertToUtcZone = true;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
           break;
           
         case "ISO_INSTANT":
           formatter = DateTimeFormatter.ISO_INSTANT;
+          convertToUtcZone = true;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
           break;
           
         case "RFC_1123_DATE_TIME":
           formatter = DateTimeFormatter.RFC_1123_DATE_TIME;
+          convertToUtcZone = true;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
           break;
         
         default:
           formatter = DateTimeFormatter.ofPattern(format);
+          convertToUtcZone = format.matches(".*[VzOXxZ].*");
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
           break;
@@ -142,6 +195,9 @@ public class CustomDateTimeFormatter {
         return value.toEpochSecond(ZoneOffset.UTC);
       } else if (formatter == null) {
         return value.toString();
+      } else if (convertToUtcZone) {
+        ZonedDateTime zoned = value.atZone(ZoneOffset.UTC);
+        return formatter.format(zoned);
       } else {
         return formatter.format(value);
       }

@@ -449,6 +449,62 @@ public class FormatDelimited implements Format {
    * <td> Milliseconds since the epoch (1970-01-01)</td>
    * <td>1684158330120L</td>
    * </tr>
+   *  
+   * </tbody></table>
+   * 
+   * <table class="striped" style="text-align:left">
+   * <caption>The following predefined formats all require zone/offset data that will be assumed to be UTC.</caption>
+   * <thead>
+   * <tr>
+   * <th scope="col">Formatter</th>
+   * <th scope="col">Description</th>
+   * <th scope="col">Example</th>
+   * </tr>
+   * </thead>
+   * <tbody>
+   *  
+   * <tr>
+   * <th scope="row"> ISO_OFFSET_DATE</th>
+   * <td> ISO Date with offset </td>
+   * <td>'2023-05-15Z'</td>
+   * </tr>
+   *  
+   * <tr>
+   * <th scope="row"> ISO_OFFSET_TIME</th>
+   * <td> Time with offset </td>
+   * <td>'13:45:30.12Z'</td>
+   * </tr>
+   *  
+   * <tr>
+   * <th scope="row"> ISO_OFFSET_DATE_TIME</th>
+   * <td> Date Time with Offset </td>
+   * <td>'2023-05-15T13:45:30.12Z'</td>
+   * </tr>
+   *  
+   * <tr>
+   * <th scope="row"> ISO_ZONED_DATE_TIME</th>
+   * <td> Zoned Date Time </td>
+   * <td>'2023-05-15T13:45:30.12Z'</td>
+   * </tr>
+   *  
+   * <tr>
+   * <th scope="row"> ISO_DATE_TIME</th>
+   * <td> Date and time with ZoneId </td>
+   * <td>'2023-05-15T13:45:30.12Z'</td>
+   * </tr>
+   *  
+   * <tr>
+   * <th scope="row"> ISO_INSTANT</th>
+   * <td> Date and Time of an Instant </td>
+   * <td>'2023-05-15T13:45:30.120Z'</td>
+   * </tr>
+   *  
+   * <tr>
+   * <th scope="row"> RFC_1123_DATE_TIME</th>
+   * <td> RFC 1123 / RFC 822 </td>
+   * <td>'Mon, 15 May 2023 13:45:30 GMT'</td>
+   * </tr>                      
+   *  
    * </tbody>
    * </table>
    * <p>
@@ -518,6 +574,44 @@ public class FormatDelimited implements Format {
                         <th scope="row"> EPOCH_MILLISECONDS</th>
                         <td> Milliseconds since the epoch (1970-01-01)</td>
                         <td>1684158330120L</td>
+                        </tr>
+                        <tr colspan="3"><td>
+                        The following predefined formats all require zone/offset data that will be assumed to be UTC.
+                        </td></tr>
+                        <tr>
+                        <th scope="row"> ISO_OFFSET_DATE</th>
+                        <td> ISO Date with offset </td>
+                        <td>'2023-05-15Z'</td>
+                        </tr>
+                        <tr>
+                        <th scope="row"> ISO_OFFSET_TIME</th>
+                        <td> Time with offset </td>
+                        <td>'13:45:30.12Z'</td>
+                        </tr>
+                        <tr>
+                        <th scope="row"> ISO_OFFSET_DATE_TIME</th>
+                        <td> Date Time with Offset </td>
+                        <td>'2023-05-15T13:45:30.12Z'</td>
+                        </tr>
+                        <tr>
+                        <th scope="row"> ISO_ZONED_DATE_TIME</th>
+                        <td> Zoned Date Time </td>
+                        <td>'2023-05-15T13:45:30.12Z'</td>
+                        </tr>
+                        <tr>
+                        <th scope="row"> ISO_DATE_TIME</th>
+                        <td> Date and time with ZoneId </td>
+                        <td>'2023-05-15T13:45:30.12Z'</td>
+                        </tr>
+                        <tr>
+                        <th scope="row"> ISO_INSTANT</th>
+                        <td> Date and Time of an Instant </td>
+                        <td>'2023-05-15T13:45:30.120Z'</td>
+                        </tr>
+                        <tr>
+                        <th scope="row"> RFC_1123_DATE_TIME</th>
+                        <td> RFC 1123 / RFC 822 </td>
+                        <td>'Mon, 15 May 2023 13:45:30 GMT'</td>
                         </tr>
                         </table>
                         <P>

@@ -42,6 +42,16 @@ public class CustomDateTimeFormatterTest {
     System.out.println(new CustomDateTimeFormatter("ISO_ORDINAL_DATE").format(dateTime));
     System.out.println(new CustomDateTimeFormatter("ISO_WEEK_DATE").format(dateTime));
 
+    System.out.println(new CustomDateTimeFormatter("ISO_OFFSET_DATE").format(dateTime));
+    System.out.println(new CustomDateTimeFormatter("ISO_OFFSET_TIME").format(dateTime));
+    System.out.println(new CustomDateTimeFormatter("ISO_OFFSET_DATE_TIME").format(dateTime));
+    System.out.println(new CustomDateTimeFormatter("ISO_ZONED_DATE_TIME").format(dateTime));
+    System.out.println(new CustomDateTimeFormatter("ISO_DATE_TIME").format(dateTime));
+    System.out.println(new CustomDateTimeFormatter("ISO_INSTANT").format(dateTime));
+    System.out.println(new CustomDateTimeFormatter("RFC_1123_DATE_TIME").format(dateTime));
+
+    System.out.println(new CustomDateTimeFormatter("VV zzz O X x Z").format(dateTime));
+
     assertEquals(1684158330L, new CustomDateTimeFormatter("EPOCH_SECONDS").format(dateTime));
     assertEquals(1684158330120L, new CustomDateTimeFormatter("EPOCH_MILLISECONDS").format(dateTime));
     assertEquals("20230515", new CustomDateTimeFormatter("BASIC_ISO_DATE").format(dateTime));
@@ -53,6 +63,15 @@ public class CustomDateTimeFormatterTest {
     assertEquals("2023-135", new CustomDateTimeFormatter("ISO_ORDINAL_DATE").format(dateTime));
     assertEquals("2023-W20-1", new CustomDateTimeFormatter("ISO_WEEK_DATE").format(dateTime));
     
+    assertEquals("2023-05-15Z", new CustomDateTimeFormatter("ISO_OFFSET_DATE").format(dateTime));
+    assertEquals("13:45:30.12Z", new CustomDateTimeFormatter("ISO_OFFSET_TIME").format(dateTime));
+    assertEquals("2023-05-15T13:45:30.12Z", new CustomDateTimeFormatter("ISO_OFFSET_DATE_TIME").format(dateTime));
+    assertEquals("2023-05-15T13:45:30.12Z", new CustomDateTimeFormatter("ISO_ZONED_DATE_TIME").format(dateTime));
+    assertEquals("2023-05-15T13:45:30.12Z", new CustomDateTimeFormatter("ISO_DATE_TIME").format(dateTime));
+    assertEquals("2023-05-15T13:45:30.120Z", new CustomDateTimeFormatter("ISO_INSTANT").format(dateTime));
+    assertEquals("Mon, 15 May 2023 13:45:30 GMT", new CustomDateTimeFormatter("RFC_1123_DATE_TIME").format(dateTime));
+
+    assertEquals("Z Z GMT Z +00 +0000", new CustomDateTimeFormatter("VV zzz O X x Z").format(dateTime));
   }
   
 }
