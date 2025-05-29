@@ -45,6 +45,17 @@ public class ObjectMapperConfigurationTest {
             )
     );
     
+    assertEquals(
+            "{\"float\":1.7,\"double\":2.7,\"type\":\"*/*\"}"
+            , mapper.writeValueAsString(
+                    ImmutableMap.<String, Object>builder()
+                            .put("float", 1.7F)
+                            .put("double", 2.7)
+                            .put("type", MediaType.ANY_TYPE)
+                            .build()
+            )
+    );
+    
   }
   
 }

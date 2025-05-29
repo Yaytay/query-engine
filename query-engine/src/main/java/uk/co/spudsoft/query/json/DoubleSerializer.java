@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 njt
+ * Copyright (C) 2025 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ import java.io.IOException;
 /**
  * Jackson {@link com.fasterxml.jackson.databind.ser.std.StdSerializer} for writing {@link Double} objects without trailing zeros.
  *
- * @author njt
+ * @author jtalbut
  */
 public class DoubleSerializer extends StdSerializer<Double> {
 
