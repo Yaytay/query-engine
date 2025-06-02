@@ -16,10 +16,12 @@
  */
 package uk.co.spudsoft.query.exec.fmts.json;
 
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.jackson.DatabindCodec;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -82,6 +84,7 @@ public class FormatJsonInstanceTest {
             .dateFormat("d MMMM uuuu")
             .dateTimeFormat("d MMMM uuuu h:mm a")
             .timeFormat("h:mm a")
+            .decimalFormat("0.00")
             .build();
     FormatJsonInstance instance = new FormatJsonInstance(null, definition);
     // Create a test DataRow with different types of data
@@ -89,11 +92,16 @@ public class FormatJsonInstanceTest {
     DataRow row = DataRow.create(types,
             "dateValue", LocalDate.of(2023, 5, 15),
             "timeValue", LocalTime.of(13, 45, 30),
-            "dateTimeValue", LocalDateTime.of(2023, 5, 15, 13, 45, 30)
+            "dateTimeValue", LocalDateTime.of(2023, 5, 15, 13, 45, 30),
+            "decimalValue", 12.0
     );
 
     // Convert to JSON
-    JsonObject result = new JsonObject(instance.toJsonBuffer(row));
+    Buffer bufferJson = instance.toJsonBuffer(row);
+    JsonObject result = new JsonObject(bufferJson);
+    String stringJson = bufferJson.toString(StandardCharsets.UTF_8);
+    
+    assertEquals("{\"dateValue\":\"15 May 2023\",\"timeValue\":\"1:45 pm\",\"dateTimeValue\":\"15 May 2023 1:45 pm\",\"decimalValue\":12.00}", stringJson);
 
     // Date/time values might be formatted as strings
     assertEquals("15 May 2023", result.getValue("dateValue"));
@@ -106,7 +114,7 @@ public class FormatJsonInstanceTest {
     FormatJson definition = FormatJson.builder()
             .dateFormat("uuuu-MM-dd")
             .dateTimeFormat("uuuu-MM-dd'T'HH:mm:ss")
-            .timeFormat("HH:mm:ss")
+            .timeFormat("HH:mm:ss")            
             .build();
     FormatJsonInstance instance = new FormatJsonInstance(null, definition);
     // Create a test DataRow with different types of data
