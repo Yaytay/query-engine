@@ -80,6 +80,31 @@ public class RsqlEvaluator implements RSQLVisitor<Boolean, DataRow> {
 
   }
 
+  /**
+   * Base class for performing comparisons that are always string comparisons.
+   * Note that for non-String field this will use the default "toString" method of the value, it will not use any specific formatting configured for the output.
+   */
+  abstract static class RsqlOperatorString implements RsqlOperator {
+
+    abstract boolean compare(String rowValue, List<String> args);
+
+    @Override
+    public <T> boolean operate(String field, RsqlComparator<T> rsqlComparator, Object rowValue, List<String> arguments) {
+      if (rsqlComparator != null) {
+        throw new AssertionError("rsqlComparator must be null");
+      }
+      if (rowValue == null) {
+        return compare(null, arguments);
+      } else if (rowValue instanceof String stringValue) {
+        return compare(stringValue, arguments);
+      } else {
+        String stringValue = rowValue.toString();
+        return compare(stringValue, arguments);
+      }
+    }
+
+  }
+
   static class RsqlOperatorIn extends RsqlOperatorMulti {
     @Override
     <T> boolean compare(RsqlComparator<T> rsqlComparator, T rowValue, Set<T> args) {
@@ -158,6 +183,7 @@ public class RsqlEvaluator implements RSQLVisitor<Boolean, DataRow> {
           .put(RSQLOperators.LESS_THAN_OR_EQUAL.getSymbol(), new RsqlOperatorLessThanOrEqual())
           .put(RSQLOperators.NOT_EQUAL.getSymbol(), new RsqlOperatorNotEqual())
           .put(RSQLOperators.NOT_IN.getSymbol(), new RsqlOperatorNotIn())
+          .put("=~", new RsqlOperatorRegex())
           .build();
   private static final ImmutableMap<DataType, RsqlComparator<?>> COMPARATOR_MAP = ImmutableMap.<DataType, RsqlComparator<?>>builder()
           .put(DataType.Boolean, new RsqlComparatorBoolean())
@@ -210,11 +236,16 @@ public class RsqlEvaluator implements RSQLVisitor<Boolean, DataRow> {
         logger.warn("The operator specified in the RSQL expression ({}) is not handled", operator.getSymbol());
         throw new IllegalArgumentException("The operator specified in the RSQL expression is not handled");
       }
-
-      RsqlComparator<?> rsqlComparator = COMPARATOR_MAP.get(type);
-      if (rsqlComparator == null) {
-        logger.warn("The data type {} is not handled", type);
-        throw new IllegalStateException("The data type accessed in the RSQL expression is not handled");
+      
+      RsqlComparator<?> rsqlComparator;
+      if (rsqlOperator instanceof RsqlOperatorString) {
+        rsqlComparator = null;
+      } else {
+        rsqlComparator = COMPARATOR_MAP.get(type);
+        if (rsqlComparator == null) {
+          logger.warn("The data type {} is not handled", type);
+          throw new IllegalStateException("The data type accessed in the RSQL expression is not handled");
+        }
       }
 
       return rsqlOperator.operate(selector, rsqlComparator, rowValue, node.getArguments());

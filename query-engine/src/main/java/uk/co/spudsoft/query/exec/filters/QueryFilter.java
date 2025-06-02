@@ -27,10 +27,17 @@ import uk.co.spudsoft.query.exec.procs.query.ProcessorQueryInstance;
 
 /**
  * Filter for converting _query command line arguments into {@link uk.co.spudsoft.query.exec.procs.query.ProcessorQueryInstance}s.
- * 
- * The value of the argument should be a positive integer, that will be the maximum number of rows returned.
+ * <P>
+ * The value of the argument must be a valid RQL expression.
  * If at all possible query instructions should be implemented in the query, rather than using this filter.
- *
+ * <P>
+ * There are two extensions to the standard RQL processor:
+ * <UL>
+ * <LI>String comparisons may begin or end with a '*' character that will be treated as a wildcard.
+ * <LI>There is a '=~' operator for performing regular expression matches.
+ * </UL>
+ * 
+ * 
  * @author jtalbut
  */
 public class QueryFilter implements Filter {

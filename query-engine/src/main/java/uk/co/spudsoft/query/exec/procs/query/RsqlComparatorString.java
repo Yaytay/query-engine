@@ -44,4 +44,26 @@ public class RsqlComparatorString extends AbstractRsqlComparator<String> {
     return value;
   }
 
+  @Override
+  public boolean equal(String rowValue, String compareValue) {
+    if (rowValue == null) {
+      return compareValue == null;
+    } else if (compareValue == null) {
+      return false;
+    }
+    if (compareValue.startsWith("*")) {
+      if (compareValue.endsWith("*")) {
+        return rowValue.contains(compareValue.substring(1, compareValue.length() - 1));
+      } else {
+        return rowValue.endsWith(compareValue.substring(1, compareValue.length()));
+      }
+    } else if (compareValue.endsWith("*")) {
+      return rowValue.startsWith(compareValue.substring(0, compareValue.length() - 1));
+    } else {
+      return super.equal(rowValue, compareValue);
+    } 
+  }
+
+  
+  
 }
