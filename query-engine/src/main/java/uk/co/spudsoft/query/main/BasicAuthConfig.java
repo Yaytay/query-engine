@@ -42,6 +42,8 @@ public class BasicAuthConfig {
   private Endpoint defaultIdp;
 
   private Map<String, Endpoint> idpMap = new HashMap<>();
+  
+  private String authorizationPath;
 
   /**
    * Default constructor for the BasicAuthConfig class.
@@ -113,6 +115,31 @@ public class BasicAuthConfig {
   public void setDefaultIdp(Endpoint defaultIdp) {
     this.defaultIdp = defaultIdp;
   }
+
+  /**
+   * Get the path to append to the current host (and scheme) to perform an authorization request.
+   * <P>
+   * This is only useful in a "path hijack" configuration, where some base path on the domain is routed to
+   * the query engine, but other paths are routed to an authorization subsystem.
+   * 
+   * @return the path to append to the current host (and scheme) to perform an authorization request.
+   */
+  public String getAuthorizationPath() {
+    return authorizationPath;
+  }
+
+  /**
+   * Set the path to append to the current host (and scheme) to perform an authorization request.
+   * <P>
+   * This is only useful in a "path hijack" configuration, where some base path on the domain is routed to
+   * the query engine, but other paths are routed to an authorization subsystem.
+   * 
+   * @param authorizationPath the path to append to the current host (and scheme) to perform an authorization request.
+   */
+  public void setAuthorizationPath(String authorizationPath) {
+    this.authorizationPath = authorizationPath;
+  }
+  
 
   /**
    * Get a map of "domains" to IdP URLs that will be consulted if the username in the request is of the form "user@domain".

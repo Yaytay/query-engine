@@ -287,7 +287,7 @@ public class RequestContextBuilder {
 
       Future<String> tokenFuture = null;
       if (basicAuthConfig.getIdpMap() == null || basicAuthConfig.getIdpMap().isEmpty()) {
-        if (basicAuthConfig.getDefaultIdp() == null) {
+        if (basicAuthConfig.getDefaultIdp() == null && Strings.isNullOrEmpty(basicAuthConfig.getAuthorizationPath())) {
           tokenFuture = discoverer.performOpenIdDiscovery(baseRequestUrl(request))
                   .compose(dd -> {
                     String authUrl = dd.getAuthorizationEndpoint();
@@ -305,7 +305,7 @@ public class RequestContextBuilder {
       if (tokenFuture == null) {
         Endpoint authEndpoint;
         try {
-          authEndpoint = findAuthEndpoint(basicAuthConfig, domain, basicAuthConfig.getGrantType() == BasicAuthGrantType.resourceOwnerPasswordCredentials);
+          authEndpoint = findAuthEndpoint(basicAuthConfig, domain, baseRequestUrl(request), basicAuthConfig.getGrantType() == BasicAuthGrantType.resourceOwnerPasswordCredentials);
         } catch (Throwable ex) {
           return Future.failedFuture(ex);
         }
@@ -390,11 +390,31 @@ public class RequestContextBuilder {
    *
    * @param basicAuthConfig The configuration data for basic auth.
    * @param domain The domain used to look up a mapped IdP URL. If null or empty, the default IdP is used.
+   * @param baseUrl The URL used to make this request, with no path or anything thereafter.
    * @return The authentication endpoint URL as a String.
    * @throws IllegalStateException If no valid IdP configuration can be determined.
    */
-  static Endpoint findAuthEndpoint(BasicAuthConfig basicAuthConfig, String domain, boolean requireCredentials) throws IllegalStateException {
+  static Endpoint findAuthEndpoint(BasicAuthConfig basicAuthConfig, String domain, String baseUrl, boolean requireCredentials) throws IllegalStateException {
     Endpoint authEndpoint;
+    if (!Strings.isNullOrEmpty(basicAuthConfig.getAuthorizationPath())) {
+      StringBuilder authUrlBuilder = new StringBuilder();
+      authUrlBuilder.append(baseUrl);
+      if (baseUrl.endsWith("/")) {
+        if (basicAuthConfig.getAuthorizationPath().startsWith("/")) {
+          authUrlBuilder.append(basicAuthConfig.getAuthorizationPath().substring(1));
+        } else {
+          authUrlBuilder.append(basicAuthConfig.getAuthorizationPath());
+        }
+      } else {
+        if (basicAuthConfig.getAuthorizationPath().startsWith("/")) {
+          authUrlBuilder.append(basicAuthConfig.getAuthorizationPath());
+        } else {
+          authUrlBuilder.append("/").append(basicAuthConfig.getAuthorizationPath());
+        }
+      }
+      authEndpoint = new Endpoint(authUrlBuilder.toString(), basicAuthConfig.getDiscoveryEndpointCredentials());
+      return authEndpoint;
+    }
     if (basicAuthConfig.getIdpMap() == null || basicAuthConfig.getIdpMap().isEmpty()) {
       authEndpoint = basicAuthConfig.getDefaultIdp();
       if (authEndpoint == null || Strings.isNullOrEmpty(authEndpoint.getUrl())) {
