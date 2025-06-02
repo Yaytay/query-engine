@@ -127,14 +127,21 @@ public class RequestContextBuilder {
 
   static String baseRequestUrl(HttpServerRequest request) {
     StringBuilder sb = new StringBuilder();
-    String scheme = request.scheme();
-    sb.append(scheme);
+    
+    MultiMap headers = request.headers();
+    
+    String proto = headers == null ? null : headers.get("X-Forwarded-Proto");
+    if (Strings.isNullOrEmpty(proto) || (!"https".equals(proto) && !"http".equals(proto))) {
+      proto = request.scheme();
+    }
+    
+    sb.append(proto);
     sb.append("://");
     HostAndPort hap = request.authority();
     if (hap != null) {
       sb.append(hap.host());
       int port = hap.port();
-      if (!isStandardHttpsPort(scheme, port) && !isStandardHttpPort(scheme, port)) {
+      if (port > 0 && !isStandardHttpsPort(proto, port) && !isStandardHttpPort(proto, port)) {
         sb.append(":");
         sb.append(port);
       }
