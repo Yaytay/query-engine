@@ -186,7 +186,6 @@ public class SessionConfig {
         entry.getValue().validate(path + ".oauth." + entry.getKey());
       }
     }
-    
   }
   
 }

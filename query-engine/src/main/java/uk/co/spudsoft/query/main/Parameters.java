@@ -1087,14 +1087,17 @@ public class Parameters {
     if (jwt != null) {
       jwt.validate("jwt");
     }
-    if (session != null && session.getOauth() != null && !session.getOauth().isEmpty()) {
-      if (jwt == null) {
-        throw new IllegalArgumentException("Sessions are configured with oauth without any acceptable jwt configuration.");
-      } else {
-        if (jwt.getJwksEndpoints() == null || jwt.getJwksEndpoints().isEmpty()) {
-          throw new IllegalArgumentException("Sessions are configured with oauth without known JWKS endpoints being configured, please set jwt.jwksEndpoints.");
+    if (session != null) {
+      if (session.getOauth() != null && !session.getOauth().isEmpty()) {
+        if (jwt == null) {
+          throw new IllegalArgumentException("Sessions are configured with oauth without any acceptable jwt configuration.");
+        } else {
+          if (jwt.getJwksEndpoints() == null || jwt.getJwksEndpoints().isEmpty()) {
+            throw new IllegalArgumentException("Sessions are configured with oauth without known JWKS endpoints being configured, please set jwt.jwksEndpoints.");
+          }
         }
       }
+      session.validate("session");
     }
     if (pipelineCache != null) {
       pipelineCache.validate("pipelineCache");

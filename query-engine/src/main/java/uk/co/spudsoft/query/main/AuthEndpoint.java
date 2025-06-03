@@ -104,7 +104,12 @@ public class AuthEndpoint {
    */
   public void validate(String path) {
     if (Strings.isNullOrEmpty(issuer)) {
-      throw new IllegalArgumentException(path + ".issuer not configured");
+      if (Strings.isNullOrEmpty(authorizationEndpoint)) {
+        throw new IllegalArgumentException(path + ".issuer and " + path + ".authorizationEndpoint not configured");
+      }
+    }
+    if (credentials == null) {
+      throw new IllegalArgumentException(path + ".credentials not configured");
     }
   }
   

@@ -256,6 +256,8 @@ public final class PipelineDefnLoader {
   private Future<DirCacheTree.Directory> navigateDirs(RequestContext req, DirCacheTree.Directory dir, String[] parts, int offset) {
 
     DirCacheTree.Node permsNode = dir.get(PERMISSIONS_FILENAME);
+    
+    logger.debug("Navigating {} for {}[{}]", dir, parts, offset + 1);
 
     DirCacheTree.Directory childDir = offset < parts.length - 2 ? dir.getDir(parts[offset + 1]) : null;
     if (permsNode != null) {
@@ -374,7 +376,8 @@ public final class PipelineDefnLoader {
                     return Future.succeededFuture((DirCacheTree.File) child);
                   }
                 }
-              }    
+              }
+              logger.warn("Failed to find {}", path);
               return Future.failedFuture(new ServiceException(404, "Not found"));
             });
   }

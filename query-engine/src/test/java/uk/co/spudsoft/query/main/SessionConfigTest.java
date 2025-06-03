@@ -84,11 +84,12 @@ public class SessionConfigTest {
       sc.setOauth(oauth);
       sc.validate("session");
     });
-    assertEquals("session.oauth.ms.issuer not configured", ex.getMessage());
+    assertEquals("session.oauth.ms.issuer and session.oauth.ms.authorizationEndpoint not configured", ex.getMessage());
     
     Map<String, AuthEndpoint> oauth = new HashMap<>();
     AuthEndpoint auth = new AuthEndpoint();
     auth.setIssuer("issuer1");
+    auth.setCredentials(new ClientCredentials("id", "secret"));
     oauth.put("ms", auth);
     sessionConfig.setOauth(oauth);
     sessionConfig.validate("session");

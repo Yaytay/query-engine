@@ -72,11 +72,14 @@ public class AuthEndpointTest {
   @Test
   public void testValidate() throws IllegalArgumentException {
     AuthEndpoint authEndpoint = new AuthEndpoint();
-    IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+    assertEquals("auth.issuer and auth.authorizationEndpoint not configured", assertThrows(IllegalArgumentException.class, () -> {
       authEndpoint.validate("auth");
-    });
-    assertEquals("auth.issuer not configured", ex.getMessage());
+    }).getMessage());
     authEndpoint.setIssuer("issuer");
+    assertEquals("auth.credentials not configured", assertThrows(IllegalArgumentException.class, () -> {
+      authEndpoint.validate("auth");
+    }).getMessage());
+    authEndpoint.setCredentials(new ClientCredentials("id", "secret"));
     authEndpoint.validate("auth");
   }
 
