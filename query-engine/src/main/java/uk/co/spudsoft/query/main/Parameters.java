@@ -1100,6 +1100,7 @@ public class Parameters {
    * add additional environmental information to the context.
    * @return the additional data that is made available via the request object.
    */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public Map<String, String> getRequestContextEnvironment() {
     return requestContextEnvironment;
   }
@@ -1118,6 +1119,7 @@ public class Parameters {
    * add additional environmental information to the context.
    * @param requestContextEnvironment the additional data that is made available via the request object.
    */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public void setRequestContextEnvironment(Map<String, String> requestContextEnvironment) {
     this.requestContextEnvironment = requestContextEnvironment;
   }
