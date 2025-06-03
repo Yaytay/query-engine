@@ -124,6 +124,7 @@ public class DynamicEndpointPipelineIT {
     RequestContext req = new RequestContext(
             null
             , null
+            , null
             , "localhost"
             , null
             , null
@@ -221,6 +222,7 @@ public class DynamicEndpointPipelineIT {
     RequestContext req = new RequestContext(
             null
             , null
+            , null
             , "localhost"
             , null
             , null
@@ -316,6 +318,7 @@ public class DynamicEndpointPipelineIT {
     RequestContext req = new RequestContext(
             null
             , null
+            , null
             , "localhost"
             , null
             , null
@@ -407,6 +410,7 @@ public class DynamicEndpointPipelineIT {
     
     RequestContext req = new RequestContext(
             null
+            , null
             , null
             , "localhost"
             , null

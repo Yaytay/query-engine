@@ -91,6 +91,7 @@ public class SourceSqlStreamingInstanceTest {
       RequestContext req = new RequestContext(
               null
               , null
+              , null
               , "localhost"
               , null
               , null
@@ -152,6 +153,7 @@ public class SourceSqlStreamingInstanceTest {
       
       RequestContext req = new RequestContext(
               null
+              , null
               , null
               , "localhost"
               , null

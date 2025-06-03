@@ -50,7 +50,7 @@ public class QueryRouterTest {
   public void testBadMethod(Vertx vertx) {
 
     PipelineDefnLoader loader = mock(PipelineDefnLoader.class);
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, null, null, true, null, false, null, Collections.singletonList("aud"), null);
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, null, null, true, null, false, null, Collections.singletonList("aud"), null, null);
     QueryRouter router = new QueryRouter(vertx, new AuditorMemoryImpl(), rcb, loader, null, System.getProperty("java.io.tmpdir"), true);
 
     RoutingContext routingContext = mock(RoutingContext.class);
@@ -67,7 +67,7 @@ public class QueryRouterTest {
   public void testShortPath(Vertx vertx) {
 
     PipelineDefnLoader loader = mock(PipelineDefnLoader.class);
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, null, null, true, null, false, null, Collections.singletonList("aud"), null);
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, null, null, true, null, false, null, Collections.singletonList("aud"), null, null);
     QueryRouter router = new QueryRouter(vertx, new AuditorMemoryImpl(), rcb, loader, null, System.getProperty("java.io.tmpdir"), true);
 
     RoutingContext routingContext = mock(RoutingContext.class);

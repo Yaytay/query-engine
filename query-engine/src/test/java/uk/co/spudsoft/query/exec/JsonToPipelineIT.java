@@ -75,6 +75,7 @@ public class JsonToPipelineIT {
     RequestContext req = new RequestContext(
             null
             , null
+            , null
             , "localhost"
             , null
             , null

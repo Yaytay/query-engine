@@ -96,6 +96,7 @@ public class FormatAtomInstanceTest {
     RequestContext req = new RequestContext(
       null
       , null
+      , null
       , "localhost"
       , "/data/atom"
       , new HeadersMultiMap()

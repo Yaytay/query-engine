@@ -826,6 +826,7 @@ public class Main extends Application {
             , jwtConfig.getIssuerHostPath()
             , jwtConfig.getRequiredAudiences()
             , params.getSession().getSessionCookie() != null ? params.getSession().getSessionCookie().getName() : null
+            , params.getRequestContextEnvironment()
     );
     return rcb;
   }

@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.conditions;
 
+import com.google.common.collect.ImmutableMap;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpServerRequest;
@@ -73,7 +74,8 @@ public class ConditionInstanceTest {
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3&param3=true"));
 
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null
+            , ImmutableMap.<String, String>builder().put("ev1", "good").put("ev2", "bad").build());
     RequestContext ctx = rcb.buildRequestContext(req).result();
 
     assertFalse(new ConditionInstance("request").evaluate(ctx, DataRow.EMPTY_ROW));
@@ -89,6 +91,12 @@ public class ConditionInstanceTest {
     assertTrue(new ConditionInstance("params.get('param3')").evaluate(ctx, null));
     assertTrue(new ConditionInstance("params['param3']").evaluate(ctx, null));
     assertFalse(new ConditionInstance("params['param4']").evaluate(ctx, null));
+
+    assertTrue(new ConditionInstance("'good' == request.env['ev1']").evaluate(ctx, null));
+    assertTrue(new ConditionInstance("'good' == request.env.ev1").evaluate(ctx, null));
+    assertFalse(new ConditionInstance("'good' == request.env['ev2']").evaluate(ctx, null));
+    assertFalse(new ConditionInstance("'good' == request.env['ev3']").evaluate(ctx, null));
+    assertFalse(new ConditionInstance("'good' == request.env.ev3").evaluate(ctx, null));
   }
 
 }

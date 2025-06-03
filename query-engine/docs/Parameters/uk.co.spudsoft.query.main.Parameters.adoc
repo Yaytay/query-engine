@@ -238,4 +238,18 @@ Soft links will not be followed.
  
 
 The path must be valid (Query Engine will not start if it is not), but may be set to "/dev/null" in which case no documentation will be served at all.
+| [[requestContextEnvironment]]requestContextEnvironment
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Map.html[Map]<link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String], link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]>
+| The additional data that is made available via the request object.
+
+The uk.co.spudsoft.query.exec.conditions.RequestContext  is made available in both 
+ uk.co.spudsoft.query.exec.conditions.ConditionInstance s and various templates 
+ (such as  and ).
+ By default this context contains information specific to the request, and very little information about
+ the service it is running in.
+ 
+
+The entire requestContextEnvironment is also available (with no change)
+ using uk.co.spudsoft.query.exec.conditions.RequestContext#getEnv , providing a way to
+ add additional environmental information to the context.
 |===

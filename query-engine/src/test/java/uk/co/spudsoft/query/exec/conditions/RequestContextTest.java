@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.conditions;
 
+import com.google.common.collect.ImmutableMap;
 import inet.ipaddr.IPAddressString;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.net.SocketAddress;
@@ -95,7 +96,7 @@ public class RequestContextTest {
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
 
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null, null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
 
     assertEquals("bob.fred", ctx.getJwt().getClaim("preferred_username"));
@@ -113,7 +114,7 @@ public class RequestContextTest {
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
 
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null, null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
 
     assertEquals("security-admin-console", ctx.getJwt().getClaim("aud"));
@@ -124,7 +125,7 @@ public class RequestContextTest {
   public void testGetClientIp() {
     HttpServerRequest request = mock(HttpServerRequest.class);
     when(request.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
-    RequestContext ctx = new RequestContext(request, null);
+    RequestContext ctx = new RequestContext(null, request, null);
     assertEquals(new IPAddressString("111.122.133.144"), ctx.getClientIp());
 
     assertEquals("{\"clientIp\":\"111.122.133.144\"}", ctx.toString());
@@ -134,7 +135,7 @@ public class RequestContextTest {
   public void testGetArguments() {
     HttpServerRequest request = mock(HttpServerRequest.class);
     when(request.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
-    RequestContext ctx = new RequestContext(request, null);
+    RequestContext ctx = new RequestContext(null, request, null);
     assertEquals(new IPAddressString("111.122.133.144"), ctx.getClientIp());
 
     assertEquals("{\"clientIp\":\"111.122.133.144\"}", ctx.toString());
@@ -144,7 +145,7 @@ public class RequestContextTest {
   public void testClientIpIsInV4() {
     HttpServerRequest request = mock(HttpServerRequest.class);
     when(request.getHeader("X-Cluster-Client-IP")).thenReturn("111.122.133.144");
-    RequestContext requestContext = new RequestContext(request, null);
+    RequestContext requestContext = new RequestContext(null, request, null);
     assertEquals(new IPAddressString("111.122.133.144"), requestContext.getClientIp());
     assertTrue(requestContext.clientIpIsIn("111.122.133.144"));
     assertFalse(requestContext.clientIpIsIn("111.122.133.145"));
@@ -160,7 +161,7 @@ public class RequestContextTest {
   public void testClientIpIsInV6() {
     HttpServerRequest request = mock(HttpServerRequest.class);
     when(request.getHeader("X-Cluster-Client-IP")).thenReturn("fe80::14e0:18c7:e093:f8dd%18");
-    RequestContext requestContext = new RequestContext(request, null);
+    RequestContext requestContext = new RequestContext(null, request, null);
     assertEquals(new IPAddressString("fe80::14e0:18c7:e093:f8dd%18"), requestContext.getClientIp());
     assertTrue(requestContext.clientIpIsIn("fe80::14e0:18c7:e093:f8dd%18"));
     assertTrue(requestContext.clientIpIsIn("fe80::14e0:18c7:e093:f8dd/128"));
@@ -176,7 +177,7 @@ public class RequestContextTest {
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
 
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null, null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
 
     assertEquals("Bob Fred", ctx.getName());
@@ -191,7 +192,7 @@ public class RequestContextTest {
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_GIVENNAME_FAMILYNAME);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
 
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null, null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
 
     assertEquals("Bob Fred", ctx.getName());
@@ -206,7 +207,7 @@ public class RequestContextTest {
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_GIVENNAME);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
 
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null, null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
 
     assertEquals("Bob", ctx.getName());
@@ -221,7 +222,7 @@ public class RequestContextTest {
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_FAMILYNAME);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
 
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null, null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
 
     assertEquals("Fred", ctx.getName());
@@ -236,7 +237,7 @@ public class RequestContextTest {
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_PREFERREDUSERNAME);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
 
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null, null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
 
     assertEquals("bob.fred", ctx.getName());
@@ -249,12 +250,26 @@ public class RequestContextTest {
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_PREFERREDUSERNAME);
     when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
    
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null, null);
     RequestContext ctx = rcb.buildRequestContext(req).result();
     
     assertTrue(ctx.isInGroup("group1"));
     assertFalse(ctx.isInGroup("group4"));
     assertTrue(ctx.isInGroup("group4", "group2"));
+  }
+
+  @Test
+  public void testGetEnvVar() {
+    HttpServerRequest req = mock(HttpServerRequest.class);
+    when(req.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
+    when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_PREFERREDUSERNAME);
+    when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
+
+    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null
+            , ImmutableMap.<String, String>builder().put("ev1", "good").put("ev2", "bad").build());
+    RequestContext ctx = rcb.buildRequestContext(req).result();
+
+    assertEquals("good", ctx.getEnv().get("ev1"));
   }
 
 }

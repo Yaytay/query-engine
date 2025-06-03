@@ -106,6 +106,7 @@ public class PipelineExecutorImplTest {
     RequestContext req = new RequestContext(
             null
             , null
+            , null
             , "localhost"
             , null
             , null
@@ -168,6 +169,7 @@ public class PipelineExecutorImplTest {
     
     RequestContext req = new RequestContext(
             null
+            , null
             , null
             , "localhost"
             , null
@@ -328,7 +330,7 @@ public class PipelineExecutorImplTest {
 
   @Test
   public void testEvaluateDefaultValues() {
-    RequestContext requestContext = new RequestContext("id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    RequestContext requestContext = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     
     Argument arg = Argument.builder()
             .type(DataType.Date)

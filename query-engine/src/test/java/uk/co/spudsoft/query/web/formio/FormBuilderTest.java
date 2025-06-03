@@ -183,7 +183,7 @@ public class FormBuilderTest {
             )
             .build();
     
-    RequestContext requestContext = new RequestContext("requestId", "url", "host", "path", null, null, null, new IPAddressString("0.0.0.0"), null);
+    RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "path", null, null, null, new IPAddressString("0.0.0.0"), null);
 
     PipelineAndFile paf = new PipelineDefnLoader.PipelineAndFile(new File(Path.of("name"), LocalDateTime.now(), 3), pipeline);
     

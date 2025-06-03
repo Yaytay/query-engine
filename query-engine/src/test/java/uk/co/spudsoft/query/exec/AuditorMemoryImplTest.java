@@ -42,8 +42,8 @@ public class AuditorMemoryImplTest {
   
   @Test
   public void testDeleteCacheFile() {
-    RequestContext context = new RequestContext("id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
-    RequestContext context2 = new RequestContext("id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    RequestContext context = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    RequestContext context2 = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     AuditorMemoryImpl auditor = new AuditorMemoryImpl();
     
     LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
@@ -74,7 +74,7 @@ public class AuditorMemoryImplTest {
     );
     
     Jwt jwt = new Jwt(new JsonObject(), new JsonObject("{\"iss\":\"issuer\",\"sub\":\"subject\",\"preferred_username\":\"username\"}"), null, null);
-    RequestContext context = new RequestContext("id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), jwt);
+    RequestContext context = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), jwt);
     
     rule = RateLimitRule.builder().scope(Arrays.asList(RateLimitScopeType.clientip)).build();
     assertTrue(AuditorMemoryImpl.rowMatches(context, rule, goodRow));
@@ -110,10 +110,10 @@ public class AuditorMemoryImplTest {
   @Test
   public void testNotFound() {
     // Just checking that these don't throw
-    RequestContext context = new RequestContext("id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    RequestContext context = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     AuditorMemoryImpl auditor = new AuditorMemoryImpl();
     auditor.recordException(context, new Throwable("test"));
-    context = new RequestContext(null, "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    context = new RequestContext(null, null, "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     auditor.recordException(context, new Throwable("test"));
   }
 

@@ -53,7 +53,7 @@ public class JexlEvaluatorTest {
     );
     IPAddressString clientIp = new IPAddressString("127.0.0.2");
     
-    RequestContext request = new RequestContext("requestId", "http://url", "host", "path", params, headers, cookies, clientIp, jwt);
+    RequestContext request = new RequestContext(null, "requestId", "http://url", "host", "path", params, headers, cookies, clientIp, jwt);
     
     assertEquals(1, new JexlEvaluator("1").evaluateAsObject(request, null));
     assertEquals(28, new JexlEvaluator("28").evaluateAsObject(request, null));

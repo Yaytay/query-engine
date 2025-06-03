@@ -56,6 +56,7 @@ public class PipelineDefnLoaderTest {
     RequestContext req = new RequestContext(
             null
             , null
+            , null
             , "localhost"
             , null
             , null
@@ -128,6 +129,7 @@ public class PipelineDefnLoaderTest {
 
     RequestContext req = new RequestContext(
             null
+            , null
             , null
             , "unknown"
             , null

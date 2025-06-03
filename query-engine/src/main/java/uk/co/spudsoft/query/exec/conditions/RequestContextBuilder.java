@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.exec.conditions;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
@@ -33,6 +34,7 @@ import io.vertx.ext.web.client.WebClient;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,6 +72,7 @@ public class RequestContextBuilder {
   private final String issuerHostPath;
   private final ImmutableList<String> audList;
   private final String sessionCookieName;
+  private final ImmutableMap<String, String> requestContextEnvironment;
 
   /**
    * Constructor.
@@ -94,6 +97,7 @@ public class RequestContextBuilder {
    * token is acceptable).
    * @param sessionCookie The name of the session cookie that should contain the ID of a previously recorded JWT. Only valid if
    * login is enabled.
+   * @param requestContextEnvironment The additional data that is made available via the request object.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The WebClient should be created specifically for use by the RequestContextBuilder.")
   public RequestContextBuilder(WebClient webClient,
@@ -106,7 +110,8 @@ public class RequestContextBuilder {
            boolean deriveIssuerFromHost,
            String issuerHostPath,
            List<String> requiredAuds,
-           String sessionCookie
+           String sessionCookie,
+           Map<String, String> requestContextEnvironment
   ) {
     this.webClient = webClient;
     this.validator = validator;
@@ -119,6 +124,7 @@ public class RequestContextBuilder {
     this.issuerHostPath = ensureNonBlankStartsWith(issuerHostPath, "/");
     this.audList = ImmutableCollectionTools.copy(requiredAuds);
     this.sessionCookieName = sessionCookie;
+    this.requestContextEnvironment = ImmutableCollectionTools.copy(requestContextEnvironment);
   }
 
   static String ensureNonBlankStartsWith(String path, String start) {
@@ -223,7 +229,7 @@ public class RequestContextBuilder {
               })
               .compose(jwt -> {
                 request.resume();
-                return build(request, jwt);
+                return build(requestContextEnvironment, request, jwt);
               }, ex -> {
                 request.resume();
                 logger.info("Failed to validate token from cookie {}: {}", sessionCookie.getValue(), ex.getMessage());
@@ -253,11 +259,11 @@ public class RequestContextBuilder {
 
     if (!Strings.isNullOrEmpty(openIdIntrospectionHeader)) {
 
-      return buildFromBase64Json(request, openIdIntrospectionHeader);
+      return buildFromBase64Json(requestContextEnvironment, request, openIdIntrospectionHeader);
 
     } else if (Strings.isNullOrEmpty(authHeader)) {
 
-      return build(request, null);
+      return build(requestContextEnvironment, request, null);
 
     } else if (authHeader.startsWith(BASIC)) {
 
@@ -325,7 +331,7 @@ public class RequestContextBuilder {
                 request.resume();
               })
               .compose(jwt -> {
-                return build(request, jwt);
+                return build(requestContextEnvironment, request, jwt);
               });
 
     } else if (authHeader.startsWith(BEARER)) {
@@ -344,18 +350,18 @@ public class RequestContextBuilder {
               })
               .compose(jwt -> {
                 request.resume();
-                return build(request, jwt);
+                return build(requestContextEnvironment, request, jwt);
               });
 
     } else {
 
       logger.warn("Unable to process auth header: {}", authHeader);
-      return build(request, null);
+      return build(requestContextEnvironment, request, null);
 
     }
   }
 
-  static Future<RequestContext> buildFromBase64Json(HttpServerRequest request, String base64Json) {
+  static Future<RequestContext> buildFromBase64Json(Map<String, String> environment, HttpServerRequest request, String base64Json) {
     try {
       String json = base64Json;
       try {
@@ -364,7 +370,7 @@ public class RequestContextBuilder {
       } catch (Throwable ex) {
       }
       Jwt jwt = new Jwt(null, new JsonObject(json), null, null);
-      RequestContext result = new RequestContext(request, jwt);
+      RequestContext result = new RequestContext(environment, request, jwt);
       return Future.succeededFuture(result);
     } catch (Throwable ex) {
       logger.warn("Failed to create RequestContext: ", ex);
@@ -372,9 +378,9 @@ public class RequestContextBuilder {
     }
   }
 
-  static Future<RequestContext> build(HttpServerRequest request, Jwt jwt) {
+  static Future<RequestContext> build(Map<String, String> environment, HttpServerRequest request, Jwt jwt) {
     try {
-      RequestContext result = new RequestContext(request, jwt);
+      RequestContext result = new RequestContext(environment, request, jwt);
       return Future.succeededFuture(result);
     } catch (Throwable ex) {
       logger.warn("Failed to create RequestContext: ", ex);

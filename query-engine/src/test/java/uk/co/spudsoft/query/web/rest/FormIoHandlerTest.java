@@ -33,7 +33,7 @@ public class FormIoHandlerTest {
   @Test
   public void testPipelineStreamExceptions() throws IOException {
     
-    RequestContext requestContext = new RequestContext("requestId", "url", "host", "path", null, null, null, new IPAddressString("0.0.0.0"), null);
+    RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "path", null, null, null, new IPAddressString("0.0.0.0"), null);
 
     FormIoHandler.PipelineStreamer streamer = new FormIoHandler.PipelineStreamer(requestContext, null, 0, new FilterFactory(Collections.emptyList()));
     streamer.write(null);

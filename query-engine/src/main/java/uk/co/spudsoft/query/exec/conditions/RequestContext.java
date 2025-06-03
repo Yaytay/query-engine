@@ -88,14 +88,17 @@ public class RequestContext {
 
   private long rowsWritten;
 
+  private ImmutableMap<String, String> environment;
   /**
    * Constructor.
    *
+   * @param environment Additional data to make available.
    * @param request HttpServerRequest to extract the context from.
    * @param jwt JsonWebToken extracted from the request.
    *
    */
-  public RequestContext(HttpServerRequest request, Jwt jwt) {
+  public RequestContext(Map<String, String> environment, HttpServerRequest request, Jwt jwt) {
+    this.environment = ImmutableCollectionTools.copy(environment);
     this.startTime = System.currentTimeMillis();
     this.requestId = extractRequestId();
     this.url = request.absoluteURI();
@@ -113,6 +116,7 @@ public class RequestContext {
 
   /**
    * Manual constructor for use in test cases.
+   * @param environment Additional data to make available.
    * @param requestId an ID that is unique to this request.
    * @param url The absolute URL of the request.
    * @param host The value to use for the host.
@@ -123,7 +127,8 @@ public class RequestContext {
    * @param clientIp Client IP address that should have been extracted from the request.
    * @param jwt JWT that should have been extracted from the request.
    */
-  public RequestContext(String requestId, String url, String host, String path, MultiMap params, MultiMap headers, Set<Cookie> cookies, IPAddressString clientIp, Jwt jwt) {
+  public RequestContext(Map<String, String> environment, String requestId, String url, String host, String path, MultiMap params, MultiMap headers, Set<Cookie> cookies, IPAddressString clientIp, Jwt jwt) {
+    this.environment = ImmutableCollectionTools.copy(environment);
     this.startTime = System.currentTimeMillis();
     this.requestId = requestId;
     this.url = url;
@@ -461,6 +466,14 @@ public class RequestContext {
    */
   public Set<Cookie> getCookies() {
     return cookies;
+  }
+  
+  /**
+   * Get the environment data of the context.
+   * @return the environment data of the context.
+   */
+  public Map<String, String> getEnv() {
+    return environment;
   }
 
   @Override
