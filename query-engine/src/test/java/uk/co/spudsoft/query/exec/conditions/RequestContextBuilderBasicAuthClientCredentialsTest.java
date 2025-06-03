@@ -99,7 +99,7 @@ public class RequestContextBuilderBasicAuthClientCredentialsTest {
     router.route(HttpMethod.GET, "/.well-known/openid-configuration").handler(ctx -> {
       logger.info("Got request to {}", ctx.request().uri());
       JsonObject result = new JsonObject();
-      result.put("authorization_endpoint", RequestContextBuilder.baseRequestUrl(ctx.request()) + "/auth");
+      result.put("token_endpoint", RequestContextBuilder.baseRequestUrl(ctx.request()) + "/auth");
       result.put("jwks_uri", RequestContextBuilder.baseRequestUrl(ctx.request()) + "/jwks");
       HttpServerResponse response = ctx.response();
       response.setStatusCode(200);

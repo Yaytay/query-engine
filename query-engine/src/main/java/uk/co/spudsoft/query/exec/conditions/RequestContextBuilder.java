@@ -290,12 +290,11 @@ public class RequestContextBuilder {
         if (basicAuthConfig.getDefaultIdp() == null && Strings.isNullOrEmpty(basicAuthConfig.getAuthorizationPath())) {
           tokenFuture = discoverer.performOpenIdDiscovery(baseRequestUrl(request))
                   .compose(dd -> {
-                    String authUrl = dd.getAuthorizationEndpoint();
                     if (basicAuthConfig.getGrantType() == BasicAuthGrantType.clientCredentials) {
-                      return performClientCredentialsGrant(authUrl, username, password);
+                      return performClientCredentialsGrant(dd.getTokenEndpoint(), username, password);
                     } else {
                       Endpoint endpoint = new Endpoint();
-                      endpoint.setUrl(authUrl);
+                      endpoint.setUrl(dd.getAuthorizationEndpoint());
                       endpoint.setCredentials(basicAuthConfig.getDiscoveryEndpointCredentials());
                       return performResourceOwnerPasswordCredentials(endpoint, username, password);
                     }
@@ -445,23 +444,23 @@ public class RequestContextBuilder {
     return authEndpoint;
   }
 
-  private Future<String> performClientCredentialsGrant(String authEndpoint, String clientId, String clientSecret) {
-    logger.debug("Performing client_credentials request to {}", authEndpoint);
+  private Future<String> performClientCredentialsGrant(String tokenEndpoint, String clientId, String clientSecret) {
+    logger.debug("Performing client_credentials request to {}", tokenEndpoint);
     MultiMap form = new HeadersMultiMap();
     form.add("grant_type", "client_credentials");
     form.add("client_id", clientId);
     form.add("client_secret", clientSecret);
-    return webClient.postAbs(authEndpoint)
+    return webClient.postAbs(tokenEndpoint)
             .sendForm(form)
             .compose(response -> {
               try {
-                logger.trace("CCG request to {} returned: {} {}", authEndpoint, response.statusCode(), response.bodyAsString());
+                logger.trace("CCG request to {} returned: {} {}", tokenEndpoint, response.statusCode(), response.bodyAsString());
                 JsonObject body = response.bodyAsJsonObject();
                 String token = body.getString("access_token");
-                logger.debug("Client {}@{} got token {}", clientId, authEndpoint, token);
+                logger.debug("Client {}@{} got token {}", clientId, tokenEndpoint, token);
                 return Future.succeededFuture(token);
               } catch (Throwable ex) {
-                logger.warn("Failed to process client credentials grant for {}@{}: ", clientId, authEndpoint, ex);
+                logger.warn("Failed to process client credentials grant for {}@{}: ", clientId, tokenEndpoint, ex);
                 return Future.failedFuture(ex);
               }
             });
