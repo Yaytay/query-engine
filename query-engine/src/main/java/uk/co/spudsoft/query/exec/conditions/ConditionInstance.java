@@ -76,7 +76,15 @@ public class ConditionInstance {
    */
   // Compare the bindings with PipelineInstance#renderTemplate and ProcessorScriptInstance#runSource
   public boolean evaluate(RequestContext request, DataRow row) {
-    return evaluator.evaluate(request, row);
+    boolean result = evaluator.evaluate(request, row);
+    if (!result && logger.isDebugEnabled()) {
+      String sourceText = evaluator.getSourceText();
+      if (sourceText != null) {
+        sourceText = sourceText.replaceAll("\\p{Cntrl}", "");
+      }
+      logger.debug("Condition {} returned false", sourceText);
+    }
+    return result;
   }
   
 }
