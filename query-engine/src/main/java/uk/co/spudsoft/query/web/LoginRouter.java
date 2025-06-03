@@ -183,22 +183,30 @@ public class LoginRouter  implements Handler<RoutingContext> {
   static String redirectUri(HttpServerRequest request) {
     String port = request.getHeader("X-Forwarded-Port");
     String scheme = request.getHeader("X-Forwarded-Proto");
-    if (Strings.isNullOrEmpty(scheme)) {
-      scheme = request.scheme();
-      int portNum = request.authority().port();
-      if (RequestContextBuilder.isStandardHttpsPort(scheme, portNum)) {
-        port = "";
-      } else if (RequestContextBuilder.isStandardHttpPort(scheme, portNum)) {
-        port = "";
-      } else {
-        port = Integer.toString(portNum);
+    
+    int portNum = -1;
+    if (!Strings.isNullOrEmpty(port)) {
+      try {
+        portNum = Integer.parseInt(port);
+      } catch (Throwable ex) {
+        logger.warn("Illegal X-Forward-Port header received: {}", port);
       }
     }
-    if (Strings.isNullOrEmpty(port)) {
+    
+    if (Strings.isNullOrEmpty(scheme)) {
+      scheme = request.scheme();
+    }
+    if (portNum < 0) {
+      portNum = request.authority().port();
+    }
+    if (RequestContextBuilder.isStandardHttpsPort(scheme, portNum)) {
+      port = "";
+    } else if (RequestContextBuilder.isStandardHttpPort(scheme, portNum)) {
       port = "";
     } else {
-      port = ":" + port;
+      port = ":" + Integer.toString(portNum);
     }
+
     String host = request.getHeader("X-Forwarded-Host");
     if (Strings.isNullOrEmpty(host)) {
       host = request.authority().host();
