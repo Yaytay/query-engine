@@ -398,12 +398,6 @@
       <artifactId>mssql-jdbc</artifactId>
       <version>12.10.0.jre11</version>
     </dependency>
-    <!-- Just to get mysql-connector-j up to a version without CVE-2024-7254 -->
-    <dependency>
-      <groupId>com.google.protobuf</groupId>
-      <artifactId>protobuf-java</artifactId>
-      <version>4.31.1</version>
-    </dependency>
     <dependency>
       <groupId>com.mysql</groupId>
       <artifactId>mysql-connector-j</artifactId>
