@@ -55,6 +55,7 @@ import io.vertx.core.VertxBuilder;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.jackson.DatabindCodec;
 import io.vertx.ext.healthchecks.HealthCheckHandler;
 import io.vertx.ext.web.Router;
@@ -449,6 +450,11 @@ public class Main extends Application {
               , Pattern.compile("\\..*")
               , params.getFilePollPeriodSeconds() > 0 ? Duration.of(params.getFilePollPeriodSeconds(), ChronoUnit.SECONDS) : null
       );
+      dirCache.setCallback(() -> {
+        if (logger.isDebugEnabled()) {
+          logger.debug("Known files changed to: ", Json.encode(dirCache.getRoot()));
+        }
+      });
       defnLoader = new PipelineDefnLoader(meterRegistry, vertx, params.getPipelineCache(), dirCache);
     } catch (Throwable ex) {
       logger.error("Unable to config pipeline loader: ", ex);
