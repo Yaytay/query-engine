@@ -61,6 +61,12 @@ public class ColumnDefn implements ColumnDescriptor {
     return name;
   }
 
+  /**
+   * Get the key for the column.
+   * The key is usually the same as the name, but if a column may be created with two names that differ only in case
+   * using a case-insensitive key can allow the engine to consider them the same.
+   * @return the key for the column.
+   */
   public String key() {
     return key;
   }
