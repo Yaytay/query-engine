@@ -121,6 +121,7 @@ public class ProcessorDynamicField implements Processor {
   private final String name;
   
   private final boolean innerJoin;
+  private final boolean useCaseInsensitiveFieldNames;
   
   private final String fieldIdColumn;
   private final String fieldNameColumn;
@@ -252,6 +253,25 @@ public class ProcessorDynamicField implements Processor {
     return innerJoin;
   }
 
+  /**
+   * Get the case insensitivity flag.
+   * If set to true two dynamic field names that differ only in case will be considered to be the same field.
+   * For the sake of clarity this should usually be left false.
+   * @return the case insensitivity flag.
+   */
+  @Schema(description = """
+                        The inner join flag.
+                        <P>
+                        If set to true the parent row will only be output if the child feed has at least one matching row.
+                        <P>
+                        For the sake of clarity this should usually be left as false.
+                        """
+          , defaultValue = "false"
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+  public boolean isUseCaseInsensitiveFieldNames() {
+    return useCaseInsensitiveFieldNames;
+  }
+  
   /**
    * Get the parent ID columns.
    * 
@@ -389,6 +409,7 @@ public class ProcessorDynamicField implements Processor {
     private Condition condition;
     private String name;
     private boolean innerJoin;
+    private boolean useCaseInsensitiveFieldNames;
     private String fieldIdColumn = "id";
     private String fieldNameColumn = "name";
     private String fieldTypeColumn = "type";
@@ -443,6 +464,16 @@ public class ProcessorDynamicField implements Processor {
       return this;
     }
 
+    /**
+     * Set the {@link ProcessorDynamicField#useCaseInsensitiveFieldNames} value in the builder.
+     * @param value The value for the {@link ProcessorDynamicField#useCaseInsensitiveFieldNames}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder useCaseInsensitiveFieldNames(final boolean value) {
+      this.useCaseInsensitiveFieldNames = value;
+      return this;
+    }
+    
     /**
      * Set the {@link ProcessorDynamicField#fieldIdColumn} value in the builder.
      * @param value The value for the {@link ProcessorDynamicField#fieldIdColumn}.
@@ -548,7 +579,7 @@ public class ProcessorDynamicField implements Processor {
      * @return a new instance of the ProcessorDynamicField class.
      */
     public ProcessorDynamicField build() {
-      ProcessorDynamicField result = new ProcessorDynamicField(type, condition, name, innerJoin, fieldIdColumn, fieldNameColumn, fieldTypeColumn, fieldColumnColumn, parentIdColumns, valuesParentIdColumns, valuesFieldIdColumn, fieldValueColumnName, fieldDefns, fieldValues);
+      ProcessorDynamicField result = new ProcessorDynamicField(type, condition, name, innerJoin, useCaseInsensitiveFieldNames, fieldIdColumn, fieldNameColumn, fieldTypeColumn, fieldColumnColumn, parentIdColumns, valuesParentIdColumns, valuesFieldIdColumn, fieldValueColumnName, fieldDefns, fieldValues);
       result.validateType(ProcessorType.DYNAMIC_FIELD, type);
       return result;
     }
@@ -562,11 +593,16 @@ public class ProcessorDynamicField implements Processor {
     return new ProcessorDynamicField.Builder();
   }
 
-  private ProcessorDynamicField(final ProcessorType type, final Condition condition, final String name, final boolean innerJoin, final String fieldIdColumn, final String fieldNameColumn, final String fieldTypeColumn, final String fieldColumnColumn, final List<String> parentIdColumns, final List<String> valuesParentIdColumns, final String valuesFieldIdColumn, final String fieldValueColumnName, final SourcePipeline fieldDefns, final SourcePipeline fieldValues) {
+  private ProcessorDynamicField(final ProcessorType type, final Condition condition, final String name
+          , final boolean innerJoin, final boolean useCaseInsensitiveFieldNames
+          , final String fieldIdColumn, final String fieldNameColumn, final String fieldTypeColumn, final String fieldColumnColumn
+          , final List<String> parentIdColumns, final List<String> valuesParentIdColumns
+          , final String valuesFieldIdColumn, final String fieldValueColumnName, final SourcePipeline fieldDefns, final SourcePipeline fieldValues) {
     this.type = type;
     this.condition = condition;
     this.name = name;
     this.innerJoin = innerJoin;
+    this.useCaseInsensitiveFieldNames = useCaseInsensitiveFieldNames;
     this.fieldIdColumn = fieldIdColumn;
     this.fieldNameColumn = fieldNameColumn;
     this.fieldTypeColumn = fieldTypeColumn;

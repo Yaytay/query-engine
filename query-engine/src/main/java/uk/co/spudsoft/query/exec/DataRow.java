@@ -101,6 +101,17 @@ public class DataRow {
   }
 
   /**
+   * Set the type for a field if it is not already set.
+   * @param key the key for the field - used in the type map.
+   * @param name the name of the field - used in output.
+   * @param type the DataType.
+   * @throws IllegalStateException if the field already has a type that is not {@link DataType#Null} or the same as type.
+   */
+  public final void putTypeIfAbsent(String key, String name, DataType type) throws IllegalStateException {
+    types.putIfAbsent(key, name, type);
+  }
+
+  /**
    * Create a DataRow with the given types.
    * @param types List of {@link ColumnDefn} objects that make up the row.
    * @return a newly created DataRow.
@@ -185,7 +196,7 @@ public class DataRow {
    */
   public void forEach(BiConsumer<ColumnDefn, ? super Comparable<?>> action) {
     types.forEach(cd -> {
-      action.accept(cd, data.get(cd.name()));
+      action.accept(cd, data.get(cd.key()));
     });
   }
 
@@ -207,6 +218,18 @@ public class DataRow {
    */
   public DataRow put(String key, Comparable<?> value) {
     DataType type = DataType.fromObject(value);
+    return put(key, key, type, value);
+  }
+  
+  /**
+   * Add a value to this DataRow.
+   * @param key The key for the field being set - for lookup.
+   * @param name The name of the field being set - for presentation.
+   * @param type The type of the field being set.
+   * @param value The value of the field.
+   * @return this, so that this method may be used in a fluent manner.
+   */
+  public DataRow put(String key, String name, DataType type, Comparable<?> value) {
     types.putIfAbsent(key, type);
     data.put(key, value);
     return this;
@@ -214,15 +237,13 @@ public class DataRow {
   
   /**
    * Add a value to this DataRow.
-   * @param key The name of the field being set.
+   * @param key The key for the field being set.
    * @param type The type of the field being set.
    * @param value The value of the field.
    * @return this, so that this method may be used in a fluent manner.
    */
   public DataRow put(String key, DataType type, Comparable<?> value) {
-    types.putIfAbsent(key, type);
-    data.put(key, value);
-    return this;
+    return put(key, key, type, value);
   }
   
   /**

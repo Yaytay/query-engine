@@ -87,14 +87,28 @@ public class Types {
   /**
    * Set the type for the key if it is not already set (or is currently set to null).
    * 
-   * If it possible 
-   * 
    * @param key The name of the column.
    * @param type The desired type of the column.
    * @return this.
    * @throws IllegalStateException if they type is already set to a non-null value and an attempt is made to set it to a different non-null value.
    */
   public final Types putIfAbsent(String key, DataType type) {
+    return putIfAbsent(key, key, type);
+  }
+  
+  /**
+   * Set the type for the key if it is not already set (or is currently set to null).
+   * 
+   * The name is used in the column definition, the key is used when looking the type up.
+   * This is intended to be used to allow for case-insensitive type-maps.
+   * 
+   * @param key The key to use when comparing the column.
+   * @param name The name of the column.
+   * @param type The desired type of the column.
+   * @return this.
+   * @throws IllegalStateException if they type is already set to a non-null value and an attempt is made to set it to a different non-null value.
+   */
+  public final Types putIfAbsent(String key, String name, DataType type) {
     if (type == null) {
       type = DataType.Null;
     }
@@ -102,11 +116,11 @@ public class Types {
       Integer idx = indices.get(key);
       if (idx == null) {
         indices.put(key, defns.size());
-        defns.add(new ColumnDefn(key, type));
+        defns.add(new ColumnDefn(name, key, type));
       } else {
         ColumnDefn current = defns.get(idx);
         if (current.type() == DataType.Null && type != DataType.Null) {
-          defns.set(idx, new ColumnDefn(key, type));
+          defns.set(idx, new ColumnDefn(current.name(), key, type));
         }
       }
     }

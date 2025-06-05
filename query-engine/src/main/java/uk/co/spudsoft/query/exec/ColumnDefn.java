@@ -30,6 +30,7 @@ import uk.co.spudsoft.query.defn.DataType;
 public class ColumnDefn implements ColumnDescriptor {
   
   private final String name;
+  private final String key;
   private final DataType type;
 
   /**
@@ -39,12 +40,29 @@ public class ColumnDefn implements ColumnDescriptor {
    */
   public ColumnDefn(String name, DataType type) {
     this.name = name;
+    this.key = name;
+    this.type = type;
+  }
+
+  /**
+   * Constructor.
+   * @param name The name of the column.
+   * @param key The key of the column.
+   * @param type The type of the column.
+   */
+  public ColumnDefn(String name, String key, DataType type) {
+    this.name = name;
+    this.key = key;
     this.type = type;
   }
 
   @Override
   public String name() {
     return name;
+  }
+
+  public String key() {
+    return key;
   }
 
   @Override

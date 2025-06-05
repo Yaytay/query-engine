@@ -26,6 +26,7 @@ import io.vertx.core.json.Json;
 import io.vertx.core.streams.ReadStream;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +55,7 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
   
   private final ProcessorDynamicField definition;
 
-  private static class FieldDefn {
+  static class FieldDefn {
     public final Object id;
     public final String name;
     public final DataType type;
@@ -67,9 +68,9 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
       this.column = column;
     }
   }
-  
-  private List<FieldDefn> fields;
-  private List<String> fieldValueColumnNames;
+    
+  private final List<String> fieldValueColumnNames;
+  private List<FieldDefn> fields; // Protected for the benefit of unit tests only
   
   /**
    * Constructor.
@@ -81,6 +82,20 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
   public ProcessorDynamicFieldInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorDynamicField definition, String name) {
+    this(vertx, sourceNameTracker, context, definition, name, null);
+  }
+
+  /**
+   * Constructor.
+   * @param vertx the Vert.x instance.
+   * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
+   * @param context the Vert.x context.
+   * @param definition the definition of this processor.
+   * @param name the name of this processor, used in tracking and logging.
+   * @param fields override the collection of fields for testing
+   */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
+  ProcessorDynamicFieldInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorDynamicField definition, String name, List<FieldDefn> fields) {
     super(logger, vertx, sourceNameTracker, context, name, definition.getParentIdColumns(), definition.getValuesParentIdColumns(), definition.isInnerJoin());
     this.definition = definition;    
     if (Strings.isNullOrEmpty(definition.getFieldValueColumnName())) {
@@ -88,6 +103,7 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
     } else {
       this.fieldValueColumnNames = ImmutableList.copyOf(definition.getFieldValueColumnName().split(","));
     }
+    this.fields = fields;
   }
 
   @Override
@@ -142,26 +158,31 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
     }
     for (FieldDefn fieldDefn : fields) {
       boolean added = false;
-      parentRow.putTypeIfAbsent(fieldDefn.name, fieldDefn.type);
+      String key = fieldDefn.name;
+      if (definition.isUseCaseInsensitiveFieldNames()) {
+        key = key.toLowerCase(Locale.ROOT);
+      }
+      parentRow.putTypeIfAbsent(key, fieldDefn.name, fieldDefn.type);
       for (DataRow row : childRows) {
         if (fieldDefn.id.equals(row.get(definition.getValuesFieldIdColumn()))) {
           if (Strings.isNullOrEmpty(fieldDefn.column)) {
             for (String valueFieldName : this.fieldValueColumnNames) {
               Comparable<?> value = row.get(valueFieldName);
               if (value != null) {
-                parentRow.put(fieldDefn.name, value);
+                parentRow.put(key, fieldDefn.name, DataType.fromObject(value), value);
                 break;
               }
             }
           } else {
-            parentRow.put(fieldDefn.name, row.get(fieldDefn.column));
+            Comparable<?> value = row.get(fieldDefn.column);
+            parentRow.put(key, fieldDefn.name, DataType.fromObject(value), value);
           }
           added = true;
           break;
         }
       }
       if (!added) {
-        parentRow.put(fieldDefn.name, fieldDefn.type, null);
+        parentRow.put(key, fieldDefn.name, fieldDefn.type, null);
       }
     }
     logger.trace("Resulting row: {}", parentRow);

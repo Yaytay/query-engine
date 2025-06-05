@@ -80,7 +80,7 @@
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>params4j</artifactId>
-      <version>0.0.29</version>
+      <version>0.0.30</version>
       <exclusions>
       </exclusions>
     </dependency>
