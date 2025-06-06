@@ -182,7 +182,11 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
         }
       }
       if (!added) {
-        parentRow.put(fieldDefn.key, fieldDefn.name, fieldDefn.type, null);
+        // Explicitly store null if nothing has already been written
+        // If something has been written then either it's already null or it has a value that we can't improve on
+        if (!parentRow.containsKey(fieldDefn.key)) {
+          parentRow.put(fieldDefn.key, fieldDefn.name, fieldDefn.type, null);
+        }
       }
     }
     logger.trace("Resulting row: {}", parentRow);

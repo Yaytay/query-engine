@@ -70,12 +70,12 @@
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>dir-cache</artifactId>
-      <version>0.0.28</version>
+      <version>0.0.29</version>
     </dependency>
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>jwt-validator-vertx</artifactId>
-      <version>0.0.39</version>
+      <version>0.0.44</version>
     </dependency>
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
@@ -141,6 +141,16 @@
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-web</artifactId>
+      <version>${vertx.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-web-client</artifactId>
+      <version>${vertx.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-uri-template</artifactId>
       <version>${vertx.version}</version>
     </dependency>
     <dependency>

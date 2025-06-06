@@ -376,6 +376,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     logger.debug("initializeProcessors({}, {}, {}, {}, {})", pipeline, parentSource, iter, index, input);
     if (!iter.hasNext()) {
       progressNotificationInternal(pipeline, null, null, (long) index, false, null, "All processors initialized", null, null);
+      logger.debug("Types after all processors initialized: {}", input.getTypes());
       return Future.succeededFuture(input);
     } else {
       ProcessorInstance processor = iter.next();

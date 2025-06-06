@@ -195,4 +195,44 @@ public class ProcessorDynamicFieldInstanceTest {
     assertEquals(Arrays.asList("id", "Field"), cds.stream().map(cd -> cd.name()).collect(Collectors.toList()));
     assertEquals(Arrays.asList("one", "second"), values);    
   }
+
+  
+  @Test
+  public void testCaseInsensitiveOnlyFirst() {
+    ProcessorDynamicField defn = ProcessorDynamicField.builder()
+            .useCaseInsensitiveFieldNames(true)
+            .valuesFieldIdColumn("fieldId")
+            .build();
+    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstance(null, null, null, defn, "P0-DynamicField"
+            , Arrays.asList(
+                    new FieldDefn(0, "field", "Field", DataType.String, "stringValue")
+                    , new FieldDefn(1, "field", "field", DataType.String, "stringValue")
+            )
+    );
+    
+    Types parentTypes = new Types();
+    DataRow parent = DataRow.create(parentTypes).put("id", "one");
+
+    Types childTypes = new Types();
+    List<DataRow> children = Arrays.asList(
+            DataRow.create(childTypes).put("fieldId", 0).put("stringValue", "first")
+    );
+    
+    DataRow result = instance.processChildren(parent, children);
+    assertEquals(2, result.size());
+    assertEquals("one", result.get("id"));
+    // Case insensitive always have lowercase key
+    // it finds second because field ID 1 comes after field ID 0, regardless of the order of the child rows
+    assertEquals("first", result.get("field"));
+
+    
+    List<ColumnDefn> cds = new ArrayList<>();
+    List<Object> values = new ArrayList<>();
+    result.forEach((cd, value) -> {
+      cds.add(cd);
+      values.add(value);
+    });
+    assertEquals(Arrays.asList("id", "Field"), cds.stream().map(cd -> cd.name()).collect(Collectors.toList()));
+    assertEquals(Arrays.asList("one", "first"), values);    
+  }
 }
