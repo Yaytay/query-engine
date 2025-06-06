@@ -50,8 +50,8 @@ public class ProcessorDynamicFieldInstanceTest {
             .build();
     ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstance(null, null, null, defn, "P0-DynamicField"
             , Arrays.asList(
-                    new FieldDefn(0, "field", DataType.String, "stringValue")
-                    , new FieldDefn(1, "Field", DataType.String, "stringValue")
+                    new FieldDefn(0, "field", "field", DataType.String, "stringValue")
+                    , new FieldDefn(1, "Field", "Field", DataType.String, "stringValue")
             )
     );
     
@@ -88,8 +88,8 @@ public class ProcessorDynamicFieldInstanceTest {
             .build();
     ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstance(null, null, null, defn, "P0-DynamicField"
             , Arrays.asList(
-                    new FieldDefn(0, "field", DataType.String, "stringValue")
-                    , new FieldDefn(1, "Field", DataType.String, "stringValue")
+                    new FieldDefn(0, "field", "field", DataType.String, "stringValue")
+                    , new FieldDefn(1, "field", "Field", DataType.String, "stringValue")
             )
     );
     
@@ -126,8 +126,8 @@ public class ProcessorDynamicFieldInstanceTest {
             .build();
     ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstance(null, null, null, defn, "P0-DynamicField"
             , Arrays.asList(
-                    new FieldDefn(1, "Field", DataType.String, "stringValue")
-                    , new FieldDefn(0, "field", DataType.String, "stringValue")
+                    new FieldDefn(1, "field", "Field", DataType.String, "stringValue")
+                    , new FieldDefn(0, "field", "field", DataType.String, "stringValue")
             )
     );
     
@@ -164,8 +164,8 @@ public class ProcessorDynamicFieldInstanceTest {
             .build();
     ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstance(null, null, null, defn, "P0-DynamicField"
             , Arrays.asList(
-                    new FieldDefn(0, "Field", DataType.String, "stringValue")
-                    , new FieldDefn(1, "field", DataType.String, "stringValue")
+                    new FieldDefn(0, "field", "Field", DataType.String, "stringValue")
+                    , new FieldDefn(1, "field", "field", DataType.String, "stringValue")
             )
     );
     

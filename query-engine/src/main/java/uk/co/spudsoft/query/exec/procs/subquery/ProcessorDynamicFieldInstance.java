@@ -57,12 +57,14 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
 
   static class FieldDefn {
     public final Object id;
+    public final String key;
     public final String name;
     public final DataType type;
     public final String column;
 
-    FieldDefn(Object id, String name, DataType type, String column) {
+    FieldDefn(Object id, String key, String name, DataType type, String column) {
       this.id = id;
+      this.key = key;
       this.name = name;
       this.type = type;
       this.column = column;
@@ -130,21 +132,22 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
                         } else {
                           Object id = row.get(definition.getFieldIdColumn());
                           String name = Objects.toString(row.get(definition.getFieldNameColumn()));
+                          String key = definition.isUseCaseInsensitiveFieldNames() ? name.toLowerCase(Locale.ROOT) : name;
                           DataType type = DataType.valueOf(Objects.toString(row.get(definition.getFieldTypeColumn())));
                           Comparable<?> valueColumn = row.get(definition.getFieldColumnColumn());
-                          String column = valueColumn == null ? null : Objects.toString(valueColumn);
-                          return new FieldDefn(id, name, type, column);
+                          String column = valueColumn == null ? null : Objects.toString(valueColumn);                          
+                          return new FieldDefn(id, key, name, type, column);
                         }
                       });
             })
             .compose(collated -> {
               fields = collated;
               for (FieldDefn field : fields) {
-                types.putIfAbsent(field.name, field.type);
+                types.putIfAbsent(field.key, field.name, field.type);
               }
               if (logger.isTraceEnabled()) {
                 logger.trace("Defined dynamic fields: {}", Json.encode(fields));
-                logger.debug("Dynamic field types: {}", Json.encode(types));
+                logger.trace("Dynamic field types: {}", types);
               }
               return initializeChildStream(executor, pipeline, "fieldValues", definition.getFieldValues()).map(rswt -> rswt.getStream());
             });
@@ -159,31 +162,27 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
     }
     for (FieldDefn fieldDefn : fields) {
       boolean added = false;
-      String key = fieldDefn.name;
-      if (definition.isUseCaseInsensitiveFieldNames()) {
-        key = key.toLowerCase(Locale.ROOT);
-      }
-      parentRow.putTypeIfAbsent(key, fieldDefn.name, fieldDefn.type);
+      parentRow.putTypeIfAbsent(fieldDefn.key, fieldDefn.name, fieldDefn.type);
       for (DataRow row : childRows) {
         if (fieldDefn.id.equals(row.get(definition.getValuesFieldIdColumn()))) {
           if (Strings.isNullOrEmpty(fieldDefn.column)) {
             for (String valueFieldName : this.fieldValueColumnNames) {
               Comparable<?> value = row.get(valueFieldName);
               if (value != null) {
-                parentRow.put(key, fieldDefn.name, DataType.fromObject(value), value);
+                parentRow.put(fieldDefn.key, fieldDefn.name, DataType.fromObject(value), value);
                 break;
               }
             }
           } else {
             Comparable<?> value = row.get(fieldDefn.column);
-            parentRow.put(key, fieldDefn.name, DataType.fromObject(value), value);
+            parentRow.put(fieldDefn.key, fieldDefn.name, DataType.fromObject(value), value);
           }
           added = true;
           break;
         }
       }
       if (!added) {
-        parentRow.put(key, fieldDefn.name, fieldDefn.type, null);
+        parentRow.put(fieldDefn.key, fieldDefn.name, fieldDefn.type, null);
       }
     }
     logger.trace("Resulting row: {}", parentRow);
