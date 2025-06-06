@@ -86,6 +86,7 @@ processors:
       
 - type: DYNAMIC_FIELD
   innerJoin: false
+  useCaseInsensitiveFieldNames: true
   parentIdColumns:
   - dataId
   fieldColumnColumn: valueField

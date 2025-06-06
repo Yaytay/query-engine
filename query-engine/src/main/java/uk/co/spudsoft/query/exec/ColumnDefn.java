@@ -96,7 +96,7 @@ public class ColumnDefn implements ColumnDescriptor {
 
   @Override
   public String toString() {
-    return name + ":" + type;
+    return name + " (" + key + "):" + type;
   }
   
 }

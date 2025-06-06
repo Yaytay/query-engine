@@ -144,6 +144,7 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
               }
               if (logger.isTraceEnabled()) {
                 logger.trace("Defined dynamic fields: {}", Json.encode(fields));
+                logger.debug("Dynamic field types: {}", Json.encode(types));
               }
               return initializeChildStream(executor, pipeline, "fieldValues", definition.getFieldValues()).map(rswt -> rswt.getStream());
             });
