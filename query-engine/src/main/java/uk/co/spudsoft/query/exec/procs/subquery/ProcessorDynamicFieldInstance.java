@@ -169,13 +169,17 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
             for (String valueFieldName : this.fieldValueColumnNames) {
               Comparable<?> value = row.get(valueFieldName);
               if (value != null) {
-                parentRow.put(fieldDefn.key, fieldDefn.name, DataType.fromObject(value), value);
+                value = castValue(value, fieldDefn);
+                parentRow.put(fieldDefn.key, fieldDefn.name, fieldDefn.type, value);
                 break;
               }
             }
           } else {
             Comparable<?> value = row.get(fieldDefn.column);
-            parentRow.put(fieldDefn.key, fieldDefn.name, DataType.fromObject(value), value);
+            if (value != null) {
+              value = castValue(value, fieldDefn);
+            }
+            parentRow.put(fieldDefn.key, fieldDefn.name, fieldDefn.type, value);
           }
           added = true;
           break;
@@ -191,5 +195,14 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
     }
     logger.trace("Resulting row: {}", parentRow);
     return parentRow;
+  }
+
+  Comparable<?> castValue(Comparable<?> value, FieldDefn fieldDefn) {
+    try {
+      value = fieldDefn.type.cast(value);
+    } catch (Throwable ex) {
+      logger.warn("Failed to cast field {} with value {} ({}) to {}", fieldDefn.key, value, value.getClass(), fieldDefn.type);
+    }
+    return value;
   }
 }
