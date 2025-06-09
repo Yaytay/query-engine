@@ -26,7 +26,6 @@ import io.vertx.core.streams.WriteStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
-import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.LoggerFactory;
 import static uk.co.spudsoft.query.defn.DataType.Boolean;
