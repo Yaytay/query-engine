@@ -38,8 +38,8 @@
     <argLine></argLine>
     <vertx.version>4.5.14</vertx.version>
     <slf4j.version>2.0.17</slf4j.version>
-    <junit-jupiter.version>5.13.0</junit-jupiter.version>
-    <junit-platform.version>1.13.0</junit-platform.version>
+    <junit-jupiter.version>5.13.1</junit-jupiter.version>
+    <junit-platform.version>1.13.1</junit-platform.version>
     <testcontainers.version>1.21.1</testcontainers.version>
     <!-- 
       Graal versions are often tied in to JDK versions, cannot upgrade to 24+ until using JDK 22+ 
@@ -412,7 +412,7 @@
         <plugin>
           <groupId>org.owasp</groupId>
           <artifactId>dependency-check-maven</artifactId>
-          <version>12.1.1</version>
+          <version>12.1.2</version>
           <configuration>
             <failBuildOnCVSS>8</failBuildOnCVSS>
             <failOnError>false</failOnError>

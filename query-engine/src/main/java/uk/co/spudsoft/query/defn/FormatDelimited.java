@@ -26,7 +26,9 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import java.time.format.DateTimeFormatter;
+import uk.co.spudsoft.query.exec.fmts.CustomBooleanFormatter;
 import uk.co.spudsoft.query.exec.fmts.CustomDateTimeFormatter;
+import uk.co.spudsoft.query.exec.fmts.CustomDecimalFormatter;
 import uk.co.spudsoft.query.exec.fmts.text.FormatDelimitedInstance;
 
 /**
@@ -60,6 +62,8 @@ public class FormatDelimited implements Format {
   private final String dateFormat;
   private final String dateTimeFormat;
   private final String timeFormat;
+  private final String decimalFormat;
+  private final String booleanFormat;
   
   @Override
   public FormatDelimitedInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
@@ -91,6 +95,20 @@ public class FormatDelimited implements Format {
         DateTimeFormatter.ofPattern(timeFormat);
       } catch (Throwable ex) {
         throw new IllegalArgumentException("Invalid timeFormat: " + ex.getMessage());
+      }
+    }
+    if (!Strings.isNullOrEmpty(decimalFormat)) {
+      try {
+        new CustomDecimalFormatter(decimalFormat);
+      } catch (Throwable ex) {
+        throw new IllegalArgumentException("Invalid decimalFormat: " + ex.getMessage());
+      }
+    }
+    if (!Strings.isNullOrEmpty(booleanFormat)) {
+      try {
+        new CustomBooleanFormatter(booleanFormat, openQuote, closeQuote, false);
+      } catch (Throwable ex) {
+        throw new IllegalArgumentException("Invalid booleanFormat: " + ex.getMessage());
       }
     }
   }
@@ -654,6 +672,95 @@ public class FormatDelimited implements Format {
     return timeFormat;
   }
   
+  /**
+   * Get the Java {@link java.text.DecimalFormat} to use for float and double columns.
+   * <P>
+   * If not set the default toString() method will be called, which will result in a format equivalent to "0.0" 
+   * (i.e. it will include at least one digit after the decimal point).
+   * 
+   * @return the Java format to use for floating point columns.
+   */
+  @Schema(description = """
+                        The Java format to use for float and double columns.
+                        <P>
+                        This value will be used by the Java DecimalFormat to format floating point values.
+                        <P>
+                        If not set the default toString() method will be called, which will result in a format equivalent to "0.0"
+                        (i.e. it will include at least one digit after the decimal point).
+                        """
+          , maxLength = 100
+  )
+  public String getDecimalFormat() {
+    return decimalFormat;
+  }
+
+  /**
+   * Get the format to use for Boolean columns.
+   * <P>
+   * This must be a <A href="https://commons.apache.org/proper/commons-jexl/" target="_blank">JEXL</A> expression that evaluates to
+   * an array of two string values - the first being true and the second being false.
+   * These strings will be inserted into the output stream as is, and thus must be valid, specifically they can be:
+   * <UL>
+   * <LI>true  (any case)
+   * <LI>false  (any case)
+   * <LI>A numeric value
+   * <LI>A string value
+   * </UL>
+   * The following are all examples of valid expressions:
+   * <UL>
+   * <LI>['true', 'false']
+   * Valid, but pointless, because this is the default behaviour.
+   * <LI>['True', 'False']
+   * Python formatting.
+   * <LI>['1', '0']
+   * Output a numeric 1 or 0.
+   * <LI>['"1"', '"0"']
+   * Output a quoted "1" or "0".
+   * <LI>['"yes"', '"no"']
+   * Output a quoted "yes" or "no".
+   * </UL>
+   * <P>
+   * Validation is carried out on the output from the expression, but this validation is not perfect and it is possible to produce an invalid output with a bad format.
+   * 
+   * If not set Boolean values will be output as "true" or "false".
+   * 
+   * @return the format to use for Boolean columns.
+   */
+  @Schema(description = """
+                        Get the format to use for Boolean columns.
+                        <P>
+                        This must be a <A href="https://commons.apache.org/proper/commons-jexl/" target="_blank">JEXL</A> expression that evaluates to
+                        an array of two string values - the first being true and the second being false.
+                        These strings will be inserted into the output stream as is, and thus must be valid JSON; specifically they can be:
+                        <UL>
+                        <LI>true  (any case)
+                        <LI>false  (any case)
+                        <LI>A numeric value
+                        <LI>A string value
+                        </UL>
+                        The following are all examples of valid expressions:
+                        <UL>
+                        <LI>['true', 'false']
+                        Valid, but pointless, because this is the default behaviour.
+                        <LI>['True', 'False']
+                        Python formatting.
+                        <LI>['1', '0']
+                        Output a numeric 1 or 0.
+                        <LI>['"1"', '"0"']
+                        Output a quoted "1" or "0".
+                        <LI>['"yes"', '"no"']
+                        Output a quoted "yes" or "no".
+                        </UL>
+                        <P>
+                        Validation is carried out on the output from the expression, but this validation is not perfect and it is possible to produce an invalid output with a bad format.
+                        <P>
+                        If not set Boolean values will be output as "true" or "false".
+                        """
+          , maxLength = 100
+  )
+  public String getBooleanFormat() {
+    return booleanFormat;
+  }  
  
   /**
    * Builder class for FormatJson.
@@ -680,6 +787,8 @@ public class FormatDelimited implements Format {
     private String dateFormat = "yyyy-MM-dd";
     private String dateTimeFormat = "yyyy-MM-dd'T'HH:mm";
     private String timeFormat = "HH:mm";
+    private String decimalFormat = null;
+    private String booleanFormat = null;
 
     private Builder() {
     }
@@ -877,12 +986,36 @@ public class FormatDelimited implements Format {
       this.timeFormat = value;
       return this;
     }
+
+    /**
+     * Set the {@link FormatDelimited#decimalFormat} value in the builder.
+     * @param value The value for the {@link FormatDelimited#decimalFormat}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder decimalFormat(final String value) {
+      this.decimalFormat = value;
+      return this;
+    }
+
+    /**
+     * Set the {@link FormatDelimited#booleanFormat} value in the builder.
+     * @param value The value for the {@link FormatDelimited#booleanFormat}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder booleanFormat(final String value) {
+      this.booleanFormat = value;
+      return this;
+    }
+    
+    
     /**
      * Construct a new instance of the FormatDelimited class.
      * @return a new instance of the FormatDelimited class.
      */
     public FormatDelimited build() {
-      return new FormatDelimited(type, name, description, extension, filename, mediaType, hidden, bom, headerRow, quoteTemporal, delimiter, openQuote, closeQuote, escapeCloseQuote, replaceCloseQuote, newline, dateFormat, dateTimeFormat, timeFormat);
+      return new FormatDelimited(type, name, description, extension, filename, mediaType, hidden
+              , bom, headerRow, quoteTemporal, delimiter, openQuote, closeQuote, escapeCloseQuote, replaceCloseQuote, newline
+              , dateFormat, dateTimeFormat, timeFormat, decimalFormat, booleanFormat);
     }
   }
 
@@ -912,7 +1045,9 @@ public class FormatDelimited implements Format {
           , final String newline          
           , final String dateFormat
           , final String dateTimeFormat
-          , final String timeFormat          
+          , final String timeFormat   
+          , final String decimalFormat
+          , final String booleanFormat
   ) {
     validateType(FormatType.Delimited, type);
     this.type = type;
@@ -934,6 +1069,8 @@ public class FormatDelimited implements Format {
     this.dateFormat = dateFormat;
     this.dateTimeFormat = dateTimeFormat;
     this.timeFormat = timeFormat;
+    this.decimalFormat = decimalFormat;
+    this.booleanFormat = booleanFormat;
   }
     
   

@@ -42,7 +42,9 @@ import uk.co.spudsoft.query.exec.fmts.FormattingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.fmts.CustomBooleanFormatter;
 import uk.co.spudsoft.query.exec.fmts.CustomDateTimeFormatter;
+import uk.co.spudsoft.query.exec.fmts.CustomDecimalFormatter;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
 /**
@@ -67,6 +69,9 @@ public class FormatDelimitedInstance implements FormatInstance {
   private final DateTimeFormatter dateFormatter;
   private final CustomDateTimeFormatter dateTimeFormatter;
   private final DateTimeFormatter timeFormatter;
+  
+  private final CustomDecimalFormatter decimalFormatter;
+  private final CustomBooleanFormatter booleanFormatter;
   
   private final Promise<Void> finalPromise;
   
@@ -97,6 +102,8 @@ public class FormatDelimitedInstance implements FormatInstance {
       this.timeFormatter = DateTimeFormatter.ofPattern(defn.getTimeFormat());
     }
     
+    this.decimalFormatter = new CustomDecimalFormatter(defn.getDecimalFormat());
+    this.booleanFormatter = new CustomBooleanFormatter(defn.getBooleanFormat(), defn.getOpenQuote(), defn.getCloseQuote(), false);
     
     this.formattingStream = new FormattingWriteStream(outputStream
             , v -> Future.succeededFuture()
@@ -183,8 +190,14 @@ public class FormatDelimitedInstance implements FormatInstance {
           String stringValue;
           switch (cd.type()) {
             case Boolean:
+              outputRow.append(booleanFormatter.format(v));              
+              break;
             case Double:
             case Float:
+              if (v instanceof Number numberValue) {
+                outputRow.append(decimalFormatter.format(numberValue));
+              }
+              break;
             case Integer:
             case Long:
               outputRow.append(v);

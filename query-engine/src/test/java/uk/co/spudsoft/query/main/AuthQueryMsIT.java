@@ -297,7 +297,7 @@ public class AuthQueryMsIT {
             .statusCode(200)
             .extract().body().asString();
     
-    assertThat(body, startsWith("<table class=\"qetable\"><thead>\n<tr class=\"header\"><th class=\"header evenCol\" >dataId</th><th class=\"header oddCol\" >instant</th><th class=\"header evenCol\" >ref</th><th class=\"header oddCol\" >value</th><th class=\"header evenCol\" >children</th></tr>\n</thead><tbody>\n<tr class=\"dataRow evenRow\" ><td class=\"evenRow evenCol\">1</td><td class=\"evenRow oddCol\">1971-05-07T03:00</td><td class=\"evenRow evenCol\">antiquewhite</td><td class=\"evenRow oddCol\">first</td><td class=\"evenRow evenCol\">one</td></tr>"));
+    assertThat(body, startsWith("<table class=\"qetable\"><thead>\n<tr class=\"header\"><th class=\"header oddCol\" >dataId</th><th class=\"header evenCol\" >instant</th><th class=\"header oddCol\" >ref</th><th class=\"header evenCol\" >value</th><th class=\"header oddCol\" >children</th></tr>\n</thead><tbody>\n<tr class=\"dataRow evenRow\" ><td class=\"evenRow oddCol\">1</td><td class=\"evenRow evenCol\">1971-05-07T03:00</td><td class=\"evenRow oddCol\">antiquewhite</td><td class=\"evenRow evenCol\">first</td><td class=\"evenRow oddCol\">one</td></tr>"));
 
     body = given()
             .header(new Header("Authorization", "Bearer " + token))

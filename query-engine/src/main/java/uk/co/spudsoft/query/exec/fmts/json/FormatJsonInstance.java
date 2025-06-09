@@ -47,6 +47,7 @@ import uk.co.spudsoft.query.exec.fmts.FormattingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.fmts.CustomBooleanFormatter;
 import uk.co.spudsoft.query.exec.fmts.CustomDateTimeFormatter;
 import uk.co.spudsoft.query.exec.fmts.CustomDecimalFormatter;
 import uk.co.spudsoft.query.web.RequestContextHandler;
@@ -81,7 +82,8 @@ public final class FormatJsonInstance implements FormatInstance {
   private final CustomDateTimeFormatter dateTimeFormatter;
   private final DateTimeFormatter timeFormatter;
     
-  private final CustomDecimalFormatter decimalFormat;
+  private final CustomDecimalFormatter decimalFormatter;
+  private final CustomBooleanFormatter booleanFormatter;
   
   /**
    * Constructor.
@@ -107,7 +109,8 @@ public final class FormatJsonInstance implements FormatInstance {
       this.timeFormatter = DateTimeFormatter.ofPattern(defn.getTimeFormat());
     }
     
-    this.decimalFormat = new CustomDecimalFormatter(defn.getDecimalFormat());
+    this.decimalFormatter = new CustomDecimalFormatter(defn.getDecimalFormat());
+    this.booleanFormatter = new CustomBooleanFormatter(defn.getBooleanFormat(), "\"", "\"", true);
     
     this.formattingStream = new FormattingWriteStream(outputStream
             , v -> {
@@ -156,21 +159,18 @@ public final class FormatJsonInstance implements FormatInstance {
           } else {
             switch (cd.type()) {
               case Boolean:
-                if (value instanceof Boolean booleanValue) {
-                  gen.writeBooleanField(cd.name(), booleanValue);
-                } else {
-                  gen.writeBooleanField(cd.name(), Boolean.parseBoolean(value.toString()));
-                }
+                gen.writeFieldName(cd.name());
+                gen.writeRawValue(booleanFormatter.format(value));
                 break ;
                 
               case Double:
               case Float:
                 if (value instanceof Number numberValue) {
                   gen.writeFieldName(cd.name());
-                  if (decimalFormat.mustBeEncodedAsString()) {
-                    gen.writeString(decimalFormat.format(numberValue));
+                  if (decimalFormatter.mustBeEncodedAsString()) {
+                    gen.writeString(decimalFormatter.format(numberValue));
                   } else {
-                    gen.writeRawValue(decimalFormat.format(numberValue));
+                    gen.writeRawValue(decimalFormatter.format(numberValue));
                   }
                 }
                 break ;

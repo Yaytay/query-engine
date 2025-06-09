@@ -92,10 +92,19 @@ public class JexlEvaluator {
     return jexl;
   }
 
-  
   private final JexlExpression expression;
   private final AtomicInteger iteration = new AtomicInteger();
 
+  /**
+   * Get the JEXL engine.
+   * This engine must not be modified by callers.
+   * @return the JEXL engine.
+   */
+  @SuppressWarnings("MS_EXPOSE_REP")
+  public static JexlEngine getJexlEngine() {
+    return JEXL;
+  }  
+  
   /**
    * Return true if the condition or its expression is null or blank.
    * @param condition The condition being assessed.

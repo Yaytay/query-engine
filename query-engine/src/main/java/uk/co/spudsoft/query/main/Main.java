@@ -452,7 +452,7 @@ public class Main extends Application {
       );
       dirCache.setCallback(() -> {
         if (logger.isDebugEnabled()) {
-          logger.debug("Known files changed to: ", Json.encode(dirCache.getRoot()));
+          logger.debug("Known files changed to: {}", Json.encode(dirCache.getRoot()));
         }
       });
       defnLoader = new PipelineDefnLoader(meterRegistry, vertx, params.getPipelineCache(), dirCache);

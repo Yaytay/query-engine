@@ -138,7 +138,7 @@ public class EmptyQueryIT {
             .statusCode(200)
             .extract().body().asString();
 
-    assertThat(body, equalTo("<table class=\"qetable\"><thead>\n<tr class=\"header\"><th class=\"header evenCol\" >colourId</th><th class=\"header oddCol\" >name</th><th class=\"header evenCol\" >hex</th></tr>\n</thead><tbody>\n</tbody></table>"));
+    assertThat(body, equalTo("<table class=\"qetable\"><thead>\n<tr class=\"header\"><th class=\"header oddCol\" >colourId</th><th class=\"header evenCol\" >name</th><th class=\"header oddCol\" >hex</th></tr>\n</thead><tbody>\n</tbody></table>"));
     assertThat(body, not(containsString("\t\t\t\t\t\t\t")));
 
     bodyBytes = given()

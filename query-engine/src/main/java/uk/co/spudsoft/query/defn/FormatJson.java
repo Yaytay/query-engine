@@ -28,7 +28,9 @@ import io.vertx.core.streams.WriteStream;
 import java.time.format.DateTimeFormatter;
 import uk.co.spudsoft.query.exec.fmts.json.FormatJsonInstance;
 import uk.co.spudsoft.query.exec.FormatInstance;
+import uk.co.spudsoft.query.exec.fmts.CustomBooleanFormatter;
 import uk.co.spudsoft.query.exec.fmts.CustomDateTimeFormatter;
+import uk.co.spudsoft.query.exec.fmts.CustomDecimalFormatter;
 
 /**
  * Output the data stream in JSON.
@@ -57,6 +59,8 @@ public class FormatJson implements Format {
   private final String dateTimeFormat;
   private final String timeFormat;
   private final String decimalFormat;
+  private final String booleanFormat;
+  
   
   
 
@@ -93,6 +97,20 @@ public class FormatJson implements Format {
         DateTimeFormatter.ofPattern(timeFormat);
       } catch (Throwable ex) {
         throw new IllegalArgumentException("Invalid timeFormat: " + ex.getMessage());
+      }
+    }
+    if (!Strings.isNullOrEmpty(decimalFormat)) {
+      try {
+        new CustomDecimalFormatter(decimalFormat);
+      } catch (Throwable ex) {
+        throw new IllegalArgumentException("Invalid decimalFormat: " + ex.getMessage());
+      }
+    }
+    if (!Strings.isNullOrEmpty(booleanFormat)) {
+      try {
+        new CustomBooleanFormatter(booleanFormat, "\"", "\"", true);
+      } catch (Throwable ex) {
+        throw new IllegalArgumentException("Invalid booleanFormat: " + ex.getMessage());
       }
     }
   }
@@ -634,6 +652,70 @@ public class FormatJson implements Format {
   public String getDecimalFormat() {
     return decimalFormat;
   }
+
+  /**
+   * Get the format to use for Boolean columns.
+   * <P>
+   * This must be a <A href="https://commons.apache.org/proper/commons-jexl/" target="_blank">JEXL</A> expression that evaluates to
+   * an array of two string values - the first being true and the second being false.
+   * These strings will be inserted into the output stream as is, and thus must be valid JSON, specifically they can be:
+   * <UL>
+   * <LI>true
+   * <LI>false
+   * <LI>A numeric value
+   * <LI>A string value
+   * </UL>
+   * The following are all examples of valid expressions:
+   * <UL>
+   * <LI>['true', 'false']
+   * Valid, but pointless, because this is the default behaviour.
+   * <LI>['1', '0']
+   * Output a numeric 1 or 0.
+   * <LI>['"1"', '"0"']
+   * Output a quoted "1" or "0".
+   * <LI>['"yes"', '"no"']
+   * Output a quoted "yes" or "no".
+   * </UL>
+   * <P>
+   * Validation is carried out on the output from the expression, but this validation is not perfect and it is possible to produce invalid JSON with a bad format.
+   * 
+   * If not set Boolean values will be output as standard JSON Boolean values.
+   * 
+   * @return the format to use for Boolean columns.
+   */
+  @Schema(description = """
+                        Get the format to use for Boolean columns.
+                        <P>
+                        This must be a <A href="https://commons.apache.org/proper/commons-jexl/" target="_blank">JEXL</A> expression that evaluates to
+                        an array of two string values - the first being true and the second being false.
+                        These strings will be inserted into the output stream as is, and thus must be valid JSON; specifically they can be:
+                        <UL>
+                        <LI>true
+                        <LI>false
+                        <LI>A numeric value
+                        <LI>A string value
+                        </UL>
+                        The following are all examples of valid expressions:
+                        <UL>
+                        <LI>['true', 'false']
+                        Valid, but pointless, because this is the default behaviour.
+                        <LI>['1', '0']
+                        Output a numeric 1 or 0.
+                        <LI>['"1"', '"0"']
+                        Output a quoted "1" or "0".
+                        <LI>['"yes"', '"no"']
+                        Output a quoted "yes" or "no".
+                        </UL>
+                        <P>
+                        Validation is carried out on the output from the expression, but this validation is not perfect and it is possible to produce invalid JSON with a bad format.
+                        <P>
+                        If not set Boolean values will be output as standard JSON Boolean values.
+                        """
+          , maxLength = 100
+  )
+  public String getBooleanFormat() {
+    return booleanFormat;
+  }
   
   /**
    * Builder class for FormatJson.
@@ -656,6 +738,7 @@ public class FormatJson implements Format {
     private String dateTimeFormat;
     private String timeFormat;
     private String decimalFormat;
+    private String booleanFormat;    
     
     private Builder() {
     }
@@ -804,13 +887,23 @@ public class FormatJson implements Format {
     }
 
     /**
+     * Set the {@link FormatJson#booleanFormat} value in the builder.
+     * @param value The value for the {@link FormatJson#booleanFormat}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder booleanFormat(final String value) {
+      this.booleanFormat = value;
+      return this;
+    }
+
+    /**
      * Construct a new instance of the FormatJson class.
      * @return a new instance of the FormatJson class.
      */
     public FormatJson build() {
       return new uk.co.spudsoft.query.defn.FormatJson(type, name, description, extension, filename, mediaType
               , hidden, dataName, metadataName, compatibleTypeNames
-              , dateFormat, dateTimeFormat, timeFormat, decimalFormat
+              , dateFormat, dateTimeFormat, timeFormat, decimalFormat, booleanFormat
       );
     }
   }
@@ -826,7 +919,7 @@ public class FormatJson implements Format {
   private FormatJson(final FormatType type, final String name, final String description
           , final String extension, final String filename, final MediaType mediaType
           , final boolean hidden, String dataName, String metadataName, Boolean compatibleTypeNames
-          , final String dateFormat, final String dateTimeFormat, final String timeFormat, final String decimalFormat
+          , final String dateFormat, final String dateTimeFormat, final String timeFormat, final String decimalFormat, final String booleanFormat
   ) {
     validateType(FormatType.JSON, type);
     this.type = type;
@@ -843,6 +936,7 @@ public class FormatJson implements Format {
     this.dateTimeFormat = dateTimeFormat;
     this.timeFormat = timeFormat;
     this.decimalFormat = decimalFormat;
+    this.booleanFormat = booleanFormat;
   }
   
 }
