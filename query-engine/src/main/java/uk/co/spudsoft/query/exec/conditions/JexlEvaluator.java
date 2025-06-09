@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.conditions;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -100,7 +101,7 @@ public class JexlEvaluator {
    * This engine must not be modified by callers.
    * @return the JEXL engine.
    */
-  @SuppressWarnings("MS_EXPOSE_REP")
+  @SuppressFBWarnings("MS_EXPOSE_REP")
   public static JexlEngine getJexlEngine() {
     return JEXL;
   }  
