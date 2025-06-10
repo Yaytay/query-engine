@@ -42,12 +42,10 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.FormatDelimited;
-import uk.co.spudsoft.query.defn.FormatXml;
 import uk.co.spudsoft.query.exec.ColumnDefn;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
-import uk.co.spudsoft.query.exec.fmts.xml.FormatXmlInstance;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
 /**
@@ -137,8 +135,12 @@ public class FormatDelimitedInstanceTest {
             outbytes = Arrays.copyOfRange(outbytes, 3, outbytes.length);
             
             String outstring = new String(outbytes, StandardCharsets.UTF_8);
-            assertThat(outstring, startsWith("\"Boolean\",\"Date\",\"DateTime\",\"Double\",\"Float\",\"Integer\",\"Long\",\"String\",\"Time\"\nfalse,,1971-05-02T01:01,1.1,1.1,1,10000000,\"This is row 1\",01:01\ntrue,1971-05-03,,2.2,2.2,2,20000000,\"This is row 2\",02:02"
-            ));
+            assertThat(outstring, startsWith("""
+                                             "Boolean","Date","DateTime","Double","Float","Integer","Long","String","Time"
+                                             ,1971-05-01,1971-05-01T00:00,0.0,0.0,0,0,"This is row 0",00:00
+                                             false,,1971-05-02T01:01,1.1,1.1,1,10000000,"This is row 1",01:01
+                                             true,1971-05-03,,2.2,2.2,2,20000000,"This is row 2",02:02
+                                             """));
           });
           testContext.completeNow();
         }

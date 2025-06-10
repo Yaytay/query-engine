@@ -60,8 +60,9 @@ public class CustomBooleanFormatterTest {
       new CustomBooleanFormatter("['<bob>', 'fred\"']", "<", ">", true);
     }).getMessage());
     assertEquals("The false value is not valid (is not \"true\" or \"false\"; is not a number; does not begin with < and end with >", assertThrows(IllegalArgumentException.class, () -> {
-      new CustomBooleanFormatter("['true', 'False']", "<", ">", false);
+      new CustomBooleanFormatter("['true', 'False']", "<", ">", true);
     }).getMessage());
+    new CustomBooleanFormatter("['true', 'False']", "<", ">", false);
   }
   
   @Test

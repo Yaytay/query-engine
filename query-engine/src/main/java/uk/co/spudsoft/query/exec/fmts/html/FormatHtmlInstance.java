@@ -20,6 +20,7 @@ import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
@@ -74,8 +75,8 @@ public class FormatHtmlInstance implements FormatInstance {
   private final FormattingWriteStream formattingStream;
 
   private static final Buffer OPEN = Buffer.buffer("<table class=\"qetable\"><thead>\n");
-  private static final Buffer ENDHEAD = Buffer.buffer("</thead><tbody>\n");
-  private static final Buffer CLOSE = Buffer.buffer("</tbody></table>");
+  private static final String ENDHEAD = "</thead><tbody>\n";
+  private static final String CLOSE = "</tbody></table>";
   private final AtomicBoolean started = new AtomicBoolean();
 
   private final DateTimeFormatter dateFormatter;
@@ -84,6 +85,8 @@ public class FormatHtmlInstance implements FormatInstance {
 
   private final CustomDecimalFormatter decimalFormatter;
   private final CustomBooleanFormatter booleanFormatter;
+  
+  private final Promise<Void> finalPromise;
 
   private Types types;
 
@@ -98,6 +101,7 @@ public class FormatHtmlInstance implements FormatInstance {
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "FormatHtmlInstance is a wrapper around WriteStream<Buffer>, it will make mutating calls to it")
   public FormatHtmlInstance(FormatHtml defn, WriteStream<Buffer> outputStream) {
     this.outputStream = outputStream;
+    this.finalPromise = Promise.<Void>promise();
 
     if (Strings.isNullOrEmpty(defn.getDateFormat())) {
       this.dateFormatter = null;
@@ -121,9 +125,13 @@ public class FormatHtmlInstance implements FormatInstance {
             row -> {
               if (!started.get()) {
                 started.set(true);
-                return outputStream.write(Buffer.buffer(headerFromRow()))
-                        .compose(v -> outputStream.write(ENDHEAD))
-                        .compose(v -> outputStream.write(Buffer.buffer(rowFromRow(row))));
+                
+                String headerAndFirstRow = headerFromRow()
+                        .append(ENDHEAD)
+                        .append(rowFromRow(row))
+                        .toString();
+                Buffer buffer = Buffer.buffer(headerAndFirstRow);
+                return outputStream.write(buffer);
               } else {
                 return outputStream.write(Buffer.buffer(rowFromRow(row)));
               }
@@ -138,19 +146,35 @@ public class FormatHtmlInstance implements FormatInstance {
               }
               if (!started.get()) {
                 started.set(true);
-                return outputStream.write(Buffer.buffer(headerFromRow()))
-                        .compose(v -> outputStream.write(ENDHEAD))
-                        .compose(v -> outputStream.write(CLOSE))
+                String headerAndClose = headerFromRow()
+                        .append(ENDHEAD)
+                        .append(CLOSE)
+                        .toString();
+                Buffer buffer = Buffer.buffer(headerAndClose);
+                return outputStream.write(buffer)
                         .compose(v2 -> outputStream.end());
               } else {
-                return outputStream.write(CLOSE)
-                        .compose(v2 -> outputStream.end());
+                return outputStream.write(Buffer.buffer(CLOSE))
+                        .compose(v2 -> outputStream.end())
+                        .andThen(ar -> {
+                          finalPromise.handle(ar);
+                        });
               }
             }
     );
   }
 
-  private String headerFromRow() {
+  /**
+   * Returns a future that completes when the associated {@code WriteStream} has reached its final state,
+   * indicating that the stream has either been closed or finished writing.
+   *
+   * @return a {@code Future<Void>} that completes when the final operation on the stream is complete.
+   */
+  public Future<Void> getFinalFuture() {
+    return finalPromise.future();
+  }
+  
+  private StringBuilder headerFromRow() {
     StringBuilder header = new StringBuilder();
     header.append("<tr class=\"header\">");
     int colNum[] = {0};
@@ -159,7 +183,7 @@ public class FormatHtmlInstance implements FormatInstance {
       header.append("<th class=\"header ").append(evenCol).append("\" >").append(cd.name()).append("</th>");
     });
     header.append("</tr>\n");
-    return header.toString();
+    return header;
   }
 
   private String rowFromRow(DataRow row) {
@@ -167,7 +191,7 @@ public class FormatHtmlInstance implements FormatInstance {
       return "";
     }
     StringBuilder tr = new StringBuilder();
-    String evenRow = ((rowNum++ % 2 == 0) ? "evenRow" : "oddRow");
+    String evenRow = ((++rowNum % 2 == 0) ? "evenRow" : "oddRow");
     tr.append("<tr class=\"dataRow ").append(evenRow).append("\" >");
 
     boolean isEvenField[] = {false};
@@ -192,7 +216,7 @@ public class FormatHtmlInstance implements FormatInstance {
           case Integer:
           case Long:
             if (value instanceof Number numValue) {
-              tr.append(decimalFormatter.format(numValue.longValue()));
+              tr.append(numValue.longValue());
             }
             break;
 

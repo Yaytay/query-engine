@@ -42,6 +42,9 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
   private final AsyncHandler<DataRow> process;
   private final AsyncHandler<Long> terminate;
   private long rowCount = 0;
+  
+  private final Object lastProcessFutureLock = new Object();
+  private Future<Void> lastProcessFuture;
 
   /**
    * Constructor.
@@ -61,6 +64,7 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
     this.initialize = initialize;
     this.process = process;
     this.terminate = terminate;
+    this.lastProcessFuture = Future.succeededFuture();
   }
 
   @Override
@@ -71,14 +75,21 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
 
   @Override
   public Future<Void> write(DataRow data) {
-    ++rowCount;
-    if (initialized) {
-      return process.handle(data);
-    } else {
-      initialized = true;
-      return initialize.handle(null)
-              .compose(v -> process.handle(data));
-    }
+    return lastProcessFuture.compose(v -> {
+      ++rowCount;
+      Future<Void> result;
+      if (initialized) {
+        result = process.handle(data);
+      } else {
+        initialized = true;
+        result = initialize.handle(null)
+                .compose(v2 -> process.handle(data));
+      }
+      synchronized (lastProcessFutureLock) {
+        lastProcessFuture = result;        
+      }
+      return result;
+    });
   }
 
   @Override
@@ -88,15 +99,17 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
 
   @Override
   public void end(Handler<AsyncResult<Void>> handler) {
-    if (initialized) {
-      VertxMDC.INSTANCE.remove(SourceInstance.SOURCE_CONTEXT_KEY);
-      terminate.handle(rowCount).onComplete(handler);      
-    } else {
-      initialize.handle(null).compose(v -> {
+    lastProcessFuture.andThen(v -> {
+      if (initialized) {
         VertxMDC.INSTANCE.remove(SourceInstance.SOURCE_CONTEXT_KEY);
-        return terminate.handle(rowCount);
-      }).onComplete(handler);
-    }
+        terminate.handle(rowCount).onComplete(handler);      
+      } else {
+        initialize.handle(null).compose(v2 -> {
+          VertxMDC.INSTANCE.remove(SourceInstance.SOURCE_CONTEXT_KEY);
+          return terminate.handle(rowCount);
+        }).onComplete(handler);
+      }
+    });
   }
 
   @Override
@@ -114,7 +127,5 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
     outputStream.drainHandler(handler);
     return this;
   }
-  
-  
   
 }

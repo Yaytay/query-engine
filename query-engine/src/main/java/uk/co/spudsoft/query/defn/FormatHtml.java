@@ -27,7 +27,6 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import java.time.format.DateTimeFormatter;
 import uk.co.spudsoft.query.exec.fmts.html.FormatHtmlInstance;
-import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.exec.fmts.CustomBooleanFormatter;
 import uk.co.spudsoft.query.exec.fmts.CustomDateTimeFormatter;
 import uk.co.spudsoft.query.exec.fmts.CustomDecimalFormatter;
@@ -80,7 +79,7 @@ public class FormatHtml implements Format {
   private final String booleanFormat;
   
   @Override
-  public FormatInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
+  public FormatHtmlInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
     return new FormatHtmlInstance(this, writeStream);
   }
 
