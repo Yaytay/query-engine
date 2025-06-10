@@ -57,7 +57,7 @@ import uk.co.spudsoft.query.web.RequestContextHandler;
  * 
  * @author jtalbut
  */
-public class FormatDelimitedInstance implements FormatInstance {
+public final class FormatDelimitedInstance implements FormatInstance {
 
   private static final Logger logger = LoggerFactory.getLogger(FormatDelimitedInstance.class);
   
@@ -178,8 +178,12 @@ public class FormatDelimitedInstance implements FormatInstance {
     if (row.isEmpty()) {
       return Future.succeededFuture();
     }
-    StringBuilder outputRow = new StringBuilder();
+    String outputRow = generateOutputRow(row);
+    return outputStream.write(Buffer.buffer(outputRow.getBytes(StandardCharsets.UTF_8)));
+  }
 
+  String generateOutputRow(DataRow row) {
+    StringBuilder outputRow = new StringBuilder();
     AtomicBoolean first = new AtomicBoolean(true);
     row.forEach((cd, v) -> {
       if (!first.compareAndSet(true, false)) {
@@ -254,7 +258,7 @@ public class FormatDelimitedInstance implements FormatInstance {
       }
     });
     outputRow.append(defn.getNewline());
-    return outputStream.write(Buffer.buffer(outputRow.toString().getBytes(StandardCharsets.UTF_8)));
+    return outputRow.toString();
   }
   
   static String encodeCloseQuote(FormatDelimited defn, String string) {

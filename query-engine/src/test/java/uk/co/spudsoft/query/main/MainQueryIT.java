@@ -235,7 +235,14 @@ public class MainQueryIT {
             .statusCode(200)
             .extract().body().asString();
     
-    assertThat(body, startsWith("<table class=\"qetable\"><thead>\n<tr class=\"header\"><th class=\"header oddCol\" >dataId</th><th class=\"header evenCol\" >instant</th><th class=\"header oddCol\" >ref</th><th class=\"header evenCol\" >value</th><th class=\"header oddCol\" >children</th></tr>\n</thead><tbody>\n<tr class=\"dataRow evenRow\" ><td class=\"evenRow oddCol\">1</td><td class=\"evenRow evenCol\">1971-05-07T03:00</td><td class=\"evenRow oddCol\">antiquewhite</td><td class=\"evenRow evenCol\">first</td><td class=\"evenRow oddCol\">one</td></tr>"));
+    assertThat(body, startsWith("""
+                                <table class="qetable"><thead>
+                                <tr class="header"><th class="header oddCol" >dataId</th><th class="header evenCol" >instant</th><th class="header oddCol" >ref</th><th class="header evenCol" >value</th><th class="header oddCol" >children</th></tr>
+                                </thead><tbody>
+                                <tr class="dataRow oddRow" ><td class="oddRow oddCol">1</td><td class="oddRow evenCol">1971-05-07T03:00</td><td class="oddRow oddCol">antiquewhite</td><td class="oddRow evenCol">first</td><td class="oddRow oddCol">one</td></tr>
+                                <tr class="dataRow evenRow" ><td class="evenRow oddCol">2</td><td class="evenRow evenCol">1971-05-08T06:00</td><td class="evenRow oddCol">aqua</td><td class="evenRow evenCol">second</td><td class="evenRow oddCol">two,four</td></tr>
+                                <tr class="dataRow oddRow" ><td class="oddRow oddCol">3</td><td class="oddRow evenCol">1971-05-09T09:00</td><td class="oddRow oddCol">aquamarine</td><td class="oddRow evenCol">third</td><td class="oddRow oddCol">three,six,nine</td></tr>
+                                """));
 
     body = given()
             .queryParam("key", postgres.getName())
