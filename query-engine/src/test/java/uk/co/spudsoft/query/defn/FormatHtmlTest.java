@@ -52,5 +52,22 @@ public class FormatHtmlTest {
       FormatHtml.builder().name(null).build().validate();
     });
     FormatHtml.builder().name("name").build().validate();
+
+    assertThrows(IllegalArgumentException.class, () -> {
+      FormatHtml.builder().name("html").dateFormat("Bob").build().validate();
+    });
+    assertThrows(IllegalArgumentException.class, () -> {
+      FormatHtml.builder().name("html").dateTimeFormat("Bob").build().validate();
+    });
+    assertThrows(IllegalArgumentException.class, () -> {
+      FormatHtml.builder().name("html").timeFormat("Bob").build().validate();
+    });
+    assertThrows(IllegalArgumentException.class, () -> {
+      FormatHtml.builder().name("html").decimalFormat("a.b.c").build().validate();
+    });
+    assertThrows(IllegalArgumentException.class, () -> {
+      FormatHtml.builder().name("html").booleanFormat("Bob").build().validate();
+    });
+    FormatHtml.builder().name("name").build().validate();
   }
 }

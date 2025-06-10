@@ -49,6 +49,22 @@ public class CustomBooleanFormatterTest {
   }
   
   @Test
+  public void testFormatQuotingBad() {
+    assertEquals("The false value is not valid (is not \"true\" or \"false\"; is not a number; does not begin with < and end with >", assertThrows(IllegalArgumentException.class, () -> {
+      new CustomBooleanFormatter("['<bob>', 'fred']", "<", ">", true);
+    }).getMessage());
+    assertEquals("The false value is not valid (is not \"true\" or \"false\"; is not a number; does not begin with < and end with >", assertThrows(IllegalArgumentException.class, () -> {
+      new CustomBooleanFormatter("['<bob>', '\"fred']", "<", ">", true);
+    }).getMessage());
+    assertEquals("The false value is not valid (is not \"true\" or \"false\"; is not a number; does not begin with < and end with >", assertThrows(IllegalArgumentException.class, () -> {
+      new CustomBooleanFormatter("['<bob>', 'fred\"']", "<", ">", true);
+    }).getMessage());
+    assertEquals("The false value is not valid (is not \"true\" or \"false\"; is not a number; does not begin with < and end with >", assertThrows(IllegalArgumentException.class, () -> {
+      new CustomBooleanFormatter("['true', 'False']", "<", ">", false);
+    }).getMessage());
+  }
+  
+  @Test
   public void testFormatValid() {
     CustomBooleanFormatter formatter = new CustomBooleanFormatter("['\"1\"', '\"0\"']", "\"", "\"", true);
     
@@ -64,6 +80,11 @@ public class CustomBooleanFormatterTest {
 
     assertEquals("true", formatter.format("true"));
     assertEquals("false", formatter.format("not true"));
+
+    formatter = new CustomBooleanFormatter("['true', 'fALSe']", "<", ">", false);
+
+    assertEquals("true", formatter.format(1));
+    assertEquals("fALSe", formatter.format(0));
 
     formatter = new CustomBooleanFormatter("['1', '0']", "<", ">", true);
 

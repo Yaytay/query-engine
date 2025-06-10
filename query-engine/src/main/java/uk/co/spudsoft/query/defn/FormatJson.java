@@ -842,7 +842,7 @@ public class FormatJson implements Format {
      * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder compatibleTypeNames(final Boolean value) {
-      this.compatibleTypeNames = value;
+      this.compatibleTypeNames = value == null ? false : value;
       return this;
     }
     
@@ -918,7 +918,7 @@ public class FormatJson implements Format {
 
   private FormatJson(final FormatType type, final String name, final String description
           , final String extension, final String filename, final MediaType mediaType
-          , final boolean hidden, String dataName, String metadataName, Boolean compatibleTypeNames
+          , final boolean hidden, String dataName, String metadataName, boolean compatibleTypeNames
           , final String dateFormat, final String dateTimeFormat, final String timeFormat, final String decimalFormat, final String booleanFormat
   ) {
     validateType(FormatType.JSON, type);
@@ -931,7 +931,7 @@ public class FormatJson implements Format {
     this.hidden = hidden;
     this.dataName = dataName;
     this.metadataName = metadataName;
-    this.compatibleTypeNames = compatibleTypeNames == null ? false : compatibleTypeNames;
+    this.compatibleTypeNames = compatibleTypeNames;
     this.dateFormat = dateFormat;
     this.dateTimeFormat = dateTimeFormat;
     this.timeFormat = timeFormat;

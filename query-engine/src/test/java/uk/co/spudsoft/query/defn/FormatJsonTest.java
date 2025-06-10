@@ -64,8 +64,13 @@ public class FormatJsonTest {
     
     dj = FormatJson.builder().compatibleTypeNames(Boolean.FALSE).build();
     assertFalse(dj.isCompatibleTypeNames());
+    dj = FormatJson.builder().compatibleTypeNames(null).build();
+    assertFalse(dj.isCompatibleTypeNames());
     dj = FormatJson.builder().compatibleTypeNames(Boolean.TRUE).build();
     assertTrue(dj.isCompatibleTypeNames());
+    
+    dj = FormatJson.builder().booleanFormat("['true','false']").build();
+    assertEquals("['true','false']", dj.getBooleanFormat());
   }
   
   @Test
@@ -76,6 +81,21 @@ public class FormatJsonTest {
     });
     assertThrows(IllegalArgumentException.class, () -> {
       FormatJson.builder().name("json").metadataName("meta").build().validate();
+    });
+    assertThrows(IllegalArgumentException.class, () -> {
+      FormatJson.builder().name("json").dateFormat("Bob").build().validate();
+    });
+    assertThrows(IllegalArgumentException.class, () -> {
+      FormatJson.builder().name("json").dateTimeFormat("Bob").build().validate();
+    });
+    assertThrows(IllegalArgumentException.class, () -> {
+      FormatJson.builder().name("json").timeFormat("Bob").build().validate();
+    });
+    assertThrows(IllegalArgumentException.class, () -> {
+      FormatJson.builder().name("json").decimalFormat("a.b.c").build().validate();
+    });
+    assertThrows(IllegalArgumentException.class, () -> {
+      FormatJson.builder().name("json").booleanFormat("Bob").build().validate();
     });
     FormatJson.builder().name("name").build().validate();
     FormatJson.builder().name("json").dataName("data").build().validate();

@@ -82,6 +82,12 @@ public class FormatDelimitedTest {
     assertThrows(IllegalArgumentException.class, () -> {
       FormatDelimited.builder().timeFormat("T").build().validate();
     });
+    assertThrows(IllegalArgumentException.class, () -> {
+      FormatDelimited.builder().decimalFormat("a.b.c").build().validate();
+    });
+    assertThrows(IllegalArgumentException.class, () -> {
+      FormatDelimited.builder().booleanFormat("Bob").build().validate();
+    });
     FormatDelimited.builder()
             .dateFormat(null)
             .dateTimeFormat(null)
