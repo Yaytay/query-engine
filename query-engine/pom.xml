@@ -31,7 +31,7 @@
   <scm>
     <connection>scm:git@github.com:Yaytay/query-engine.git</connection>
     <developerConnection>scm:git@github.com:Yaytay/query-engine.git</developerConnection>
-    <url>https://github.com/Yaytay/vertx-resteasy-helpers.git</url>
+    <url>https://github.com/Yaytay/query-engine.git</url>
   </scm>
 
   <properties>
