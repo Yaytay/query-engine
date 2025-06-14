@@ -29,6 +29,8 @@ import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import io.swagger.v3.oas.models.media.JsonSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -47,13 +49,13 @@ import org.slf4j.LoggerFactory;
  * <li>Outputs correct schema for {@link com.google.common.net.MediaType} type, rather than expecting an Object.
  * <li>Sets the schema type correctly for arrays.
  * </ul>
- * 
+ *
  * @author jtalbut
  */
 public class OpenApiModelConverter implements ModelConverter {
 
   private static final Logger logger = LoggerFactory.getLogger(OpenApiModelConverter.class);
-  
+
   private final AtomicInteger level = new AtomicInteger();
 
   /**
@@ -61,9 +63,9 @@ public class OpenApiModelConverter implements ModelConverter {
    */
   public OpenApiModelConverter() {
   }
-  
+
   @Override
-  @SuppressWarnings({"unchecked", "rawtypes"})  
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public Schema resolve(AnnotatedType type, ModelConverterContext context, Iterator<ModelConverter> chain) {
     if (chain.hasNext()) {
       logger.trace("Resolving type: {} {}:{} ({})", level.incrementAndGet(), type.getType().getTypeName(), type.getPropertyName(), type.getName());
@@ -97,7 +99,7 @@ public class OpenApiModelConverter implements ModelConverter {
     }
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes"})  
+  @SuppressWarnings({"unchecked", "rawtypes"})
   void setSchemaType(Schema schema) {
     // logger.debug("{} {} ({} or {}): {}", schema.getClass(), schema.getName(), schema.getTypes(), schema.getType(), schema.getProperties() == null ? null : schema.getProperties().size());
     if (schema.getType() != null && schema.getTypes() == null) {
@@ -118,15 +120,12 @@ public class OpenApiModelConverter implements ModelConverter {
         try {
           method = cls.getMethod(methodName);
         } catch (NoSuchMethodException ex) {
-          return ;
+          return;
         }
         ArraySchema arraySchema = method.getAnnotation(ArraySchema.class);
         if (arraySchema != null) {
           if (s.getTypes() == null || s.getTypes().isEmpty()) {
             s.setTypes(ImmutableSet.builder().add("array").build());
-          }
-          if (arraySchema.minItems() > 0 && arraySchema.minItems() != Integer.MAX_VALUE && s.getMinItems() == null) {
-            s.setMinItems(arraySchema.minItems());
           }
           if (arraySchema.arraySchema() != null) {
             if (Strings.isNullOrEmpty(s.getDescription()) && !Strings.isNullOrEmpty(arraySchema.arraySchema().description())) {
@@ -138,39 +137,54 @@ public class OpenApiModelConverter implements ModelConverter {
           }
           if (arraySchema.schema() != null) {
             io.swagger.v3.oas.annotations.media.Schema itemSchemaAnnotation = arraySchema.schema();
-            Schema itemSchema = s.getItems();
+            Schema<?> itemSchema = s.getItems();
             if (itemSchema == null) {
               itemSchema = new JsonSchema();
+            } else {
+              itemSchema.setMinItems(null);
+              itemSchema.setMaxItems(null);
+              itemSchema.setUniqueItems(null);
             }
             if (itemSchemaAnnotation.types() != null && itemSchemaAnnotation.types().length > 0) {
               itemSchema.setTypes(new HashSet<>(Arrays.asList(itemSchemaAnnotation.types())));
             }
             if (itemSchema.getTypes() == null || itemSchema.getTypes().isEmpty() || itemSchema.getTypes().contains("object")) {
-              if (itemSchemaAnnotation.implementation() != null) {
+              if (itemSchemaAnnotation.implementation() != null && itemSchemaAnnotation.implementation() != Void.class) {
                 itemSchema.$ref("#/components/schemas/" + itemSchemaAnnotation.implementation().getSimpleName());
+              } else if (method.getGenericReturnType() != null) {
+                Type returnType = method.getGenericReturnType();
 
+                if (returnType instanceof ParameterizedType parameterizedType) {
+                  Type[] typeArguments = parameterizedType.getActualTypeArguments();
+
+                  if (typeArguments.length > 0) {
+                    if (typeArguments[0] instanceof Class<?> retClass) {
+                      itemSchema.$ref("#/components/schemas/" + retClass.getSimpleName());
+                    }
+                  }
+                }
               }
             }
-            if (itemSchemaAnnotation.maxLength() > 0 && itemSchemaAnnotation.maxLength() != Integer.MAX_VALUE) {
-              itemSchema.maxLength(itemSchemaAnnotation.maxLength());
+            if (arraySchema.minItems() >= 0 && arraySchema.minItems() < Integer.MAX_VALUE) {
+              schema.setMinItems(arraySchema.minItems());
             }
             s.setItems(itemSchema);
-            if (Strings.isNullOrEmpty(s.getDescription()) && !Strings.isNullOrEmpty(itemSchemaAnnotation.description())) {
-              s.setDescription(itemSchemaAnnotation.description());
-            }
-          } 
+//            if (Strings.isNullOrEmpty(s.getDescription()) && !Strings.isNullOrEmpty(itemSchemaAnnotation.description())) {
+//              s.setDescription(itemSchemaAnnotation.description());
+//            }
+          }
           if (arraySchema.schema() != null) {
             io.swagger.v3.oas.annotations.media.Schema itemSchemaAnnotation = arraySchema.schema();
             if (Strings.isNullOrEmpty(s.getDescription()) && !Strings.isNullOrEmpty(itemSchemaAnnotation.description())) {
               s.setDescription(itemSchemaAnnotation.description());
             }
-          } 
+          }
         }
       });
     }
   }
-  
-  @SuppressWarnings({"unchecked", "rawtypes"})  
+
+  @SuppressWarnings({"unchecked", "rawtypes"})
   static void removeEmptyProperty(Schema schema) {
     if (schema != null && schema.getProperties() != null) {
       schema.getProperties().remove("empty");
@@ -179,8 +193,8 @@ public class OpenApiModelConverter implements ModelConverter {
       }
     }
   }
-  
-  @SuppressWarnings({"unchecked", "rawtypes"})  
+
+  @SuppressWarnings({"unchecked", "rawtypes"})
   static void convertDuration(Schema schema) {
     if (schema != null) {
       schema.setProperties(null);
@@ -189,8 +203,8 @@ public class OpenApiModelConverter implements ModelConverter {
       schema.setPattern("^P(?!$)(\\\\d+Y)?(\\\\d+M)?(\\\\d+W)?(\\\\d+D)?(T(?=\\\\d)(\\\\d+H)?(\\\\d+M)?(\\\\d+S)?)?$");
     }
   }
-  
-  @SuppressWarnings({"unchecked", "rawtypes"})  
+
+  @SuppressWarnings({"unchecked", "rawtypes"})
   static void convertMediaType(Schema schema) {
     if (schema != null) {
       schema.setProperties(null);
@@ -200,7 +214,7 @@ public class OpenApiModelConverter implements ModelConverter {
       schema.setPattern("^(" + restrictedName + ")/(" + restrictedName + ")(; *" + restrictedName + "(=" + restrictedName + "))*$");
     }
   }
-  
+
   @Override
   public boolean isOpenapi31() {
     return true;

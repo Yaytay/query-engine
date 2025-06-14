@@ -82,10 +82,7 @@ public class SourcePipeline {
    * @return processors to run on the data as it flows from the Source.
    */
   @ArraySchema(
-          schema = @Schema(
-                  implementation = Processor.class
-          )
-          , arraySchema = @Schema(
+          arraySchema = @Schema(
                   type = "array"
                   , description = """
                                 <P>Processors to run on the data as it flows from the Source.</P>

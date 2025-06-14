@@ -525,7 +525,7 @@ public class Main extends Application {
         new JacksonJsonProvider(PipelineDefnLoader.JSON_OBJECT_MAPPER, JacksonJsonProvider.BASIC_ANNOTATIONS)
     );
 
-    OpenAPIConfiguration openApiConfig = createOpenapiConfiguration(controllers);
+    OpenAPIConfiguration openApiConfig = createOpenapiConfiguration(controllers, this);
     OpenApiHandler openApiHandler = new OpenApiHandler(this, openApiConfig, "/api", params.getOpenApiExplorerUrl());
     ModelConverters.getInstance(true).addConverter(new OpenApiModelConverter());
 
@@ -837,9 +837,9 @@ public class Main extends Application {
     return rcb;
   }
 
-  private OpenAPIConfiguration createOpenapiConfiguration(List<Object> resources) {
+  static OpenAPIConfiguration createOpenapiConfiguration(List<Object> resources, Object application) {
     return new SwaggerConfiguration()
-            .resourceClasses(Stream.concat(resources.stream(), Stream.of(this)).map(r -> r.getClass().getCanonicalName())
+            .resourceClasses(Stream.concat(resources.stream(), Stream.of(application)).map(r -> r.getClass().getCanonicalName())
                     .collect(Collectors.toSet()))
             .prettyPrint(true)
             .filterClass("uk.co.spudsoft.query.main.OpenApiFilterClass")

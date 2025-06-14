@@ -1,3 +1,7 @@
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+
+select pg_advisory_lock(1234567890);
+
 -- Fields Table
 -- Defines dynamic fields that rows in the Data table may, or may not, have.
 CREATE TABLE IF NOT EXISTS "Fields" (
@@ -434,3 +438,6 @@ BEGIN
   END LOOP;
 END;
 $do$
+;
+
+select pg_advisory_unlock(1234567890);

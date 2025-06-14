@@ -35,7 +35,7 @@
   </scm>
 
   <properties>
-    <fork.count>4</fork.count>
+    <fork.count>1</fork.count>
     <compiler.dir>target/compiler</compiler.dir>
     <mainClass>uk.co.spudsoft.query.main.Main</mainClass>
     <rootdir>${project.basedir}/..</rootdir>
@@ -115,12 +115,12 @@
     <dependency>
       <groupId>io.swagger.core.v3</groupId>
       <artifactId>swagger-jaxrs2-jakarta</artifactId>
-      <version>2.2.27</version>
+      <version>2.2.28</version>
     </dependency>
     <dependency>
       <groupId>io.swagger.core.v3</groupId>
       <artifactId>swagger-annotations-jakarta</artifactId>
-      <version>2.2.27</version>
+      <version>2.2.28</version>
     </dependency>
     <dependency>
       <groupId>com.github.seancfoley</groupId>
@@ -416,7 +416,7 @@
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
-      <version>42.7.6</version>
+      <version>42.7.7</version>
     </dependency>
     <dependency>
       <groupId>io.github.nstdio</groupId>
@@ -735,6 +735,9 @@
   <profiles>
     <profile>
       <id>ui</id>
+      <activation>
+        <activeByDefault>>true</activeByDefault>
+      </activation>
       <build>
         <plugins>
           <plugin>

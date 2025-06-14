@@ -31,6 +31,7 @@
   </developers>
 
   <properties>
+    <fork.count>0.5C</fork.count>
     <!-- For production usage JDK must be compatible with GraalVM and must be receiving security updates, effectively meaning the most recent LTS -->
     <jdk.version>21</jdk.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -85,14 +86,14 @@
           <executions>
             <execution>
               <id>display-plugin-updates</id>
-              <phase>validate</phase>
+              <phase>compile</phase>
               <goals>
                 <goal>display-plugin-updates</goal>
               </goals>
             </execution>
             <execution>
               <id>display-dependency-updates</id>
-              <phase>validate</phase>
+              <phase>compile</phase>
               <goals>
                 <goal>display-dependency-updates</goal>
               </goals>
@@ -264,7 +265,7 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>3.5.3</version>
           <configuration>
-            <forkCount>1</forkCount>
+            <forkCount>${fork.count}</forkCount>
             <reuseForks>true</reuseForks>
             <argLine>
               @{argLine}
@@ -302,7 +303,7 @@
             </execution>
           </executions>
           <configuration>
-            <forkCount>1</forkCount>
+            <forkCount>${fork.count}</forkCount>
             <useModulePath>false</useModulePath>
             <reuseForks>false</reuseForks>
             <argLine>@{argLine} -Dfile.encoding=UTF-8 -XX:+UnlockExperimentalVMOptions -XX:+UseJVMCICompiler --module-path=${compiler.dir} --upgrade-module-path=${compiler.dir}</argLine>
@@ -536,6 +537,9 @@
               </goals>
               <configuration>
                 <licensesOutputDirectory>${user.home}/.m2/licenses</licensesOutputDirectory>
+                <socketTimeout>500</socketTimeout>
+                <connectTimeout>500</connectTimeout>
+                <connectionRequestTimeout>500</connectionRequestTimeout>
               </configuration>
             </execution>
           </executions>

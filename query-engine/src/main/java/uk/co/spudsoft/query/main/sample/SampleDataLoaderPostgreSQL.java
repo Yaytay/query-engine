@@ -20,10 +20,12 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.sqlclient.Pool;
+import static io.vertx.sqlclient.Pool.pool;
 import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.SqlConnectOptions;
+import io.vertx.sqlclient.SqlConnection;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
@@ -78,17 +80,19 @@ public class SampleDataLoaderPostgreSQL implements SampleDataLoader {
     } catch (Throwable ex) {
       return Future.failedFuture(ex);
     }
-    
-    return Future.succeededFuture()
-            .compose(rs -> executeSql(pool, sql))
-            .mapEmpty()
-            ;
+
+    return pool.withTransaction(conn -> {
+      return executeSql(conn, sql)
+              .onFailure(ex -> {
+                logger.warn("Failed to update PostgreSQL sample data: ", ex);
+              });
+    }).mapEmpty();
 
   }
 
   @SuppressFBWarnings("SQL_INJECTION_VERTX")
-  private static Future<RowSet<Row>> executeSql(Pool pool, String sql) {
-    return pool.query(sql).execute();
+  private static Future<RowSet<Row>> executeSql(SqlConnection conn, String sql) {
+    return conn.query(sql).execute();
   }
 
 }
