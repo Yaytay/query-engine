@@ -36,7 +36,7 @@ class FormatAtomTest {
       .type(FormatType.Atom)
       .name("TestFormat")
       .extension("xml")
-      .mediaType(com.google.common.net.MediaType.parse(MediaType.APPLICATION_XML))
+      .mediaType(MediaType.APPLICATION_XML)
       .fieldInitialLetterFix("_")
       .fieldInvalidLetterFix("-")
       .build();

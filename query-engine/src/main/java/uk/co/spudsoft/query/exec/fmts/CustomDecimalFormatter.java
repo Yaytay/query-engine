@@ -20,9 +20,7 @@ import com.google.common.base.Strings;
 import java.text.DecimalFormat;
 
 /**
- * A helper class to work with DateTimeFormatters allowing them to be accessed by name as well as by pattern.
- *
- * Also supports EPOCH_SECONDS and EPOCH_MILLISECONDS.
+ * A helper class to work with DecimalFormat.
  *
  * @author jtalbut
  */
@@ -34,8 +32,7 @@ public class CustomDecimalFormatter {
   /**
    * Constructor.
    *
-   * @param format Either a DateTimeFormatter pattern or the name of a predefined DateTimeFormatter (excluding zoned or offset
-   * ones) or EPOCH_SECONDS and EPOCH_MILLISECONDS.
+   * @param format a DecimalFormat pattern.
    */
   public CustomDecimalFormatter(String format) {
 

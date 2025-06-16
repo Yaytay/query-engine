@@ -32,7 +32,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -103,7 +102,7 @@ public class OpenApiModelConverter implements ModelConverter {
 
   static void ensureParentSchema(Set<Class<?>> processed, Class<?> cls, Schema<?> schema) {
 
-    if (cls != null && ! cls.getPackageName().startsWith("java")) {
+    if (cls != null && !cls.getPackageName().startsWith("java")) {
       augmentFromClass(processed, cls.getSuperclass(), schema);
       if (cls.getInterfaces() != null) {
         for (Class<?> iface : cls.getInterfaces()) {
@@ -116,7 +115,7 @@ public class OpenApiModelConverter implements ModelConverter {
   @SuppressWarnings({"unchecked", "rawtypes"})
   private static void augmentFromClass(Set<Class<?>> processed, Class<?> cls, Schema schema) {
     
-    if (cls != null && ! cls.getPackageName().startsWith("java")) {
+    if (cls != null && !cls.getPackageName().startsWith("java")) {
       if (!processed.contains(cls)) {
         processed.add(cls);
         Map<String, Schema> props = schema.getProperties();

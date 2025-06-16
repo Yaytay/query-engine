@@ -96,6 +96,12 @@ public final class CustomBooleanFormatter {
       this.trueValue = (String) array[0];
       this.falseValue = (String) array[1];
       
+      if (openQuote == null) {
+        openQuote = "\"";
+      }
+      if (closeQuote == null) {
+        closeQuote = "\"";
+      }
       validateValue("true", trueValue, openQuote, closeQuote, lowerCaseOnly);
       validateValue("false", falseValue, openQuote, closeQuote, lowerCaseOnly);
     }

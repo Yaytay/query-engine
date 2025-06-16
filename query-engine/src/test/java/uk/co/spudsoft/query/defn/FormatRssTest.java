@@ -36,7 +36,7 @@ class FormatRssTest {
       .type(FormatType.RSS)
       .name("TestFormat")
       .extension("xml")
-      .mediaType(com.google.common.net.MediaType.parse(MediaType.APPLICATION_XML))
+      .mediaType(MediaType.APPLICATION_XML)
       .fieldInitialLetterFix("_")
       .fieldInvalidLetterFix("-")
       .build();
@@ -56,7 +56,7 @@ class FormatRssTest {
     FormatRss formatRss = new FormatRss.Builder().build();
 
     // Assert
-    assertEquals("RSS", formatRss.getName());
+    assertEquals("rss", formatRss.getName());
     assertEquals("xml", formatRss.getExtension());
     assertEquals("application/rss+xml; charset=utf-8", formatRss.getMediaType().toString());
     assertEquals(FormatType.RSS, formatRss.getType());

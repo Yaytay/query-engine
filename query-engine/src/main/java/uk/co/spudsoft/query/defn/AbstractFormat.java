@@ -17,68 +17,53 @@
 package uk.co.spudsoft.query.defn;
 
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.google.common.base.Strings;
 import com.google.common.net.MediaType;
 
 /**
  * Base class for Format implementations.
  * <P>
  * There is a lot of commonality between Format implementations.
- * 
+ *
  * @author jtalbut
  */
 public abstract class AbstractFormat implements Format {
-  
-  /**
-   * The type of Format being configured, must be appropriate for the Format being configured.
-   */
-  protected final FormatType type;
-  /**
-   * The name of the format, as will be used on query string parameters.
-   */
-  protected final String name;
-  /**
-   * The description of the format, optional value to help UI users choose which format to use.
-   */
-  protected final String description;
-  /**
-   * The the extension of the format, used to determine the format based upon the URL path.
-   */
-  protected final String extension;
-  /**
-   * The filename to use in the Content-Disposition header.
-   */
-  protected final String filename;
-  /**
-   * The media type of the format, used to determine the format based upon the Accept header in the request.
-   */
-  protected final MediaType mediaType;
-  /**
-   * The hidden flag, to determine whether the format should be removed from the list when presented as an option to users.
-   */
-  protected final boolean hidden;
+
+  private final FormatType type;
+  private final String name;
+  private final String description;
+  private final String extension;
+  private final String filename;
+  private final MediaType mediaType;
+  private final boolean hidden;
 
   /**
    * Constructor.
-   * @param type The type of Format being configured, must be appropriate for the Format being configured.
-   * @param name The name of the format, as will be used on query string parameters.
-   * @param description The description of the format, optional value to help UI users choose which format to use.
-   * @param extension The the extension of the format, used to determine the format based upon the URL path.
-   * @param filename The filename to use in the Content-Disposition header.
-   * @param mediaType The media type of the format, used to determine the format based upon the Accept header in the request.
-   * @param hidden  The hidden flag, to determine whether the format should be removed from the list when presented as an option to users.
+   * @param builder The Builder object to use to seed this instance.
    */
-  public AbstractFormat(FormatType type, String name, String description, String extension, String filename, MediaType mediaType, boolean hidden) {
-    this.type = type;
-    this.name = name;
-    this.description = description;
-    this.extension = extension;
-    this.filename = filename;
-    this.mediaType = mediaType;
-    this.hidden = hidden;
+  public AbstractFormat(Builder<?> builder) {
+    this.type = builder.type;
+    this.name = builder.name;
+    this.description = builder.description;
+    this.extension = builder.extension;
+    this.filename = builder.filename;
+    this.mediaType = builder.mediaType;
+    this.hidden = builder.hidden;
   }
 
+  /**
+   * Validate the configured data.
+   * @param requiredType The type that the concrete class actually requires this format to have.
+   */
+  protected void validate(FormatType requiredType) {
+    validateType(requiredType, type);
+    if (Strings.isNullOrEmpty(name)) {
+      throw new IllegalArgumentException("Format has no name");
+    }
+  }
+  
   @Override
-  public FormatType getType() {
+  public final FormatType getType() {
     return type;
   }
 
@@ -122,34 +107,34 @@ public abstract class AbstractFormat implements Format {
     /**
      * The type of Format being configured.
      */
-    protected FormatType type;
+    private FormatType type;
     /**
      * The name of the format, as will be used on query string parameters.
      */
-    protected String name;
+    private String name;
     /**
      * The description of the format, optional value to help UI users choose which format to use.
      */
-    protected String description;
+    private String description;
     /**
      * The the extension of the format, used to determine the format based upon the URL path.
      */
-    protected String extension;
+    private String extension;
     /**
      * The filename to use in the Content-Disposition header.
      */
-    protected String filename;
+    private String filename;
     /**
      * The media type of the format, used to determine the format based upon the Accept header in the request.
      */
-    protected MediaType mediaType;
+    private MediaType mediaType;
     /**
      * The hidden flag, to determine whether the format should be removed from the list when presented as an option to users.
      */
-    protected boolean hidden;
+    private boolean hidden;
 
     /**
-     * Constructor. 
+     * Constructor.
      * @param type The type of Format being configured, must be appropriate for the Format being configured.
      * @param name The name of the format, as will be used on query string parameters.
      * @param description The description of the format, optional value to help UI users choose which format to use.
@@ -176,7 +161,7 @@ public abstract class AbstractFormat implements Format {
     final T self() {
         return (T) this;
     }
-    
+
     /**
      * Set the {@link Format#getType()} value in the builder.
      * @param value The value for the {@link Format#getType()}, must match the type of the concrete class.
@@ -186,7 +171,7 @@ public abstract class AbstractFormat implements Format {
       this.type = value;
       return self();
     }
-   
+
     /**
      * Set the {@link Format#getName()} value in the builder.
      * @param value The value for the {@link Format#getName()}.
@@ -249,7 +234,7 @@ public abstract class AbstractFormat implements Format {
       this.hidden = hidden;
       return self();
     }
-    
+
   }
-  
+
 }
