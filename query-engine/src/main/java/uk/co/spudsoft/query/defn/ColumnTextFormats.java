@@ -16,18 +16,13 @@
  */
 package uk.co.spudsoft.query.defn;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.net.MediaType;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import uk.co.spudsoft.query.exec.fmts.CustomBooleanFormatter;
 import uk.co.spudsoft.query.exec.fmts.CustomDateTimeFormatter;
 import uk.co.spudsoft.query.exec.fmts.CustomDecimalFormatter;
-import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
  * Base class for Format implementations that use standard text formatters for columns.
@@ -36,25 +31,25 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
  *
  * @author jtalbut
  */
-public abstract class AbstractTextFormat extends AbstractFormat implements Format {
+public abstract class ColumnTextFormats {
 
+  private final String column;
   private final String dateFormat;
   private final String dateTimeFormat;
   private final String timeFormat;
   private final String decimalFormat;
   private final String booleanFormat;
-  private final List<ColumnTextFormats> columnSpecificTextFormats;
-  private final ImmutableMap<String, ColumnTextFormats> columnSpecificTextFormatsMap;
 
   /**
    * Validate the configured data.
-   * @param requiredType The type that the concrete class actually requires this format to have.
    * @param openQuote The quoting string that may be included at the beginning of a Boolean value, may be null.
    * @param closeQuote The quoting string that may be included at the end of a Boolean value, may be null.
    * 
    */
-  protected void validate(FormatType requiredType, String openQuote, String closeQuote) {
-    super.validate(requiredType);
+  protected void validate(String openQuote, String closeQuote) {
+    if (!Strings.isNullOrEmpty(column)) {
+      throw new IllegalArgumentException("No column specified for column text formats");
+    }
     if (!Strings.isNullOrEmpty(dateFormat)) {
       try {
         DateTimeFormatter.ofPattern(dateFormat);
@@ -90,6 +85,23 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
         throw new IllegalArgumentException("Invalid booleanFormat: " + ex.getMessage());
       }
     }
+    if (Strings.isNullOrEmpty(dateFormat) && Strings.isNullOrEmpty(dateTimeFormat) && Strings.isNullOrEmpty(timeFormat) && Strings.isNullOrEmpty(decimalFormat) && Strings.isNullOrEmpty(booleanFormat)) {
+      throw new IllegalArgumentException("No formats specified for column \"" + column + "\"");
+    }
+  }
+
+  /**
+   * Get the column to be formatted.
+   * @return the column to be formatted.
+   */
+  @Schema(description = """
+                        The column to be formatted.
+                        """
+          , maxLength = 100
+          , requiredMode = Schema.RequiredMode.REQUIRED
+  )
+  public String getColumn() {
+    return column;
   }
   
   /**
@@ -470,73 +482,32 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
   }
 
   /**
-   * Get the overrides for the formatting of specific columns.
-   * @return the overrides for the formatting of specific columns.
+   * Builder class for TextFormats.
    */
-  @Schema(description = """
-                        <P>The overrides for the formatting of specific columns.</P>
-                        <P>
-                        Usually the default formatting of a column is adequate, but this can be overridden if there is a specific need.
-                        </P>
-                        <P>
-                        There are only three aspects of a column that can be overridden:
-                        <UL>
-                        <LI>The title that will appear in the header row.
-                        <LI>The format that Excel will apply to the body cells.
-                        <LI>The width of the column.
-                        </UL>
-                        </P>
-                        <P>
-                        There is no capability for changing the order of output columns, this will always be set as the order they appear in the data.
-                        </P>
-                        """)
-  public List<ColumnTextFormats> getColumnsSpecificTextFormats() {
-    return columnSpecificTextFormats;
-  }
+  public static class Builder {
 
-  @JsonIgnore  
-  public ImmutableMap<String, ColumnTextFormats> getColumnSpecificTextFormatsMap() {
-    return columnSpecificTextFormatsMap;
-  }
-  
-  /**
-   * Builder class for AbstractTextFormat.
-   *
-   * @param <T> The type parameter for the concrete builder class extending this builder.
-   */
-  public abstract static class Builder<T extends Builder<T>> extends AbstractFormat.Builder<T> {
-
+    private String column;
     private String dateFormat;
     private String dateTimeFormat;
     private String timeFormat;
     private String decimalFormat;
     private String booleanFormat;
-    private List<ColumnTextFormats> columnSpecificTextFormats;
 
     /**
      * Constructor.
-     * @param type The default type to use.
-     * @param name The default name to use.
-     * @param description The default description to use.
-     * @param extension The default extension to use.
-     * @param filename The default filename to use.
-     * @param mediaType The default mediaType to use.
-     * @param hidden The default hidden to use.
-     * @param dateFormat The default dateFormat to use.
-     * @param dateTimeFormat The default dateTimeFormat to use.
-     * @param timeFormat The default timeFormat to use.
-     * @param decimalFormat The default decimalFormat to use.
-     * @param booleanFormat The default booleanFormat to use.
      */
-    protected Builder(FormatType type, String name, String description, String extension, String filename, MediaType mediaType, boolean hidden
-        , String dateFormat, String dateTimeFormat, String timeFormat, String decimalFormat, String booleanFormat
-    ) {
-      super(type, name, description, extension, filename, mediaType, hidden);
-      this.dateFormat = dateFormat;
-      this.dateTimeFormat = dateTimeFormat;
-      this.timeFormat = timeFormat;
-      this.decimalFormat = decimalFormat;
-      this.booleanFormat = booleanFormat;
+    protected Builder() {
+    }
+
+    /**
+     * Set the column to be formatted.
+     *
+     * @param column The name of the column to be formatted.
+     * @return this, so that the builder can be used in a fluent manner.
+     */
+    public Builder column(String column) {
+      this.column = column;
+      return this;
     }
 
     /**
@@ -545,9 +516,9 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
      * @param dateFormat The format string to use for date fields.
      * @return this, so that the builder can be used in a fluent manner.
      */
-    public T dateFormat(String dateFormat) {
+    public Builder dateFormat(String dateFormat) {
       this.dateFormat = dateFormat;
-      return self();
+      return this;
     }
 
     /**
@@ -556,9 +527,9 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
      * @param dateTimeFormat The format string to use for date/time fields.
      * @return this, so that the builder can be used in a fluent manner.
      */
-    public T dateTimeFormat(String dateTimeFormat) {
+    public Builder dateTimeFormat(String dateTimeFormat) {
       this.dateTimeFormat = dateTimeFormat;
-      return self();
+      return this;
     }
 
     /**
@@ -567,9 +538,9 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
      * @param timeFormat The format string to use for time fields.
      * @return this, so that the builder can be used in a fluent manner.
      */
-    public T timeFormat(String timeFormat) {
+    public Builder timeFormat(String timeFormat) {
       this.timeFormat = timeFormat;
-      return self();
+      return this;
     }
 
     /**
@@ -578,9 +549,9 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
      * @param decimalFormat The format string to use for decimal fields.
      * @return this, so that the builder can be used in a fluent manner.
      */
-    public T decimalFormat(String decimalFormat) {
+    public Builder decimalFormat(String decimalFormat) {
       this.decimalFormat = decimalFormat;
-      return self();
+      return this;
     }
 
     /**
@@ -589,25 +560,9 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
      * @param booleanFormat The format string to use for boolean fields.
      * @return this, so that the builder can be used in a fluent manner.
      */
-    public T booleanFormat(String booleanFormat) {
+    public Builder booleanFormat(String booleanFormat) {
       this.booleanFormat = booleanFormat;
-      return self();
-    }
-
-    /**
-     * Set the column-specific text formats.
-     * <P>
-     * It is an error to create a column-specific text format with no format specified, or with no column specified.
-     * <P>
-     * Given that each column can only be of one type there is usually no reason to set more than one custom format for a single column-specific text format,
-     * but it is not an error to do so - only the relevant format (for the column data type) will be used.
-     * 
-     * @param columnSpecificTextFormats The column-specific text formats.
-     * @return this, so that the builder can be used in a fluent manner.
-     */
-    public T columnSpecificTextFormats(List<ColumnTextFormats> columnSpecificTextFormats) {
-      this.columnSpecificTextFormats = columnSpecificTextFormats;
-      return self();
+      return this;
     }
   }
 
@@ -615,14 +570,12 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
    * Constructor.
    * @param builder The builder object used to initialise this instance.
    */
-  protected AbstractTextFormat(Builder<?> builder) {
-    super(builder);
+  protected ColumnTextFormats(Builder builder) {
+    this.column = builder.column;
     this.dateFormat = builder.dateFormat;
     this.dateTimeFormat = builder.dateTimeFormat;
     this.timeFormat = builder.timeFormat;
     this.decimalFormat = builder.decimalFormat;
     this.booleanFormat = builder.booleanFormat;
-    this.columnSpecificTextFormats = ImmutableCollectionTools.copy(builder.columnSpecificTextFormats);
-    this.columnSpecificTextFormatsMap = ImmutableCollectionTools.listToMap(builder.columnSpecificTextFormats, cstf -> cstf.getColumn());
   }
 }
