@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.pipeline;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -99,12 +100,18 @@ public class PipelineNodesTree extends AbstractTree {
      * @return the children of the node.
      */
     @Override
-    @Schema(description = """
-                          The children of the node.
-                          <P>
-                          If this is null then the node is a PipelineFile, otherwise it is a PipelineDir.
-                          </P>
-                          """)
+    @ArraySchema(
+            arraySchema = @Schema(
+                    description = """
+                                  The children of the node.
+                                  <P>
+                                  If this is null then the node is a file, otherwise it is a directory.
+                                  </P>
+                                  """
+                    , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+                    , nullable = true
+            )
+    )
     public List<PipelineNode> getChildren() {
       return super.getChildren();
     }
@@ -187,11 +194,18 @@ public class PipelineNodesTree extends AbstractTree {
      */
     @Override
     @NotNull
-    @Schema(nullable = false
-            , requiredMode = Schema.RequiredMode.REQUIRED
-            , description = """
-                          The children of the directory.
-                          """)
+    @ArraySchema(
+            arraySchema = @Schema(
+                    description = """
+                                  The children of the node.
+                                  <P>
+                                  If this is null then the node is a file, otherwise it is a directory.
+                                  </P>
+                                  """
+                    , requiredMode = Schema.RequiredMode.REQUIRED
+                    , nullable = false
+            )
+    )
     public List<PipelineNode> getChildren() {
       return super.getChildren(); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
     }

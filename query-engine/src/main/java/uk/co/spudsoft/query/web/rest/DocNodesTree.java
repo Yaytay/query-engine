@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.web.rest;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -54,7 +55,7 @@ public class DocNodesTree extends AbstractTree {
                   , DocFile.class
           }
   )
-  public static class DocNode extends AbstractNode<DocNode> {
+  public abstract static class DocNode extends AbstractNode<DocNode> {
     
     private final String path; 
 
@@ -101,14 +102,18 @@ public class DocNodesTree extends AbstractTree {
      * @return the children of the node.
      */
     @Override
-    @Schema(description = """
-                          <P>
-                          The children of the node.
-                          </P>
-                          <P>
-                          If this is null then the node is a file, otherwise it is a directory.
-                          </P>
-                          """)
+    @ArraySchema(
+            arraySchema = @Schema(
+                    description = """
+                                  The children of the node.
+                                  <P>
+                                  If this is null then the node is a file, otherwise it is a directory.
+                                  </P>
+                                  """
+                    , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+                    , nullable = true
+            )
+    )
     public List<DocNode> getChildren() {
       return super.getChildren();
     }
@@ -176,13 +181,17 @@ public class DocNodesTree extends AbstractTree {
      */
     @Override
     @NotNull
-    @Schema(description = """
-                          <P>
-                          The children of the node.
-                          </P>
-                          """
-            , nullable = false
-            , requiredMode = Schema.RequiredMode.REQUIRED
+    @ArraySchema(
+            arraySchema = @Schema(
+                    description = """
+                                  The children of the node.
+                                  <P>
+                                  If this is null then the node is a file, otherwise it is a directory.
+                                  </P>
+                                  """
+                    , requiredMode = Schema.RequiredMode.REQUIRED
+                    , nullable = false
+            )
     )
     public List<DocNode> getChildren() {
       return super.getChildren(); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody

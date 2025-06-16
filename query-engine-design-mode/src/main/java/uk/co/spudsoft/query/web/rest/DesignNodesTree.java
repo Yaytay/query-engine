@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.web.rest;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.io.File;
@@ -100,14 +101,17 @@ public class DesignNodesTree extends AbstractTree {
      * @return the children of the node.
      */
     @Override
-    @Schema(description = """
-                          <P>
-                          The children of the node.
-                          </P>
-                          <P>
-                          If this is null then the node is a file, otherwise it is a directory.
-                          </P>
-                          """)
+    @ArraySchema(
+            arraySchema = @Schema(
+                    description = """
+                                  The children of the node.
+                                  <P>
+                                  If this is null then the node is a file, otherwise it is a directory.
+                                  </P>
+                                  """,
+                     requiredMode = Schema.RequiredMode.NOT_REQUIRED
+            )
+    )
     public List<DesignNode> getChildren() {
       return super.getChildren();
     }
@@ -198,21 +202,21 @@ public class DesignNodesTree extends AbstractTree {
      */
     @Override
     @NotNull
-    @Schema(nullable = false
-            , requiredMode = Schema.RequiredMode.REQUIRED
-            , description = """
-                          <P>
-                          The children of the node.
-                          </P>
-                          <P>
-                          If this is null then the node is a file, otherwise it is a directory.
-                          </P>
-                          """)
+    @ArraySchema(
+            arraySchema = @Schema(
+                    description = """
+                                  The children of the node.
+                                  <P>
+                                  If this is null then the node is a file, otherwise it is a directory.
+                                  </P>
+                                  """
+                    , requiredMode = Schema.RequiredMode.REQUIRED
+                    , nullable = false
+            )
+    )
     public List<DesignNodesTree.DesignNode> getChildren() {
       return super.getChildren(); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
     }
-
-
   }
 
   static String relativize(String separator, java.nio.file.Path root, DirCacheTree.Node node) {

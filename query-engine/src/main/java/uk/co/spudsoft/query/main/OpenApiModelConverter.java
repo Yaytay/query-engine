@@ -32,11 +32,13 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,6 +82,7 @@ public class OpenApiModelConverter implements ModelConverter {
       if (javaType != null) {
         Class<?> cls = javaType.getRawClass();
         fixArrrayPropertyDescriptions(cls, schema);
+        ensureParentSchema(new HashSet<>(), cls, schema);
         if (Map.class.isAssignableFrom(cls) || List.class.isAssignableFrom(cls)) {
           removeEmptyProperty(schema);
         }
@@ -89,7 +92,6 @@ public class OpenApiModelConverter implements ModelConverter {
         if (MediaType.class.isAssignableFrom(cls)) {
           convertMediaType(schema);
         }
-        setSchemaType(schema);
       }
       level.decrementAndGet();
       return schema;
@@ -99,15 +101,62 @@ public class OpenApiModelConverter implements ModelConverter {
     }
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
-  void setSchemaType(Schema schema) {
-    // logger.debug("{} {} ({} or {}): {}", schema.getClass(), schema.getName(), schema.getTypes(), schema.getType(), schema.getProperties() == null ? null : schema.getProperties().size());
-    if (schema.getType() != null && schema.getTypes() == null) {
-      // logger.debug("Adding {} type to {}", schema.getType(), schema.getName());
-      schema.setTypes(ImmutableSet.builder().add(schema.getType()).build());
+  static void ensureParentSchema(Set<Class<?>> processed, Class<?> cls, Schema<?> schema) {
+
+    if (cls != null && ! cls.getPackageName().startsWith("java")) {
+      augmentFromClass(processed, cls.getSuperclass(), schema);
+      if (cls.getInterfaces() != null) {
+        for (Class<?> iface : cls.getInterfaces()) {
+          augmentFromClass(processed, iface, schema);
+        }
+      }
     }
   }
 
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  private static void augmentFromClass(Set<Class<?>> processed, Class<?> cls, Schema schema) {
+    
+    if (cls != null && ! cls.getPackageName().startsWith("java")) {
+      if (!processed.contains(cls)) {
+        processed.add(cls);
+        Map<String, Schema> props = schema.getProperties();
+        if (props != null) {
+          props.forEach((k, s) -> {
+            String propName = s.getName();
+            String methodName = "get" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
+
+            Method method;
+            try {
+              method = cls.getMethod(methodName);
+            } catch (NoSuchMethodException ex) {
+              return;
+            }
+
+            io.swagger.v3.oas.annotations.media.Schema schemaAnnotation = method.getAnnotation(io.swagger.v3.oas.annotations.media.Schema.class);
+            if (schemaAnnotation != null) {
+              if (Strings.isNullOrEmpty(s.getDescription())) {
+                if (!Strings.isNullOrEmpty(schemaAnnotation.description())) {
+                  s.description(schemaAnnotation.description());
+                }
+              }
+              if (schema.getRequired() == null || !schema.getRequired().contains(propName)) {
+                if (schemaAnnotation.requiredMode() == RequiredMode.REQUIRED) {
+                  schema.addRequiredItem(propName);
+                }
+              }
+              if (s.getMaxLength() == null) {
+                if (schemaAnnotation.maxLength() >= 0) {
+                  s.maxLength(schemaAnnotation.maxLength());
+                }
+              }
+            }
+          });
+        }
+        ensureParentSchema(processed, cls, schema);
+      }
+    }
+  }
+    
   @SuppressWarnings({"unchecked", "rawtypes"})
   static void fixArrrayPropertyDescriptions(Class<?> cls, Schema schema) {
     Map<String, Schema> props = schema.getProperties();

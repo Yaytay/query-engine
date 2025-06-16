@@ -398,6 +398,7 @@ public final class ArgumentDetails {
                         <P>
                         """
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+          , types = {"string", "number", "boolean", "array"}
           )
   public Object getDefaultValue() {
     return defaultValue;

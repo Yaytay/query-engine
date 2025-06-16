@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.web.rest.DocHandler;
 
 /**
  *
@@ -41,11 +42,11 @@ public class OpenApiModelTest extends Application {
   private static final Logger logger = LoggerFactory.getLogger(OpenApiModelTest.class);
 
   @Test
-  public void testModel() throws Throwable {
+  public void testPipeline() throws Throwable {
 
     ModelConverters.getInstance(true).addConverter(new OpenApiModelConverter());
 
-    OpenAPIConfiguration openApiConfig = Main.createOpenapiConfiguration(Arrays.asList(new OpenApiTestController()), this);
+    OpenAPIConfiguration openApiConfig = Main.createOpenapiConfiguration(Arrays.asList(new OpenApiTestController()), this, "OpenApiModelTest#testPipeline");
 
     JaxrsOpenApiContextBuilder<?> oacb = new JaxrsOpenApiContextBuilder<>()
             .application(this);
@@ -60,14 +61,39 @@ public class OpenApiModelTest extends Application {
     OpenAPI oas = ctx.read();
 
     if (config.isOpenAPI31()) {
-      logger.error("OpenAPI 3.1: {}", Json31.pretty(oas));
+      logger.error("Pipeline OpenAPI 3.1: {}", Json31.pretty(oas));
     } else {
-      logger.error("OpenAPI 3.0: {}", Json.pretty(oas));
+      logger.error("Pipeline OpenAPI 3.0: {}", Json.pretty(oas));
     }
     
     assertNotNull(oas);
-    for (int i = 0; i < 100; ++i) {
-      Thread.sleep(100);
+  }
+  
+  @Test
+  public void testDocHandler() throws Throwable {
+
+    ModelConverters.getInstance(true).addConverter(new OpenApiModelConverter());
+
+    OpenAPIConfiguration openApiConfig = Main.createOpenapiConfiguration(Arrays.asList(new DocHandler(null, true, false)), this, "OpenApiModelTest#testDocHandler");
+
+    JaxrsOpenApiContextBuilder<?> oacb = new JaxrsOpenApiContextBuilder<>()
+            .application(this);
+    oacb.setOpenApiConfiguration(openApiConfig);
+    OpenApiContext ctx = oacb.buildContext(true);
+
+    OpenAPIConfiguration config = ctx.getOpenApiConfiguration();
+    if (config == null) {
+      config = openApiConfig;
     }
+
+    OpenAPI oas = ctx.read();
+
+    if (config.isOpenAPI31()) {
+      logger.error("DocHandler OpenAPI 3.1: {}", Json31.pretty(oas));
+    } else {
+      logger.error("DocHandler OpenAPI 3.0: {}", Json.pretty(oas));
+    }
+    
+    assertNotNull(oas);
   }
 }

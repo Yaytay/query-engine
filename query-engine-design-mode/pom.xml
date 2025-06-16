@@ -36,6 +36,7 @@
   </scm>
 
   <properties>
+    <fork.count>1</fork.count>
     <compiler.dir>target/compiler</compiler.dir>
     <mainClass>uk.co.spudsoft.query.main.DesignMain</mainClass>
     <rootdir>${project.basedir}/..</rootdir>
