@@ -25,9 +25,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.Temporal;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -42,9 +39,7 @@ import uk.co.spudsoft.query.exec.fmts.FormattingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
-import uk.co.spudsoft.query.exec.fmts.CustomBooleanFormatter;
-import uk.co.spudsoft.query.exec.fmts.CustomDateTimeFormatter;
-import uk.co.spudsoft.query.exec.fmts.CustomDecimalFormatter;
+import uk.co.spudsoft.query.exec.fmts.ValueFormatters;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
 /**
@@ -66,12 +61,7 @@ public final class FormatDelimitedInstance implements FormatInstance {
   private final FormattingWriteStream formattingStream;
   private final AtomicBoolean started = new AtomicBoolean();
 
-  private final DateTimeFormatter dateFormatter;
-  private final CustomDateTimeFormatter dateTimeFormatter;
-  private final DateTimeFormatter timeFormatter;
-  
-  private final CustomDecimalFormatter decimalFormatter;
-  private final CustomBooleanFormatter booleanFormatter;
+  private final ValueFormatters valueFormatters;
   
   private final Promise<Void> finalPromise;
   
@@ -88,22 +78,7 @@ public final class FormatDelimitedInstance implements FormatInstance {
     this.outputStream = outputStream;
     this.finalPromise = Promise.<Void>promise();
     
-    if (Strings.isNullOrEmpty(defn.getDateFormat())) {
-      this.dateFormatter = null;
-    } else {
-      this.dateFormatter = DateTimeFormatter.ofPattern(defn.getDateFormat());
-    }
-    
-    this.dateTimeFormatter = new CustomDateTimeFormatter(defn.getDateTimeFormat());
-    
-    if (Strings.isNullOrEmpty(defn.getTimeFormat())) {
-      this.timeFormatter = null;
-    } else {
-      this.timeFormatter = DateTimeFormatter.ofPattern(defn.getTimeFormat());
-    }
-    
-    this.decimalFormatter = new CustomDecimalFormatter(defn.getDecimalFormat());
-    this.booleanFormatter = new CustomBooleanFormatter(defn.getBooleanFormat(), defn.getOpenQuote(), defn.getCloseQuote(), false);
+    this.valueFormatters = defn.toValueFormatters(defn.getOpenQuote(), defn.getCloseQuote(), false);
     
     this.formattingStream = new FormattingWriteStream(outputStream
             , v -> Future.succeededFuture()
@@ -194,24 +169,18 @@ public final class FormatDelimitedInstance implements FormatInstance {
           String stringValue;
           switch (cd.type()) {
             case Boolean:
-              outputRow.append(booleanFormatter.format(v));              
+              outputRow.append(valueFormatters.getBooleanFormatter(cd.name()).format(v));              
               break;
             case Double:
             case Float:
-              if (v instanceof Number numberValue) {
-                outputRow.append(decimalFormatter.format(numberValue));
-              }
+              outputRow.append(valueFormatters.getDecimalFormatter(cd.name()).format(v));
               break;
             case Integer:
             case Long:
               outputRow.append(v);
               break;
             case Date:
-              if (dateFormatter != null && v instanceof Temporal t) {
-                stringValue = dateFormatter.format(t);
-              } else {
-                stringValue = v.toString();
-              }
+              stringValue = valueFormatters.getDateFormatter(cd.name()).format(v);
               if (defn.isQuoteTemporal()) {
                 outputEncodedQuotedString(outputRow, stringValue);
               } else {
@@ -219,15 +188,11 @@ public final class FormatDelimitedInstance implements FormatInstance {
               }
               break;
             case DateTime:
-              if (dateTimeFormatter != null && v instanceof LocalDateTime t) {
-                Object objectValue = dateTimeFormatter.format(t);
-                if (objectValue instanceof String s) {
-                  stringValue = s;
-                } else {
-                  stringValue = objectValue == null ? null : objectValue.toString();
-                }
+              Object objectValue = valueFormatters.getDateTimeFormatter(cd.name()).format(v);
+              if (objectValue instanceof String s) {
+                stringValue = s;
               } else {
-                stringValue = v.toString();
+                stringValue = objectValue == null ? null : objectValue.toString();
               }
               if (defn.isQuoteTemporal()) {
                 outputEncodedQuotedString(outputRow, stringValue);
@@ -236,11 +201,7 @@ public final class FormatDelimitedInstance implements FormatInstance {
               }
               break;              
             case Time:
-              if (timeFormatter != null && v instanceof Temporal t) {
-                stringValue = timeFormatter.format(t);
-              } else {
-                stringValue = v.toString();
-              }
+              stringValue = valueFormatters.getTimeFormatter(cd.name()).format(v);
               if (defn.isQuoteTemporal()) {
                 outputEncodedQuotedString(outputRow, stringValue);
               } else {

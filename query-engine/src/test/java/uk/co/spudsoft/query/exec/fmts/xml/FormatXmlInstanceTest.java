@@ -34,6 +34,7 @@ import java.time.LocalTime;
 import java.time.Month;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +54,10 @@ import uk.co.spudsoft.query.exec.procs.ListReadStream;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import uk.co.spudsoft.query.defn.ColumnTextFormats;
+import uk.co.spudsoft.query.exec.fmts.ValueFormatters;
 
 /**
  *
@@ -262,55 +266,102 @@ public class FormatXmlInstanceTest {
     assertEquals("F", FormatXmlInstance.getName(nameMap, "F", "_", "   ", "default"));
     assertEquals("FA_", FormatXmlInstance.getName(nameMap, "F", "_", "  A ", "default"));
   }
-
-  @Test
-  void testFormatValue() {
-    FormatXmlInstance instance = new FormatXmlInstance(FormatXml.builder().build(), null);
-            
-    // Test null value
-    assertNull(instance.formatValue((String) null));
-
-    // Test String value
-    assertEquals("Hello World", instance.formatValue("Hello World"));
-
-    // Test numeric values
-    assertEquals("42", instance.formatValue(42));
-    assertEquals("42.5", instance.formatValue(42.5));
-    assertEquals("123456789", instance.formatValue(123456789L));
-    assertEquals("123.456", instance.formatValue(new BigDecimal("123.456")));
-
-    // Test boolean values
-    assertEquals("true", instance.formatValue(true));
-    assertEquals("false", instance.formatValue(false));
-
-    // Test date/time values
-    LocalDate date = LocalDate.of(2023, 5, 15);
-    assertEquals("2023-05-15", instance.formatValue(date));
-
-    LocalTime time = LocalTime.of(14, 30, 15);
-    assertEquals("14:30:15", instance.formatValue(time));
-
-    LocalDateTime dateTime = LocalDateTime.of(2023, 5, 15, 14, 30, 15);
-    assertEquals("2023-05-15T14:30:15", instance.formatValue(dateTime));
-  }
-
-  @Test
-  void testFormatTemporalValues() {
-    FormatXmlInstance instance = new FormatXmlInstance(FormatXml.builder()
-            .dateFormat("yyyy")
-            .dateTimeFormat("HH yyyy")
-            .timeFormat("mm")
-            .build(), null);
-            
-    // Test date/time values
-    LocalDate date = LocalDate.of(2023, 5, 15);
-    assertEquals("2023", instance.formatValue(date));
-
-    LocalTime time = LocalTime.of(14, 30, 15);
-    assertEquals("30", instance.formatValue(time));
-
-    LocalDateTime dateTime = LocalDateTime.of(2023, 5, 15, 14, 30, 15);
-    assertEquals("14 2023", instance.formatValue(dateTime));
-  }
   
+    private final ValueFormatters valueFormatters = new ValueFormatters("dd/MM/YYYY", "ss:mm:hh dd/MM/YYYY", "ss:mm:hh", "0.000", "['\"y\"', '\"n\"']"
+            , "\"", "\"", true, Collections.emptyList());
+
+    @Test
+    public void testFormatValue_Boolean() {
+        String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Boolean, true);
+        assertEquals("\"y\"", result);
+        
+        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Boolean, false);
+        assertEquals("\"n\"", result);
+
+        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Boolean, "true");
+        assertEquals("\"y\"", result);
+        
+        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Boolean, "false");
+        assertEquals("\"n\"", result);
+
+        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Boolean, 1);
+        assertEquals("\"y\"", result);
+        
+        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Boolean, 0);
+        assertEquals("\"n\"", result);
+    }
+
+    @Test
+    public void testFormatValue_Numeric() {
+        // Test Double
+        String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Double, 123.456);
+        assertEquals("123.456", result);
+        
+        // Test Float
+        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Float, 456.789f);
+        assertEquals("456.789", result);
+        
+        // Test Integer
+        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Integer, 12345);
+        assertEquals("12345", result);
+        
+        // Test Long
+        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Long, 123456789L);
+        assertEquals("123456789", result);
+        
+        // Test BigDecimal as Integer
+        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Integer, new BigDecimal("999"));
+        assertEquals("999", result);
+    }
+
+    @Test
+    public void testFormatValue_String() {
+        String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.String, "Hello World");
+        assertEquals("Hello World", result);
+        
+        // Test non-string value converted to string
+        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.String, 12345);
+        assertEquals("12345", result);
+    }
+
+    @Test
+    public void testFormatValue_Null() {
+        String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Null, null);
+        assertNull(result);
+    }
+
+    @Test
+    public void testFormatValue_Temporal() {
+        // Test Date
+        LocalDate date = LocalDate.of(2023, 12, 25);
+        String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Date, date);
+        assertEquals("25/12/2023", result);
+        
+        // Test DateTime
+        LocalDateTime dateTime = LocalDateTime.of(2023, 12, 25, 10, 30, 45);
+        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.DateTime, dateTime);
+        assertEquals("45:30:10 25/12/2023", result);
+        
+        // Test Time
+        LocalTime time = LocalTime.of(10, 30, 45);
+        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Time, time);
+        assertEquals("45:30:10", result);
+    }
+
+    @Test
+    public void testFormatValue_IntegerWithNonNumberValue() {
+        // Test when Integer type receives a non-Number value
+        String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Integer, "12345");
+        assertEquals("12345", result);
+
+        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Integer, "Four");
+        assertEquals("Four", result);
+    }
+
+    @Test
+    public void testFormatValue_LongWithNonNumberValue() {
+        // Test when Long type receives a non-Number value
+        String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Long, "123456789");
+        assertEquals("123456789", result);
+    }
 }

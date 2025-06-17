@@ -17,7 +17,6 @@
 package uk.co.spudsoft.query.exec.fmts.xml;
 
 import com.ctc.wstx.stax.WstxOutputFactory;
-import com.google.common.base.Strings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -40,22 +39,26 @@ import uk.co.spudsoft.query.exec.fmts.xlsx.OutputWriteStreamWrapper;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
 import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
-import java.io.IOException;
 import java.nio.charset.Charset;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
+import uk.co.spudsoft.query.defn.DataType;
+import static uk.co.spudsoft.query.defn.DataType.Boolean;
+import static uk.co.spudsoft.query.defn.DataType.Date;
+import static uk.co.spudsoft.query.defn.DataType.DateTime;
+import static uk.co.spudsoft.query.defn.DataType.Double;
+import static uk.co.spudsoft.query.defn.DataType.Float;
+import static uk.co.spudsoft.query.defn.DataType.Integer;
+import static uk.co.spudsoft.query.defn.DataType.Null;
+import static uk.co.spudsoft.query.defn.DataType.Time;
 
 import static uk.co.spudsoft.query.defn.FormatXml.NAME_CHAR_REGEX;
 import static uk.co.spudsoft.query.defn.FormatXml.NAME_START_REGEX;
+import uk.co.spudsoft.query.exec.fmts.ValueFormatters;
 
 /**
  * Handles the formatting of data into XML format as part of a data processing pipeline.
@@ -72,9 +75,7 @@ public final class FormatXmlInstance implements FormatInstance {
   private final OutputWriteStreamWrapper streamWrapper;
   private final FormattingWriteStream formattingStream;
 
-  private final DateTimeFormatter dateFormatter;
-  private final DateTimeFormatter dateTimeFormatter;
-  private final DateTimeFormatter timeFormatter;
+  private final ValueFormatters valueFormatters;
 
   private final AtomicBoolean started = new AtomicBoolean();
   private XMLStreamWriter writer;
@@ -84,7 +85,7 @@ public final class FormatXmlInstance implements FormatInstance {
   private final Map<String, String> nameMap = new HashMap<>();
 
   private Types types;
-  
+
   /**
    * Constructor.
    * @param definition The formatting definition for the output.
@@ -93,24 +94,78 @@ public final class FormatXmlInstance implements FormatInstance {
   public FormatXmlInstance(FormatXml definition, WriteStream<Buffer> outputStream) {
     this.defn = definition.withDefaults();
     this.streamWrapper = new OutputWriteStreamWrapper(outputStream);
-    this.dateFormatter = Strings.isNullOrEmpty(definition.getDateFormat()) ? null : DateTimeFormatter.ofPattern(definition.getDateFormat());
-    this.dateTimeFormatter = Strings.isNullOrEmpty(definition.getDateTimeFormat()) ? null : DateTimeFormatter.ofPattern(definition.getDateTimeFormat());
-    this.timeFormatter = Strings.isNullOrEmpty(definition.getTimeFormat()) ? null : DateTimeFormatter.ofPattern(definition.getTimeFormat());
-    this.formattingStream = new FormattingWriteStream(outputStream
+    this.valueFormatters = defn.toValueFormatters("", "", false);
+    this.formattingStream = createFormattingWriteStream(
+      outputStream,
+      streamWrapper,
+      started,
+      this::start,
+      this::outputRow,
+      this::close
+    );
+  }
+
+  /**
+   * Functional interface for the start operation.
+   */
+  @FunctionalInterface
+  interface StartFunction {
+    void start() throws Exception;
+  }
+
+  /**
+   * Functional interface for processing a row.
+   */
+  @FunctionalInterface
+  interface ProcessRowFunction {
+    void processRow(DataRow row) throws Throwable;
+  }
+
+  /**
+   * Functional interface for the close operation.
+   */
+  @FunctionalInterface
+  interface CloseFunction {
+    void close() throws Exception;
+  }
+
+  /**
+   * Creates a FormattingWriteStream with the standard XML formatting pattern.
+   * This factory method can be reused by other XML-based format instances.
+   *
+   * @param outputStream The WriteStream that the data is to be sent to.
+   * @param streamWrapper The OutputWriteStreamWrapper for the output stream.
+   * @param started AtomicBoolean to track if formatting has started.
+   * @param startFunction Function to call when starting the output.
+   * @param processRowFunction Function to call for each DataRow.
+   * @param closeFunction Function to call when closing the output.
+   * @return A configured FormattingWriteStream.
+   */
+  static FormattingWriteStream createFormattingWriteStream(
+    WriteStream<Buffer> outputStream,
+    OutputWriteStreamWrapper streamWrapper,
+    AtomicBoolean started,
+    StartFunction startFunction,
+    ProcessRowFunction processRowFunction,
+    CloseFunction closeFunction) {
+
+    return new FormattingWriteStream(outputStream
       , v -> Future.succeededFuture()
       , row -> {
       logger.info("Got row {}", row);
       if (!started.get()) {
         try {
-          start();
+          startFunction.start();
         } catch (Throwable ex) {
+          logger.warn("Failed to start XML writer: ", ex);
           return Future.failedFuture(ex);
         }
       }
       if (!row.isEmpty()) {
         try {
-          outputRow(row);
+          processRowFunction.processRow(row);
         } catch (Throwable ex) {
+          logger.warn("Failed to output row: ", ex);
           return Future.failedFuture(ex);
         }
       }
@@ -132,19 +187,73 @@ public final class FormatXmlInstance implements FormatInstance {
       }
       if (!started.get()) {
         try {
-          start();
+          startFunction.start();
         } catch (Throwable ex) {
+          logger.warn("Failed to start XML writer: ", ex);
           return Future.failedFuture(ex);
         }
       }
       try {
-        close();
+        closeFunction.close();
         return Future.succeededFuture();
       } catch (Throwable ex) {
         return Future.failedFuture(ex);
       }
     }
     );
+  }
+
+  static String formatValue(ValueFormatters valueFormatters, String elementName, DataType type, Comparable<?> value) {
+    if (value == null) {
+      return null;
+    } else {
+      switch (type) {
+        case Boolean:
+          return valueFormatters.getBooleanFormatter(elementName).format(value);
+
+        case Double:
+        case Float:
+          return valueFormatters.getDecimalFormatter(elementName).format(value);
+
+        case Integer:
+        case Long:
+          if (value instanceof Number numValue) {
+            return Long.toString(numValue.longValue());
+          } else {
+            return value.toString();
+          }
+
+        case Null:
+          return null;
+
+        case String:
+          if (value instanceof String stringValue) {
+            return stringValue;
+          } else {
+            return value.toString();
+          }
+
+        case Date:
+          return valueFormatters.getDateFormatter(elementName).format(value);
+
+        case DateTime:
+          Object formatted = valueFormatters.getDateTimeFormatter(elementName).format(value);
+          if (formatted instanceof String stringFormatted) {
+            return stringFormatted;
+          } else if (formatted != null) {
+            return formatted.toString();
+          } else {
+            return null;
+          }
+
+        case Time:
+          return valueFormatters.getTimeFormatter(elementName).format(value);
+
+        default:
+          logger.warn("Field {} if of unknown type {} with value {} ({})", elementName, type, value, value.getClass());
+          throw new IllegalStateException("Field of unknown type " + type);
+      }
+    }
   }
 
   /**
@@ -157,23 +266,18 @@ public final class FormatXmlInstance implements FormatInstance {
     return streamWrapper.getFinalFuture();
   }
 
-  private void start() throws IOException {
+  private void start() throws Exception {
     started.set(true);
 
-    try {
-      writer = xmlOutputFactory.createXMLStreamWriter(streamWrapper, Charset.forName(defn.getEncoding()).name());
-      if (defn.isXmlDeclaration()) {
-        writer.writeStartDocument(defn.getEncoding(), "1.0");
-        if (defn.isIndent()) {
-          writer.writeCharacters("\n");
-        }
+    writer = xmlOutputFactory.createXMLStreamWriter(streamWrapper, Charset.forName(defn.getEncoding()).name());
+    if (defn.isXmlDeclaration()) {
+      writer.writeStartDocument(defn.getEncoding(), "1.0");
+      if (defn.isIndent()) {
+        writer.writeCharacters("\n");
       }
-      writer.writeStartElement(getName(defn.getDocName(), "data"));
-      logger.debug("Document started");
-    } catch (XMLStreamException ex) {
-      logger.warn("Failed to create XMLStreamWriter: ", ex);
-      throw new IOException(ex);
     }
+    writer.writeStartElement(getName(defn.getDocName(), "data"));
+    logger.debug("Document started");
   }
 
   private void close() throws Exception {
@@ -239,78 +343,36 @@ public final class FormatXmlInstance implements FormatInstance {
     return result;
   }
 
-  String formatValue(Comparable<?> value) {
-    if (value == null) {
-      return null;
-    } else if (value instanceof LocalDateTime ldt) {
-      return formatValue(ldt);
-    } else if (value instanceof LocalDate ld) {
-      return formatValue(ld);
-    } else if (value instanceof LocalTime lt) {
-      return formatValue(lt);
-    } else if (value instanceof Boolean b) {
-      return b ? "true" : "false";
-    } else {
-      return value.toString();
-    }
-  }
-
-  String formatValue(LocalTime lt) {
-    if (timeFormatter == null) {
-      return lt.toString();
-    } else {
-      return timeFormatter.format(lt);
-    }
-  }
-
-  String formatValue(LocalDateTime ldt) {
-    if (dateTimeFormatter == null) {
-      return ldt.toString();
-    } else {
-      return dateTimeFormatter.format(ldt);
-    }
-  }
-
-  String formatValue(LocalDate ld) {
-    if (dateFormatter == null) {
-      return ld.toString();
-    } else {
-      return dateFormatter.format(ld);
-    }
-  }
-
   private void outputRow(DataRow row) throws Throwable {
-      try {
-        if (defn.isIndent()) {
-          writer.writeCharacters("\n  ");
-        }
-        writer.writeStartElement(getName(defn.getRowName(), "row"));
-        int fieldNumber = 0;
-        for (Iterator<ColumnDefn> iter = types.iterator(); iter.hasNext();) {
-          ++fieldNumber;
-          ColumnDefn columnDefn = iter.next();
-          Comparable<?> v = row.get(columnDefn.name());
-          if (v != null) {
-            if (defn.isFieldsAsAttributes()) {
-              writer.writeAttribute(getName(columnDefn.name(), "field" +  fieldNumber), formatValue(v));
-            } else {
-              if (defn.isIndent()) {
-                writer.writeCharacters("\n    ");
-              }
-              writer.writeStartElement(getName(columnDefn.name(), "field" + fieldNumber));
-              writer.writeCharacters(formatValue(v));
-              writer.writeEndElement();
-            }
+    if (defn.isIndent()) {
+      writer.writeCharacters("\n  ");
+    }
+    writer.writeStartElement(getName(defn.getRowName(), "row"));
+    int fieldNumber = 0;
+    for (Iterator<ColumnDefn> iter = types.iterator(); iter.hasNext();) {
+      ++fieldNumber;
+      ColumnDefn columnDefn = iter.next();
+      Comparable<?> v = row.get(columnDefn.name());
+      if (v != null) {
+        if (defn.isFieldsAsAttributes()) {
+          writer.writeAttribute(
+                  getName(columnDefn.name(), "field" +  fieldNumber)
+                  , formatValue(valueFormatters, columnDefn.name(), columnDefn.type(), v)
+          );
+        } else {
+          if (defn.isIndent()) {
+            writer.writeCharacters("\n    ");
           }
+          writer.writeStartElement(getName(columnDefn.name(), "field" + fieldNumber));
+          writer.writeCharacters(formatValue(valueFormatters, columnDefn.name(), columnDefn.type(), v));
+          writer.writeEndElement();
         }
-        if (defn.isIndent()) {
-          writer.writeCharacters("\n  ");
-        }
-        writer.writeEndElement();
-      } catch (Throwable ex) {
-        logger.warn("Failed to output row: ", ex);
-        throw ex;
       }
+    }
+    if (defn.isIndent()) {
+      writer.writeCharacters("\n  ");
+    }
+    writer.writeEndElement();
   }
 
   @Override

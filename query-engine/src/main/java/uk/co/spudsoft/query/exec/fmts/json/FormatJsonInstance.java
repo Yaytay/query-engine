@@ -28,9 +28,6 @@ import io.vertx.core.streams.WriteStream;
 import static io.vertx.sqlclient.impl.Utils.toJson;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAccessor;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
@@ -47,9 +44,8 @@ import uk.co.spudsoft.query.exec.fmts.FormattingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
-import uk.co.spudsoft.query.exec.fmts.CustomBooleanFormatter;
-import uk.co.spudsoft.query.exec.fmts.CustomDateTimeFormatter;
 import uk.co.spudsoft.query.exec.fmts.CustomDecimalFormatter;
+import uk.co.spudsoft.query.exec.fmts.ValueFormatters;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
 
@@ -78,12 +74,7 @@ public final class FormatJsonInstance implements FormatInstance {
   private String title;
   private String description;
   
-  private final DateTimeFormatter dateFormatter;
-  private final CustomDateTimeFormatter dateTimeFormatter;
-  private final DateTimeFormatter timeFormatter;
-    
-  private final CustomDecimalFormatter decimalFormatter;
-  private final CustomBooleanFormatter booleanFormatter;
+  private final ValueFormatters valueFormatters;
   
   /**
    * Constructor.
@@ -95,23 +86,8 @@ public final class FormatJsonInstance implements FormatInstance {
     this.outputStream = outputStream;
     this.defn = defn;
     
-    if (Strings.isNullOrEmpty(defn.getDateFormat())) {
-      this.dateFormatter = null;
-    } else {
-      this.dateFormatter = DateTimeFormatter.ofPattern(defn.getDateFormat());
-    }
-    
-    dateTimeFormatter = new CustomDateTimeFormatter(defn.getDateTimeFormat());
-    
-    if (Strings.isNullOrEmpty(defn.getTimeFormat())) {
-      this.timeFormatter = null;
-    } else {
-      this.timeFormatter = DateTimeFormatter.ofPattern(defn.getTimeFormat());
-    }
-    
-    this.decimalFormatter = new CustomDecimalFormatter(defn.getDecimalFormat());
-    this.booleanFormatter = new CustomBooleanFormatter(defn.getBooleanFormat(), "\"", "\"", true);
-    
+    this.valueFormatters = defn.toValueFormatters("\"", "\"", true);
+
     this.formattingStream = new FormattingWriteStream(outputStream
             , v -> {
               return start();
@@ -160,19 +136,18 @@ public final class FormatJsonInstance implements FormatInstance {
             switch (cd.type()) {
               case Boolean:
                 gen.writeFieldName(cd.name());
-                gen.writeRawValue(booleanFormatter.format(value));
+                gen.writeRawValue(valueFormatters.getBooleanFormatter(cd.name()).format(value));
                 break ;
                 
               case Double:
               case Float:
-                if (value instanceof Number numberValue) {
                   gen.writeFieldName(cd.name());
-                  if (decimalFormatter.mustBeEncodedAsString()) {
-                    gen.writeString(decimalFormatter.format(numberValue));
+                  CustomDecimalFormatter formatter = valueFormatters.getDecimalFormatter(cd.name());
+                  if (formatter.mustBeEncodedAsString()) {
+                    gen.writeString(formatter.format(value));
                   } else {
-                    gen.writeRawValue(decimalFormatter.format(numberValue));
+                    gen.writeRawValue(formatter.format(value));
                   }
-                }
                 break ;
                 
               case Integer:
@@ -195,37 +170,20 @@ public final class FormatJsonInstance implements FormatInstance {
                 break ;
                 
               case Date:
-                if (dateFormatter == null) {
-                  gen.writeStringField(cd.name(), value.toString());
-                } else {
-                  if (value instanceof TemporalAccessor ta) {
-                    gen.writeStringField(cd.name(), dateFormatter.format(ta));
-                  }
-                }
+                gen.writeStringField(cd.name(), valueFormatters.getDateFormatter(cd.name()).format(value));
                 break ;
                 
               case DateTime:
-                if (value instanceof LocalDateTime ldt) {
-                  Object formatted = dateTimeFormatter.format(ldt);
-                  if (formatted instanceof String stringFormatted) {
-                    gen.writeStringField(cd.name(), stringFormatted);
-                  } else if (formatted instanceof Long longFormatted) {
-                    gen.writeNumberField(cd.name(), longFormatted);
-                  }
-                } else {
-                  logger.warn("DateTime value is not LocalDateTime (it's {} of {})", value.getClass(), value);
-                  gen.writeStringField(cd.name(), value.toString());
+                Object formatted = valueFormatters.getDateTimeFormatter(cd.name()).format(value);
+                if (formatted instanceof String stringFormatted) {
+                  gen.writeStringField(cd.name(), stringFormatted);
+                } else if (formatted instanceof Long longFormatted) {
+                  gen.writeNumberField(cd.name(), longFormatted);
                 }
                 break ;
                 
               case Time:
-                if (timeFormatter == null) {
-                  gen.writeStringField(cd.name(), value.toString());
-                } else {
-                  if (value instanceof TemporalAccessor ta) {
-                    gen.writeStringField(cd.name(), timeFormatter.format(ta));
-                  }
-                }
+                gen.writeStringField(cd.name(), valueFormatters.getTimeFormatter(cd.name()).format(value));
                 break ;
                 
               default:

@@ -19,10 +19,7 @@ package uk.co.spudsoft.query.exec.fmts.xml;
 import com.ctc.wstx.stax.WstxOutputFactory;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import org.slf4j.Logger;
@@ -34,20 +31,12 @@ import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormattingWriteStream;
 import uk.co.spudsoft.query.exec.fmts.xlsx.OutputWriteStreamWrapper;
-import uk.co.spudsoft.query.web.RequestContextHandler;
 
 import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -55,6 +44,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import uk.co.spudsoft.query.exec.ColumnDefn;
+import uk.co.spudsoft.query.exec.fmts.ValueFormatters;
 
 /**
  * Handles the formatting of data into Rss format as part of a data processing pipeline. This class implements the FormatInstance
@@ -86,12 +76,10 @@ public final class FormatRssInstance implements FormatInstance {
   private final OutputWriteStreamWrapper streamWrapper;
   private final FormattingWriteStream formattingStream;
 
-  private final DateTimeFormatter dateFormatter;
-  private final DateTimeFormatter dateTimeFormatter;
-  private final DateTimeFormatter timeFormatter;
-  
+  private final ValueFormatters valueFormatters;
+
   private final String customNamespace;
-  
+
   private final AtomicBoolean started = new AtomicBoolean();
   private XMLStreamWriter writer;
 
@@ -111,75 +99,27 @@ public final class FormatRssInstance implements FormatInstance {
   public FormatRssInstance(FormatRss definition, WriteStream<Buffer> outputStream) {
     this.defn = definition.withDefaults();
     this.streamWrapper = new OutputWriteStreamWrapper(outputStream);
-    this.dateFormatter = Strings.isNullOrEmpty(definition.getDateFormat()) ? null : DateTimeFormatter.ofPattern(definition.getDateFormat());
-    this.dateTimeFormatter = Strings.isNullOrEmpty(definition.getDateTimeFormat()) ? null : DateTimeFormatter.ofPattern(definition.getDateTimeFormat());
-    this.timeFormatter = Strings.isNullOrEmpty(definition.getTimeFormat()) ? null : DateTimeFormatter.ofPattern(definition.getTimeFormat());
+    this.valueFormatters = defn.toValueFormatters("", "", false);
     this.customNamespace = Strings.isNullOrEmpty(definition.getCustomNamespace()) ? DEFAULT_CUSTOM_NAMESPACE : definition.getCustomNamespace();
-    this.formattingStream = new FormattingWriteStream(outputStream,
-             v -> Future.succeededFuture(),
-             row -> {
-              logger.info("Got row {}", row);
-              if (!started.get()) {
-                try {
-                  start();
-                } catch (Throwable ex) {
-                  return Future.failedFuture(ex);
-                }
-              }
-              if (!row.isEmpty()) {
-                try {
-                  outputRow(row);
-                } catch (Throwable ex) {
-                  return Future.failedFuture(ex);
-                }
-              }
-              if (streamWrapper.writeQueueFull()) {
-                Promise<Void> promise = Promise.promise();
-                streamWrapper.drainHandler(v -> promise.complete());
-                return promise.future();
-              } else {
-                return Future.succeededFuture();
-              }
-            },
-             rows -> {
-              Context vertxContext = Vertx.currentContext();
-              if (vertxContext != null) {
-                RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
-                if (requestContext != null) {
-                  requestContext.setRowsWritten(rows);
-                }
-              }
-              if (!started.get()) {
-                try {
-                  start();
-                } catch (Throwable ex) {
-                  return Future.failedFuture(ex);
-                }
-              }
-              try {
-                close();
-                return Future.succeededFuture();
-              } catch (Throwable ex) {
-                return Future.failedFuture(ex);
-              }
-            }
+    this.formattingStream = FormatXmlInstance.createFormattingWriteStream(
+      outputStream,
+      streamWrapper,
+      started,
+      this::start,
+      this::outputRow,
+      this::close
     );
   }
 
-  private void start() throws IOException {
+  private void start() throws Exception {
     started.set(true);
 
-    try {
-      writer = xmlOutputFactory.createXMLStreamWriter(streamWrapper, StandardCharsets.UTF_8.name());
-      writer.writeStartElement("rss");
-      writer.writeNamespace("custom", customNamespace);
-      writer.writeAttribute("version", "2.0");
-      writer.writeCharacters("\n  ");
-      writer.writeStartElement("channel");
-    } catch (XMLStreamException ex) {
-      logger.warn("Failed to create XMLStreamWriter: ", ex);
-      throw new IOException(ex);
-    }
+    writer = xmlOutputFactory.createXMLStreamWriter(streamWrapper, StandardCharsets.UTF_8.name());
+    writer.writeStartElement("rss");
+    writer.writeNamespace("custom", customNamespace);
+    writer.writeAttribute("version", "2.0");
+    writer.writeCharacters("\n  ");
+    writer.writeStartElement("channel");
   }
 
   private void close() throws Exception {
@@ -205,81 +145,31 @@ public final class FormatRssInstance implements FormatInstance {
     return streamWrapper.getFinalFuture();
   }
 
-  private String getName(String original, String defaultValue) {
-    return FormatXmlInstance.getName(nameMap, this.defn.getFieldInitialLetterFix(), this.defn.getFieldInvalidLetterFix(), original, defaultValue);
-  }
-
-  String formatValue(Comparable<?> value) {
-    if (value == null) {
-      return null;
-    } else if (value instanceof LocalDateTime ldt) {
-      return formatValue(ldt);
-    } else if (value instanceof LocalDate ld) {
-      return formatValue(ld);
-    } else if (value instanceof LocalTime lt) {
-      return formatValue(lt);
-    } else if (value instanceof Boolean b) {
-      return b ? "true" : "false";
-    } else {
-      return value.toString();
-    }
-  }
-
-  String formatValue(LocalTime lt) {
-    if (timeFormatter == null) {
-      return lt.toString();
-    } else {
-      return timeFormatter.format(lt);
-    }
-  }
-
-  String formatValue(LocalDateTime ldt) {
-    if (dateTimeFormatter == null) {
-      return ldt.toString();
-    } else {
-      return dateTimeFormatter.format(ldt);
-    }
-  }
-
-  String formatValue(LocalDate ld) {
-    if (dateFormatter == null) {
-      return ld.toString();
-    } else {
-      return dateFormatter.format(ld);
-    }
-  }
-
   private void outputRow(DataRow row) throws Throwable {
-    try {
-      writer.writeCharacters("\n    ");
-      writer.writeStartElement("item");
+    writer.writeCharacters("\n    ");
+    writer.writeStartElement("item");
 
-      int fieldNumber = 0;
-      for (Iterator<ColumnDefn> iter = types.iterator(); iter.hasNext();) {
-        ++fieldNumber;
-        ColumnDefn columnDefn = iter.next();
-        Comparable<?> v = row.get(columnDefn.name());
+    int fieldNumber = 0;
+    for (Iterator<ColumnDefn> iter = types.iterator(); iter.hasNext();) {
+      ++fieldNumber;
+      ColumnDefn columnDefn = iter.next();
+      Comparable<?> v = row.get(columnDefn.name());
 
-        String fieldName = columnDefn.name();
+      String fieldName = columnDefn.name();
 
-        writer.writeCharacters("\n      ");
-        if (STD_ITEM_ELEMENTS.contains(fieldName)) {
-          writer.writeStartElement(fieldName);
-        } else {
-          writer.writeStartElement(customNamespace, fieldName);
-        }
-        if (v != null) {
-          writer.writeCharacters(formatValue(v));
-        }
-        writer.writeEndElement();
+      writer.writeCharacters("\n      ");
+      if (STD_ITEM_ELEMENTS.contains(fieldName)) {
+        writer.writeStartElement(fieldName);
+      } else {
+        writer.writeStartElement(customNamespace, fieldName);
       }
-      writer.writeCharacters("\n    ");
+      if (v != null) {
+        writer.writeCharacters(FormatXmlInstance.formatValue(valueFormatters, columnDefn.name(), columnDefn.type(), v));
+      }
       writer.writeEndElement();
-
-    } catch (Throwable ex) {
-      logger.warn("Failed to output row: ", ex);
-      throw ex;
     }
+    writer.writeCharacters("\n    ");
+    writer.writeEndElement();
   }
 
   @Override

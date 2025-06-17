@@ -17,11 +17,7 @@
 package uk.co.spudsoft.query.exec.fmts.xml;
 
 import com.ctc.wstx.stax.WstxOutputFactory;
-import com.google.common.base.Strings;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import org.slf4j.Logger;
@@ -34,32 +30,35 @@ import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormattingWriteStream;
 import uk.co.spudsoft.query.exec.fmts.xlsx.OutputWriteStreamWrapper;
-import uk.co.spudsoft.query.web.RequestContextHandler;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import static uk.co.spudsoft.query.defn.DataType.Boolean;
+import static uk.co.spudsoft.query.defn.DataType.Date;
+import static uk.co.spudsoft.query.defn.DataType.DateTime;
+import static uk.co.spudsoft.query.defn.DataType.Double;
+import static uk.co.spudsoft.query.defn.DataType.Float;
+import static uk.co.spudsoft.query.defn.DataType.Integer;
+import static uk.co.spudsoft.query.defn.DataType.Null;
+import static uk.co.spudsoft.query.defn.DataType.Time;
+import uk.co.spudsoft.query.exec.fmts.ValueFormatters;
 
 /**
  * Handles the formatting of data into Atom format as part of a data processing pipeline. This class implements the FormatInstance
  * interface to define the behaviour required for formatting data output. It uses XML writing utilities to generate structured XML
  * documents based on the provided definition and data rows.
  */
+
 public final class FormatAtomInstance implements FormatInstance {
 
   private static final Logger logger = LoggerFactory.getLogger(FormatAtomInstance.class);
@@ -75,9 +74,7 @@ public final class FormatAtomInstance implements FormatInstance {
   private final String requestUrl;
   private final String baseUrl;
 
-  private final DateTimeFormatter dateFormatter;
-  private final DateTimeFormatter dateTimeFormatter;
-  private final DateTimeFormatter timeFormatter;
+  private final ValueFormatters valueFormatters;
 
   private final AtomicBoolean started = new AtomicBoolean();
   private XMLStreamWriter writer;
@@ -88,7 +85,7 @@ public final class FormatAtomInstance implements FormatInstance {
   private final Map<String, String> nameMap = new HashMap<>();
 
   private Types types;
- 
+
   /**
    * Constructor.
    *
@@ -101,57 +98,14 @@ public final class FormatAtomInstance implements FormatInstance {
     this.requestUrl = requestUrl;
     this.baseUrl = endsWith(requestUrl, "/");
     this.streamWrapper = new OutputWriteStreamWrapper(outputStream);
-    this.dateFormatter = Strings.isNullOrEmpty(definition.getDateFormat()) ? null : DateTimeFormatter.ofPattern(definition.getDateFormat());
-    this.dateTimeFormatter = Strings.isNullOrEmpty(definition.getDateTimeFormat()) ? null : DateTimeFormatter.ofPattern(definition.getDateTimeFormat());
-    this.timeFormatter = Strings.isNullOrEmpty(definition.getTimeFormat()) ? null : DateTimeFormatter.ofPattern(definition.getTimeFormat());
-    this.formattingStream = new FormattingWriteStream(outputStream,
-             v -> Future.succeededFuture(),
-             row -> {
-              logger.info("Got row {}", row);
-              if (!started.get()) {
-                try {
-                  start();
-                } catch (Throwable ex) {
-                  return Future.failedFuture(ex);
-                }
-              }
-              if (!row.isEmpty()) {
-                try {
-                  outputRow(row);
-                } catch (Throwable ex) {
-                  return Future.failedFuture(ex);
-                }
-              }
-              if (streamWrapper.writeQueueFull()) {
-                Promise<Void> promise = Promise.promise();
-                streamWrapper.drainHandler(v -> promise.complete());
-                return promise.future();
-              } else {
-                return Future.succeededFuture();
-              }
-            },
-             rows -> {
-              Context vertxContext = Vertx.currentContext();
-              if (vertxContext != null) {
-                RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
-                if (requestContext != null) {
-                  requestContext.setRowsWritten(rows);
-                }
-              }
-              if (!started.get()) {
-                try {
-                  start();
-                } catch (Throwable ex) {
-                  return Future.failedFuture(ex);
-                }
-              }
-              try {
-                close();
-                return Future.succeededFuture();
-              } catch (Throwable ex) {
-                return Future.failedFuture(ex);
-              }
-            }
+    this.valueFormatters = defn.toValueFormatters("", "", false);
+    this.formattingStream = FormatXmlInstance.createFormattingWriteStream(
+      outputStream,
+      streamWrapper,
+      started,
+      this::start,
+      this::outputRow,
+      this::close
     );
   }
 
@@ -175,24 +129,19 @@ public final class FormatAtomInstance implements FormatInstance {
     }
   }
 
-  private void start() throws IOException {
+  private void start() throws Exception {
     started.set(true);
 
-    try {
-      writer = xmlOutputFactory.createXMLStreamWriter(streamWrapper, StandardCharsets.UTF_8.name());
-      writer.writeStartDocument("utf-8", "1.0");
-      writer.writeStartElement("feed");
-      writer.writeDefaultNamespace("http://www.w3.org/2005/Atom");
-      writer.writeNamespace("m", METADATA_NAMESPACE);
-      writer.writeNamespace("d", DATASERVICES_NAMESPACE);
+    writer = xmlOutputFactory.createXMLStreamWriter(streamWrapper, StandardCharsets.UTF_8.name());
+    writer.writeStartDocument("utf-8", "1.0");
+    writer.writeStartElement("feed");
+    writer.writeDefaultNamespace("http://www.w3.org/2005/Atom");
+    writer.writeNamespace("m", METADATA_NAMESPACE);
+    writer.writeNamespace("d", DATASERVICES_NAMESPACE);
 
-      writeElement("id", requestUrl);
-      writeElement("title", defn.getName());
-      writeElement("updated", OffsetDateTime.now(ZoneId.of("UTC")));
-    } catch (XMLStreamException ex) {
-      logger.warn("Failed to create XMLStreamWriter: ", ex);
-      throw new IOException(ex);
-    }
+    writeElement("id", DataType.String, requestUrl);
+    writeElement("title", DataType.String, defn.getName());
+    writeElement("updated", DataType.DateTime, OffsetDateTime.now(ZoneId.of("UTC")));
   }
 
   private void close() throws Exception {
@@ -209,55 +158,14 @@ public final class FormatAtomInstance implements FormatInstance {
     return FormatXmlInstance.getName(nameMap, this.defn.getFieldInitialLetterFix(), this.defn.getFieldInvalidLetterFix(), original, defaultValue);
   }
 
-  void writeElement(String elementName, Comparable<?> content) throws XMLStreamException {
-    if (content == null) {
-      writer.writeStartElement(getName(elementName, "field"));
-      writer.writeEndElement();
-    } else {
-      writer.writeStartElement(getName(elementName, "field"));
-      writer.writeCharacters(formatValue(content));
-      writer.writeEndElement();
-    }
-  }
+  void writeElement(String elementName, DataType type, Comparable<?> value) throws XMLStreamException {
+    writer.writeStartElement(getName(elementName, "field"));
 
-  String formatValue(Comparable<?> value) {
-    if (value == null) {
-      return null;
-    } else if (value instanceof LocalDateTime ldt) {
-      return formatValue(ldt);
-    } else if (value instanceof LocalDate ld) {
-      return formatValue(ld);
-    } else if (value instanceof LocalTime lt) {
-      return formatValue(lt);
-    } else if (value instanceof Boolean b) {
-      return b ? "true" : "false";
-    } else {
-      return value.toString();
+    String formatted = FormatXmlInstance.formatValue(valueFormatters, elementName, type, value);
+    if (formatted != null) {
+      writer.writeCharacters(formatted);
     }
-  }
-
-  String formatValue(LocalTime lt) {
-    if (timeFormatter == null) {
-      return lt.toString();
-    } else {
-      return timeFormatter.format(lt);
-    }
-  }
-
-  String formatValue(LocalDateTime ldt) {
-    if (dateTimeFormatter == null) {
-      return ldt.toString();
-    } else {
-      return dateTimeFormatter.format(ldt);
-    }
-  }
-
-  String formatValue(LocalDate ld) {
-    if (dateFormatter == null) {
-      return ld.toString();
-    } else {
-      return dateFormatter.format(ld);
-    }
+    writer.writeEndElement();
   }
 
   static String getType(DataType type) {
@@ -276,49 +184,44 @@ public final class FormatAtomInstance implements FormatInstance {
   }
 
   private void outputRow(DataRow row) throws Throwable {
-    try {
-      writer.writeStartElement("entry");
+    writer.writeStartElement("entry");
 
-      writeElement("id", baseUrl + rowNum.incrementAndGet());
-      writeElement("title", defn.getName());
-      writeElement("updated", OffsetDateTime.now(ZoneId.of("UTC")));
+    writeElement("id", DataType.String, baseUrl + rowNum.incrementAndGet());
+    writeElement("title", DataType.String, defn.getName());
+    writeElement("updated", DataType.DateTime, OffsetDateTime.now(ZoneId.of("UTC")));
 
-      writer.writeStartElement("content");
-      writer.writeAttribute("type", "application/xml");
+    writer.writeStartElement("content");
+    writer.writeAttribute("type", "application/xml");
 
-      writer.writeStartElement("m", "properties", METADATA_NAMESPACE);
+    writer.writeStartElement("m", "properties", METADATA_NAMESPACE);
 
-      row.forEach((k, v) -> {
-        try {
-          writer.writeStartElement("d", getName(k.name(), "field"), DATASERVICES_NAMESPACE);
-          String type = getType(k.type());
-          if (type != null) {
-            writer.writeAttribute("m", METADATA_NAMESPACE, "type", type);
-          }
-          if (v == null) {
-            writer.writeAttribute("m", METADATA_NAMESPACE, "null", "true");
-          } else {
-            writer.writeCharacters(formatValue(v));
-          }
-          writer.writeEndElement();
-        } catch (XMLStreamException ex) {
-          if (v == null)  {
-            logger.warn("Failed to output null value: ", ex);
-          } else {
-            logger.warn("Failed to output {} value \"{}\": ", v, v.getClass(), ex);
-
-          }
-          throw new RuntimeException(ex);
+    row.forEach((k, v) -> {
+      try {
+        writer.writeStartElement("d", getName(k.name(), "field"), DATASERVICES_NAMESPACE);
+        String type = getType(k.type());
+        if (type != null) {
+          writer.writeAttribute("m", METADATA_NAMESPACE, "type", type);
         }
-      });
-      writer.writeEndElement();
+        if (v == null) {
+          writer.writeAttribute("m", METADATA_NAMESPACE, "null", "true");
+        } else {
+          writer.writeCharacters(FormatXmlInstance.formatValue(valueFormatters, k.name(), k.type(), v));
+        }
+        writer.writeEndElement();
+      } catch (XMLStreamException ex) {
+        if (v == null)  {
+          logger.warn("Failed to output null value: ", ex);
+        } else {
+          logger.warn("Failed to output {} value \"{}\": ", v, v.getClass(), ex);
 
-      writer.writeEndElement();
-      writer.writeEndElement();
-    } catch (Throwable ex) {
-      logger.warn("Failed to output row: ", ex);
-      throw ex;
-    }
+        }
+        throw new RuntimeException(ex);
+      }
+    });
+    writer.writeEndElement();
+
+    writer.writeEndElement();
+    writer.writeEndElement();
   }
 
   @Override

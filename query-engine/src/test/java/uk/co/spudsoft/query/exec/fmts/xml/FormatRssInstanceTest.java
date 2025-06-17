@@ -36,7 +36,6 @@ import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
 import java.io.File;
-import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -48,8 +47,6 @@ import java.util.List;
 
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  *
@@ -158,55 +155,4 @@ public class FormatRssInstanceTest {
     return row;
   }
 
-  @Test
-  void testFormatValue() {
-    FormatRssInstance instance = new FormatRssInstance(FormatRss.builder().build(), null);
-            
-    // Test null value
-    assertNull(instance.formatValue((String) null));
-
-    // Test String value
-    assertEquals("Hello World", instance.formatValue("Hello World"));
-
-    // Test numeric values
-    assertEquals("42", instance.formatValue(42));
-    assertEquals("42.5", instance.formatValue(42.5));
-    assertEquals("123456789", instance.formatValue(123456789L));
-    assertEquals("123.456", instance.formatValue(new BigDecimal("123.456")));
-
-    // Test boolean values
-    assertEquals("true", instance.formatValue(true));
-    assertEquals("false", instance.formatValue(false));
-
-    // Test date/time values
-    LocalDate date = LocalDate.of(2023, 5, 15);
-    assertEquals("2023-05-15", instance.formatValue(date));
-
-    LocalTime time = LocalTime.of(14, 30, 15);
-    assertEquals("14:30:15", instance.formatValue(time));
-
-    LocalDateTime dateTime = LocalDateTime.of(2023, 5, 15, 14, 30, 15);
-    assertEquals("2023-05-15T14:30:15", instance.formatValue(dateTime));
-  }
-
-
-  @Test
-  void testFormatTemporalValues() {
-    FormatRssInstance instance = new FormatRssInstance(FormatRss.builder()
-            .dateFormat("yyyy")
-            .dateTimeFormat("HH yyyy")
-            .timeFormat("mm")
-            .build(), null);
-            
-    // Test date/time values
-    LocalDate date = LocalDate.of(2023, 5, 15);
-    assertEquals("2023", instance.formatValue(date));
-
-    LocalTime time = LocalTime.of(14, 30, 15);
-    assertEquals("30", instance.formatValue(time));
-
-    LocalDateTime dateTime = LocalDateTime.of(2023, 5, 15, 14, 30, 15);
-    assertEquals("14 2023", instance.formatValue(dateTime));
-  }
-  
 }

@@ -16,17 +16,20 @@
  */
 package uk.co.spudsoft.query.defn;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.net.MediaType;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import uk.co.spudsoft.query.exec.fmts.CustomBooleanFormatter;
 import uk.co.spudsoft.query.exec.fmts.CustomDateTimeFormatter;
 import uk.co.spudsoft.query.exec.fmts.CustomDecimalFormatter;
+import uk.co.spudsoft.query.exec.fmts.ValueFormatters;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
@@ -43,15 +46,14 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
   private final String timeFormat;
   private final String decimalFormat;
   private final String booleanFormat;
-  private final List<ColumnTextFormats> columnSpecificTextFormats;
-  private final ImmutableMap<String, ColumnTextFormats> columnSpecificTextFormatsMap;
+  private final ImmutableList<ColumnTextFormats> columnSpecificTextFormats;
 
   /**
    * Validate the configured data.
    * @param requiredType The type that the concrete class actually requires this format to have.
    * @param openQuote The quoting string that may be included at the beginning of a Boolean value, may be null.
    * @param closeQuote The quoting string that may be included at the end of a Boolean value, may be null.
-   * 
+   *
    */
   protected void validate(FormatType requiredType, String openQuote, String closeQuote) {
     super.validate(requiredType);
@@ -90,6 +92,30 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
         throw new IllegalArgumentException("Invalid booleanFormat: " + ex.getMessage());
       }
     }
+    if (!columnSpecificTextFormats.isEmpty()) {
+      Map<String, Integer> names = new HashMap<>();
+      for (int i = 0; i < columnSpecificTextFormats.size(); ++i) {
+        ColumnTextFormats ctf = columnSpecificTextFormats.get(i);
+        Integer previousIndex = names.get(ctf.getColumn());
+        if (previousIndex != null) {
+          throw new IllegalArgumentException("At least two column-specific text formats (" + i + " and " + previousIndex + ") have the same name (\"" + ctf.getColumn() + "\")");
+        } else {
+          names.put(ctf.getColumn(), i);
+        }
+        ctf.validate(openQuote, closeQuote);
+      }
+    }
+  }
+
+  /**
+   * Construct a new ValueFormatters object based on this definition.
+   * @param openQuote The string to require at the beginning of Boolean values that are not numeric or true/false.
+   * @param closeQuote The string to require at the end of Boolean values that are not numeric or true/false.
+   * @param booleanLowerCaseOnly If true then Boolean values are only permitted without quotes if they are lowercase true/false (i.e. when false True is a valid value).
+   * @return a new ValueFormatters object based on this definition.
+   */
+  public ValueFormatters toValueFormatters(String openQuote, String closeQuote, boolean booleanLowerCaseOnly) {
+    return new ValueFormatters(dateFormat, dateTimeFormat, timeFormat, decimalFormat, booleanFormat, openQuote, closeQuote, booleanLowerCaseOnly, columnSpecificTextFormats);
   }
   
   /**
@@ -490,15 +516,10 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
                         There is no capability for changing the order of output columns, this will always be set as the order they appear in the data.
                         </P>
                         """)
-  public List<ColumnTextFormats> getColumnsSpecificTextFormats() {
+  public List<ColumnTextFormats> getColumnSpecificTextFormats() {
     return columnSpecificTextFormats;
   }
 
-  @JsonIgnore  
-  public ImmutableMap<String, ColumnTextFormats> getColumnSpecificTextFormatsMap() {
-    return columnSpecificTextFormatsMap;
-  }
-  
   /**
    * Builder class for AbstractTextFormat.
    *
@@ -601,10 +622,11 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
      * <P>
      * Given that each column can only be of one type there is usually no reason to set more than one custom format for a single column-specific text format,
      * but it is not an error to do so - only the relevant format (for the column data type) will be used.
-     * 
+     *
      * @param columnSpecificTextFormats The column-specific text formats.
      * @return this, so that the builder can be used in a fluent manner.
      */
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public T columnSpecificTextFormats(List<ColumnTextFormats> columnSpecificTextFormats) {
       this.columnSpecificTextFormats = columnSpecificTextFormats;
       return self();
@@ -623,6 +645,5 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
     this.decimalFormat = builder.decimalFormat;
     this.booleanFormat = builder.booleanFormat;
     this.columnSpecificTextFormats = ImmutableCollectionTools.copy(builder.columnSpecificTextFormats);
-    this.columnSpecificTextFormatsMap = ImmutableCollectionTools.listToMap(builder.columnSpecificTextFormats, cstf -> cstf.getColumn());
   }
 }

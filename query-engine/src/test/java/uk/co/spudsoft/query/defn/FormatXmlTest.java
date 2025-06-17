@@ -30,7 +30,6 @@ import uk.co.spudsoft.query.exec.fmts.xml.FormatXmlInstance;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
-import org.mockito.Mockito;
 import static org.mockito.Mockito.mock;
 
 class FormatXmlTest {
@@ -42,7 +41,7 @@ class FormatXmlTest {
       .type(FormatType.XML)
       .name("TestFormat")
       .extension("xml")
-      .mediaType(com.google.common.net.MediaType.parse(MediaType.APPLICATION_XML))
+      .mediaType(MediaType.APPLICATION_XML)
       .xmlDeclaration(true)
       .encoding("UTF-16")
       .indent(true)

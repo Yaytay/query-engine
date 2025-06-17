@@ -55,7 +55,7 @@ import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
  * 
  * @author jtalbut
  */
-public final class CustomBooleanFormatter {
+public final class CustomBooleanFormatter implements CustomFormatter {
 
   private final String trueValue;
   private final String falseValue;
@@ -90,7 +90,7 @@ public final class CustomBooleanFormatter {
 
       if (!(value instanceof Object[] array) || array.length != 2
               || !(array[0] instanceof String) || !(array[1] instanceof String)) {
-        throw new IllegalArgumentException("Expression must evaluate to a two-element array of strings.");
+        throw new IllegalArgumentException("Expression must evaluate to a two-element array of strings: " + expression);
       }
 
       this.trueValue = (String) array[0];
@@ -141,6 +141,7 @@ public final class CustomBooleanFormatter {
    * @param value The value to be formatted as a Boolean.
    * @return A string value that can be output.
    */
+  @Override
   public String format(Object value) {
     if (value == null) {
       return null;

@@ -36,7 +36,7 @@ public class CustomBooleanFormatterTest {
   
   @Test
   public void testFormatValidExpressionNotArrays() {
-    assertEquals("Expression must evaluate to a two-element array of strings.", assertThrows(IllegalArgumentException.class, () -> {
+    assertEquals("Expression must evaluate to a two-element array of strings: 1", assertThrows(IllegalArgumentException.class, () -> {
       new CustomBooleanFormatter("1", "<", ">", true);
     }).getMessage());
   }

@@ -21,6 +21,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A helper class to work with DateTimeFormatters allowing them to be accessed by name as well as by pattern.
@@ -30,6 +32,8 @@ import java.time.format.DateTimeFormatter;
  * @author jtalbut
  */
 public class CustomDateTimeFormatter {
+  
+  private static final Logger logger = LoggerFactory.getLogger(CustomDateTimeFormatter.class);
   
   private final DateTimeFormatter formatter;
   private final boolean convertToUtcZone;
@@ -185,22 +189,27 @@ public class CustomDateTimeFormatter {
    * @param value the date/time value to be formatted.
    * @return The formatted value, which will be either a String or a Long.
    */
-  public Object format(LocalDateTime value) {
+  public Object format(Object value) {
     if (value == null) {
       return null;
     } else {
-      if (dateTimeAsEpochMillis) {
-        return value.toInstant(ZoneOffset.UTC).toEpochMilli();
-      } else if (dateTimeAsEpochSeconds) {
-        return value.toEpochSecond(ZoneOffset.UTC);
-      } else if (formatter == null) {
-        return value.toString();
-      } else if (convertToUtcZone) {
-        ZonedDateTime zoned = value.atZone(ZoneOffset.UTC);
-        return formatter.format(zoned);
+      if (value instanceof LocalDateTime ldt) {
+        if (dateTimeAsEpochMillis) {
+          return ldt.toInstant(ZoneOffset.UTC).toEpochMilli();
+        } else if (dateTimeAsEpochSeconds) {
+          return ldt.toEpochSecond(ZoneOffset.UTC);
+        } else if (formatter == null) {
+          return value.toString();
+        } else if (convertToUtcZone) {
+          ZonedDateTime zoned = ldt.atZone(ZoneOffset.UTC);
+          return formatter.format(zoned);
+        } else {
+          return formatter.format(ldt);
+        }
       } else {
-        return formatter.format(value);
-      }
+        logger.warn("Value {} of type {} passed to CustomDateTimeFormatter", value, value.getClass());
+        return value.toString();
+      }      
     }
   }
   

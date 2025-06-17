@@ -70,6 +70,7 @@ public class ImmutableCollectionTools {
       src.forEach(v -> {
         K key = id.apply(v);
         if (key != null) {
+          
           builder.put(key, v);
         }
       });

@@ -31,7 +31,7 @@ import uk.co.spudsoft.query.exec.fmts.CustomDecimalFormatter;
  *
  * @author jtalbut
  */
-public abstract class ColumnTextFormats {
+public class ColumnTextFormats {
 
   private final String column;
   private final String dateFormat;
@@ -47,8 +47,8 @@ public abstract class ColumnTextFormats {
    * 
    */
   protected void validate(String openQuote, String closeQuote) {
-    if (!Strings.isNullOrEmpty(column)) {
-      throw new IllegalArgumentException("No column specified for column text formats");
+    if (Strings.isNullOrEmpty(column)) {
+      throw new IllegalArgumentException("No column specified for column value formatters");
     }
     if (!Strings.isNullOrEmpty(dateFormat)) {
       try {
@@ -482,6 +482,14 @@ public abstract class ColumnTextFormats {
   }
 
   /**
+   * Builder factory method.
+   * @return a new Builder instance.
+   */
+  public static Builder builder() {
+    return new Builder();
+  }
+  
+  /**
    * Builder class for TextFormats.
    */
   public static class Builder {
@@ -496,7 +504,7 @@ public abstract class ColumnTextFormats {
     /**
      * Constructor.
      */
-    protected Builder() {
+    private Builder() {
     }
 
     /**
@@ -563,6 +571,14 @@ public abstract class ColumnTextFormats {
     public Builder booleanFormat(String booleanFormat) {
       this.booleanFormat = booleanFormat;
       return this;
+    }
+    
+    /**
+     * Construct a new ColumnTextFormats object.
+     * @return a new ColumnTextFormats object.
+     */
+    public ColumnTextFormats build() {
+      return new ColumnTextFormats(this);
     }
   }
 

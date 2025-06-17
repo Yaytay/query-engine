@@ -18,20 +18,28 @@ package uk.co.spudsoft.query.exec.fmts;
 
 import com.google.common.base.Strings;
 import java.text.DecimalFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A helper class to work with DecimalFormat.
  *
  * @author jtalbut
  */
-public class CustomDecimalFormatter {
+public class CustomDecimalFormatter implements CustomFormatter {
 
+  private static final Logger logger = LoggerFactory.getLogger(CustomDecimalFormatter.class);
+  
   private final DecimalFormat formatter;
   private final boolean mustBeEncodedAsString;
 
   /**
    * Constructor.
    *
+   * Note that DecimalFormat is quite lenient with its patterns.
+   * For example a pattern for "invalid" will result in an output of either "invalid" or "-invalid" for any input.
+   * Misuse of real format characters is more likely to cause an exception.
+   * 
    * @param format a DecimalFormat pattern.
    */
   public CustomDecimalFormatter(String format) {
@@ -98,14 +106,20 @@ public class CustomDecimalFormatter {
    * @param value the date/time value to be formatted.
    * @return The formatted value.
    */
-  public String format(Number value) {
+  @Override
+  public String format(Object value) {
     if (value == null) {
       return null;
     } else {
-      if (formatter == null) {
-        return value.toString();
+      if (value instanceof Number n) {
+        if (formatter == null) {
+          return n.toString();
+        } else {
+          return formatter.format(n);
+        }
       } else {
-        return formatter.format(value);
+        logger.warn("Value {} of type {} passed to CustomDecimalFormatter", value, value.getClass());
+        return value.toString();
       }
     }
   }

@@ -16,7 +16,6 @@
  */
 package uk.co.spudsoft.query.exec.fmts.html;
 
-import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -24,9 +23,6 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAccessor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.LoggerFactory;
 import static uk.co.spudsoft.query.defn.DataType.Boolean;
@@ -46,9 +42,7 @@ import uk.co.spudsoft.query.exec.fmts.FormattingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
-import uk.co.spudsoft.query.exec.fmts.CustomBooleanFormatter;
-import uk.co.spudsoft.query.exec.fmts.CustomDateTimeFormatter;
-import uk.co.spudsoft.query.exec.fmts.CustomDecimalFormatter;
+import uk.co.spudsoft.query.exec.fmts.ValueFormatters;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
 /**
@@ -79,12 +73,7 @@ public class FormatHtmlInstance implements FormatInstance {
   private static final String CLOSE = "</tbody></table>";
   private final AtomicBoolean started = new AtomicBoolean();
 
-  private final DateTimeFormatter dateFormatter;
-  private final CustomDateTimeFormatter dateTimeFormatter;
-  private final DateTimeFormatter timeFormatter;
-
-  private final CustomDecimalFormatter decimalFormatter;
-  private final CustomBooleanFormatter booleanFormatter;
+  private final ValueFormatters valueFormatters;
   
   private final Promise<Void> finalPromise;
 
@@ -103,22 +92,7 @@ public class FormatHtmlInstance implements FormatInstance {
     this.outputStream = outputStream;
     this.finalPromise = Promise.<Void>promise();
 
-    if (Strings.isNullOrEmpty(defn.getDateFormat())) {
-      this.dateFormatter = null;
-    } else {
-      this.dateFormatter = DateTimeFormatter.ofPattern(defn.getDateFormat());
-    }
-
-    dateTimeFormatter = new CustomDateTimeFormatter(defn.getDateTimeFormat());
-
-    if (Strings.isNullOrEmpty(defn.getTimeFormat())) {
-      this.timeFormatter = null;
-    } else {
-      this.timeFormatter = DateTimeFormatter.ofPattern(defn.getTimeFormat());
-    }
-
-    this.decimalFormatter = new CustomDecimalFormatter(defn.getDecimalFormat());
-    this.booleanFormatter = new CustomBooleanFormatter(defn.getBooleanFormat(), "", "", false);
+    this.valueFormatters = defn.toValueFormatters("", "", false);
 
     this.formattingStream = new FormattingWriteStream(outputStream,
             v -> outputStream.write(OPEN),
@@ -203,14 +177,12 @@ public class FormatHtmlInstance implements FormatInstance {
       if (value != null) {
         switch (cd.type()) {
           case Boolean:
-            tr.append(booleanFormatter.format(value));
+            tr.append(valueFormatters.getBooleanFormatter(cd.name()).format(value));
             break;
 
           case Double:
           case Float:
-            if (value instanceof Number numberValue) {
-              tr.append(decimalFormatter.format(numberValue));
-            }
+            tr.append(valueFormatters.getDecimalFormatter(cd.name()).format(value));
             break;
 
           case Integer:
@@ -232,33 +204,15 @@ public class FormatHtmlInstance implements FormatInstance {
             break;
 
           case Date:
-            if (dateFormatter == null) {
-              tr.append(value.toString());
-            } else {
-              if (value instanceof TemporalAccessor ta) {
-                tr.append(dateFormatter.format(ta));
-              }
-            }
+            tr.append(valueFormatters.getDateFormatter(cd.name()).format(value));
             break;
 
           case DateTime:
-            if (value instanceof LocalDateTime ldt) {
-              Object formatted = dateTimeFormatter.format(ldt);
-              tr.append(formatted);
-            } else {
-              logger.warn("DateTime value is not LocalDateTime (it's {} of {})", value.getClass(), value);
-              tr.append(value.toString());
-            }
+            tr.append(valueFormatters.getDateTimeFormatter(cd.name()).format(value));
             break;
 
           case Time:
-            if (timeFormatter == null) {
-              tr.append(value.toString());
-            } else {
-              if (value instanceof TemporalAccessor ta) {
-                tr.append(timeFormatter.format(ta));
-              }
-            }
+            tr.append(valueFormatters.getTimeFormatter(cd.name()).format(value));
             break;
 
           default:
