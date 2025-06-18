@@ -59,6 +59,11 @@ import uk.co.spudsoft.query.exec.fmts.html.FormatHtmlInstance;
 )
 public class FormatHtml extends AbstractTextFormat implements Format {
   
+  private static final String DEFAULT_NAME = "html";
+
+  private static final String DEFAULT_EXTENSION = "html";
+  private static final String DEFAULT_MEDIA_TYPE = "text/html;charset=UTF-8";
+  
   @Override
   public FormatHtmlInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
     return new FormatHtmlInstance(this, writeStream);
@@ -79,8 +84,8 @@ public class FormatHtml extends AbstractTextFormat implements Format {
      * Default constructor.
      */
     public Builder() {
-      super(FormatType.HTML, "html", null, "html", null, MediaType.parse("text/html"), false
-              , "yyyy-MM-dd", "yyyy-MM-dd'T'HH:mm", "HH:mm", null, null
+      super(FormatType.HTML, DEFAULT_NAME, null, DEFAULT_EXTENSION, null, MediaType.parse(DEFAULT_MEDIA_TYPE), false
+              , null, null, null, null, null
       );
     }
     

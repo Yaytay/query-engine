@@ -94,7 +94,7 @@ public final class FormatAtomInstance implements FormatInstance {
    * @param outputStream The WriteStream that the data is to be sent to.
    */
   public FormatAtomInstance(FormatAtom definition, String requestUrl, WriteStream<Buffer> outputStream) {
-    this.defn = definition.withDefaults();
+    this.defn = definition;
     this.requestUrl = requestUrl;
     this.baseUrl = endsWith(requestUrl, "/");
     this.streamWrapper = new OutputWriteStreamWrapper(outputStream);

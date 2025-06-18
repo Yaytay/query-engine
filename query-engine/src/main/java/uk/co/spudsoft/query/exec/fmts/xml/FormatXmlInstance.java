@@ -59,6 +59,7 @@ import static uk.co.spudsoft.query.defn.DataType.Time;
 import static uk.co.spudsoft.query.defn.FormatXml.NAME_CHAR_REGEX;
 import static uk.co.spudsoft.query.defn.FormatXml.NAME_START_REGEX;
 import uk.co.spudsoft.query.exec.fmts.ValueFormatters;
+import uk.co.spudsoft.query.main.Coalesce;
 
 /**
  * Handles the formatting of data into XML format as part of a data processing pipeline.
@@ -92,7 +93,7 @@ public final class FormatXmlInstance implements FormatInstance {
    * @param outputStream The WriteStream that the data is to be sent to.
    */
   public FormatXmlInstance(FormatXml definition, WriteStream<Buffer> outputStream) {
-    this.defn = definition.withDefaults();
+    this.defn = definition;
     this.streamWrapper = new OutputWriteStreamWrapper(outputStream);
     this.valueFormatters = defn.toValueFormatters("", "", false);
     this.formattingStream = createFormattingWriteStream(
@@ -269,9 +270,10 @@ public final class FormatXmlInstance implements FormatInstance {
   private void start() throws Exception {
     started.set(true);
 
-    writer = xmlOutputFactory.createXMLStreamWriter(streamWrapper, Charset.forName(defn.getEncoding()).name());
+    String encoding = Coalesce.coalesce(defn.getEncoding(), "utf-8");
+    writer = xmlOutputFactory.createXMLStreamWriter(streamWrapper, Charset.forName(encoding).name());
     if (defn.isXmlDeclaration()) {
-      writer.writeStartDocument(defn.getEncoding(), "1.0");
+      writer.writeStartDocument(encoding, "1.0");
       if (defn.isIndent()) {
         writer.writeCharacters("\n");
       }

@@ -36,6 +36,16 @@ import uk.co.spudsoft.query.exec.fmts.text.FormatDelimitedInstance;
                       """)
 public class FormatDelimited extends AbstractTextFormat implements Format {
 
+  private static final String DEFAULT_NAME = "csv";
+
+  private static final String DEFAULT_EXTENSION = "csv";
+  private static final String DEFAULT_MEDIA_TYPE = "text/csv;charset=UTF-8";
+  
+  private static final String DEFAULT_DELIMITER = ",";
+  private static final String DEFAULT_NEWLINE = "\r\n";
+  private static final String DEFAULT_OPEN_QUOTE = "\"";
+  private static final String DEFAULT_CLOSE_QUOTE = "\"";
+  
   private final boolean bom;
   private final boolean headerRow;
   private final boolean quoteTemporal;
@@ -57,19 +67,19 @@ public class FormatDelimited extends AbstractTextFormat implements Format {
   }
 
   @Override
-  @Schema(defaultValue = "text/csv;charset=UTF-8")
+  @Schema(defaultValue = DEFAULT_MEDIA_TYPE)
   public MediaType getMediaType() {
     return super.getMediaType();
   }
 
   @Override
-  @Schema(defaultValue = "csv")
+  @Schema(defaultValue = DEFAULT_NAME)
   public String getName() {
     return super.getName();
   }
 
   @Override
-  @Schema(defaultValue = "csv")
+  @Schema(defaultValue = DEFAULT_EXTENSION)
   public String getExtension() {
     return super.getExtension();
   }
@@ -123,7 +133,7 @@ public class FormatDelimited extends AbstractTextFormat implements Format {
   @Schema(description = """
                         The delimiter between field values in the output.
                         """
-          , defaultValue = ","
+          , defaultValue = DEFAULT_DELIMITER
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           , maxLength = 10
   )
@@ -138,7 +148,7 @@ public class FormatDelimited extends AbstractTextFormat implements Format {
   @Schema(description = """
                         Any string values in the output will be prefixed by this value.
                         """
-          , defaultValue = "\""
+          , defaultValue = DEFAULT_CLOSE_QUOTE
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           , maxLength = 10
 )
@@ -153,7 +163,7 @@ public class FormatDelimited extends AbstractTextFormat implements Format {
   @Schema(description = """
                         Any string values in the output will be suffixed by this value.
                         """
-          , defaultValue = "\""
+          , defaultValue = DEFAULT_OPEN_QUOTE
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           , maxLength = 10
   )
@@ -171,7 +181,6 @@ public class FormatDelimited extends AbstractTextFormat implements Format {
                         <P>
                         Do not set both this and replaceCloseQuote, this value will take preference.
                         """
-          , defaultValue = "\""
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           , maxLength = 10
   )
@@ -189,7 +198,6 @@ public class FormatDelimited extends AbstractTextFormat implements Format {
                         <P>
                         Do not set both this and escapeCloseQuote, the value of escapeCloseQuote will take preference.
                         """
-          , defaultValue = "\""
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           , maxLength = 10
   )
@@ -204,7 +212,7 @@ public class FormatDelimited extends AbstractTextFormat implements Format {
   @Schema(description = """
                         Each row in the output will be suffixed by this value.
                         """
-          , defaultValue = "\\r\\n"
+          , defaultValue = DEFAULT_NEWLINE
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           , maxLength = 10
   )
@@ -222,16 +230,16 @@ public class FormatDelimited extends AbstractTextFormat implements Format {
     private boolean bom = false;
     private boolean headerRow = true;
     private boolean quoteTemporal = true;
-    private String delimiter = ",";
-    private String openQuote = "\"";
-    private String closeQuote = "\"";
-    private String escapeCloseQuote = "";
-    private String replaceCloseQuote = "";
-    private String newline = "\r\n";
+    private String delimiter = DEFAULT_DELIMITER;
+    private String openQuote = DEFAULT_OPEN_QUOTE;
+    private String closeQuote = DEFAULT_CLOSE_QUOTE;
+    private String escapeCloseQuote;
+    private String replaceCloseQuote;
+    private String newline = DEFAULT_NEWLINE;
 
     private Builder() {
-      super(FormatType.Delimited, "csv", null, "csv", null, MediaType.parse("text/csv;charset=UTF-8"), false
-              , "yyyy-MM-dd", "yyyy-MM-dd'T'HH:mm", "HH:mm", null, null
+      super(FormatType.Delimited, DEFAULT_NAME, null, DEFAULT_EXTENSION, null, MediaType.parse(DEFAULT_MEDIA_TYPE), false
+              , null, null, null, null, null
       );
     }
 

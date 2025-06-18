@@ -43,6 +43,11 @@ import static uk.co.spudsoft.query.defn.FormatXml.NAME_START_REGEX;
                       """)
 public class FormatRss extends AbstractTextFormat implements Format {
 
+  private static final String DEFAULT_NAME = "RSS";
+
+  private static final String DEFAULT_EXTENSION = "xml";
+  private static final String DEFAULT_MEDIA_TYPE = "application/rss+xml; charset=utf-8";
+
   private final String customNamespace;
   private final String fieldInitialLetterFix;
   private final String fieldInvalidLetterFix;
@@ -64,27 +69,6 @@ public class FormatRss extends AbstractTextFormat implements Format {
    */
   public static FormatRss.Builder builder() {
     return new FormatRss.Builder();
-  }
-
-
-  /**
-   * Creates a new FormatRss instance with values replaced by defaults it they are not set.
-   * @return a newly created FormatRss instance in which all fields have values.
-   */
-  public FormatRss withDefaults() {
-    Builder builder = new Builder();
-    builder.type(getType());
-    builder.name(getName());
-    builder.description(getDescription());
-    builder.extension(getExtension());
-    builder.mediaType(getMediaType().toString());
-    builder.fieldInitialLetterFix(fieldInitialLetterFix == null ? "F" : fieldInitialLetterFix);
-    builder.fieldInvalidLetterFix(fieldInvalidLetterFix == null ? "_" : fieldInvalidLetterFix);
-    builder.dateFormat(getDateFormat());
-    builder.dateTimeFormat(getDateTimeFormat());
-    builder.timeFormat(getTimeFormat());
-    builder.customNamespace(customNamespace);
-    return builder.build();
   }
 
   @Override
@@ -110,7 +94,7 @@ public class FormatRss extends AbstractTextFormat implements Format {
    * @return the name of the format, as will be used on query string parameters.
    */
   @Override
-  @Schema(defaultValue = "XML")
+  @Schema(defaultValue = DEFAULT_NAME)
   public String getName() {
     return super.getName();
   }
@@ -120,7 +104,7 @@ public class FormatRss extends AbstractTextFormat implements Format {
    *
    * @return the file extension used for this format.
    */
-  @Schema(defaultValue = "xml")
+  @Schema(defaultValue = DEFAULT_EXTENSION)
   @Override
   public String getExtension() {
     return super.getExtension();
@@ -131,7 +115,7 @@ public class FormatRss extends AbstractTextFormat implements Format {
    *
    * @return the {@link MediaType}, which maps to Content-Type in HTTP headers.
    */
-  @Schema(defaultValue = "application/rss+xml; charset=utf-8")
+  @Schema(defaultValue = DEFAULT_MEDIA_TYPE)
   @Override
   public MediaType getMediaType() {
     return super.getMediaType();

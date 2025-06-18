@@ -19,7 +19,6 @@ package uk.co.spudsoft.query.defn;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import com.google.common.base.Strings;
 import com.google.common.net.MediaType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
@@ -131,31 +130,6 @@ public class FormatXml extends AbstractTextFormat implements Format {
   }
 
 
-  /**
-   * Creates a new FormatXml instance with values replaced by defaults it they are not set.
-   * @return a newly created FormatXml instance in which all fields have values.
-   */
-  public FormatXml withDefaults() {
-    Builder builder = new Builder();
-    builder.type(getType());
-    builder.name(getName());
-    builder.description(getDescription());
-    builder.extension(getExtension());
-    builder.mediaType(getMediaType().toString());
-    builder.xmlDeclaration(xmlDeclaration);
-    builder.encoding(Strings.isNullOrEmpty(encoding) ? "utf-8" : encoding);
-    builder.indent(indent);
-    builder.fieldsAsAttributes(fieldsAsAttributes);
-    builder.docName(Strings.isNullOrEmpty(docName) ? "data" : docName);
-    builder.rowName(Strings.isNullOrEmpty(rowName) ? "row" : rowName);
-    builder.fieldInitialLetterFix(fieldInitialLetterFix == null ? "" : fieldInitialLetterFix);
-    builder.fieldInvalidLetterFix(fieldInvalidLetterFix == null ? "" : fieldInvalidLetterFix);
-    builder.dateFormat(getDateFormat());
-    builder.dateTimeFormat(getDateTimeFormat());
-    builder.timeFormat(getTimeFormat());
-    return builder.build();
-  }
-
   @Override
   public FormatXmlInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
     return new FormatXmlInstance(this, writeStream);
@@ -235,7 +209,7 @@ public class FormatXml extends AbstractTextFormat implements Format {
    *
    * @return the character encoding to be used.
    */
-  @Schema(description = "The character encoding (e.g., UTF-8) for the XML.",
+  @Schema(description = "The character encoding (e.g., utf-8) for the XML.",
     maxLength = 100,
     defaultValue = "utf-8")
   public String getEncoding() {

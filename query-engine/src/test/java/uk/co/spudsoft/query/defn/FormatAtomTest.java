@@ -60,10 +60,6 @@ class FormatAtomTest {
     assertEquals("xml", formatAtom.getExtension());
     assertEquals(MediaType.APPLICATION_ATOM_XML + "; charset=utf-8", formatAtom.getMediaType().toString());
     assertEquals(FormatType.Atom, formatAtom.getType());
-    assertNull(formatAtom.getFieldInitialLetterFix());
-    assertNull(formatAtom.getFieldInvalidLetterFix());
-
-    formatAtom = formatAtom.withDefaults();
     assertEquals("F", formatAtom.getFieldInitialLetterFix());
     assertEquals("_", formatAtom.getFieldInvalidLetterFix());
 
@@ -73,11 +69,6 @@ class FormatAtomTest {
       .build();
     assertEquals("Z", formatAtom.getFieldInitialLetterFix());
     assertEquals("X", formatAtom.getFieldInvalidLetterFix());
-
-    formatAtom = formatAtom.withDefaults();
-    assertEquals("Z", formatAtom.getFieldInitialLetterFix());
-    assertEquals("X", formatAtom.getFieldInvalidLetterFix());
-
   }
 
   @Test
@@ -88,24 +79,6 @@ class FormatAtomTest {
     // Assert
     assertNotNull(builder);
     assertInstanceOf(FormatAtom.Builder.class, builder);
-  }
-
-  @Test
-  void testWithDefaults() {
-    // Arrange
-    FormatAtom formatWithNulls = new FormatAtom.Builder()
-      .type(FormatType.Atom)
-      .build();
-
-    // Act
-    FormatAtom formatWithDefaults = formatWithNulls.withDefaults();
-
-    // Assert
-    assertNotNull(formatWithDefaults);
-    assertEquals(FormatType.Atom, formatWithDefaults.getType());
-    assertNotNull(formatWithDefaults.getName());
-    assertNotNull(formatWithDefaults.getExtension());
-    assertNotNull(formatWithDefaults.getMediaType());
   }
 
   @Test

@@ -16,7 +16,6 @@
  */
 package uk.co.spudsoft.query.exec.fmts.xlsx;
 
-import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -57,6 +56,7 @@ import uk.co.spudsoft.xlsx.XlsxWriter;
 import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.main.Coalesce;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 
 /**
@@ -148,24 +148,7 @@ public class FormatXlsxInstance implements FormatInstance {
             }
     );
   }
-  
-  private String coalesce(String one, String two) {
-    if (!Strings.isNullOrEmpty(one)) {
-      return one;
-    }
-    return two;
-  }
-  
-  private String coalesce(String one, String two, String three) {
-    if (!Strings.isNullOrEmpty(one)) {
-      return one;
-    }
-    if (!Strings.isNullOrEmpty(two)) {
-      return two;
-    }
-    return three;
-  }
-  
+    
   private String getUsernameFromContext() {
     Context vertxContext = Vertx.currentContext();
     if (vertxContext != null) {
@@ -227,8 +210,8 @@ public class FormatXlsxInstance implements FormatInstance {
     
     TableDefinition defn = new TableDefinition(
             "SpudSoft Query Engine"
-            , coalesce(definition.getSheetName(), "Data")
-            , coalesce(definition.getCreator(), getUsernameFromContext(), "Data")
+            , Coalesce.coalesce(definition.getSheetName(), "Data")
+            , Coalesce.coalesce(definition.getCreator(), getUsernameFromContext(), "Data")
             , definition.isGridLines()
             , definition.isHeaders()
             , getFontDefinition(definition.getHeaderFont())

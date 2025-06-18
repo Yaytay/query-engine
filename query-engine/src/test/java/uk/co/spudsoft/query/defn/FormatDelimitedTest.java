@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.defn;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
@@ -44,19 +45,19 @@ public class FormatDelimitedTest {
     assertEquals("\"", FormatDelimited.builder().build().getCloseQuote());
     assertEquals("$", FormatDelimited.builder().closeQuote("$").build().getCloseQuote());
 
-    assertEquals("", FormatDelimited.builder().build().getEscapeCloseQuote());
+    assertNull(FormatDelimited.builder().build().getEscapeCloseQuote());
     assertEquals("$", FormatDelimited.builder().escapeCloseQuote("$").build().getEscapeCloseQuote());
 
-    assertEquals("", FormatDelimited.builder().build().getReplaceCloseQuote());
+    assertNull(FormatDelimited.builder().build().getReplaceCloseQuote());
     assertEquals("S", FormatDelimited.builder().replaceCloseQuote("S").build().getReplaceCloseQuote());
 
-    assertEquals("yyyy-MM-dd", FormatDelimited.builder().build().getDateFormat());
+    assertNull(FormatDelimited.builder().build().getDateFormat());
     assertEquals("S", FormatDelimited.builder().dateFormat("S").build().getDateFormat());
 
-    assertEquals("yyyy-MM-dd'T'HH:mm", FormatDelimited.builder().build().getDateTimeFormat());
+    assertNull(FormatDelimited.builder().build().getDateTimeFormat());
     assertEquals("S", FormatDelimited.builder().dateTimeFormat("S").build().getDateTimeFormat());
 
-    assertEquals("HH:mm", FormatDelimited.builder().build().getTimeFormat());
+    assertNull(FormatDelimited.builder().build().getTimeFormat());
     assertEquals("S", FormatDelimited.builder().timeFormat("S").build().getTimeFormat());
   }
   

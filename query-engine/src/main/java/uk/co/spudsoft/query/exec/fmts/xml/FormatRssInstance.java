@@ -97,7 +97,7 @@ public final class FormatRssInstance implements FormatInstance {
    * @param outputStream The WriteStream that the data is to be sent to.
    */
   public FormatRssInstance(FormatRss definition, WriteStream<Buffer> outputStream) {
-    this.defn = definition.withDefaults();
+    this.defn = definition;
     this.streamWrapper = new OutputWriteStreamWrapper(outputStream);
     this.valueFormatters = defn.toValueFormatters("", "", false);
     this.customNamespace = Strings.isNullOrEmpty(definition.getCustomNamespace()) ? DEFAULT_CUSTOM_NAMESPACE : definition.getCustomNamespace();

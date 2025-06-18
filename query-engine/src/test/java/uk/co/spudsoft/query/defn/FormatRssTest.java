@@ -63,21 +63,12 @@ class FormatRssTest {
     assertNull(formatRss.getFieldInitialLetterFix());
     assertNull(formatRss.getFieldInvalidLetterFix());
 
-    formatRss = formatRss.withDefaults();
-    assertEquals("F", formatRss.getFieldInitialLetterFix());
-    assertEquals("_", formatRss.getFieldInvalidLetterFix());
-
     formatRss = new FormatRss.Builder()
       .fieldInitialLetterFix("Z")
       .fieldInvalidLetterFix("X")
       .build();
     assertEquals("Z", formatRss.getFieldInitialLetterFix());
     assertEquals("X", formatRss.getFieldInvalidLetterFix());
-
-    formatRss = formatRss.withDefaults();
-    assertEquals("Z", formatRss.getFieldInitialLetterFix());
-    assertEquals("X", formatRss.getFieldInvalidLetterFix());
-
   }
 
   @Test
@@ -88,24 +79,6 @@ class FormatRssTest {
     // Assert
     assertNotNull(builder);
     assertInstanceOf(FormatRss.Builder.class, builder);
-  }
-
-  @Test
-  void testWithDefaults() {
-    // Arrange
-    FormatRss formatWithNulls = new FormatRss.Builder()
-      .type(FormatType.RSS)
-      .build();
-
-    // Act
-    FormatRss formatWithDefaults = formatWithNulls.withDefaults();
-
-    // Assert
-    assertNotNull(formatWithDefaults);
-    assertEquals(FormatType.RSS, formatWithDefaults.getType());
-    assertNotNull(formatWithDefaults.getName());
-    assertNotNull(formatWithDefaults.getExtension());
-    assertNotNull(formatWithDefaults.getMediaType());
   }
 
   @Test

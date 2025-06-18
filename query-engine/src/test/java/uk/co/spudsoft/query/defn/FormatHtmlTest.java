@@ -29,7 +29,7 @@ public class FormatHtmlTest {
     }
     assertEquals("html", dh.getExtension());
     assertEquals("html", dh.getName());
-    assertEquals(MediaType.parse("text/html"), dh.getMediaType());
+    assertEquals(MediaType.parse("text/html; charset=utf-8"), dh.getMediaType());
     dh = FormatHtml.builder().extension("extn").build();
     assertEquals("extn", dh.getExtension());
     dh = FormatHtml.builder().name("format").build();

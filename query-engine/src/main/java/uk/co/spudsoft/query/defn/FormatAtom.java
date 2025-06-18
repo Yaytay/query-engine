@@ -46,6 +46,15 @@ import static uk.co.spudsoft.query.defn.FormatXml.NAME_START_REGEX;
                       """)
 public class FormatAtom extends AbstractTextFormat implements Format {
 
+  private static final String DEFAULT_NAME = "Atom";
+
+  private static final String DEFAULT_EXTENSION = "xml";
+  private static final String DEFAULT_MEDIA_TYPE = "application/atom+xml; charset=utf-8";
+  
+  
+  private static final String DEFAULT_FIELD_INITIAL_LETTER_FIX = "F";
+  private static final String DEFAULT_FIELD_INVALID_LETTER_FIX = "_";
+  
   private final String fieldInitialLetterFix;
   private final String fieldInvalidLetterFix;
 
@@ -65,29 +74,6 @@ public class FormatAtom extends AbstractTextFormat implements Format {
    */
   public static FormatAtom.Builder builder() {
     return new FormatAtom.Builder();
-  }
-
-
-  /**
-   * Creates a new FormatAtom instance with values replaced by defaults it they are not set.
-   * @return a newly created FormatAtom instance in which all fields have values.
-   */
-  public FormatAtom withDefaults() {
-    Builder builder = new Builder();
-    builder.type(getType());
-    builder.name(getName());
-    builder.description(getDescription());
-    builder.extension(getExtension());
-    builder.mediaType(getMediaType().toString());
-    builder.fieldInitialLetterFix(fieldInitialLetterFix == null ? "F" : fieldInitialLetterFix);
-    builder.fieldInvalidLetterFix(fieldInvalidLetterFix == null ? "_" : fieldInvalidLetterFix);
-    builder.dateFormat(getDateFormat());
-    builder.dateTimeFormat(getDateTimeFormat());
-    builder.timeFormat(getTimeFormat());
-    builder.decimalFormat(getDecimalFormat());
-    builder.booleanFormat(getBooleanFormat());
-    
-    return builder.build();
   }
 
   @Override
@@ -114,7 +100,7 @@ public class FormatAtom extends AbstractTextFormat implements Format {
    * @return the name of the format, as will be used on query string parameters.
    */
   @Override
-  @Schema(defaultValue = "Atom")
+  @Schema(defaultValue = DEFAULT_NAME)
   public String getName() {
     return super.getName();
   }
@@ -124,7 +110,7 @@ public class FormatAtom extends AbstractTextFormat implements Format {
    *
    * @return the file extension used for this format.
    */
-  @Schema(defaultValue = "xml")
+  @Schema(defaultValue = DEFAULT_EXTENSION)
   @Override
   public String getExtension() {
     return super.getExtension();
@@ -135,7 +121,7 @@ public class FormatAtom extends AbstractTextFormat implements Format {
    *
    * @return the {@link MediaType}, which maps to Content-Type in HTTP headers.
    */
-  @Schema(defaultValue = "application/atom+xml; charset=utf-8")
+  @Schema(defaultValue = DEFAULT_MEDIA_TYPE)
   @Override
   public MediaType getMediaType() {
     return super.getMediaType();
@@ -148,7 +134,7 @@ public class FormatAtom extends AbstractTextFormat implements Format {
    */
   @Schema(description = "Fix applied to the initial letter of a field's name.",
     maxLength = 100,
-    defaultValue = "F"
+    defaultValue = DEFAULT_FIELD_INITIAL_LETTER_FIX
   )
   public String getFieldInitialLetterFix() {
     return fieldInitialLetterFix;
@@ -161,7 +147,8 @@ public class FormatAtom extends AbstractTextFormat implements Format {
    */
   @Schema(description = "Fix applied to invalid letters in field names.",
     maxLength = 100,
-    defaultValue = "_")
+    defaultValue = DEFAULT_FIELD_INVALID_LETTER_FIX
+  )
   public String getFieldInvalidLetterFix() {
     return fieldInvalidLetterFix;
   }
@@ -176,14 +163,14 @@ public class FormatAtom extends AbstractTextFormat implements Format {
   @JsonPOJOBuilder(withPrefix = "")
   public static class Builder extends AbstractTextFormat.Builder<Builder> {
 
-    private String fieldInitialLetterFix;
-    private String fieldInvalidLetterFix;
+    private String fieldInitialLetterFix = DEFAULT_FIELD_INITIAL_LETTER_FIX;
+    private String fieldInvalidLetterFix = DEFAULT_FIELD_INVALID_LETTER_FIX;
 
     /**
      * Default constructor.
      */
     public Builder() {
-      super(FormatType.Atom, "Atom", null, "xml", null, MediaType.parse("application/atom+xml; charset=utf-8"), false
+      super(FormatType.Atom, DEFAULT_NAME, null, DEFAULT_EXTENSION, null, MediaType.parse(DEFAULT_MEDIA_TYPE), false
               , null, null, null, null, null
       );
     }

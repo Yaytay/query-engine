@@ -86,13 +86,6 @@ class FormatXmlTest {
     assertNull(formatXml.getFieldInitialLetterFix());
     assertNull(formatXml.getFieldInvalidLetterFix());
 
-    formatXml = formatXml.withDefaults();
-    assertEquals("utf-8", formatXml.getEncoding());
-    assertEquals("data", formatXml.getDocName());
-    assertEquals("row", formatXml.getRowName());
-    assertEquals("", formatXml.getFieldInitialLetterFix());
-    assertEquals("", formatXml.getFieldInvalidLetterFix());
-
     formatXml = new FormatXml.Builder()
       .encoding("utf-16")
       .docName("testDoc")
@@ -115,26 +108,6 @@ class FormatXmlTest {
     // Assert
     assertNotNull(builder);
     assertInstanceOf(FormatXml.Builder.class, builder);
-  }
-
-  @Test
-  void testWithDefaults() {
-    // Arrange
-    FormatXml formatWithNulls = new FormatXml.Builder()
-      .type(FormatType.XML)
-      .build();
-
-    // Act
-    FormatXml formatWithDefaults = formatWithNulls.withDefaults();
-
-    // Assert
-    assertNotNull(formatWithDefaults);
-    assertEquals(FormatType.XML, formatWithDefaults.getType());
-    assertNotNull(formatWithDefaults.getName());
-    assertNotNull(formatWithDefaults.getExtension());
-    assertNotNull(formatWithDefaults.getMediaType());
-    assertNotNull(formatWithDefaults.getDocName());
-    assertNotNull(formatWithDefaults.getRowName());
   }
 
   @Test
