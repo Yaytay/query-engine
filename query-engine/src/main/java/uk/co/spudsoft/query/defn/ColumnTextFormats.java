@@ -31,6 +31,22 @@ import uk.co.spudsoft.query.exec.fmts.CustomDecimalFormatter;
  *
  * @author jtalbut
  */
+@Schema(
+        description="""
+                    <P>The overrides for the formatting of specific columns.</P>
+                    <P>
+                    This is only required when two columns of the same type need to be formatted in different ways.
+                    </P>
+                    <P>
+                    Given that a column can only be of one data type it is usually only appropriate to set one format
+                    with this structure for a given column.
+                    </P>
+                    <P>
+                    Any column not specified here will have the default format, so it is only necessary to specify the
+                    odd columns here.
+                    </P>
+                    """
+)
 public class ColumnTextFormats {
 
   private final String column;
@@ -385,7 +401,6 @@ public class ColumnTextFormats {
                         This value will be used by the Java DateTimeFormatter to format times.
                         """
     , maxLength = 100
-    , defaultValue = "HH:mm"
   )
   public String getTimeFormat() {
     return timeFormat;

@@ -20,6 +20,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.net.MediaType;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.format.DateTimeFormatter;
@@ -499,23 +500,25 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
    * Get the overrides for the formatting of specific columns.
    * @return the overrides for the formatting of specific columns.
    */
-  @Schema(description = """
+  @ArraySchema(
+          arraySchema = @Schema(
+                  description = """
                         <P>The overrides for the formatting of specific columns.</P>
                         <P>
-                        Usually the default formatting of a column is adequate, but this can be overridden if there is a specific need.
+                        This is only required when two columns of the same type need to be formatted in different ways.
                         </P>
                         <P>
-                        There are only three aspects of a column that can be overridden:
-                        <UL>
-                        <LI>The title that will appear in the header row.
-                        <LI>The format that Excel will apply to the body cells.
-                        <LI>The width of the column.
-                        </UL>
+                        Given that a column can only be of one data type it is usually only appropriate to set one format
+                        with this structure for a given column.
                         </P>
                         <P>
-                        There is no capability for changing the order of output columns, this will always be set as the order they appear in the data.
+                        Any column not specified here will have the default format, so it is only necessary to specify the
+                        odd columns here.
                         </P>
-                        """)
+                        """
+          )
+          , minItems = 0
+  )
   public List<ColumnTextFormats> getColumnSpecificTextFormats() {
     return columnSpecificTextFormats;
   }
