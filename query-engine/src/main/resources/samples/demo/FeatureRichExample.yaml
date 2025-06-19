@@ -191,6 +191,10 @@ formats:
   extension: tsv
   headerRow: true
   mediaType: text/tsv
+  decimalFormat: 0.000
+  columnSpecificTextFormats:
+    - column: boolValue
+      booleanFormat: '[''"yes"'',''"no"'']'
 - type: Delimited
   headerRow: false
   hidden: true

@@ -16,6 +16,8 @@
  */
 package uk.co.spudsoft.query.defn;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.Strings;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -47,6 +49,7 @@ import uk.co.spudsoft.query.exec.fmts.CustomDecimalFormatter;
                     </P>
                     """
 )
+@JsonDeserialize(builder = ColumnTextFormats.Builder.class)
 public class ColumnTextFormats {
 
   private final String column;
@@ -507,6 +510,7 @@ public class ColumnTextFormats {
   /**
    * Builder class for TextFormats.
    */
+  @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
 
     private String column;
