@@ -234,10 +234,15 @@ public enum DataType {
           return tv;
         }
         case Number tv -> {
-          return java.lang.Double.compare(tv.doubleValue(), 0.0) != 0;
+          return java.lang.Double.compare(tv.doubleValue(), 0.0) != 0.0;
         }
         case String tv -> {
-          return java.lang.Boolean.valueOf(tv);
+          try {
+            double dv = java.lang.Double.parseDouble(tv);
+            return dv != 0.0;
+          } catch (Throwable ex) {
+            return java.lang.Boolean.valueOf(tv);
+          }
         }
         default -> {
           logger.info("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
@@ -281,7 +286,12 @@ public enum DataType {
           return LocalDateTime.ofInstant(tv.toInstant(), ZoneOffset.UTC);
         }
         case String tv -> {
-          return LocalDateTime.parse(tv);
+          try {
+            return LocalDateTime.parse(tv);
+          } catch (Throwable ex) {
+            
+            return LocalDateTime.parse(tv.replace(" ", "T"));
+          }
         }
         default -> {
           logger.info("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);

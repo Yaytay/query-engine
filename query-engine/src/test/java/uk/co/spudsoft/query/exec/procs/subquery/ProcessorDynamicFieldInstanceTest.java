@@ -16,6 +16,8 @@
  */
 package uk.co.spudsoft.query.exec.procs.subquery;
 
+import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -234,5 +236,14 @@ public class ProcessorDynamicFieldInstanceTest {
     });
     assertEquals(Arrays.asList("id", "Field"), cds.stream().map(cd -> cd.name()).collect(Collectors.toList()));
     assertEquals(Arrays.asList("one", "first"), values);    
+  }
+  
+  @Test
+  public void testCast() {
+    assertEquals(LocalDateTime.of(2022, Month.OCTOBER, 07, 0, 0, 0), ProcessorDynamicFieldInstance.castValue("2022-10-07 00:00:00", new FieldDefn("id", "key", "field", DataType.DateTime, "column")));
+    assertEquals(Boolean.TRUE, ProcessorDynamicFieldInstance.castValue(1, new FieldDefn("id", "key", "field", DataType.Boolean, "column")));
+    assertEquals(Boolean.FALSE, ProcessorDynamicFieldInstance.castValue(0, new FieldDefn("id", "key", "field", DataType.Boolean, "column")));
+    assertEquals(Boolean.TRUE, ProcessorDynamicFieldInstance.castValue("1", new FieldDefn("id", "key", "field", DataType.Boolean, "column")));
+    assertEquals(Boolean.FALSE, ProcessorDynamicFieldInstance.castValue("0", new FieldDefn("id", "key", "field", DataType.Boolean, "column")));
   }
 }
