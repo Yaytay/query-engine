@@ -288,6 +288,15 @@ public class PipelineExecutorImpl implements PipelineExecutor {
       List<String> argStringValues = valuesMap.getAll(arg.getName());      
       ImmutableList<Comparable<?>> values = null;
       
+      if (arg.isEmptyIsAbsent()) {
+        argStringValues = argStringValues.stream()
+                .filter(a -> !Strings.isNullOrEmpty(a))
+                .collect(Collectors.toList());
+        if (argStringValues.isEmpty()) {
+          continue ;
+        }        
+      }
+      
       if (arg.isHidden() && argStringValues != null && !argStringValues.isEmpty()) {
         throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" is not permitted.");
       }

@@ -67,6 +67,7 @@ public class Argument {
   private final boolean multiValued;
   private final boolean ignored;
   private final boolean validate;
+  private final boolean emptyIsAbsent;
   private final ImmutableList<String> dependsUpon; 
   private final String defaultValueExpression;
   private final String minimumValue;
@@ -371,6 +372,30 @@ public class Argument {
   }
 
   /**
+   * Return true if an empty query string argument should be considered to be absent.
+   * <P>
+   * Some historical services call Query Engine with empty query string values, which can cause problems when they are passed to a database engine.
+   * A BIND construct is no defence against this, because Query Engine considers the argument to have been passed in with a zero length string.
+   * Setting this to true will make the engine ignore the blank query string value completely.
+   * 
+   * @return true if an empty query string argument should be considered to be absent. 
+   */
+  @Schema(description = """
+                        <P>If set to true an empty query string argument should be considered to be absent.</P>
+                        <P>
+                        Some historical services call Query Engine with empty query string values, which can cause problems when they are passed to a database engine.
+                        A BIND construct is no defence against this, because Query Engine considers the argument to have been passed in with a zero length string.
+                        Setting this to true will make the engine ignore the blank query string value completely.
+                        """
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+          , type = "boolean"
+          , defaultValue = "false"
+          )
+  public boolean isEmptyIsAbsent() {
+    return emptyIsAbsent;
+  }
+
+  /**
    * Return a list of the name(s) of another argument(s) that this argument requires.
    * 
    * This is intended to allow the UI to disable inputs until their dependent argument has been provided.
@@ -636,6 +661,7 @@ public class Argument {
     private boolean multiValued = false;
     private boolean ignored = false;
     private boolean validate = true;
+    private boolean emptyIsAbsent = false;
     private List<String> dependsUpon;
     private String defaultValueExpression;
     private String minimumValue;
@@ -765,6 +791,17 @@ public class Argument {
     }
 
     /**
+     * Set the emptyIsAbsent flag of the Argument in the builder.
+     * If emptyIsAbsent is set to true a query string argument with no value will be treated as if it has not been sent.
+     * @param value the emptyIsAbsent flag of the Argument.
+     * @return this, so that the builder may be used fluently.
+     */
+    public Builder emptyIsAbsent(final boolean value) {
+      this.emptyIsAbsent = value;
+      return this;
+    }
+
+    /**
      * Set the list of arguments that this argument depends upon in the builder.
      * @param value the list of arguments that this argument depends upon.
      * @return this, so that the builder may be used fluently.
@@ -850,7 +887,13 @@ public class Argument {
      * @return a new Argument object.
      */
     public Argument build() {
-      return new uk.co.spudsoft.query.defn.Argument(type, group, name, title, prompt, description, optional, hidden, multiValued, ignored, validate, dependsUpon, defaultValueExpression, minimumValue, maximumValue, possibleValues, possibleValuesUrl, permittedValuesRegex, condition);
+      return new uk.co.spudsoft.query.defn.Argument(type, group, name, title, prompt, description
+              , optional, hidden, multiValued, ignored, validate, emptyIsAbsent
+              , dependsUpon
+              , defaultValueExpression, minimumValue, maximumValue
+              , possibleValues, possibleValuesUrl, permittedValuesRegex
+              , condition
+      );
     }
   }
 
@@ -863,7 +906,7 @@ public class Argument {
   }
 
   private Argument(DataType type, String group, String name, String title, String prompt, String description
-          , boolean optional, boolean hidden, boolean multiValued, boolean ignored, boolean validate
+          , boolean optional, boolean hidden, boolean multiValued, boolean ignored, boolean validate, boolean emptyIsAbsent
           , List<String> dependsUpon
           , String defaultValueExpression, String minimumValue, String maximumValue
           , List<ArgumentValue> possibleValues, String possibleValuesUrl, String permittedValuesRegex
@@ -880,6 +923,7 @@ public class Argument {
     this.multiValued = multiValued;
     this.ignored = ignored;
     this.validate = validate;
+    this.emptyIsAbsent = emptyIsAbsent;
     this.dependsUpon = ImmutableCollectionTools.copy(dependsUpon);
     this.defaultValueExpression = defaultValueExpression;
     this.minimumValue = minimumValue;
