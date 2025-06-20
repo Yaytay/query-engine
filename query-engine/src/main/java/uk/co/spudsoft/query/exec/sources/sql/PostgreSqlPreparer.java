@@ -31,7 +31,9 @@ public class PostgreSqlPreparer extends AbstractSqlPreparer {
   
   @Override
   void generateParameterNumber(StringBuilder builder, int number) {
-    builder.append("\\$").append(number);
+    builder.append("$").append(number);
   }
+  
+  
   
 }

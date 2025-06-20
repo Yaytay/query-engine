@@ -201,7 +201,9 @@ public class SourceSqlStreamingInstance extends AbstractSource {
             }).compose(tran -> {
               addNameToContextLocalData();
               transaction = tran;
-              logger.debug("Executing SQL stream on {} with {}", connection, args);
+              if (logger.isDebugEnabled()) {
+                logger.debug("Executing SQL stream on {} with {}", connection, args.deepToString());
+              }
               MetadataRowStreamImpl rowStream = new MetadataRowStreamImpl(preparedStatement, context, definition.getStreamingFetchSize(), args);
               rowStream.exceptionHandler(ex -> {
                 logger.error("Exception occured in stream: ", ex);
