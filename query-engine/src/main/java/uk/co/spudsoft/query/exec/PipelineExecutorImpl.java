@@ -292,7 +292,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
         argStringValues = argStringValues.stream()
                 .filter(a -> !Strings.isNullOrEmpty(a))
                 .collect(Collectors.toList());
-        if (argStringValues.isEmpty()) {
+        if (argStringValues.isEmpty() && !arg.isOptional()) {
           continue ;
         }        
       }

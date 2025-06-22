@@ -275,6 +275,7 @@ public class LoginRouterWithDiscoveryIT {
             .extract().header("Location")
             ;
     assertThat(authUiUrl, startsWith("http://localhost:" + port + "/authorization_endpoint"));
+    logger.debug("authUiUrl: {}", authUiUrl);
     Map<String, List<String>> authUiParams = new QueryStringDecoder(authUiUrl).parameters();
     assertEquals(Arrays.asList("code"), authUiParams.get("response_type"));
     assertEquals(Arrays.asList("bdab017f4732085a51f9"), authUiParams.get("client_id"));
