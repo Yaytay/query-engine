@@ -112,6 +112,7 @@ import uk.co.spudsoft.query.exec.filters.MapFilter;
 import uk.co.spudsoft.query.exec.filters.OffsetFilter;
 import uk.co.spudsoft.query.exec.filters.QueryFilter;
 import uk.co.spudsoft.query.exec.filters.SortFilter;
+import uk.co.spudsoft.query.exec.filters.WithoutFilter;
 import uk.co.spudsoft.query.exec.procs.sort.ProcessorSortInstance;
 import uk.co.spudsoft.query.json.ObjectMapperConfiguration;
 import uk.co.spudsoft.query.logging.VertxMDCSpanProcessor;
@@ -630,6 +631,7 @@ public class Main extends Application {
                     , new QueryFilter()
                     , new MapFilter()
                     , new SortFilter()
+                    , new WithoutFilter()
             )
     );
     return filterFactory;

@@ -228,6 +228,19 @@ public class MainQueryIT {
     body = given()
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
+            .queryParam("_without", "children")
+            .log().all()
+            .get("/query/sub1/sub2/TemplatedYamlToPipelineIT.tsv")
+            .then()
+            .log().ifError()
+            .statusCode(200)
+            .extract().body().asString();
+        
+    assertThat(body, startsWith("\"dataId\"\t\"instant\"\t\"ref\"\t\"value\"\n1\t\"1971-05-07T03:00\"\t\"antiquewhite\"\t\"first\""));
+    
+    body = given()
+            .queryParam("key", postgres.getName())
+            .queryParam("port", postgres.getPort())
             .log().all()
             .get("/query/sub1/sub2/TemplatedYamlToPipelineIT.html")
             .then()
