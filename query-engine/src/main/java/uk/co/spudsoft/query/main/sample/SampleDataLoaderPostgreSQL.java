@@ -40,16 +40,6 @@ public class SampleDataLoaderPostgreSQL extends AbstractSampleDataLoader {
   }
 
   @Override
-  protected String getSampleTableName() {
-    return "stock";
-  }
-
-  @Override
-  protected String getJdbcUrlPrefix() {
-    return "jdbc:postgresql://";
-  }
-
-  @Override
   public String getIdentifierQuote() {
     return "\"";
   }

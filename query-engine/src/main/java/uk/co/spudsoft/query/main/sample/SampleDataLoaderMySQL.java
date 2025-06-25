@@ -47,16 +47,6 @@ public class SampleDataLoaderMySQL extends AbstractSampleDataLoader {
   }
 
   @Override
-  protected String getSampleTableName() {
-    return "stock";
-  }
-
-  @Override
-  protected String getJdbcUrlPrefix() {
-    return "jdbc:mysql://";
-  }
-
-  @Override
   public String getIdentifierQuote() {
     return "`";
   }

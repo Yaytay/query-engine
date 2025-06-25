@@ -230,17 +230,6 @@ public class SortingStream<T> implements ReadStream<T> {
     input.handler(this::inputHandler);
   }
 
-  private void postException(Throwable ex) {
-    logger.warn("Exception in SortingStream: ", ex);
-    Handler<Throwable> exceptionHandlerCaptured;
-    synchronized (lock) {
-      exceptionHandlerCaptured = exceptionHandler;
-    }
-    if (exceptionHandlerCaptured != null) {
-      exceptionHandlerCaptured.handle(ex);
-    }
-  }
-
   private void processOutputs() {
     boolean done = false;
     while (!done) {
@@ -358,6 +347,18 @@ public class SortingStream<T> implements ReadStream<T> {
     postException(exception);
   }
 
+  private void postException(Throwable ex) {
+    logger.warn("Exception in SortingStream: ", ex);
+    Handler<Throwable> exceptionHandlerCaptured;
+    synchronized (lock) {
+      exceptionHandlerCaptured = exceptionHandler;
+    }
+    if (exceptionHandlerCaptured != null) {
+      exceptionHandlerCaptured.handle(ex);
+    }
+  }
+
+  
   private void inputHandler(T item) {
     // logger.debug("inputHandler {}", item);
     int sizeofData = memoryEvaluator.sizeof(item);

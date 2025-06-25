@@ -111,6 +111,42 @@ public class SortingStreamTest {
   }
 
   @Test
+  public void testSortingError(Vertx vertx, VertxTestContext testContext) {    
+    List<Integer> input = Arrays.asList(151, 892, 849, 786, 912, 714, 455, 27, 516, 789, 560, 62, 550, 351, 317, 661, 11, 125, 53, 131, 429, 735, 591, 663, 760, 795, 173, 91, 499, 445);
+    logger.debug("input has {} entries", input.size());
+    List<Integer> expected = new ArrayList<>(input);
+    expected.sort(Comparator.naturalOrder());
+    
+    ListReadStream<Integer> lrs = new ListReadStream<>(vertx.getOrCreateContext(), input);
+    
+    SortingStream<Integer> ss = new SortingStream<>(
+            vertx.getOrCreateContext()
+            , vertx.fileSystem()
+            , Comparator.naturalOrder()
+            , i -> SerializeWriteStream.byteArrayFromInt(i)
+            , b -> SerializeReadStream.intFromByteArray(b)
+            , null
+            , "SortingStreamTest_testSimpleSort"
+            , 1000
+            , i -> 16
+            , lrs
+    );
+    ss.endHandler(v -> {
+      logger.debug("Ended");
+      testContext.failNow("Stream ended, but should not have");
+    });
+    ss.exceptionHandler(ex -> {
+      logger.error("Failed: ", ex);
+      testContext.completeNow();
+    });
+    ss.handler(item -> {
+      logger.debug("Received {}", item);
+      throw new IllegalStateException("Testing");
+    });
+    ss.fetch(4);
+  }
+
+  @Test
   @Timeout(24000000)
   public void testSmallFileSort(Vertx vertx, VertxTestContext testContext) {
     

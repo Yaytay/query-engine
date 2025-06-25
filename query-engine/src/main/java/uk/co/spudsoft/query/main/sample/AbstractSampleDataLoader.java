@@ -1,4 +1,4 @@
-/*
+ /*
  * Copyright (C) 2025 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
@@ -65,28 +65,6 @@ public abstract class AbstractSampleDataLoader implements SampleDataLoader {
    */
   protected abstract String getScript();
   
-  /**
-   * Get the sample table name to check for database preparation status.
-   * @return the sample table name to check if database is already prepared.
-   */
-  protected abstract String getSampleTableName();
-  
-  /**
-   * Get the database-specific JDBC URL prefix for connection testing.
-   * @return the JDBC URL prefix (e.g., "jdbc:postgresql://", "jdbc:mysql://").
-   */
-  protected abstract String getJdbcUrlPrefix();
-  
-  /**
-   * Get the query to check if the sample table exists.
-   * This method can be overridden for database-specific implementations.
-   * @param tableName the name of the table to check
-   * @return the SQL query to check table existence
-   */
-  protected String getTableExistsQuery(String tableName) {
-    return "SELECT 1 FROM information_schema.tables WHERE table_name = ? LIMIT 1";
-  }
-
   /**
    * Opportunity for a SampleDataLoader to split the loaded string into multiple parts each executed in their own transaction.
    * 

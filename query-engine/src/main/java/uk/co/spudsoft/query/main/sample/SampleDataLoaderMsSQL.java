@@ -40,23 +40,7 @@ public class SampleDataLoaderMsSQL extends AbstractSampleDataLoader {
   }
 
   @Override
-  protected String getSampleTableName() {
-    return "stock";
-  }
-
-  @Override
-  protected String getJdbcUrlPrefix() {
-    return "jdbc:sqlserver://";
-  }
-
-  @Override
   public String getIdentifierQuote() {
     return "[";
-  }
-
-  @Override
-  protected String getTableExistsQuery(String tableName) {
-    // SQL Server uses sys.tables instead of information_schema.tables for better performance
-    return "SELECT 1 FROM sys.tables WHERE name = ?";
   }
 }
