@@ -31,7 +31,7 @@
   </developers>
 
   <properties>
-    <fork.count>0.5C</fork.count>
+    <fork.count>4</fork.count>
     <!-- For production usage JDK must be compatible with GraalVM and must be receiving security updates, effectively meaning the most recent LTS -->
     <jdk.version>21</jdk.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -39,8 +39,8 @@
     <argLine></argLine>
     <vertx.version>4.5.14</vertx.version>
     <slf4j.version>2.0.17</slf4j.version>
-    <junit-jupiter.version>5.13.1</junit-jupiter.version>
-    <junit-platform.version>1.13.1</junit-platform.version>
+    <junit-jupiter.version>5.13.2</junit-jupiter.version>
+    <junit-platform.version>1.13.2</junit-platform.version>
     <testcontainers.version>1.21.2</testcontainers.version>
     <!-- 
       Graal versions are often tied in to JDK versions, cannot upgrade to 24+ until using JDK 22+ 
@@ -255,7 +255,7 @@
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>10.25.0</version>
+              <version>10.26.0</version>
             </dependency>
           </dependencies>
         </plugin>

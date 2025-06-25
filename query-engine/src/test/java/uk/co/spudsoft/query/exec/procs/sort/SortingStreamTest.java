@@ -68,6 +68,7 @@ public class SortingStreamTest {
   @Test
   public void testSimpleSort(Vertx vertx, VertxTestContext testContext) {    
     List<Integer> input = Arrays.asList(151, 892, 849, 786, 912, 714, 455, 27, 516, 789, 560, 62, 550, 351, 317, 661, 11, 125, 53, 131, 429, 735, 591, 663, 760, 795, 173, 91, 499, 445);
+    logger.debug("input has {} entries", input.size());
     List<Integer> expected = new ArrayList<>(input);
     expected.sort(Comparator.naturalOrder());
     

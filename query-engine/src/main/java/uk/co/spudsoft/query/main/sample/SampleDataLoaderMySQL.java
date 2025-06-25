@@ -16,23 +16,11 @@
  */
 package uk.co.spudsoft.query.main.sample;
 
-import com.google.common.base.Strings;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.vertx.core.Future;
-import io.vertx.core.Vertx;
-import io.vertx.sqlclient.Pool;
-import io.vertx.sqlclient.PoolOptions;
-import io.vertx.sqlclient.SqlConnectOptions;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
@@ -40,80 +28,53 @@ import org.slf4j.LoggerFactory;
  *
  * @author jtalbut
  */
-public class SampleDataLoaderMySQL implements SampleDataLoader {
-
-  @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(SampleDataLoaderMySQL.class);
+public class SampleDataLoaderMySQL extends AbstractSampleDataLoader {
 
   /**
    * Constructor.
    */
   public SampleDataLoaderMySQL() {
   }
-  
+
   @Override
   public String getName() {
     return "MySQL";
   }
-  
+
+  @Override
+  protected String getScript() {
+    return "/sampleData/MySQL Test Structures.sql";
+  }
+
+  @Override
+  protected String getSampleTableName() {
+    return "stock";
+  }
+
+  @Override
+  protected String getJdbcUrlPrefix() {
+    return "jdbc:mysql://";
+  }
+
   @Override
   public String getIdentifierQuote() {
     return "`";
   }
-  
-  /**
-   * Get the SQL script used to generate test structures for MySQL.
-   * @return the SQL script used to generate test structures for MySQL.
-   */
-  protected String getScript() {
-    return "/sampleData/MySQL Test Structures.sql";
-  }
-  
+
   @Override
-  @SuppressFBWarnings("SQL_INJECTION_VERTX")
-  public Future<Void> prepareTestDatabase(Vertx vertx, String url, String username, String password) {
-    SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(url);
-    connectOptions.setUser(username);
-    connectOptions.setPassword(password);
-    Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(3));
-    
-    String contents;
-    try (InputStream strm = getClass().getResourceAsStream(getScript())) {
-      contents = new String(strm.readAllBytes(), StandardCharsets.UTF_8);
-    } catch (Throwable ex) {
-      return Future.failedFuture(ex);
-    }
-    
+  protected List<String> parseSql(String loadedSql) {
     List<String> sqlList = new ArrayList<>();
     String delimiter = ";";
     int start = 0;
     Pattern delimPat = Pattern.compile("DELIMITER (\\S+)");
-    Matcher matcher = delimPat.matcher(contents);
+    Matcher matcher = delimPat.matcher(loadedSql);
     while (matcher.find()) {
-      sqlList.addAll(Arrays.asList(contents.substring(start, matcher.start()).split(delimiter)));
+      sqlList.addAll(Arrays.asList(loadedSql.substring(start, matcher.start()).split(delimiter)));
       delimiter = matcher.group(1);
       start = matcher.end() + 1;
     }    
-    sqlList.addAll(Arrays.asList(contents.substring(start).split(delimiter)));
-        
-    return executeSql(pool, sqlList.iterator())
-            .mapEmpty()
-            ;
-
+    sqlList.addAll(Arrays.asList(loadedSql.substring(start).split(delimiter)));
+    return sqlList;
   }
   
-  @SuppressFBWarnings("SQL_INJECTION_VERTX")
-  private Future<Void> executeSql(Pool pool, Iterator<String> iter) {
-    if (iter.hasNext()) {
-      String stmt = iter.next().trim();
-      if (Strings.isNullOrEmpty(stmt)) {
-        return executeSql(pool, iter);
-      } else {
-        return pool.query(stmt).execute()
-                .compose(rs -> executeSql(pool, iter));
-      }
-    } else {
-      return Future.succeededFuture();
-    }
-  }
 }

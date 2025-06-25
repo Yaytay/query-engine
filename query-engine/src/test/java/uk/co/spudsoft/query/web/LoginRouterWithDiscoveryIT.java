@@ -33,6 +33,10 @@ import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.PublicKey;
 import java.time.Duration;
 import java.util.Arrays;
@@ -58,17 +62,16 @@ import uk.co.spudsoft.jwtvalidatorvertx.jdk.JdkTokenBuilder;
 import uk.co.spudsoft.query.main.Main;
 import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
-
 /**
  *
  * @author jtalbut
  */
 public class LoginRouterWithDiscoveryIT {
-  
+
   private static final Logger logger = LoggerFactory.getLogger(LoginRouterWithDiscoveryIT.class);
-  
+
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
-  
+
   private HttpServer createServer(int port) throws Exception {
     ExecutorService exeSvc = Executors.newFixedThreadPool(2);
     HttpServer server = HttpServer.create(new InetSocketAddress(port), 2);
@@ -77,13 +80,32 @@ public class LoginRouterWithDiscoveryIT {
   }
 
   public static int findUnusedPort() {
-    try (ServerSocket s = new ServerSocket(0)) {
-      return s.getLocalPort();
+    Path targetDir = Paths.get("target", "reserved-ports");
+
+    try {
+      Files.createDirectories(targetDir);
+
+      for (int attempt = 0; attempt < 100; attempt++) {
+        try (ServerSocket socket = new ServerSocket(0)) {
+          int port = socket.getLocalPort();
+          Path lockFile = targetDir.resolve("port-" + port + ".lock");
+
+          try {
+            Files.createFile(lockFile);
+            lockFile.toFile().deleteOnExit();
+            return port;
+          } catch (FileAlreadyExistsException e) {
+            continue;
+          }
+        }
+      }
+
+      throw new RuntimeException("Could not find an unused port after 100 attempts");
     } catch (IOException ex) {
-      throw new RuntimeException(ex);
+      throw new RuntimeException("Failed to reserve port", ex);
     }
   }
-  
+
   private void sendResponse(HttpExchange exchange, int responseCode, String body) throws IOException {
     byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);
     exchange.sendResponseHeaders(responseCode, bodyBytes.length);
@@ -91,14 +113,14 @@ public class LoginRouterWithDiscoveryIT {
       os.write(bodyBytes);
     }
   }
-  
+
   @Test
   public void testLoginWithDiscoveryIT() throws Exception {
     logger.debug("Running testLoginWithDiscoveryIT");
-    
+
     Cache<String, AlgorithmAndKeyPair> keyCache = AlgorithmAndKeyPair.createCache(Duration.ofMinutes(1));
     JdkTokenBuilder builder = new JdkTokenBuilder(keyCache);
-    
+
     int port = findUnusedPort();
     HttpServer server = createServer(port);
     server.createContext("/", new HttpHandler() {
@@ -137,123 +159,116 @@ public class LoginRouterWithDiscoveryIT {
             try {
               response.put("access_token", builder.buildToken(JsonWebAlgorithm.RS512, this.toString(), "http://localhost:" + port + "/", "sub", Arrays.asList("query-engine"), nowSeconds, nowSeconds + 100, null));
               sendResponse(exchange, 200, response.toString());
-            } catch(Throwable ex) {
+            } catch (Throwable ex) {
               logger.error("Failed to generate token: ", ex);
               sendResponse(exchange, 500, ex.getClass().toString() + "\n" + ex.getMessage() + "\n" + ExceptionUtils.getStackTrace(ex));
             }
-            break;                        
+            break;
           default:
             logger.error("Unknown request: {}", exchange.getRequestURI().getPath());
             sendResponse(exchange, 404, "Not found");
         }
       }
-    });    
+    });
     server.start();
-    
+
     GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-      "--persistence.datasource.url=" + postgres.getJdbcUrl()
-      , "--persistence.datasource.adminUser.username=" + postgres.getUser()
-      , "--persistence.datasource.adminUser.password=" + postgres.getPassword()
-      , "--persistence.datasource.schema=public" 
-      , "--baseConfigPath=target/query-engine/samples-loginrouterwithdiscoveryit"
-      , "--jwt.acceptableIssuerRegexes[0]=.*"
-      , "--jwt.defaultJwksCacheDuration=PT1M"
-      , "--jwt.jwksEndpoints[0]=http://localhost:" + port + "/jwks_uri"
-      , "--logging.jsonFormat=false"
-      , "--sampleDataLoads[0].url=" + postgres.getVertxUrl()
-      , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()
-      , "--sampleDataLoads[0].adminUser.password=" + postgres.getPassword()
-      , "--managementEndpoints[0]=up"
-      , "--managementEndpoints[2]=prometheus"
-      , "--managementEndpoints[3]=threads"
-      , "--managementEndpointPort=8001"
-      , "--managementEndpointUrl=http://localhost:8001/manage"
-      , "--session.purgeDelay=PT1S"
-      , "--session.requireSession=false"
-      , "--session.oauth.test.logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
-      , "--session.oauth.test.issuer=http://localhost:" + port + "/"
-      , "--session.oauth.test.credentials.id=bdab017f4732085a51f9"
-      , "--session.oauth.test.credentials.secret=" + System.getProperty("queryEngineGithubSecret")
-      , "--session.oauth.test.pkce=true"
+      "--persistence.datasource.url=" + postgres.getJdbcUrl(),
+       "--persistence.datasource.adminUser.username=" + postgres.getUser(),
+       "--persistence.datasource.adminUser.password=" + postgres.getPassword(),
+       "--persistence.datasource.schema=public",
+       "--baseConfigPath=target/query-engine/samples-loginrouterwithdiscoveryit",
+       "--jwt.acceptableIssuerRegexes[0]=.*",
+       "--jwt.defaultJwksCacheDuration=PT1M",
+       "--jwt.jwksEndpoints[0]=http://localhost:" + port + "/jwks_uri",
+       "--logging.jsonFormat=false",
+       "--sampleDataLoads[0].url=" + postgres.getVertxUrl(),
+       "--sampleDataLoads[0].adminUser.username=" + postgres.getUser(),
+       "--sampleDataLoads[0].adminUser.password=" + postgres.getPassword(),
+       "--managementEndpoints[0]=up",
+       "--managementEndpoints[2]=prometheus",
+       "--managementEndpoints[3]=threads",
+       "--managementEndpointPort=8001",
+       "--managementEndpointUrl=http://localhost:8001/manage",
+       "--session.purgeDelay=PT1S",
+       "--session.requireSession=false",
+       "--session.oauth.test.logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg",
+       "--session.oauth.test.issuer=http://localhost:" + port + "/",
+       "--session.oauth.test.credentials.id=bdab017f4732085a51f9",
+       "--session.oauth.test.credentials.secret=" + System.getProperty("queryEngineGithubSecret"),
+       "--session.oauth.test.pkce=true"
     }, stdout, System.getenv());
     assertEquals(0, stdoutStream.size());
-    
+
     RestAssured.port = main.getPort();
-    
+
     String body = given()
             .log().all()
             .get("/login")
             .then()
             .statusCode(400)
             .log().all()
-            .extract().body().asString()
-            ;
+            .extract().body().asString();
     assertEquals("Target URL not specified", body);
-    
+
     body = given()
             .log().all()
             .get("/login?return=http://fred/")
             .then()
             .statusCode(400)
             .log().all()
-            .extract().body().asString()
-            ;
+            .extract().body().asString();
     assertEquals("OAuth provider not specified", body);
-    
+
     body = given()
             .log().all()
             .get("/login?return=http://fred/")
             .then()
             .statusCode(400)
             .log().all()
-            .extract().body().asString()
-            ;
+            .extract().body().asString();
     assertEquals("OAuth provider not specified", body);
-    
+
     body = given()
             .log().all()
             .get("/login/return")
             .then()
             .statusCode(400)
             .log().all()
-            .extract().body().asString()
-            ;
+            .extract().body().asString();
     assertEquals("Code not specified", body);
-    
+
     body = given()
             .log().all()
             .get("/login/return?code=code")
             .then()
             .statusCode(400)
             .log().all()
-            .extract().body().asString()
-            ;
+            .extract().body().asString();
     assertEquals("State not specified", body);
-    
+
     body = given()
             .log().all()
             .get("/login/return?code=code&state=state")
             .then()
             .statusCode(400)
             .log().all()
-            .extract().body().asString()
-            ;
+            .extract().body().asString();
     assertEquals("State does not exist", body);
-    
+
     body = given()
             .log().all()
             .get("/login?return=http://fred/&provider=bob")
             .then()
             .statusCode(400)
             .log().all()
-            .extract().body().asString()
-            ;
+            .extract().body().asString();
     assertEquals("OAuth provider not known", body);
-    
+
     // Provider is case sensistive
     body = given()
             .log().all()
@@ -261,10 +276,9 @@ public class LoginRouterWithDiscoveryIT {
             .then()
             .statusCode(400)
             .log().all()
-            .extract().body().asString()
-            ;
+            .extract().body().asString();
     assertEquals("OAuth provider not known", body);
-    
+
     String authUiUrl = given()
             .redirects().follow(false)
             .log().all()
@@ -272,8 +286,7 @@ public class LoginRouterWithDiscoveryIT {
             .then()
             .statusCode(307)
             .log().all()
-            .extract().header("Location")
-            ;
+            .extract().header("Location");
     assertThat(authUiUrl, startsWith("http://localhost:" + port + "/authorization_endpoint"));
     logger.debug("authUiUrl: {}", authUiUrl);
     Map<String, List<String>> authUiParams = new QueryStringDecoder(authUiUrl).parameters();
@@ -284,7 +297,6 @@ public class LoginRouterWithDiscoveryIT {
     assertTrue(authUiParams.containsKey("code_challenge"));
     assertTrue(authUiParams.containsKey("nonce"));
     assertThat(authUiParams.get("redirect_uri").get(0), startsWith("http://localhost:" + Integer.toString(main.getPort()) + "/login/return"));
-    
 
     // The test endpint will happily give out a token
     Map<String, String> cookies = given()
@@ -295,12 +307,11 @@ public class LoginRouterWithDiscoveryIT {
             .log().all()
             .statusCode(307)
             .header("Location", startsWith("http://fred?access_token="))
-            .extract().cookies()
-            ;
+            .extract().cookies();
     logger.debug("Cookies: {}", cookies);
     assertTrue(cookies.containsKey("qe-session"));
     assertThat(cookies.get("qe-session").length(), greaterThan(64));
-    
+
     body = given()
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
@@ -312,7 +323,7 @@ public class LoginRouterWithDiscoveryIT {
             .log().ifError()
             .statusCode(200)
             .extract().body().asString();
-    
+
     body = given()
             .cookies(cookies)
             .log().all()
@@ -324,7 +335,7 @@ public class LoginRouterWithDiscoveryIT {
     logger.debug("History: {}", body);
 
     Thread.sleep(1500);
-    
+
     cookies = given()
             .cookies(cookies)
             .redirects().follow(false)
@@ -334,12 +345,11 @@ public class LoginRouterWithDiscoveryIT {
             .log().all()
             .statusCode(307)
             .header("Location", equalTo("/"))
-            .extract().cookies()
-            ;
+            .extract().cookies();
     logger.debug("Cookies: {}", cookies);
     assertTrue(cookies.containsKey("qe-session"));
-    assertThat(cookies.get("qe-session").length(), equalTo(0));    
-    
+    assertThat(cookies.get("qe-session").length(), equalTo(0));
+
     cookies = new HashMap<>();
     cookies.put("qe-session", "bad");
     body = given()
@@ -350,10 +360,10 @@ public class LoginRouterWithDiscoveryIT {
             .log().ifError()
             .statusCode(401)
             .extract().body().asString();
-    logger.debug("History: {}", body);    
-    
+    logger.debug("History: {}", body);
+
     server.stop(0);
     main.shutdown();
   }
-  
+
 }

@@ -36,22 +36,22 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A ReadStream wrapper that sorts the input.
- * 
+ *
  * This must capture the entire stream before outputting anything, so it doesn't 'stream' as such, but the interface is that of a ReadStream.
- * 
+ *
  * @param <T> the type of data being streamed
  * @author jtalbut
  */
 public class SortingStream<T> implements ReadStream<T> {
-  
+
   private static final Logger logger = LoggerFactory.getLogger(SortingStream.class);
-  
+
   private final Context context;
   private final FileSystem fileSystem;
   private final Comparator<T> comparator;
   private final SerializeWriteStream.Serializer<T> serializer;
   private final SerializeReadStream.Deserializer<T> deserializer;
-  
+
   private final String tempDir;
   private final String baseFileName;
   private final long memoryLimit;
@@ -68,29 +68,29 @@ public class SortingStream<T> implements ReadStream<T> {
      */
     int sizeof(T data);
   }
-  
+
   private final MemoryEvaluator<T> memoryEvaluator;
 
   private final Object lock = new Object();
-  
+
   private final ReadStream<T> input;
   private int inputCount = 0;
-  
+
   private Handler<Throwable> exceptionHandler;
   private Handler<T> handler;
   private Handler<Void> endHandler;
-  
+
   private long demand;
   private boolean emitting;
   private boolean endHandlerCalled;
-  
+
   private int writeQueueMaxSize;
 
   private List<T> items = new ArrayList<>();
   private long sizeOfItemsInMemory;
-  
+
   private final List<String> files = new ArrayList<>();
-  
+
   final class SourceStream {
     // private Object source;
     private int index;
@@ -103,25 +103,27 @@ public class SortingStream<T> implements ReadStream<T> {
       // logger.trace("SourceStream endHandler {}", this);
       this.ended = true;
       synchronized (lock) {
-        if (head == null) {
-          if (!pending.remove(this)) {
-            throw new IllegalStateException("Removal from pending failed for: " + this);
-          }
+        if (!pending.remove(this)) {
+          throw new IllegalStateException("Removal from pending failed for: " + this);
         }
       }
       context.runOnContext(v2 -> {
         processOutputs();
       });
     }
-    
+
     private void itemHandler(T item) {
       // logger.trace("SourceStream handler: {} {}", this, item);
       ++count;
       this.input.pause();
-      this.head = item;
       synchronized (lock) {
+        this.head = item;
         if (!pending.remove(this)) {
-          throw new IllegalStateException("Removal from pending failed for: " + this);
+          if (ended) {
+            return ;
+          } else {
+            throw new IllegalStateException("Removal from pending failed for: " + this);
+          }
         }
         if (!ended) {
           // logger.debug("Before adding {}: {}", item, outputs.stream().map(ss -> ss.head.toString()).collect(Collectors.joining(", ")));
@@ -135,7 +137,7 @@ public class SortingStream<T> implements ReadStream<T> {
         });
       }
     }
-    
+
     SourceStream(Object source, int index, ReadStream<T> input) {
       this.index = index;   // The ID of the stream, for use in the pending Set
       this.input = input;
@@ -143,7 +145,7 @@ public class SortingStream<T> implements ReadStream<T> {
       this.input.endHandler(this::endHandler);
       this.input.handler(this::itemHandler);
     }
-    
+
     public boolean next() {
       this.head = null;
       if (this.ended) {
@@ -159,7 +161,7 @@ public class SortingStream<T> implements ReadStream<T> {
     public int hashCode() {
       return this.index;
     }
-    
+
     @Override
     public boolean equals(Object obj) {
       if (this == obj) {
@@ -177,7 +179,7 @@ public class SortingStream<T> implements ReadStream<T> {
     }
 
   }
-  
+
   // This is just for debug purposes
   private List<SourceStream> outputHolder;
   // SourceStreams should be in one of these two at any time
@@ -187,7 +189,7 @@ public class SortingStream<T> implements ReadStream<T> {
 
   /**
    * Constructor.
-   * 
+   *
    * @param context The Vert.x context used when asynchronous actions must be scheduled.
    * @param fileSystem The Vert.x filesystem used for managing data when it is too large to fit in memory.
    * @param comparator The comparator used to sort items
@@ -221,7 +223,7 @@ public class SortingStream<T> implements ReadStream<T> {
     this.baseFileName = baseFileName;
     this.memoryLimit = memoryLimit;
     this.memoryEvaluator = memoryEvaluator;
-    
+
     this.input = input;
     input.endHandler(this::inputEndHandler);
     input.exceptionHandler(this::inputExceptionHandler);
@@ -238,7 +240,7 @@ public class SortingStream<T> implements ReadStream<T> {
       exceptionHandlerCaptured.handle(ex);
     }
   }
-  
+
   private void processOutputs() {
     boolean done = false;
     while (!done) {
@@ -265,7 +267,7 @@ public class SortingStream<T> implements ReadStream<T> {
           } else {
             endHandlerCalled = true;
             endHandlerCaptured = endHandler;
-          } 
+          }
           emitting = false;
           // logger.debug("End handler: {}", endHandler);
           done = true;
@@ -282,7 +284,7 @@ public class SortingStream<T> implements ReadStream<T> {
           if (!pending.add(topStream)) {
             throw new IllegalStateException("Failed to add stream to pending: " + topStream);
           }
-          next = topStream.head;          
+          next = topStream.head;
           done = topStream.next();
         }
 //        heads = outputs.stream().map(ss -> ss.head.toString()).collect(Collectors.joining(", "));
@@ -300,7 +302,7 @@ public class SortingStream<T> implements ReadStream<T> {
       }
     }
   }
-  
+
   private void inputEndHandler(Void nothing) {
     synchronized (lock) {
       // logger.debug("inputEndHandler with {} remaining", items.size());
@@ -310,7 +312,7 @@ public class SortingStream<T> implements ReadStream<T> {
       });
       outputHolder = new ArrayList<>(files.size() + 1);
       pending = new HashSet<>(files.size() + 1);
-            
+
       if (!items.isEmpty()) {
         ReadStream<T> memStream = new ListReadStream<>(context, items);
         SourceStream ss = new SourceStream("list", 0, memStream);
@@ -318,9 +320,9 @@ public class SortingStream<T> implements ReadStream<T> {
         pending.add(ss);
         ss.next();
       }
-      
+
       emitting = true;
-      
+
       List<Future<?>> futures = new ArrayList<>(files.size() + 1);
       for (String file : files) {
         Future<?> future = fileSystem.open(file, new OpenOptions().setRead(true).setDeleteOnClose(false))
@@ -331,8 +333,8 @@ public class SortingStream<T> implements ReadStream<T> {
                   synchronized (lock) {
                     outputHolder.add(ss);
                     pending.add(ss);
+                    ss.next();
                   }
-                  ss.next();
                   return Future.succeededFuture();
                 })
                 .onFailure(ex -> {
@@ -351,29 +353,29 @@ public class SortingStream<T> implements ReadStream<T> {
               });
     }
   }
-  
+
   private void inputExceptionHandler(Throwable exception) {
     postException(exception);
   }
-  
+
   private void inputHandler(T item) {
     // logger.debug("inputHandler {}", item);
     int sizeofData = memoryEvaluator.sizeof(item);
-    
+
     List<T> itemsToWrite = null;
-    
-    synchronized (lock) { 
+
+    synchronized (lock) {
       ++inputCount;
       if (sizeofData + sizeOfItemsInMemory >= memoryLimit) {
         itemsToWrite = items;
         items = new ArrayList<>(itemsToWrite.size());
         sizeOfItemsInMemory = 0;
-      }        
+      }
       items.add(item);
       sizeOfItemsInMemory += sizeofData;
     }
     if (itemsToWrite != null) {
-      input.pause(); 
+      input.pause();
       sortItemsList(itemsToWrite);
       writeItems(itemsToWrite)
               .onComplete(ar -> {
@@ -385,14 +387,14 @@ public class SortingStream<T> implements ReadStream<T> {
               });
     }
   }
-  
+
   @Override
   public ReadStream<T> handler(Handler<T> handler) {
     this.handler = handler;
     return this;
   }
 
-  
+
   @Override
   public SortingStream<T> pause() {
     input.pause();
@@ -439,7 +441,7 @@ public class SortingStream<T> implements ReadStream<T> {
     this.exceptionHandler = handler;
     return this;
   }
-  
+
   @Override
   public ReadStream<T> endHandler(Handler<Void> endHandler) {
     this.endHandler = endHandler;
@@ -449,14 +451,14 @@ public class SortingStream<T> implements ReadStream<T> {
   private void sortItemsList(List<T> items) {
     items.sort(comparator);
   }
-  
+
   private Future<Void> writeAll(WriteStream<T> stream, List<T> items) {
     for (T item : items) {
       stream.write(item);
     }
     return stream.end();
   }
-  
+
   private Future<Void> writeItems(List<T> items) {
     return fileSystem.createTempFile(tempDir, baseFileName, ".sort", (String) null)
             .compose(filename -> {
@@ -472,5 +474,5 @@ public class SortingStream<T> implements ReadStream<T> {
               return writeAll(sws, items);
             });
   }
-  
+
 }

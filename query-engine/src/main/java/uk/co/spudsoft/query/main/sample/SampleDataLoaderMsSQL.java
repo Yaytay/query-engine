@@ -31,81 +31,45 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Sample data load for Microsoft SQL Server.
+ *
  * @author jtalbut
  */
-public class SampleDataLoaderMsSQL implements SampleDataLoader {
-
-  @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(SampleDataLoaderMsSQL.class);
+public class SampleDataLoaderMsSQL extends AbstractSampleDataLoader {
 
   /**
    * Constructor.
    */
   public SampleDataLoaderMsSQL() {
   }
-  
+
   @Override
   public String getName() {
-    return "MS SQL Server";
+    return "SQL Server";
+  }
+
+  @Override
+  protected String getScript() {
+    return "/sampleData/MS SQL Test Structures.sql";
+  }
+
+  @Override
+  protected String getSampleTableName() {
+    return "stock";
+  }
+
+  @Override
+  protected String getJdbcUrlPrefix() {
+    return "jdbc:sqlserver://";
   }
 
   @Override
   public String getIdentifierQuote() {
-    return "\"";
+    return "[";
   }
-  
-  /**
-   * Get the SQL script used to generate test structures for Microsoft SQL Server.
-   * @return the SQL script used to generate test structures for Microsoft SQL Server.
-   */
-  protected String getScript() {
-    return "/sampleData/MS SQL Test Structures.sql";
-  }
-  
-  private Future<Void> createTestDatabase(Vertx vertx, String url, String username, String password) {
-    String fullUrl = url;
-    String shortUrl = fullUrl.substring(0, fullUrl.lastIndexOf("/"));
-    SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(shortUrl);
-    connectOptions.setUser(username);
-    connectOptions.setPassword(password);
-    Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(3));
-    
-    return Future.succeededFuture()            
-            .compose(rs -> pool.preparedQuery("""
-                    IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'test')
-                    BEGIN
-                      CREATE DATABASE test;
-                    END;
-                  """).execute())
-            .mapEmpty()
-            ;
-  }
-  
+
   @Override
-  @SuppressFBWarnings("SQL_INJECTION_VERTX")
-  public Future<Void> prepareTestDatabase(Vertx vertx, String url, String username, String password) {
-    SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(url);
-    connectOptions.setUser(username);
-    connectOptions.setPassword(password);
-    Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(3));
-    
-    String sql;
-    try (InputStream strm = getClass().getResourceAsStream(getScript())) {
-      sql = new String(strm.readAllBytes(), StandardCharsets.UTF_8);
-    } catch (Throwable ex) {
-      return Future.failedFuture(ex);
-    }
-    
-    return createTestDatabase(vertx, url, username, password)
-            .compose(rs -> executeSql(pool, sql))
-            .mapEmpty()
-            ;
-
+  protected String getTableExistsQuery(String tableName) {
+    // SQL Server uses sys.tables instead of information_schema.tables for better performance
+    return "SELECT 1 FROM sys.tables WHERE name = ?";
   }
-
-  @SuppressFBWarnings("SQL_INJECTION_VERTX")
-  private static Future<RowSet<Row>> executeSql(Pool pool, String sql) {
-    return pool.query(sql).execute();
-  }
-
 }
