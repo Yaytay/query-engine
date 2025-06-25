@@ -30,17 +30,17 @@ import org.slf4j.LoggerFactory;
  * <P>
  * A single iterator from the List will be taken in the constructor - anything that invalidates that iterator will break this implementation.
  * This class is not expected to handle changes to the List whilst it is running.
- * 
+ *
  * @param <T> The type of item being streamed.
  * @author jtalbut
  */
 public class ListReadStream<T> implements ReadStream<T> {
-  
+
   private static final Logger logger = LoggerFactory.getLogger(ListReadStream.class);
-  
+
   private final Context context;
   private final Iterator<T> iter;
-  
+
   private final Object lock = new Object();
 
   private Handler<Throwable> exceptionHandler;
@@ -50,7 +50,7 @@ public class ListReadStream<T> implements ReadStream<T> {
   private long demand;
   private boolean emitting;
   private boolean ended;
-  
+
   /**
    * Constructor.
    * @param context the Vert.x {@link Context} for asynchronous operations.
@@ -61,30 +61,35 @@ public class ListReadStream<T> implements ReadStream<T> {
     this.context = context;
     this.iter = items.iterator();
   }
-  
+
   private void process() {
     while (!ended) {
       Handler<Throwable> exceptionHandlerCaptured;
       Handler<Void> endHandlerCaptured = null;
       Handler<T> handlerCaptured = null;
       T item = null;
+      boolean shouldContinue = false;
+
       synchronized (lock) {
         if (demand <= 0) {
           emitting = false;
-          return ;
+          return;
         } else if (demand < Long.MAX_VALUE) {
           --demand;
         }
         exceptionHandlerCaptured = exceptionHandler;
         if (iter.hasNext()) {
-          item =  iter.next();
+          item = iter.next();
           handlerCaptured = handler;
+          shouldContinue = true;
         } else {
-          emitting = false;
+          logger.debug("Nothing to emit");
           ended = true;
           endHandlerCaptured = endHandler;
+          emitting = false; // Safe to set false here since we're ending
         }
       }
+
       if (item != null && handlerCaptured != null) {
         try {
           logger.trace("Handling {}", item);
@@ -97,14 +102,24 @@ public class ListReadStream<T> implements ReadStream<T> {
           }
         }
       }
+
       if (ended && endHandlerCaptured != null) {
         logger.debug("Ending");
         endHandlerCaptured.handle(null);
-        return ;
+        return;
+      }
+
+      // Check if we should continue or if another process() call has taken over
+      synchronized (lock) {
+        if (!shouldContinue || demand <= 0) {
+          emitting = false;
+          return;
+        }
+        // Continue the loop while holding the lock on emitting
       }
     }
   }
-  
+
   @Override
   public ListReadStream<T> exceptionHandler(Handler<Throwable> handler) {
     synchronized (lock) {
@@ -128,7 +143,7 @@ public class ListReadStream<T> implements ReadStream<T> {
     }
     return this;
   }
-  
+
   @Override
   public ListReadStream<T> pause() {
     synchronized (lock) {
@@ -138,35 +153,46 @@ public class ListReadStream<T> implements ReadStream<T> {
   }
 
   @Override
-  public ListReadStream<T> resume() {
-    synchronized (lock) {
-      demand = Long.MAX_VALUE;
-      if (emitting) {
-        return this;
-      }
-      emitting = true;
-    }
-    context.runOnContext(v -> process());
-    return this;
-  }
-
-  @Override
   public ListReadStream<T> fetch(long amount) {
     if (amount < 0L) {
       throw new IllegalArgumentException();
     }
+    boolean shouldProcess = false;
     synchronized (lock) {
+      if (ended) {
+        return this;
+      }
       demand += amount;
       if (demand < 0L) {
         demand = Long.MAX_VALUE;
       }
-      if (emitting) {
-        return this;
+      if (!emitting) {
+        emitting = true;
+        shouldProcess = true;
       }
-      emitting = true;
     }
-    context.runOnContext(v -> process());
+    if (shouldProcess) {
+      context.runOnContext(v -> process());
+    }
     return this;
   }
 
+  @Override
+  public ListReadStream<T> resume() {
+    boolean shouldProcess = false;
+    synchronized (lock) {
+      if (ended) {
+        return this;
+      }
+      demand = Long.MAX_VALUE;
+      if (!emitting) {
+        emitting = true;
+        shouldProcess = true;
+      }
+    }
+    if (shouldProcess) {
+      context.runOnContext(v -> process());
+    }
+    return this;
+  }
 }
