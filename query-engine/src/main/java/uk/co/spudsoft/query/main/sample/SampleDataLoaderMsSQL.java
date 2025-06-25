@@ -16,19 +16,6 @@
  */
 package uk.co.spudsoft.query.main.sample;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.vertx.core.Future;
-import io.vertx.core.Vertx;
-import io.vertx.sqlclient.Pool;
-import io.vertx.sqlclient.PoolOptions;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
-import io.vertx.sqlclient.SqlConnectOptions;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Sample data load for Microsoft SQL Server.
  *
