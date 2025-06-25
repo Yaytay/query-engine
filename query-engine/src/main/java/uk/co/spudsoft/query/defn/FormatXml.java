@@ -303,8 +303,8 @@ public class FormatXml extends AbstractTextFormat implements Format {
     private boolean fieldsAsAttributes = false;
     private String docName;
     private String rowName;
-    private String fieldInitialLetterFix;
-    private String fieldInvalidLetterFix;
+    private String fieldInitialLetterFix = "F";
+    private String fieldInvalidLetterFix = "_";
 
     /**
      * Default constructor.

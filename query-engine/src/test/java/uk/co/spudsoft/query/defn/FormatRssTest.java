@@ -60,8 +60,8 @@ class FormatRssTest {
     assertEquals("xml", formatRss.getExtension());
     assertEquals("application/rss+xml; charset=utf-8", formatRss.getMediaType().toString());
     assertEquals(FormatType.RSS, formatRss.getType());
-    assertNull(formatRss.getFieldInitialLetterFix());
-    assertNull(formatRss.getFieldInvalidLetterFix());
+    assertEquals("F", formatRss.getFieldInitialLetterFix());
+    assertEquals("_", formatRss.getFieldInvalidLetterFix());
 
     formatRss = new FormatRss.Builder()
       .fieldInitialLetterFix("Z")

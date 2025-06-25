@@ -58,7 +58,7 @@ public class Types {
     int i = 0;
     for (ColumnDefn defn : types) {
       defns.add(defn);
-      indices.put(defn.name(), i++);
+      indices.put(defn.key(), i++);
     }
   }
   

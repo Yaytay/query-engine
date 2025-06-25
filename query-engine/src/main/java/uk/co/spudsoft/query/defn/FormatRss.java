@@ -171,8 +171,8 @@ public class FormatRss extends AbstractTextFormat implements Format {
   public static class Builder extends AbstractTextFormat.Builder<Builder> {
 
     private String customNamespace;
-    private String fieldInitialLetterFix;
-    private String fieldInvalidLetterFix;
+    private String fieldInitialLetterFix = "F";
+    private String fieldInvalidLetterFix = "_";
 
     /**
      * Default constructor.

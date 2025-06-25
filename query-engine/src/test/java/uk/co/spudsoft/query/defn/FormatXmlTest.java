@@ -83,8 +83,8 @@ class FormatXmlTest {
     assertFalse(formatXml.isFieldsAsAttributes());
     assertNull(formatXml.getDocName());
     assertNull(formatXml.getRowName());
-    assertNull(formatXml.getFieldInitialLetterFix());
-    assertNull(formatXml.getFieldInvalidLetterFix());
+    assertEquals("F", formatXml.getFieldInitialLetterFix());
+    assertEquals("_", formatXml.getFieldInvalidLetterFix());
 
     formatXml = new FormatXml.Builder()
       .encoding("utf-16")

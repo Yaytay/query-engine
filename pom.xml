@@ -31,7 +31,7 @@
   </developers>
 
   <properties>
-    <fork.count>4</fork.count>
+    <fork.count>1</fork.count>
     <!-- For production usage JDK must be compatible with GraalVM and must be receiving security updates, effectively meaning the most recent LTS -->
     <jdk.version>21</jdk.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

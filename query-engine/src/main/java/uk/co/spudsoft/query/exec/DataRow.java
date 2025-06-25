@@ -230,7 +230,7 @@ public class DataRow {
    * @return this, so that this method may be used in a fluent manner.
    */
   public DataRow put(String key, String name, DataType type, Comparable<?> value) {
-    types.putIfAbsent(key, type);
+    types.putIfAbsent(key, name, type);
     data.put(key, value);
     return this;
   }

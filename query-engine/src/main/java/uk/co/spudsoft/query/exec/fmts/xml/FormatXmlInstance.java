@@ -309,12 +309,18 @@ public final class FormatXmlInstance implements FormatInstance {
   }
 
   private String getName(String original, String defaultValue) {
-    return getName(nameMap, defn.getFieldInitialLetterFix(), defn.getFieldInitialLetterFix(), original, defaultValue);
+    return getName(nameMap, defn.getFieldInitialLetterFix(), defn.getFieldInvalidLetterFix(), original, defaultValue);
   }
 
   static String getName(Map<String, String> nameMap, String fieldInitialLetterFix, String fieldInvalidLetterFix, String original, String defaultValue) {
     if (original == null) {
       return defaultValue;
+    }
+    if (fieldInitialLetterFix == null) {
+      fieldInitialLetterFix = "";
+    }
+    if (fieldInvalidLetterFix == null) {
+      fieldInvalidLetterFix = "";
     }
     String result = nameMap.get(original);
     if (result != null) {
@@ -354,7 +360,7 @@ public final class FormatXmlInstance implements FormatInstance {
     for (Iterator<ColumnDefn> iter = types.iterator(); iter.hasNext();) {
       ++fieldNumber;
       ColumnDefn columnDefn = iter.next();
-      Comparable<?> v = row.get(columnDefn.name());
+      Comparable<?> v = row.get(columnDefn.key());
       if (v != null) {
         if (defn.isFieldsAsAttributes()) {
           writer.writeAttribute(
@@ -371,7 +377,7 @@ public final class FormatXmlInstance implements FormatInstance {
         }
       }
     }
-    if (defn.isIndent()) {
+    if (defn.isIndent() && !defn.isFieldsAsAttributes()) {
       writer.writeCharacters("\n  ");
     }
     writer.writeEndElement();

@@ -53,10 +53,9 @@ import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import uk.co.spudsoft.query.defn.ColumnTextFormats;
 import uk.co.spudsoft.query.exec.fmts.ValueFormatters;
 
 /**
@@ -66,33 +65,43 @@ import uk.co.spudsoft.query.exec.fmts.ValueFormatters;
 @ExtendWith(VertxExtension.class)
 public class FormatXmlInstanceTest {
 
-
   private List<ColumnDefn> buildTypes() {
     return Arrays.asList(
-      new ColumnDefn("Boolean", DataType.Boolean)
-      , new ColumnDefn("Date", DataType.Date)
-      , new ColumnDefn("DateTime", DataType.DateTime)
-      , new ColumnDefn("Double", DataType.Double)
-      , new ColumnDefn("Float", DataType.Float)
-      , new ColumnDefn("Integer", DataType.Integer)
-      , new ColumnDefn("Long", DataType.Long)
-      , new ColumnDefn("String", DataType.String)
-      , new ColumnDefn("Time", DataType.Time)
+            new ColumnDefn("Boolean", DataType.Boolean),
+             new ColumnDefn("Date", DataType.Date),
+             new ColumnDefn("DateTime", DataType.DateTime),
+             new ColumnDefn("Double", DataType.Double),
+             new ColumnDefn("Float", DataType.Float),
+             new ColumnDefn("Integer", DataType.Integer),
+             new ColumnDefn("Long", DataType.Long),
+             new ColumnDefn("String", DataType.String),
+             new ColumnDefn("Time", DataType.Time),
+             new ColumnDefn("Telephone contact details", "telephone contact details", DataType.String)
     );
   }
 
+  private void deleteWithoutError(FileSystem fs, String path) {
+    try {
+      fs.deleteBlocking(path);
+    } catch (Throwable ex) {
+    }
+  }
+  
   @Test
   public void testDefaultStream(Vertx vertx, VertxTestContext testContext, TestInfo testInfo) throws IOException {
 
-    String outfile = "target/temp/" + testInfo.getTestClass().get().getSimpleName() + "_" + testInfo.getTestMethod().get().getName() + ".xml";
+    String outfile = "target/temp/" + testInfo.getTestClass().get().getSimpleName() + "_" + testInfo.getTestMethod().get().getName() + ".xml";    
 
     FormatXml defn = FormatXml.builder()
-      .build();
+            .fieldInitialLetterFix(null)
+            .fieldInvalidLetterFix(null)
+            .build();
 
     FileSystem fs = vertx.fileSystem();
     if (!fs.existsBlocking("target/temp")) {
       fs.mkdirBlocking("target/temp");
     }
+    deleteWithoutError(fs, outfile);
     WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setCreate(true).setSync(true));
 
     FormatXmlInstance instance = defn.createInstance(vertx, null, writeStream);
@@ -104,24 +113,24 @@ public class FormatXmlInstanceTest {
     }
 
     instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
-      .compose(v -> {
-        return instance.getFinalFuture();
-      })
-      .onComplete(ar -> {
-        if (ar.failed()) {
-          testContext.failNow(ar.cause());
-        } else {
-          testContext.verify(() -> {
-            String outstring = FileUtils.readFileToString(new File(outfile), StandardCharsets.UTF_8);
-            assertThat(outstring, startsWith(
-              """
-              <?xml version='1.0' encoding='utf-8'?><data><row><Date>1971-05-01</Date><DateTime>1971-05-01T00:00</DateTime><Double>0.0</Double><Float>0.0</Float><Integer>0</Integer><Long>0</Long><String>This is row 0</String><Time>00:00</Time></row><row><Boolean>false</Boolean><DateTime>1971-05-02T01:01</DateTime><Double>1.1</Double><Float>1.1</Float><Integer>1</Integer><Long>10000000</Long><String>This is row 1</String><Time>01:01</Time></row><row><Boolean>true</Boolean><Date>1971-05-03</Date><Double>2.2</Double><Float>2.2</Float><Integer>2</Integer><Long>20000000</Long><String>This is row 2</String><Time>02:02</Time></row><row><Boolean>false</Boolean><Date>1971-05-04</Date><DateTime>1971-05-04T03:03</DateTime><Float>3.3</Float><Integer>3</Integer><Long>30000000</Long><String>This is row 3</String><Time>03:03</Time></row><row><Boolean>true</Boolean><Date>1971-05-05</Date><DateTime>1971-05-05T04:04</DateTime><Double>4.4</Double><Integer>4</Integer><Long>40000000</Long><String>This is row 4</String><Time>04:04</Time></row><row><Boolean>false</Boolean><Date>1971-05-06</Date><DateTime>1971-05-06T05:05</DateTime><Double>5.5</Double><Float>5.5</Float><Long>50000000</Long><String>This is row 5</String><Time>05:05</Time></row><row><Boolean>true</Boolean><Date>1971-05-07</Date><DateTime>1971-05-07T06:06</DateTime><Double>6.6</Double><Float>6.6</Float><Integer>6</Integer><String>This is row 6</String><Time>06:06</Time></row><row><Boolean>false</Boolean><Date>1971-05-08</Date><DateTime>1971-05-08T07:07</DateTime><Double>7.7</Double><Float>7.7</Float><Integer>7</Integer><Long>70000000</Long><Time>07:07</Time></row><row><Boolean>true</Boolean><Date>1971-05-09</Date><DateTime>1971-05-09T08:08</DateTime><Double>8.8</Double><Float>8.8</Float><Integer>8</Integer><Long>80000000</Long><String>This is row 8</String></row><row><Date>1971-05-10</Date><DateTime>1971-05-10T09:09</DateTime><Double>9.9</Double><Float>9.9</Float><Integer>9</Integer><Long>90000000</Long><String>This is row 9</String><Time>09:09</Time></row></data>
-              """.trim()
-            ));
-          });
-          testContext.completeNow();
-        }
-      });
+            .compose(v -> {
+              return instance.getFinalFuture();
+            })
+            .onComplete(ar -> {
+              if (ar.failed()) {
+                testContext.failNow(ar.cause());
+              } else {
+                testContext.verify(() -> {
+                  String outstring = FileUtils.readFileToString(new File(outfile), StandardCharsets.UTF_8);
+                  assertThat(outstring, startsWith(
+                          """
+                          <?xml version='1.0' encoding='utf-8'?><data><row><Date>1971-05-01</Date><DateTime>1971-05-01T00:00</DateTime><Double>0.0</Double><Float>0.0</Float><Integer>0</Integer><Long>0</Long><String>This is row 0</String><Time>00:00</Time><Telephonecontactdetails>01234</Telephonecontactdetails></row><row><Boolean>false</Boolean><DateTime>1971-05-02T01:01</DateTime><Double>1.1</Double><Float>1.1</Float><Integer>1</Integer><Long>10000000</Long><String>This is row 1</String><Time>01:01</Time></row><row><Boolean>true</Boolean><Date>1971-05-03</Date><Double>2.2</Double><Float>2.2</Float><Integer>2</Integer><Long>20000000</Long><String>This is row 2</String><Time>02:02</Time><Telephonecontactdetails>01234</Telephonecontactdetails></row>
+                          """.trim()
+                  ));
+                });
+                testContext.completeNow();
+              }
+            });
   }
 
   @Test
@@ -130,13 +139,14 @@ public class FormatXmlInstanceTest {
     String outfile = "target/temp/" + testInfo.getTestClass().get().getSimpleName() + "_" + testInfo.getTestMethod().get().getName() + ".xml";
 
     FormatXml defn = FormatXml.builder()
-      .indent(true)
-      .build();
+            .indent(true)
+            .build();
 
     FileSystem fs = vertx.fileSystem();
     if (!fs.existsBlocking("target/temp")) {
       fs.mkdirBlocking("target/temp");
     }
+    deleteWithoutError(fs, outfile);
     WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setSync(true));
 
     FormatXmlInstance instance = defn.createInstance(vertx, null, writeStream);
@@ -148,17 +158,17 @@ public class FormatXmlInstanceTest {
     }
 
     instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
-      .compose(v -> {
-        return instance.getFinalFuture();
-      })
-      .onComplete(ar -> {
-        if (ar.failed()) {
-          testContext.failNow(ar.cause());
-        } else {
-          testContext.verify(() -> {
-            String outstring = FileUtils.readFileToString(new File(outfile), StandardCharsets.UTF_8);
-            assertThat(outstring, startsWith(
-              """
+            .compose(v -> {
+              return instance.getFinalFuture();
+            })
+            .onComplete(ar -> {
+              if (ar.failed()) {
+                testContext.failNow(ar.cause());
+              } else {
+                testContext.verify(() -> {
+                  String outstring = FileUtils.readFileToString(new File(outfile), StandardCharsets.UTF_8);
+                  assertThat(outstring, startsWith(
+                          """
               <?xml version='1.0' encoding='utf-8'?>
               <data>
                 <row>
@@ -170,6 +180,7 @@ public class FormatXmlInstanceTest {
                   <Long>0</Long>
                   <String>This is row 0</String>
                   <Time>00:00</Time>
+                  <Telephone_contact_details>01234</Telephone_contact_details>
                 </row>
                 <row>
                   <Boolean>false</Boolean>
@@ -182,27 +193,28 @@ public class FormatXmlInstanceTest {
                   <Time>01:01</Time>
                 </row>
               """.trim()
-            ));
-          });
-          testContext.completeNow();
-        }
-      });
+                  ));
+                });
+                testContext.completeNow();
+              }
+            });
   }
 
   @Test
-  public void testIndentedFieldsAsAttributesStream(Vertx vertx, VertxTestContext testContext, TestInfo testInfo) throws IOException{
+  public void testIndentedFieldsAsAttributesStream(Vertx vertx, VertxTestContext testContext, TestInfo testInfo) throws IOException {
 
     String outfile = "target/temp/" + testInfo.getTestClass().get().getSimpleName() + "_" + testInfo.getTestMethod().get().getName() + ".xml";
 
     FormatXml defn = FormatXml.builder()
-      .indent(true)
-      .fieldsAsAttributes(true)
-      .build();
+            .indent(true)
+            .fieldsAsAttributes(true)
+            .build();
 
     FileSystem fs = vertx.fileSystem();
     if (!fs.existsBlocking("target/temp")) {
       fs.mkdirBlocking("target/temp");
     }
+    deleteWithoutError(fs, outfile);
     WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setCreate(true).setSync(true));
 
     FormatXmlInstance instance = defn.createInstance(vertx, null, writeStream);
@@ -214,35 +226,36 @@ public class FormatXmlInstanceTest {
     }
 
     instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
-      .compose(v -> {
-        return instance.getFinalFuture();
-      })
-      .onComplete(ar -> {
-        if (ar.failed()) {
-          testContext.failNow(ar.cause());
-        } else {
-          testContext.verify(() -> {
-            String outstring = FileUtils.readFileToString(new File(outfile), StandardCharsets.UTF_8);
-            assertThat(outstring, startsWith(
-                  """
-                  <?xml version='1.0' encoding='utf-8'?>
-                  <data>
-                    <row Date="1971-05-01" DateTime="1971-05-01T00:00" Double="0.0" Float="0.0" Integer="0" Long="0" String="This is row 0" Time="00:00">
-                    </row>
-                    <row Boolean="false" DateTime="1971-05-02T01:01" Double="1.1" Float="1.1" Integer="1" Long="10000000" String="This is row 1" Time="01:01">
-                    </row>
-                    <row Boolean="true" Date="1971-05-03" Double="2.2" Float="2.2" Integer="2" Long="20000000" String="This is row 2" Time="02:02">
-                    </row>
-                    <row Boolean="false" Date="1971-05-04" DateTime="1971-05-04T03:03" Float="3.3" Integer="3" Long="30000000" String="This is row 3" Time="03:03">
-                    </row>
-                    <row Boolean="true" Date="1971-05-05" DateTime="1971-05-05T04:04" Double="4.4" Integer="4" Long="40000000" String="This is row 4" Time="04:04">
-                    </row>
-                  """.trim()
-            ));
-          });
-          testContext.completeNow();
-        }
-      });
+            .compose(v -> {
+              return instance.getFinalFuture();
+            })
+            .onComplete(ar -> {
+              if (ar.failed()) {
+                testContext.failNow(ar.cause());
+              } else {
+                testContext.verify(() -> {
+                  String outstring = FileUtils.readFileToString(new File(outfile), StandardCharsets.UTF_8);
+                  assertThat(outstring, equalTo(
+                          """
+                          <?xml version='1.0' encoding='utf-8'?>
+                          <data>
+                            <row Date="1971-05-01" DateTime="1971-05-01T00:00" Double="0.0" Float="0.0" Integer="0" Long="0" String="This is row 0" Time="00:00" Telephone_contact_details="01234"/>
+                            <row Boolean="false" DateTime="1971-05-02T01:01" Double="1.1" Float="1.1" Integer="1" Long="10000000" String="This is row 1" Time="01:01"/>
+                            <row Boolean="true" Date="1971-05-03" Double="2.2" Float="2.2" Integer="2" Long="20000000" String="This is row 2" Time="02:02" Telephone_contact_details="01234"/>
+                            <row Boolean="false" Date="1971-05-04" DateTime="1971-05-04T03:03" Float="3.3" Integer="3" Long="30000000" String="This is row 3" Time="03:03" Telephone_contact_details="None"/>
+                            <row Boolean="true" Date="1971-05-05" DateTime="1971-05-05T04:04" Double="4.4" Integer="4" Long="40000000" String="This is row 4" Time="04:04" Telephone_contact_details="01234"/>
+                            <row Boolean="false" Date="1971-05-06" DateTime="1971-05-06T05:05" Double="5.5" Float="5.5" Long="50000000" String="This is row 5" Time="05:05"/>
+                            <row Boolean="true" Date="1971-05-07" DateTime="1971-05-07T06:06" Double="6.6" Float="6.6" Integer="6" String="This is row 6" Time="06:06" Telephone_contact_details="01234"/>
+                            <row Boolean="false" Date="1971-05-08" DateTime="1971-05-08T07:07" Double="7.7" Float="7.7" Integer="7" Long="70000000" Time="07:07"/>
+                            <row Boolean="true" Date="1971-05-09" DateTime="1971-05-09T08:08" Double="8.8" Float="8.8" Integer="8" Long="80000000" String="This is row 8" Telephone_contact_details="01234"/>
+                            <row Date="1971-05-10" DateTime="1971-05-10T09:09" Double="9.9" Float="9.9" Integer="9" Long="90000000" String="This is row 9" Time="09:09" Telephone_contact_details="None"/>
+                          </data>
+                          """.trim()
+                  ));
+                });
+                testContext.completeNow();
+              }
+            });
   }
 
   private DataRow createDataRow(Types types, int rowNum) {
@@ -256,6 +269,11 @@ public class FormatXmlInstanceTest {
     row.put("Long", rowNum % 9 == 6 ? null : rowNum * 10000000L);
     row.put("String", rowNum % 9 == 7 ? null : "This is row " + rowNum);
     row.put("Time", rowNum % 9 == 8 ? null : LocalTime.of(rowNum, rowNum));
+    if (rowNum % 2 == 0) {
+      row.put("telephone contact details", "Telephone contact details", DataType.String, "01234");
+    } else if (rowNum % 3 == 0) {
+      row.put("telephone contact details", "Telephone contact details", DataType.String, "None");
+    }
     return row;
   }
 
@@ -265,103 +283,104 @@ public class FormatXmlInstanceTest {
     assertEquals("default", FormatXmlInstance.getName(nameMap, "F", "_", null, "default"));
     assertEquals("F", FormatXmlInstance.getName(nameMap, "F", "_", "   ", "default"));
     assertEquals("FA_", FormatXmlInstance.getName(nameMap, "F", "_", "  A ", "default"));
+    assertEquals("Telephone_contact_details", FormatXmlInstance.getName(nameMap, "F", "_", "Telephone contact details", "default"));
   }
-  
-    private final ValueFormatters valueFormatters = new ValueFormatters("dd/MM/YYYY", "ss:mm:hh dd/MM/YYYY", "ss:mm:hh", "0.000", "['\"y\"', '\"n\"']"
-            , "\"", "\"", true, Collections.emptyList());
 
-    @Test
-    public void testFormatValue_Boolean() {
-        String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Boolean, true);
-        assertEquals("\"y\"", result);
-        
-        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Boolean, false);
-        assertEquals("\"n\"", result);
+  private final ValueFormatters valueFormatters = new ValueFormatters("dd/MM/YYYY", "ss:mm:hh dd/MM/YYYY", "ss:mm:hh", "0.000", "['\"y\"', '\"n\"']",
+           "\"", "\"", true, Collections.emptyList());
 
-        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Boolean, "true");
-        assertEquals("\"y\"", result);
-        
-        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Boolean, "false");
-        assertEquals("\"n\"", result);
+  @Test
+  public void testFormatValue_Boolean() {
+    String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Boolean, true);
+    assertEquals("\"y\"", result);
 
-        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Boolean, 1);
-        assertEquals("\"y\"", result);
-        
-        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Boolean, 0);
-        assertEquals("\"n\"", result);
-    }
+    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Boolean, false);
+    assertEquals("\"n\"", result);
 
-    @Test
-    public void testFormatValue_Numeric() {
-        // Test Double
-        String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Double, 123.456);
-        assertEquals("123.456", result);
-        
-        // Test Float
-        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Float, 456.789f);
-        assertEquals("456.789", result);
-        
-        // Test Integer
-        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Integer, 12345);
-        assertEquals("12345", result);
-        
-        // Test Long
-        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Long, 123456789L);
-        assertEquals("123456789", result);
-        
-        // Test BigDecimal as Integer
-        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Integer, new BigDecimal("999"));
-        assertEquals("999", result);
-    }
+    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Boolean, "true");
+    assertEquals("\"y\"", result);
 
-    @Test
-    public void testFormatValue_String() {
-        String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.String, "Hello World");
-        assertEquals("Hello World", result);
-        
-        // Test non-string value converted to string
-        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.String, 12345);
-        assertEquals("12345", result);
-    }
+    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Boolean, "false");
+    assertEquals("\"n\"", result);
 
-    @Test
-    public void testFormatValue_Null() {
-        String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Null, null);
-        assertNull(result);
-    }
+    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Boolean, 1);
+    assertEquals("\"y\"", result);
 
-    @Test
-    public void testFormatValue_Temporal() {
-        // Test Date
-        LocalDate date = LocalDate.of(2023, 12, 25);
-        String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Date, date);
-        assertEquals("25/12/2023", result);
-        
-        // Test DateTime
-        LocalDateTime dateTime = LocalDateTime.of(2023, 12, 25, 10, 30, 45);
-        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.DateTime, dateTime);
-        assertEquals("45:30:10 25/12/2023", result);
-        
-        // Test Time
-        LocalTime time = LocalTime.of(10, 30, 45);
-        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Time, time);
-        assertEquals("45:30:10", result);
-    }
+    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Boolean, 0);
+    assertEquals("\"n\"", result);
+  }
 
-    @Test
-    public void testFormatValue_IntegerWithNonNumberValue() {
-        // Test when Integer type receives a non-Number value
-        String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Integer, "12345");
-        assertEquals("12345", result);
+  @Test
+  public void testFormatValue_Numeric() {
+    // Test Double
+    String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Double, 123.456);
+    assertEquals("123.456", result);
 
-        result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Integer, "Four");
-        assertEquals("Four", result);
-    }
+    // Test Float
+    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Float, 456.789f);
+    assertEquals("456.789", result);
 
-    @Test
-    public void testFormatValue_LongWithNonNumberValue() {
-        // Test when Long type receives a non-Number value
-        String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Long, "123456789");
-        assertEquals("123456789", result);
-    }
+    // Test Integer
+    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Integer, 12345);
+    assertEquals("12345", result);
+
+    // Test Long
+    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Long, 123456789L);
+    assertEquals("123456789", result);
+
+    // Test BigDecimal as Integer
+    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Integer, new BigDecimal("999"));
+    assertEquals("999", result);
+  }
+
+  @Test
+  public void testFormatValue_String() {
+    String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.String, "Hello World");
+    assertEquals("Hello World", result);
+
+    // Test non-string value converted to string
+    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.String, 12345);
+    assertEquals("12345", result);
+  }
+
+  @Test
+  public void testFormatValue_Null() {
+    String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Null, null);
+    assertNull(result);
+  }
+
+  @Test
+  public void testFormatValue_Temporal() {
+    // Test Date
+    LocalDate date = LocalDate.of(2023, 12, 25);
+    String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Date, date);
+    assertEquals("25/12/2023", result);
+
+    // Test DateTime
+    LocalDateTime dateTime = LocalDateTime.of(2023, 12, 25, 10, 30, 45);
+    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.DateTime, dateTime);
+    assertEquals("45:30:10 25/12/2023", result);
+
+    // Test Time
+    LocalTime time = LocalTime.of(10, 30, 45);
+    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Time, time);
+    assertEquals("45:30:10", result);
+  }
+
+  @Test
+  public void testFormatValue_IntegerWithNonNumberValue() {
+    // Test when Integer type receives a non-Number value
+    String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Integer, "12345");
+    assertEquals("12345", result);
+
+    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Integer, "Four");
+    assertEquals("Four", result);
+  }
+
+  @Test
+  public void testFormatValue_LongWithNonNumberValue() {
+    // Test when Long type receives a non-Number value
+    String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Long, "123456789");
+    assertEquals("123456789", result);
+  }
 }
