@@ -27,9 +27,11 @@ import static io.restassured.RestAssured.given;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.lang.invoke.MethodHandles;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
@@ -52,9 +54,11 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 import uk.co.spudsoft.jwtvalidatorvertx.AlgorithmAndKeyPair;
 import uk.co.spudsoft.jwtvalidatorvertx.JsonWebAlgorithm;
 import uk.co.spudsoft.jwtvalidatorvertx.JwkBuilder;
@@ -71,6 +75,15 @@ public class LoginRouterWithDiscoveryIT {
   private static final Logger logger = LoggerFactory.getLogger(LoginRouterWithDiscoveryIT.class);
 
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
+
+  private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
+  
+  @BeforeAll
+  public void createDirs() {
+    File confsDir = new File(CONFS_DIR);
+    FileUtils.deleteQuietly(confsDir);
+    confsDir.mkdirs();
+  }
 
   private HttpServer createServer(int port) throws Exception {
     ExecutorService exeSvc = Executors.newFixedThreadPool(2);
@@ -181,7 +194,7 @@ public class LoginRouterWithDiscoveryIT {
        "--persistence.datasource.adminUser.username=" + postgres.getUser(),
        "--persistence.datasource.adminUser.password=" + postgres.getPassword(),
        "--persistence.datasource.schema=public",
-       "--baseConfigPath=target/query-engine/samples-loginrouterwithdiscoveryit",
+       "--baseConfigPath=" + CONFS_DIR,
        "--jwt.acceptableIssuerRegexes[0]=.*",
        "--jwt.defaultJwksCacheDuration=PT1M",
        "--jwt.jwksEndpoints[0]=http://localhost:" + port + "/jwks_uri",

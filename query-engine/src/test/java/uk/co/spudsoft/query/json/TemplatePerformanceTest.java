@@ -42,12 +42,14 @@ import org.stringtemplate.v4.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.TestInstance;
 
 /**
  *
  * @author jtalbut
  */
 @TestMethodOrder(MethodOrderer.MethodName.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class TemplatePerformanceTest {
   
   @SuppressWarnings("constantname")
@@ -97,7 +99,7 @@ public class TemplatePerformanceTest {
    * To be honest, this javadoc only exists to push the log line down to > line 100 so that the output lines up with the rest.
    */
   @BeforeAll
-  public static void headers() {
+  public void headers() {
     logger.info("{}", String.format("%-40s %-20s %10s %10s %14s", "Method", "JVM", "Iterations", "Duration/s", "Rate (iters/s)"));
   }
   

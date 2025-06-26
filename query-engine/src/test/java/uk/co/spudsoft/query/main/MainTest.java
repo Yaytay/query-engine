@@ -21,6 +21,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
@@ -30,21 +31,27 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 
 /**
  *
  * @author jtalbut
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MainTest {
   
   private static final Logger logger = LoggerFactory.getLogger(MainTest.class);
   
+  private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
+  
   @BeforeAll
-  public static void createDirs() {
-    File paramsDir = new File("target/query-engine/samples-maintest");
-    paramsDir.mkdirs();
+  public void createDirs() {
+    File confsDir = new File(CONFS_DIR);
+    FileUtils.deleteQuietly(confsDir);
+    confsDir.mkdirs();
   }
   
   @Test
@@ -56,7 +63,7 @@ public class MainTest {
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
             "--exitOnRun"
-            , "--baseConfigPath=target/query-engine/samples-maintest"
+            , "--baseConfigPath=" + CONFS_DIR
             , "--jwt.acceptableIssuerRegexes[0]=.*"
             , "--jwt.defaultJwksCacheDuration=PT1M"
     }, stdout, System.getenv());
@@ -68,7 +75,7 @@ public class MainTest {
     logger.info("testMain");
     GlobalOpenTelemetry.resetForTest();
     Main.main(new String[]{
-            "--baseConfigPath=target/query-engine/samples-maintest"
+            "--baseConfigPath=" + CONFS_DIR
             , "--jwt.acceptableIssuerRegexes[0]=.*"
             , "--jwt.defaultJwksCacheDuration=PT1M"
     });
@@ -88,7 +95,7 @@ public class MainTest {
   @Test
   public void testPrepareBaseConfigPath() throws Exception {
     logger.info("testPrepareBaseConfigPath");
-    File testDir = new File("target/test-base-config-path");
+    File testDir = new File(CONFS_DIR);
     if (testDir.exists()) {
       deleteDir(testDir);
     }

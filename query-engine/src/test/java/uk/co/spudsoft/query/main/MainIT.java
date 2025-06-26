@@ -36,12 +36,14 @@ import io.restassured.http.ContentType;
 import io.vertx.core.json.JsonObject;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import org.junit.jupiter.api.TestInstance;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 import uk.co.spudsoft.query.web.LoginRouterWithDiscoveryIT;
 
@@ -51,6 +53,7 @@ import uk.co.spudsoft.query.web.LoginRouterWithDiscoveryIT;
  * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MainIT {
   
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
@@ -60,15 +63,12 @@ public class MainIT {
   
   private final int mgmtPort = LoginRouterWithDiscoveryIT.findUnusedPort();
   
-  private static final String CONFS_DIR = "target/query-engine/samples-mainit";
+  private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
   
   @BeforeAll
-  public static void createDirs(Vertx vertx) {
+  public void createDirs() {
     File confsDir = new File(CONFS_DIR);
-    try {
-      FileUtils.deleteDirectory(confsDir);
-    } catch (Throwable ex) {
-    }
+    FileUtils.deleteQuietly(confsDir);
     confsDir.mkdirs();
   }
     

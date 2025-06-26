@@ -24,6 +24,7 @@ import io.vertx.junit5.VertxExtension;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
+import java.lang.invoke.MethodHandles;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThan;
@@ -38,6 +39,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.TestInstance;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
 
@@ -49,33 +51,32 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
  * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MainQueryWithoutPersistenceIT {
   
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
   private static final ServerProviderMySQL mysql = new ServerProviderMySQL().init();
   
+  private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
+  
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(MainQueryWithoutPersistenceIT.class);
   
   @BeforeAll
-  public static void createDirs(Vertx vertx) {
-    File paramsDir = new File("target/query-engine/samples-mainqueryit");
-    try {
-      FileUtils.deleteDirectory(paramsDir);
-    } catch (Throwable ex) {
-    }
-    paramsDir.mkdirs();
+  public void createDirs() {
+    File confsDir = new File(CONFS_DIR);
+    FileUtils.deleteQuietly(confsDir);
+    confsDir.mkdirs();
   }
   
   @Test
   public void testQuery() throws Exception {
     GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
-    String baseConfigDir = "target/query-engine/samples-mainqueryit";
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-      "--baseConfigPath=" + baseConfigDir
+      "--baseConfigPath=" + CONFS_DIR
       , "--vertxOptions.eventLoopPoolSize=5"
       , "--vertxOptions.workerPoolSize=5"
       , "--pipelineCache.maxDuration=PT10M"

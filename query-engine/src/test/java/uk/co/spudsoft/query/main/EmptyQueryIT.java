@@ -27,6 +27,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.lang.invoke.MethodHandles;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
+import org.junit.jupiter.api.TestInstance;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
 
@@ -52,26 +54,23 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
  * 
  * @author jtalbut
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class EmptyQueryIT {
   
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
   private static final ServerProviderMySQL mysql = new ServerProviderMySQL().init();
   
-  private static final String BASE_CONFIG_DIR = "target/query-engine/samples-emptyqueryit";
+  private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
   
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(EmptyQueryIT.class);
   
   @BeforeAll
-  public static void createDirvs() throws IOException {
-    File paramsDir = new File(BASE_CONFIG_DIR);
-    if (paramsDir.exists()) {
-      try {
-        FileUtils.deleteDirectory(paramsDir);
-      } catch (Throwable ex) {
-      }
-    }
-    paramsDir.mkdirs();    
+  public void createDirs() {
+    File confsDir = new File(CONFS_DIR);
+    FileUtils.deleteQuietly(confsDir);
+    confsDir.mkdirs();
+
     File outDir = new File("target/temp/EmptyDataIT");
     outDir.mkdirs();
   }
@@ -89,7 +88,7 @@ public class EmptyQueryIT {
       , "--persistence.datasource.user.username=" + mysql.getUser()
       , "--persistence.datasource.user.password=" + mysql.getPassword()
       , "--persistence.retryLimit=100"
-      , "--baseConfigPath=" + BASE_CONFIG_DIR
+      , "--baseConfigPath=" + CONFS_DIR
       , "--vertxOptions.eventLoopPoolSize=5"
       , "--vertxOptions.workerPoolSize=5"
       , "--httpServerOptions.tracingPolicy=ALWAYS"

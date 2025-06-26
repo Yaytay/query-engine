@@ -32,9 +32,12 @@ import static io.restassured.RestAssured.when;
 import io.restassured.http.ContentType;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.lang.invoke.MethodHandles;
 import uk.co.spudsoft.query.main.Main;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.TestInstance;
+import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 
 
 /**
@@ -42,15 +45,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class UiRouterIT {
   
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(UiRouterIT.class);
   
+  private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
+  
   @BeforeAll
-  public static void createDirs(Vertx vertx) {
-    File paramsDir = new File("target/query-engine/samples-uirouterit");
-    paramsDir.mkdirs();
+  public void createDirs() {
+    File confsDir = new File(CONFS_DIR);
+    FileUtils.deleteQuietly(confsDir);
+    confsDir.mkdirs();
   }
     
   @Test
@@ -60,7 +67,7 @@ public class UiRouterIT {
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-        "--baseConfigPath=target/classes/samples"
+        "--baseConfigPath=" + CONFS_DIR
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--logging.jsonFormat=false"

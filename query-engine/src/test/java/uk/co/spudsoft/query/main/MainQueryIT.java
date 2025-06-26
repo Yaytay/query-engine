@@ -20,7 +20,9 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.PrintStream;
+import java.lang.invoke.MethodHandles;
 import java.util.UUID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.Test;
@@ -33,6 +35,8 @@ import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
 
 /**
@@ -47,14 +51,22 @@ public class MainQueryIT {
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
   private static final ServerProviderMySQL mysql = new ServerProviderMySQL().init();
   
+  private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
+  
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(MainQueryIT.class);
+  
+  @BeforeAll
+  public void createDirs() {
+    File confsDir = new File(CONFS_DIR);
+    FileUtils.deleteQuietly(confsDir);
+    confsDir.mkdirs();
+  }
   
   @Test
   public void testQuery() throws Exception {
     GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
-    String baseConfigDir = "target/query-engine/samples-mainqueryit";
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
@@ -64,7 +76,7 @@ public class MainQueryIT {
       , "--persistence.datasource.user.username=" + mysql.getUser()
       , "--persistence.datasource.user.password=" + mysql.getPassword()
       , "--persistence.retryLimit=100"
-      , "--baseConfigPath=" + baseConfigDir
+      , "--baseConfigPath=" + CONFS_DIR
       , "--vertxOptions.eventLoopPoolSize=5"
       , "--vertxOptions.workerPoolSize=5"
       , "--pipelineCache.maxDuration=PT10M"

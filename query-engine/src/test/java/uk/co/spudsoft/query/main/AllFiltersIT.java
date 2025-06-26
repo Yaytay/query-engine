@@ -24,6 +24,7 @@ import io.vertx.junit5.VertxExtension;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
+import java.lang.invoke.MethodHandles;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -39,6 +40,7 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.TestInstance;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
 
@@ -54,6 +56,7 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
  * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class AllFiltersIT {
   
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
@@ -62,18 +65,15 @@ public class AllFiltersIT {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(AllFiltersIT.class);
 
-  private static final String CONFS_DIR = "target/query-engine/samples-allfiltersit";
+  private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
   
   @BeforeAll
-  public static void createDirs(Vertx vertx) {
+  public void createDirs() {
     File confsDir = new File(CONFS_DIR);
-    try {
-      FileUtils.deleteDirectory(confsDir);
-    } catch (Throwable ex) {
-    }
+    FileUtils.deleteQuietly(confsDir);
     confsDir.mkdirs();
   }
-  
+      
   @Test
   public void testQuery() throws Exception {
     GlobalOpenTelemetry.resetForTest();

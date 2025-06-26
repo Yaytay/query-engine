@@ -29,6 +29,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.UUID;
@@ -70,6 +71,8 @@ public class AuthQueryMsIT {
   private static final ServerProviderMySQL mysql = new ServerProviderMySQL().init();
   private static final ServerProviderMsSQL mssql = new ServerProviderMsSQL().init();
 
+  private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
+  
   private JdkJwksHandler jwks;
   private TokenBuilder tokenBuilder;
 
@@ -77,13 +80,10 @@ public class AuthQueryMsIT {
   private static final Logger logger = LoggerFactory.getLogger(AuthQueryMsIT.class);
   
   @BeforeAll
-  public void createDirs(Vertx vertx) throws IOException {
-    File paramsDir = new File("target/query-engine/samples-authquerymsit");
-    try {
-      FileUtils.deleteDirectory(paramsDir);
-    } catch (Throwable ex) {
-    }
-    paramsDir.mkdirs();
+  public void createDirs() throws IOException {
+    File confsDir = new File(CONFS_DIR);
+    FileUtils.deleteQuietly(confsDir);
+    confsDir.mkdirs();
 
     Cache<String, AlgorithmAndKeyPair> keyCache = AlgorithmAndKeyPair.createCache(Duration.ofMinutes(1));
     tokenBuilder = new JdkTokenBuilder(keyCache);
@@ -98,7 +98,6 @@ public class AuthQueryMsIT {
   public void testQuery() throws Exception {
     GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
-    String baseConfigDir = "target/query-engine/samples-authquerymsit";
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
@@ -108,7 +107,7 @@ public class AuthQueryMsIT {
       , "--persistence.datasource.user.username=" + mssql.getUser()
       , "--persistence.datasource.user.password=" + mssql.getPassword()
       , "--persistence.retryLimit=100"
-      , "--baseConfigPath=" + baseConfigDir
+      , "--baseConfigPath=" + CONFS_DIR
       , "--vertxOptions.eventLoopPoolSize=5"
       , "--vertxOptions.workerPoolSize=5"
       , "--httpServerOptions.tracingPolicy=ALWAYS"

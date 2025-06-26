@@ -16,17 +16,21 @@
  */
 package uk.co.spudsoft.query.main.sample;
 
+import io.vertx.core.Vertx;
+import io.vertx.junit5.VertxExtension;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  *
  * @author njt
  */
+@ExtendWith(VertxExtension.class)
 public class AbstractSampleDataLoaderTest {
   
   @Test
@@ -42,8 +46,5 @@ public class AbstractSampleDataLoaderTest {
     assertFalse(AbstractSampleDataLoader.checkStaleLockFile(testPath, 1000));
     Thread.sleep(100);
     assertTrue(AbstractSampleDataLoader.checkStaleLockFile(testPath, 50));
-    
-    
   }
-
 }

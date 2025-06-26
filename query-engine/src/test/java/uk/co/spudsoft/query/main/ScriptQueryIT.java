@@ -26,6 +26,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeAll;
@@ -59,6 +60,8 @@ public class ScriptQueryIT {
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
   private static final ServerProviderMySQL mysql = new ServerProviderMySQL().init();
 
+  private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
+  
   private JdkJwksHandler jwks;
   private TokenBuilder tokenBuilder;
 
@@ -66,13 +69,10 @@ public class ScriptQueryIT {
   private static final Logger logger = LoggerFactory.getLogger(ScriptQueryIT.class);
   
   @BeforeAll
-  public void createDirs(Vertx vertx) throws IOException {
-    File paramsDir = new File("target/query-engine/samples-scriptqueryit");
-    try {
-      FileUtils.deleteDirectory(paramsDir);
-    } catch (Throwable ex) {
-    }
-    paramsDir.mkdirs();
+  public void createDirs() throws IOException {
+    File confsDir = new File(CONFS_DIR);
+    FileUtils.deleteQuietly(confsDir);
+    confsDir.mkdirs();
 
     Cache<String, AlgorithmAndKeyPair> keyCache = AlgorithmAndKeyPair.createCache(Duration.ofMinutes(1));
     tokenBuilder = new JdkTokenBuilder(keyCache);
@@ -87,7 +87,6 @@ public class ScriptQueryIT {
   public void testQuery() throws Exception {
     GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
-    String baseConfigDir = "target/query-engine/samples-scriptqueryit";
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
@@ -97,7 +96,7 @@ public class ScriptQueryIT {
       , "--persistence.datasource.user.username=" + mysql.getUser()
       , "--persistence.datasource.user.password=" + mysql.getPassword()
       , "--persistence.retryLimit=100"
-      , "--baseConfigPath=" + baseConfigDir
+      , "--baseConfigPath=" + CONFS_DIR
       , "--vertxOptions.eventLoopPoolSize=5"
       , "--vertxOptions.workerPoolSize=5"
       , "--httpServerOptions.tracingPolicy=ALWAYS"

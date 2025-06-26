@@ -32,11 +32,14 @@ import static io.restassured.RestAssured.given;
 import io.restassured.response.Response;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.TestInstance;
+import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 import uk.co.spudsoft.query.web.LoginRouterWithDiscoveryIT;
 
 
@@ -45,9 +48,12 @@ import uk.co.spudsoft.query.web.LoginRouterWithDiscoveryIT;
  * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ConcurrentRuleInMemoryIT {
   
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
+  
+  private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
   
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ConcurrentRuleInMemoryIT.class);
@@ -55,9 +61,10 @@ public class ConcurrentRuleInMemoryIT {
   private final int mgmtPort = LoginRouterWithDiscoveryIT.findUnusedPort();
   
   @BeforeAll
-  public static void createDirs(Vertx vertx) {
-    File paramsDir = new File("target/query-engine/samples-mainit");
-    paramsDir.mkdirs();
+  public void createDirs() {
+    File confsDir = new File(CONFS_DIR);
+    FileUtils.deleteQuietly(confsDir);
+    confsDir.mkdirs();
   }
       
   @Test
@@ -67,7 +74,7 @@ public class ConcurrentRuleInMemoryIT {
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-      "--baseConfigPath=target/query-engine/samples-concurrentrulesit"
+      "--baseConfigPath=" + CONFS_DIR
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--logging.jsonFormat=false"
