@@ -48,6 +48,12 @@ public class Parameters {
   private VertxOptions vertxOptions = new VertxOptions();
 
   /**
+   * Temporary directory to use.
+   * Defaults to the value of System.getProperty("java.io.tmpdir").
+   */
+  private String tempDir = System.getProperty("java.io.tmpdir");
+  
+  /**
    * The HttpServerOptions that will be used when creating the HTTP server.
    */
   private HttpServerOptions httpServerOptions = new HttpServerOptions().setPort(0);
@@ -351,6 +357,24 @@ public class Parameters {
    */
   public VertxOptions getVertxOptions() {
     return vertxOptions;
+  }
+
+  /**
+   * The temporary directory to use.
+   * Defaults to the value of System.getProperty("java.io.tmpdir").
+   * @return the temporary directory to use.
+   */
+  public String getTempDir() {
+    return tempDir;
+  }
+
+  /**
+   * The temporary directory to use.
+   * Defaults to the value of System.getProperty("java.io.tmpdir").
+   * @param tempDir the temporary directory to use.
+   */
+  public void setTempDir(String tempDir) {
+    this.tempDir = tempDir;
   }
 
   /**

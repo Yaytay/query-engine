@@ -25,8 +25,10 @@ public class SampleDataLoaderPostgreSQL extends AbstractSampleDataLoader {
 
   /**
    * Constructor.
+   * @param basePath The root directory for storing lock files.
    */
-  public SampleDataLoaderPostgreSQL() {
+  public SampleDataLoaderPostgreSQL(String basePath) {
+    super(basePath);
   }
 
   @Override

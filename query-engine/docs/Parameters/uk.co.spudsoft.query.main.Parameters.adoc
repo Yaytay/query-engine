@@ -12,6 +12,9 @@ Top level configuration options for Query Engine.
 | [[logging]]logging
 | xref:uk.co.spudsoft.query.logging.LogbackOptions.adoc[LogbackOptions]
 | The options for configuring logback.
+| [[tempDir]]tempDir
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
+| The temporary directory to use.Defaults to the value of System.getProperty("java.io.tmpdir").
 | [[fileStabilisationDelaySeconds]]fileStabilisationDelaySeconds
 | int
 | The seconds to wait after being notified or a file change to allow all file writes to complete.

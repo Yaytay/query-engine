@@ -568,7 +568,7 @@ public class Main extends Application {
             .compose(svr -> {
               this.port = svr.actualPort();
               if (!params.getSampleDataLoads().isEmpty()) {
-                return performSampleDataLoads(params.getSampleDataLoads().iterator());
+                return performSampleDataLoads(params.getTempDir(), params.getSampleDataLoads().iterator());
               } else {
                 return Future.succeededFuture();
               }
@@ -637,23 +637,28 @@ public class Main extends Application {
     return filterFactory;
   }
 
-  private Future<Void> performSampleDataLoads(Iterator<DataSourceConfig> iter) {
+  private Future<Void> performSampleDataLoads(String tempDir, Iterator<DataSourceConfig> iter) {
     if (iter.hasNext()) {
       DataSourceConfig source = iter.next();
       String url = source.getUrl();
       SampleDataLoader loader;
+      if (Strings.isNullOrEmpty(tempDir)) {
+        tempDir = System.getProperty("java.io.tmpdir");
+      }
+      String basePath = (tempDir.endsWith("/") ? tempDir + "database-locks" : tempDir + File.separator + "database-locks");
+      
       if (Strings.isNullOrEmpty(url)) {
         logger.warn("No URL configured for sample data loader {}", source);
-        return performSampleDataLoads(iter);
+        return performSampleDataLoads(basePath, iter);
       } else if (url.startsWith("mysql")) {
-        loader = new SampleDataLoaderMySQL();
+        loader = new SampleDataLoaderMySQL(basePath);
       } else if (url.startsWith("sqlserver")) {
-        loader = new SampleDataLoaderMsSQL();
+        loader = new SampleDataLoaderMsSQL(basePath);
       } else if (url.startsWith("postgresql")) {
-        loader = new SampleDataLoaderPostgreSQL();
+        loader = new SampleDataLoaderPostgreSQL(basePath);
       } else {
         logger.warn("No sample data loader found for {}", url);
-        return performSampleDataLoads(iter);
+        return performSampleDataLoads(basePath, iter);
       }
       logger.info("Using sample data loader {} to load to {}", loader.getName(), url);
       Credentials user = source.getAdminUser();
@@ -668,7 +673,7 @@ public class Main extends Application {
                 logger.warn("Failed to prepare {} sample data: ", loader.getName(), ex);
                 return Future.succeededFuture();
               })
-              .compose(v -> performSampleDataLoads(iter));
+              .compose(v -> performSampleDataLoads(basePath, iter));
     } else {
       return Future.succeededFuture();
     }

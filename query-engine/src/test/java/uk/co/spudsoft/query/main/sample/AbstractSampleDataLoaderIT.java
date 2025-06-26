@@ -20,8 +20,9 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import java.io.File;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
@@ -33,7 +34,7 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 @ExtendWith(VertxExtension.class)
 public class AbstractSampleDataLoaderIT {
   
-  private ServerProviderPostgreSQL provider = new ServerProviderPostgreSQL();
+  private ServerProviderPostgreSQL provider = new ServerProviderPostgreSQL().init();
     
   @Test
   public void testPrepareTestDatabase(Vertx vertx, VertxTestContext testContext) {
@@ -48,7 +49,7 @@ public class AbstractSampleDataLoaderIT {
   }
   
   private Future<Void> prep(Vertx vertx, ServerProviderPostgreSQL provider) {
-    return provider.init()
+    return provider
             .prepareTestDatabase(vertx)
             .compose(v -> {
               return provider.prepareTestDatabase(vertx);
@@ -58,25 +59,47 @@ public class AbstractSampleDataLoaderIT {
   @Test
   public void testScriptNotFound(Vertx vertx, VertxTestContext testContext) {
     TestSampleDataLoaderScriptDoesNotExist dataLoader = new TestSampleDataLoaderScriptDoesNotExist();
-    Future<Void> future = dataLoader.prepareTestDatabase(vertx, provider.getVertxUrl(), null, null);
-    future.andThen(testContext.failingThenComplete());
+    Future<Void> future = dataLoader.prepareTestDatabase(vertx, provider.getVertxUrl(), provider.getUser(), provider.getPassword());
+    future.andThen(ar -> {
+      testContext.verify(() -> {
+        assertTrue(ar.failed());
+        assertEquals("java.io.FileNotFoundException: SQL script not found: ThisFileDoesNotExist", ar.cause().getMessage());
+      });      
+      testContext.completeNow();
+    });
   }
   
   @Test
   public void testGetScriptThrows(Vertx vertx, VertxTestContext testContext) {
     TestSampleDataLoaderScriptThrowsException dataLoader = new TestSampleDataLoaderScriptThrowsException();
-    Future<Void> future = dataLoader.prepareTestDatabase(vertx, provider.getVertxUrl(), null, null);
-    future.andThen(testContext.failingThenComplete());
+    Future<Void> future = dataLoader.prepareTestDatabase(vertx, provider.getVertxUrl(), provider.getUser(), provider.getPassword());
+    future.andThen(ar -> {
+      testContext.verify(() -> {
+        assertTrue(ar.failed());
+        assertEquals("java.lang.IllegalStateException: You asked me to throw an exception", ar.cause().getMessage());
+      });      
+      testContext.completeNow();
+    });
   }
   
   @Test
   public void testBadScript(Vertx vertx, VertxTestContext testContext) {
     TestSampleDataLoaderBadScript dataLoader = new TestSampleDataLoaderBadScript();
     Future<Void> future = dataLoader.prepareTestDatabase(vertx, provider.getVertxUrl(), provider.getUser(), provider.getPassword());
-    future.andThen(testContext.failingThenComplete());
+    future.andThen(ar -> {
+      testContext.verify(() -> {
+        assertTrue(ar.failed());
+        assertEquals("ERROR: syntax error at or near \"This\" (42601)", ar.cause().getMessage());
+      });      
+      testContext.completeNow();
+    });
   }
   
   private static class TestSampleDataLoaderScriptDoesNotExist extends AbstractSampleDataLoader {
+
+    public TestSampleDataLoaderScriptDoesNotExist() {
+      super("target" + File.separator + "temp");
+    }
 
     @Override
     protected String getScript() {
@@ -85,12 +108,12 @@ public class AbstractSampleDataLoaderIT {
 
     @Override
     public String getName() {
-      throw new UnsupportedOperationException("Not supported yet.");
+      return this.getClass().getSimpleName();
     }
 
     @Override
     public String getIdentifierQuote() {
-      throw new UnsupportedOperationException("Not supported yet.");
+      return "'";
     }
     
   }

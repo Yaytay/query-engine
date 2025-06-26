@@ -29,7 +29,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -39,6 +38,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.SqlConnection;
+import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -53,10 +53,14 @@ public abstract class AbstractSampleDataLoader implements SampleDataLoader {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractSampleDataLoader.class);
 
+  private final Path basePath;
+  
   /**
    * Protected constructor.
+   * @param basePath The root directory for storing lock files.
    */
-  protected AbstractSampleDataLoader() {
+  protected AbstractSampleDataLoader(String basePath) {
+    this.basePath = Path.of(basePath);
   }
   
   /**
@@ -102,11 +106,9 @@ public abstract class AbstractSampleDataLoader implements SampleDataLoader {
         String sql;
         try (InputStream strm = AbstractSampleDataLoader.class.getResourceAsStream(getScript())) {
           if (strm == null) {
-            throw new RuntimeException("SQL script not found: " + getScript());
+            throw new FileNotFoundException("SQL script not found: " + getScript());
           }
           sql = new String(strm.readAllBytes(), StandardCharsets.UTF_8);
-        } catch (Throwable ex) {
-          throw new RuntimeException("Failed to load SQL script: " + getScript(), ex);
         }
         
         List<String> sqlInChunks = parseSql(sql);
@@ -116,7 +118,7 @@ public abstract class AbstractSampleDataLoader implements SampleDataLoader {
                   releaseDatabaseLock(lockFile);
                 });
         
-      } catch (Exception ex) {
+      } catch (Throwable ex) {
         logger.warn("Failed to prepare {} test database: ", getName(), ex);
         releaseDatabaseLock(lockFile);
         throw new RuntimeException(ex);
@@ -132,13 +134,12 @@ public abstract class AbstractSampleDataLoader implements SampleDataLoader {
   }
   
   private Path getLockFilePath(String lockKey) {
-    Path targetDir = Paths.get("target", "database-locks");
     try {
-      Files.createDirectories(targetDir);
+      Files.createDirectories(basePath);
     } catch (IOException e) {
       throw new RuntimeException("Failed to create lock directory", e);
     }
-    return targetDir.resolve("db-prep-" + lockKey + ".lock");
+    return basePath.resolve("db-prep-" + lockKey + ".lock");
   }
   
   private boolean acquireDatabaseLock(Path lockFile) {

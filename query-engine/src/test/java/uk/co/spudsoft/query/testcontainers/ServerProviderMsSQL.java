@@ -21,6 +21,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.mssqlclient.MSSQLConnectOptions;
+import java.io.File;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.util.Arrays;
@@ -166,7 +167,7 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
 
   @Override
   public Future<Void> prepareTestDatabase(Vertx vertx) {
-    SampleDataLoader loader = new SampleDataLoaderMsSQL();
+    SampleDataLoader loader = new SampleDataLoaderMsSQL("target" + File.separator + "temp");
     return loader.prepareTestDatabase(vertx, getVertxUrl(), getUser(), getPassword());
   }
 }

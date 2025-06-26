@@ -20,6 +20,7 @@ import com.github.dockerjava.api.model.Container;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.pgclient.PgConnectOptions;
+import java.io.File;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -145,7 +146,7 @@ public class ServerProviderPostgreSQL extends AbstractServerProvider implements 
 
   @Override
   public Future<Void> prepareTestDatabase(Vertx vertx) {
-    SampleDataLoader loader = new SampleDataLoaderPostgreSQL();
+    SampleDataLoader loader = new SampleDataLoaderPostgreSQL("target" + File.separator + "temp");
     return loader.prepareTestDatabase(vertx, getVertxUrl(), getUser(), getPassword());
   }
 

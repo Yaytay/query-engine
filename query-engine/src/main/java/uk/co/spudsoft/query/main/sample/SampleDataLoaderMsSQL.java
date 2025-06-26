@@ -25,8 +25,10 @@ public class SampleDataLoaderMsSQL extends AbstractSampleDataLoader {
 
   /**
    * Constructor.
+   * @param basePath The root directory for storing lock files.
    */
-  public SampleDataLoaderMsSQL() {
+  public SampleDataLoaderMsSQL(String basePath) {
+    super(basePath);
   }
 
   @Override

@@ -32,8 +32,10 @@ public class SampleDataLoaderMySQL extends AbstractSampleDataLoader {
 
   /**
    * Constructor.
+   * @param basePath The root directory for storing lock files.
    */
-  public SampleDataLoaderMySQL() {
+  public SampleDataLoaderMySQL(String basePath) {
+    super(basePath);
   }
 
   @Override

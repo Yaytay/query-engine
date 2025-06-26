@@ -20,6 +20,7 @@ import com.github.dockerjava.api.model.Container;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.mysqlclient.MySQLConnectOptions;
+import java.io.File;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -147,7 +148,7 @@ public class ServerProviderMySQL extends AbstractServerProvider implements Serve
 
   @Override
   public Future<Void> prepareTestDatabase(Vertx vertx) {
-    SampleDataLoader loader = new SampleDataLoaderMySQL();
+    SampleDataLoader loader = new SampleDataLoaderMySQL("target" + File.separator + "temp");
     return loader.prepareTestDatabase(vertx, getVertxUrl(), getUser(), getPassword());
   }
 }
