@@ -163,7 +163,7 @@ public abstract class AbstractSampleDataLoader implements SampleDataLoader {
     }
   }
   
-  private Void waitForDatabasePreparation(Path lockFile) {
+  private void waitForDatabasePreparation(Path lockFile) {
     logger.debug("Waiting for database preparation to complete: {}", lockFile);
     
     int maxWaitSeconds = 60; // Maximum wait time
@@ -173,7 +173,7 @@ public abstract class AbstractSampleDataLoader implements SampleDataLoader {
     for (int i = 0; i < attempts; i++) {
       if (!Files.exists(lockFile)) {
         logger.debug("Database preparation completed: {}", lockFile);
-        return null;
+        return ;
       }
       
       try {
@@ -185,20 +185,27 @@ public abstract class AbstractSampleDataLoader implements SampleDataLoader {
     }
     
     // Check if lock file is stale (older than 2 minutes)
-    try {
-      if (Files.exists(lockFile)) {
-        FileTime lockTime = Files.getLastModifiedTime(lockFile);
-        if (Instant.now().minusSeconds(120).isAfter(lockTime.toInstant())) {
-          logger.warn("Removing stale database lock file: {}", lockFile);
-          Files.deleteIfExists(lockFile);
-          return null;
-        }
-      }
-    } catch (IOException e) {
-      logger.warn("Failed to check lock file staleness: ", e);
+    if (!checkStaleLockFile(lockFile, 2 * 60 * 1000)) {
+      return ;
     }
     
     throw new RuntimeException("Timeout waiting for database preparation to complete");
+  }
+
+  static boolean checkStaleLockFile(Path lockFile, long milliSeconds) {
+    try {
+      if (Files.exists(lockFile)) {
+        FileTime lockTime = Files.getLastModifiedTime(lockFile);
+        if (Instant.now().minusMillis(milliSeconds).isAfter(lockTime.toInstant())) {
+          logger.warn("Removing stale database lock file: {}", lockFile);
+          Files.deleteIfExists(lockFile);
+          return true;
+        }
+      }
+    }catch (IOException e) {
+      logger.warn("Failed to check lock file staleness: ", e);
+    }
+    return false;
   }
   
   private void releaseDatabaseLock(Path lockFile) {
