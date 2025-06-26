@@ -22,6 +22,7 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.regex.Pattern;
@@ -35,6 +36,7 @@ import uk.co.spudsoft.query.web.ServiceException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.TestInstance;
 import uk.co.spudsoft.query.main.Main;
 
 /**
@@ -42,12 +44,15 @@ import uk.co.spudsoft.query.main.Main;
  * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class DesignHandlerTest {
 
+  private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
+  
   @Test
   public void testDetermineAbsolutePath(Vertx vertx) throws IOException, ServiceException {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
-    java.io.File rootDir = new java.io.File("target/query-engine/samples-designhandlertest");
+    java.io.File rootDir = new java.io.File(CONFS_DIR);
     Main.prepareBaseConfigPath(rootDir, null);
     DirCache dirCache = DirCache.cache(rootDir.toPath(), Duration.of(1, ChronoUnit.SECONDS), Pattern.compile("\\..*"), null);
     PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, new CacheConfig(), dirCache);

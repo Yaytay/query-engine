@@ -25,6 +25,7 @@ import java.io.PrintStream;
 import java.lang.invoke.MethodHandles;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
@@ -34,6 +35,7 @@ import uk.co.spudsoft.query.main.Main;
  *
  * @author jtalbut
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class DocHandlerNoneIT {
   
   private static final Logger logger = LoggerFactory.getLogger(DocHandlerNoneIT.class.getName());

@@ -22,9 +22,11 @@ import io.vertx.junit5.VertxExtension;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
+import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,26 +53,24 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
  * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class RunIT {
   
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
   private static final ServerProviderMySQL mysql = new ServerProviderMySQL().init();
   private static final ServerProviderMsSQL mssql = new ServerProviderMsSQL().init();
   
+  private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
+  
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(RunIT.class);
   
   @BeforeAll
-  public static void createDirs() {
-    File paramsDir = new File("target/query-engine/samples-runit");
-    /*
-    try {
-      FileUtils.deleteDirectory(paramsDir);
-    } catch (Exception ex) {
-    }
-    */
-    paramsDir.mkdirs();
-}
+  public void createDirs() {
+    File confsDir = new File(CONFS_DIR);
+    // FileUtils.deleteQuietly(confsDir);
+    confsDir.mkdirs();
+  }
     
   @Test
   public void testMainDaemon() throws Exception {
@@ -84,7 +84,7 @@ public class RunIT {
       , "--persistence.datasource.adminUser.username=" + postgres.getUser()
       , "--persistence.datasource.adminUser.password=" + postgres.getPassword()
       , "--persistence.datasource.schema=public" 
-      , "--baseConfigPath=target/query-engine/samples-runit"
+      , "--baseConfigPath=" + CONFS_DIR
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       // , "--jwt.jwksEndpoints[0]=" + System.getProperty("queryEngineEntraUrl").replace("v2.0", "discovery/v2.0/keys")
       , "--jwt.requiredAudiences[0]=query-engine"

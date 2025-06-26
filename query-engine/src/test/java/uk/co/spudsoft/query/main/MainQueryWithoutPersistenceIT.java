@@ -19,7 +19,6 @@ package uk.co.spudsoft.query.main;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
-import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import java.io.ByteArrayOutputStream;
 import java.io.File;

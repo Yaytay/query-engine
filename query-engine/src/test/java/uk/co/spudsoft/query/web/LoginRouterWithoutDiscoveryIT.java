@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
@@ -44,6 +45,7 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
  *
  * @author jtalbut
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class LoginRouterWithoutDiscoveryIT {
   
   private static final Logger logger = LoggerFactory.getLogger(LoginRouterWithoutDiscoveryIT.class);

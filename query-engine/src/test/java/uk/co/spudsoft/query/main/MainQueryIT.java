@@ -36,6 +36,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.TestInstance;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
 
@@ -46,6 +47,7 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
  * 
  * @author jtalbut
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MainQueryIT {
   
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();

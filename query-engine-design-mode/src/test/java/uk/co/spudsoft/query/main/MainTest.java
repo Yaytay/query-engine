@@ -18,22 +18,37 @@ package uk.co.spudsoft.query.main;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.invoke.MethodHandles;
 import java.util.Collections;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 
 /**
  *
  * @author jtalbut
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MainTest {
   
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(MainTest.class);
   
+  private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
+  
+  @BeforeAll
+  public void createDirs() {
+    File confsDir = new File(CONFS_DIR);
+    FileUtils.deleteQuietly(confsDir);
+    confsDir.mkdirs();
+  }
+      
   @Test
   public void testMainExitOnRun() throws Exception {
     Main main = new DesignMain();
@@ -42,7 +57,7 @@ public class MainTest {
     GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
               "--exitOnRun"
-            , "--baseConfigPath=target/query-engine/samples-maintest"
+            , "--baseConfigPath=" + CONFS_DIR
             , "--jwt.acceptableIssuerRegexes[0]=.*"
             , "--jwt.defaultJwksCacheDuration=PT1M"
     }, stdout, Collections.emptyMap());
@@ -52,9 +67,10 @@ public class MainTest {
   public void testMain() throws IOException {
     GlobalOpenTelemetry.resetForTest();
     Main.main(new String[]{
-              "--baseConfigPath=target/query-engine/samples-maintest"
+              "--baseConfigPath=" + CONFS_DIR
             , "--jwt.acceptableIssuerRegexes[0]=.*"
             , "--jwt.defaultJwksCacheDuration=PT1M"
     });
   }
 }
+ 

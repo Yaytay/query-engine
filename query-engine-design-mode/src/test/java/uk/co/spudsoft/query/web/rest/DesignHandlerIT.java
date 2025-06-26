@@ -34,11 +34,14 @@ import static io.restassured.RestAssured.given;
 import io.restassured.http.ContentType;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
+import org.junit.jupiter.api.TestInstance;
+import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 
 /**
  * A set of tests that do not actually do any querying.
@@ -46,10 +49,13 @@ import static org.hamcrest.Matchers.startsWith;
  * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class DesignHandlerIT {
 
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
 
+  private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
+  
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(DesignHandlerIT.class);
 
@@ -65,16 +71,10 @@ public class DesignHandlerIT {
   }
 
   @BeforeAll
-  public static void createDirs(Vertx vertx, VertxTestContext testContext) {
-    File sourceDir = new File("target/query-engine/samples-designhandlerit/sub1/newfolder");
-    if (sourceDir.exists()) {
-      deleteFolder(sourceDir);
-    }
-    sourceDir = new File("target/query-engine/samples-designhandlerit/sub1/newdir");
-    if (sourceDir.exists()) {
-      deleteFolder(sourceDir);
-    }
-
+  public void createDirs(Vertx vertx, VertxTestContext testContext) {
+    File confsDir = new File(CONFS_DIR);
+    FileUtils.deleteQuietly(confsDir);
+    confsDir.mkdirs();
     postgres.prepareTestDatabase(vertx).onComplete(testContext.succeedingThenComplete());
   }
 
@@ -89,7 +89,7 @@ public class DesignHandlerIT {
       , "--audit.datasource.adminUser.username=" + postgres.getUser()
       , "--audit.datasource.adminUser.password=" + postgres.getPassword()
       , "--audit.datasource.schema=public"
-      , "--baseConfigPath=target/query-engine/samples-designhandlerit"
+      , "--baseConfigPath=" + CONFS_DIR
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--logging.jsonFormat=true"

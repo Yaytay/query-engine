@@ -19,7 +19,6 @@ package uk.co.spudsoft.query.main;
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
-import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import java.io.File;
 import org.junit.jupiter.api.BeforeAll;

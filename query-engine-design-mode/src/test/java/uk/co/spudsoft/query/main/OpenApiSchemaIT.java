@@ -39,6 +39,7 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 import io.vertx.junit5.Timeout;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -50,6 +51,7 @@ import java.util.concurrent.TimeUnit;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 
 /**
  *
@@ -59,18 +61,21 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class OpenApiSchemaIT {
   
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
+
+  private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
   
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(OpenApiSchemaIT.class);
   
   @BeforeAll
-  public static void createDirs(Vertx vertx, VertxTestContext testContext) {
-    File paramsDir = new File("target/query-engine/samples-mainqueryit");
-    Main.prepareBaseConfigPath(paramsDir, null);
+  public void createDirs(Vertx vertx, VertxTestContext testContext) {
+    File confsDir = new File(CONFS_DIR);
+    FileUtils.deleteQuietly(confsDir);
+    confsDir.mkdirs();
+
     postgres.prepareTestDatabase(vertx)
             .onComplete(testContext.succeedingThenComplete())
             ;
-    new File("target/classes/samples/sub1/sub3").mkdirs();
   }
   
   @Test
@@ -88,7 +93,7 @@ public class OpenApiSchemaIT {
       , "--persistence.datasource.user.password=" + postgres.getPassword()
       , "--persistence.retryLimit=100"
       , "--persistence.retryIncrementMs=500"
-      , "--baseConfigPath=target/query-engine/samples-mainqueryit"
+      , "--baseConfigPath=" + CONFS_DIR
       , "--vertxOptions.eventLoopPoolSize=5"
       , "--vertxOptions.workerPoolSize=5"
       , "--httpServerOptions.tracingPolicy=ALWAYS"

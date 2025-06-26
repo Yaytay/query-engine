@@ -18,7 +18,6 @@ package uk.co.spudsoft.query.main;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
-import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import java.io.File;
 import org.junit.jupiter.api.BeforeAll;
@@ -33,8 +32,11 @@ import static io.restassured.config.RedirectConfig.redirectConfig;
 import io.restassured.config.RestAssuredConfig;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.TestInstance;
+import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 
 
 /**
@@ -42,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MainIT {
   
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
@@ -49,10 +52,13 @@ public class MainIT {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(MainIT.class);
   
+  private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
+  
   @BeforeAll
-  public static void createDirs(Vertx vertx) {
-    File paramsDir = new File("target/query-engine/samples-mainit");
-    paramsDir.mkdirs();
+  public void createDirs() {
+    File confsDir = new File(CONFS_DIR);
+    FileUtils.deleteQuietly(confsDir);
+    confsDir.mkdirs();
   }
     
   @Test
@@ -64,7 +70,7 @@ public class MainIT {
     GlobalOpenTelemetry.resetForTest();
     main.testMain(new String[]{
       "--persistence.datasource.url=wibble"
-      , "--baseConfigPath=target/query-engine/samples-mainit"
+      , "--baseConfigPath=" + CONFS_DIR
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--jwt.jwksEndpoints[0]=http://localhost/jwks"
@@ -98,7 +104,7 @@ public class MainIT {
       , "--persistence.datasource.adminUser.username=" + postgres.getUser()
       , "--persistence.datasource.adminUser.password=" + postgres.getPassword()
       , "--persistence.datasource.schema=public" 
-      , "--baseConfigPath=target/query-engine/samples-mainit"
+      , "--baseConfigPath=" + CONFS_DIR
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--jwt.jwksEndpoints[0]=http://localhost/jwks"
