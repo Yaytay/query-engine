@@ -89,7 +89,7 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
     rowStream.pause();
     rowStream.exceptionHandler(ex -> {
       sourceNameTracker.addNameToContextLocalData();
-      logger.warn("Exception in RowStream: ", ex);
+      logger.error("Exception in RowStream: ", ex);
       readyPromise.tryFail(ex);
       Handler<Throwable> capturedExceptionHandler;
       synchronized (this) {

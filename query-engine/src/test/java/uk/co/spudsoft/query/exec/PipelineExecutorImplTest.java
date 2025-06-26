@@ -53,8 +53,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
 import uk.co.spudsoft.query.defn.FormatDelimited;
 import uk.co.spudsoft.query.defn.FormatJson;
 import uk.co.spudsoft.query.defn.FormatType;
@@ -335,26 +338,40 @@ public class PipelineExecutorImplTest {
     Argument arg = Argument.builder()
             .type(DataType.Date)
             .multiValued(true)
+            .defaultValueExpression("['1971-05-06', '1968-07-30', ...]")
             .build();
     
-    ImmutableList<Comparable<?>> values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null, "['1971-05-06', '1968-07-30', ...]");
+    ImmutableList<Comparable<?>> values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null);
     assertNotNull(values);
     assertEquals(Arrays.asList(LocalDate.of(1971, 5, 6), LocalDate.of(1968, 7, 30)), values);
 
-    values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null, "['1923-05-06', '2042-07-30']");
+    arg = Argument.builder()
+            .type(DataType.Date)
+            .multiValued(true)
+            .defaultValueExpression("['1923-05-06', '2042-07-30']")
+            .build();
+    
+    values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null);
     assertNotNull(values);
     assertEquals(Arrays.asList(LocalDate.of(1923, 5, 6), LocalDate.of(2042, 7, 30)), values);
 
     arg = Argument.builder()
             .type(DataType.Integer)
             .multiValued(true)
+            .defaultValueExpression("[23, 45, null, ...]")
             .build();
     
-    values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null, "[23, 45, null, ...]");
+    values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null);
     assertNotNull(values);
     assertEquals(Arrays.asList(23, 45), values);
 
-    values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null, "[23, 45, null]");
+    arg = Argument.builder()
+            .type(DataType.Integer)
+            .multiValued(true)
+            .defaultValueExpression("[23, 45, null]")
+            .build();
+    
+    values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null);
     assertNotNull(values);
     assertEquals(Arrays.asList(23, 45), values);
 
@@ -362,9 +379,10 @@ public class PipelineExecutorImplTest {
             .type(DataType.Date)
             .multiValued(true)
             .permittedValuesRegex("\\d{4}-\\d{2}-\\d{2}")
+            .defaultValueExpression("['1971-05-06', '1968-07-30', ...]")
             .build();
     
-    values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null, "['1971-05-06', '1968-07-30', ...]");
+    values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null);
     assertNotNull(values);
     assertEquals(Arrays.asList(LocalDate.of(1971, 5, 6), LocalDate.of(1968, 7, 30)), values);
 
@@ -373,11 +391,35 @@ public class PipelineExecutorImplTest {
             .multiValued(true)
             .validate(false)
             .permittedValuesRegex("ABCD")
+            .defaultValueExpression("['1971-05-06', '1968-07-30', ...]")
             .build();
     
-    values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null, "['1971-05-06', '1968-07-30', ...]");
+    values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null);
     assertNotNull(values);
     assertEquals(Arrays.asList(LocalDate.of(1971, 5, 6), LocalDate.of(1968, 7, 30)), values);
+
+    arg = Argument.builder()
+            .type(DataType.String)
+            .name("Department")
+            .description("Department")
+            .optional(true)
+            .hidden(true)
+            .multiValued(false)
+            .ignored(false)
+            .validate(true)
+            .emptyIsAbsent(false)
+            .dependsUpon(ImmutableList.of())
+            .possibleValues(ImmutableList.of())
+            .defaultValueExpression("firstMatchingStringWithPrefix(request.groups, '/Department_', true)")
+            .build();
+    
+    Jwt jwt = mock(Jwt.class);
+    when(jwt.getGroups()).thenReturn(Arrays.asList("Bob", "/Department_First department"));
+    requestContext = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), jwt);
+            
+    values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null);
+    assertNotNull(values);
+    assertEquals(ImmutableList.of("First department"), values);
   }
 
   @Test

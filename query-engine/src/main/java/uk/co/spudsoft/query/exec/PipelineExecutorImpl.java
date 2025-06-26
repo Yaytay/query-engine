@@ -185,8 +185,8 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     }
   }
   
-  static ImmutableList<Comparable<?>> evaluateDefaultValues(Argument arg, RequestContext requestContext, Pattern permittedValuesPattern, String expression) {
-    JexlEvaluator evaluator = new JexlEvaluator(expression);
+  static ImmutableList<Comparable<?>> evaluateDefaultValues(Argument arg, RequestContext requestContext, Pattern permittedValuesPattern) {
+    JexlEvaluator evaluator = new JexlEvaluator(arg.getDefaultValueExpression());
     Object raw = evaluator.evaluateAsObject(requestContext, null);
     if (raw == null) {
       return ImmutableList.of();
@@ -308,7 +308,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
           if (Strings.isNullOrEmpty(arg.getDefaultValueExpression())) {
             continue ;
           } else {
-            values = evaluateDefaultValues(arg, requestContext, permittedValuesPattern, arg.getDefaultValueExpression());
+            values = evaluateDefaultValues(arg, requestContext, permittedValuesPattern);
           }
         }
       }
@@ -318,7 +318,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
       } else if (!arg.isOptional() && !arg.isHidden()) {
         throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" is mandatory and was not provided.");
       } else if (!Strings.isNullOrEmpty(arg.getDefaultValueExpression())) {
-        values = evaluateDefaultValues(arg, requestContext, permittedValuesPattern, arg.getDefaultValueExpression());
+        values = evaluateDefaultValues(arg, requestContext, permittedValuesPattern);
       } else {
         values = ImmutableList.of();
       }
