@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2025 jtalbut
  *
@@ -38,8 +37,8 @@ public class FiqlToRsqlConverter {
   }
   
   /**
-   * Converts a FIQL expression to RSQL format by adding single quotes around unquoted values. Only modifies expressions that need
-   * conversion and don't already contain multiple RSQL terms.
+   * Converts a FIQL expression to RSQL format by adding single quotes around unquoted values. 
+   * Only modifies expressions that need conversion and don't already contain multiple RSQL terms.
    *
    * @param fiqlExpression the original FIQL expression
    * @return the converted RSQL expression, or the original if no conversion needed
@@ -76,24 +75,25 @@ public class FiqlToRsqlConverter {
   }
 
   /**
-   * Checks if the expression already contains single-quoted values
+   * Checks if the expression already contains single-quoted values.
    */
   private static boolean containsQuotedValues(String expression) {
     return expression.contains("'") && QUOTED_VALUES_PATTERN.matcher(expression).matches();
   }
 
   /**
-   * Checks if the expression contains multiple terms (logical operators)
+   * Checks if the expression contains multiple terms (logical operators).
    */
   private static boolean containsMultipleTerms(String expression) {
     // Look for patterns that indicate multiple field==value or field!=value expressions
     // separated by logical operators
-    return MULTIPLE_TERMS_PATTERN.matcher(expression).matches() ||
-           expression.contains(" and ") || expression.contains(" or ");
+    return MULTIPLE_TERMS_PATTERN.matcher(expression).matches()
+            || expression.contains(" and ")
+            || expression.contains(" or ");
   }
 
   /**
-   * Determines if a value needs to be quoted (contains spaces or special characters)
+   * Determines if a value needs to be quoted (contains spaces or special characters).
    */
   private static boolean needsQuoting(String value) {
     return value.contains(" ")
