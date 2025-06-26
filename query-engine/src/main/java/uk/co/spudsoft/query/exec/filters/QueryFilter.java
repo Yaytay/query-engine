@@ -54,10 +54,11 @@ public class QueryFilter implements Filter {
   public String getKey() {
     return "_query";
   }
-
+  
   @Override
   public ProcessorInstance createProcessor(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String argument, String name) throws IllegalArgumentException {
     try {
+      argument = FiqlToRsqlConverter.convertFiqlToRsql(argument);
       ProcessorQueryInstance.RSQL_PARSER.parse(argument);
     } catch (Throwable ex) {
       logger.warn("Failed to parse argument to _query filter (\"{}\"): ", argument, ex);
