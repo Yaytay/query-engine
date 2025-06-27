@@ -313,7 +313,7 @@ public class FormatXml extends AbstractTextFormat implements Format {
    * <P>
    * This facility should only be used when there is a specific requirement to encode some characters in a given way.
    * <P>
-   * This is NOT a generic search and replace facility, the "with" value must be a valid XML character reference (without the & and ;).
+   * This is NOT a generic search and replace facility, the "with" value must be a valid XML character reference (without the &amp; and ;).
    * <P>
    * Note that character references cannot be set in attributes, so it is invalid to use character references when fieldsAsAttributes is true.
    * 
@@ -323,6 +323,10 @@ public class FormatXml extends AbstractTextFormat implements Format {
     return characterReferences;
   }
   
+  /**
+   * Get the replacement character references as a map.
+   * @return the replacement character references as a map.
+   */
   @JsonIgnore
   public Map<String, String> getCharacterReferenceMap() {
     return characterReferenceMap;
