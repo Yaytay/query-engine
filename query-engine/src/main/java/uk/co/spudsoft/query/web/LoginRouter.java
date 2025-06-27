@@ -66,6 +66,10 @@ public class LoginRouter implements Handler<RoutingContext> {
 
   private static final SecureRandom RANDOM = getFastestSecureRandom();
 
+  /**
+   * Choose the best available SecureRandom implementation.
+   * @return the best available SecureRandom implementation. 
+   */
   public static SecureRandom getFastestSecureRandom() {
     String[] algorithms = {
       "NativePRNGNonBlocking", // Fastest, non-blocking
