@@ -93,6 +93,7 @@ public class LoginRouterWithDiscoveryWithoutPersistenceIT {
 
   public static int findUnusedPort() {
     try (ServerSocket s = new ServerSocket(0)) {
+       s.setReuseAddress(false);
       return s.getLocalPort();
     } catch (IOException ex) {
       throw new RuntimeException(ex);

@@ -16,8 +16,6 @@
  */
 package uk.co.spudsoft.query.pipeline;
 
-import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
-import uk.co.spudsoft.query.pipeline.FileCache;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.vertx.core.Future;

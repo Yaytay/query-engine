@@ -138,7 +138,7 @@ public class DynamicEndpointPipelineIT {
     SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getVertxUrl());
     connectOptions.setUser(serverProviderMy.getUser());
     connectOptions.setPassword(serverProviderMy.getPassword());
-    Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(1));
+    Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(8));
     pool.preparedQuery("delete from DynamicEndpoint")
             .execute()
             .compose(rs -> {
@@ -235,7 +235,7 @@ public class DynamicEndpointPipelineIT {
     SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getVertxUrl());
     connectOptions.setUser(serverProviderMy.getUser());
     connectOptions.setPassword(serverProviderMy.getPassword());
-    Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(1));
+    Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(8));
     pool.preparedQuery("delete from DynamicEndpoint")
             .execute()
             .compose(rs -> {
@@ -331,7 +331,7 @@ public class DynamicEndpointPipelineIT {
     SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getVertxUrl());
     connectOptions.setUser(serverProviderMy.getUser());
     connectOptions.setPassword(serverProviderMy.getPassword());
-    Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(1));
+    Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(8));
     pool.preparedQuery("delete from DynamicEndpoint")
             .execute()
             .compose(rs -> {
@@ -425,7 +425,7 @@ public class DynamicEndpointPipelineIT {
     SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getVertxUrl());
     connectOptions.setUser(serverProviderMy.getUser());
     connectOptions.setPassword(serverProviderMy.getPassword());
-    Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(1));
+    Pool pool = Pool.pool(vertx, connectOptions, new PoolOptions().setMaxSize(8));
     pool.preparedQuery("delete from DynamicEndpoint")
             .execute()
             .compose(rs -> {
