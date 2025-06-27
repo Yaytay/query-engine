@@ -16,7 +16,6 @@
  */
 package uk.co.spudsoft.query.main.sample;
 
-import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import java.nio.file.Files;
 import java.nio.file.Path;

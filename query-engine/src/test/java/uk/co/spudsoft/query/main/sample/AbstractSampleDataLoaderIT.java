@@ -21,6 +21,7 @@ import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.io.File;
+import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
@@ -35,7 +36,7 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 public class AbstractSampleDataLoaderIT {
   
   private ServerProviderPostgreSQL provider = new ServerProviderPostgreSQL().init();
-    
+
   @Test
   public void testPrepareTestDatabase(Vertx vertx, VertxTestContext testContext) {
     
@@ -115,7 +116,11 @@ public class AbstractSampleDataLoaderIT {
     public String getIdentifierQuote() {
       return "'";
     }
-    
+
+    @Override
+    protected Path getCompletionFilePath(String lockKey) {
+      return null;
+    }
   }
   
   private static class TestSampleDataLoaderScriptThrowsException extends TestSampleDataLoaderScriptDoesNotExist {
