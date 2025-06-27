@@ -46,6 +46,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
+import javax.xml.stream.XMLStreamException;
 import uk.co.spudsoft.query.defn.DataType;
 import static uk.co.spudsoft.query.defn.DataType.Boolean;
 import static uk.co.spudsoft.query.defn.DataType.Date;
@@ -228,7 +229,7 @@ public final class FormatXmlInstance implements FormatInstance {
           return null;
 
         case String:
-          if (value instanceof String stringValue) {
+          if (value instanceof String stringValue) {            
             return stringValue;
           } else {
             return value.toString();
@@ -371,9 +372,18 @@ public final class FormatXmlInstance implements FormatInstance {
           if (defn.isIndent()) {
             writer.writeCharacters("\n    ");
           }
-          writer.writeStartElement(getName(columnDefn.name(), "field" + fieldNumber));
-          writer.writeCharacters(formatValue(valueFormatters, columnDefn.name(), columnDefn.type(), v));
-          writer.writeEndElement();
+          if (columnDefn.type() == DataType.String && ! defn.getCharacterReferences().isEmpty()) {
+            // If there are character references to replace we need to handle strings differently
+            // We only do character reference replacements in strings.
+            String stringValue = formatValue(valueFormatters, columnDefn.name(), columnDefn.type(), v);
+            writer.writeStartElement(getName(columnDefn.name(), "field" + fieldNumber));
+            writeCharactersWithReplacementCharacterRefs(stringValue);
+            writer.writeEndElement();
+          } else {
+            writer.writeStartElement(getName(columnDefn.name(), "field" + fieldNumber));
+            writer.writeCharacters(formatValue(valueFormatters, columnDefn.name(), columnDefn.type(), v));
+            writer.writeEndElement();
+          }
         }
       }
     }
@@ -388,5 +398,38 @@ public final class FormatXmlInstance implements FormatInstance {
     this.types = input.getTypes();
     return input.getStream().pipeTo(formattingStream);
   }
+    
+  private void writeCharactersWithReplacementCharacterRefs(String text) throws XMLStreamException {
+    StringBuilder normalChars = new StringBuilder();
 
+    for (int i = 0; i < text.length();) {
+      boolean found = false;
+
+      for (Map.Entry<String, String> entry : defn.getCharacterReferenceMap().entrySet()) {
+        String pattern = entry.getKey();
+        if (text.startsWith(pattern, i)) {
+          // Write accumulated normal characters first
+          if (normalChars.length() > 0) {
+            writer.writeCharacters(normalChars.toString());
+            normalChars.setLength(0);
+          }
+          // Write entity reference
+          writer.writeEntityRef(entry.getValue());
+          i += pattern.length();
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        normalChars.append(text.charAt(i));
+        i++;
+      }
+    }
+
+    // Write any remaining normal characters
+    if (normalChars.length() > 0) {
+      writer.writeCharacters(normalChars.toString());
+    }
+  }
 }

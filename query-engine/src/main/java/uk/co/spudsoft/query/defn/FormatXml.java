@@ -17,8 +17,11 @@
 
 package uk.co.spudsoft.query.defn;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.net.MediaType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
@@ -28,7 +31,10 @@ import io.vertx.core.streams.WriteStream;
 import uk.co.spudsoft.query.exec.fmts.xml.FormatXmlInstance;
 
 import java.nio.charset.Charset;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
+import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
  * Output the data stream in XML.
@@ -51,6 +57,8 @@ public class FormatXml extends AbstractTextFormat implements Format {
   private final String rowName;
   private final String fieldInitialLetterFix;
   private final String fieldInvalidLetterFix;
+  private final ImmutableList<FormatXmlCharacterReference> characterReferences;
+  private final Map<String, String> characterReferenceMap;
 
   private static final String NAME_START_REGEX_STR = "["
     + ":"
@@ -119,6 +127,13 @@ public class FormatXml extends AbstractTextFormat implements Format {
     this.rowName = builder.rowName;
     this.fieldInitialLetterFix = builder.fieldInitialLetterFix;
     this.fieldInvalidLetterFix = builder.fieldInvalidLetterFix;
+    this.characterReferences = ImmutableCollectionTools.copy(builder.characterReferences);
+    
+    ImmutableMap.Builder<String, String> mapBuilder = ImmutableMap.<String, String>builder();
+    this.characterReferences.forEach(cr -> {
+      mapBuilder.put(cr.getReplace(), cr.getWith());
+    });
+    this.characterReferenceMap = mapBuilder.build();
   }
 
   /**
@@ -149,6 +164,9 @@ public class FormatXml extends AbstractTextFormat implements Format {
     }
     if (rowName != null && !NAME_START_REGEX.matcher(rowName).matches()) {
       throw new IllegalArgumentException("The value '" + rowName + "' provided as rowName is not a valid element name in an XML document");
+    }
+    if (fieldsAsAttributes && !characterReferences.isEmpty()) {
+      throw new IllegalArgumentException("XML output is set to output values as attributes, but replacement character reference have been set");
     }
     if (encoding != null) {
       try {
@@ -288,6 +306,29 @@ public class FormatXml extends AbstractTextFormat implements Format {
   }
 
   /**
+   * Get any character references that should be explicitly set in the output.
+   * <P>
+   * The XML output factory will produce correct XML for the encoding specified and it is not usually necessary to
+   * specify any character references to replace.
+   * <P>
+   * This facility should only be used when there is a specific requirement to encode some characters in a given way.
+   * <P>
+   * This is NOT a generic search and replace facility, the "with" value must be a valid XML character reference (without the & and ;).
+   * <P>
+   * Note that character references cannot be set in attributes, so it is invalid to use character references when fieldsAsAttributes is true.
+   * 
+   * @return any character references that should be explicitly set in the output.
+   */
+  public List<FormatXmlCharacterReference> getCharacterReferences() {
+    return characterReferences;
+  }
+  
+  @JsonIgnore
+  public Map<String, String> getCharacterReferenceMap() {
+    return characterReferenceMap;
+  }
+
+  /**
    * Builder class for creating instances of the FormatXml class.
    *
    * The Builder pattern allows for the incremental construction and customization
@@ -305,6 +346,7 @@ public class FormatXml extends AbstractTextFormat implements Format {
     private String rowName;
     private String fieldInitialLetterFix = "F";
     private String fieldInvalidLetterFix = "_";
+    private List<FormatXmlCharacterReference> characterReferences;
 
     /**
      * Default constructor.
@@ -401,6 +443,17 @@ public class FormatXml extends AbstractTextFormat implements Format {
       this.fieldInvalidLetterFix = fieldInvalidLetterFix;
       return this;
     }
+    
+    /**
+     * Set explicit character references that should be written in the output.
+     * @param characterReferences explicit character references that should be written in the output.
+     * @return this Builder instance.
+     */
+    public Builder characterReferences(List<FormatXmlCharacterReference> characterReferences) {
+      this.characterReferences = characterReferences;
+      return this;
+    }
+
     
     /**
      * Build an instance of {@link FormatXml}.

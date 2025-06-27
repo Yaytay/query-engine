@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.fmts.xml;
 
+import com.google.common.collect.ImmutableList;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.FileSystem;
@@ -56,6 +57,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import uk.co.spudsoft.query.defn.FormatXmlCharacterReference;
 import uk.co.spudsoft.query.exec.fmts.ValueFormatters;
 
 /**
@@ -124,7 +126,81 @@ public class FormatXmlInstanceTest {
                   String outstring = FileUtils.readFileToString(new File(outfile), StandardCharsets.UTF_8);
                   assertThat(outstring, startsWith(
                           """
-                          <?xml version='1.0' encoding='utf-8'?><data><row><Date>1971-05-01</Date><DateTime>1971-05-01T00:00</DateTime><Double>0.0</Double><Float>0.0</Float><Integer>0</Integer><Long>0</Long><String>This is row 0</String><Time>00:00</Time><Telephonecontactdetails>01234</Telephonecontactdetails></row><row><Boolean>false</Boolean><DateTime>1971-05-02T01:01</DateTime><Double>1.1</Double><Float>1.1</Float><Integer>1</Integer><Long>10000000</Long><String>This is row 1</String><Time>01:01</Time></row><row><Boolean>true</Boolean><Date>1971-05-03</Date><Double>2.2</Double><Float>2.2</Float><Integer>2</Integer><Long>20000000</Long><String>This is row 2</String><Time>02:02</Time><Telephonecontactdetails>01234</Telephonecontactdetails></row>
+                          <?xml version='1.0' encoding='utf-8'?><data><row><Date>1971-05-01</Date><DateTime>1971-05-01T00:00</DateTime><Double>0.0</Double><Float>0.0</Float><Integer>0</Integer><Long>0</Long><String>This is row \u2013 0</String><Time>00:00</Time><Telephonecontactdetails>01234</Telephonecontactdetails></row><row><Boolean>false</Boolean><DateTime>1971-05-02T01:01</DateTime><Double>1.1</Double><Float>1.1</Float><Integer>1</Integer><Long>10000000</Long><String>This is row \u2013 1</String><Time>01:01</Time></row><row><Boolean>true</Boolean><Date>1971-05-03</Date><Double>2.2</Double><Float>2.2</Float><Integer>2</Integer><Long>20000000</Long><String>This is row \u2013 2</String><Time>02:02</Time><Telephonecontactdetails>01234</Telephonecontactdetails></row>
+                          """.trim()
+                  ));
+                });
+                testContext.completeNow();
+              }
+            });
+  }
+
+  @Test
+  public void testCharacterReferenceReplacements(Vertx vertx, VertxTestContext testContext, TestInfo testInfo) throws IOException {
+
+    String outfile = "target/temp/" + testInfo.getTestClass().get().getSimpleName() + "_" + testInfo.getTestMethod().get().getName() + ".xml";    
+
+    FormatXml defn = FormatXml.builder()
+            .fieldInitialLetterFix(null)
+            .fieldInvalidLetterFix(null)
+            .indent(true)
+            .characterReferences(
+                    ImmutableList.of(
+                            FormatXmlCharacterReference.builder().replace("\u2013").with("#x2013").build()
+                    )
+            )
+            .build();
+
+    FileSystem fs = vertx.fileSystem();
+    if (!fs.existsBlocking("target/temp")) {
+      fs.mkdirBlocking("target/temp");
+    }
+    deleteWithoutError(fs, outfile);
+    WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setCreate(true).setSync(true));
+
+    FormatXmlInstance instance = defn.createInstance(vertx, null, writeStream);
+
+    Types types = new Types(buildTypes());
+    List<DataRow> rowsList = new ArrayList<>();
+    for (int i = 0; i < 10; ++i) {
+      rowsList.add(createDataRow(types, i));
+    }
+
+    instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
+            .compose(v -> {
+              return instance.getFinalFuture();
+            })
+            .onComplete(ar -> {
+              if (ar.failed()) {
+                testContext.failNow(ar.cause());
+              } else {
+                testContext.verify(() -> {
+                  String outstring = FileUtils.readFileToString(new File(outfile), StandardCharsets.UTF_8);
+                  assertThat(outstring, startsWith(
+                          """
+                          <?xml version='1.0' encoding='utf-8'?>
+                          <data>
+                            <row>
+                              <Date>1971-05-01</Date>
+                              <DateTime>1971-05-01T00:00</DateTime>
+                              <Double>0.0</Double>
+                              <Float>0.0</Float>
+                              <Integer>0</Integer>
+                              <Long>0</Long>
+                              <String>This is row &#x2013; 0</String>
+                              <Time>00:00</Time>
+                              <Telephonecontactdetails>01234</Telephonecontactdetails>
+                            </row>
+                            <row>
+                              <Boolean>false</Boolean>
+                              <DateTime>1971-05-02T01:01</DateTime>
+                              <Double>1.1</Double>
+                              <Float>1.1</Float>
+                              <Integer>1</Integer>
+                              <Long>10000000</Long>
+                              <String>This is row &#x2013; 1</String>
+                              <Time>01:01</Time>
+                            </row>
                           """.trim()
                   ));
                 });
@@ -178,7 +254,7 @@ public class FormatXmlInstanceTest {
                   <Float>0.0</Float>
                   <Integer>0</Integer>
                   <Long>0</Long>
-                  <String>This is row 0</String>
+                  <String>This is row \u2013 0</String>
                   <Time>00:00</Time>
                   <Telephone_contact_details>01234</Telephone_contact_details>
                 </row>
@@ -189,7 +265,7 @@ public class FormatXmlInstanceTest {
                   <Float>1.1</Float>
                   <Integer>1</Integer>
                   <Long>10000000</Long>
-                  <String>This is row 1</String>
+                  <String>This is row \u2013 1</String>
                   <Time>01:01</Time>
                 </row>
               """.trim()
@@ -239,16 +315,16 @@ public class FormatXmlInstanceTest {
                           """
                           <?xml version='1.0' encoding='utf-8'?>
                           <data>
-                            <row Date="1971-05-01" DateTime="1971-05-01T00:00" Double="0.0" Float="0.0" Integer="0" Long="0" String="This is row 0" Time="00:00" Telephone_contact_details="01234"/>
-                            <row Boolean="false" DateTime="1971-05-02T01:01" Double="1.1" Float="1.1" Integer="1" Long="10000000" String="This is row 1" Time="01:01"/>
-                            <row Boolean="true" Date="1971-05-03" Double="2.2" Float="2.2" Integer="2" Long="20000000" String="This is row 2" Time="02:02" Telephone_contact_details="01234"/>
-                            <row Boolean="false" Date="1971-05-04" DateTime="1971-05-04T03:03" Float="3.3" Integer="3" Long="30000000" String="This is row 3" Time="03:03" Telephone_contact_details="None"/>
-                            <row Boolean="true" Date="1971-05-05" DateTime="1971-05-05T04:04" Double="4.4" Integer="4" Long="40000000" String="This is row 4" Time="04:04" Telephone_contact_details="01234"/>
-                            <row Boolean="false" Date="1971-05-06" DateTime="1971-05-06T05:05" Double="5.5" Float="5.5" Long="50000000" String="This is row 5" Time="05:05"/>
-                            <row Boolean="true" Date="1971-05-07" DateTime="1971-05-07T06:06" Double="6.6" Float="6.6" Integer="6" String="This is row 6" Time="06:06" Telephone_contact_details="01234"/>
+                            <row Date="1971-05-01" DateTime="1971-05-01T00:00" Double="0.0" Float="0.0" Integer="0" Long="0" String="This is row \u2013 0" Time="00:00" Telephone_contact_details="01234"/>
+                            <row Boolean="false" DateTime="1971-05-02T01:01" Double="1.1" Float="1.1" Integer="1" Long="10000000" String="This is row \u2013 1" Time="01:01"/>
+                            <row Boolean="true" Date="1971-05-03" Double="2.2" Float="2.2" Integer="2" Long="20000000" String="This is row \u2013 2" Time="02:02" Telephone_contact_details="01234"/>
+                            <row Boolean="false" Date="1971-05-04" DateTime="1971-05-04T03:03" Float="3.3" Integer="3" Long="30000000" String="This is row \u2013 3" Time="03:03" Telephone_contact_details="None"/>
+                            <row Boolean="true" Date="1971-05-05" DateTime="1971-05-05T04:04" Double="4.4" Integer="4" Long="40000000" String="This is row \u2013 4" Time="04:04" Telephone_contact_details="01234"/>
+                            <row Boolean="false" Date="1971-05-06" DateTime="1971-05-06T05:05" Double="5.5" Float="5.5" Long="50000000" String="This is row \u2013 5" Time="05:05"/>
+                            <row Boolean="true" Date="1971-05-07" DateTime="1971-05-07T06:06" Double="6.6" Float="6.6" Integer="6" String="This is row \u2013 6" Time="06:06" Telephone_contact_details="01234"/>
                             <row Boolean="false" Date="1971-05-08" DateTime="1971-05-08T07:07" Double="7.7" Float="7.7" Integer="7" Long="70000000" Time="07:07"/>
-                            <row Boolean="true" Date="1971-05-09" DateTime="1971-05-09T08:08" Double="8.8" Float="8.8" Integer="8" Long="80000000" String="This is row 8" Telephone_contact_details="01234"/>
-                            <row Date="1971-05-10" DateTime="1971-05-10T09:09" Double="9.9" Float="9.9" Integer="9" Long="90000000" String="This is row 9" Time="09:09" Telephone_contact_details="None"/>
+                            <row Boolean="true" Date="1971-05-09" DateTime="1971-05-09T08:08" Double="8.8" Float="8.8" Integer="8" Long="80000000" String="This is row \u2013 8" Telephone_contact_details="01234"/>
+                            <row Date="1971-05-10" DateTime="1971-05-10T09:09" Double="9.9" Float="9.9" Integer="9" Long="90000000" String="This is row \u2013 9" Time="09:09" Telephone_contact_details="None"/>
                           </data>
                           """.trim()
                   ));
@@ -267,7 +343,7 @@ public class FormatXmlInstanceTest {
     row.put("Float", rowNum % 9 == 4 ? null : rowNum + (float) rowNum / 10);
     row.put("Integer", rowNum % 9 == 5 ? null : rowNum);
     row.put("Long", rowNum % 9 == 6 ? null : rowNum * 10000000L);
-    row.put("String", rowNum % 9 == 7 ? null : "This is row " + rowNum);
+    row.put("String", rowNum % 9 == 7 ? null : "This is row \u2013 " + rowNum);
     row.put("Time", rowNum % 9 == 8 ? null : LocalTime.of(rowNum, rowNum));
     if (rowNum % 2 == 0) {
       row.put("telephone contact details", "Telephone contact details", DataType.String, "01234");
