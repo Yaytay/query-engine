@@ -38,6 +38,9 @@ public class DesignNodesTree extends AbstractTree {
   private DesignNodesTree() {
   }
 
+  /**
+   * Base class for pipeline design files and the directories that contain them.
+   */
   @JsonSubTypes({
     @JsonSubTypes.Type(value = DesignNodesTree.DesignDir.class),
     @JsonSubTypes.Type(value = DesignNodesTree.DesignFile.class)
@@ -192,6 +195,12 @@ public class DesignNodesTree extends AbstractTree {
       super(path, modified, name, List.copyOf(children));
     }
 
+    /**
+     * Constructor for DesignNode directory.
+     * @param root The root path for physical location of all nodes in the tree.
+     * @param src The DirCacheTree version of the directory.
+     * @param name The name of the directory.
+     */
     public DesignDir(java.nio.file.Path root, DirCacheTree.Directory src, String name) {
       super(relativize(File.separator, root, src), src.getModified(), name, buildChildren(root, src));
     }

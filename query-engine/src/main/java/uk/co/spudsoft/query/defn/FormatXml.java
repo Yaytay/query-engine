@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.net.MediaType;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
@@ -320,6 +321,23 @@ public class FormatXml extends AbstractTextFormat implements Format {
    * 
    * @return any character references that should be explicitly set in the output.
    */
+  @ArraySchema(
+          arraySchema = @Schema(
+                  description = """
+                                Get any character references that should be explicitly set in the output.
+                                <P>
+                                The XML output factory will produce correct XML for the encoding specified and it is not usually necessary to
+                                specify any character references to replace.
+                                <P>
+                                This facility should only be used when there is a specific requirement to encode some characters in a given way.
+                                <P>
+                                This is NOT a generic search and replace facility, the "with" value must be a valid XML character reference (without the &amp; and ;).
+                                <P>
+                                Note that character references cannot be set in attributes, so it is invalid to use character references when fieldsAsAttributes is true.
+                                """
+          )
+          , minItems = 0
+  )  
   public List<FormatXmlCharacterReference> getCharacterReferences() {
     return characterReferences;
   }
