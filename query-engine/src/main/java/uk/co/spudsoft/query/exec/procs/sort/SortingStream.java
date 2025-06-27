@@ -93,9 +93,9 @@ public class SortingStream<T> implements ReadStream<T> {
 
   final class SourceStream {
     // private Object source;
-    private int index;
+    private final int index;
     private int count;
-    private ReadStream<T> input;
+    private final ReadStream<T> input;
     private volatile boolean ended = false;
     private T head;
 
