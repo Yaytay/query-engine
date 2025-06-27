@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.net.MediaType;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
@@ -453,6 +454,7 @@ public class FormatXml extends AbstractTextFormat implements Format {
      * @param characterReferences explicit character references that should be written in the output.
      * @return this Builder instance.
      */
+    @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "Builder class should result in all instances being immutable when object is built")
     public Builder characterReferences(List<FormatXmlCharacterReference> characterReferences) {
       this.characterReferences = characterReferences;
       return this;
