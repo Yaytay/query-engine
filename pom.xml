@@ -32,6 +32,7 @@
 
   <properties>
     <fork.count>1</fork.count>
+    <parallel.count>1</parallel.count>
     <!-- For production usage JDK must be compatible with GraalVM and must be receiving security updates, effectively meaning the most recent LTS -->
     <jdk.version>21</jdk.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -266,6 +267,7 @@
           <version>3.5.3</version>
           <configuration>
             <forkCount>${fork.count}</forkCount>
+            <parallel>${parallel.count}</parallel>
             <reuseForks>true</reuseForks>
             <argLine>
               @{argLine}
@@ -304,6 +306,7 @@
           </executions>
           <configuration>
             <forkCount>${fork.count}</forkCount>
+            <parallel>${parallel.count}</parallel>
             <useModulePath>false</useModulePath>
             <reuseForks>false</reuseForks>
             <argLine>@{argLine} -Dfile.encoding=UTF-8 -XX:+UnlockExperimentalVMOptions -XX:+UseJVMCICompiler --module-path=${compiler.dir} --upgrade-module-path=${compiler.dir}</argLine>

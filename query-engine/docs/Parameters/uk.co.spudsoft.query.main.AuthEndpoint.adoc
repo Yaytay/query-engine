@@ -50,7 +50,7 @@ The issuer provided must still be valid according to the xref:uk.co.spudsoft.que
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | The OAuth token endpoint.
 | [[credentials]]credentials
-| uk.co.spudsoft.query.main.ClientCredentials
+| xref:uk.co.spudsoft.query.main.ClientCredentials.adoc[ClientCredentials]
 | The client credentials to use when communicating with the OAuth endpoint.
 | [[scope]]scope
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]

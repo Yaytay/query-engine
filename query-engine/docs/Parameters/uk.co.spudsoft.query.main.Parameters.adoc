@@ -208,7 +208,7 @@ Note that the fileHash must also match, but isn't built into the key (should usu
 
 Note that the default value for the outputCacheDir is probably a bad choice for anything other than the simplest setups.
 | [[basicAuth]]basicAuth
-| uk.co.spudsoft.query.main.BasicAuthConfig
+| xref:uk.co.spudsoft.query.main.BasicAuthConfig.adoc[BasicAuthConfig]
 | Set the configuration of the handling of requests using basic authentication for data requests.
 
 Note that when the IdP to use for validating the credentials is determined by the OpenID Discovery the

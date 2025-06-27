@@ -1,0 +1,24 @@
+= BasicAuthGrantType
+
+Represents the types of OAuth 2.0 grant types that utilize basic authentication credentials.
+
+[cols="1,1a,4a",stripes=even]
+|===
+| Name
+| Type
+| Details
+
+
+| [[name]]name
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
+| 
+
+| [[ordinal]]ordinal
+| int
+| 
+
+| [[hash]]hash
+| int
+| 
+
+|===

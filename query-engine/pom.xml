@@ -574,9 +574,17 @@
                 <additionalOption>--include-classes</additionalOption>
                 <additionalOption>uk.co.spudsoft.query.main.AuthEndpoint</additionalOption>
                 <additionalOption>--include-classes</additionalOption>
+                <additionalOption>uk.co.spudsoft.query.main.Endpoint</additionalOption>
+                <additionalOption>--include-classes</additionalOption>
+                <additionalOption>uk.co.spudsoft.query.main.BasicAuthConfig</additionalOption>
+                <additionalOption>--include-classes</additionalOption>
+                <additionalOption>uk.co.spudsoft.query.main.BasicAuthGrantType</additionalOption>
+                <additionalOption>--include-classes</additionalOption>
                 <additionalOption>uk.co.spudsoft.query.main.CookieConfig</additionalOption>
                 <additionalOption>--include-classes</additionalOption>
                 <additionalOption>uk.co.spudsoft.query.main.Credentials</additionalOption>
+                <additionalOption>--include-classes</additionalOption>
+                <additionalOption>uk.co.spudsoft.query.main.ClientCredentials</additionalOption>
                 <additionalOption>--include-classes</additionalOption>
                 <additionalOption>uk.co.spudsoft.query.main.ProtectedCredentials</additionalOption>
                 <additionalOption>--include-classes</additionalOption>

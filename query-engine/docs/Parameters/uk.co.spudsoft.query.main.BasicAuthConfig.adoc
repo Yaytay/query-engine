@@ -1,0 +1,46 @@
+= BasicAuthConfig
+
+Configuration for handling basic authentication with support for customizable IdPs
+ and grant types.
+
+Allows for the specification of a default IdP, domain-to-IdP mappings, and defines
+ the grant type to be used while processing basic auth requests.
+ 
+
+If neither type of IdP is specified OpenID Discovery will be used to attempt to find
+ and authorization endpoint on the host used to make the original request (adding the path from
+ jwt.issuerHostPath).
+
+[cols="1,1a,4a",stripes=even]
+|===
+| Name
+| Type
+| Details
+
+
+| [[grantType]]grantType
+| xref:uk.co.spudsoft.query.main.BasicAuthGrantType.adoc[BasicAuthGrantType]
+| Get the type of grant to use when processing a basic auth request.
+| [[discoveryEndpointCredentials]]discoveryEndpointCredentials
+| xref:uk.co.spudsoft.query.main.Credentials.adoc[Credentials]
+| Sets the credentials used for connecting to the authorization endpoint when OpenID Discovery is used.This only needs to be set when OpenID Discovery is used with .
+| [[defaultIdp]]defaultIdp
+| xref:uk.co.spudsoft.query.main.Endpoint.adoc[Endpoint]
+| Set the IdP to use when no "domain" is specified in the username.
+
+Note that this IdP will also be used for all requests if the IdMap is empty.
+ 
+
+This should be the full URL to which the grant request will be POSTed.
+| [[authorizationPath]]authorizationPath
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
+| Set the path to append to the current host (and scheme) to perform an authorization request.
+
+This is only useful in a "path hijack" configuration, where some base path on the domain is routed to
+ the query engine, but other paths are routed to an authorization subsystem.
+| [[idpMap]]idpMap
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Map.html[Map]<link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String], xref:uk.co.spudsoft.query.main.Endpoint.adoc[Endpoint]>
+| Set a map of "domains" to IdP URLs that will be consulted if the username in the request is of the form "user@domain".
+
+The domain specified in the username is used as the key to this map, but serves no other purpose and does not have to be recognised by the IdP itself (the domain will be removed from the username when the request to the IdP is made).
+|===

@@ -28,6 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.main.AuthEndpoint;
 import uk.co.spudsoft.query.main.CookieConfig;
 
@@ -36,6 +38,8 @@ import uk.co.spudsoft.query.main.CookieConfig;
  * @author jtalbut
  */
 public class LoginRouterTest {
+  
+  private static final Logger logger = LoggerFactory.getLogger(LoginRouterTest.class);
   
   @Test
   public void testRedirectUri() {
@@ -76,6 +80,11 @@ public class LoginRouterTest {
 
   @Test
   public void testCreateCodeChallenge() {
+    for (int i = 1; i < 200; ++i) {
+      String codeVerifier = LoginRouter.randomString(i);
+      String challenge = LoginRouter.createCodeChallenge(codeVerifier);
+      logger.debug("{}: {} => {}", i, codeVerifier.length(), challenge.length());
+    }
   }
 
   @Test
