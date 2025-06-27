@@ -372,7 +372,7 @@ public final class FormatXmlInstance implements FormatInstance {
           if (defn.isIndent()) {
             writer.writeCharacters("\n    ");
           }
-          if (columnDefn.type() == DataType.String && ! defn.getCharacterReferences().isEmpty()) {
+          if (columnDefn.type() == DataType.String && !defn.getCharacterReferences().isEmpty()) {
             // If there are character references to replace we need to handle strings differently
             // We only do character reference replacements in strings.
             String stringValue = formatValue(valueFormatters, columnDefn.name(), columnDefn.type(), v);
