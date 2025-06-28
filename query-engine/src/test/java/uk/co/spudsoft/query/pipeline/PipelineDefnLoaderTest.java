@@ -49,6 +49,7 @@ public class PipelineDefnLoaderTest {
   public void testGetAccessible(Vertx vertx, VertxTestContext testContext) throws Exception {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     CacheConfig cacheConfig = new CacheConfig();
+    cacheConfig.setPurgePeriod(Duration.ofMillis(100));
     cacheConfig.setMaxItems(10);
     PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(1), Pattern.compile("\\..*"), null));
     Thread.sleep(2000);

@@ -47,7 +47,7 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
  * @author jtalbut
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class MainQueryIT {
+public class MainQueryForkIT {
   
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
   private static final ServerProviderMySQL mysql = new ServerProviderMySQL().init();
@@ -55,7 +55,7 @@ public class MainQueryIT {
   private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
   
   @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(MainQueryIT.class);
+  private static final Logger logger = LoggerFactory.getLogger(MainQueryForkIT.class);
   
   @BeforeAll
   public void createDirs() {

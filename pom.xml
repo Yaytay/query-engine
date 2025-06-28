@@ -31,8 +31,6 @@
   </developers>
 
   <properties>
-    <fork.count>1</fork.count>
-    <parallel.count>1</parallel.count>
     <!-- For production usage JDK must be compatible with GraalVM and must be receiving security updates, effectively meaning the most recent LTS -->
     <jdk.version>21</jdk.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -266,8 +264,9 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>3.5.3</version>
           <configuration>
-            <forkCount>${fork.count}</forkCount>
-            <parallel>${parallel.count}</parallel>
+            <forkCount>1</forkCount>
+            <parallel>none</parallel>
+            <workingDirectory>${project.basedir}</workingDirectory>
             <reuseForks>true</reuseForks>
             <argLine>
               @{argLine}
@@ -292,9 +291,61 @@
           <version>3.5.3</version>
           <executions>
             <execution>
+              <id>one-fork-integration-tests</id>
               <goals>
                 <goal>integration-test</goal>
               </goals>
+              <configuration>
+                <forkCount>1</forkCount>
+                <parallel>none</parallel>
+                <useModulePath>false</useModulePath>
+                <reuseForks>true</reuseForks>
+                <workingDirectory>${project.basedir}</workingDirectory>
+                <argLine>@{argLine} -Dfile.encoding=UTF-8 -XX:+UnlockExperimentalVMOptions -XX:+UseJVMCICompiler --module-path=${compiler.dir} --upgrade-module-path=${compiler.dir}</argLine>
+                <argLine>
+                  @{argLine}
+                  -Dfile.encoding=UTF-8
+                  -XX:+UnlockExperimentalVMOptions
+                  -XX:+EnableJVMCI
+                  --module-path=${compiler.dir}
+                  --upgrade-module-path=${project.build.directory}/compiler
+                  --add-exports org.graalvm.nativeimage/org.graalvm.nativeimage.impl=ALL-UNNAMED
+                  --add-exports org.graalvm.polyglot/org.graalvm.polyglot.impl=ALL-UNNAMED
+                  --add-exports org.graalvm.truffle.compiler/com.oracle.truffle.compiler=ALL-UNNAMED
+                </argLine>
+                <excludes>
+                  <exclude>**/sandbox/**</exclude>
+                  <exclude>**/*ForkIT*</exclude>
+                </excludes>
+              </configuration>
+            </execution>
+            <execution>
+              <id>many-forks-integration-tests</id>
+              <goals>
+                <goal>integration-test</goal>
+              </goals>
+              <configuration>
+                <forkCount>1</forkCount>
+                <parallel>none</parallel>
+                <useModulePath>false</useModulePath>
+                <reuseForks>false</reuseForks>
+                <workingDirectory>${project.basedir}</workingDirectory>
+                <argLine>@{argLine} -Dfile.encoding=UTF-8 -XX:+UnlockExperimentalVMOptions -XX:+UseJVMCICompiler --module-path=${compiler.dir} --upgrade-module-path=${compiler.dir}</argLine>
+                <argLine>
+                  @{argLine}
+                  -Dfile.encoding=UTF-8
+                  -XX:+UnlockExperimentalVMOptions
+                  -XX:+EnableJVMCI
+                  --module-path=${compiler.dir}
+                  --upgrade-module-path=${project.build.directory}/compiler
+                  --add-exports org.graalvm.nativeimage/org.graalvm.nativeimage.impl=ALL-UNNAMED
+                  --add-exports org.graalvm.polyglot/org.graalvm.polyglot.impl=ALL-UNNAMED
+                  --add-exports org.graalvm.truffle.compiler/com.oracle.truffle.compiler=ALL-UNNAMED
+                </argLine>
+                <includes>
+                  <include>**/*ForkIT*</include>
+                </includes>
+              </configuration>
             </execution>
             <execution>
               <id>verify</id>
@@ -304,27 +355,6 @@
               </goals>
             </execution>
           </executions>
-          <configuration>
-            <forkCount>${fork.count}</forkCount>
-            <parallel>${parallel.count}</parallel>
-            <useModulePath>false</useModulePath>
-            <reuseForks>false</reuseForks>
-            <argLine>@{argLine} -Dfile.encoding=UTF-8 -XX:+UnlockExperimentalVMOptions -XX:+UseJVMCICompiler --module-path=${compiler.dir} --upgrade-module-path=${compiler.dir}</argLine>
-            <argLine>
-              @{argLine}
-              -Dfile.encoding=UTF-8
-              -XX:+UnlockExperimentalVMOptions
-              -XX:+EnableJVMCI
-              --module-path=${compiler.dir}
-              --upgrade-module-path=${project.build.directory}/compiler
-              --add-exports org.graalvm.nativeimage/org.graalvm.nativeimage.impl=ALL-UNNAMED
-              --add-exports org.graalvm.polyglot/org.graalvm.polyglot.impl=ALL-UNNAMED
-              --add-exports org.graalvm.truffle.compiler/com.oracle.truffle.compiler=ALL-UNNAMED
-            </argLine>
-            <excludes>
-              <exclude>**/sandbox/**</exclude>
-            </excludes>
-          </configuration>
         </plugin>
 
         <plugin>

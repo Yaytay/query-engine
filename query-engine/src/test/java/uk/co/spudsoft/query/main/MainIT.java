@@ -17,7 +17,6 @@
 package uk.co.spudsoft.query.main;
 
 import com.google.common.collect.ImmutableMap;
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import io.vertx.junit5.VertxExtension;
 import java.io.File;
@@ -74,7 +73,6 @@ public class MainIT {
   @Test
   public void testHelp() throws Exception {
     logger.debug("Running testHelp");
-    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
@@ -94,7 +92,6 @@ public class MainIT {
   @Test
   public void testHelpEnv() throws Exception {
     logger.debug("Running testHelpEnv");
-    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
@@ -109,7 +106,6 @@ public class MainIT {
   @Test
   public void testBadAudit() throws Exception {
     logger.debug("Running testBadAudit");
-    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
@@ -150,7 +146,6 @@ public class MainIT {
   @Test
   public void testMainDaemon() throws Exception {
     logger.debug("Running testMainDaemon");
-    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
@@ -351,7 +346,6 @@ public class MainIT {
   @Test
   public void testAuthRequired() throws Exception {
     logger.debug("Running testAuthRequired");
-    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);

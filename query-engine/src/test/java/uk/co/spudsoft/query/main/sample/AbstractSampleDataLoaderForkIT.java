@@ -33,7 +33,7 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
  * @author njt
  */
 @ExtendWith(VertxExtension.class)
-public class AbstractSampleDataLoaderIT {
+public class AbstractSampleDataLoaderForkIT {
   
   private ServerProviderPostgreSQL provider = new ServerProviderPostgreSQL().init();
 

@@ -61,14 +61,6 @@ public class ConditionInstance {
   }
 
   /**
-   * Get the parsed test of the expression.
-   * @return the parsed test of the expression.
-   */
-  public String getParsedText() {
-    return evaluator.getParsedText();
-  }
-  
-  /**
    * Evaluate the expression for the given RequestContext and DataRow, which may be null.
    * @param request The context of the request.
    * @param row The current DataRow, if this expression is to be evaluated in the context of a row.
@@ -80,9 +72,9 @@ public class ConditionInstance {
     if (!result && logger.isDebugEnabled()) {
       String sourceText = evaluator.getSourceText();
       if (sourceText != null) {
-        sourceText = sourceText.replaceAll("\\p{Cntrl}", "");
+        sourceText = sourceText.replaceAll("\\p{Cntrl}", "#");
       }
-      logger.debug("Condition {} returned false", sourceText);
+      logger.debug("Condition {} ({}) returned false", sourceText);
     }
     return result;
   }

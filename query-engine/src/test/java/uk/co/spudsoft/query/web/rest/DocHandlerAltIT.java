@@ -60,7 +60,6 @@ public class DocHandlerAltIT {
   
   @Test
   public void testDocs() throws Exception {
-    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);

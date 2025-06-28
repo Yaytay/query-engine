@@ -62,7 +62,6 @@ public class UiRouterIT {
     
   @Test
   public void testMainDaemon() throws Exception {
-    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);

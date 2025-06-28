@@ -16,7 +16,6 @@
  */
 package uk.co.spudsoft.query.main;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
 import io.vertx.junit5.VertxExtension;
@@ -72,7 +71,6 @@ public class FeatureRichQueryIT {
   
   @Test
   public void testQuery() throws Exception {
-    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     String baseConfigDir = "target/query-engine/samples-featurerichqueryit";
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();

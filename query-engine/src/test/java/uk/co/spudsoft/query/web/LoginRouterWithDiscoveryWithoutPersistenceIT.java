@@ -167,7 +167,6 @@ public class LoginRouterWithDiscoveryWithoutPersistenceIT {
     logger.info("Creating auth server at http://localhost:{}/", port);
     server.start();
     
-    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);

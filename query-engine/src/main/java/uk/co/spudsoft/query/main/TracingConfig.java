@@ -38,6 +38,7 @@ public class TracingConfig {
   
   /**
    * The protocol to use to send distributed tracing data.
+   * This is only relevant if the url is set.
    */
   private TracingProtocol protocol = TracingProtocol.none;
   
@@ -69,6 +70,7 @@ public class TracingConfig {
   
   /**
    * The URL to send distributed tracing data to.
+   * If this is not set that protocol will always be considered to be "none".
    */
   private String url;
 

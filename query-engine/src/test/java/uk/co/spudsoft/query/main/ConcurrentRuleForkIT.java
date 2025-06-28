@@ -16,9 +16,7 @@
  */
 package uk.co.spudsoft.query.main;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
-import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import java.io.File;
 import org.junit.jupiter.api.BeforeAll;
@@ -49,12 +47,12 @@ import uk.co.spudsoft.query.web.LoginRouterWithDiscoveryIT;
  */
 @ExtendWith(VertxExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class ConcurrentRuleIT {
+public class ConcurrentRuleForkIT {
   
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
   
   @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(ConcurrentRuleIT.class);
+  private static final Logger logger = LoggerFactory.getLogger(ConcurrentRuleForkIT.class);
   
   private final int mgmtPort = LoginRouterWithDiscoveryIT.findUnusedPort();
   
@@ -69,7 +67,6 @@ public class ConcurrentRuleIT {
       
   @Test
   public void testMainDaemon() throws Exception {
-    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);

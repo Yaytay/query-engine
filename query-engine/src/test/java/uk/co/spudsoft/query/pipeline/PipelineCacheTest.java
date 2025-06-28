@@ -16,8 +16,6 @@
  */
 package uk.co.spudsoft.query.pipeline;
 
-import uk.co.spudsoft.query.web.ServiceException;
-import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 import org.junit.jupiter.api.Test;
 import uk.co.spudsoft.query.web.ServiceException;
 
@@ -69,10 +67,6 @@ public class PipelineCacheTest {
     assertFourBadPaths("|");
     assertFourBadPaths("?");
     assertFourBadPaths("*");
-  }
-
-  @Test
-  public void testGetPipeline() {
   }
   
 }

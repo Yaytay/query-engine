@@ -64,7 +64,6 @@ public class LoginRouterWithoutDiscoveryIT {
   @Test
   public void testLoginWithoutDiscoveryIT() throws Exception {
     logger.debug("Running testLoginWithoutDiscoveryIT");
-    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);

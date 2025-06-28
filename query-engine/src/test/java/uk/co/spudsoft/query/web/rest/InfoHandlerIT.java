@@ -18,9 +18,7 @@ package uk.co.spudsoft.query.web.rest;
 
 import uk.co.spudsoft.query.main.*;
 import com.google.common.collect.ImmutableMap;
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
-import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import java.io.File;
 import org.junit.jupiter.api.BeforeAll;
@@ -37,7 +35,6 @@ import java.lang.invoke.MethodHandles;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.TestInstance;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
@@ -71,7 +68,6 @@ public class InfoHandlerIT {
   @Test
   public void testMainDaemon() throws Exception {
     logger.debug("Running testMainDaemon");
-    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);

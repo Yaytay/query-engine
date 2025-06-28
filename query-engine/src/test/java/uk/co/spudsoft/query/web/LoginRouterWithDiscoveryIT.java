@@ -187,7 +187,6 @@ public class LoginRouterWithDiscoveryIT {
     });
     server.start();
 
-    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);

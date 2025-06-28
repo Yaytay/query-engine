@@ -144,14 +144,6 @@ public class JexlEvaluator {
   }
 
   /**
-   * Get the parsed test of the expression.
-   * @return the parsed test of the expression.
-   */
-  public String getParsedText() {
-    return expression.getParsedText();
-  }
-  
-  /**
    * Evaluate the expression for the given RequestContext and DataRow, which may be null.
    * @param request The context of the request.
    * @param row The current DataRow, if this expression is to be evaluated in the context of a row.
@@ -196,7 +188,7 @@ public class JexlEvaluator {
     }
     context.set("iteration", iteration.getAndIncrement());
     
-    return expression.evaluate(context);    
+    return expression.evaluate(context);
   }
   
 }

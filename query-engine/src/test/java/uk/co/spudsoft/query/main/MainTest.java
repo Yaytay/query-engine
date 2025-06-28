@@ -16,7 +16,10 @@
  */
 package uk.co.spudsoft.query.main;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
+import io.opentelemetry.exporter.zipkin.ZipkinSpanExporter;
+import io.opentelemetry.sdk.trace.export.SpanExporter;
+import io.opentelemetry.sdk.trace.samplers.Sampler;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -26,8 +29,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.util.Comparator;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -35,6 +42,10 @@ import org.junit.jupiter.api.TestInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
+import static uk.co.spudsoft.query.main.TracingSampler.alwaysOff;
+import static uk.co.spudsoft.query.main.TracingSampler.alwaysOn;
+import static uk.co.spudsoft.query.main.TracingSampler.parent;
+import static uk.co.spudsoft.query.main.TracingSampler.ratio;
 
 /**
  *
@@ -56,7 +67,6 @@ public class MainTest {
   
   @Test
   public void testMainExitOnRun() throws Exception {
-    GlobalOpenTelemetry.resetForTest();
     logger.info("testMainExitOnRun");
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
@@ -73,7 +83,6 @@ public class MainTest {
   @Test
   public void testMain() throws IOException {
     logger.info("testMain");
-    GlobalOpenTelemetry.resetForTest();
     Main.main(new String[]{
             "--baseConfigPath=" + CONFS_DIR
             , "--jwt.acceptableIssuerRegexes[0]=.*"
@@ -86,7 +95,7 @@ public class MainTest {
   public void testFileType() {
     assertEquals("directory", Main.fileType(new File("target/classes")));
     assertEquals("does not exist", Main.fileType(new File("target/nonexistant")));
-    assertEquals("file", Main.fileType(new File("target/classes/logback.xml")));
+    assertEquals("file", Main.fileType(new File("pom.xml")));
   }
   
   /**
@@ -100,8 +109,6 @@ public class MainTest {
       deleteDir(testDir);
     }
     assertFalse(testDir.exists());
-    
-    Main.prepareBaseConfigPath(new File("target/classes/logback.xml"), null);
     
     Main.prepareBaseConfigPath(testDir, null);
     assertTrue(testDir.exists());
@@ -134,5 +141,94 @@ public class MainTest {
               .count();
     }
   }
+
+  @Test
+  void testSamplerAlwaysOn() {
+    TracingConfig config = new TracingConfig();
+    config.setSampler(TracingSampler.alwaysOn);
+
+    Sampler result = Main.sampler(config);
+
+    assertEquals(Sampler.alwaysOn(), result);
+  }
+
+  @Test
+  void testSamplerAlwaysOff() {
+    TracingConfig config = new TracingConfig();
+    config.setSampler(TracingSampler.alwaysOff);
+
+    Sampler result = Main.sampler(config);
+
+    assertEquals(Sampler.alwaysOff(), result);
+  }
+
+  @Test
+  void testSamplerRatio() {
+    TracingConfig config = new TracingConfig();
+    config.setSampler(TracingSampler.ratio);
+    config.setSampleRatio(0.5);
+
+    Sampler result = Main.sampler(config);
+
+    assertEquals(Sampler.traceIdRatioBased(0.5), result);
+  }
+
+  @Test
+  void testSamplerParent() {
+    TracingConfig config = new TracingConfig();
+    config.setSampler(TracingSampler.parent);
     
+    config.setRootSampler(TracingSampler.alwaysOff);
+    assertEquals(Sampler.parentBased(Sampler.alwaysOff()), Main.sampler(config));
+    
+    config.setRootSampler(TracingSampler.alwaysOn);
+    assertEquals(Sampler.parentBased(Sampler.alwaysOn()), Main.sampler(config));
+    
+    config.setRootSampler(TracingSampler.parent);
+    
+    config.setRootSampler(TracingSampler.ratio);
+    config.setSampleRatio(0.7);
+    assertEquals(Sampler.parentBased(Sampler.traceIdRatioBased(0.7)), Main.sampler(config));
+  }
+
+  @Test
+  void testSpanExporterNone() {
+    TracingConfig config = new TracingConfig();
+    assertEquals(TracingProtocol.none, config.getProtocol());
+
+    SpanExporter result = Main.spanExporter(config);
+
+    assertNull(result);
+  }
+
+  @Test
+  void testSpanExporterOtlpHttp() {
+    TracingConfig config = new TracingConfig();
+    config.setProtocol(TracingProtocol.otlphttp);
+    assertEquals(TracingProtocol.otlphttp, config.getProtocol());
+
+    SpanExporter result = Main.spanExporter(config);
+    assertNull(result);
+    
+    config.setUrl("http://localhost");
+    result = Main.spanExporter(config);
+    assertNotNull(result);
+    assertThat(result, instanceOf(OtlpHttpSpanExporter.class));
+  }
+
+  @Test
+  void testSpanExporterZipkin() {
+    TracingConfig config = new TracingConfig();
+    config.setProtocol(TracingProtocol.zipkin);
+    assertEquals(TracingProtocol.zipkin, config.getProtocol());
+
+    SpanExporter result = Main.spanExporter(config);
+    assertNull(result);
+    
+    config.setUrl("http://localhost");
+    result = Main.spanExporter(config);
+    assertNotNull(result);
+    assertThat(result, instanceOf(ZipkinSpanExporter.class));
+  }
+
 }

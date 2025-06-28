@@ -24,7 +24,6 @@ import io.restassured.config.RestAssuredConfig;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.invoke.MethodHandles;
@@ -77,7 +76,6 @@ public class EmptyQueryIT {
   
   @Test
   public void testQuery() throws Exception {
-    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);

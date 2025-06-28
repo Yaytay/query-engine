@@ -65,7 +65,6 @@ public class RunIT {
   @Test
   public void testMainDaemon() throws Exception {
     // The MySQL JDBC driver used by TestContainers will call OpenTelementry.get() :(
-    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);

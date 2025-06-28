@@ -16,11 +16,9 @@
  */
 package uk.co.spudsoft.query.main;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
 import io.restassured.response.Response;
-import io.vertx.core.Vertx;
 import io.vertx.ext.web.impl.Utils;
 import io.vertx.junit5.VertxExtension;
 import java.io.ByteArrayOutputStream;
@@ -59,14 +57,14 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
  */
 @ExtendWith(VertxExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class CachingIT {
+public class CachingForkIT {
   
   private static final ServerProviderMySQL mysql = new ServerProviderMySQL().init();
   
   private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
   
   @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(CachingIT.class);
+  private static final Logger logger = LoggerFactory.getLogger(CachingForkIT.class);
   
   @BeforeAll
   public void createDirs() {
@@ -77,7 +75,6 @@ public class CachingIT {
   
   @Test
   public void testQuery() throws Exception {
-    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);

@@ -69,7 +69,6 @@ public class FormBuilderIT {
   
   @Test
   public void testQuery() throws Exception {
-    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);

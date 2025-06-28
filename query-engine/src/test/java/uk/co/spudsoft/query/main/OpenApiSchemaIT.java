@@ -82,7 +82,6 @@ public class OpenApiSchemaIT {
   @Test
   @Timeout(value = 2400, timeUnit = TimeUnit.SECONDS)
   public void testQuery() throws Exception {
-    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);

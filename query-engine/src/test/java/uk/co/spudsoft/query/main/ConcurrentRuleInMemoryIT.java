@@ -16,9 +16,7 @@
  */
 package uk.co.spudsoft.query.main;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
-import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import java.io.File;
 import org.junit.jupiter.api.BeforeAll;
@@ -69,7 +67,6 @@ public class ConcurrentRuleInMemoryIT {
       
   @Test
   public void testMainDaemon() throws Exception {
-    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);

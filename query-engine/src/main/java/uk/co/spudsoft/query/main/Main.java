@@ -26,6 +26,7 @@ import uk.co.spudsoft.query.logging.LoggingConfiguration;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
@@ -125,6 +126,7 @@ import uk.co.spudsoft.query.main.sample.SampleDataLoaderMsSQL;
 import uk.co.spudsoft.query.main.sample.SampleDataLoaderMySQL;
 import uk.co.spudsoft.query.main.sample.SampleDataLoaderPostgreSQL;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
+import uk.co.spudsoft.query.web.LoggingRouter;
 import uk.co.spudsoft.query.web.LoginDao;
 import uk.co.spudsoft.query.web.LoginDaoMemoryImpl;
 import uk.co.spudsoft.query.web.LoginDaoPersistenceImpl;
@@ -174,6 +176,8 @@ public class Main extends Application {
   private OpenIdDiscoveryHandler openIdDiscoveryHandler;
   private JwtValidator jwtValidator;
 
+  private static volatile OpenTelemetry openTelemetry;
+  private static final Object OPEN_TELEMETRY_LOCK = new Object();
 
   private volatile int port;
 
@@ -227,7 +231,7 @@ public class Main extends Application {
   /**
    * Main method.
    * @param args Command line arguments that should have the same form as properties with the query-engine prefix, no dashes are required.
-   *
+   *7
    */
   public static void main(String[] args) {
     Main main = new Main();
@@ -471,6 +475,8 @@ public class Main extends Application {
 
     Router router = Router.router(vertx);
     Router mgmtRouter = Router.router(vertx);
+    
+    router.route().handler(new LoggingRouter());
 
     ManagementRoute.deployStandardMgmtEndpoints(mgmtRouter, router, params.getManagementEndpoints(), new AtomicReference<>(params));
     if (ManagementRoute.mgmtEndpointPermitted(params.getManagementEndpoints(), "up")) {
@@ -864,48 +870,31 @@ public class Main extends Application {
 
   static OpenTelemetry buildOpenTelemetry(TracingConfig config) {
 
+    // Check if GlobalOpenTelemetry is already set
+    synchronized (OPEN_TELEMETRY_LOCK) {
+      if (openTelemetry == null) {
+        openTelemetry = createOpenTelemetry(config);
+      }
+    }
+    return openTelemetry;
+  }
+
+  static OpenTelemetry createOpenTelemetry(TracingConfig config) {
     ResourceBuilder resourceBuilder = Resource.getDefault().toBuilder()
             .put("service.name", config.getServiceName())
             .put("service.version", Version.MAVEN_PROJECT_VERSION)
             ;
 
     Sampler sampler;
-    SdkTracerProviderBuilder builder = SdkTracerProvider.builder();
+    SdkTracerProviderBuilder builder = SdkTracerProvider.builder()
+            ;
 
     if (config.getProtocol() != TracingProtocol.none && !Strings.isNullOrEmpty(config.getUrl())) {
-      SpanExporter spanExporter = switch (config.getProtocol()) {
-        case none -> null;
-        // case otlpgrpc -> OtlpGrpcSpanExporter.builder().setEndpoint(config.getUrl()).build();
-        case otlphttp -> OtlpHttpSpanExporter.builder()
-                .setEndpoint(config.getUrl())
-                .build();
-        case zipkin -> ZipkinSpanExporter.builder()
-                .setSender((BytesMessageSender) URLConnectionSender.create(config.getUrl()))
-                .setEndpoint(config.getUrl())
-                .build();
-      };
+      SpanExporter spanExporter = spanExporter(config);
       if (spanExporter != null) {
         builder.addSpanProcessor(BatchSpanProcessor.builder(spanExporter).build());
       }
-      sampler = switch (config.getSampler()) {
-        case alwaysOff ->
-          Sampler.alwaysOff();
-        case alwaysOn ->
-          Sampler.alwaysOn();
-        case parent ->
-          Sampler.parentBased(switch (config.getSampler()) {
-            case alwaysOff ->
-              Sampler.alwaysOff();
-            case alwaysOn ->
-              Sampler.alwaysOn();
-            case parent ->
-              Sampler.alwaysOff();
-            case ratio ->
-              Sampler.traceIdRatioBased(config.getSampleRatio());
-          });
-        case ratio ->
-          Sampler.traceIdRatioBased(config.getSampleRatio());
-      };
+      sampler = sampler(config);
     } else {
       sampler = Sampler.alwaysOff();
     }
@@ -927,7 +916,53 @@ public class Main extends Application {
             ;
 
     logger.debug("Building OpenTelemetry");
-    return openTelemetryBuilder.buildAndRegisterGlobal();
+    try {
+      return openTelemetryBuilder.buildAndRegisterGlobal();
+    } catch (IllegalStateException e) {
+      // GlobalOpenTelemetry already set, return the existing instance
+      return GlobalOpenTelemetry.get();
+    }
+  }
+
+  static Sampler sampler(TracingConfig config) {
+    Sampler sampler;
+    sampler = switch (config.getSampler()) {
+      case alwaysOff ->
+            Sampler.alwaysOff();
+      case alwaysOn ->
+            Sampler.alwaysOn();
+      case parent ->
+            Sampler.parentBased(switch (config.getRootSampler()) {
+              case alwaysOff ->
+                      Sampler.alwaysOff();
+              case alwaysOn ->
+                      Sampler.alwaysOn();
+              case parent ->
+                      Sampler.alwaysOff();
+              case ratio ->
+                      Sampler.traceIdRatioBased(config.getSampleRatio());
+            });
+      case ratio ->
+            Sampler.traceIdRatioBased(config.getSampleRatio());
+    };
+    return sampler;
+  }
+
+  static SpanExporter spanExporter(TracingConfig config) {
+    if (Strings.isNullOrEmpty(config.getUrl())) {
+      return null;
+    }
+    SpanExporter spanExporter = switch (config.getProtocol()) {
+      case none -> null;
+      case otlphttp -> OtlpHttpSpanExporter.builder()
+              .setEndpoint(config.getUrl())
+              .build();
+      case zipkin -> ZipkinSpanExporter.builder()
+              .setSender((BytesMessageSender) URLConnectionSender.create(config.getUrl()))
+              .setEndpoint(config.getUrl())
+              .build();
+    };
+    return spanExporter;
   }
 
   /**

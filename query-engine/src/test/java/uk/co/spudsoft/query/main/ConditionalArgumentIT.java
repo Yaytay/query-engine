@@ -18,11 +18,9 @@ package uk.co.spudsoft.query.main;
 
 import com.google.common.cache.Cache;
 import com.google.common.collect.ImmutableMap;
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
 import io.restassured.http.Header;
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import java.io.ByteArrayOutputStream;
@@ -95,7 +93,6 @@ public class ConditionalArgumentIT {
   
   @Test
   public void testQuery() throws Exception {
-    GlobalOpenTelemetry.resetForTest();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);

@@ -32,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.web.LoginDaoMemoryImpl;
 
@@ -69,6 +70,10 @@ public class ConditionInstanceTest {
 
   @Test
   public void testWithRequestContext() {
+    ch.qos.logback.classic.Logger lg = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(ConditionInstance.class);
+    ch.qos.logback.classic.Level origLvl = lg.getLevel();
+    lg.setLevel(ch.qos.logback.classic.Level.DEBUG);
+    
     HttpServerRequest req = mock(HttpServerRequest.class);
     when(req.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
@@ -97,6 +102,8 @@ public class ConditionInstanceTest {
     assertFalse(new ConditionInstance("'good' == request.env['ev2']").evaluate(ctx, null));
     assertFalse(new ConditionInstance("'good' == request.env['ev3']").evaluate(ctx, null));
     assertFalse(new ConditionInstance("'good' == request.env.ev3").evaluate(ctx, null));
+    
+    lg.setLevel(origLvl);
   }
 
 }
