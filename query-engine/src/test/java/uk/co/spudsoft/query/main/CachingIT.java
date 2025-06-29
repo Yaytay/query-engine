@@ -25,6 +25,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
 import java.lang.invoke.MethodHandles;
+import javax.annotation.concurrent.NotThreadSafe;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -57,14 +58,15 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
  */
 @ExtendWith(VertxExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class CachingForkIT {
+@NotThreadSafe
+public class CachingIT {
   
   private static final ServerProviderMySQL mysql = new ServerProviderMySQL().init();
   
   private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
   
   @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(CachingForkIT.class);
+  private static final Logger logger = LoggerFactory.getLogger(CachingIT.class);
   
   @BeforeAll
   public void createDirs() {

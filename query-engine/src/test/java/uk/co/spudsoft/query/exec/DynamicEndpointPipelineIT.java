@@ -106,6 +106,10 @@ public class DynamicEndpointPipelineIT {
   public void testHandlingWithDynamicEndpoint(Vertx vertx, VertxTestContext testContext) throws Throwable {
     logger.info("testHandlingWithDynamicEndpoint");
 
+    ch.qos.logback.classic.Logger lg = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(PipelineDefnLoader.class);
+    ch.qos.logback.classic.Level origLvl = lg.getLevel();
+    lg.setLevel(ch.qos.logback.classic.Level.DEBUG);
+        
     Future<Void> prepFuture = prepareDatabase(vertx);
     Awaitility.await().atMost(60, TimeUnit.SECONDS).until(() -> prepFuture.isComplete());
     assertTrue(prepFuture.succeeded());
@@ -191,9 +195,11 @@ public class DynamicEndpointPipelineIT {
               if (ar.succeeded()) {
                 vertx.setTimer(2000, l -> {
                   logger.debug("Ending test");
+                  lg.setLevel(origLvl);
                   testContext.completeNow();
                 });
               } else {
+                lg.setLevel(origLvl);
                 testContext.failNow(ar.cause());
               }
             });

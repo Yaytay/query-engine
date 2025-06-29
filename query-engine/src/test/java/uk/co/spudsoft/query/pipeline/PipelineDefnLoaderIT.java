@@ -26,7 +26,9 @@ import java.io.File;
 import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.util.regex.Pattern;
+import net.jcip.annotations.NotThreadSafe;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
@@ -40,15 +42,16 @@ import uk.co.spudsoft.query.main.Main;
  * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
-public class PipelineDefnLoaderForkIT {
+@NotThreadSafe
+public class PipelineDefnLoaderIT {
   
-  private static final Logger logger = LoggerFactory.getLogger(PipelineDefnLoaderForkIT.class);
+  private static final Logger logger = LoggerFactory.getLogger(PipelineDefnLoaderIT.class);
 
   private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
   
   @Test
   public void testGetAccessible(Vertx vertx, VertxTestContext testContext) throws Exception {
-    
+        
     Main.prepareBaseConfigPath(new File(CONFS_DIR), null);
     
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
@@ -73,6 +76,42 @@ public class PipelineDefnLoaderForkIT {
               });
               return loader.writeYamlFile(CONFS_DIR + "/sub1/sub2/YamlToPipelineIT.yaml", p);
             })
+            .compose(v -> {
+              return loader.writeJsonFile("nonexistant/nonexisteant/file.json", null);
+            })
+            .andThen(ar -> {
+              testContext.verify(() -> {
+                assertTrue(ar.failed());
+              });
+            })
+            .recover(ex -> Future.succeededFuture())
+            .compose(v -> {
+              return loader.readJsonFile("nonexistant/nonexisteant/file.json");
+            })
+            .andThen(ar -> {
+              testContext.verify(() -> {
+                assertTrue(ar.failed());
+              });
+            })
+            .recover(ex -> Future.succeededFuture())
+            .compose(p -> {
+              return loader.writeYamlFile("nonexistant/nonexisteant/file.yaml", null);
+            })
+            .andThen(ar -> {
+              testContext.verify(() -> {
+                assertTrue(ar.failed());
+              });
+            })
+            .recover(ex -> Future.succeededFuture())
+            .compose(v -> {
+              return loader.readYamlFile("nonexistant/nonexisteant/file.yaml");
+            })
+            .andThen(ar -> {
+              testContext.verify(() -> {
+                assertTrue(ar.failed());
+              });
+            })
+            .recover(ex -> Future.succeededFuture())
             .andThen(testContext.succeedingThenComplete())
             ;
         

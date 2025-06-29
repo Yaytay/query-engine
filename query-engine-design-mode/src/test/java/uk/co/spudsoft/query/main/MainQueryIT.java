@@ -47,7 +47,7 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
  * @author jtalbut
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class MainQueryForkIT {
+public class MainQueryIT {
   
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
   private static final ServerProviderMySQL mysql = new ServerProviderMySQL().init();

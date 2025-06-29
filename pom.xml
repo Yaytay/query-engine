@@ -39,8 +39,8 @@
     <vertx.version>4.5.14</vertx.version>
     <slf4j.version>2.0.17</slf4j.version>
     <junit-jupiter.version>5.13.2</junit-jupiter.version>
-    <junit-platform.version>1.13.2</junit-platform.version>
-    <testcontainers.version>1.21.2</testcontainers.version>
+    <junit-platform.version>1.13.3</junit-platform.version>
+    <testcontainers.version>1.21.3</testcontainers.version>
     <!-- 
       Graal versions are often tied in to JDK versions, cannot upgrade to 24+ until using JDK 22+ 
       See https://github.com/oracle/graal/issues/7651

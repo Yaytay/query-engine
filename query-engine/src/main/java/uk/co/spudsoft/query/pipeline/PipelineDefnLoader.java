@@ -382,20 +382,24 @@ public final class PipelineDefnLoader {
             });
   }
   
+  private Future<Pipeline> readFile(ObjectMapper mapper, String absolutePath) {
+    return fs.readFile(absolutePath)
+            .compose(buffer -> {
+              try {
+                return Future.succeededFuture(mapper.readValue(buffer.getBytes(), Pipeline.class));
+              } catch (Throwable ex) {
+                return Future.failedFuture(ex);
+              }
+            });
+  }
+  
   /**
    * Read a {@link Pipeline} from a file containing JSON.
    * @param absolutePath the path to the file that is to be read.
    * @return A Future that will be completed with the {@link Pipeline} definition when the file has been written.
    */
   public Future<Pipeline> readJsonFile(String absolutePath) {
-    return fs.readFile(absolutePath)
-            .compose(buffer -> {
-              try {
-                return Future.succeededFuture(JSON_OBJECT_MAPPER.readValue(buffer.getBytes(), Pipeline.class));
-              } catch (Throwable ex) {
-                return Future.failedFuture(ex);
-              }
-            });
+    return readFile(JSON_OBJECT_MAPPER, absolutePath);
   }
   
   /**
@@ -404,14 +408,16 @@ public final class PipelineDefnLoader {
    * @return A Future that will be completed with the {@link Pipeline} definition when the file has been written.
    */
   public Future<Pipeline> readYamlFile(String absolutePath) {
-    return fs.readFile(absolutePath)
-            .compose(buffer -> {
-              try {
-                return Future.succeededFuture(YAML_OBJECT_MAPPER.readValue(buffer.getBytes(), Pipeline.class));
-              } catch (Throwable ex) {
-                return Future.failedFuture(ex);
-              }
-            });
+    return readFile(YAML_OBJECT_MAPPER, absolutePath);
+  }
+  
+  private Future<Void> writeFile(ObjectMapper mapper, String absolutePath, Pipeline pipeline) {
+    try {
+      byte[] bytes = mapper.writeValueAsBytes(pipeline);
+      return fs.writeFile(absolutePath, Buffer.buffer(bytes));
+    } catch (Throwable ex) {
+      return Future.failedFuture(ex);
+    }
   }
   
   /**
@@ -421,12 +427,7 @@ public final class PipelineDefnLoader {
    * @return A Future that will be completed when the file has been written.
    */
   public Future<Void> writeJsonFile(String absolutePath, Pipeline pipeline) {
-    try {
-      byte[] bytes = JSON_OBJECT_MAPPER.writeValueAsBytes(pipeline);
-      return fs.writeFile(absolutePath, Buffer.buffer(bytes));
-    } catch (Throwable ex) {
-      return Future.failedFuture(ex);
-    }
+    return writeFile(JSON_OBJECT_MAPPER, absolutePath, pipeline);
   }
   
   /**
@@ -436,12 +437,7 @@ public final class PipelineDefnLoader {
    * @return A Future that will be completed when the file has been written.
    */
   public Future<Void> writeYamlFile(String absolutePath, Pipeline pipeline) {
-    try {
-      byte[] bytes = YAML_OBJECT_MAPPER.writeValueAsBytes(pipeline);
-      return fs.writeFile(absolutePath, Buffer.buffer(bytes));
-    } catch (Throwable ex) {
-      return Future.failedFuture(ex);
-    }
+    return writeFile(YAML_OBJECT_MAPPER, absolutePath, pipeline);
   }
   
   private Future<Pipeline> readPipeline(DirCacheTree.File file, ObjectMapper mapper) {
