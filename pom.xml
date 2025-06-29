@@ -265,8 +265,7 @@
           <version>3.5.3</version>
           <configuration>
             <forkCount>1</forkCount>
-            <parallel>classes</parallel>
-            <threadCount>4</threadCount>
+            <parallel>none</parallel>
             <workingDirectory>${project.basedir}</workingDirectory>
             <reuseForks>true</reuseForks>
             <argLine>
@@ -298,8 +297,7 @@
               </goals>
               <configuration>
                 <forkCount>1</forkCount>
-                <parallel>classes</parallel>
-                <threadCount>4</threadCount>
+                <parallel>none</parallel>
                 <useModulePath>false</useModulePath>
                 <reuseForks>true</reuseForks>
                 <workingDirectory>${project.basedir}</workingDirectory>
@@ -328,8 +326,7 @@
               </goals>
               <configuration>
                 <forkCount>1</forkCount>
-                <parallel>classes</parallel>
-                <threadCount>4</threadCount>
+                <parallel>none</parallel>
                 <useModulePath>false</useModulePath>
                 <reuseForks>false</reuseForks>
                 <workingDirectory>${project.basedir}</workingDirectory>
