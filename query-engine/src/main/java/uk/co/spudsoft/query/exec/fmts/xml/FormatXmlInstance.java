@@ -19,7 +19,6 @@ package uk.co.spudsoft.query.exec.fmts.xml;
 import com.ctc.wstx.stax.WstxOutputFactory;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
@@ -152,7 +151,7 @@ public final class FormatXmlInstance implements FormatInstance {
     ProcessRowFunction processRowFunction,
     CloseFunction closeFunction) {
 
-    return new FormattingWriteStream(outputStream
+    return new FormattingWriteStream(streamWrapper
       , v -> Future.succeededFuture()
       , row -> {
       logger.trace("Got row {}", row);
@@ -172,13 +171,7 @@ public final class FormatXmlInstance implements FormatInstance {
           return Future.failedFuture(ex);
         }
       }
-      if (streamWrapper.writeQueueFull()) {
-        Promise<Void> promise = Promise.promise();
-        streamWrapper.drainHandler(v -> promise.tryComplete());
-        return promise.future();
-      } else {
-        return Future.succeededFuture();
-      }
+      return Future.succeededFuture();
     }
       , rows -> {
       Context vertxContext = Vertx.currentContext();

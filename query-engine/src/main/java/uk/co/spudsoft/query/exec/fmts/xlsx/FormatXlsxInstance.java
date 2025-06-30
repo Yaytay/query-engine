@@ -19,7 +19,6 @@ package uk.co.spudsoft.query.exec.fmts.xlsx;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
@@ -92,14 +91,14 @@ public class FormatXlsxInstance implements FormatInstance {
     this.definition = definition;    
     outputStream.setWriteQueueMaxSize(1000);
     this.streamWrapper = new OutputWriteStreamWrapper(outputStream);
-    this.formattingStream = new FormattingWriteStream(outputStream
+    this.formattingStream = new FormattingWriteStream(streamWrapper
             , v -> Future.succeededFuture()
             , row -> {
               logger.info("Got row {}", row);
               if (!started.get()) {
                 started.set(true);
-                TableDefinition tableDefintion = tableDefinition();
-                writer = new XlsxWriter(tableDefintion);
+                TableDefinition tableDefinition = tableDefinition();
+                writer = new XlsxWriter(tableDefinition);
                 try {
                   writer.startFile(streamWrapper);
                 } catch (IOException ex) {
@@ -113,15 +112,7 @@ public class FormatXlsxInstance implements FormatInstance {
               } catch (IOException ex) {
                 return Future.failedFuture(ex);
               }
-              if (streamWrapper.writeQueueFull()) {
-                Promise<Void> promise = Promise.promise();
-                streamWrapper.drainHandler(v -> {
-                  promise.tryComplete();
-                });
-                return promise.future();
-              } else {
-                return Future.succeededFuture();
-              }
+              return Future.succeededFuture();
             }
             , rows -> {
               Context vertxContext = Vertx.currentContext();

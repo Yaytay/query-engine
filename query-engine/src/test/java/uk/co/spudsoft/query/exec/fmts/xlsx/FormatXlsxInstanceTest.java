@@ -17,10 +17,8 @@
 package uk.co.spudsoft.query.exec.fmts.xlsx;
 
 import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.FileSystem;
 import io.vertx.core.file.OpenOptions;
-import io.vertx.core.streams.WriteStream;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.time.LocalDate;
@@ -66,43 +64,45 @@ public class FormatXlsxInstanceTest {
   @Test
   public void testStream(Vertx vertx, VertxTestContext testContext) {    
     
-    vertx.runOnContext(v -> {
-      FormatXlsx defn = FormatXlsx.builder()
-              .headerColours(FormatXlsxColours.builder().fgColour("000000").bgColour("FFFFFF").build())
-              .evenColours(FormatXlsxColours.builder().fgColour("000001").bgColour("FFFFFE").build())
-              .oddColours(FormatXlsxColours.builder().fgColour("111111").bgColour("EEEEEE").build())
-              .build();
+    FormatXlsx defn = FormatXlsx.builder()
+            .headerColours(FormatXlsxColours.builder().fgColour("000000").bgColour("FFFFFF").build())
+            .evenColours(FormatXlsxColours.builder().fgColour("000001").bgColour("FFFFFE").build())
+            .oddColours(FormatXlsxColours.builder().fgColour("111111").bgColour("EEEEEE").build())
+            .build();
 
-      FileSystem fs = vertx.fileSystem();
-      if (!fs.existsBlocking("target/temp")) {
-        fs.mkdirBlocking("target/temp");
-      }
-      WriteStream<Buffer> writeStream = fs.openBlocking("target/temp/FormatXlsxInstanceTest.xlsx", new OpenOptions().setCreate(true));
+    FileSystem fs = vertx.fileSystem();
+    if (!fs.existsBlocking("target/temp")) {
+      fs.mkdirBlocking("target/temp");
+    }
 
-      FormatXlsxInstance instance = (FormatXlsxInstance) defn.createInstance(vertx, null, writeStream);
+    fs.open("target/temp/FormatXlsxInstanceTest.xlsx", new OpenOptions().setCreate(true))
+      .compose(writeStream -> {
 
-      Types types = new Types(buildTypes());
-      List<DataRow> rowsList = new ArrayList<>();
-      for (int i = 0; i < 10; ++i) {
-        rowsList.add(createDataRow(types, i));
-      }
+        FormatXlsxInstance instance = (FormatXlsxInstance) defn.createInstance(vertx, null, writeStream);
 
-      instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
-              .onComplete(testContext.succeedingThenComplete());
-    });
+        Types types = new Types(buildTypes());
+        List<DataRow> rowsList = new ArrayList<>();
+        for (int i = 0; i < 1000; ++i) {
+          rowsList.add(createDataRow(types, i));
+        }
+
+        return instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types));
+      })
+      .onComplete(testContext.succeedingThenComplete());
+            
   }
   
   private DataRow createDataRow(Types types, int rowNum) {
     DataRow row = DataRow.create(types);
     row.put("Boolean", rowNum % 9 == 0 ? null : (rowNum % 2 == 0 ? Boolean.TRUE : Boolean.FALSE));
-    row.put("Date", rowNum % 9 == 1 ? null : LocalDate.of(1971, Month.MAY, 1 + rowNum));
-    row.put("DateTime", rowNum % 9 == 2 ? null : LocalDateTime.of(1971, Month.MAY, 1 + rowNum, rowNum, rowNum));
+    row.put("Date", rowNum % 9 == 1 ? null : LocalDate.of(1971, Month.MAY, 1 + rowNum % 29));
+    row.put("DateTime", rowNum % 9 == 2 ? null : LocalDateTime.of(1971, Month.MAY, 1 + rowNum % 29, rowNum % 24, rowNum % 60));
     row.put("Double", rowNum % 9 == 3 ? null : rowNum + (double) rowNum / 10);
     row.put("Float", rowNum % 9 == 4 ? null : rowNum + (float) rowNum / 10);
     row.put("Integer", rowNum % 9 == 5 ? null : rowNum);
     row.put("Long", rowNum % 9 == 6 ? null : rowNum * 10000000L);
     row.put("String", rowNum % 9 == 7 ? null : "This is row " + rowNum);
-    row.put("Time", rowNum % 9 == 8 ? null : LocalTime.of(rowNum, rowNum));
+    row.put("Time", rowNum % 9 == 8 ? null : LocalTime.of(rowNum % 24, rowNum % 60));
     return row;
   }
   

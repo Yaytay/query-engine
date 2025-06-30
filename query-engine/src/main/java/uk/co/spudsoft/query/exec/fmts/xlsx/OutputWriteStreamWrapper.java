@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.exec.fmts.xlsx;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
@@ -36,10 +37,11 @@ import java.io.OutputStream;
  *
  * @author jtalbut
  */
-public class OutputWriteStreamWrapper extends OutputStream {
+public class OutputWriteStreamWrapper extends OutputStream implements WriteStream<Buffer> {
 
   private final WriteStream<Buffer> outputStream;
   private final Promise<Void> finalPromise;
+  private Handler<Throwable> exceptionHandler;
 
   /**
    * Constructor.
@@ -49,27 +51,14 @@ public class OutputWriteStreamWrapper extends OutputStream {
   public OutputWriteStreamWrapper(WriteStream<Buffer> outputStream) {
     this.outputStream = outputStream;
     this.finalPromise = Promise.promise();
+    this.outputStream.exceptionHandler(ex -> {
+      if (exceptionHandler != null) {
+        exceptionHandler.handle(ex);
+      }
+    });
   }
 
-  /**
-   * Return true if the {@link WriteStream} is full.
-   * @return true if the {@link WriteStream} is full.
-   */
-  public boolean writeQueueFull() {
-    return outputStream.writeQueueFull();
-  }
-
-  /**
-   * Set the handler to call when the {@link WriteStream} is not full any more.
-   * @param handler the handler to call when the {@link WriteStream} is not full any more.
-   */
-  public void drainHandler(Handler<Void> handler) {
-    outputStream.drainHandler(handler);
-    if (!outputStream.writeQueueFull()) {
-      handler.handle(null);
-    }
-  }
-
+  // OutputStream methods
   @Override
   public void write(int b) throws IOException {
     outputStream.write(Buffer.buffer(new byte[]{(byte) b}));
@@ -92,6 +81,56 @@ public class OutputWriteStreamWrapper extends OutputStream {
     outputStream.write(Buffer.buffer(b));
   }
 
+  // WriteStream<Buffer> methods
+  @Override
+  public WriteStream<Buffer> exceptionHandler(Handler<Throwable> handler) {
+    this.exceptionHandler = handler;
+    return this;
+  }
+
+  @Override
+  public Future<Void> write(Buffer data) {
+    return outputStream.write(data);
+  }
+
+  @Override
+  public void write(Buffer data, Handler<AsyncResult<Void>> handler) {
+    outputStream.write(data, handler);
+  }
+
+  @Override
+  public void end(Handler<AsyncResult<Void>> handler) {
+    outputStream.end(ar -> {
+      if (ar.succeeded()) {
+        finalPromise.tryComplete();
+      } else {
+        finalPromise.tryFail(ar.cause());
+      }
+      if (handler != null) {
+        handler.handle(ar);
+      }
+    });
+  }
+
+  @Override
+  public WriteStream<Buffer> setWriteQueueMaxSize(int maxSize) {
+    outputStream.setWriteQueueMaxSize(maxSize);
+    return this;
+  }
+
+  @Override
+  public boolean writeQueueFull() {
+    return outputStream.writeQueueFull();
+  }
+
+  @Override
+  public WriteStream<Buffer> drainHandler(Handler<Void> handler) {
+    outputStream.drainHandler(handler);
+    if (!outputStream.writeQueueFull()) {
+      handler.handle(null);
+    }
+    return this;
+  }
 
   /**
    * Returns a future that completes when the {@link WriteStream} has reached its final state,
@@ -102,5 +141,4 @@ public class OutputWriteStreamWrapper extends OutputStream {
   public Future<Void> getFinalFuture() {
     return finalPromise.future();
   }
-
 }

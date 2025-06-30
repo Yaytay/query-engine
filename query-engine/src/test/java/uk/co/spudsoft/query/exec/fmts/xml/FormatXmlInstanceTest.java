@@ -105,19 +105,18 @@ public class FormatXmlInstanceTest {
         fs.mkdirBlocking("target/temp");
       }
       deleteWithoutError(fs, outfile);
-      WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setCreate(true).setSync(true));
+      
+      fs.open(outfile, new OpenOptions().setCreate(true).setSync(true))
+              .compose(writeStream -> {
+                FormatXmlInstance instance = defn.createInstance(vertx, null, writeStream);
 
-      FormatXmlInstance instance = defn.createInstance(vertx, null, writeStream);
-
-      Types types = new Types(buildTypes());
-      List<DataRow> rowsList = new ArrayList<>();
-      for (int i = 0; i < 10; ++i) {
-        rowsList.add(createDataRow(types, i));
-      }
-
-      instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
-              .compose(v2 -> {
-                return instance.getFinalFuture();
+                Types types = new Types(buildTypes());
+                List<DataRow> rowsList = new ArrayList<>();
+                for (int i = 0; i < 10000; ++i) {
+                  rowsList.add(createDataRow(types, i));
+                }
+                return instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
+                        .compose(v2 -> instance.getFinalFuture());
               })
               .onComplete(ar -> {
                 if (ar.failed()) {
@@ -339,14 +338,14 @@ public class FormatXmlInstanceTest {
   private DataRow createDataRow(Types types, int rowNum) {
     DataRow row = DataRow.create(types);
     row.put("Boolean", rowNum % 9 == 0 ? null : (rowNum % 2 == 0 ? Boolean.TRUE : Boolean.FALSE));
-    row.put("Date", rowNum % 9 == 1 ? null : LocalDate.of(1971, Month.MAY, 1 + rowNum));
-    row.put("DateTime", rowNum % 9 == 2 ? null : LocalDateTime.of(1971, Month.MAY, 1 + rowNum, rowNum, rowNum));
+    row.put("Date", rowNum % 9 == 1 ? null : LocalDate.of(1971, Month.MAY, 1 + rowNum % 29));
+    row.put("DateTime", rowNum % 9 == 2 ? null : LocalDateTime.of(1971, Month.MAY, 1 + rowNum % 29, rowNum % 24, rowNum % 60));
     row.put("Double", rowNum % 9 == 3 ? null : rowNum + (double) rowNum / 10);
     row.put("Float", rowNum % 9 == 4 ? null : rowNum + (float) rowNum / 10);
     row.put("Integer", rowNum % 9 == 5 ? null : rowNum);
     row.put("Long", rowNum % 9 == 6 ? null : rowNum * 10000000L);
     row.put("String", rowNum % 9 == 7 ? null : "This is row \u2013 " + rowNum);
-    row.put("Time", rowNum % 9 == 8 ? null : LocalTime.of(rowNum, rowNum));
+    row.put("Time", rowNum % 9 == 8 ? null : LocalTime.of(rowNum % 24, rowNum % 60));
     if (rowNum % 2 == 0) {
       row.put("telephone contact details", "Telephone contact details", DataType.String, "01234");
     } else if (rowNum % 3 == 0) {
