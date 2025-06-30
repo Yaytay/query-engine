@@ -34,7 +34,7 @@ public final class Version {
   /**
    * The project version, as set in the Maven pom.xml.
    */
-  public static final String MAVEN_PROJECT_VERSION = "0.0.110-3-main";
+  public static final String MAVEN_PROJECT_VERSION = "0.0.111-main";
 
   private Version() {
   }

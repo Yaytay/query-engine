@@ -92,47 +92,49 @@ public class FormatXmlInstanceTest {
   @Test
   public void testDefaultStream(Vertx vertx, VertxTestContext testContext, TestInfo testInfo) throws IOException {
 
-    String outfile = "target/temp/" + testInfo.getTestClass().get().getSimpleName() + "_" + testInfo.getTestMethod().get().getName() + ".xml";    
+    vertx.runOnContext(v1 -> {
+      String outfile = "target/temp/" + testInfo.getTestClass().get().getSimpleName() + "_" + testInfo.getTestMethod().get().getName() + ".xml";    
 
-    FormatXml defn = FormatXml.builder()
-            .fieldInitialLetterFix(null)
-            .fieldInvalidLetterFix(null)
-            .build();
+      FormatXml defn = FormatXml.builder()
+              .fieldInitialLetterFix(null)
+              .fieldInvalidLetterFix(null)
+              .build();
 
-    FileSystem fs = vertx.fileSystem();
-    if (!fs.existsBlocking("target/temp")) {
-      fs.mkdirBlocking("target/temp");
-    }
-    deleteWithoutError(fs, outfile);
-    WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setCreate(true).setSync(true));
+      FileSystem fs = vertx.fileSystem();
+      if (!fs.existsBlocking("target/temp")) {
+        fs.mkdirBlocking("target/temp");
+      }
+      deleteWithoutError(fs, outfile);
+      WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setCreate(true).setSync(true));
 
-    FormatXmlInstance instance = defn.createInstance(vertx, null, writeStream);
+      FormatXmlInstance instance = defn.createInstance(vertx, null, writeStream);
 
-    Types types = new Types(buildTypes());
-    List<DataRow> rowsList = new ArrayList<>();
-    for (int i = 0; i < 10; ++i) {
-      rowsList.add(createDataRow(types, i));
-    }
+      Types types = new Types(buildTypes());
+      List<DataRow> rowsList = new ArrayList<>();
+      for (int i = 0; i < 10; ++i) {
+        rowsList.add(createDataRow(types, i));
+      }
 
-    instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
-            .compose(v -> {
-              return instance.getFinalFuture();
-            })
-            .onComplete(ar -> {
-              if (ar.failed()) {
-                testContext.failNow(ar.cause());
-              } else {
-                testContext.verify(() -> {
-                  String outstring = FileUtils.readFileToString(new File(outfile), StandardCharsets.UTF_8);
-                  assertThat(outstring, startsWith(
-                          """
-                          <?xml version='1.0' encoding='utf-8'?><data><row><Date>1971-05-01</Date><DateTime>1971-05-01T00:00</DateTime><Double>0.0</Double><Float>0.0</Float><Integer>0</Integer><Long>0</Long><String>This is row \u2013 0</String><Time>00:00</Time><Telephonecontactdetails>01234</Telephonecontactdetails></row><row><Boolean>false</Boolean><DateTime>1971-05-02T01:01</DateTime><Double>1.1</Double><Float>1.1</Float><Integer>1</Integer><Long>10000000</Long><String>This is row \u2013 1</String><Time>01:01</Time></row><row><Boolean>true</Boolean><Date>1971-05-03</Date><Double>2.2</Double><Float>2.2</Float><Integer>2</Integer><Long>20000000</Long><String>This is row \u2013 2</String><Time>02:02</Time><Telephonecontactdetails>01234</Telephonecontactdetails></row>
-                          """.trim()
-                  ));
-                });
-                testContext.completeNow();
-              }
-            });
+      instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
+              .compose(v2 -> {
+                return instance.getFinalFuture();
+              })
+              .onComplete(ar -> {
+                if (ar.failed()) {
+                  testContext.failNow(ar.cause());
+                } else {
+                  testContext.verify(() -> {
+                    String outstring = FileUtils.readFileToString(new File(outfile), StandardCharsets.UTF_8);
+                    assertThat(outstring, startsWith(
+                            """
+                            <?xml version='1.0' encoding='utf-8'?><data><row><Date>1971-05-01</Date><DateTime>1971-05-01T00:00</DateTime><Double>0.0</Double><Float>0.0</Float><Integer>0</Integer><Long>0</Long><String>This is row \u2013 0</String><Time>00:00</Time><Telephonecontactdetails>01234</Telephonecontactdetails></row><row><Boolean>false</Boolean><DateTime>1971-05-02T01:01</DateTime><Double>1.1</Double><Float>1.1</Float><Integer>1</Integer><Long>10000000</Long><String>This is row \u2013 1</String><Time>01:01</Time></row><row><Boolean>true</Boolean><Date>1971-05-03</Date><Double>2.2</Double><Float>2.2</Float><Integer>2</Integer><Long>20000000</Long><String>This is row \u2013 2</String><Time>02:02</Time><Telephonecontactdetails>01234</Telephonecontactdetails></row>
+                            """.trim()
+                    ));
+                  });
+                  testContext.completeNow();
+                }
+              });
+    });
   }
 
   @Test

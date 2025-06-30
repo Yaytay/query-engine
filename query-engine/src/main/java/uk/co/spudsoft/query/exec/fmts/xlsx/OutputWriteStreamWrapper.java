@@ -65,6 +65,9 @@ public class OutputWriteStreamWrapper extends OutputStream {
    */
   public void drainHandler(Handler<Void> handler) {
     outputStream.drainHandler(handler);
+    if (!outputStream.writeQueueFull()) {
+      handler.handle(null);
+    }
   }
 
   @Override

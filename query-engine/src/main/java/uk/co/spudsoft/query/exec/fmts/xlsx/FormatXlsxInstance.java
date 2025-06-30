@@ -89,7 +89,8 @@ public class FormatXlsxInstance implements FormatInstance {
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "FormatXlsxInstance is a wrapper around WriteStream<Buffer>, it will make mutating calls to it")
   public FormatXlsxInstance(FormatXlsx definition, WriteStream<Buffer> outputStream) {
-    this.definition = definition;
+    this.definition = definition;    
+    outputStream.setWriteQueueMaxSize(1000);
     this.streamWrapper = new OutputWriteStreamWrapper(outputStream);
     this.formattingStream = new FormattingWriteStream(outputStream
             , v -> Future.succeededFuture()
@@ -114,7 +115,9 @@ public class FormatXlsxInstance implements FormatInstance {
               }
               if (streamWrapper.writeQueueFull()) {
                 Promise<Void> promise = Promise.promise();
-                streamWrapper.drainHandler(v -> promise.complete());
+                streamWrapper.drainHandler(v -> {
+                  promise.tryComplete();
+                });
                 return promise.future();
               } else {
                 return Future.succeededFuture();

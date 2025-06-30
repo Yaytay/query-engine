@@ -95,6 +95,7 @@ public final class FormatXmlInstance implements FormatInstance {
    */
   public FormatXmlInstance(FormatXml definition, WriteStream<Buffer> outputStream) {
     this.defn = definition;
+    outputStream.setWriteQueueMaxSize(1000);
     this.streamWrapper = new OutputWriteStreamWrapper(outputStream);
     this.valueFormatters = defn.toValueFormatters("", "", false);
     this.formattingStream = createFormattingWriteStream(
@@ -154,7 +155,7 @@ public final class FormatXmlInstance implements FormatInstance {
     return new FormattingWriteStream(outputStream
       , v -> Future.succeededFuture()
       , row -> {
-      logger.info("Got row {}", row);
+      logger.trace("Got row {}", row);
       if (!started.get()) {
         try {
           startFunction.start();
@@ -173,7 +174,7 @@ public final class FormatXmlInstance implements FormatInstance {
       }
       if (streamWrapper.writeQueueFull()) {
         Promise<Void> promise = Promise.promise();
-        streamWrapper.drainHandler(v -> promise.complete());
+        streamWrapper.drainHandler(v -> promise.tryComplete());
         return promise.future();
       } else {
         return Future.succeededFuture();
@@ -280,7 +281,7 @@ public final class FormatXmlInstance implements FormatInstance {
       }
     }
     writer.writeStartElement(getName(defn.getDocName(), "data"));
-    logger.debug("Document started");
+    logger.trace("Document started");
   }
 
   private void close() throws Exception {

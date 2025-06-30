@@ -66,28 +66,30 @@ public class FormatXlsxInstanceTest {
   @Test
   public void testStream(Vertx vertx, VertxTestContext testContext) {    
     
-    FormatXlsx defn = FormatXlsx.builder()
-            .headerColours(FormatXlsxColours.builder().fgColour("000000").bgColour("FFFFFF").build())
-            .evenColours(FormatXlsxColours.builder().fgColour("000001").bgColour("FFFFFE").build())
-            .oddColours(FormatXlsxColours.builder().fgColour("111111").bgColour("EEEEEE").build())
-            .build();
-    
-    FileSystem fs = vertx.fileSystem();
-    if (!fs.existsBlocking("target/temp")) {
-      fs.mkdirBlocking("target/temp");
-    }
-    WriteStream<Buffer> writeStream = fs.openBlocking("target/temp/FormatXlsxInstanceTest.xlsx", new OpenOptions().setCreate(true));
-    
-    FormatXlsxInstance instance = (FormatXlsxInstance) defn.createInstance(vertx, null, writeStream);
-    
-    Types types = new Types(buildTypes());
-    List<DataRow> rowsList = new ArrayList<>();
-    for (int i = 0; i < 10; ++i) {
-      rowsList.add(createDataRow(types, i));
-    }
-    
-    instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
-            .onComplete(testContext.succeedingThenComplete());
+    vertx.runOnContext(v -> {
+      FormatXlsx defn = FormatXlsx.builder()
+              .headerColours(FormatXlsxColours.builder().fgColour("000000").bgColour("FFFFFF").build())
+              .evenColours(FormatXlsxColours.builder().fgColour("000001").bgColour("FFFFFE").build())
+              .oddColours(FormatXlsxColours.builder().fgColour("111111").bgColour("EEEEEE").build())
+              .build();
+
+      FileSystem fs = vertx.fileSystem();
+      if (!fs.existsBlocking("target/temp")) {
+        fs.mkdirBlocking("target/temp");
+      }
+      WriteStream<Buffer> writeStream = fs.openBlocking("target/temp/FormatXlsxInstanceTest.xlsx", new OpenOptions().setCreate(true));
+
+      FormatXlsxInstance instance = (FormatXlsxInstance) defn.createInstance(vertx, null, writeStream);
+
+      Types types = new Types(buildTypes());
+      List<DataRow> rowsList = new ArrayList<>();
+      for (int i = 0; i < 10; ++i) {
+        rowsList.add(createDataRow(types, i));
+      }
+
+      instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
+              .onComplete(testContext.succeedingThenComplete());
+    });
   }
   
   private DataRow createDataRow(Types types, int rowNum) {
