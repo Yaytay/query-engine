@@ -69,8 +69,7 @@ public class JexlEvaluatorTest {
     assertEquals("Feed", new JexlEvaluator("'Feed'").evaluateAsObject(request, null));
     assertNull(new JexlEvaluator("null").evaluateAsObject(request, null));
     assertEquals(LocalDate.now(), new JexlEvaluator("now().toLocalDate()").evaluateAsObject(request, null));
-    assertEquals(LocalDate.now().withDayOfMonth(1).minusMonths(1), new JexlEvaluator("now().toLocalDate().withDayOfMonth(1).minusMonths(1)").evaluateAsObject(request, null));
-     
+    assertEquals(LocalDate.now().withDayOfMonth(1).minusMonths(1), new JexlEvaluator("now().toLocalDate().withDayOfMonth(1).minusMonths(1)").evaluateAsObject(request, null));    
   }
   
 }

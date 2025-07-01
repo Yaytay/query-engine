@@ -22,6 +22,7 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpServerRequest;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
@@ -67,6 +68,8 @@ public class ConditionInstanceTest {
   }
 
   private static final String OPENID = Base64.getEncoder().encodeToString("{\"jti\":\"a28849b9-3624-42c3-aaad-21c5f80ffc55\",\"exp\":1653142100,\"nbf\":0,\"iat\":1653142040,\"iss\":\"http://ca.localtest.me\",\"aud\":\"security-admin-console\",\"sub\":\"af78202f-b54a-439d-913c-0bbe99ba6bf8\",\"typ\":\"Bearer\",\"azp\":\"QE2\",\"scope\":\"openid profile email qe2\",\"email_verified\":false,\"name\":\"Bob Fred\",\"preferred_username\":\"bob.fred\",\"given_name\":\"Bob\",\"family_name\":\"Fred\",\"email\":\"bob@localtest.me\",\"groups\":[\"group1\",\"group2\",\"group3\"]}".getBytes(StandardCharsets.UTF_8));
+  private static final String OPENID2 = Base64.getEncoder().encodeToString("{\"jti\":\"a28849b9-3624-42c3-aaad-21c5f80ffc55\",\"exp\":1653142100,\"nbf\":0,\"iat\":1653142040,\"iss\":\"http://ca.localtest.me\",\"aud\":[\"service-query-engine\", \"client-root-bob.fred.net\", \"thingummy\"],\"sub\":\"af78202f-b54a-439d-913c-0bbe99ba6bf8\",\"typ\":\"Bearer\",\"azp\":\"QE2\",\"scope\":\"openid profile email qe2\",\"email_verified\":false,\"name\":\"Bob Fred\",\"preferred_username\":\"bob.fred\",\"given_name\":\"Bob\",\"family_name\":\"Fred\",\"email\":\"bob@localtest.me\",\"groups\":[\"group1\",\"group2\",\"group3\"]}".getBytes(StandardCharsets.UTF_8));
+    
 
   @Test
   public void testWithRequestContext() {
@@ -89,6 +92,7 @@ public class ConditionInstanceTest {
     assertTrue(new ConditionInstance("request.jwt.getClaimAsList(\"aud\").contains('security-admin-console')").evaluate(ctx, DataRow.EMPTY_ROW));
     assertTrue(new ConditionInstance("request.jwt.audience.contains('security-admin-console')").evaluate(ctx, DataRow.EMPTY_ROW));
     assertTrue(new ConditionInstance("request.jwt.getClaim(\"scope\") =~ '.*[^q]?qe2[^2]?.*'").evaluate(ctx, DataRow.EMPTY_ROW));
+    assertTrue(new ConditionInstance("request.jwt.claim[\"scope\"] =~ '.*[^q]?qe2[^2]?.*'").evaluate(ctx, DataRow.EMPTY_ROW));
     assertFalse(new ConditionInstance("request.jwt.getClaim(\"scope\") =~ '.*[^q]?qe3[^3]?.*'").evaluate(ctx, DataRow.EMPTY_ROW));
     assertTrue(new ConditionInstance("request.jwt.scope.contains(\"qe2\")").evaluate(ctx, DataRow.EMPTY_ROW));
     assertFalse(new ConditionInstance("request.jwt.scope.contains(\"qe1\")").evaluate(ctx, DataRow.EMPTY_ROW));
@@ -102,6 +106,13 @@ public class ConditionInstanceTest {
     assertFalse(new ConditionInstance("'good' == request.env['ev2']").evaluate(ctx, null));
     assertFalse(new ConditionInstance("'good' == request.env['ev3']").evaluate(ctx, null));
     assertFalse(new ConditionInstance("'good' == request.env.ev3").evaluate(ctx, null));
+    
+    when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID2);
+    ctx = rcb.buildRequestContext(req).result();
+
+    assertTrue(new ConditionInstance("firstMatchingStringWithPrefix(request.getAudience(), 'client-root-', true) =~ ['bob-sandbox.fred.net', 'bob.fred.net']").evaluate(ctx, null));
+    assertTrue(new ConditionInstance("firstMatchingStringWithPrefix(request.audience, 'client-root-', true) =~ ['bob-sandbox.fred.net', 'bob.fred.net']").evaluate(ctx, null));
+    assertTrue(new ConditionInstance("firstMatchingStringWithPrefix(request.aud, 'client-root-', true) =~ ['bob-sandbox.fred.net', 'bob.fred.net']").evaluate(ctx, null));
     
     lg.setLevel(origLvl);
   }

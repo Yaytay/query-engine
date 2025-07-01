@@ -549,6 +549,13 @@ public class RequestContext {
     }
     return null;
   }
+  /**
+   * Get the audience ('aud' claim) from the JWT, or null if there is no JWT.
+   * @return the audience ('aud' claim) from the JWT, or null if there is no JWT.
+   */
+  public List<String> getAud() {
+    return getAudience();
+  }
 
   /**
    * Get the issuer ('iss' claim) from the JWT, or null if there is no JWT.
@@ -562,6 +569,14 @@ public class RequestContext {
   }
 
   /**
+   * Get the issuer ('iss' claim) from the JWT, or null if there is no JWT.
+   * @return the issuer ('iss' claim) from the JWT, or null if there is no JWT.
+   */
+  public String getIss() {
+    return getIssuer();
+  }
+
+  /**
    * Get the subject ('sub' claim) from the JWT, or null if there is no JWT.
    * @return the subject ('sub' claim) from the JWT, or null if there is no JWT.
    */
@@ -570,6 +585,14 @@ public class RequestContext {
       return jwt.getSubject();
     }
     return null;
+  }
+
+  /**
+   * Get the subject ('sub' claim) from the JWT, or null if there is no JWT.
+   * @return the subject ('sub' claim) from the JWT, or null if there is no JWT.
+   */
+  public String getSub() {
+    return getSubject();
   }
 
   /**
