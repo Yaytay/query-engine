@@ -9,6 +9,8 @@
   <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator" />
 
   <logger name="uk.co.spudsoft.query" level="INFO" />
+  <logger name="com.zaxxer.hikari" level="DEBUG" />
+
   <logger name="ContainerOutput" level="WARN" />
 
   <root level="INFO">

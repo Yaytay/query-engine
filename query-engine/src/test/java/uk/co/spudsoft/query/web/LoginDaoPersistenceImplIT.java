@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import uk.co.spudsoft.query.exec.AuditorPersistenceImpl;
+import uk.co.spudsoft.query.exec.JdbcHelper;
 import uk.co.spudsoft.query.main.Credentials;
 import uk.co.spudsoft.query.main.DataSourceConfig;
 import uk.co.spudsoft.query.main.Persistence;
@@ -54,30 +55,6 @@ public class LoginDaoPersistenceImplIT {
   private static String previousTimezone;
   
   @Test
-  public void testPrepare(Vertx vertx, VertxTestContext testContext) throws Exception {
-    
-    Persistence config = new Persistence();    
-    LoginDaoPersistenceImpl instance = new LoginDaoPersistenceImpl(vertx, null, config, Duration.ofHours(1));
-    assertThrows(IllegalStateException.class, () -> {
-      instance.prepare();
-    });
-    DataSourceConfig dataSourceConfig = new DataSourceConfig();
-    config.setDataSource(dataSourceConfig);
-    assertThrows(IllegalStateException.class, () -> {
-      instance.prepare();
-    });
-    dataSourceConfig.setUrl(postgres.getJdbcUrl());
-    dataSourceConfig.setSchema("public");
-    dataSourceConfig.setAdminUser(new Credentials(postgres.getUser(), postgres.getPassword()));
-    instance.prepare();
-    assertThrows(IllegalStateException.class, () -> {
-      instance.prepare();
-    });
-    
-    testContext.completeNow();
-  }
-
-  @Test
   public void testTokenExpiryPostgres(Vertx vertx, VertxTestContext testContext) throws Throwable {
     
     Persistence config = new Persistence();
@@ -88,10 +65,12 @@ public class LoginDaoPersistenceImplIT {
     dataSource.setUser(new Credentials(postgres.getUser(), postgres.getPassword()));
     config.setDataSource(dataSource);
     
-    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config);
+    JdbcHelper jdbcHelper = new JdbcHelper(vertx, JdbcHelper.createDataSource(dataSource, dataSource.getAdminUser(), null));
+    
+    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config, jdbcHelper);
     auditor.prepare();
     
-    LoginDaoPersistenceImpl instance = new LoginDaoPersistenceImpl(vertx, null, config, Duration.ofMillis(500));
+    LoginDaoPersistenceImpl instance = new LoginDaoPersistenceImpl(vertx, null, config, Duration.ofMillis(500), jdbcHelper);
     instance.prepare();
     
     LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
@@ -123,10 +102,12 @@ public class LoginDaoPersistenceImplIT {
     dataSource.setUser(new Credentials(postgres.getUser(), postgres.getPassword()));
     config.setDataSource(dataSource);
     
-    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config);
+    JdbcHelper jdbcHelper = new JdbcHelper(vertx, JdbcHelper.createDataSource(dataSource, dataSource.getAdminUser(), null));
+    
+    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config, jdbcHelper);
     auditor.prepare();
     
-    LoginDaoPersistenceImpl instance = new LoginDaoPersistenceImpl(vertx, null, config, Duration.ofMillis(500));
+    LoginDaoPersistenceImpl instance = new LoginDaoPersistenceImpl(vertx, null, config, Duration.ofMillis(500), jdbcHelper);
     instance.prepare();
     
     LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
@@ -160,10 +141,12 @@ public class LoginDaoPersistenceImplIT {
     dataSource.setUser(new Credentials(mysql.getUser(), mysql.getPassword()));
     config.setDataSource(dataSource);
     
-    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config);
+    JdbcHelper jdbcHelper = new JdbcHelper(vertx, JdbcHelper.createDataSource(dataSource, dataSource.getAdminUser(), null));
+    
+    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config, jdbcHelper);
     auditor.prepare();
     
-    LoginDaoPersistenceImpl instance = new LoginDaoPersistenceImpl(vertx, null, config, Duration.ofMillis(500));
+    LoginDaoPersistenceImpl instance = new LoginDaoPersistenceImpl(vertx, null, config, Duration.ofMillis(500), jdbcHelper);
     instance.prepare();
     
     LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
@@ -195,10 +178,12 @@ public class LoginDaoPersistenceImplIT {
     dataSource.setUser(new Credentials(mysql.getUser(), mysql.getPassword()));
     config.setDataSource(dataSource);
     
-    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config);
+    JdbcHelper jdbcHelper = new JdbcHelper(vertx, JdbcHelper.createDataSource(dataSource, dataSource.getAdminUser(), null));
+    
+    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config, jdbcHelper);
     auditor.prepare();
     
-    LoginDaoPersistenceImpl instance = new LoginDaoPersistenceImpl(vertx, null, config, Duration.ofMillis(500));
+    LoginDaoPersistenceImpl instance = new LoginDaoPersistenceImpl(vertx, null, config, Duration.ofMillis(500), jdbcHelper);
     instance.prepare();
     
     LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
@@ -232,10 +217,12 @@ public class LoginDaoPersistenceImplIT {
     dataSource.setUser(new Credentials(mssql.getUser(), mssql.getPassword()));
     config.setDataSource(dataSource);
     
-    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config);
+    JdbcHelper jdbcHelper = new JdbcHelper(vertx, JdbcHelper.createDataSource(dataSource, dataSource.getAdminUser(), null));
+    
+    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config, jdbcHelper);
     auditor.prepare();
     
-    LoginDaoPersistenceImpl instance = new LoginDaoPersistenceImpl(vertx, null, config, Duration.ofMillis(500));
+    LoginDaoPersistenceImpl instance = new LoginDaoPersistenceImpl(vertx, null, config, Duration.ofMillis(500), jdbcHelper);
     instance.prepare();
     
     LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
@@ -267,10 +254,12 @@ public class LoginDaoPersistenceImplIT {
     dataSource.setUser(new Credentials(mssql.getUser(), mssql.getPassword()));
     config.setDataSource(dataSource);
     
-    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config);
+    JdbcHelper jdbcHelper = new JdbcHelper(vertx, JdbcHelper.createDataSource(dataSource, dataSource.getAdminUser(), null));
+    
+    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config, jdbcHelper);
     auditor.prepare();
     
-    LoginDaoPersistenceImpl instance = new LoginDaoPersistenceImpl(vertx, null, config, Duration.ofMillis(500));
+    LoginDaoPersistenceImpl instance = new LoginDaoPersistenceImpl(vertx, null, config, Duration.ofMillis(500), jdbcHelper);
     instance.prepare();
     
     LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);

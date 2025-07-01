@@ -48,9 +48,8 @@ public class DataSourceConfig {
   private Credentials adminUser;
 
   // Connection Pool Sizing
-  private int minPoolSize = 2;
   private int maxPoolSize = 10;
-  private int minimumIdle = -1; // Use same as maxPoolSize if not set
+  private int minimumIdle = 1;
 
   // Connection Timing
   private long connectionTimeout = 30000; // 30 seconds
@@ -135,16 +134,6 @@ public class DataSourceConfig {
    */
   public DataSourceConfig setMaxPoolSize(int maxPoolSize) {
     this.maxPoolSize = maxPoolSize;
-    return this;
-  }
-
-  /**
-   * Set the minimum number of concurrent connections that should be made to this datasource.
-   * @param minPoolSize the minimum number of concurrent connections that should be made to this datasource.
-   * @return this, so that this method may be used in a fluent manner.
-   */
-  public DataSourceConfig setMinPoolSize(int minPoolSize) {
-    this.minPoolSize = minPoolSize;
     return this;
   }
 
@@ -383,14 +372,6 @@ public class DataSourceConfig {
   }
 
   /**
-   * The minimum size of the connection pool.
-   * @return the minimum size of the connection pool.
-   */
-  public int getMinPoolSize() {
-    return minPoolSize;
-  }
-
-  /**
    * The minimum number of idle connections in the pool.
    * @return the minimum number of idle connections in the pool.
    */
@@ -568,9 +549,6 @@ public class DataSourceConfig {
     // Additional validation for HikariCP specific properties
     if (maxPoolSize <= 0) {
       throw new IllegalArgumentException(path + ".maxPoolSize must be greater than 0");
-    }
-    if (minimumIdle < -1) {
-      throw new IllegalArgumentException(path + ".minimumIdle must be -1 or greater");
     }
     if (minimumIdle > maxPoolSize) {
       throw new IllegalArgumentException(path + ".minimumIdle cannot be greater than maxPoolSize");

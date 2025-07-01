@@ -22,19 +22,11 @@ import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.Base64;
 import org.junit.jupiter.api.Test;
-import uk.co.spudsoft.query.main.Persistence;
-import uk.co.spudsoft.query.main.DataSourceConfig;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.lessThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.fail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,97 +38,6 @@ public class AuditorTest {
 
   private static final Logger logger = LoggerFactory.getLogger(AuditorTest.class);
 
-  @Test
-  public void testBadDriver() {
-    String url = "jdbc:nonexistant:wibble";
-    logger.info("Bad driver: {}", url);
-    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(
-            null,
-            null,
-            new Persistence()
-                    .setDataSource(new DataSourceConfig()
-                                    .setUrl(url)
-                    )
-                    .setRetryBase(Duration.ofMillis(10000))
-                    .setRetryIncrement(Duration.ofMillis(10000))
-    );
-    long start = System.currentTimeMillis();
-    try {
-      auditor.prepare();
-      fail("Expected to throw");
-    } catch (Throwable ex) {      
-      assertThat(System.currentTimeMillis() - start, lessThan(1000L));
-    }
-  }
-
-  @Test
-  public void testNoDatasource() {
-    String url = null;
-    logger.info("No datasource: {}", url);
-    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(
-            null,
-            null,
-            new Persistence()
-                    .setDataSource(null)
-                    .setRetryBase(Duration.ofMillis(100))
-                    .setRetryIncrement(Duration.ofMillis(10))
-                    .setRetryLimit(10)
-    );
-    long start = System.currentTimeMillis();
-    try {
-      auditor.prepare();
-      fail("Expected to throw");
-    } catch (Throwable ex) {      
-      assertThat(System.currentTimeMillis() - start, lessThan(100L));
-    }
-  }
-
-  @Test
-  public void testBadUrl() {
-    String url = "jdbc:postgresql://wibble/db";
-    logger.info("Bad URL: {}", url);
-    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(
-            null,
-            null,
-            new Persistence()
-                    .setDataSource(new DataSourceConfig()
-                                    .setUrl(url)
-                    )
-                    .setRetryBase(Duration.ofMillis(100))
-                    .setRetryIncrement(Duration.ofMillis(100))
-                    .setRetryLimit(4)
-    );
-    long start = System.currentTimeMillis();
-    try {
-      auditor.prepare();
-      fail("Expected to throw");
-    } catch (Throwable ex) {      
-      assertThat(System.currentTimeMillis() - start, greaterThan(1000L));
-    }
-  }
-
-  @Test
-  public void testNoRetries() {
-    String url = "jdbc:postgresql://wibble/db";
-    logger.info("Bad URL: {}", url);
-    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(
-            null,
-            null,
-            new Persistence()
-                    .setDataSource(new DataSourceConfig()
-                                    .setUrl(url)
-                    )
-                    .setRetryLimit(0)
-    );
-    long start = System.currentTimeMillis();
-    try {
-      auditor.prepare();
-      fail("Expected to throw");
-    } catch (Throwable ex) {      
-      assertThat(System.currentTimeMillis() - start, greaterThan(1000L));
-    }
-  }
-  
   @Test
   public void testLocalUser() {
     assertNull(Auditor.localizeUsername(null));

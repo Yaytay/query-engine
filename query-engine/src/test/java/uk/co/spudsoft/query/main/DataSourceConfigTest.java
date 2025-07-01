@@ -32,9 +32,8 @@ public class DataSourceConfigTest {
     DataSourceConfig config = new DataSourceConfig();
     
     // Test default values
-    assertThat(config.getMinPoolSize(), equalTo(2));
     assertThat(config.getMaxPoolSize(), equalTo(10));
-    assertThat(config.getMinimumIdle(), equalTo(-1));
+    assertThat(config.getMinimumIdle(), equalTo(1));
     assertThat(config.getConnectionTimeout(), equalTo(30000L));
     assertThat(config.getIdleTimeout(), equalTo(600000L));
     assertThat(config.getKeepaliveTime(), equalTo(0L));
@@ -64,11 +63,9 @@ public class DataSourceConfigTest {
   @Test
   public void testConnectionPoolSizing() {
     DataSourceConfig config = new DataSourceConfig()
-        .setMinPoolSize(5)
         .setMaxPoolSize(20)
         .setMinimumIdle(8);
     
-    assertThat(config.getMinPoolSize(), equalTo(5));
     assertThat(config.getMaxPoolSize(), equalTo(20));
     assertThat(config.getMinimumIdle(), equalTo(8));
   }
@@ -147,7 +144,6 @@ public class DataSourceConfigTest {
         .setSchema("test_schema")
         .setUser(new Credentials().setUsername("user"))
         .setAdminUser(new Credentials().setUsername("admin"))
-        .setMinPoolSize(5)
         .setMaxPoolSize(15)
         .setMinimumIdle(3)
         .setConnectionTimeout(25000L)
@@ -174,7 +170,6 @@ public class DataSourceConfigTest {
     assertThat(config.getSchema(), equalTo("test_schema"));
     assertThat(config.getUser().getUsername(), equalTo("user"));
     assertThat(config.getAdminUser().getUsername(), equalTo("admin"));
-    assertThat(config.getMinPoolSize(), equalTo(5));
     assertThat(config.getMaxPoolSize(), equalTo(15));
     assertThat(config.getMinimumIdle(), equalTo(3));
     assertThat(config.getConnectionTimeout(), equalTo(25000L));
@@ -240,19 +235,6 @@ public class DataSourceConfigTest {
         () -> config.validate("test")
     );
     assertThat(exception.getMessage(), equalTo("test.maxPoolSize must be greater than 0"));
-  }
-
-  @Test
-  public void testValidationFailureInvalidMinimumIdle() {
-    DataSourceConfig config = new DataSourceConfig()
-        .setUrl("jdbc:postgresql://localhost:5432/test")
-        .setMinimumIdle(-2);
-    
-    IllegalArgumentException exception = assertThrows(
-        IllegalArgumentException.class,
-        () -> config.validate("test")
-    );
-    assertThat(exception.getMessage(), equalTo("test.minimumIdle must be -1 or greater"));
   }
 
   @Test

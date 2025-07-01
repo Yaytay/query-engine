@@ -23,7 +23,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -40,7 +39,6 @@ import liquibase.exception.LiquibaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.JdbcHelper;
-import uk.co.spudsoft.query.main.Credentials;
 import uk.co.spudsoft.query.main.DataSourceConfig;
 import uk.co.spudsoft.query.main.Persistence;
 
@@ -63,7 +61,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
   
   private final AtomicBoolean prepared = new AtomicBoolean(false);
   
-  private JdbcHelper jdbcHelper;
+  private final JdbcHelper jdbcHelper;
   
   private final AtomicLong lastPurge = new AtomicLong();
   
@@ -79,13 +77,15 @@ public class LoginDaoPersistenceImpl implements LoginDao {
    * @param meterRegistry {@link MeterRegistry} for reporting metrics.
    * @param configuration database configuration.
    * @param purgeDelay purge delay for expired tokens/sessions.  A scheduled job will be set up with this period to clean up expired data.
+   * @param jdbcHelper Helper object for making DB calls.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "MeterRegisty is intended to be mutable by any user")
-  public LoginDaoPersistenceImpl(Vertx vertx, MeterRegistry meterRegistry, Persistence configuration, Duration purgeDelay) {
+  public LoginDaoPersistenceImpl(Vertx vertx, MeterRegistry meterRegistry, Persistence configuration, Duration purgeDelay, JdbcHelper jdbcHelper) {
     this.vertx = vertx;
     this.meterRegistry = meterRegistry;
     this.configuration = configuration;
     this.purgeDelay = purgeDelay;
+    this.jdbcHelper = jdbcHelper;
   }
 
   private String recordLogin = """
@@ -215,13 +215,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
         expireTokens = expireTokens.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
       }
 
-      Credentials credentials = dataSourceConfig.getUser();
-      if (credentials == null) {
-        credentials = dataSourceConfig.getAdminUser();
-      }
-      dataSource = JdbcHelper.createDataSource(dataSourceConfig, credentials, meterRegistry);
-      jdbcHelper = new JdbcHelper(vertx, dataSource);
-      try (Connection connection = dataSource.getConnection()) {
+      jdbcHelper.runOnConnectionSynchronously("LoginDaoPersistenceImpl.prepare", connection -> {
         quote = connection.getMetaData().getIdentifierQuoteString();
         recordLogin = recordLogin.replaceAll("#", quote);
         markUsed = markUsed.replaceAll("#", quote);
@@ -231,7 +225,8 @@ public class LoginDaoPersistenceImpl implements LoginDao {
         getToken = getToken.replaceAll("#", quote);
         deleteToken = deleteToken.replaceAll("#", quote);
         expireTokens = expireTokens.replaceAll("#", quote);
-      }
+        return null;
+      });
       
       timezoneHandlingTest();
       

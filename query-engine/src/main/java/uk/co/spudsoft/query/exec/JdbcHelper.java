@@ -88,10 +88,7 @@ public class JdbcHelper {
 
     // Pool sizing configuration
     ds.setMaximumPoolSize(config.getMaxPoolSize());
-    if (config.getMinimumIdle() == -1) {
-      // Use maxPoolSize as default for minimumIdle when not explicitly set
-      ds.setMinimumIdle(config.getMaxPoolSize());
-    } else {
+    if (config.getMinimumIdle() > 0) {
       ds.setMinimumIdle(config.getMinimumIdle());
     }
 
@@ -151,6 +148,17 @@ public class JdbcHelper {
 
     return ds;
   }
+
+  /**
+   * Shut down the data source.
+   */
+  public void shutdown() {
+    if (dataSource instanceof HikariDataSource hikari) {
+      hikari.close();
+    }
+  }
+  
+  
   /**
    * Functional interface defining a consumer that takes in one argument and can throw an exception.
    *
@@ -213,6 +221,33 @@ public class JdbcHelper {
     return vertx.executeBlocking(() -> runSqlUpdateSynchronously(name, sql, prepareStatement));
   }
 
+  /**
+   * Run commands that use a JDBC connection on the calling thread.
+   * 
+   * @param <R> The return type of the consumer.
+   * @param name name of the action being taken for log messages.
+   * @param consumer consumer that will do something on the connection.
+   * @return A value of type R.
+   * @throws Exception if something goes wrong.
+   */
+  public <R> R runOnConnectionSynchronously(String name, SqlFunction<Connection, R> consumer) throws Exception {
+    String logMessage = "Failed to get connection ({}): ";
+    try {
+      Connection conn = dataSource.getConnection();
+      try {
+        return consumer.accept(conn);
+      } finally {
+        closeConnection(conn);
+      }
+    } catch (Exception ex) {
+      logger.error(logMessage, name, ex);
+      throw ex;
+    } catch (Throwable ex) {
+      logger.error(logMessage, name, ex);
+      throw new RuntimeException(logMessage.replace("{}", name), ex);
+    }    
+  }
+  
   /**
    * Run a SQL update synchronously.
    * @param name name of the action being taken for log messages.

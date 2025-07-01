@@ -22,6 +22,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.hash.Hashing;
@@ -99,10 +100,21 @@ public final class PipelineDefnLoader {
    * The ObjectMapper to reading/writing JSON files containing {@link Pipeline} definitions.
    */
   public static final ObjectMapper JSON_OBJECT_MAPPER = createObjectMapper(null);
+
   /**
    * The ObjectMapper to reading/writing YAML files containing {@link Pipeline} definitions.
    */
-  public static final ObjectMapper YAML_OBJECT_MAPPER = createObjectMapper(new YAMLFactory());  
+  public static final ObjectMapper YAML_OBJECT_MAPPER = createYamlObjectMapper();
+
+  private static ObjectMapper createYamlObjectMapper() {
+    YAMLFactory yamlFactory = new YAMLFactory();
+    // Configure YAML factory to use literal block scalars for multiline strings
+    yamlFactory.configure(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE, true);
+    yamlFactory.configure(YAMLGenerator.Feature.MINIMIZE_QUOTES, true);
+    yamlFactory.configure(YAMLGenerator.Feature.WRITE_DOC_START_MARKER, false);
+    
+    return createObjectMapper(yamlFactory);
+  }
 
   private static ObjectMapper createObjectMapper(JsonFactory jf) {
     ObjectMapper mapper = new ObjectMapper(jf);

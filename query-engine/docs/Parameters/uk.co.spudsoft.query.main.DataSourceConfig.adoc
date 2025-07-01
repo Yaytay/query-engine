@@ -24,9 +24,6 @@ Configuration data for communicating with a data source.
 | [[maxPoolSize]]maxPoolSize
 | int
 | Set the maximum number of concurrent connections that should be made to this datasource.
-| [[minPoolSize]]minPoolSize
-| int
-| Set the minimum number of concurrent connections that should be made to this datasource.
 | [[minimumIdle]]minimumIdle
 | int
 | Set the minimum number of idle connections that HikariCP tries to maintain in the pool.

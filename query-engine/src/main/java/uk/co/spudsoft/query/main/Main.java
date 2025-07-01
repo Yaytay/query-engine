@@ -105,6 +105,7 @@ import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.AuditorMemoryImpl;
 import uk.co.spudsoft.query.exec.AuditorPersistenceImpl;
 import uk.co.spudsoft.query.exec.FilterFactory;
+import uk.co.spudsoft.query.exec.JdbcHelper;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineExecutorImpl;
 import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
@@ -180,6 +181,9 @@ public class Main extends Application {
   private static final Object OPEN_TELEMETRY_LOCK = new Object();
 
   private volatile int port;
+  
+  private JdbcHelper jdbcHelper;
+  
 
   /**
    * Constructor.
@@ -253,6 +257,9 @@ public class Main extends Application {
    * Shutdown Vert.x, but not the entire process.
    */
   public void shutdown() {
+    if (jdbcHelper != null) {
+      jdbcHelper.shutdown();
+    }
     Vertx v = this.vertx;
     if (v != null) {
       v.close();
@@ -420,12 +427,19 @@ public class Main extends Application {
 
     vertx = vertxBuilder.build();
     meterRegistry = (PrometheusMeterRegistry) BackendRegistries.getDefaultNow();
-
+    
     LoginDao loginDao;
     if (params.getPersistence().getDataSource() != null
             && !Strings.isNullOrEmpty(params.getPersistence().getDataSource().getUrl())) {
-      auditor = new AuditorPersistenceImpl(vertx, meterRegistry, params.getPersistence());
-      loginDao = new LoginDaoPersistenceImpl(vertx, meterRegistry, params.getPersistence(), params.getSession().getPurgeDelay());
+
+      Credentials credentials = params.getPersistence().getDataSource().getUser();
+      if (credentials == null) {
+        credentials = params.getPersistence().getDataSource().getAdminUser();
+      }
+      this.jdbcHelper = new JdbcHelper(vertx, JdbcHelper.createDataSource(params.getPersistence().getDataSource(), credentials, meterRegistry));
+
+      auditor = new AuditorPersistenceImpl(vertx, meterRegistry, params.getPersistence(), jdbcHelper);
+      loginDao = new LoginDaoPersistenceImpl(vertx, meterRegistry, params.getPersistence(), params.getSession().getPurgeDelay(), jdbcHelper);
     } else {
       logger.info("Persistence is not configured, using in-memory tracking of last {} runs", AuditorMemoryImpl.SIZE);
       auditor = new AuditorMemoryImpl();
