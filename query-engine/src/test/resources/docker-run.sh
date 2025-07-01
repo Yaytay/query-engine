@@ -14,7 +14,6 @@ docker run -it \
   -e query-engine.audit.dataSource.user.password=TopSecret \
   -e query-engine.audit.dataSource.adminUser.username=auditor-ddl \
   -e query-engine.audit.dataSource.adminUser.password=TopSecret \
-  -e query-engine.zipkin.baseUrl=http://localhost/wontwork \
   -p 8080:8080 \
   -v /mnt/c/Work/github/query-engine/src/test/resources/sources:/var/query-engine \
   $image

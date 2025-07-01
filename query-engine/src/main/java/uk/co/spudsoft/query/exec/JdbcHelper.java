@@ -31,6 +31,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Calendar;
 import java.util.TimeZone;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
@@ -40,17 +41,19 @@ import uk.co.spudsoft.query.main.DataSourceConfig;
 
 /**
  * Helper class for working with JDBC within Vertx.
- * 
+ *
  * @author jtalbut
  */
 public class JdbcHelper {
-  
+
   private static final Logger logger = LoggerFactory.getLogger(JdbcHelper.class);
-  
+
   private static final Calendar TZ_CAL = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-    
+
   private final Vertx vertx;
   private final DataSource dataSource;
+
+  private static final AtomicInteger INSTANCE_COUNTER = new AtomicInteger();
 
   /**
    * Constructor.
@@ -62,7 +65,7 @@ public class JdbcHelper {
     this.vertx = vertx;
     this.dataSource = dataSource;
   }
-  
+
   /**
    * Create a {@link HikariDataSource} from parameters.
    * @param config the configuration of the {@link DataSource}.
@@ -72,6 +75,8 @@ public class JdbcHelper {
    */
   public static HikariDataSource createDataSource(DataSourceConfig config, @Nullable Credentials credentials, @Nullable MeterRegistry meterRegistry) {
     HikariDataSource ds = new HikariDataSource();
+
+    // Essential connection properties
     ds.setJdbcUrl(config.getUrl());
     if (credentials != null) {
       ds.setUsername(Auditor.localizeUsername(credentials.getUsername()));
@@ -80,17 +85,72 @@ public class JdbcHelper {
     if (config.getSchema() != null) {
       ds.setSchema(config.getSchema());
     }
+
+    // Pool sizing configuration
     ds.setMaximumPoolSize(config.getMaxPoolSize());
-    ds.setMinimumIdle(config.getMinPoolSize());
-    ds.setIdleTimeout(30000);
-    ds.setAutoCommit(true);
+    if (config.getMinimumIdle() == -1) {
+      // Use maxPoolSize as default for minimumIdle when not explicitly set
+      ds.setMinimumIdle(config.getMaxPoolSize());
+    } else {
+      ds.setMinimumIdle(config.getMinimumIdle());
+    }
+
+    // Connection timing configuration
+    ds.setConnectionTimeout(config.getConnectionTimeout());
+    ds.setIdleTimeout(config.getIdleTimeout());
+    ds.setKeepaliveTime(config.getKeepaliveTime());
+    ds.setMaxLifetime(config.getMaxLifetime());
+    ds.setValidationTimeout(config.getValidationTimeout());
+    ds.setInitializationFailTimeout(config.getInitializationFailTimeout());
+    ds.setLeakDetectionThreshold(config.getLeakDetectionThreshold());
+
+    // Connection behavior configuration
+    ds.setAutoCommit(config.isAutoCommit());
+    ds.setReadOnly(config.isReadOnly());
+
+    if (config.getIsolationLevel() != null && !config.getIsolationLevel().trim().isEmpty()) {
+      ds.setTransactionIsolation(config.getIsolationLevel());
+    }
+
+    if (config.getCatalog() != null && !config.getCatalog().trim().isEmpty()) {
+      ds.setCatalog(config.getCatalog());
+    }
+
+    // Pool behavior configuration
+    ds.setAllowPoolSuspension(config.isAllowPoolSuspension());
+    ds.setRegisterMbeans(config.isRegisterMbeans());
+
+    // JDBC driver configuration
+    if (config.getDriverClassName() != null && !config.getDriverClassName().trim().isEmpty()) {
+      ds.setDriverClassName(config.getDriverClassName());
+    }
+
+    if (config.getDataSourceClassName() != null && !config.getDataSourceClassName().trim().isEmpty()) {
+      ds.setDataSourceClassName(config.getDataSourceClassName());
+    }
+
+    if (config.getConnectionTestQuery() != null && !config.getConnectionTestQuery().trim().isEmpty()) {
+      ds.setConnectionTestQuery(config.getConnectionTestQuery());
+    }
+
+    if (config.getConnectionInitSql() != null && !config.getConnectionInitSql().trim().isEmpty()) {
+      ds.setConnectionInitSql(config.getConnectionInitSql());
+    }
+
+    // Pool identification
+    if (config.getPoolName() != null && !config.getPoolName().trim().isEmpty()) {
+      ds.setPoolName(config.getPoolName());
+    } else {
+      ds.setPoolName("QueryEngine-" + INSTANCE_COUNTER.incrementAndGet());
+    }
+
+    // Metrics configuration
     if (meterRegistry != null) {
       ds.setMetricsTrackerFactory(new MicrometerMetricsTrackerFactory(meterRegistry));
     }
-    return ds;
 
+    return ds;
   }
-  
   /**
    * Functional interface defining a consumer that takes in one argument and can throw an exception.
    *
@@ -107,7 +167,7 @@ public class JdbcHelper {
      */
     void accept(T t) throws Throwable;
   }
-  
+
   /**
    * Functional interface defining a consumer that takes in one argument and can throw an exception.
    *
@@ -141,7 +201,7 @@ public class JdbcHelper {
       ps.setTimestamp(index, Timestamp.from(utc.toInstant(ZoneOffset.UTC)), TZ_CAL);
     }
   }
-  
+
   /**
    * Run a SQL update asynchronously (in the Vertx worker thread).
    * @param name name of the action being taken for log messages.
@@ -192,7 +252,7 @@ public class JdbcHelper {
 
   /**
    * Run a SQL select asynchronously (in the Vertx worker thread).
-   * 
+   *
    * @param <R> The type of data being returned.
    * @param sql statement to be run.
    * @param prepareStatement a {@link SqlConsumer} to use to set parameters on the {@link PreparedStatement}.
@@ -210,7 +270,7 @@ public class JdbcHelper {
 
   /**
    * Run a SQL select synchronously.
-   * 
+   *
    * @param <R> The type of data being returned.
    * @param sql statement to be run.
    * @param prepareStatement a {@link SqlConsumer} to use to set parameters on the {@link PreparedStatement}.
@@ -234,7 +294,7 @@ public class JdbcHelper {
         try {
           logMessage = "Failed to prepare statement: ";
           prepareStatement.accept(statement);
-          
+
           logMessage = "Failed to execute query: ";
           ResultSet rs = statement.executeQuery();
           try {
@@ -256,7 +316,7 @@ public class JdbcHelper {
       throw new RuntimeException(logMessage, ex);
     }
   }
-  
+
   /**
    * Return the string value truncated to at most maxLen-4 characters with "..." appended.
    * @param value the value to be truncated.
@@ -273,7 +333,7 @@ public class JdbcHelper {
       return value.substring(0, maxLen - 4) + "...";
     }
   }
-  
+
   /**
    * Convert value to a string, returning null if value is null.
    * @param value the value to convert.
@@ -285,7 +345,7 @@ public class JdbcHelper {
     }
     return value.toString();
   }
-  
+
   /**
    * Close a {@link Connection} without throwing an error (just reporting it).
    * @param conn the {@link Connection} to close.
@@ -309,6 +369,6 @@ public class JdbcHelper {
       logger.error("Failed to close statement: ", ex);
     }
   }
-  
-  
+
+
 }

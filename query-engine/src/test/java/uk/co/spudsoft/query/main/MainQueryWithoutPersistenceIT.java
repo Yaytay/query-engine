@@ -79,7 +79,6 @@ public class MainQueryWithoutPersistenceIT {
       , "--vertxOptions.workerPoolSize=5"
       , "--pipelineCache.maxDuration=PT10M"
       , "--logging.jsonFormat=false"
-      , "--zipkin.baseUrl=http://localhost/wontwork"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--sampleDataLoads[0].url=" + postgres.getVertxUrl()

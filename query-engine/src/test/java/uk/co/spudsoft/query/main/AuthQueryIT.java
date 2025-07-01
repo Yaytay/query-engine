@@ -108,7 +108,6 @@ public class AuthQueryIT {
       , "--httpServerOptions.tracingPolicy=ALWAYS"
       , "--pipelineCache.maxDurationMs=PT10M"
       , "--logging.jsonFormat=false"
-      , "--zipkin.baseUrl=http://localhost/wontwork"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.jwksEndpoints[0]=" + jwks.getBaseUrl() + "/jwks"
       , "--jwt.defaultJwksCacheDuration=PT1M"

@@ -85,7 +85,6 @@ public class FormBuilderIT {
       , "--httpServerOptions.tracingPolicy=ALWAYS"
       , "--pipelineCache.maxDuration=PT10M"
       , "--logging.jsonFormat=false"
-      , "--zipkin.baseUrl=http://localhost/wontwork"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
     }, stdout, System.getenv());

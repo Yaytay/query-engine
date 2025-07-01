@@ -91,7 +91,6 @@ public class AllFiltersIT {
       , "--pipelineCache.maxDuration=PT10M"
       , "--logging.jsonFormat=false"
       , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec\\\\.procs\\\\.subquery=TRACE"
-      , "--zipkin.baseUrl=http://localhost/wontwork"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--sampleDataLoads[0].url=" + postgres.getVertxUrl()
