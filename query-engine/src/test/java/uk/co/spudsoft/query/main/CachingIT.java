@@ -231,7 +231,7 @@ public class CachingIT {
     String username = mysql.getUser();
     String password = mysql.getPassword();
     
-    Awaitility.await().atMost(60, TimeUnit.SECONDS).until(() -> getDirtyAudits(jdbcUrl, username, password).isEmpty());
+    Awaitility.await().pollDelay(10, TimeUnit.SECONDS).atMost(60, TimeUnit.SECONDS).until(() -> getDirtyAudits(jdbcUrl, username, password).isEmpty());
     
     ensureAuditIsClean(jdbcUrl, username, password);
     
@@ -255,6 +255,9 @@ public class CachingIT {
           }
           rows.add(row);
         }
+      }
+      if (!rows.isEmpty()) {
+        logger.info("Dirty audit rows: {}", rows);
       }
       return rows;
     }  

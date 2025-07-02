@@ -39,6 +39,7 @@ import static org.hamcrest.Matchers.startsWith;
 import org.junit.jupiter.api.TestInstance;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 import org.testcontainers.shaded.org.awaitility.Awaitility;
+import static uk.co.spudsoft.query.main.CachingIT.getDirtyAudits;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
 
 /**
@@ -80,7 +81,7 @@ public class FeatureRichQueryIT {
     String username = mysql.getUser();
     String password = mysql.getPassword();
     
-    Awaitility.await().atMost(60, TimeUnit.SECONDS).until(() -> CachingIT.getDirtyAudits(jdbcUrl, username, password).isEmpty());
+    Awaitility.await().pollDelay(10, TimeUnit.SECONDS).atMost(60, TimeUnit.SECONDS).until(() -> getDirtyAudits(jdbcUrl, username, password).isEmpty());
     
     CachingIT.ensureAuditIsClean(jdbcUrl, username, password);
     

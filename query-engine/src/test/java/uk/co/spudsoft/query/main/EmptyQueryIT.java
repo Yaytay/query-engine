@@ -86,7 +86,7 @@ public class EmptyQueryIT {
     String username = mysql.getUser();
     String password = mysql.getPassword();
     
-    Awaitility.await().atMost(60, TimeUnit.SECONDS).until(() -> CachingIT.getDirtyAudits(jdbcUrl, username, password).isEmpty());
+    Awaitility.await().pollDelay(10, TimeUnit.SECONDS).atMost(60, TimeUnit.SECONDS).until(() -> getDirtyAudits(jdbcUrl, username, password).isEmpty());
     
     CachingIT.ensureAuditIsClean(jdbcUrl, username, password);
     
