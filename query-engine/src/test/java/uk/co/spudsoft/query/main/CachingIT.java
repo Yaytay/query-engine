@@ -19,12 +19,16 @@ package uk.co.spudsoft.query.main;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
 import io.restassured.response.Response;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.impl.Utils;
 import io.vertx.junit5.VertxExtension;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
 import java.lang.invoke.MethodHandles;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import javax.annotation.concurrent.NotThreadSafe;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeAll;
@@ -41,6 +45,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.TestInstance;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
@@ -107,6 +112,7 @@ public class CachingIT {
     long start = System.currentTimeMillis();
     
     Response response1 = given()
+            .header("Query", "query1")
             .queryParam("rows", "37")
             .queryParam("delay", "100")
             .log().all()
@@ -138,6 +144,7 @@ public class CachingIT {
     start = System.currentTimeMillis();
     
     Response response2 = given()
+            .header("Query", "query2")
             .queryParam("rows", "37")
             .queryParam("delay", "100")
             .log().all()
@@ -164,6 +171,7 @@ public class CachingIT {
     
     Response response3 = given()
             .header("If-Modified-Since", Utils.formatRFC1123DateTime(System.currentTimeMillis()))
+            .header("Query", "query3")
             .queryParam("rows", "37")
             .queryParam("delay", "100")
             .log().all()
@@ -194,6 +202,7 @@ public class CachingIT {
     start = System.currentTimeMillis();
     
     Response response4 = given()
+            .header("Query", "query4")
             .queryParam("rows", "37")
             .queryParam("delay", "100")
             .log().all()
@@ -213,8 +222,36 @@ public class CachingIT {
     assertThat(lastModified4, not(equalTo(lastModified1)));
 
     assertEquals(body1, body4);
+
+    ensureAuditIsClean();
     
     main.shutdown();
+  }
+  
+  private void ensureAuditIsClean() throws SQLException {
+    String jdbcUrl = mysql.getJdbcUrl();
+    String username = mysql.getUser();
+    String password = mysql.getPassword();
+
+    try (java.sql.Connection conn = java.sql.DriverManager.getConnection(jdbcUrl, username, password); java.sql.Statement stmt = conn.createStatement()) {
+
+      // Query for requests without response_timeout
+      JsonArray rows = new JsonArray();
+      String query = "select * from request where responseTime is null";
+      try (java.sql.ResultSet rs = stmt.executeQuery(query)) {
+        ResultSetMetaData meta = rs.getMetaData();
+
+        while (rs.next()) {
+          JsonObject row = new JsonObject();
+          for (int i = 1; i <= meta.getColumnCount(); ++i) {
+            row.put(meta.getColumnName(i), rs.getObject(i));
+          }
+          logger.warn("Found incomplete audit: ", row);
+          rows.add(row);
+        }
+      }
+      assertEquals(new JsonArray(), rows, "Incomplete requests in database!");
+    }
   }
   
 }

@@ -312,7 +312,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
           resumeSecondary = !secondaryEnded && secondaryRows.size() < secondaryStreamBufferLowThreshold;
 
           if (capturedHandler != null) {
-            if (!innerJoin || !mergeSecondary.isEmpty()) {
+            if (!innerJoin || (mergeSecondary != null && !mergeSecondary.isEmpty())) {
               if (demand != Long.MAX_VALUE) {
                 --demand;
               }
@@ -322,7 +322,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
       }
       
       if (capturedHandler != null) {
-        if (!innerJoin || !mergeSecondary.isEmpty()) {
+        if (!innerJoin || (mergeSecondary != null && !mergeSecondary.isEmpty())) {
           V result = merger.apply(mergePrimary, mergeSecondary);
           logger.trace("Outputting {}", result);
           capturedHandler.handle(result);
