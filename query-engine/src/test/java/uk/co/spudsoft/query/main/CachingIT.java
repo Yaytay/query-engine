@@ -223,6 +223,8 @@ public class CachingIT {
 
     assertEquals(body1, body4);
 
+    Thread.sleep(500);
+    
     ensureAuditIsClean();
     
     main.shutdown();
