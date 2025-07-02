@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.invoke.MethodHandles;
+import java.util.concurrent.TimeUnit;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -39,6 +40,8 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
 import org.junit.jupiter.api.TestInstance;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
+import org.testcontainers.shaded.org.awaitility.Awaitility;
+import static uk.co.spudsoft.query.main.CachingIT.getDirtyAudits;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
 
 /**
@@ -75,6 +78,18 @@ public class EmptyQueryIT {
   
   @Test
   public void testQuery() throws Exception {
+    
+    // Audit records are written asynchronously after the data is sent
+    // which gives a race condition here.
+    // Give them up to a minute to complete.
+    String jdbcUrl = mysql.getJdbcUrl();
+    String username = mysql.getUser();
+    String password = mysql.getPassword();
+    
+    Awaitility.await().atMost(60, TimeUnit.SECONDS).until(() -> CachingIT.getDirtyAudits(jdbcUrl, username, password).isEmpty());
+    
+    CachingIT.ensureAuditIsClean(jdbcUrl, username, password);
+    
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
