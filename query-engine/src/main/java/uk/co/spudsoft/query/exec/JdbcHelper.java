@@ -486,7 +486,7 @@ public class JdbcHelper {
     }
     if (value.length() <= maxLen) {
       return value;
-    } else if(maxLen < 8) {
+    } else if (maxLen < 8) {
       return value.substring(0, maxLen);
     } else {
       return value.substring(0, maxLen - 3) + "...";

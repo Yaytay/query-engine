@@ -20,6 +20,9 @@ import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.metrics.micrometer.MicrometerMetricsTrackerFactory;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -28,6 +31,8 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Calendar;
+import java.util.concurrent.Callable;
+import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
@@ -45,7 +50,9 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -670,5 +677,28 @@ public class JdbcHelperTest {
     JdbcHelper.closeStatement(statement);
 
     verify(statement).close();
+  }
+  
+  @Test
+  @SuppressWarnings("unchecked")
+  void testShutdown_WithActiveFutures() {
+    Vertx vertx = mock(Vertx.class);
+    DataSource dataSource = mock(DataSource.class);
+    JdbcHelper jdbcHelper = new JdbcHelper(vertx, dataSource);
+
+    Promise<Void> promise = Promise.promise();
+    
+    // Start an operation to create an active future
+    when(vertx.executeBlocking((Callable<Void>)any())).thenReturn(promise.future());
+    jdbcHelper.runSqlUpdate("test", "SELECT 1", ps -> {});
+
+    // Shutdown should not complete immediately
+    Future<Void> shutdownFuture = jdbcHelper.shutdown();
+
+    assertFalse(shutdownFuture.isComplete());
+    
+    promise.complete();
+
+    assertTrue(shutdownFuture.isComplete());
   }
 }
