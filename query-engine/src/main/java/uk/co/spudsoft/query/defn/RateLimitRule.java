@@ -341,4 +341,33 @@ public class RateLimitRule {
     this.concurrencyLimit = concurrencyLimit;
   }
 
+  @Override
+  public String toString() {
+    // {"scope":["username"],"timeLimit":"PT10M","runLimit":null,"byteLimit":null,"concurrencyLimit":5}
+    StringBuilder result = new StringBuilder();
+    result.append("{\"scope\":")
+            .append(scope)
+            .append(",\"timeLimit\":\"")
+            .append(timeLimit)
+            .append("\"")
+            ;
+    if (runLimit != null) {
+      result.append(",\"runLimit\":\"")
+              .append(runLimit)
+              .append("\"")
+              ;
+    }
+    if (byteLimit != null) {
+      result.append(",\"byteLimit\":\"")
+              .append(byteLimit)
+              .append("\"")
+              ;
+    }
+    result.append(",\"concurrencyLimit\":")
+            .append(concurrencyLimit)
+            .append("}")
+            ;
+    return result.toString();
+  }
+  
 }

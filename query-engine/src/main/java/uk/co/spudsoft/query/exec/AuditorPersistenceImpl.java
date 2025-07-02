@@ -30,7 +30,6 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerResponse;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.jackson.DatabindCodec;
@@ -52,6 +51,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import static javax.management.Query.value;
 import liquibase.Scope;
 import liquibase.command.CommandScope;
 import liquibase.command.core.UpdateCommandStep;
@@ -98,7 +99,7 @@ public class AuditorPersistenceImpl implements Auditor {
   private static final Base64.Decoder DECODER = java.util.Base64.getDecoder();
 
   private static final EnumMap<AuditHistorySortOrder, String> SORT_COLUMN_NAMES = prepareSortColumnNames();
-
+  
   private static EnumMap<AuditHistorySortOrder, String> prepareSortColumnNames() {
     EnumMap<AuditHistorySortOrder, String> result = new EnumMap<>(AuditHistorySortOrder.class);
     for (AuditHistorySortOrder value : AuditHistorySortOrder.values()) {
@@ -182,7 +183,7 @@ public class AuditorPersistenceImpl implements Auditor {
     }
 
     Boolean done = Boolean.FALSE;
-    for (int retry = 0; !done && configuration.getRetryLimit() < 0 || retry <= configuration.getRetryLimit(); ++retry) {
+    for (int retry = 0; !done && (configuration.getRetryLimit() < 0 || retry <= configuration.getRetryLimit()); ++retry) {
       logger.debug("Running liquibase, attempt {}", retry);
 
       done = jdbcHelper.runOnConnectionSynchronously("AuditorPersistenceImpl.prepare", connection -> {
@@ -762,7 +763,7 @@ public class AuditorPersistenceImpl implements Auditor {
               ? "RateLimitRule {} failed: Concurrency limit failed. At {} there were {} outstanding runs since {}. Rule: {}"
               : "RateLimitRule {} failed: Concurrency limit failed. At {} there was {} outstanding run since {}. Rule: {}"
               ;
-      logger.error(logmsg, index, timestamp, outstanding, now.minus(rule.getTimeLimit()), Json.encode(rule));
+      logger.error(logmsg, index, timestamp, outstanding, now.minus(rule.getTimeLimit()), rule);
       throw new ServiceException(429, "Query already running, please try again later");
     }
     Long runLimit = rule.getParsedRunLimit();
@@ -772,7 +773,7 @@ public class AuditorPersistenceImpl implements Auditor {
                 ? "RateLimitRule {} failed: Run limit failed. At {} there had been {} runs since {}. Rule: {}"
                 : "RateLimitRule {} failed: Run limit failed. At {} there had been {} run since {}. Rule: {}"
                 ;
-        logger.error(logmsg, index, timestamp, outstanding, now.minus(rule.getTimeLimit()), Json.encode(rule));
+        logger.error(logmsg, index, timestamp, outstanding, now.minus(rule.getTimeLimit()), rule);
         throw new ServiceException(429, "Run too many times, please try again later");
       }
     }
@@ -783,7 +784,7 @@ public class AuditorPersistenceImpl implements Auditor {
                 ? "RateLimitRule {} failed: Byte limit failed. At {} there had been {} bytes sent since {}. Rule: {}"
                 : "RateLimitRule {} failed: Byte limit failed. At {} there had been {} byte sent since {}. Rule: {}"
                 ;
-        logger.error(logmsg, index, timestamp, outstanding, now.minus(rule.getTimeLimit()), Json.encode(rule));
+        logger.error(logmsg, index, timestamp, outstanding, now.minus(rule.getTimeLimit()), rule);
         throw new ServiceException(429, "Rate limit exceeded, please try again later");
       }
     }
@@ -805,28 +806,30 @@ public class AuditorPersistenceImpl implements Auditor {
       return null;
     }
     JsonObject jo = new JsonObject();
-    for (Map.Entry<String, String> entry : map.entries()) {
-      String key = entry.getKey();
-      String value = entry.getValue();
-      if (AUTH.equalsIgnoreCase(key)) {
-        value = protectAuthHeader(value);
-      }
-      Object curValue = jo.getValue(key);
-      if (curValue == null) {
-        jo.put(key, value);
-      } else if (curValue instanceof JsonArray array) {
-        array.add(value);
-      } else if (curValue instanceof String string) {
-        JsonArray array = new JsonArray();
-        array.add(string);
-        array.add(value);
-        jo.put(key, array);
+    for (String key : map.names()) {
+      List<String> values = map.getAll(key);
+      if (values != null && !values.isEmpty()) {
+        if (AUTH.equalsIgnoreCase(key)) {
+          values = values.stream().map(v -> protectAuthHeader(v)).collect(Collectors.toList());
+        }
+        if (values.size() == 1) {
+          jo.put(key, values.get(0));
+        } else {
+          JsonArray array = new JsonArray();
+          for (String value : values) {
+            array.add(value);
+          }
+          jo.put(key, array);
+        }        
       }
     }
     return jo;
   }
 
   static String protectAuthHeader(String value) {
+    if  (value == null) {
+      return null;
+    }
     if (value.startsWith(BASIC)) {
       try {
         String base64Part = value.substring(BASIC.length());
@@ -929,7 +932,7 @@ public class AuditorPersistenceImpl implements Auditor {
     });
   }
 
-  private Integer getInteger(ResultSet rs, int colIdx) throws SQLException {
+  static Integer getInteger(ResultSet rs, int colIdx) throws SQLException {
     int value = rs.getInt(colIdx);
     if (rs.wasNull()) {
       return null;
@@ -938,7 +941,7 @@ public class AuditorPersistenceImpl implements Auditor {
     }
   }
 
-  private Long getLong(ResultSet rs, int colIdx) throws SQLException {
+  static Long getLong(ResultSet rs, int colIdx) throws SQLException {
     long value = rs.getLong(colIdx);
     if (rs.wasNull()) {
       return null;
@@ -951,6 +954,9 @@ public class AuditorPersistenceImpl implements Auditor {
   ObjectNode getArguments(ResultSet rs, int idx, String id) throws SQLException {
     ObjectNode arguments = null;
     String value = rs.getString(idx);
+    if (rs.wasNull()) {
+      return null;
+    }
     try {
       if (!Strings.isNullOrEmpty(value)) {
         arguments = mapper.readValue(value, ObjectNode.class);

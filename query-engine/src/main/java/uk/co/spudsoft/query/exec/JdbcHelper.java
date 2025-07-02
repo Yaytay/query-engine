@@ -21,6 +21,7 @@ import com.zaxxer.hikari.metrics.micrometer.MicrometerMetricsTrackerFactory;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -30,7 +31,10 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Calendar;
+import java.util.Set;
 import java.util.TimeZone;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
@@ -53,6 +57,11 @@ public class JdbcHelper {
   private final Vertx vertx;
   private final DataSource dataSource;
 
+  // Shutdown management
+  private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
+  private final Set<Future<?>> activeFutures = ConcurrentHashMap.newKeySet();
+  private volatile Promise<Void> shutdownPromise;
+
   private static final AtomicInteger INSTANCE_COUNTER = new AtomicInteger();
 
   /**
@@ -66,7 +75,7 @@ public class JdbcHelper {
     this.dataSource = dataSource;
   }
 
-  /**
+ /**
    * Create a {@link HikariDataSource} from parameters.
    * @param config the configuration of the {@link DataSource}.
    * @param credentials credentials to use.
@@ -147,18 +156,174 @@ public class JdbcHelper {
     }
 
     return ds;
+  }  
+  
+  /**
+   * Check if new operations should be blocked.
+   * @throws IllegalStateException if shutdown has been initiated.
+   */
+  private void checkNotShuttingDown() {
+    if (shuttingDown.get()) {
+      throw new IllegalStateException("JdbcHelper is shutting down - no new operations allowed");
+    }
   }
 
   /**
-   * Shut down the data source.
+   * Register a future to track its completion for shutdown purposes.
+   * @param future the future to track
+   * @return the same future for chaining
    */
-  public void shutdown() {
-    if (dataSource instanceof HikariDataSource hikari) {
-      hikari.close();
+  private <T> Future<T> trackFuture(Future<T> future) {
+    activeFutures.add(future);
+    future.onComplete(ar -> {
+      activeFutures.remove(future);
+      checkShutdownComplete();
+    });
+    return future;
+  }
+
+  /**
+   * Check if shutdown can complete (all operations finished).
+   */
+  private void checkShutdownComplete() {
+    Promise<Void> promise = shutdownPromise;
+    if (promise != null && activeFutures.isEmpty()) {
+      logger.info("All JDBC operations completed, closing datasource");
+      closeDataSource();
+      promise.complete();
     }
   }
-  
-  
+
+  /**
+   * Actually close the datasource.
+   */
+  private void closeDataSource() {
+    if (dataSource instanceof HikariDataSource hikari) {
+      try {
+        hikari.close();
+        logger.info("HikariDataSource closed successfully");
+      } catch (Exception ex) {
+        logger.error("Error closing HikariDataSource", ex);
+      }
+    }
+  }
+
+  /**
+   * Initiate graceful shutdown.
+   * Blocks new operations and waits for existing ones to complete.
+   *
+   * @return A Future that completes when all operations are finished and the datasource is closed.
+   */
+  public Future<Void> shutdown() {
+    if (shuttingDown.compareAndSet(false, true)) {
+      logger.info("Initiating JdbcHelper shutdown, {} active operations", activeFutures.size());
+
+      shutdownPromise = Promise.promise();
+
+      if (activeFutures.isEmpty()) {
+        // No active operations, can shutdown immediately
+        logger.info("No active operations, closing datasource immediately");
+        closeDataSource();
+        shutdownPromise.complete();
+      } else {
+        logger.info("Waiting for {} active operations to complete", activeFutures.size());
+        // Operations will trigger checkShutdownComplete() when they finish
+      }
+
+      return shutdownPromise.future();
+    } else {
+      // Already shutting down, return existing promise
+      Promise<Void> promise = shutdownPromise;
+      return promise != null ? promise.future() : Future.succeededFuture();
+    }
+  }
+
+  /**
+   * Force shutdown with timeout.
+   * @param timeoutMs timeout in milliseconds
+   * @return Future that completes when shutdown is done or timeout is reached
+   */
+  public Future<Void> shutdown(long timeoutMs) {
+    Future<Void> shutdownFuture = shutdown();
+
+    if (timeoutMs <= 0) {
+      return shutdownFuture;
+    }
+
+    Promise<Void> timeoutPromise = Promise.promise();
+
+    // Set up timeout
+    long timerId = vertx.setTimer(timeoutMs, id -> {
+      if (!timeoutPromise.future().isComplete()) {
+        logger.warn("Shutdown timeout reached, forcing closure of {} active operations", activeFutures.size());
+        closeDataSource();
+        timeoutPromise.complete();
+      }
+    });
+
+    // Complete when either shutdown finishes or timeout occurs
+    shutdownFuture.onComplete(ar -> {
+      vertx.cancelTimer(timerId);
+      if (!timeoutPromise.future().isComplete()) {
+        timeoutPromise.handle(ar);
+      }
+    });
+
+    return timeoutPromise.future();
+  }
+
+  /**
+   * Run a SQL update asynchronously (in the Vertx worker thread).
+   * @param name name of the action being taken for log messages.
+   * @param sql statement to be run.
+   * @param prepareStatement a {@link SqlConsumer} to use to set parameters on the {@link PreparedStatement}.
+   * @return A Future that will be completed when the operation is complete.
+   */
+  public Future<Integer> runSqlUpdate(String name, String sql, SqlConsumer<PreparedStatement> prepareStatement) {
+    checkNotShuttingDown();
+
+    Future<Integer> future = vertx.executeBlocking(() -> runSqlUpdateSynchronously(name, sql, prepareStatement));
+    return trackFuture(future);
+  }
+
+  /**
+   * Run a SQL select asynchronously (in the Vertx worker thread).
+   *
+   * @param <R> The type of data being returned.
+   * @param sql statement to be run.
+   * @param prepareStatement a {@link SqlConsumer} to use to set parameters on the {@link PreparedStatement}.
+   * @param resultSetHandler a {@link SqlFunction} called once to convert the complete {@link ResultSet} to an object of type R.
+   * @return A Future that will be completed when all the results have been processed.
+   */
+  public <R> Future<R> runSqlSelect(String sql
+          , SqlConsumer<PreparedStatement> prepareStatement
+          , SqlFunction<ResultSet, R> resultSetHandler
+  ) {
+    checkNotShuttingDown();
+
+    Future<R> future = vertx.executeBlocking(() -> {
+      return runSqlSelectSynchronously(sql, prepareStatement, resultSetHandler);
+    });
+    return trackFuture(future);
+  }
+
+  /**
+   * Get the number of currently active operations.
+   * @return number of active operations
+   */
+  public int getActiveOperationCount() {
+    return activeFutures.size();
+  }
+
+  /**
+   * Check if this JdbcHelper is shutting down.
+   * @return true if shutdown has been initiated
+   */
+  public boolean isShuttingDown() {
+    return shuttingDown.get();
+  }
+
+
   /**
    * Functional interface defining a consumer that takes in one argument and can throw an exception.
    *
@@ -211,19 +376,8 @@ public class JdbcHelper {
   }
 
   /**
-   * Run a SQL update asynchronously (in the Vertx worker thread).
-   * @param name name of the action being taken for log messages.
-   * @param sql statement to be run.
-   * @param prepareStatement a {@link SqlConsumer} to use to set parameters on the {@link PreparedStatement}.
-   * @return A Future that will be completed when the operation is complete.
-   */
-  public Future<Integer> runSqlUpdate(String name, String sql, SqlConsumer<PreparedStatement> prepareStatement) {
-    return vertx.executeBlocking(() -> runSqlUpdateSynchronously(name, sql, prepareStatement));
-  }
-
-  /**
    * Run commands that use a JDBC connection on the calling thread.
-   * 
+   *
    * @param <R> The return type of the consumer.
    * @param name name of the action being taken for log messages.
    * @param consumer consumer that will do something on the connection.
@@ -245,9 +399,9 @@ public class JdbcHelper {
     } catch (Throwable ex) {
       logger.error(logMessage, name, ex);
       throw new RuntimeException(logMessage.replace("{}", name), ex);
-    }    
+    }
   }
-  
+
   /**
    * Run a SQL update synchronously.
    * @param name name of the action being taken for log messages.
@@ -283,24 +437,6 @@ public class JdbcHelper {
       logger.error(logMessage, name, ex);
       throw new RuntimeException(logMessage.replace("{}", name), ex);
     }
-  }
-
-  /**
-   * Run a SQL select asynchronously (in the Vertx worker thread).
-   *
-   * @param <R> The type of data being returned.
-   * @param sql statement to be run.
-   * @param prepareStatement a {@link SqlConsumer} to use to set parameters on the {@link PreparedStatement}.
-   * @param resultSetHandler a {@link SqlFunction} called once to convert the complete {@link ResultSet} to an object of type R.
-   * @return A Future that will be completed when all the results have been processed.
-   */
-  public <R> Future<R> runSqlSelect(String sql
-          , SqlConsumer<PreparedStatement> prepareStatement
-          , SqlFunction<ResultSet, R> resultSetHandler
-  ) {
-    return vertx.executeBlocking(() -> {
-      return runSqlSelectSynchronously(sql, prepareStatement, resultSetHandler);
-    });
   }
 
   /**

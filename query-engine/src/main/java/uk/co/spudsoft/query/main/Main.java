@@ -82,7 +82,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
@@ -257,15 +259,38 @@ public class Main extends Application {
    * Shutdown Vert.x, but not the entire process.
    */
   public void shutdown() {
-    if (jdbcHelper != null) {
-      jdbcHelper.shutdown();
-    }
     Vertx v = this.vertx;
-    if (v != null) {
-      v.close();
+    
+    if (jdbcHelper != null) {
+        CountDownLatch latch = new CountDownLatch(1);
+        
+        jdbcHelper.shutdown(10000)
+                .onComplete(ar -> {
+                    if (ar.failed()) {
+                        logger.error("Failed to shutdown database connections adequately, inconsistencies are possible: ", ar.cause());
+                    } else {
+                        logger.info("Database connections shutdown completed successfully");
+                    }
+                    latch.countDown();
+                });
+        
+        try {
+            // Wait for shutdown to complete (with reasonable timeout)
+            boolean completed = latch.await(15, TimeUnit.SECONDS);
+            if (!completed) {
+                logger.warn("JdbcHelper shutdown timed out after 15 seconds");
+            }
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            logger.warn("Interrupted while waiting for JdbcHelper shutdown", ex);
+        }
     }
-  }
-
+    
+    if (v != null) {
+        v.close();
+    }
+}  
+  
   /**
    * Method to allow test code to call main with no risk of System.exit being called.
    * @param args Command line arguments.
