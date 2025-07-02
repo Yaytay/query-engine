@@ -98,6 +98,12 @@ public class Parameters {
   private CacheConfig pipelineCache = new CacheConfig();
 
   /**
+   * By default requests to / redirect to /openapi and display the OpenAPI docs.
+   * This is not much use in a path hijack situation, so allow for the provision of an alternative.
+   */
+  private String rootRedirectUrl;
+  
+  /**
    * The directory to contain cached output.
    * This is the on-disc caching of stream output, controlled by the cacheDuration value in individual pipelines.
    *
@@ -1148,8 +1154,30 @@ public class Parameters {
     this.requestContextEnvironment = requestContextEnvironment;
   }
 
-  
-  
+  /**
+   * Get the URL to redirect requests to / to.
+   * 
+   * By default requests to / redirect to /openapi and display the OpenAPI docs.
+   * This is not much use in a path hijack situation, so allow for the provision of an alternative.
+   * 
+   * @return the URL to redirect requests to / to.
+   */
+  public String getRootRedirectUrl() {
+    return rootRedirectUrl;
+  }
+
+  /**
+   * Set the URL to redirect requests to / to.
+   * 
+   * By default requests to / redirect to /openapi and display the OpenAPI docs.
+   * This is not much use in a path hijack situation, so allow for the provision of an alternative.
+   * 
+   * @param rootRedirectUrl the URL to redirect requests to / to.
+   */
+  public void setRootRedirectUrl(String rootRedirectUrl) {
+    this.rootRedirectUrl = rootRedirectUrl;
+  }
+
   /**
    * Validate the provided parameters.
    *

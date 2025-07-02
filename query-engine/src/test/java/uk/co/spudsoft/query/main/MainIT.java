@@ -315,7 +315,7 @@ public class MainIT {
             .then()
             .statusCode(301)
             .log().all()
-            .header("Location", equalTo("/openapi"))
+            .header("Location", equalTo("../openapi"))
             .extract().body().asString()
             ;
 

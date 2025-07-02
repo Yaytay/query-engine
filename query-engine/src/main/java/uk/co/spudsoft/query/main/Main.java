@@ -588,7 +588,7 @@ public class Main extends Application {
     );
 
     router.get("/api").handler(rc -> {
-      rc.response().setStatusCode(301).putHeader("Location", "/openapi").end();
+      rc.response().setStatusCode(301).putHeader("Location", "../openapi").end();
     });
     RequestContextHandler rch = new RequestContextHandler(vertx, rcb, outputAllErrorMessages());
     router.route("/api/*").handler(rch);
@@ -604,7 +604,11 @@ public class Main extends Application {
     }
     router.route("/").handler(rc -> {
       rc.response().setStatusCode(307);
-      rc.redirect("/ui/");
+      if (Strings.isNullOrEmpty(params.getRootRedirectUrl())) {
+        rc.redirect("/ui/");
+      } else {
+        rc.redirect(params.getRootRedirectUrl());
+      }
     });
 
     return httpServer

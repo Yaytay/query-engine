@@ -255,4 +255,8 @@ The uk.co.spudsoft.query.exec.conditions.RequestContext  is made available in bo
 The entire requestContextEnvironment is also available (with no change)
  using uk.co.spudsoft.query.exec.conditions.RequestContext#getEnv , providing a way to
  add additional environmental information to the context.
+| [[rootRedirectUrl]]rootRedirectUrl
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
+| Set the URL to redirect requests to / to.By default requests to / redirect to /openapi and display the OpenAPI docs.
+ This is not much use in a path hijack situation, so allow for the provision of an alternative.
 |===
