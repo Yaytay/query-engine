@@ -202,6 +202,10 @@ public class FeatureRichQueryIT {
       fos.write(bodyBytes);
     }
     
+    Awaitility.await().pollDelay(10, TimeUnit.SECONDS).atMost(60, TimeUnit.SECONDS).until(() -> getDirtyAudits(jdbcUrl, username, password).isEmpty());
+    
+    CachingIT.ensureAuditIsClean(jdbcUrl, username, password);
+    
     main.shutdown();
   }
   

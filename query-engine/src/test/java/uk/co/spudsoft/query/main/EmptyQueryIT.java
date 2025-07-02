@@ -197,6 +197,10 @@ public class EmptyQueryIT {
             .extract().body().asString();
 
     assertThat(body, equalTo("[]"));
+
+    Awaitility.await().pollDelay(10, TimeUnit.SECONDS).atMost(60, TimeUnit.SECONDS).until(() -> getDirtyAudits(jdbcUrl, username, password).isEmpty());
+    
+    CachingIT.ensureAuditIsClean(jdbcUrl, username, password);
     
     main.shutdown();
   }

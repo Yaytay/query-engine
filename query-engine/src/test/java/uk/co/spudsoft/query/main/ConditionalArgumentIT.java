@@ -31,6 +31,7 @@ import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -44,11 +45,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
+import org.testcontainers.shaded.org.awaitility.Awaitility;
 import uk.co.spudsoft.jwtvalidatorvertx.AlgorithmAndKeyPair;
 import uk.co.spudsoft.jwtvalidatorvertx.JsonWebAlgorithm;
 import uk.co.spudsoft.jwtvalidatorvertx.TokenBuilder;
 import uk.co.spudsoft.jwtvalidatorvertx.jdk.JdkJwksHandler;
 import uk.co.spudsoft.jwtvalidatorvertx.jdk.JdkTokenBuilder;
+import static uk.co.spudsoft.query.main.CachingIT.getDirtyAudits;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
 
 /**
@@ -253,6 +256,14 @@ public class ConditionalArgumentIT {
                  0	"Name From Token"	"Henry"	0
                  1	"Name From Token"	"Henry"	1
                  """, body);
+    
+    String jdbcUrl = mysql.getJdbcUrl();
+    String username = mysql.getUser();
+    String password = mysql.getPassword();
+    
+    Awaitility.await().pollDelay(10, TimeUnit.SECONDS).atMost(60, TimeUnit.SECONDS).until(() -> getDirtyAudits(jdbcUrl, username, password).isEmpty());
+    
+    CachingIT.ensureAuditIsClean(jdbcUrl, username, password);
     
     main.shutdown();
   }

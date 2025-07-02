@@ -23,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
 import java.lang.invoke.MethodHandles;
+import java.util.concurrent.TimeUnit;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -40,6 +41,8 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.TestInstance;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
+import org.testcontainers.shaded.org.awaitility.Awaitility;
+import static uk.co.spudsoft.query.main.CachingIT.getDirtyAudits;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
 
 /**
@@ -401,6 +404,14 @@ public class AllFiltersIT {
     assertThat(body, startsWith("\"dataId\"\t\"instant\"\t\"colour\"\t\"value\"\t\"children\"\t\"DateField\"\t\"TimeField\"\t\"DateTimeField\"\t\"LongField\"\t\"DoubleField\"\t\"BoolField\"\t\"TextField\""));
     assertThat(body, not(containsString("\t\t\t\t\t\t\t")));
     logger.debug("Output: {}", body);
+    
+    String jdbcUrl = mysql.getJdbcUrl();
+    String username = mysql.getUser();
+    String password = mysql.getPassword();
+    
+    Awaitility.await().pollDelay(10, TimeUnit.SECONDS).atMost(60, TimeUnit.SECONDS).until(() -> getDirtyAudits(jdbcUrl, username, password).isEmpty());
+    
+    CachingIT.ensureAuditIsClean(jdbcUrl, username, password);
     
     main.shutdown();
   }
