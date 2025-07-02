@@ -20,6 +20,14 @@ import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.metrics.micrometer.MicrometerMetricsTrackerFactory;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Calendar;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
@@ -28,9 +36,27 @@ import uk.co.spudsoft.query.main.Credentials;
 import uk.co.spudsoft.query.main.DataSourceConfig;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.sameInstance;
+import static org.hamcrest.Matchers.startsWith;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 /**
  * Exhaustive unit tests for JdbcHelper.createDataSource method.
@@ -312,4 +338,337 @@ public class JdbcHelperTest {
     ds.close();
   }
 
+  @Test
+  void testSetLocalDateTimeUTC_NullValue() throws SQLException {
+    PreparedStatement preparedStatement = mock(PreparedStatement.class);
+    LocalDateTime utc = null;
+    int index = 1;
+
+    JdbcHelper.setLocalDateTimeUTC(preparedStatement, index, utc);
+
+    verify(preparedStatement).setTimestamp(index, null);
+    verifyNoMoreInteractions(preparedStatement);
+  }
+
+  @Test
+  void testSetLocalDateTimeUTC_ValidValue() throws SQLException {
+    PreparedStatement preparedStatement = mock(PreparedStatement.class);
+    LocalDateTime utc = LocalDateTime.of(2023, 6, 15, 14, 30, 45);
+    int index = 2;
+    Timestamp expectedTimestamp = Timestamp.from(utc.toInstant(ZoneOffset.UTC));
+
+    JdbcHelper.setLocalDateTimeUTC(preparedStatement, index, utc);
+
+    verify(preparedStatement).setTimestamp(eq(index), eq(expectedTimestamp), any(Calendar.class));
+    verifyNoMoreInteractions(preparedStatement);
+  }
+
+  @Test
+  void testSetLocalDateTimeUTC_EpochTime() throws SQLException {
+    PreparedStatement preparedStatement = mock(PreparedStatement.class);
+    LocalDateTime utc = LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC);
+    int index = 1;
+    Timestamp expectedTimestamp = Timestamp.from(utc.toInstant(ZoneOffset.UTC));
+
+    JdbcHelper.setLocalDateTimeUTC(preparedStatement, index, utc);
+
+    verify(preparedStatement).setTimestamp(eq(index), eq(expectedTimestamp), any(Calendar.class));
+  }
+
+  @Test
+  void testSetLocalDateTimeUTC_FutureDate() throws SQLException {
+    PreparedStatement preparedStatement = mock(PreparedStatement.class);
+    LocalDateTime utc = LocalDateTime.of(2050, 12, 31, 23, 59, 59);
+    int index = 3;
+
+    JdbcHelper.setLocalDateTimeUTC(preparedStatement, index, utc);
+
+    verify(preparedStatement).setTimestamp(eq(index), any(Timestamp.class), any(Calendar.class));
+  }
+
+  @Test
+  void testSetLocalDateTimeUTC_SqlExceptionPropagated() throws SQLException {
+    PreparedStatement preparedStatement = mock(PreparedStatement.class);
+    LocalDateTime utc = LocalDateTime.now();
+    int index = 1;
+    SQLException expectedException = new SQLException("Database connection failed");
+
+    doThrow(expectedException).when(preparedStatement).setTimestamp(anyInt(), any(Timestamp.class), any(Calendar.class));
+
+    SQLException thrownException = assertThrows(SQLException.class, () -> {
+      JdbcHelper.setLocalDateTimeUTC(preparedStatement, index, utc);
+    });
+
+    assertThat(thrownException, sameInstance(expectedException));
+  }
+
+  @Test
+  void testSetLocalDateTimeUTC_CalendarUsesGMT() throws SQLException {
+    PreparedStatement preparedStatement = mock(PreparedStatement.class);
+    LocalDateTime utc = LocalDateTime.of(2023, 6, 15, 14, 30, 45);
+    int index = 1;
+
+    JdbcHelper.setLocalDateTimeUTC(preparedStatement, index, utc);
+
+    verify(preparedStatement).setTimestamp(eq(index), any(Timestamp.class), argThat(calendar -> 
+        "GMT".equals(calendar.getTimeZone().getID())
+    ));
+  }
+
+  // ===== Tests for limitLength method =====
+
+  @Test
+  void testLimitLength_NullValue() {
+    String result = JdbcHelper.limitLength(null, 10);
+    assertThat(result, nullValue());
+  }
+
+  @Test
+  void testLimitLength_StringShorterThanLimit() {
+    String input = "short";
+    String result = JdbcHelper.limitLength(input, 10);
+    assertThat(result, equalTo("short"));
+  }
+
+  @Test
+  void testLimitLength_StringEqualToLimit() {
+    String input = "exactlimit";
+    String result = JdbcHelper.limitLength(input, 10);
+    assertThat(result, equalTo("exactlimit"));
+  }
+
+  @Test
+  void testLimitLength_StringLongerThanLimit() {
+    String input = "this string is much longer than the limit";
+    String result = JdbcHelper.limitLength(input, 10);
+    assertThat(result, equalTo("this st..."));
+  }
+
+  @Test
+  void testLimitLength_EmptyString() {
+    String input = "";
+    String result = JdbcHelper.limitLength(input, 5);
+    assertThat(result, equalTo(""));
+  }
+
+  @Test
+  void testLimitLength_ZeroLimit() {
+    String input = "anything";
+    String result = JdbcHelper.limitLength(input, 0);
+    assertThat(result, equalTo(""));
+  }
+
+  @Test
+  void testLimitLength_NegativeLimit() {
+    String input = "anything";
+    String result = JdbcHelper.limitLength(input, -5);
+    assertThat(result, equalTo(""));
+  }
+
+  @Test
+  void testLimitLength_LimitOne() {
+    String input = "test";
+    String result = JdbcHelper.limitLength(input, 1);
+    assertThat(result, equalTo("t"));
+  }
+
+  @Test
+  void testLimitLength_UnicodeCharacters() {
+    String input = "测试文本";
+    String result = JdbcHelper.limitLength(input, 2);
+    assertThat(result, equalTo("测试"));
+  }
+
+  @Test
+  void testLimitLength_LargeLimit() {
+    String input = "small";
+    String result = JdbcHelper.limitLength(input, Integer.MAX_VALUE);
+    assertThat(result, equalTo("small"));
+  }
+
+  // ===== Tests for toString method =====
+
+  @Test
+  void testToString_NullValue() {
+    String result = JdbcHelper.toString(null);
+    assertThat(result, nullValue());
+  }
+
+  @Test
+  void testToString_StringValue() {
+    String input = "test string";
+    String result = JdbcHelper.toString(input);
+    assertThat(result, equalTo("test string"));
+  }
+
+  @Test
+  void testToString_IntegerValue() {
+    Integer input = 42;
+    String result = JdbcHelper.toString(input);
+    assertThat(result, equalTo("42"));
+  }
+
+  @Test
+  void testToString_LongValue() {
+    Long input = 123456789L;
+    String result = JdbcHelper.toString(input);
+    assertThat(result, equalTo("123456789"));
+  }
+
+  @Test
+  void testToString_DoubleValue() {
+    Double input = 3.14159;
+    String result = JdbcHelper.toString(input);
+    assertThat(result, equalTo("3.14159"));
+  }
+
+  @Test
+  void testToString_BooleanValue() {
+    Boolean input = true;
+    String result = JdbcHelper.toString(input);
+    assertThat(result, equalTo("true"));
+  }
+
+  @Test
+  void testToString_BigDecimalValue() {
+    BigDecimal input = new BigDecimal("123.456");
+    String result = JdbcHelper.toString(input);
+    assertThat(result, equalTo("123.456"));
+  }
+
+  @Test
+  void testToString_EmptyString() {
+    String input = "";
+    String result = JdbcHelper.toString(input);
+    assertThat(result, equalTo(""));
+  }
+
+  @Test
+  void testToString_CustomObject() {
+    Object input = new Object() {
+      @Override
+      public String toString() {
+        return "custom object";
+      }
+    };
+    String result = JdbcHelper.toString(input);
+    assertThat(result, equalTo("custom object"));
+  }
+
+  @Test
+  void testToString_ArrayValue() {
+    int[] input = {1, 2, 3};
+    String result = JdbcHelper.toString(input);
+    assertThat(result, notNullValue());
+    assertThat(result, containsString("["));
+  }
+
+  // ===== Tests for closeConnection method =====
+
+  @Test
+  void testCloseConnection_NullConnection() {
+    // Should not throw exception
+    assertDoesNotThrow(() -> JdbcHelper.closeConnection(null));
+  }
+
+  @Test
+  void testCloseConnection_ValidConnection() throws SQLException {
+    Connection connection = mock(Connection.class);
+
+    JdbcHelper.closeConnection(connection);
+
+    verify(connection).close();
+    verifyNoMoreInteractions(connection);
+  }
+
+  @Test
+  void testCloseConnection_SqlExceptionSuppressed() throws SQLException {
+    Connection connection = mock(Connection.class);
+    doThrow(new SQLException("Connection already closed")).when(connection).close();
+
+    // Should not throw exception, should suppress it
+    assertDoesNotThrow(() -> JdbcHelper.closeConnection(connection));
+
+    verify(connection).close();
+  }
+
+  @Test
+  void testCloseConnection_RuntimeExceptionSuppressed() throws SQLException {
+    Connection connection = mock(Connection.class);
+    doThrow(new RuntimeException("Unexpected error")).when(connection).close();
+
+    // Should not throw exception, should suppress it
+    assertDoesNotThrow(() -> JdbcHelper.closeConnection(connection));
+
+    verify(connection).close();
+  }
+
+  @Test
+  void testCloseConnection_AlreadyClosedConnection() throws SQLException {
+    Connection connection = mock(Connection.class);
+    when(connection.isClosed()).thenReturn(true);
+
+    JdbcHelper.closeConnection(connection);
+
+    verify(connection).close();
+  }
+
+  // ===== Tests for closeStatement method =====
+
+  @Test
+  void testCloseStatement_NullStatement() {
+    // Should not throw exception
+    assertDoesNotThrow(() -> JdbcHelper.closeStatement(null));
+  }
+
+  @Test
+  void testCloseStatement_ValidStatement() throws SQLException {
+    PreparedStatement statement = mock(PreparedStatement.class);
+
+    JdbcHelper.closeStatement(statement);
+
+    verify(statement).close();
+    verifyNoMoreInteractions(statement);
+  }
+
+  @Test
+  void testCloseStatement_SqlExceptionSuppressed() throws SQLException {
+    PreparedStatement statement = mock(PreparedStatement.class);
+    doThrow(new SQLException("Statement already closed")).when(statement).close();
+
+    // Should not throw exception, should suppress it
+    assertDoesNotThrow(() -> JdbcHelper.closeStatement(statement));
+
+    verify(statement).close();
+  }
+
+  @Test
+  void testCloseStatement_RuntimeExceptionSuppressed() throws SQLException {
+    PreparedStatement statement = mock(PreparedStatement.class);
+    doThrow(new RuntimeException("Unexpected error")).when(statement).close();
+
+    // Should not throw exception, should suppress it
+    assertDoesNotThrow(() -> JdbcHelper.closeStatement(statement));
+
+    verify(statement).close();
+  }
+
+  @Test
+  void testCloseStatement_AlreadyClosedStatement() throws SQLException {
+    PreparedStatement statement = mock(PreparedStatement.class);
+    when(statement.isClosed()).thenReturn(true);
+
+    JdbcHelper.closeStatement(statement);
+
+    verify(statement).close();
+  }
+
+  @Test
+  void testCloseStatement_CallableStatement() throws SQLException {
+    PreparedStatement statement = mock(PreparedStatement.class);
+
+    JdbcHelper.closeStatement(statement);
+
+    verify(statement).close();
+  }
 }

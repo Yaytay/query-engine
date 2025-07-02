@@ -308,23 +308,6 @@ public class JdbcHelper {
   }
 
   /**
-   * Get the number of currently active operations.
-   * @return number of active operations
-   */
-  public int getActiveOperationCount() {
-    return activeFutures.size();
-  }
-
-  /**
-   * Check if this JdbcHelper is shutting down.
-   * @return true if shutdown has been initiated
-   */
-  public boolean isShuttingDown() {
-    return shuttingDown.get();
-  }
-
-
-  /**
    * Functional interface defining a consumer that takes in one argument and can throw an exception.
    *
    * @param <T> The type of the argument.
@@ -498,10 +481,15 @@ public class JdbcHelper {
     if (value == null) {
       return value;
     }
-    if (value.length() < maxLen) {
+    if (maxLen < 0) {
+      maxLen = 0;
+    }
+    if (value.length() <= maxLen) {
       return value;
+    } else if(maxLen < 8) {
+      return value.substring(0, maxLen);
     } else {
-      return value.substring(0, maxLen - 4) + "...";
+      return value.substring(0, maxLen - 3) + "...";
     }
   }
 
