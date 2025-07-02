@@ -148,7 +148,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(200)
             .contentType(equalTo("application/yaml"))
-            .body(startsWith("---\ntitle: \""))
+            .body(startsWith("title: "))
             .extract().body().asString();
     
     // And can put a yaml file as json

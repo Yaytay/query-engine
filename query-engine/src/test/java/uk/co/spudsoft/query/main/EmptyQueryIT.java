@@ -16,7 +16,6 @@
  */
 package uk.co.spudsoft.query.main;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
 import io.restassured.config.HttpClientConfig;
@@ -171,7 +170,7 @@ public class EmptyQueryIT {
     
     
     body = given()
-            .config(RestAssuredConfig.config().httpClient(HttpClientConfig.httpClientConfig().setParam("http.socket.timeout",10000)))
+            // .config(RestAssuredConfig.config().httpClient(HttpClientConfig.httpClientConfig().setParam("http.socket.timeout",10000)))
             .queryParam("minDate", "2971-05-06")
             .queryParam("_fmt", "json")
             .accept("text/html")

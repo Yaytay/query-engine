@@ -261,6 +261,8 @@ public class QueryRouter implements Handler<RoutingContext> {
                 
                 if (notModifiedSince(routingContext, cacheDetails.expiry())) {
                   response.setStatusCode(304);
+                  // bodyEndHandler not called, so must explicitly audit reponse
+                  auditor.recordResponse(requestContext, response);
                   return response.end();
                 } else {
                   Format chosenFormat = pipelineExecutor.getFormat(pipeline.getFormats(), formatRequest);

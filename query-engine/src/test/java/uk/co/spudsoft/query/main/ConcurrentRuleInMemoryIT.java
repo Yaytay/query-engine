@@ -68,54 +68,56 @@ public class ConcurrentRuleInMemoryIT {
   @Test
   public void testMainDaemon() throws Exception {
     Main main = new Main();
-    ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
-    PrintStream stdout = new PrintStream(stdoutStream);
-    main.testMain(new String[]{
-      "--baseConfigPath=" + CONFS_DIR
-      , "--jwt.acceptableIssuerRegexes[0]=.*"
-      , "--jwt.defaultJwksCacheDuration=PT1M"
-      , "--logging.jsonFormat=false"
-//      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec=TRACE"
-      , "--managementEndpoints[0]=up"
-      , "--managementEndpoints[2]=prometheus"
-      , "--managementEndpoints[3]=threads"
-      , "--managementEndpointPort=" + mgmtPort
-      , "--managementEndpointUrl=http://localhost:" + mgmtPort + "/manage"
-    }, stdout, System.getenv());
-    assertEquals(0, stdoutStream.size());
-    
-    RestAssured.port = main.getPort();
-    
-    long startTime = System.currentTimeMillis();
-    given()
-            .log().all()
-            .get("/query/sub1/sub2/ConcurrentRulesIT?_fmt=oneline")
-            .then()
-            .statusCode(200)
-            .log().all()
-            ;
-    long endTime = System.currentTimeMillis();
-    assertThat(endTime - startTime, greaterThan(2500L));
-    
-    List<Response> responses = new ArrayList<>();
-    Thread thread1 = new Thread(() -> runQuery(responses));
-    thread1.start();
-    Thread.sleep(100);
-    Thread thread2 = new Thread(() -> runQuery(responses));
-    thread2.start();
-    
-    thread1.join();
-    thread2.join();
-    
-    if (responses.get(0).getStatusCode() == 200) {
-      assertEquals(200, responses.get(0).getStatusCode());
-      assertEquals(429, responses.get(1).getStatusCode());
-    } else {
-      assertEquals(429, responses.get(0).getStatusCode());
-      assertEquals(200, responses.get(1).getStatusCode());
+    try {
+      ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
+      PrintStream stdout = new PrintStream(stdoutStream);
+      main.testMain(new String[]{
+        "--baseConfigPath=" + CONFS_DIR
+        , "--jwt.acceptableIssuerRegexes[0]=.*"
+        , "--jwt.defaultJwksCacheDuration=PT1M"
+        , "--logging.jsonFormat=false"
+  //      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec=TRACE"
+        , "--managementEndpoints[0]=up"
+        , "--managementEndpoints[2]=prometheus"
+        , "--managementEndpoints[3]=threads"
+        , "--managementEndpointPort=" + mgmtPort
+        , "--managementEndpointUrl=http://localhost:" + mgmtPort + "/manage"
+      }, stdout, System.getenv());
+      assertEquals(0, stdoutStream.size());
+
+      RestAssured.port = main.getPort();
+
+      long startTime = System.currentTimeMillis();
+      given()
+              .log().all()
+              .get("/query/sub1/sub2/ConcurrentRulesIT?_fmt=oneline")
+              .then()
+              .statusCode(200)
+              .log().all()
+              ;
+      long endTime = System.currentTimeMillis();
+      assertThat(endTime - startTime, greaterThan(2500L));
+
+      List<Response> responses = new ArrayList<>();
+      Thread thread1 = new Thread(() -> runQuery(responses));
+      thread1.start();
+      Thread.sleep(100);
+      Thread thread2 = new Thread(() -> runQuery(responses));
+      thread2.start();
+
+      thread1.join();
+      thread2.join();
+
+      if (responses.get(0).getStatusCode() == 200) {
+        assertEquals(200, responses.get(0).getStatusCode());
+        assertEquals(429, responses.get(1).getStatusCode());
+      } else {
+        assertEquals(429, responses.get(0).getStatusCode());
+        assertEquals(200, responses.get(1).getStatusCode());
+      }
+    } finally {
+      main.shutdown();
     }
-    
-    main.shutdown();
   }
   
   private void runQuery(List<Response> responses) {

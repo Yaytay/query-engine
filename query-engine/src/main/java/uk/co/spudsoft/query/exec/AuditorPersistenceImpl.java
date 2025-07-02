@@ -52,7 +52,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import static javax.management.Query.value;
 import liquibase.Scope;
 import liquibase.command.CommandScope;
 import liquibase.command.core.UpdateCommandStep;
@@ -70,8 +69,6 @@ import uk.co.spudsoft.dircache.DirCacheTree;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.defn.RateLimitRule;
 import uk.co.spudsoft.query.defn.RateLimitScopeType;
-import static uk.co.spudsoft.query.defn.RateLimitScopeType.host;
-import static uk.co.spudsoft.query.defn.RateLimitScopeType.username;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.main.Persistence;
 import uk.co.spudsoft.query.main.DataSourceConfig;
@@ -652,7 +649,7 @@ public class AuditorPersistenceImpl implements Auditor {
 
   @Override
   public Future<Pipeline> runRateLimitRules(RequestContext context, Pipeline pipeline) {
-    List<RateLimitRule> rules = pipeline.getRateLimitRules();
+     List<RateLimitRule> rules = pipeline.getRateLimitRules();
 
     logger.debug("Performing rate limit check with {} rules", rules.size());
     if (CollectionUtils.isEmpty(rules)) {
@@ -754,9 +751,9 @@ public class AuditorPersistenceImpl implements Auditor {
           }
         }
         return null;
-      }).map(v -> pipeline);
+    }).map(v -> pipeline);
   }
-
+  
   static void evaluateRateLimitRule(RateLimitRule rule, Instant now, int index, int outstanding, int runs, long bytes, LocalDateTime timestamp) throws ServiceException {
     if (outstanding > rule.getConcurrencyLimit()) {
       String logmsg = outstanding > 1
