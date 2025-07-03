@@ -56,6 +56,16 @@ public interface Auditor {
   void healthCheck(Promise<Status> promise);
   
   /**
+   * Wait up to timeoutMs milliseconds until all requests have a responseTime.
+   * 
+   * 
+   * 
+   * @param timeoutMs The maximum time to wait, in milliseconds.
+   * @return A Future that will complete successfully when no requests have a null responseTime, or unsuccessfully after timeoutMs milliseconds.
+   */
+  Future<Void> waitForOutstandingRequests(long timeoutMs);
+  
+  /**
    * Record a request.
    * <p>
    * This must be the first method to call as it is the one that creates the row with the given {@link RequestContext#requestId}.

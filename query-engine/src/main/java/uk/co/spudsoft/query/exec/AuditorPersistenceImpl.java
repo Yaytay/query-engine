@@ -40,17 +40,21 @@ import java.nio.charset.StandardCharsets;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Calendar;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TimeZone;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import liquibase.Scope;
 import liquibase.command.CommandScope;
@@ -138,6 +142,49 @@ public class AuditorPersistenceImpl implements Auditor {
     this.jdbcHelper = jdbcHelper;
   }
 
+
+  @Override
+  public Future<Void> waitForOutstandingRequests(long timeoutMs) {
+    Promise<Void> promise = Promise.promise();
+    
+    LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+    Timestamp relevanceThreshold = Timestamp.from(now.minusDays(1).toInstant(ZoneOffset.UTC));
+    waitForOutstandingRequests(promise, relevanceThreshold, System.currentTimeMillis() + timeoutMs);
+    return promise.future();
+  }
+  
+  private void waitForOutstandingRequests(Promise<Void> promise, Timestamp relevanceThreshold, long terminalTime) {
+    
+    jdbcHelper.runSqlSelect(countOutstandingRequests, ps -> {
+      Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+      ps.setTimestamp(1, relevanceThreshold, cal);
+    }, rs -> {
+      while (rs.next()) {
+        return rs.getLong(1);
+      }
+      return null;
+    })
+            .onComplete(ar -> {
+              if (ar.failed()) {
+                promise.fail(ar.cause());
+              } else {
+                Long count = ar.result();
+                if (count == null) {
+                  promise.fail(new IllegalStateException("Outstanding requests query returned null"));
+                } else if (count == 0) {
+                  promise.complete();
+                } else if (System.currentTimeMillis() > terminalTime) {
+                  promise.fail(new TimeoutException("Outstanding requests (" + count + ") remain after timeout"));
+                } else {
+                  logger.info("There are {} outstanding requests to be resolved", count);
+                  vertx.setTimer(500, l -> {
+                    waitForOutstandingRequests(promise, relevanceThreshold, terminalTime);
+                  });
+                }
+              }
+            });
+  }
+  
   /**
    *
    * @throws IOException if the resource accessor fails.
@@ -166,6 +213,7 @@ public class AuditorPersistenceImpl implements Auditor {
       recordCacheFile = recordCacheFile.replaceAll("#SCHEMA#.", "");
       recordCacheFileUsed = recordCacheFileUsed.replaceAll("#SCHEMA#.", "");
       deleteCacheFile = deleteCacheFile.replaceAll("#SCHEMA#.", "");
+      countOutstandingRequests = countOutstandingRequests.replaceAll("#SCHEMA#.", "");
     } else {
       recordRequest = recordRequest.replaceAll("SCHEMA", dataSourceConfig.getSchema());
       recordFile = recordFile.replaceAll("SCHEMA", dataSourceConfig.getSchema());
@@ -177,6 +225,7 @@ public class AuditorPersistenceImpl implements Auditor {
       recordCacheFile = recordCacheFile.replaceAll("#SCHEMA#.", dataSourceConfig.getSchema());
       recordCacheFileUsed = recordCacheFileUsed.replaceAll("#SCHEMA#.", dataSourceConfig.getSchema());
       deleteCacheFile = deleteCacheFile.replaceAll("#SCHEMA#.", dataSourceConfig.getSchema());
+      countOutstandingRequests = countOutstandingRequests.replaceAll("#SCHEMA#.", dataSourceConfig.getSchema());
     }
 
     Boolean done = Boolean.FALSE;
@@ -197,6 +246,7 @@ public class AuditorPersistenceImpl implements Auditor {
           recordCacheFile = recordCacheFile.replaceAll("#", quote);
           recordCacheFileUsed = recordCacheFileUsed.replaceAll("#", quote);
           deleteCacheFile = deleteCacheFile.replaceAll("#", quote);
+          countOutstandingRequests = countOutstandingRequests.replaceAll("#", quote);
 
           String databaseProduct = dmd.getDatabaseProductName();
           logger.debug("Database product: {}", databaseProduct);
@@ -431,6 +481,15 @@ public class AuditorPersistenceImpl implements Auditor {
             #cacheDeleted# = ?
           where
             #id# = ?
+          """;
+  private String countOutstandingRequests = """
+          select
+            count(*)
+          from
+            #SCHEMA#.#request#
+          where
+            #responseTime# is null
+            and #timestamp# > ?
           """;
 
   private boolean baseSqlExceptionIsNonexistantDriver(Throwable ex) {

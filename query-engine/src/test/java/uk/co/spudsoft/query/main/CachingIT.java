@@ -29,7 +29,6 @@ import java.io.PrintStream;
 import java.lang.invoke.MethodHandles;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.concurrent.NotThreadSafe;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeAll;
@@ -46,9 +45,9 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.TestInstance;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
-import org.testcontainers.shaded.org.awaitility.Awaitility;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
 
 /**
@@ -224,48 +223,11 @@ public class CachingIT {
 
     assertEquals(body1, body4);
 
-    // Audit records are written asynchronously after the data is sent
-    // which gives a race condition here.
-    // Give them up to a minute to complete.
-    String jdbcUrl = mysql.getJdbcUrl();
-    String username = mysql.getUser();
-    String password = mysql.getPassword();
-    
-    Awaitility.await().pollDelay(10, TimeUnit.SECONDS).atMost(60, TimeUnit.SECONDS).until(() -> getDirtyAudits(jdbcUrl, username, password).isEmpty());
-    
-    ensureAuditIsClean(jdbcUrl, username, password);
-    
     main.shutdown();
-  }
-  
-  public static JsonArray getDirtyAudits(String jdbcUrl, String username, String password) throws SQLException {
 
-    try (java.sql.Connection conn = java.sql.DriverManager.getConnection(jdbcUrl, username, password); java.sql.Statement stmt = conn.createStatement()) {
-
-      // Query for requests without response_timeout
-      JsonArray rows = new JsonArray();
-      String query = "select * from request where responseTime is null";
-      try (java.sql.ResultSet rs = stmt.executeQuery(query)) {
-        ResultSetMetaData meta = rs.getMetaData();
-
-        while (rs.next()) {
-          JsonObject row = new JsonObject();
-          for (int i = 1; i <= meta.getColumnCount(); ++i) {
-            row.put(meta.getColumnName(i), rs.getObject(i));
-          }
-          rows.add(row);
-        }
-      }
-      if (!rows.isEmpty()) {
-        logger.info("Dirty audit rows: {}", rows);
-      }
-      return rows;
-    }  
+    // Audit records should all have been sorted by main.shutdown
+    assertTrue(TestHelpers.getDirtyAudits(logger, mysql.getJdbcUrl(), mysql.getUser(), mysql.getPassword()).isEmpty());
+    
   }
-  
-  public static void ensureAuditIsClean(String jdbcUrl, String username, String password) throws SQLException {
-    JsonArray rows = getDirtyAudits(jdbcUrl, username, password);
-    assertEquals(new JsonArray(), rows, "Incomplete requests in database!");
-  }
-  
+    
 }

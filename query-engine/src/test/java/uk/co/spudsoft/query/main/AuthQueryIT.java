@@ -31,7 +31,6 @@ import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -44,16 +43,15 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
-import org.testcontainers.shaded.org.awaitility.Awaitility;
 import uk.co.spudsoft.jwtvalidatorvertx.AlgorithmAndKeyPair;
 import uk.co.spudsoft.jwtvalidatorvertx.JsonWebAlgorithm;
 import uk.co.spudsoft.jwtvalidatorvertx.TokenBuilder;
 import uk.co.spudsoft.jwtvalidatorvertx.jdk.JdkJwksHandler;
 import uk.co.spudsoft.jwtvalidatorvertx.jdk.JdkTokenBuilder;
-import static uk.co.spudsoft.query.main.CachingIT.getDirtyAudits;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
 
 /**
@@ -339,15 +337,10 @@ public class AuthQueryIT {
     assertEquals(history2.getJsonArray("rows").getJsonObject(1).getString("id"), history1.getJsonArray("rows").getJsonObject(3).getString("id"));
     assertEquals(history2.getJsonArray("rows").getJsonObject(2).getString("id"), history1.getJsonArray("rows").getJsonObject(4).getString("id"));
 
-    String jdbcUrl = mysql.getJdbcUrl();
-    String username = mysql.getUser();
-    String password = mysql.getPassword();
-    
-    Awaitility.await().pollDelay(10, TimeUnit.SECONDS).atMost(60, TimeUnit.SECONDS).until(() -> getDirtyAudits(jdbcUrl, username, password).isEmpty());
-    
-    CachingIT.ensureAuditIsClean(jdbcUrl, username, password);
-    
     main.shutdown();
+
+    // Audit records should all have been sorted by main.shutdown
+    assertTrue(TestHelpers.getDirtyAudits(logger, mysql.getJdbcUrl(), mysql.getUser(), mysql.getPassword()).isEmpty());
   }
   
 }

@@ -22,6 +22,7 @@ import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -37,6 +38,7 @@ import java.util.Comparator;
 import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
@@ -131,18 +133,47 @@ public class AuditorMemoryImpl implements Auditor {
     }
   }
   
+  private final Vertx vertx;
   private final Deque<AuditRow> auditRows = new ArrayDeque<>(SIZE + 1);
 
   /**
    * Constructor.
+   * @param vertx The Vert.x instance.
    */
-  public AuditorMemoryImpl() {
+  public AuditorMemoryImpl(Vertx vertx) {
+    this.vertx = vertx;
   }
   
   @Override
   public void prepare() throws Exception {
   }
+
+  @Override
+  public Future<Void> waitForOutstandingRequests(long timeoutMs) {
+    Promise<Void> promise = Promise.promise();
+    waitForOutstandingRequests(promise, System.currentTimeMillis() + timeoutMs);
+    return promise.future();
+  }
   
+  private void waitForOutstandingRequests(Promise<Void> promise, long terminalTime) {
+    boolean allComplete = true;
+    for (AuditRow row : auditRows) {
+      if (row.responseTime == null) {
+        allComplete = false;
+        break;
+      }
+    }
+    if (allComplete) {
+      promise.complete();
+    } else if (System.currentTimeMillis() > terminalTime) {
+      promise.fail(new TimeoutException("Outstanding requests remain after timeout"));
+    } else {
+      vertx.setTimer(500, l -> {
+        waitForOutstandingRequests(promise, terminalTime);
+      });
+    }
+  }
+
   private AuditRow find(String id) {
     if (Strings.isNullOrEmpty(id)) {
       return null;

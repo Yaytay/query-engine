@@ -17,10 +17,8 @@
 package uk.co.spudsoft.query.main;
 
 import com.google.common.cache.Cache;
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
-import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -28,7 +26,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.invoke.MethodHandles;
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -38,15 +35,14 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
 import static org.hamcrest.Matchers.startsWith;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
-import org.testcontainers.shaded.org.awaitility.Awaitility;
 import uk.co.spudsoft.jwtvalidatorvertx.AlgorithmAndKeyPair;
 import uk.co.spudsoft.jwtvalidatorvertx.TokenBuilder;
 import uk.co.spudsoft.jwtvalidatorvertx.jdk.JdkJwksHandler;
 import uk.co.spudsoft.jwtvalidatorvertx.jdk.JdkTokenBuilder;
-import static uk.co.spudsoft.query.main.CachingIT.getDirtyAudits;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
 
 /**
@@ -125,15 +121,10 @@ public class ScriptQueryIT {
     logger.debug("Result: {}", body);
     assertThat(body, startsWith("\"value\"\t\"name\"\t\"arg1\"\t\"arg2\"\n0\t\"Source\"\t\"First\"\t\"Second\"\n"));
     
-    String jdbcUrl = mysql.getJdbcUrl();
-    String username = mysql.getUser();
-    String password = mysql.getPassword();
-    
-    Awaitility.await().pollDelay(10, TimeUnit.SECONDS).atMost(60, TimeUnit.SECONDS).until(() -> getDirtyAudits(jdbcUrl, username, password).isEmpty());
-    
-    CachingIT.ensureAuditIsClean(jdbcUrl, username, password);
-    
     main.shutdown();
+
+    // Audit records should all have been sorted by main.shutdown
+    assertTrue(TestHelpers.getDirtyAudits(logger, mysql.getJdbcUrl(), mysql.getUser(), mysql.getPassword()).isEmpty());
   }
   
 }

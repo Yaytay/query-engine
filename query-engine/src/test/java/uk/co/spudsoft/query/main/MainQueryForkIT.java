@@ -24,7 +24,6 @@ import java.io.File;
 import java.io.PrintStream;
 import java.lang.invoke.MethodHandles;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -36,11 +35,10 @@ import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
-import org.testcontainers.shaded.org.awaitility.Awaitility;
-import static uk.co.spudsoft.query.main.CachingIT.getDirtyAudits;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
 
 /**
@@ -284,15 +282,10 @@ public class MainQueryForkIT {
             .statusCode(401)
             .extract().body().asString();
     
-    String jdbcUrl = mysql.getJdbcUrl();
-    String username = mysql.getUser();
-    String password = mysql.getPassword();
-    
-    Awaitility.await().pollDelay(10, TimeUnit.SECONDS).atMost(60, TimeUnit.SECONDS).until(() -> getDirtyAudits(jdbcUrl, username, password).isEmpty());
-    
-    CachingIT.ensureAuditIsClean(jdbcUrl, username, password);
-    
     main.shutdown();
+
+    // Audit records should all have been sorted by main.shutdown
+    assertTrue(TestHelpers.getDirtyAudits(logger, mysql.getJdbcUrl(), mysql.getUser(), mysql.getPassword()).isEmpty());
   }
   
 }

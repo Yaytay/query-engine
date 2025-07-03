@@ -52,8 +52,6 @@ public class JdbcHelper {
 
   private static final Logger logger = LoggerFactory.getLogger(JdbcHelper.class);
 
-  private static final Calendar TZ_CAL = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-
   private final Vertx vertx;
   private final DataSource dataSource;
 
@@ -354,7 +352,8 @@ public class JdbcHelper {
     if (utc == null) {
       ps.setTimestamp(index, null);
     } else {
-      ps.setTimestamp(index, Timestamp.from(utc.toInstant(ZoneOffset.UTC)), TZ_CAL);
+      Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+      ps.setTimestamp(index, Timestamp.from(utc.toInstant(ZoneOffset.UTC)), cal);
     }
   }
 
@@ -437,7 +436,7 @@ public class JdbcHelper {
           , SqlConsumer<PreparedStatement> prepareStatement
           , SqlFunction<ResultSet, R> resultSetHandler
   ) throws Exception {
-    logger.trace("Executing select: {}", sql);
+    logger.info("Executing select: {}", sql);
     String logMessage = null;
     try {
       logMessage = "Failed to get connection: ";

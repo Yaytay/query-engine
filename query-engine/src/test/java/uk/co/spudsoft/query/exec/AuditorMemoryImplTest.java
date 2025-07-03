@@ -17,7 +17,9 @@
 package uk.co.spudsoft.query.exec;
 
 import inet.ipaddr.IPAddressString;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.junit5.VertxExtension;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
@@ -28,6 +30,7 @@ import static org.hamcrest.Matchers.lessThan;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
 import uk.co.spudsoft.query.defn.RateLimitRule;
 import uk.co.spudsoft.query.defn.RateLimitScopeType;
@@ -38,13 +41,14 @@ import uk.co.spudsoft.query.exec.conditions.RequestContext;
  *
  * @author jtalbut
  */
+@ExtendWith(VertxExtension.class)
 public class AuditorMemoryImplTest {
   
   @Test
-  public void testDeleteCacheFile() {
+  public void testDeleteCacheFile(Vertx vertx) {
     RequestContext context = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     RequestContext context2 = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
-    AuditorMemoryImpl auditor = new AuditorMemoryImpl();
+    AuditorMemoryImpl auditor = new AuditorMemoryImpl(vertx);
     
     LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
     auditor.recordRequest(context);
@@ -108,10 +112,10 @@ public class AuditorMemoryImplTest {
   }
   
   @Test
-  public void testNotFound() {
+  public void testNotFound(Vertx vertx) {
     // Just checking that these don't throw
     RequestContext context = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
-    AuditorMemoryImpl auditor = new AuditorMemoryImpl();
+    AuditorMemoryImpl auditor = new AuditorMemoryImpl(vertx);
     auditor.recordException(context, new Throwable("test"));
     context = new RequestContext(null, null, "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     auditor.recordException(context, new Throwable("test"));

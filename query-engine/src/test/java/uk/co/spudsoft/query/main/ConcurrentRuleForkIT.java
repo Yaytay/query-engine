@@ -33,12 +33,14 @@ import java.io.PrintStream;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import net.jcip.annotations.NotThreadSafe;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.TestInstance;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
+import org.testcontainers.shaded.org.awaitility.Awaitility;
 import uk.co.spudsoft.query.web.LoginRouterWithDiscoveryIT;
 
 
@@ -66,9 +68,13 @@ public class ConcurrentRuleForkIT {
     FileUtils.deleteQuietly(confsDir);
     confsDir.mkdirs();
   }
-      
+        
   @Test
   public void testMainDaemon() throws Exception {
+    
+    // Audit records should all have been sorted by main.shutdown
+    //assertTrue(TestHelpers.getDirtyAudits(logger, mysql.getJdbcUrl(), mysql.getUser(), mysql.getPassword()).isEmpty());
+    
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
@@ -102,6 +108,8 @@ public class ConcurrentRuleForkIT {
             ;
     long endTime = System.currentTimeMillis();
     assertThat(endTime - startTime, greaterThan(2500L));
+
+     Awaitility.await().pollDelay(10, TimeUnit.SECONDS).atMost(60, TimeUnit.SECONDS).until(() -> TestHelpers.getDirtyAudits(logger, postgres.getJdbcUrl(), postgres.getUser(), postgres.getPassword()).isEmpty());
     
     List<Response> responses = new ArrayList<>();
     Thread thread1 = new Thread(() -> runQuery(responses));

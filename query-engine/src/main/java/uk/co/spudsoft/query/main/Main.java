@@ -242,6 +242,10 @@ public class Main extends Application {
   public static void main(String[] args) {
     Main main = new Main();
     main.innerMain(args, System.out, System.getenv()).onComplete(ar -> main.mainCompletion(ar));
+    Thread shutdownHook = new Thread(() -> {
+      main.shutdown();
+    });
+    Runtime.getRuntime().addShutdownHook(shutdownHook);
   }
 
   /**
@@ -259,37 +263,50 @@ public class Main extends Application {
    * Shutdown Vert.x, but not the entire process.
    */
   public void shutdown() {
-    Vertx v = this.vertx;
-    
-    if (jdbcHelper != null) {
-        CountDownLatch latch = new CountDownLatch(1);
-        
-        jdbcHelper.shutdown(10000)
-                .onComplete(ar -> {
-                    if (ar.failed()) {
-                        logger.error("Failed to shutdown database connections adequately, inconsistencies are possible: ", ar.cause());
-                    } else {
-                        logger.info("Database connections shutdown completed successfully");
-                    }
-                    latch.countDown();
-                });
-        
-        try {
-            // Wait for shutdown to complete (with reasonable timeout)
-            boolean completed = latch.await(15, TimeUnit.SECONDS);
-            if (!completed) {
-                logger.warn("JdbcHelper shutdown timed out after 15 seconds");
-            }
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-            logger.warn("Interrupted while waiting for JdbcHelper shutdown", ex);
-        }
+    Vertx localVertx = this.vertx;
+
+    CountDownLatch latch = new CountDownLatch(1);
+
+    logger.info("Performing graceful shutdown");
+    Future<Void> httpServerCloseFuture = httpServer == null ? Future.succeededFuture() : httpServer.close();
+    httpServerCloseFuture
+            .compose(v -> {
+              if (auditor == null) {
+                return Future.succeededFuture();
+              } else {
+                return auditor.waitForOutstandingRequests(30000);
+              }
+            })
+            .compose(v -> {
+              if (jdbcHelper == null) {
+                return Future.succeededFuture();
+              } else {
+                return jdbcHelper.shutdown(10000);
+              }
+            })
+            .onComplete(ar -> {
+              if (ar.failed()) {
+                logger.error("Graceful shutdown failed: ", ar.cause());
+              } else {
+                logger.info("Graceful shutdown process completed successfully");
+              }
+              latch.countDown();
+            });
+    try {
+      // Wait for shutdown to complete (with reasonable timeout)
+      boolean completed = latch.await(60, TimeUnit.SECONDS);
+      if (!completed) {
+        logger.warn("Graceful shutdown timed out after 60 seconds");
+      }
+    } catch (InterruptedException ex) {
+      Thread.currentThread().interrupt();
+      logger.warn("Interrupted while waiting for graceful shutdown", ex);
     }
-    
-    if (v != null) {
-        v.close();
+
+    if (localVertx != null) {
+      localVertx.close();
     }
-}  
+  }
   
   /**
    * Method to allow test code to call main with no risk of System.exit being called.
@@ -467,7 +484,7 @@ public class Main extends Application {
       loginDao = new LoginDaoPersistenceImpl(vertx, meterRegistry, params.getPersistence(), params.getSession().getPurgeDelay(), jdbcHelper);
     } else {
       logger.info("Persistence is not configured, using in-memory tracking of last {} runs", AuditorMemoryImpl.SIZE);
-      auditor = new AuditorMemoryImpl();
+      auditor = new AuditorMemoryImpl(vertx);
       loginDao = new LoginDaoMemoryImpl(params.getSession().getPurgeDelay());
     }
     try {
