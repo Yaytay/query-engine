@@ -126,6 +126,32 @@ public class QueryRouter implements Handler<RoutingContext> {
       return -1;
     }
   }
+  
+  static String removeMatrixParams(String input) {
+    // Find the first occurrence of ? or # to identify where the path ends
+    int queryStart = input.indexOf('?');
+    int fragmentStart = input.indexOf('#');
+
+    // Determine where the path portion ends
+    int pathEnd = input.length();
+    if (queryStart != -1) {
+      pathEnd = Math.min(pathEnd, queryStart);
+    }
+    if (fragmentStart != -1) {
+      pathEnd = Math.min(pathEnd, fragmentStart);
+    }
+
+    // Split the input into path and remainder (query + fragment)
+    String pathPortion = input.substring(0, pathEnd);
+    String remainder = pathEnd < input.length() ? input.substring(pathEnd) : "";
+
+    // Remove matrix parameters only from the path portion
+    String cleanedPath = pathPortion.replaceAll(";[^/?#]*", "");
+
+    // Reconstruct the full URL/path
+    return cleanedPath + remainder;
+  }
+  
     
   @Override
   public void handle(RoutingContext routingContext) {
@@ -143,6 +169,11 @@ public class QueryRouter implements Handler<RoutingContext> {
           WriteStream<Buffer> responseStream = response;
           response.setChunked(true);
           path = path.substring(PATH_ROOT.length() + 1);
+          
+          if (path.contains(";")) {
+            path = removeMatrixParams(path);
+          }
+          
           String extension = null;
           int dotPos = indexOfLastDotAfterLastSlash(path);
           if (dotPos > 0) {
