@@ -153,7 +153,12 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
    * </thead>
    * <tbody>
    * <tr>
-   * <th scope="row"> {@link DateTimeFormatter#BASIC_ISO_DATE}</th>
+   * <th scope="row">DEFAULT</th>
+   * <td>Output from {@link java.time.LocalDateTime#toString()}, trims seconds</td>
+   * <td>'2011-12-03T10:15:30'</td>
+   * </tr>
+   * <tr>
+   * <th scope="row">{@link DateTimeFormatter#BASIC_ISO_DATE}</th>
    * <td>Basic ISO date </td> <td>'20111203'</td>
    * </tr>
    * <tr>
@@ -179,6 +184,12 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
    * <tr>
    * <th scope="row"> {@link DateTimeFormatter#ISO_LOCAL_DATE_TIME}</th>
    * <td> ISO Local Date and Time </td>
+   * <td>'2011-12-03T10:15:30'</td>
+   * </tr>
+   * <tr>
+   * <tr>
+   * <th scope="row">ISO_LOCAL_DATE_TIME_TRIM</td>
+   * <td>ISO Local Date and Time, with trimmed seconds</td>
    * <td>'2011-12-03T10:15:30'</td>
    * </tr>
    * <tr>
@@ -260,7 +271,7 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
    * </tbody>
    * </table>
    * <p>
-   * The default output (when the format is not set) is that of {@link java.time.LocalDateTime#toString()} method, specifically, the output will be one of the following ISO-8601 formats:
+   * The default output (when the format is not set, or is set to 'DEFAULT') is that of {@link java.time.LocalDateTime#toString()} method, specifically, the output will be one of the following ISO-8601 formats:
    * <ul>
    * <li>uuuu-MM-dd'T'HH:mm
    * <li>uuuu-MM-dd'T'HH:mm:ss
@@ -269,6 +280,7 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
    * <li>uuuu-MM-dd'T'HH:mm:ss.SSSSSSSSS
    * </ul>
    * The format used will be the shortest that outputs the full value of the time where the omitted parts are implied to be zero.
+   * The difference between DEFAULT and ISO_LOCAL_DATE_TIME_TRIM is that DEFAULT will always output fractions of seconds in groups of three, whereas ISO_LOCAL_DATE_TIME_TRIM will simply output as many as necessary.
    *
    * @return the Java format to use for date/time columns.
    */
@@ -289,6 +301,11 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
                         </thead>
                         <tbody>
                         <tr>
+                        <th scope="row">DEFAULT</th>
+                        <td>Output from java.time.LocalDateTime#toString(), trims seconds</td>
+                        <td>'2011-12-03T10:15:30'</td>
+                        </tr>
+                        <tr>
                         <th scope="row"> BASIC_ISO_DATE</th>
                         <td>Basic ISO date </td> <td>'20111203'</td>
                         </tr>
@@ -303,13 +320,18 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
                         <td>'10:15:30'</td>
                         </tr>
                         <tr>
-                        <th scope="row"> ISO_TIME</th>
-                        <td> Time with or without offset </td>
+                        <th scope="row"> ISO_TIME</td>
+                        <td> Time with or without offset </th>
                         <td>'10:15:30+01:00'; '10:15:30'</td>
                         </tr>
                         <tr>
                         <th scope="row"> ISO_LOCAL_DATE_TIME</th>
                         <td> ISO Local Date and Time </td>
+                        <td>'2011-12-03T10:15:30'</td>
+                        </tr>
+                        <tr>
+                        <th scope="row">ISO_LOCAL_DATE_TIME_TRIM</th>
+                        <td>ISO Local Date and Time, with trimmed seconds</td>
                         <td>'2011-12-03T10:15:30'</td>
                         </tr>
                         <tr>
@@ -379,6 +401,7 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
                         <li>uuuu-MM-dd'T'HH:mm:ss.SSSSSSSSS
                         </ul>
                         The format used will be the shortest that outputs the full value of the time where the omitted parts are implied to be zero.
+                        The difference between DEFAULT and ISO_LOCAL_DATE_TIME_TRIM is that DEFAULT will always output fractions of seconds in groups of three, whereas ISO_LOCAL_DATE_TIME_TRIM will simply output as many as necessary.
                         """
     , maxLength = 100
     , requiredMode = Schema.RequiredMode.NOT_REQUIRED

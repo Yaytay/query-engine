@@ -54,6 +54,7 @@ public class CustomDateTimeFormatterTest {
 
     assertEquals(1684158330L, new CustomDateTimeFormatter("EPOCH_SECONDS").format(dateTime));
     assertEquals(1684158330120L, new CustomDateTimeFormatter("EPOCH_MILLISECONDS").format(dateTime));
+    assertEquals("2023-05-15T13:45:30.120", new CustomDateTimeFormatter("DEFAULT").format(dateTime));
     assertEquals("20230515", new CustomDateTimeFormatter("BASIC_ISO_DATE").format(dateTime));
     assertEquals("2023-05-15", new CustomDateTimeFormatter("ISO_LOCAL_DATE").format(dateTime));
     assertEquals("2023-05-15", new CustomDateTimeFormatter("ISO_DATE").format(dateTime));
@@ -72,6 +73,24 @@ public class CustomDateTimeFormatterTest {
     assertEquals("Mon, 15 May 2023 13:45:30 GMT", new CustomDateTimeFormatter("RFC_1123_DATE_TIME").format(dateTime));
 
     assertEquals("Z Z GMT Z +00 +0000", new CustomDateTimeFormatter("VV zzz O X x Z").format(dateTime));
+  }
+  
+  @Test
+  public void testStrippedSeconds() {
+    assertEquals("2023-05-15T13:45:30.12", new CustomDateTimeFormatter("ISO_LOCAL_DATE_TIME_TRIM").format(LocalDateTime.of(2023, 5, 15, 13, 45, 30, 120000000)));
+    assertEquals("2023-05-15T13:45:30", new CustomDateTimeFormatter("ISO_LOCAL_DATE_TIME_TRIM").format(LocalDateTime.of(2023, 5, 15, 13, 45, 30)));
+    assertEquals("2023-05-15T13:45", new CustomDateTimeFormatter("ISO_LOCAL_DATE_TIME_TRIM").format(LocalDateTime.of(2023, 5, 15, 13, 45)));
+    assertEquals("2023-05-15T13:45", new CustomDateTimeFormatter("ISO_LOCAL_DATE_TIME_TRIM").format(LocalDateTime.of(2023, 5, 15, 13, 45, 00, 0000000)));
+
+    assertEquals("2023-05-15T13:45:30.120", new CustomDateTimeFormatter("DEFAULT").format(LocalDateTime.of(2023, 5, 15, 13, 45, 30, 120000000)));
+    assertEquals("2023-05-15T13:45:30", new CustomDateTimeFormatter("DEFAULT").format(LocalDateTime.of(2023, 5, 15, 13, 45, 30)));
+    assertEquals("2023-05-15T13:45", new CustomDateTimeFormatter("DEFAULT").format(LocalDateTime.of(2023, 5, 15, 13, 45)));
+    assertEquals("2023-05-15T13:45", new CustomDateTimeFormatter("DEFAULT").format(LocalDateTime.of(2023, 5, 15, 13, 45, 00, 0000000)));
+
+    assertEquals("2023-05-15T13:45:30.120", new CustomDateTimeFormatter("").format(LocalDateTime.of(2023, 5, 15, 13, 45, 30, 120000000)));
+    assertEquals("2023-05-15T13:45:30", new CustomDateTimeFormatter("").format(LocalDateTime.of(2023, 5, 15, 13, 45, 30)));
+    assertEquals("2023-05-15T13:45", new CustomDateTimeFormatter("").format(LocalDateTime.of(2023, 5, 15, 13, 45)));
+    assertEquals("2023-05-15T13:45", new CustomDateTimeFormatter("").format(LocalDateTime.of(2023, 5, 15, 13, 45, 00, 0000000)));
   }
   
 }

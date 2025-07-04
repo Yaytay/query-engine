@@ -26,166 +26,202 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A helper class to work with DateTimeFormatters allowing them to be accessed by name as well as by pattern.
- * 
+ *
  * Also supports EPOCH_SECONDS and EPOCH_MILLISECONDS.
- * 
+ *
  * @author jtalbut
  */
 public class CustomDateTimeFormatter {
-  
+
   private static final Logger logger = LoggerFactory.getLogger(CustomDateTimeFormatter.class);
-  
-  private final DateTimeFormatter formatter;
+
+  private final DateTimeFormatter formatter;  
   private final boolean convertToUtcZone;
   private final boolean dateTimeAsEpochSeconds;
   private final boolean dateTimeAsEpochMillis;
+  private final boolean customTrimSeconds;
 
   /**
    * Constructor.
-   * 
+   *
    * @param format Either a DateTimeFormatter pattern or the name of a predefined DateTimeFormatter (excluding zoned or offset ones) or EPOCH_SECONDS and EPOCH_MILLISECONDS.
    */
   public CustomDateTimeFormatter(String format) {
-    
+
     if (Strings.isNullOrEmpty(format)) {
       formatter = null;
       convertToUtcZone = false;
       dateTimeAsEpochSeconds = false;
       dateTimeAsEpochMillis = false;
+      customTrimSeconds = false;
     } else {
       switch (format) {
+        case "DEFAULT":
+          formatter = null;
+          convertToUtcZone = false;
+          dateTimeAsEpochSeconds = false;
+          dateTimeAsEpochMillis = false;
+          customTrimSeconds = false;
+          break;
+
         case "EPOCH_SECONDS":
           formatter = null;
           convertToUtcZone = false;
           dateTimeAsEpochSeconds = true;
           dateTimeAsEpochMillis = false;
+          customTrimSeconds = false;
           break;
-          
+
         case "EPOCH_MILLISECONDS":
           formatter = null;
           convertToUtcZone = false;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = true;
+          customTrimSeconds = false;
           break;
-          
+
         case "BASIC_ISO_DATE":
           formatter = DateTimeFormatter.BASIC_ISO_DATE;
           convertToUtcZone = false;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
+          customTrimSeconds = false;
           break;
-          
+
         case "ISO_LOCAL_DATE":
           formatter = DateTimeFormatter.ISO_LOCAL_DATE;
           convertToUtcZone = false;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
+          customTrimSeconds = false;
           break;
-          
+
         case "ISO_DATE":
           formatter = DateTimeFormatter.ISO_DATE;
           convertToUtcZone = false;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
+          customTrimSeconds = false;
           break;
-          
+
         case "ISO_LOCAL_TIME":
           formatter = DateTimeFormatter.ISO_LOCAL_TIME;
           convertToUtcZone = false;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
+          customTrimSeconds = false;
           break;
-          
+
         case "ISO_TIME":
           formatter = DateTimeFormatter.ISO_TIME;
           convertToUtcZone = false;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
+          customTrimSeconds = false;
           break;
-          
+
         case "ISO_LOCAL_DATE_TIME":
           formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
           convertToUtcZone = false;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
+          customTrimSeconds = false;
           break;
-          
+
         case "ISO_ORDINAL_DATE":
           formatter = DateTimeFormatter.ISO_ORDINAL_DATE;
           convertToUtcZone = false;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
+          customTrimSeconds = false;
           break;
-          
+
         case "ISO_WEEK_DATE":
           formatter = DateTimeFormatter.ISO_WEEK_DATE;
           convertToUtcZone = false;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
+          customTrimSeconds = false;
           break;
-          
+
         case "ISO_OFFSET_DATE":
           formatter = DateTimeFormatter.ISO_OFFSET_DATE;
           convertToUtcZone = true;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
+          customTrimSeconds = false;
           break;
-          
+
         case "ISO_OFFSET_TIME":
           formatter = DateTimeFormatter.ISO_OFFSET_TIME;
           convertToUtcZone = true;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
+          customTrimSeconds = false;
           break;
-          
+
         case "ISO_OFFSET_DATE_TIME":
           formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
           convertToUtcZone = true;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
+          customTrimSeconds = false;
           break;
-          
+
         case "ISO_ZONED_DATE_TIME":
           formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
           convertToUtcZone = true;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
+          customTrimSeconds = false;
           break;
-          
+
         case "ISO_DATE_TIME":
           formatter = DateTimeFormatter.ISO_DATE_TIME;
           convertToUtcZone = true;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
+          customTrimSeconds = false;
           break;
-          
+
         case "ISO_INSTANT":
           formatter = DateTimeFormatter.ISO_INSTANT;
           convertToUtcZone = true;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
+          customTrimSeconds = false;
           break;
-          
+
         case "RFC_1123_DATE_TIME":
           formatter = DateTimeFormatter.RFC_1123_DATE_TIME;
           convertToUtcZone = true;
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
+          customTrimSeconds = false;
           break;
-        
+
+        case "ISO_LOCAL_DATE_TIME_TRIM":
+          formatter = null;
+          convertToUtcZone = false;
+          dateTimeAsEpochSeconds = false;
+          dateTimeAsEpochMillis = false;
+          customTrimSeconds = true;
+          break;
+
         default:
           formatter = DateTimeFormatter.ofPattern(format);
           convertToUtcZone = format.matches(".*[VzOXxZ].*");
           dateTimeAsEpochSeconds = false;
           dateTimeAsEpochMillis = false;
+          customTrimSeconds = false;
           break;
       }
     }
   }
-  
+
   /**
    * Format the date/time value according to the configured formatter.
-   * 
+   *
    * @param value the date/time value to be formatted.
    * @return The formatted value, which will be either a String or a Long.
    */
@@ -198,6 +234,26 @@ public class CustomDateTimeFormatter {
           return ldt.toInstant(ZoneOffset.UTC).toEpochMilli();
         } else if (dateTimeAsEpochSeconds) {
           return ldt.toEpochSecond(ZoneOffset.UTC);
+        } else if (customTrimSeconds) {
+          StringBuilder sb = new StringBuilder();
+          sb.append(
+                  String.format("%04d-%02d-%02dT%02d:%02d"
+                          , ldt.getYear()
+                          , ldt.getMonthValue()
+                          , ldt.getDayOfMonth()
+                          , ldt.getHour()
+                          , ldt.getMinute()
+                  )
+          );
+
+          if (ldt.getSecond() != 0 || ldt.getNano() != 0) {
+            sb.append(String.format(":%02d", ldt.getSecond()));
+            if (ldt.getNano() != 0) {
+              String nanos = String.format("%09d", ldt.getNano()).replaceAll("0+$", "");
+              sb.append('.').append(nanos);
+            }
+          }
+          return sb.toString();
         } else if (formatter == null) {
           return value.toString();
         } else if (convertToUtcZone) {
@@ -209,8 +265,8 @@ public class CustomDateTimeFormatter {
       } else {
         logger.warn("Value {} of type {} passed to CustomDateTimeFormatter", value, value.getClass());
         return value.toString();
-      }      
+      }
     }
   }
-  
+
 }
