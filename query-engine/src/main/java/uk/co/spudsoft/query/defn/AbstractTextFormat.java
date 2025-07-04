@@ -188,7 +188,7 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
    * </tr>
    * <tr>
    * <tr>
-   * <th scope="row">ISO_LOCAL_DATE_TIME_TRIM</td>
+   * <th scope="row">ISO_LOCAL_DATE_TIME_TRIM</th>
    * <td>ISO Local Date and Time, with trimmed seconds</td>
    * <td>'2011-12-03T10:15:30'</td>
    * </tr>
@@ -320,7 +320,7 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
                         <td>'10:15:30'</td>
                         </tr>
                         <tr>
-                        <th scope="row"> ISO_TIME</td>
+                        <th scope="row"> ISO_TIME</th>
                         <td> Time with or without offset </th>
                         <td>'10:15:30+01:00'; '10:15:30'</td>
                         </tr>
