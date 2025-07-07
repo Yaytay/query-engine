@@ -259,9 +259,12 @@ public final class FormatJsonInstance implements FormatInstance {
       if (defn.isCompatibleEmpty()) {
         return outputStream.end(EMPTY_OBJECT);
       } else {
-        Buffer start = start();
-        Buffer tail = Strings.isNullOrEmpty(defn.getDataName()) ? CLOSE_ARRAY : CLOSE_ARRAY_AND_OBJECT;
-        return outputStream.end(start.appendBuffer(tail));
+        Buffer startBuffer = start();
+        Buffer tailBuffer = Strings.isNullOrEmpty(defn.getDataName()) ? CLOSE_ARRAY : CLOSE_ARRAY_AND_OBJECT;
+        Buffer outBuffer = Buffer.buffer(startBuffer.length() + tailBuffer.length());
+        outBuffer.appendBuffer(startBuffer);
+        outBuffer.appendBuffer(tailBuffer);
+        return outputStream.end(outBuffer);
       } 
     }
   }
