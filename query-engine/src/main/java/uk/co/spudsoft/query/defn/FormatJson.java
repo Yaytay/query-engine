@@ -44,6 +44,7 @@ public class FormatJson extends AbstractTextFormat implements Format {
   private final String dataName;
   private final String metadataName;
   private final boolean compatibleTypeNames;
+  private final boolean compatibleEmpty;
 
   @Override
   public FormatInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
@@ -180,6 +181,31 @@ public class FormatJson extends AbstractTextFormat implements Format {
   }
 
   /**
+   * When set to true a JSON feed that has no data will be output as an empty JSON object.
+   * <P>
+   * This means that no metadata will be output, and no "data" field will be output - there will be nothing but an empty object 
+   * regardless of the rest of the configuration.
+   * <P>
+   * This is only relevant if the feed has no rows to output.
+   * 
+   * @return true if an empty result should consist of nothing but an empty JSON object.
+   */
+  @Schema(description = """
+                        When set to true a JSON feed that has no data will be output as an empty JSON object.
+                        <P>
+                        This means that no metadata will be output, and no "data" field will be output - there will be nothing but an empty object
+                        regardless of the rest of the configuration.
+                        <P>
+                        This is only relevant if the feed has no rows to output.
+                        """
+          , defaultValue = "false"
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  public boolean isCompatibleEmpty() {
+    return compatibleEmpty;
+  }
+
+  /**
    * Get the Java format to use for date fields.
    * 
    * @return the Java format to use for date fields.
@@ -212,6 +238,7 @@ public class FormatJson extends AbstractTextFormat implements Format {
     private String dataName;
     private String metadataName;
     private boolean compatibleTypeNames;
+    private boolean compatibleEmpty;
     
     private Builder() {
       super(FormatType.JSON, "json", null, "json", null, MediaType.parse("application/json"), false
@@ -248,6 +275,16 @@ public class FormatJson extends AbstractTextFormat implements Format {
       this.compatibleTypeNames = value == null ? false : value;
       return this;
     }
+
+    /**
+     * Set the {@link FormatJson#compatibleEmpty} value in the builder.
+     * @param value The value for the {@link FormatJson#compatibleEmpty}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder compatibleEmpty(final Boolean value) {
+      this.compatibleEmpty = value == null ? false : value;
+      return this;
+    }
     
     /**
      * Construct a new instance of the FormatJson class.
@@ -272,6 +309,7 @@ public class FormatJson extends AbstractTextFormat implements Format {
     this.dataName = builder.dataName;
     this.metadataName = builder.metadataName;
     this.compatibleTypeNames = builder.compatibleTypeNames;
+    this.compatibleEmpty = builder.compatibleEmpty;
   }
   
 }

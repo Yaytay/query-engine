@@ -32,6 +32,7 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
@@ -164,6 +165,33 @@ public class MainQueryForkIT {
     assertThat(body, startsWith("<rss xmlns:custom=\"https://spudsoft/rss\" version=\"2.0\">"));
     assertThat(body, not(containsString("clientIp")));
     assertThat(body, containsString("channel"));
+        
+    body = given()
+            .queryParam("_fmt", "metajson")
+            .log().all()
+            .get("/query/demo/FeatureRichExample")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .contentType("application/json")
+            .extract().body().asString();
+    
+    assertThat(body, startsWith("\"{\"meta\":{\"name\":\"Feature Rich Example\",\"description\":\"A complex pipeline that tries to demonstrate as many features as I can cram into a single pipeline.\",\"fields\":{\"dataId\":\"int\",\"instant\":\"datetime\",\"colour\":\"string\",\"value\":\"string\",\"children\":\"string\""));
+    assertThat(body, not(containsString("clientIp")));
+        
+    body = given()
+            .queryParam("minDate", "2097-01-01")
+            .queryParam("_fmt", "metajson")
+            .log().all()
+            .get("/query/demo/FeatureRichExample")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .contentType("application/json")
+            .extract().body().asString();
+    
+    assertThat(body, equalTo("{}"));
+    assertThat(body, not(containsString("clientIp")));
         
     body = given()
             .queryParam("key", postgres.getName())

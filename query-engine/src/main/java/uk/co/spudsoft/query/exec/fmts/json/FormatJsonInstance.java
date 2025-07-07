@@ -65,6 +65,7 @@ public final class FormatJsonInstance implements FormatInstance {
   private final FormatJson defn;
   private final FormattingWriteStream formattingStream;
   
+  private static final Buffer EMPTY_OBJECT = Buffer.buffer("{}");
   private static final Buffer OPEN_ARRAY = Buffer.buffer("[");
   private static final Buffer COMMA = Buffer.buffer(",");
   private static final Buffer CLOSE_ARRAY = Buffer.buffer("]");
@@ -90,18 +91,25 @@ public final class FormatJsonInstance implements FormatInstance {
 
     this.formattingStream = new FormattingWriteStream(outputStream
             , v -> {
-              return start();
+              return Future.succeededFuture();
             }
             , row -> {
-              try {
+              try {                
                 if (row.isEmpty()) {
                   return Future.succeededFuture();
-                } else if (started.get()) {
-                  Buffer buffer = COMMA.copy().appendBuffer(toJsonBuffer(row));
-                  return outputStream.write(buffer);
                 } else {
-                  started.set(true);
-                  return outputStream.write(toJsonBuffer(row));
+                  Buffer startBuffer;
+                  if (started.get()) {
+                    startBuffer = COMMA;
+                  } else {
+                    started.set(true);
+                    startBuffer = start();
+                  }
+                  Buffer rowBuffer = toJsonBuffer(row);
+                  Buffer outBuffer = Buffer.buffer(startBuffer.length() + rowBuffer.length());
+                  outBuffer.appendBuffer(startBuffer);
+                  outBuffer.appendBuffer(rowBuffer);
+                  return outputStream.write(outBuffer);
                 }
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);
@@ -114,10 +122,8 @@ public final class FormatJsonInstance implements FormatInstance {
                 if (requestContext != null) {
                   requestContext.setRowsWritten(rows);
                 }
-              }
-              return end()
-                      .compose(v2 -> outputStream.end())
-                      ;
+              }              
+              return end();
             }
     );
   }
@@ -203,9 +209,9 @@ public final class FormatJsonInstance implements FormatInstance {
     return Buffer.buffer(out.toByteArray());
   }
   
-  private Future<Void> start() {
+  private Buffer start() {
     if (Strings.isNullOrEmpty(defn.getDataName())) {
-      return outputStream.write(OPEN_ARRAY);
+      return OPEN_ARRAY;
     } else {
       String start;
       if (Strings.isNullOrEmpty(defn.getMetadataName())) {
@@ -241,18 +247,25 @@ public final class FormatJsonInstance implements FormatInstance {
         }
         start = "{\"" + defn.getMetadataName() + "\":{" + insertTitle + insertDesc + "\"fields\":" + toJson(metaRow).toString() + "},\"" + defn.getDataName() + "\":" + OPEN_ARRAY;
       }
-      return outputStream.write(Buffer.buffer(start));
+      return Buffer.buffer(start);
     }
   }
   
   private Future<Void> end() {
-    if (Strings.isNullOrEmpty(defn.getDataName())) {
-      return outputStream.write(CLOSE_ARRAY);
+    if (started.get()) {
+      Buffer tail = Strings.isNullOrEmpty(defn.getDataName()) ? CLOSE_ARRAY : CLOSE_ARRAY_AND_OBJECT;
+      return outputStream.end(tail);
     } else {
-      return outputStream.write(CLOSE_ARRAY_AND_OBJECT);
+      if (defn.isCompatibleEmpty()) {
+        return outputStream.end(EMPTY_OBJECT);
+      } else {
+        Buffer start = start();
+        Buffer tail = Strings.isNullOrEmpty(defn.getDataName()) ? CLOSE_ARRAY : CLOSE_ARRAY_AND_OBJECT;
+        return outputStream.end(start.appendBuffer(tail));
+      } 
     }
   }
-
+  
   @Override
   public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStreamWithTypes input) {
     this.types = input.getTypes();
