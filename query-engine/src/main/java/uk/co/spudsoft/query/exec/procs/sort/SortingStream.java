@@ -101,10 +101,14 @@ public class SortingStream<T> implements ReadStream<T> {
 
     private void endHandler(Void nothing) {
       // logger.trace("SourceStream endHandler {}", this);
-      this.ended = true;
       synchronized (lock) {
-        if (!pending.remove(this)) {
-          throw new IllegalStateException("Removal from pending failed for: " + this);
+        this.ended = true;
+        // Only remove from pending if we're actually in pending
+        // If we're in outputs, we'll be removed when processOutputs handles us
+        if (pending.contains(this)) {
+          if (!pending.remove(this)) {
+            throw new IllegalStateException("Removal from pending failed for: " + this);
+          }
         }
       }
       context.runOnContext(v2 -> {
@@ -117,14 +121,14 @@ public class SortingStream<T> implements ReadStream<T> {
       ++count;
       this.input.pause();
       synchronized (lock) {
+        if (ended) {
+          return ;
+        }
         this.head = item;
         if (!pending.remove(this)) {
-          if (ended) {
-            return ;
-          } else {
-            throw new IllegalStateException("Removal from pending failed for: " + this);
-          }
+          throw new IllegalStateException("Removal from pending failed for: " + this);
         }
+
         if (!ended) {
           // logger.debug("Before adding {}: {}", item, outputs.stream().map(ss -> ss.head.toString()).collect(Collectors.joining(", ")));
           outputs.add(this);
@@ -147,13 +151,16 @@ public class SortingStream<T> implements ReadStream<T> {
     }
 
     public boolean next() {
-      this.head = null;
-      if (this.ended) {
-        pending.remove(this);
-        return false;
-      } else {
-        this.input.fetch(1);
-        return true;
+      synchronized (lock) {
+        this.head = null;
+        if (this.ended) {
+          // Make sure we're removed from pending if we haven't been already
+          pending.remove(this);
+          return false;
+        } else {
+          this.input.fetch(1);
+          return true;
+        }
       }
     }
 
@@ -358,7 +365,7 @@ public class SortingStream<T> implements ReadStream<T> {
     }
   }
 
-  
+
   private void inputHandler(T item) {
     // logger.debug("inputHandler {}", item);
     int sizeofData = memoryEvaluator.sizeof(item);
