@@ -2,11 +2,12 @@
 # This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
 # For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
 
-name: Java CI with Maven
+name: Release
 
 on:
   push:
     tags: [ '*' ]
+
 
 jobs:
   build:
@@ -14,10 +15,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
+    - name: Checkout completely
       uses: actions/checkout@v4
       with:
-        # we don't know what commit the last tag was
         fetch-depth: 0
 
     - name: Force fetch of tags
@@ -33,7 +33,7 @@ jobs:
     - name: Set up Maven
       uses: stCarolas/setup-maven@v5
       with:
-        maven-version: 3.9.2
+        maven-version: 3.9.6
 
     - name: Generate settings.xml for Maven Builds
       uses: whelk-io/maven-settings-xml-action@v22
@@ -80,6 +80,20 @@ jobs:
         path: |
           query-engine/target/site
           query-engine-design-mode/target/site
+
+    - name: Upload site reports on failure
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: reports
+        retention-days: 2
+        path: |
+          query-engine/target/site
+          query-engine-design-mode/target/site
+
+    - name: Clean up settings.xml
+      run: |
+        rm "${HOME}/.m2/settings.xml"
 
     - name: Create release
       uses: ncipollo/release-action@v1
