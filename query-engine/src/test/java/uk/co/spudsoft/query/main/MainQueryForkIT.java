@@ -176,7 +176,7 @@ public class MainQueryForkIT {
             .contentType("application/json")
             .extract().body().asString();
     
-    assertThat(body, startsWith("\"{\"meta\":{\"name\":\"Feature Rich Example\",\"description\":\"A complex pipeline that tries to demonstrate as many features as I can cram into a single pipeline.\",\"fields\":{\"dataId\":\"int\",\"instant\":\"datetime\",\"colour\":\"string\",\"value\":\"string\",\"children\":\"string\""));
+    assertThat(body, startsWith("{\"meta\":{\"name\":\"Feature Rich Example\",\"description\":\"A complex pipeline that tries to demonstrate as many features as I can cram into a single pipeline.\",\"fields\":{\"dataId\":\"int\",\"instant\":\"datetime\",\"colour\":\"string\",\"value\":\"string\",\"children\":\"string\""));
     assertThat(body, not(containsString("clientIp")));
         
     body = given()
