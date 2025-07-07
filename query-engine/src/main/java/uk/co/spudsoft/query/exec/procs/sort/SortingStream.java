@@ -103,13 +103,8 @@ public class SortingStream<T> implements ReadStream<T> {
       // logger.trace("SourceStream endHandler {}", this);
       synchronized (lock) {
         this.ended = true;
-        // Only remove from pending if we're actually in pending
         // If we're in outputs, we'll be removed when processOutputs handles us
-        if (pending.contains(this)) {
-          if (!pending.remove(this)) {
-            throw new IllegalStateException("Removal from pending failed for: " + this);
-          }
-        }
+        pending.remove(this);
       }
       context.runOnContext(v2 -> {
         processOutputs();
@@ -121,12 +116,13 @@ public class SortingStream<T> implements ReadStream<T> {
       ++count;
       this.input.pause();
       synchronized (lock) {
-        if (ended) {
-          return ;
-        }
         this.head = item;
         if (!pending.remove(this)) {
-          throw new IllegalStateException("Removal from pending failed for: " + this);
+          if (ended) {
+            return ;
+          } else {
+            throw new IllegalStateException("Removal from pending failed for: " + this);
+          }
         }
 
         if (!ended) {
