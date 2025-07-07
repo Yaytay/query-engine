@@ -205,4 +205,8 @@ formats:
   dataName: data
   metadataName: meta
   compatibleTypeNames: true
+- type: RSS
+  customNamespace: https://spudsoft/rss
+  dateTimeFormat: yyyy-MM-dd HH:mm:ss.S
+  name: rss
 

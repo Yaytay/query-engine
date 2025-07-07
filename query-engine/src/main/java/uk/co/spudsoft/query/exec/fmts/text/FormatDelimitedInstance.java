@@ -166,52 +166,60 @@ public final class FormatDelimitedInstance implements FormatInstance {
       }
       try {
         if (v != null) {
-          String stringValue;
-          switch (cd.type()) {
-            case Boolean:
-              outputRow.append(valueFormatters.getBooleanFormatter(cd.name()).format(v));              
-              break;
-            case Double:
-            case Float:
-              outputRow.append(valueFormatters.getDecimalFormatter(cd.name()).format(v));
-              break;
-            case Integer:
-            case Long:
-              outputRow.append(v);
-              break;
-            case Date:
-              stringValue = valueFormatters.getDateFormatter(cd.name()).format(v);
-              if (defn.isQuoteTemporal()) {
-                outputEncodedQuotedString(outputRow, stringValue);
-              } else {
-                outputRow.append(stringValue);
-              }
-              break;
-            case DateTime:
-              Object objectValue = valueFormatters.getDateTimeFormatter(cd.name()).format(v);
-              if (objectValue instanceof String s) {
-                stringValue = s;
-              } else {
-                stringValue = objectValue == null ? null : objectValue.toString();
-              }
-              if (defn.isQuoteTemporal()) {
-                outputEncodedQuotedString(outputRow, stringValue);
-              } else {
-                outputRow.append(stringValue);
-              }
-              break;              
-            case Time:
-              stringValue = valueFormatters.getTimeFormatter(cd.name()).format(v);
-              if (defn.isQuoteTemporal()) {
-                outputEncodedQuotedString(outputRow, stringValue);
-              } else {
-                outputRow.append(stringValue);
-              }
-              break;
-            case String:
-            default:
-              outputEncodedQuotedString(outputRow, v.toString());
-              break;
+          if (v instanceof String s) {
+            outputEncodedQuotedString(outputRow, s);
+          } else {
+            String stringValue;
+            switch (cd.type()) {
+              case Boolean:
+                outputRow.append(valueFormatters.getBooleanFormatter(cd.name()).format(v));              
+                break;
+              case Double:
+              case Float:
+                outputRow.append(valueFormatters.getDecimalFormatter(cd.name()).format(v));
+                break;
+              case Integer:
+              case Long:
+                if (v instanceof String s) {
+                  outputEncodedQuotedString(outputRow, s);
+                } else {
+                  outputRow.append(v);
+                }
+                break;
+              case Date:
+                stringValue = valueFormatters.getDateFormatter(cd.name()).format(v);
+                if (defn.isQuoteTemporal()) {
+                  outputEncodedQuotedString(outputRow, stringValue);
+                } else {
+                  outputRow.append(stringValue);
+                }
+                break;
+              case DateTime:
+                Object objectValue = valueFormatters.getDateTimeFormatter(cd.name()).format(v);
+                if (objectValue instanceof String s) {
+                  stringValue = s;
+                } else {
+                  stringValue = objectValue == null ? null : objectValue.toString();
+                }
+                if (defn.isQuoteTemporal()) {
+                  outputEncodedQuotedString(outputRow, stringValue);
+                } else {
+                  outputRow.append(stringValue);
+                }
+                break;              
+              case Time:
+                stringValue = valueFormatters.getTimeFormatter(cd.name()).format(v);
+                if (defn.isQuoteTemporal()) {
+                  outputEncodedQuotedString(outputRow, stringValue);
+                } else {
+                  outputRow.append(stringValue);
+                }
+                break;
+              case String:
+              default:
+                outputEncodedQuotedString(outputRow, v.toString());
+                break;
+            }
           }
         }
       } catch (Throwable ex) {

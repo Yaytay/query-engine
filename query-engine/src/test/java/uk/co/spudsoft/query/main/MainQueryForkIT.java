@@ -152,6 +152,20 @@ public class MainQueryForkIT {
     assertThat(body, containsString("Output"));
         
     body = given()
+            .queryParam("_fmt", "rss")
+            .log().all()
+            .get("/query/demo/FeatureRichExample")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .contentType("application/rss+xml; charset=utf-8")
+            .extract().body().asString();
+    
+    assertThat(body, startsWith("<rss xmlns:custom=\"https://spudsoft/rss\" version=\"2.0\">"));
+    assertThat(body, not(containsString("clientIp")));
+    assertThat(body, containsString("channel"));
+        
+    body = given()
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
             .queryParam("_runid", UUID.randomUUID().toString())

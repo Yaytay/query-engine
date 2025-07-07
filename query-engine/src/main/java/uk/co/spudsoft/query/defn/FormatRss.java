@@ -43,7 +43,7 @@ import static uk.co.spudsoft.query.defn.FormatXml.NAME_START_REGEX;
                       """)
 public class FormatRss extends AbstractTextFormat implements Format {
 
-  private static final String DEFAULT_NAME = "RSS";
+  private static final String DEFAULT_NAME = "rss";
 
   private static final String DEFAULT_EXTENSION = "xml";
   private static final String DEFAULT_MEDIA_TYPE = "application/rss+xml; charset=utf-8";
@@ -178,7 +178,7 @@ public class FormatRss extends AbstractTextFormat implements Format {
      * Default constructor.
      */
     public Builder() {
-      super(FormatType.RSS, "rss", null, "xml", null, MediaType.parse("application/rss+xml; charset=utf-8"), false
+      super(FormatType.RSS, DEFAULT_NAME, null, DEFAULT_EXTENSION, null, MediaType.parse(DEFAULT_MEDIA_TYPE), false
               , null, null, null, null, null
       );      
     }

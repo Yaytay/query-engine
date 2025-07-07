@@ -358,7 +358,7 @@ public class QueryRouter implements Handler<RoutingContext> {
       RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
       
       Format chosenFormat = pipelineExecutor.getFormat(pipeline.getFormats(), formatRequest);
-      response.headers().set("content-type", chosenFormat.getMediaType().toString());
+      response.headers().set("Content-Type", chosenFormat.getMediaType().toString());
       String filename = buildDesiredFilename(chosenFormat);
       if (filename != null) {
         response.headers().set("Content-Disposition", "attachment; filename=\"" + filename + "\"");
@@ -411,9 +411,9 @@ public class QueryRouter implements Handler<RoutingContext> {
       message = ExceptionToString.convert(ex, "\n\t");
     }
     
-    routingContext
-            .response()
-            .setStatusCode(statusCode)
+    HttpServerResponse response = routingContext.response();
+    response.putHeader("Content-Type", "texxt/plain");
+    response.setStatusCode(statusCode)
             .end(message);
   }
 
