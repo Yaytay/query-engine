@@ -115,23 +115,29 @@ public class SortingStream<T> implements ReadStream<T> {
       // logger.trace("SourceStream handler: {} {}", this, item);
       ++count;
       this.input.pause();
+
+      boolean shouldProcessOutputs = false;
       synchronized (lock) {
-        this.head = item;
-        if (!pending.remove(this)) {
-          if (ended) {
-            return ;
-          } else {
-            throw new IllegalStateException("Removal from pending failed for: " + this);
-          }
+        // Double-check we haven't ended while waiting for the lock
+        if (ended) {
+          return;
         }
 
-        if (!ended) {
+        this.head = item;
+
+        boolean wasInPending = pending.remove(this);
+        if (!wasInPending && !ended) {
+          throw new IllegalStateException("Removal from pending failed for: " + this);
+        }
+
+        if (!ended && wasInPending) {
           // logger.debug("Before adding {}: {}", item, outputs.stream().map(ss -> ss.head.toString()).collect(Collectors.joining(", ")));
           outputs.add(this);
           // logger.debug("After adding: {}", outputs.stream().map(ss -> ss.head.toString()).collect(Collectors.joining(", ")));
+          shouldProcessOutputs = !emitting;
         }
       }
-      if (!emitting) {
+      if (shouldProcessOutputs) {
         context.runOnContext(v -> {
           processOutputs();
         });
