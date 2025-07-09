@@ -82,8 +82,8 @@ public class ListReadStream<T> implements ReadStream<T> {
           item = iter.next();
           handlerCaptured = handler;
           shouldContinue = true;
-        } else {
-          logger.debug("Nothing to emit");
+        } 
+        if (!iter.hasNext()) {
           ended = true;
           endHandlerCaptured = endHandler;
           emitting = false; // Safe to set false here since we're ending
