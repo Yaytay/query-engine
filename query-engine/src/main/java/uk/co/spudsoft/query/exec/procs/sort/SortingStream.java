@@ -258,18 +258,8 @@ public class SortingStream<T> implements ReadStream<T> {
           // logger.debug("Waiting for some inputs to catch up: {}", pending);
           emitting = false;
           return ;
-        } else if (outputs.isEmpty()) {
-          // Nothing is pending and nothing is to be done, we've reached the end
-          if (endHandlerCalled) {
-            return ;
-          } else {
-            endHandlerCalled = true;
-            endHandlerCaptured = endHandler;
-          }
-          emitting = false;
-          // logger.debug("End handler: {}", endHandler);
-          done = true;
-        } else if (demand <= 0) {
+        } 
+        if (demand <= 0) {
           emitting = false;
           // logger.debug("Demand: {}", demand);
           return ;
@@ -282,9 +272,26 @@ public class SortingStream<T> implements ReadStream<T> {
           if (!pending.add(topStream)) {
             throw new IllegalStateException("Failed to add stream to pending: " + topStream);
           }
-          next = topStream.head;
-          done = topStream.next();
+          if (topStream != null) {
+            next = topStream.head;
+            done = topStream.next();
+          } else {
+            next = null;
+            done = true;
+          }
         }
+        if (outputs.isEmpty() && pending.isEmpty()) {
+          // Nothing is pending and nothing is to be done, we've reached the end
+          if (endHandlerCalled) {
+            return ;
+          } else {
+            endHandlerCalled = true;
+            endHandlerCaptured = endHandler;
+          }
+          emitting = false;
+          // logger.debug("End handler: {}", endHandler);
+          done = true;
+        } 
 //        heads = outputs.stream().map(ss -> ss.head.toString()).collect(Collectors.joining(", "));
       }
       if (handlerCaptured != null) {
