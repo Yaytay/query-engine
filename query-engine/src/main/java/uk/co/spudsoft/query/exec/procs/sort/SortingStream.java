@@ -243,7 +243,7 @@ public class SortingStream<T> implements ReadStream<T> {
     boolean done = false;
     while (!done) {
       T next = null;
-      Handler<T> handlerCaptured = null;
+      Handler<T> handlerCaptured;
       Handler<Void> endHandlerCaptured = null;
 
       synchronized (lock) {
