@@ -90,18 +90,7 @@ public class ListReadStream<T> implements ReadStream<T> {
         }
       }
 
-      if (item != null && handlerCaptured != null) {
-        try {
-          logger.trace("Handling {}", item);
-          handlerCaptured.handle(item);
-        } catch (Throwable ex) {
-          if (exceptionHandlerCaptured != null) {
-            exceptionHandlerCaptured.handle(ex);
-          } else {
-            logger.warn("Exception handling item in ListReadStream: ", ex);
-          }
-        }
-      }
+      callHandler(item, handlerCaptured, exceptionHandlerCaptured);
 
       if (ended && endHandlerCaptured != null) {
         logger.debug("Ending");
@@ -116,6 +105,21 @@ public class ListReadStream<T> implements ReadStream<T> {
           return;
         }
         // Continue the loop while holding the lock on emitting
+      }
+    }
+  }
+
+  protected void callHandler(T item, Handler<T> handlerCaptured, Handler<Throwable> exceptionHandlerCaptured) {
+    if (item != null && handlerCaptured != null) {
+      try {
+        logger.trace("Handling {}", item);
+        handlerCaptured.handle(item);
+      } catch (Throwable ex) {
+        if (exceptionHandlerCaptured != null) {
+          exceptionHandlerCaptured.handle(ex);
+        } else {
+          logger.warn("Exception handling item in ListReadStream: ", ex);
+        }
       }
     }
   }

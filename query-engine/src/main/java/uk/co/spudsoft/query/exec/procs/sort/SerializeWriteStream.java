@@ -160,20 +160,26 @@ public class SerializeWriteStream<T> implements WriteStream<T> {
       buff.appendBytes(byteArrayFromInt(serialized.length));
       buff.appendBytes(serialized);
       if (writePos > 0) {
-        writeWriteBuffer(true);
+        return writeWriteBuffer(true)
+                .compose(v -> {
+                  return file.write(buff);
+                });
+      } else {
+        return file.write(buff);
       }
-      return file.write(buff);
      } else if (writePos + spaceRequired > bufferSize) {
-      writeWriteBuffer(true);
+      // Need to wait for file writes
+      Future<Void> result = writeWriteBuffer(true);
       writeBuffer.appendBytes(byteArrayFromInt(serialized.length));
       writeBuffer.appendBytes(serialized);
       writePos += spaceRequired;
-      return writePromise.future();
+      return result;
     } else {
       writeBuffer.appendBytes(byteArrayFromInt(serialized.length));
       writeBuffer.appendBytes(serialized);
       writePos += spaceRequired;
-      return writePromise.future();
+      // Don't need to wait for buffer writes
+      return Future.succeededFuture();
     }
   }
 

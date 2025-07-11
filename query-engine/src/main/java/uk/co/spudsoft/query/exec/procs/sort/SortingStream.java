@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 jtalbut
+ * Copyright (C) 2025 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,212 +16,95 @@
  */
 package uk.co.spudsoft.query.exec.procs.sort;
 
-import uk.co.spudsoft.query.exec.procs.ListReadStream;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.file.FileSystem;
 import io.vertx.core.file.OpenOptions;
 import io.vertx.core.streams.ReadStream;
-import io.vertx.core.streams.WriteStream;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
-import java.util.PriorityQueue;
-import java.util.Set;
+import java.util.ListIterator;
+import java.util.Queue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
- * A ReadStream wrapper that sorts the input.
+ * A ReadStream that sorts its input using external merge sort. Uses bounded memory by spilling sorted chunks to temporary files
+ * when memory limit is reached.
  *
- * This must capture the entire stream before outputting anything, so it doesn't 'stream' as such, but the interface is that of a ReadStream.
- *
- * @param <T> the type of data being streamed
- * @author jtalbut
+ * @param <T> The object type being sorted.
  */
-public class SortingStream<T> implements ReadStream<T> {
+public final class SortingStream<T> implements ReadStream<T> {
 
   private static final Logger logger = LoggerFactory.getLogger(SortingStream.class);
+  private static final int BUFFER_SIZE = 10; // Buffer size per source - increased for better performance
 
+  // Configuration
   private final Context context;
   private final FileSystem fileSystem;
   private final Comparator<T> comparator;
   private final SerializeWriteStream.Serializer<T> serializer;
   private final SerializeReadStream.Deserializer<T> deserializer;
-
   private final String tempDir;
   private final String baseFileName;
   private final long memoryLimit;
-
-  /**
-   * Functional interface for evaluating the approximate amount of memory used by an item.
-   * @param <T> The type of the item being evaluated.
-   */
-  public interface MemoryEvaluator<T> {
-    /**
-     * Return the approximate amount of memory that the argument uses.
-     * @param data the item under consideration.
-     * @return the approximate amount of memory that the argument uses.
-     */
-    int sizeof(T data);
-  }
-
   private final MemoryEvaluator<T> memoryEvaluator;
 
-  private final Object lock = new Object();
-
+  // Input stream
   private final ReadStream<T> input;
-  private int inputCount = 0;
 
-  private Handler<Throwable> exceptionHandler;
-  private Handler<T> handler;
+  // Stream handlers
+  private Handler<T> dataHandler;
   private Handler<Void> endHandler;
+  private Handler<Throwable> exceptionHandler;
 
-  private long demand;
-  private boolean emitting;
-  private boolean endHandlerCalled;
+  // State management
+  private final AtomicInteger state = new AtomicInteger(State.COLLECTING.ordinal());
+  private final AtomicLong demand = new AtomicLong(0);
+  private final AtomicBoolean processing = new AtomicBoolean(false);
 
-  private int writeQueueMaxSize;
+  // Collection phase
+  private final List<T> currentChunk = new ArrayList<>();
+  private long currentChunkSize = 0;
+  private final List<String> tempFiles = new ArrayList<>();
 
-  private List<T> items = new ArrayList<>();
-  private long sizeOfItemsInMemory;
+  // List of outstanding chunk writes
+  private final List<Future<Void>> pendingChunkFlushes = new  ArrayList<>();
 
-  private final List<String> files = new ArrayList<>();
+  // Merge phase
+  private MergeState mergeState;
 
-  final class SourceStream {
-    // private Object source;
-    private final int index;
-    private int count;
-    private final ReadStream<T> input;
-    private volatile boolean ended = false;
-    private T head;
-
-    private void endHandler(Void nothing) {
-      // logger.trace("SourceStream endHandler {}", this);
-      synchronized (lock) {
-        this.ended = true;
-        // If we're in outputs, we'll be removed when processOutputs handles us
-        pending.remove(this);
-      }
-      context.runOnContext(v2 -> {
-        processOutputs();
-      });
-    }
-
-    private void itemHandler(T item) {
-      // logger.trace("SourceStream handler: {} {}", this, item);
-      ++count;
-      this.input.pause();
-
-      boolean shouldProcessOutputs = false;
-      synchronized (lock) {
-        // Double-check we haven't ended while waiting for the lock
-        if (ended) {
-          return;
-        }
-
-        this.head = item;
-
-        boolean wasInPending = pending.remove(this);
-        if (!wasInPending && !ended) {
-          throw new IllegalStateException("Removal from pending failed for: " + this);
-        }
-
-        if (!ended && wasInPending) {
-          // logger.debug("Before adding {}: {}", item, outputs.stream().map(ss -> ss.head.toString()).collect(Collectors.joining(", ")));
-          outputs.add(this);
-          // logger.debug("After adding: {}", outputs.stream().map(ss -> ss.head.toString()).collect(Collectors.joining(", ")));
-          shouldProcessOutputs = !emitting;
-        }
-      }
-      if (shouldProcessOutputs) {
-        context.runOnContext(v -> {
-          processOutputs();
-        });
-      }
-    }
-
-    SourceStream(Object source, int index, ReadStream<T> input) {
-      this.index = index;   // The ID of the stream, for use in the pending Set
-      this.input = input;
-      this.input.exceptionHandler(exceptionHandler);
-      this.input.endHandler(this::endHandler);
-      this.input.handler(this::itemHandler);
-    }
-
-    public boolean next() {
-      synchronized (lock) {
-        this.head = null;
-        if (this.ended) {
-          // Make sure we're removed from pending if we haven't been already
-          pending.remove(this);
-          return false;
-        } else {
-          this.input.fetch(1);
-          return true;
-        }
-      }
-    }
-
-    @Override
-    public int hashCode() {
-      return this.index;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) {
-        return true;
-      }
-      if (obj == null) {
-        return false;
-      }
-      if (getClass() != obj.getClass()) {
-        return false;
-      }
-      @SuppressWarnings("unchecked")
-      final SourceStream other = (SourceStream) obj;
-      return this.index == other.index;
-    }
-
+  public interface MemoryEvaluator<T> {
+    long sizeof(T item);
   }
 
-  // This is just for debug purposes
-  private List<SourceStream> outputHolder;
-  // SourceStreams should be in one of these two at any time
-  // When the SourceStream is empty it is removed from both and not put back
-  private Set<SourceStream> pending;
-  private PriorityQueue<SourceStream> outputs;
+  private enum State {
+    COLLECTING,   // Still collecting input
+    MERGING,      // Merging sorted chunks
+    COMPLETED,    // All data emitted
+    FAILED        // Error occurred
+  }
 
-  /**
-   * Constructor.
-   *
-   * @param context The Vert.x context used when asynchronous actions must be scheduled.
-   * @param fileSystem The Vert.x filesystem used for managing data when it is too large to fit in memory.
-   * @param comparator The comparator used to sort items
-   * @param serializer The functional class for converting items into byte arrays that can be written to disc.
-   * @param deserializer The functional class for converting byte arrays from disc into items for the output stream.
-   * @param tempDir The temporary directory to use for writing sorted files to be merged later - if the data is too big to fit in memory.
-   * @param baseFileName The base name to use for temporary files.
-   * @param memoryLimit The approximate maximum amount of memory to use for storing items in memory before writing them to disc.
-   * @param memoryEvaluator The functional class used to calculate the approximate amount of memory used by a single item.
-   * @param input The input stream.
-   */
-  @SuppressFBWarnings(value = {"EI_EXPOSE_REP2", "CT_CONSTRUCTOR_THROW"}, justification = "CT_CONSTRUCTOR_THROW is false positive")
-  public SortingStream(
-          Context context
-          , FileSystem fileSystem
-          , Comparator<T> comparator
-          , SerializeWriteStream.Serializer<T> serializer
-          , SerializeReadStream.Deserializer<T> deserializer
-          , String tempDir
-          , String baseFileName
-          , long memoryLimit
-          , MemoryEvaluator<T> memoryEvaluator
-          , ReadStream<T> input
+  public SortingStream(Context context,
+           FileSystem fileSystem,
+           Comparator<T> comparator,
+           SerializeWriteStream.Serializer<T> serializer,
+           SerializeReadStream.Deserializer<T> deserializer,
+           String tempDir,
+           String baseFileName,
+           long memoryLimit,
+           MemoryEvaluator<T> memoryEvaluator,
+           ReadStream<T> input
   ) {
     this.context = context;
     this.fileSystem = fileSystem;
@@ -232,229 +115,338 @@ public class SortingStream<T> implements ReadStream<T> {
     this.baseFileName = baseFileName;
     this.memoryLimit = memoryLimit;
     this.memoryEvaluator = memoryEvaluator;
-
     this.input = input;
-    input.endHandler(this::inputEndHandler);
-    input.exceptionHandler(this::inputExceptionHandler);
-    input.handler(this::inputHandler);
+
+    fileSystem.mkdirsBlocking(tempDir);
+
+    // Set up input stream handlers
+    input.handler(this::handleInputItem);
+    input.endHandler(this::handleInputEnd);
+    input.exceptionHandler(this::handleException);
+
+    // Start reading input
+    input.resume();
   }
 
-  private void processOutputs() {
-    boolean done = false;
-    while (!done) {
-      T next = null;
-      Handler<T> handlerCaptured;
-      Handler<Void> endHandlerCaptured = null;
+  private void handleInputItem(T item) {
+    if (state.get() != State.COLLECTING.ordinal()) {
+      return;
+    }
 
-      synchronized (lock) {
-//        logger.debug("processOutputs: demand: {}, outputs: {} with {} pending, files: {}"
-//                , demand
-//                , outputs.size()
-//                , pending.size()
-//                , files.size()
-//        );
-        if (!pending.isEmpty()) {
-          // Waiting for some inputs to catch up
-          // logger.debug("Waiting for some inputs to catch up: {}", pending);
-          emitting = false;
-          return ;
-        } 
-        if (demand <= 0) {
-          emitting = false;
-          // logger.debug("Demand: {}", demand);
-          return ;
-        } else {
-          if (demand < Long.MAX_VALUE) {
-            --demand;
-          }
-          handlerCaptured = handler;
-          SourceStream topStream = outputs.poll();
-          if (!pending.add(topStream)) {
-            throw new IllegalStateException("Failed to add stream to pending: " + topStream);
-          }
-          if (topStream != null) {
-            next = topStream.head;
-            done = topStream.next();
-          } else {
-            next = null;
-            done = true;
-          }
+    currentChunk.add(item);
+    currentChunkSize += memoryEvaluator.sizeof(item);
+
+    if (currentChunkSize >= memoryLimit) {
+      flushCurrentChunk()
+              .onFailure(this::handleException);
+    }
+  }
+
+  private void handleInputEnd(Void v) {
+    if (state.get() != State.COLLECTING.ordinal()) {
+      return;
+    }
+
+    logger.trace("Input ended, transitioning to merge phase");
+
+    // Flush any remaining chunk
+    Future<Void> flushFuture = currentChunk.isEmpty() ?
+        Future.succeededFuture() :
+        flushCurrentChunk();
+
+    flushFuture
+        .compose(vv -> startMergePhase())
+        .onFailure(this::handleException);
+  }
+
+  private Future<Void> flushChunkAsync(List<T> chunkToFlush) {
+    if (chunkToFlush.isEmpty()) {
+      return Future.succeededFuture();
+    }
+
+    // Sort the chunk
+    Collections.sort(chunkToFlush, comparator);
+
+    // Write to temporary file
+    String tempFileName = tempDir + "/" + baseFileName + "_" + tempFiles.size() + ".tmp";
+    tempFiles.add(tempFileName);
+
+    return fileSystem.open(tempFileName, new OpenOptions().setCreate(true).setWrite(true))
+        .compose(file -> {
+          SerializeWriteStream<T> writeStream = new SerializeWriteStream<>(file, serializer);
+          return writeAllItems(writeStream, chunkToFlush);
+        });
+  }
+
+  private Future<Void> flushCurrentChunk() {
+    List<T> chunkToFlush = new ArrayList<>(currentChunk);
+    currentChunk.clear();
+    currentChunkSize = 0;
+
+    Future<Void> future = flushChunkAsync(chunkToFlush);
+    pendingChunkFlushes.add(future);
+    future.onComplete(ar -> {
+      if (ar.failed()) {
+        logger.warn("Failed to write chunk to disc: ", ar.cause());
+        Handler<Throwable> exxHandler = this.exceptionHandler;
+        if (exxHandler != null) {
+          exxHandler.handle(ar.cause());
         }
-        if (outputs.isEmpty() && pending.isEmpty()) {
-          // Nothing is pending and nothing is to be done, we've reached the end
-          if (endHandlerCalled) {
-            return ;
-          } else {
-            endHandlerCalled = true;
-            endHandlerCaptured = endHandler;
-          }
-          emitting = false;
-          // logger.debug("End handler: {}", endHandler);
-          done = true;
-        } 
-//        heads = outputs.stream().map(ss -> ss.head.toString()).collect(Collectors.joining(", "));
       }
-      if (handlerCaptured != null) {
+      pendingChunkFlushes.remove(future);
+    });
+    return future;
+  }
+
+  private Future<Void> writeAllItems(SerializeWriteStream<T> stream, List<T> items) {
+    Promise<Void> promise = Promise.promise();
+
+    writeItemsIteratively(stream, items.listIterator(), promise);
+
+    return promise.future();
+  }
+
+  private void writeItemsIteratively(SerializeWriteStream<T> stream, ListIterator<T> iterator, Promise<Void> promise) {
+    // Process items synchronously when possible
+    while (iterator.hasNext()) {
+      T item = iterator.next();
+      Future<Void> writeFuture = stream.write(item);
+
+      if (writeFuture.isComplete()) {
+        // Future is already complete, check result and continue synchronously
+        if (writeFuture.failed()) {
+          promise.fail(writeFuture.cause());
+          return;
+        }
+        // Success - continue the loop
+      } else {
+        // Future is not complete, set up async continuation
+        writeFuture.onComplete(ar -> {
+          if (ar.succeeded()) {
+            // Continue writing remaining items
+            writeItemsIteratively(stream, iterator, promise);
+          } else {
+            promise.fail(ar.cause());
+          }
+        });
+        return; // Exit the loop, will continue async
+      }
+    }
+
+    // All items written successfully, end the stream
+    Future<Void> endFuture = stream.end();
+    if (endFuture.isComplete()) {
+      if (endFuture.succeeded()) {
+        promise.complete();
+      } else {
+        promise.fail(endFuture.cause());
+      }
+    } else {
+      endFuture.onComplete(promise);
+    }
+  }
+
+  private Future<Void> startMergePhase() {
+    if (!state.compareAndSet(State.COLLECTING.ordinal(), State.MERGING.ordinal())) {
+      return Future.failedFuture(new IllegalStateException("Invalid state transition"));
+    }
+
+    return Future.all(pendingChunkFlushes)
+            .compose(v1 -> {
+              logger.trace("Starting merge phase with {} temp files and {} items in memory", tempFiles.size(), currentChunk.size());
+
+              // Choose merge strategy
+              if (tempFiles.isEmpty()) {
+                // All data fits in memory - sort it
+                Collections.sort(currentChunk, comparator);
+                mergeState = new InMemoryMergeState();
+              } else {
+                // Need to merge files
+                mergeState = new BufferedFileMergeState();
+              }
+
+              return mergeState.initialize()
+                  .onSuccess(v -> {
+                    logger.trace("Merge state initialized, scheduling output processing");
+                    // Ensure we start processing if handlers are already set
+                    if (dataHandler != null && demand.get() > 0) {
+                      scheduleProcessOutput();
+                    }
+                  });
+            });
+
+  }
+
+  private void scheduleProcessOutput() {
+    if (processing.compareAndSet(false, true)) {
+      context.runOnContext(v -> {
         try {
-          handlerCaptured.handle(next);
-        } catch (Throwable ex) {
-          postException(ex);
+          processOutput();
+        } finally {
+          processing.set(false);
+        }
+      });
+    }
+  }
+
+  private void processOutput() {
+    if (state.get() != State.MERGING.ordinal() || mergeState == null) {
+      return;
+    }
+
+    // Don't process if no handler is set
+    if (dataHandler == null) {
+      return;
+    }
+
+    try {
+      // Process items while we have demand
+      while (demand.get() > 0) {
+        if (mergeState.hasNext()) {
+          T nextItem = mergeState.next();
+          if (nextItem != null) {
+            if (demand.get() != Long.MAX_VALUE) {
+              demand.decrementAndGet();
+            }
+
+            try {
+              dataHandler.handle(nextItem);
+            } catch (Exception e) {
+              handleException(e);
+              return;
+            }
+          }
+        } else if (mergeState.hasMoreDataPotential()) {
+          // We don't have all sources ready, but some might have more data
+          // Fill buffers and then continue processing
+          mergeState.ensureBuffersFilled()
+                  .onComplete(ar -> {
+                    if (ar.succeeded()) {
+                      // Continue processing after buffer fill
+                      scheduleProcessOutput();
+                    } else {
+                      handleException(ar.cause());
+                    }
+                  });
+          return; // Exit and wait for async fill
+        } else {
+          // No more data available anywhere
+          complete();
+          return;
         }
       }
-      if (endHandlerCaptured != null) {
-        endHandlerCaptured.handle(null);
-        return ;
+
+      // Check if we should complete (all sources ended and no more data)
+      if (!mergeState.hasNext() && !mergeState.hasMoreDataPotential()) {
+        complete();
+      }
+    } catch (Throwable ex) {
+      Handler<Throwable> exHandler = exceptionHandler;
+      if (exHandler != null) {
+        exHandler.handle(ex);
       }
     }
   }
 
-  private void inputEndHandler(Void nothing) {
-    synchronized (lock) {
-      // logger.debug("inputEndHandler with {} remaining", items.size());
-      sortItemsList(items);
-      outputs = new PriorityQueue<>(files.size() + 1, (a, b) -> {
-        return comparator.compare(a.head, b.head);
-      });
-      outputHolder = new ArrayList<>(files.size() + 1);
-      pending = new HashSet<>(files.size() + 1);
-
-      if (!items.isEmpty()) {
-        ReadStream<T> memStream = new ListReadStream<>(context, items);
-        SourceStream ss = new SourceStream("list", 0, memStream);
-        outputHolder.add(ss);
-        pending.add(ss);
-        ss.next();
+  private void complete() {
+    if (state.compareAndSet(State.MERGING.ordinal(), State.COMPLETED.ordinal())) {
+      logger.trace("Sorting stream completed");
+      if (mergeState != null) {
+        mergeState.cleanup();
       }
-
-      emitting = true;
-
-      List<Future<?>> futures = new ArrayList<>(files.size() + 1);
-      for (String file : files) {
-        Future<?> future = fileSystem.open(file, new OpenOptions().setRead(true).setDeleteOnClose(false))
-                .compose(asyncFile -> {
-                  SerializeReadStream<T> itemStream = new SerializeReadStream<>(asyncFile, deserializer);
-
-                  SourceStream ss = new SourceStream(file, outputHolder.size(), itemStream);
-                  synchronized (lock) {
-                    outputHolder.add(ss);
-                    pending.add(ss);
-                    ss.next();
-                  }
-                  return Future.succeededFuture();
-                })
-                .onFailure(ex -> {
-                  postException(ex);
-                });
-        futures.add(future);
+      cleanup();
+      if (endHandler != null) {
+        endHandler.handle(null);
       }
-      Future.all(futures)
-              .andThen(ar -> {
-                synchronized (lock) {
-                  emitting = false;
-                }
-                context.runOnContext(v -> {
-                  processOutputs();
-                });
-              });
     }
   }
 
-  private void inputExceptionHandler(Throwable exception) {
-    postException(exception);
-  }
-
-  private void postException(Throwable ex) {
-    logger.warn("Exception in SortingStream: ", ex);
-    Handler<Throwable> exceptionHandlerCaptured;
-    synchronized (lock) {
-      exceptionHandlerCaptured = exceptionHandler;
-    }
-    if (exceptionHandlerCaptured != null) {
-      exceptionHandlerCaptured.handle(ex);
-    }
-  }
-
-
-  private void inputHandler(T item) {
-    // logger.debug("inputHandler {}", item);
-    int sizeofData = memoryEvaluator.sizeof(item);
-
-    List<T> itemsToWrite = null;
-
-    synchronized (lock) {
-      ++inputCount;
-      if (sizeofData + sizeOfItemsInMemory >= memoryLimit) {
-        itemsToWrite = items;
-        items = new ArrayList<>(itemsToWrite.size());
-        sizeOfItemsInMemory = 0;
+  private void handleException(Throwable ex) {
+    if (state.getAndSet(State.FAILED.ordinal()) != State.FAILED.ordinal()) {
+      logger.error("Error in sorting stream", ex);
+      if (mergeState != null) {
+        mergeState.cleanup();
       }
-      items.add(item);
-      sizeOfItemsInMemory += sizeofData;
-    }
-    if (itemsToWrite != null) {
-      input.pause();
-      sortItemsList(itemsToWrite);
-      writeItems(itemsToWrite)
-              .onComplete(ar -> {
-                if (ar.succeeded()) {
-                  input.resume();
-                } else {
-                  postException(ar.cause());
-                }
-              });
+      cleanup();
+      if (exceptionHandler != null) {
+        exceptionHandler.handle(ex);
+      }
     }
   }
 
+  private void cleanup() {
+    for (String tempFile : tempFiles) {
+      try {
+        fileSystem.deleteBlocking(tempFile);
+      } catch (Exception e) {
+        logger.warn("Failed to delete temp file {}: {}", tempFile, e.getMessage());
+      }
+    }
+    tempFiles.clear();
+  }
+
+  // ReadStream implementation
   @Override
   public ReadStream<T> handler(Handler<T> handler) {
-    this.handler = handler;
-    return this;
-  }
+    this.dataHandler = handler;
 
-
-  @Override
-  public SortingStream<T> pause() {
-    input.pause();
-    synchronized (lock) {
-      demand = 0;
+    // If we're already in merge phase and have data, start processing
+    if (state.get() == State.MERGING.ordinal() && handler != null && demand.get() > 0) {
+      scheduleProcessOutput();
     }
+
     return this;
   }
 
   @Override
-  public SortingStream<T> resume() {
-    input.resume();
-    return fetch(Long.MAX_VALUE);
-  }
+  public ReadStream<T> resume() {
+    demand.set(Long.MAX_VALUE);
 
+    // If we're already in merge phase and have a handler, start processing
+    if (state.get() == State.MERGING.ordinal() && dataHandler != null) {
+      scheduleProcessOutput();
+    }
+
+    return this;
+  }
   @Override
-  public SortingStream<T> fetch(long amount) {
-    input.resume();
-    if (amount < 0L) {
-      throw new IllegalArgumentException();
-    }
-    boolean startProcess;
-    synchronized (lock) {
-      demand += amount;
-      if (demand < 0L) {
-        demand = Long.MAX_VALUE;
-      }
-      if (emitting) {
-        return this;
-      }
-      emitting = true;
-      startProcess = outputs != null && pending != null;
-    }
-    if (startProcess) {
-      context.runOnContext(v -> {
-        processOutputs();
-      });
-    }
+  public ReadStream<T> pause() {
+    demand.set(0);
     return this;
   }
 
   @Override
-  public SortingStream<T> exceptionHandler(Handler<Throwable> handler) {
+  public ReadStream<T> fetch(long amount) {
+    if (amount < 0) {
+      throw new IllegalArgumentException("Fetch amount cannot be negative");
+    }
+
+    if (amount == 0) {
+      return this;
+    }
+
+    long currentDemand = demand.get();
+    if (currentDemand == Long.MAX_VALUE) {
+      return this;
+    }
+
+    long newDemand = currentDemand + amount;
+    if (newDemand < 0) {
+      newDemand = Long.MAX_VALUE;
+    }
+
+    demand.set(newDemand);
+
+    // If we're already in merge phase and have a handler, start processing
+    if (state.get() == State.MERGING.ordinal() && dataHandler != null) {
+      scheduleProcessOutput();
+    }
+
+    return this;
+  }
+
+  @Override
+  public ReadStream<T> exceptionHandler(Handler<Throwable> handler) {
     this.exceptionHandler = handler;
     return this;
   }
@@ -465,31 +457,345 @@ public class SortingStream<T> implements ReadStream<T> {
     return this;
   }
 
-  private void sortItemsList(List<T> items) {
-    items.sort(comparator);
+  // Merge state implementations
+  private abstract class MergeState {
+    abstract Future<Void> initialize();
+    abstract boolean hasNext();
+    abstract boolean hasMoreDataPotential();
+    abstract T next();
+    abstract Future<Void> ensureBuffersFilled();
+    abstract void cleanup();
   }
 
-  private Future<Void> writeAll(WriteStream<T> stream, List<T> items) {
-    for (T item : items) {
-      stream.write(item);
+  private class InMemoryMergeState extends MergeState {
+    private Iterator<T> iterator;
+
+    @Override
+    Future<Void> initialize() {
+      Collections.sort(currentChunk, comparator);
+      iterator = currentChunk.iterator();
+      return Future.succeededFuture();
     }
-    return stream.end();
+
+    @Override
+    boolean hasNext() {
+      return iterator.hasNext();
+    }
+
+    @Override
+    boolean hasMoreDataPotential() {
+      return iterator.hasNext();
+    }
+
+    @Override
+    T next() {
+      return iterator.hasNext() ? iterator.next() : null;
+    }
+
+    @Override
+    Future<Void> ensureBuffersFilled() {
+      return Future.succeededFuture();
+    }
+
+    @Override
+    void cleanup() {
+      // Nothing to clean up
+    }
   }
 
-  private Future<Void> writeItems(List<T> items) {
-    return fileSystem.createTempFile(tempDir, baseFileName, ".sort", (String) null)
-            .compose(filename -> {
-              synchronized (lock) {
-                files.add(filename);
-              }
-              logger.trace("Dumping {} sorted items to {}", items.size(), filename);
-              return fileSystem.open(filename, new OpenOptions().setCreate(true).setTruncateExisting(true));
+  private class BufferedFileMergeState extends MergeState {
+    private List<BufferedMergeSource> sources;
+
+    @Override
+    Future<Void> initialize() {
+      sources = new ArrayList<>();
+
+      // Add in-memory chunk if present
+      if (!currentChunk.isEmpty()) {
+        sources.add(new InMemoryBufferedSource(currentChunk));
+      }
+
+      // Add file sources - use async file opening
+      List<Future<Void>> fileOpenFutures = new ArrayList<>();
+      for (String tempFile : tempFiles) {
+        Promise<Void> sourcePromise = Promise.promise();
+        fileOpenFutures.add(sourcePromise.future());
+
+        fileSystem.open(tempFile, new OpenOptions().setRead(true))
+            .onSuccess(file -> {
+              SerializeReadStream<T> readStream = new SerializeReadStream<>(file, deserializer);
+              sources.add(new FileBufferedSource(readStream));
+              sourcePromise.complete();
             })
-            .compose(asyncFile -> {
-              SerializeWriteStream<T> sws = new SerializeWriteStream<>(asyncFile, serializer)
-                      .setWriteQueueMaxSize(writeQueueMaxSize <= 0 ? 65536 : writeQueueMaxSize);
-              return writeAll(sws, items);
-            });
+            .onFailure(sourcePromise::fail);
+      }
+
+      // Wait for all file sources to be opened, then initialize them
+      return Future.all(fileOpenFutures)
+          .compose(v -> {
+            // Initialize all sources
+            List<Future<Void>> initFutures = new ArrayList<>();
+            for (BufferedMergeSource source : sources) {
+              initFutures.add(source.initialize());
+            }
+            return Future.all(initFutures);
+          })
+          .compose(v -> {
+            // Fill initial buffers
+            List<Future<Void>> fillFutures = new ArrayList<>();
+            for (BufferedMergeSource source : sources) {
+              fillFutures.add(source.fillBuffer(BUFFER_SIZE));
+            }
+            return Future.all(fillFutures);
+          })
+          .onSuccess(v -> {
+            logger.trace("Initialized merge state with {} sources", sources.size());
+          })
+          .mapEmpty();
+    }
+
+    private boolean hasPendingSources() {
+      for (BufferedMergeSource source : sources) {
+        if (!source.isEnded() && !source.hasNext()) {
+          return true; // This source is Pending
+        }
+      }
+      return false;
+    }
+
+    private BufferedMergeSource findMinSource() {
+      BufferedMergeSource minSource = null;
+      T minValue = null;
+
+      for (BufferedMergeSource source : sources) {
+        if (source.hasNext()) { // Only consider Ready sources
+          T value = source.peekNext();
+          if (minValue == null || comparator.compare(value, minValue) < 0) {
+            minValue = value;
+            minSource = source;
+          }
+        }
+      }
+
+      return minSource;
+    }
+
+    @Override
+    boolean hasNext() {
+      // Only return true if we can definitely provide a next item
+      // If there are pending sources, we can't be sure what the next item should be
+      if (hasPendingSources()) {
+        return false;
+      }
+      return findMinSource() != null;
+    }
+
+    @Override
+    boolean hasMoreDataPotential() {
+      // Return true if there are pending sources OR if we have a ready source
+      if (hasPendingSources()) {
+        return true;
+      }
+      return findMinSource() != null;
+    }
+
+    @Override
+    T next() {
+      BufferedMergeSource source = findMinSource();
+      if (source == null) {
+        return null;
+      }
+
+      T result = source.takeNext();
+      logger.trace("Taking {} from source {}", result, source);
+
+      return result;
+    }
+
+    @Override
+    Future<Void> ensureBuffersFilled() {
+      List<Future<Void>> fillFutures = new ArrayList<>();
+
+      // Fill buffers for all Pending sources
+      for (BufferedMergeSource source : sources) {
+        if (!source.isEnded() && !source.hasNext()) {
+          // This source is Pending - make it Ready or Ended
+          fillFutures.add(source.fillBuffer(BUFFER_SIZE));
+        }
+      }
+
+      if (fillFutures.isEmpty()) {
+        return Future.succeededFuture();
+      }
+
+      return Future.all(fillFutures)
+              .onSuccess(v -> {
+                logger.trace("After buffer fill, no more pending sources");
+              })
+              .mapEmpty();
+    }
+
+    @Override
+    void cleanup() {
+      if (sources != null) {
+        for (BufferedMergeSource source : sources) {
+          source.cleanup();
+        }
+      }
+    }
   }
 
+  // Buffered merge source abstractions
+  private abstract class BufferedMergeSource {
+    protected final Queue<T> buffer = new ArrayDeque<>();
+    protected boolean ended = false;
+
+    abstract Future<Void> initialize();
+    abstract Future<Void> fillBuffer(int targetSize);
+    abstract void cleanup();
+
+    boolean hasNext() {
+      return !buffer.isEmpty();
+    }
+
+    T peekNext() {
+      return buffer.peek();
+    }
+
+    T takeNext() {
+      return buffer.poll();
+    }
+
+    int bufferCount() {
+      return buffer.size();
+    }
+
+    boolean isEnded() {
+      return ended;
+    }
+  }
+
+  private class InMemoryBufferedSource extends BufferedMergeSource {
+    private final Iterator<T> iterator;
+
+    InMemoryBufferedSource(List<T> items) {
+      List<T> sortedItems = new ArrayList<>(items);
+      Collections.sort(sortedItems, comparator);
+      this.iterator = sortedItems.iterator();
+    }
+
+    @Override
+    Future<Void> initialize() {
+      return Future.succeededFuture();
+    }
+
+    @Override
+    Future<Void> fillBuffer(int targetSize) {
+      int added = 0;
+      while (iterator.hasNext() && added < targetSize) {
+        buffer.offer(iterator.next());
+        added++;
+      }
+
+      if (!iterator.hasNext()) {
+        ended = true;
+      }
+
+      return Future.succeededFuture();
+    }
+
+    @Override
+    void cleanup() {
+      // Nothing to clean up
+    }
+  }
+
+  private class FileBufferedSource extends BufferedMergeSource {
+    private final SerializeReadStream<T> readStream;
+    private Promise<Void> fillPromise;
+    private int targetFillSize;
+    private long totalItemsRead = 0;
+    private boolean streamStarted = false;
+    private boolean streamEnded = false;
+
+    FileBufferedSource(SerializeReadStream<T> readStream) {
+      this.readStream = readStream;
+    }
+
+    @Override
+    Future<Void> initialize() {
+      if (!streamStarted) {
+        streamStarted = true;
+
+        readStream.handler(item -> {
+          buffer.offer(item);
+          totalItemsRead++;
+          logger.trace("{} received item {}, buffer size now: {}", this, item, buffer.size());
+          checkFillComplete();
+        });
+
+        readStream.endHandler(v -> {
+          ended = true;
+          streamEnded = true;
+          logger.trace("{} ended after reading {} items, buffer size: {}", this, totalItemsRead, buffer.size());
+          completeFillIfWaiting();
+        });
+
+        readStream.exceptionHandler(ex -> {
+          logger.error("Error in {}", this, ex);
+          if (fillPromise != null) {
+            fillPromise.fail(ex);
+            fillPromise = null;
+          }
+        });
+      }
+      return Future.succeededFuture();
+    }
+
+    @Override
+    Future<Void> fillBuffer(int targetSize) {
+      if (streamEnded || buffer.size() >= targetSize) {
+        return Future.succeededFuture();
+      }
+
+      if (fillPromise != null) {
+        // Already filling, return existing promise
+        return fillPromise.future();
+      }
+
+      fillPromise = Promise.promise();
+      targetFillSize = targetSize;
+
+      logger.trace("{} starting fill, target: {}, current buffer: {}", this, targetSize, buffer.size());
+
+      // Start reading from the stream
+      readStream.fetch(targetSize);
+
+      return fillPromise.future();
+    }
+
+    private void checkFillComplete() {
+      if (fillPromise != null && (buffer.size() >= targetFillSize || streamEnded)) {
+        logger.trace("{} fill complete, buffer size: {}, target was: {}", this, buffer.size(), targetFillSize);
+        completeFillIfWaiting();
+      }
+    }
+
+    private void completeFillIfWaiting() {
+      if (fillPromise != null) {
+        fillPromise.complete();
+        fillPromise = null;
+        logger.trace("{} complete, promise signalled", this);
+      } else {
+        logger.trace("{} complete, noone waiting", this);
+      }
+      scheduleProcessOutput();
+    }
+
+    @Override
+    void cleanup() {
+      // The SerializeReadStream should handle cleanup internally
+      // when the underlying AsyncFile is closed
+    }
+  }
 }
