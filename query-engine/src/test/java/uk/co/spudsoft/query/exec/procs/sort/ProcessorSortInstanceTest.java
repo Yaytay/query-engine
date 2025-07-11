@@ -63,14 +63,15 @@ public class ProcessorSortInstanceTest {
             , DataRow.create(types, "id", 3, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 3), "value", "one")
             , DataRow.create(types, "id", 4, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 4), "value", "one")
     );
-
-    ProcessorSortInstance instance = new ProcessorSortInstance(vertx, () -> {}, vertx.getOrCreateContext()
-            , ProcessorSort.builder().fields(Arrays.asList("timestamp")).build()
-            , "P0-Sort"
-    );
-    instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(null, rowsList), types))
-            .andThen(testContext.succeedingThenComplete());
-            
+    
+    vertx.runOnContext(v -> {
+      ProcessorSortInstance instance = new ProcessorSortInstance(vertx, () -> {}, vertx.getOrCreateContext()
+              , ProcessorSort.builder().fields(Arrays.asList("timestamp")).build()
+              , "P0-Sort"
+      );
+      instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(null, rowsList), types))
+              .andThen(testContext.succeedingThenComplete());
+    });
   }
 
   @Test
