@@ -45,6 +45,7 @@ public class FormatJson extends AbstractTextFormat implements Format {
   private final String metadataName;
   private final boolean compatibleTypeNames;
   private final boolean compatibleEmpty;
+  private final boolean outputNullValues;
 
   @Override
   public FormatInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
@@ -206,6 +207,31 @@ public class FormatJson extends AbstractTextFormat implements Format {
   }
 
   /**
+   * When set to true (the default) every object in a JSON feed will include every field.
+   * <P>
+   * The default JSON output can be very inefficient if the data contains a lot of null values.
+   * By setting this to false, null fields will be omitted completely from the output.
+   * <P>
+   * In order to avoid confusing consumers of the stream the first row output will always contain all the fields.
+   * 
+   * @return false if null fields should be removed from the output after the first row.
+   */
+  @Schema(description = """
+                        When set to true (the default) every object in a JSON feed will include every field.
+                        <P>
+                        The default JSON output can be very inefficient if the data contains a lot of null values.
+                        By setting this to false, null fields will be omitted completely from the output.
+                        <P>
+                        In order to avoid confusing consumers of the stream the first row output will always contain all the fields.
+                        """
+          , defaultValue = "true"
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  public boolean isOutputNullValues() {
+    return outputNullValues;
+  }
+  
+  /**
    * Get the Java format to use for date fields.
    * 
    * @return the Java format to use for date fields.
@@ -239,6 +265,7 @@ public class FormatJson extends AbstractTextFormat implements Format {
     private String metadataName;
     private boolean compatibleTypeNames;
     private boolean compatibleEmpty;
+    private boolean outputNullValues = true;
     
     private Builder() {
       super(FormatType.JSON, "json", null, "json", null, MediaType.parse("application/json"), false
@@ -285,6 +312,16 @@ public class FormatJson extends AbstractTextFormat implements Format {
       this.compatibleEmpty = value == null ? false : value;
       return this;
     }
+
+    /**
+     * Set the {@link FormatJson#outputNullValues} value in the builder.
+     * @param value The value for the {@link FormatJson#outputNullValues}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder outputNullValues(final Boolean value) {
+      this.outputNullValues = value == null ? false : value;
+      return this;
+    }
     
     /**
      * Construct a new instance of the FormatJson class.
@@ -310,6 +347,7 @@ public class FormatJson extends AbstractTextFormat implements Format {
     this.metadataName = builder.metadataName;
     this.compatibleTypeNames = builder.compatibleTypeNames;
     this.compatibleEmpty = builder.compatibleEmpty;
+    this.outputNullValues = builder.outputNullValues;
   }
   
 }

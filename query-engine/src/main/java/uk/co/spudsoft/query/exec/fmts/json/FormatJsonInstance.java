@@ -99,13 +99,15 @@ public final class FormatJsonInstance implements FormatInstance {
                   return Future.succeededFuture();
                 } else {
                   Buffer startBuffer;
+                  boolean firstRow = false;
                   if (started.get()) {
                     startBuffer = COMMA;
                   } else {
                     started.set(true);
+                    firstRow = true;
                     startBuffer = start();
                   }
-                  Buffer rowBuffer = toJsonBuffer(row);
+                  Buffer rowBuffer = toJsonBuffer(row, firstRow);
                   Buffer outBuffer = Buffer.buffer(startBuffer.length() + rowBuffer.length());
                   outBuffer.appendBuffer(startBuffer);
                   outBuffer.appendBuffer(rowBuffer);
@@ -128,7 +130,7 @@ public final class FormatJsonInstance implements FormatInstance {
     );
   }
   
-  Buffer toJsonBuffer(DataRow row) throws IOException {
+  Buffer toJsonBuffer(DataRow row, boolean firstRow) throws IOException {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     
     try (JsonGenerator gen = JSON_FACTORY.createGenerator(out)) {
@@ -137,7 +139,9 @@ public final class FormatJsonInstance implements FormatInstance {
       row.forEach((cd, value) -> {
         try {
           if (value == null) {
-            gen.writeNullField(cd.name());
+            if (firstRow || defn.isOutputNullValues()) {
+              gen.writeNullField(cd.name());
+            }
           } else {
             switch (cd.type()) {
               case Boolean:

@@ -48,7 +48,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public final class SortingStream<T> implements ReadStream<T> {
 
   private static final Logger logger = LoggerFactory.getLogger(SortingStream.class);
-  private static final int BUFFER_SIZE = 10; // Buffer size per source - increased for better performance
+  private static final int BUFFER_SIZE = 1000; // Buffer size per source
 
   // Configuration
   private final Context context;
@@ -218,10 +218,7 @@ public final class SortingStream<T> implements ReadStream<T> {
     future.onComplete(ar -> {
       if (ar.failed()) {
         logger.warn("Failed to write chunk to disc: ", ar.cause());
-        Handler<Throwable> exxHandler = this.exceptionHandler;
-        if (exxHandler != null) {
-          exxHandler.handle(ar.cause());
-        }
+        handleException(ar.cause());
       }
       pendingChunkFlushes.remove(future);
     });
@@ -371,10 +368,7 @@ public final class SortingStream<T> implements ReadStream<T> {
         complete();
       }
     } catch (Throwable ex) {
-      Handler<Throwable> exHandler = exceptionHandler;
-      if (exHandler != null) {
-        exHandler.handle(ex);
-      }
+      handleException(ex);
     }
   }
 
@@ -398,8 +392,9 @@ public final class SortingStream<T> implements ReadStream<T> {
         mergeState.cleanup();
       }
       cleanup();
-      if (exceptionHandler != null) {
-        exceptionHandler.handle(ex);
+      Handler<Throwable> exHandler = exceptionHandler;
+      if (exHandler != null) {
+        exHandler.handle(ex);
       }
     }
   }
@@ -519,7 +514,7 @@ public final class SortingStream<T> implements ReadStream<T> {
 
     @Override
     T next() {
-      return iterator.hasNext() ? iterator.next() : null;
+      return iterator.next();
     }
 
     @Override
@@ -534,12 +529,10 @@ public final class SortingStream<T> implements ReadStream<T> {
   }
 
   private class BufferedFileMergeState extends MergeState {
-    private List<BufferedMergeSource> sources;
+    private final List<BufferedMergeSource> sources = new ArrayList<>();
 
     @Override
     Future<Void> initialize() {
-      sources = new ArrayList<>();
-
       // Add in-memory chunk if present
       if (!currentChunk.isEmpty()) {
         sources.add(new InMemoryBufferedSource(currentChunk));
@@ -654,10 +647,6 @@ public final class SortingStream<T> implements ReadStream<T> {
         }
       }
 
-      if (fillFutures.isEmpty()) {
-        return Future.succeededFuture();
-      }
-
       return Future.all(fillFutures)
               .onSuccess(v -> {
                 logger.trace("After buffer fill, no more pending sources");
@@ -667,10 +656,8 @@ public final class SortingStream<T> implements ReadStream<T> {
 
     @Override
     void cleanup() {
-      if (sources != null) {
-        for (BufferedMergeSource source : sources) {
-          source.cleanup();
-        }
+      for (BufferedMergeSource source : sources) {
+        source.cleanup();
       }
     }
   }

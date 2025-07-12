@@ -42,6 +42,7 @@ public class FormatJsonInstanceTest {
   @Test
   public void testToJson() throws IOException {
     FormatJson definition = FormatJson.builder()
+            .outputNullValues(false)
             .build();
     FormatJsonInstance instance = new FormatJsonInstance(null, definition);
     // Create a test DataRow with different types of data
@@ -59,7 +60,7 @@ public class FormatJsonInstanceTest {
     );
 
     // Convert to JSON
-    JsonObject result = new JsonObject(instance.toJsonBuffer(row));
+    JsonObject result = new JsonObject(instance.toJsonBuffer(row, true));
 
     // Verify the JSON object contains all expected entries
     assertEquals("test string", result.getString("stringValue"));
@@ -75,6 +76,47 @@ public class FormatJsonInstanceTest {
 
     // Null value should be present but null
     assertTrue(result.containsKey("nullValue"));
+    assertNull(result.getValue("nullValue"));
+  }
+
+  @Test
+  public void testToJsonWithoutNullsSecondRow() throws IOException {
+    FormatJson definition = FormatJson.builder()
+            .outputNullValues(false)
+            .build();
+    FormatJsonInstance instance = new FormatJsonInstance(null, definition);
+    // Create a test DataRow with different types of data
+    Types types = new Types();
+    DataRow row = DataRow.create(types,
+            "stringValue", "test string",
+            "intValue", 42,
+            "doubleValue", 3.14,
+            "boolValue", true,
+            "dateValue", LocalDate.of(2023, 5, 15),
+            "timeValue", LocalTime.of(13, 45, 30),
+            "dateTimeValue", LocalDateTime.of(2023, 5, 15, 13, 45, 30),
+            "dateTimeValueZeroSeconds", LocalDateTime.of(2023, 5, 15, 13, 45, 0),
+            "nullValue", null
+    );
+
+    // Convert to JSON
+    JsonObject result = new JsonObject(instance.toJsonBuffer(row, false));
+
+    // Verify the JSON object contains all expected entries
+    assertEquals("test string", result.getString("stringValue"));
+    assertEquals(42, result.getInteger("intValue"));
+    assertEquals(3.14, result.getDouble("doubleValue"));
+    assertEquals(true, result.getBoolean("boolValue"));
+    assertFalse(result.containsKey("nullValue"));
+
+    // Date/time values might be formatted as strings
+    assertEquals("2023-05-15", result.getValue("dateValue"));
+    assertEquals("13:45:30", result.getValue("timeValue"));
+    assertEquals("2023-05-15T13:45:30", result.getValue("dateTimeValue"));
+    assertEquals("2023-05-15T13:45", result.getValue("dateTimeValueZeroSeconds"));
+
+    // Null value should not be present
+    assertFalse(result.containsKey("nullValue"));
     assertNull(result.getValue("nullValue"));
   }
 
@@ -97,7 +139,7 @@ public class FormatJsonInstanceTest {
     );
 
     // Convert to JSON
-    Buffer bufferJson = instance.toJsonBuffer(row);
+    Buffer bufferJson = instance.toJsonBuffer(row, true);
     JsonObject result = new JsonObject(bufferJson);
     String stringJson = bufferJson.toString(StandardCharsets.UTF_8);
     
@@ -127,7 +169,7 @@ public class FormatJsonInstanceTest {
     );
 
     // Convert to JSON
-    JsonObject result = new JsonObject(instance.toJsonBuffer(row));
+    JsonObject result = new JsonObject(instance.toJsonBuffer(row, true));
 
     // Date/time values might be formatted as strings
     assertEquals("2023-05-15", result.getValue("dateValue"));
@@ -153,7 +195,7 @@ public class FormatJsonInstanceTest {
     );
 
     // Convert to JSON
-    JsonObject result = new JsonObject(instance.toJsonBuffer(row));
+    JsonObject result = new JsonObject(instance.toJsonBuffer(row, true));
 
     // Date/time values might be formatted as strings
     assertEquals("15 May 2023", result.getValue("dateValue"));
@@ -178,7 +220,7 @@ public class FormatJsonInstanceTest {
     );
 
     // Convert to JSON
-    JsonObject result = new JsonObject(instance.toJsonBuffer(row));
+    JsonObject result = new JsonObject(instance.toJsonBuffer(row, true));
 
     // Date/time values might be formatted as strings
     assertEquals("15 May 2023", result.getValue("dateValue"));
@@ -193,7 +235,7 @@ public class FormatJsonInstanceTest {
     FormatJsonInstance instance = new FormatJsonInstance(null, definition);
 
     // Test with an empty row
-    JsonObject result = new JsonObject(instance.toJsonBuffer(DataRow.EMPTY_ROW));
+    JsonObject result = new JsonObject(instance.toJsonBuffer(DataRow.EMPTY_ROW, true));
 
     // Result should be an empty JSON object
     assertEquals(0, result.size());
@@ -230,7 +272,7 @@ public class FormatJsonInstanceTest {
     );
 
     // Convert to JSON
-    JsonObject result = new JsonObject(instance.toJsonBuffer(row));
+    JsonObject result = new JsonObject(instance.toJsonBuffer(row, true));
 
     // Date/time values might be formatted as strings
     assertEquals("2023-05-15T13:45:30.12", result.getValue("dateTimeValue"));
