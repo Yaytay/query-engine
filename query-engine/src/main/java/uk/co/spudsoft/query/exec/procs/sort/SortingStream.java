@@ -84,7 +84,27 @@ public final class SortingStream<T> implements ReadStream<T> {
   // Merge phase
   private MergeState mergeState;
 
+  /**
+   * Interface for calculating the size of an item.
+   * 
+   * The generated result is compared with the memoryLimit passed in to the SortingStream constructor, it does not necessarily need
+   * to attempt to calculate bytes.
+   * 
+   * @param <T> The class of item that this MemoryEvaluator can assess.
+   */
   public interface MemoryEvaluator<T> {
+    /**
+     * Calculate the size of an item.
+     * 
+     * This is intended to return a best-efforts calculation of the number of bytes used by the item in memory,
+     * however Java Strings provide no way to know how much space they consume, so the results are approximate at best.
+     * 
+     * The return value is only used by SortingStream to determine whether the current set of items in memory should be
+     * written to a (sorted) temporary file.
+     * 
+     * @param item The item to consider.
+     * @return The size of the item.
+     */
     long sizeof(T item);
   }
 
@@ -95,6 +115,20 @@ public final class SortingStream<T> implements ReadStream<T> {
     FAILED        // Error occurred
   }
 
+  /**
+   * Constructor.
+   * 
+   * @param context The vertx {@link Context} to use for asynchronous operations.
+   * @param fileSystem The vertx {@link FileSystem} to use for temporary file operations.
+   * @param comparator The comparator to use to sort objects of type T.
+   * @param serializer The serializer to use to convert objects of type T into byte[].
+   * @param deserializer The deserializer to use to convert byte[] into objects of type T.
+   * @param tempDir The temporary directory to use to store temporary files, this should be unique to this instance of the SortingStream.
+   * @param baseFileName A base filename to use for the temporary files - this must consist of alphanumeric characters or underscore or dot.
+   * @param memoryLimit The amount of memory to use for storing items before they spill to temporary files.
+   * @param memoryEvaluator The {@link MemoryEvaluator} to use to determin the number of bytes used by items.
+   * @param input The input stream of items, which should be cold (paused, with no handlers set).
+   */
   public SortingStream(Context context,
            FileSystem fileSystem,
            Comparator<T> comparator,

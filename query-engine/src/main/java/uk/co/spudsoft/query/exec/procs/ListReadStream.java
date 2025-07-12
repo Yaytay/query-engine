@@ -109,14 +109,23 @@ public class ListReadStream<T> implements ReadStream<T> {
     }
   }
 
-  protected void callHandler(T item, Handler<T> handlerCaptured, Handler<Throwable> exceptionHandlerCaptured) {
-    if (item != null && handlerCaptured != null) {
+  /**
+   * Call the handler with the item, and call the exception handler if that fails.
+   * 
+   * This is protected to allow for test classes to inject exceptions.
+   * 
+   * @param item The item to pass to the handler.
+   * @param handler The handler.
+   * @param exceptionHandler The handler to call with any exception if handler.handle fails.
+   */
+  protected void callHandler(T item, Handler<T> handler, Handler<Throwable> exceptionHandler) {
+    if (item != null && handler != null) {
       try {
         logger.trace("Handling {}", item);
-        handlerCaptured.handle(item);
+        handler.handle(item);
       } catch (Throwable ex) {
-        if (exceptionHandlerCaptured != null) {
-          exceptionHandlerCaptured.handle(ex);
+        if (exceptionHandler != null) {
+          exceptionHandler.handle(ex);
         } else {
           logger.warn("Exception handling item in ListReadStream: ", ex);
         }
