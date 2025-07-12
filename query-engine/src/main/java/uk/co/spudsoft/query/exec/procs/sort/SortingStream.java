@@ -696,22 +696,18 @@ public final class SortingStream<T> implements ReadStream<T> {
       return buffer.poll();
     }
 
-    int bufferCount() {
-      return buffer.size();
-    }
-
     boolean isEnded() {
       return ended;
     }
   }
 
   private class InMemoryBufferedSource extends BufferedMergeSource {
-    private final Iterator<T> iterator;
 
+    // Just put everything straght into the buffer
     InMemoryBufferedSource(List<T> items) {
-      List<T> sortedItems = new ArrayList<>(items);
-      Collections.sort(sortedItems, comparator);
-      this.iterator = sortedItems.iterator();
+      Collections.sort(items, comparator);
+      this.buffer.addAll(items);
+      this.ended = true;
     }
 
     @Override
@@ -721,22 +717,11 @@ public final class SortingStream<T> implements ReadStream<T> {
 
     @Override
     Future<Void> fillBuffer(int targetSize) {
-      int added = 0;
-      while (iterator.hasNext() && added < targetSize) {
-        buffer.offer(iterator.next());
-        added++;
-      }
-
-      if (!iterator.hasNext()) {
-        ended = true;
-      }
-
       return Future.succeededFuture();
     }
 
     @Override
     void cleanup() {
-      // Nothing to clean up
     }
   }
 
