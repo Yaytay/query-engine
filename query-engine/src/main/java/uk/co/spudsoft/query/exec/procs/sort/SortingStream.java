@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.procs.sort;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -129,6 +130,7 @@ public final class SortingStream<T> implements ReadStream<T> {
    * @param memoryEvaluator The {@link MemoryEvaluator} to use to determin the number of bytes used by items.
    * @param input The input stream of items, which should be cold (paused, with no handlers set).
    */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The filesystem is clearly mutable")
   public SortingStream(Context context,
            FileSystem fileSystem,
            Comparator<T> comparator,
