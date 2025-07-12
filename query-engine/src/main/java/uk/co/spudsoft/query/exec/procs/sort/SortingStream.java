@@ -186,9 +186,7 @@ public final class SortingStream<T> implements ReadStream<T> {
     logger.trace("Input ended, transitioning to merge phase");
 
     // Flush any remaining chunk
-    Future<Void> flushFuture = currentChunk.isEmpty() ?
-        Future.succeededFuture() :
-        flushCurrentChunk();
+    Future<Void> flushFuture = currentChunk.isEmpty() ? Future.succeededFuture()  : flushCurrentChunk();
 
     flushFuture
         .compose(vv -> startMergePhase())
