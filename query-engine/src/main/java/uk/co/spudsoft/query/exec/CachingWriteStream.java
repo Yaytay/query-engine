@@ -119,12 +119,18 @@ public final class CachingWriteStream implements WriteStream<Buffer> {
 
   @Override
   public void end(Handler<AsyncResult<Void>> handler) {
-    cacheStream.end(ar -> {
-      if (ar.failed()) {
-        fileSystem.delete(cacheFile);
-      }
-    });
-    destStream.end(handler);
+    Future<Void> f1 = cacheStream.end()
+            .recover(ex -> {
+              logger.warn("Ignored error ending cache stream: ", ex);
+              fileSystem.delete(cacheFile);
+              return Future.succeededFuture();
+            });
+    Future<Void> f2 = destStream.end();
+    
+    Future.all(f1, f2)
+            .andThen(ar -> {
+              handler.handle(f2);
+            });
   }
 
   @Override
