@@ -118,14 +118,18 @@ public class SortingStream_WriteAllItemsTest {
 
       if (asyncWrites.get()) {
         Promise<Void> promise = Promise.promise();
-        if (asyncDelayMs.get() > 0) {
-          vertx.setTimer(asyncDelayMs.get(), id -> promise.complete());
-        } else {
-          vertx.runOnContext(v -> promise.complete());
-        }
+        asyncComplete(promise);
         return promise.future();
       } else {
         return Future.succeededFuture();
+      }
+    }
+
+    private void asyncComplete(Promise<Void> promise) {
+      if (asyncDelayMs.get() > 0) {
+        vertx.setTimer(asyncDelayMs.get(), id -> promise.complete());
+      } else {
+        vertx.runOnContext(v -> promise.complete());
       }
     }
 
@@ -140,7 +144,7 @@ public class SortingStream_WriteAllItemsTest {
 
       if (asyncWrites.get()) {
         Promise<Void> promise = Promise.promise();
-        vertx.setTimer(asyncDelayMs.get(), id -> promise.complete());
+        asyncComplete(promise);
         return promise.future();
       } else {
         return Future.succeededFuture();
