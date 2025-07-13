@@ -406,7 +406,7 @@ public class JdbcHelper {
     
     private final int value;
 
-    private IsolationLevel(int value) {
+    IsolationLevel(int value) {
       this.value = value;
     }
   }
