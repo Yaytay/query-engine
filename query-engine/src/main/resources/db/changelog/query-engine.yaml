@@ -11,3 +11,7 @@ databaseChangeLog:
   - include:
      relativeToChangelogFile: true
      file: schema-3_0_0_SessionTable.yaml
+
+  - include:
+     relativeToChangelogFile: true
+     file: schema-4_0_1_RulesProcessedFlag.yaml

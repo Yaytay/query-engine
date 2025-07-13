@@ -37,6 +37,7 @@ import io.vertx.ext.healthchecks.Status;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -214,6 +215,7 @@ public class AuditorPersistenceImpl implements Auditor {
       recordCacheFileUsed = recordCacheFileUsed.replaceAll("#SCHEMA#.", "");
       deleteCacheFile = deleteCacheFile.replaceAll("#SCHEMA#.", "");
       countOutstandingRequests = countOutstandingRequests.replaceAll("#SCHEMA#.", "");
+      markRateLimitRulesProcessed = markRateLimitRulesProcessed.replaceAll("#SCHEMA#.", "");
     } else {
       recordRequest = recordRequest.replaceAll("SCHEMA", dataSourceConfig.getSchema());
       recordFile = recordFile.replaceAll("SCHEMA", dataSourceConfig.getSchema());
@@ -221,11 +223,12 @@ public class AuditorPersistenceImpl implements Auditor {
       recordResponse = recordResponse.replaceAll("SCHEMA", dataSourceConfig.getSchema());
       getHistory = getHistory.replaceAll("SCHEMA", dataSourceConfig.getSchema());
       getHistoryCount = getHistoryCount.replaceAll("SCHEMA", dataSourceConfig.getSchema());
-      getCacheFile = getCacheFile.replaceAll("#SCHEMA#.", dataSourceConfig.getSchema());
-      recordCacheFile = recordCacheFile.replaceAll("#SCHEMA#.", dataSourceConfig.getSchema());
-      recordCacheFileUsed = recordCacheFileUsed.replaceAll("#SCHEMA#.", dataSourceConfig.getSchema());
-      deleteCacheFile = deleteCacheFile.replaceAll("#SCHEMA#.", dataSourceConfig.getSchema());
-      countOutstandingRequests = countOutstandingRequests.replaceAll("#SCHEMA#.", dataSourceConfig.getSchema());
+      getCacheFile = getCacheFile.replaceAll("SCHEMA", dataSourceConfig.getSchema());
+      recordCacheFile = recordCacheFile.replaceAll("SCHEMA", dataSourceConfig.getSchema());
+      recordCacheFileUsed = recordCacheFileUsed.replaceAll("SCHEMA", dataSourceConfig.getSchema());
+      deleteCacheFile = deleteCacheFile.replaceAll("SCHEMA", dataSourceConfig.getSchema());
+      countOutstandingRequests = countOutstandingRequests.replaceAll("SCHEMA", dataSourceConfig.getSchema());
+      markRateLimitRulesProcessed = markRateLimitRulesProcessed.replaceAll("SCHEMA", dataSourceConfig.getSchema());
     }
 
     Boolean done = Boolean.FALSE;
@@ -247,6 +250,7 @@ public class AuditorPersistenceImpl implements Auditor {
           recordCacheFileUsed = recordCacheFileUsed.replaceAll("#", quote);
           deleteCacheFile = deleteCacheFile.replaceAll("#", quote);
           countOutstandingRequests = countOutstandingRequests.replaceAll("#", quote);
+          markRateLimitRulesProcessed = markRateLimitRulesProcessed.replaceAll("#", quote);
 
           String databaseProduct = dmd.getDatabaseProductName();
           logger.debug("Database product: {}", databaseProduct);
@@ -491,6 +495,14 @@ public class AuditorPersistenceImpl implements Auditor {
             #responseTime# is null
             and #timestamp# > ?
           """;
+  private String markRateLimitRulesProcessed = """
+          update
+            #SCHEMA#.#request#
+          set
+            #rulesProcessed# = ?
+          where
+            #id# = ?
+          """;
 
   private boolean baseSqlExceptionIsNonexistantDriver(Throwable ex) {
     while (ex != null) {
@@ -731,8 +743,7 @@ public class AuditorPersistenceImpl implements Auditor {
       sql.append(", current_timestamp ");
       sql.append("from request where timestamp > ? ");
       args.add(LocalDateTime.ofInstant(now.minus(rule.getTimeLimit()), ZoneOffset.UTC));
-      sql.append("and id <> ? ");
-      args.add(context.getRequestId());
+      sql.append("and ").append(quote).append("rulesProcessed").append(quote).append(" is not null ");
       for (RateLimitScopeType scope : rule.getScope()) {
         switch (scope) {
           case clientip:
@@ -764,54 +775,73 @@ public class AuditorPersistenceImpl implements Auditor {
         }
       }
     }
-    boolean[] done = new boolean[rules.size()];
 
-    logger.warn("Running {} with {}", sql, args);
-    return jdbcHelper.runSqlSelect(sql.toString(), ps -> {
-        for (int i = 0; i < args.size(); ++i) {
-          ps.setObject(i + 1, args.get(i));
-        }
-      }, rs -> {
-        while (rs.next()) {
-          if (logger.isTraceEnabled()) {
-            logger.trace("RateLimitRow: id: {}, outstanding: {}, runs: {}, bytes: {}, time: {}"
-                    , rs.getInt(1)
-                    , rs.getInt(2)
-                    , rs.getInt(3)
-                    , rs.getLong(4)
-                    , rs.getTimestamp(5).toInstant()
-                    );
-          }
-          int index = rs.getInt(1);
-          if (index >= rules.size()) {
-            logger.error("Error in rate limit processing: index {} out of bounds", index);
-            throw new ServiceException(500, "Internal error");
-          }
-          if (done[index]) {
-            logger.error("Error in rate limit processing: index {} found more than once", index);
-            throw new ServiceException(500, "Internal error");
-          } else {
-            done[index] = true;
-          }
-          RateLimitRule rule = rules.get(index);
-          evaluateRateLimitRule(rule
-                  , now
-                  , index
-                  , rs.getInt(2)
-                  , rs.getInt(3)
-                  , rs.getLong(4)
-                  , rs.getTimestamp(5).toLocalDateTime()
-          );
-        }
-        for (int i = 0; i < done.length; ++i) {
-          if (!done[i]) {
-            logger.error("Error in rate limit processing: index {} not processed", i);
-            throw new ServiceException(500, "Internal error");
-          }
-        }
-        return null;
+    String sqlString = sql.toString();
+    logger.info("Running rate limit rules {} with {}", sqlString, args);
+    
+    return jdbcHelper.runInTransaction("rateLimitRules", JdbcHelper.IsolationLevel.TRANSACTION_SERIALIZABLE, conn -> {
+      runRateLimitRulesSqlInTransaction(conn, sqlString, args, rules, context.getRequestId(), now);
+      return null;
     }).map(v -> pipeline);
   }
+
+  @SuppressFBWarnings("SQL_INJECTION_JDBC")
+  private void runRateLimitRulesSqlInTransaction(Connection conn, String sql, List<Object> args, List<RateLimitRule> rules, String requestId, Instant now) throws Throwable {
+    jdbcHelper.runSqlSelectOnConnectionSynchronously(conn,
+            sql,
+            ps -> {
+              for (int i = 0; i < args.size(); ++i) {
+                ps.setObject(i + 1, args.get(i));
+              }
+            }, rs -> {
+              boolean[] done = new boolean[rules.size()];              
+              while (rs.next()) {
+                if (logger.isTraceEnabled()) {
+                  logger.trace("RateLimitRow: id: {}, outstanding: {}, runs: {}, bytes: {}, time: {}",
+                          rs.getInt(1),
+                          rs.getInt(2),
+                          rs.getInt(3),
+                          rs.getLong(4),
+                          rs.getTimestamp(5).toInstant()
+                  );
+                }
+                int index = rs.getInt(1);
+                if (index >= rules.size()) {
+                  logger.error("Error in rate limit processing: index {} out of bounds", index);
+                  throw new ServiceException(500, "Internal error");
+                }
+                if (done[index]) {
+                  logger.error("Error in rate limit processing: index {} found more than once", index);
+                  throw new ServiceException(500, "Internal error");
+                } else {
+                  done[index] = true;
+                }
+                RateLimitRule rule = rules.get(index);
+                evaluateRateLimitRule(rule,
+                        now,
+                        index,
+                        rs.getInt(2),
+                        rs.getInt(3),
+                        rs.getLong(4),
+                        rs.getTimestamp(5).toLocalDateTime()
+                );
+              }
+              for (int i = 0; i < done.length; ++i) {
+                if (!done[i]) {
+                  logger.error("Error in rate limit processing: index {} not processed", i);
+                  throw new ServiceException(500, "Internal error");
+                }
+              }
+              return null;
+            });
+    int rowsAffected = jdbcHelper.runSqlUpdateOnConnectionSynchronously(conn, markRateLimitRulesProcessed, ps -> { 
+      Timestamp ts = Timestamp.from(now);        
+      Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+      ps.setTimestamp(1, ts, cal);
+      ps.setString(2, requestId);
+    });
+    logger.debug("Marking rate limit rules processed affected {} rows", rowsAffected);
+ }
   
   static void evaluateRateLimitRule(RateLimitRule rule, Instant now, int index, int outstanding, int runs, long bytes, LocalDateTime timestamp) throws ServiceException {
     if (outstanding > rule.getConcurrencyLimit()) {

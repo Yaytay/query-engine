@@ -356,6 +356,98 @@ public class JdbcHelper {
       ps.setTimestamp(index, Timestamp.from(utc.toInstant(ZoneOffset.UTC)), cal);
     }
   }
+  
+  /**
+   * Enumeration of isolation levels to provide better type safety than the Connection constants.
+   */
+  public enum IsolationLevel {
+    /**
+     * A constant indicating that
+     * dirty reads, non-repeatable reads and phantom reads can occur.
+     * This level allows a row changed by one transaction to be read
+     * by another transaction before any changes in that row have been
+     * committed (a "dirty read").  If any of the changes are rolled back,
+     * the second transaction will have retrieved an invalid row.
+     */
+    TRANSACTION_READ_UNCOMMITTED(Connection.TRANSACTION_READ_UNCOMMITTED)
+    , 
+    /**
+     * A constant indicating that
+     * dirty reads are prevented; non-repeatable reads and phantom
+     * reads can occur.  This level only prohibits a transaction
+     * from reading a row with uncommitted changes in it.
+     */
+    TRANSACTION_READ_COMMITTED(Connection.TRANSACTION_READ_COMMITTED)
+    , 
+    /**
+     * A constant indicating that
+     * dirty reads and non-repeatable reads are prevented; phantom
+     * reads can occur.  This level prohibits a transaction from
+     * reading a row with uncommitted changes in it, and it also
+     * prohibits the situation where one transaction reads a row,
+     * a second transaction alters the row, and the first transaction
+     * rereads the row, getting different values the second time
+     * (a "non-repeatable read").
+     */
+    TRANSACTION_REPEATABLE_READ(Connection.TRANSACTION_REPEATABLE_READ)
+    , 
+    /**
+     * A constant indicating that
+     * dirty reads, non-repeatable reads and phantom reads are prevented.
+     * This level includes the prohibitions in
+     * {@code TRANSACTION_REPEATABLE_READ} and further prohibits the
+     * situation where one transaction reads all rows that satisfy
+     * a {@code WHERE} condition, a second transaction inserts a row that
+     * satisfies that {@code WHERE} condition, and the first transaction
+     * rereads for the same condition, retrieving the additional
+     * "phantom" row in the second read.
+     */
+    TRANSACTION_SERIALIZABLE(Connection.TRANSACTION_SERIALIZABLE);
+    
+    private final int value;
+
+    private IsolationLevel(int value) {
+      this.value = value;
+    }
+  }
+  
+  /**
+   * Run a callback inside a JDBC transaction.
+   * 
+   * @param <R> The return type of the consumer and thus the type contained in the returned Future.
+   * @param name name of the action being taken for log messages.
+   * @param isolationLevel one of the following {@code Connection} constants:
+   *        {@code Connection.TRANSACTION_READ_UNCOMMITTED},
+   *        {@code Connection.TRANSACTION_READ_COMMITTED},
+   *        {@code Connection.TRANSACTION_REPEATABLE_READ}, or
+   *        {@code Connection.TRANSACTION_SERIALIZABLE}.
+   *        (Note that {@code Connection.TRANSACTION_NONE} cannot be used
+   *        because it specifies that transactions are not supported.)
+   * @param consumer consumer that will do something on the connection.
+   * @return A Future containing the value of type R that the consumer returns.
+   */
+  public <R> Future<R> runInTransaction(String name, IsolationLevel isolationLevel, SqlFunction<Connection, R> consumer) {    
+    checkNotShuttingDown();
+
+    Future<R> future = vertx.executeBlocking(() -> runOnConnectionSynchronously(name, conn-> {
+      conn.setTransactionIsolation(isolationLevel.value);
+      conn.setAutoCommit(false);
+      R result = null;
+      try {
+        result = consumer.accept(conn);
+        conn.commit();
+      } catch (Throwable ex) {
+        logger.warn("Exception executing in transaction: ", ex);
+        try {
+          conn.rollback();
+        } catch (Throwable ex3) {
+        }
+        throw ex;
+      }
+      return result;
+    }));
+    return trackFuture(future);
+  }
 
   /**
    * Run commands that use a JDBC connection on the calling thread.
@@ -422,6 +514,25 @@ public class JdbcHelper {
   }
 
   /**
+   * Run a SQL update synchronously on an existing connection.
+   * @param conn the existing connection to run the SQL statements on.
+   * @param sql statement to be run.
+   * @param prepareStatement a {@link SqlConsumer} to use to set parameters on the {@link PreparedStatement}.
+   * @return the number of rows affected.
+   * @throws Exception if anything goes wrong.
+   */
+  @SuppressFBWarnings(value = "SQL_INJECTION_JDBC", justification = "SQL is generated from static strings")
+  public int runSqlUpdateOnConnectionSynchronously(Connection conn, String sql, SqlConsumer<PreparedStatement> prepareStatement) throws Throwable {
+    PreparedStatement statement = conn.prepareStatement(sql);
+    try {
+      prepareStatement.accept(statement);
+      return statement.executeUpdate();
+    } finally {
+      closeStatement(statement);
+    }
+  }
+
+  /**
    * Run a SQL select synchronously.
    *
    * @param <R> The type of data being returned.
@@ -469,6 +580,37 @@ public class JdbcHelper {
       throw new RuntimeException(logMessage, ex);
     }
   }
+  
+  /**
+   * Run a SQL select synchronously on an existing connection.
+   *
+   * @param <R> The type of data being returned.
+   * @param conn the existing connection to run the SQL statements on.
+   * @param sql statement to be run.
+   * @param prepareStatement a {@link SqlConsumer} to use to set parameters on the {@link PreparedStatement}.
+   * @param resultSetHandler a {@link SqlFunction} called once to convert the complete {@link ResultSet} to an object of type R.
+   * @return A Future that will be completed when all the results have been processed.
+   * @throws Exception if anything goes wrong.
+   */
+  public <R> R runSqlSelectOnConnectionSynchronously(Connection conn
+          , String sql
+          , SqlConsumer<PreparedStatement> prepareStatement
+          , SqlFunction<ResultSet, R> resultSetHandler
+  ) throws Throwable {
+    PreparedStatement statement = conn.prepareStatement(sql);
+    try {
+      prepareStatement.accept(statement);
+
+      ResultSet rs = statement.executeQuery();
+      try {
+        return resultSetHandler.accept(rs);
+      } finally {
+        rs.close();
+      }
+    } finally {
+      closeStatement(statement);
+    }
+  }    
 
   /**
    * Return the string value truncated to at most maxLen-4 characters with "..." appended.

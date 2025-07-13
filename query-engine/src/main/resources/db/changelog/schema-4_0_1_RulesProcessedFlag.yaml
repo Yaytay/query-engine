@@ -1,0 +1,10 @@
+databaseChangeLog:
+- changeSet:
+    id: 4_0_1-1
+    author: jtalbut (generated)
+    runWith: jdbc
+    changes:
+    - addColumn:
+        tableName: request
+        columns:
+        - {column: {name: rulesProcessed, type: timestamp, constraints: {nullable: true}}}
