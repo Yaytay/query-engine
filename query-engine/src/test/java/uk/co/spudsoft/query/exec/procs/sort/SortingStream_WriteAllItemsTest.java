@@ -118,7 +118,11 @@ public class SortingStream_WriteAllItemsTest {
 
       if (asyncWrites.get()) {
         Promise<Void> promise = Promise.promise();
-        vertx.setTimer(asyncDelayMs.get(), id -> promise.complete());
+        if (asyncDelayMs.get() > 0) {
+          vertx.setTimer(asyncDelayMs.get(), id -> promise.complete());
+        } else {
+          vertx.runOnContext(v -> promise.complete());
+        }
         return promise.future();
       } else {
         return Future.succeededFuture();
