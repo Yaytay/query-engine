@@ -76,14 +76,14 @@ public class FormatJsonTest {
     assertFalse(dj.isCompatibleEmpty());
     dj = FormatJson.builder().compatibleEmpty(Boolean.FALSE).build();
     assertFalse(dj.isCompatibleEmpty());
-    dj = FormatJson.builder().compatibleEmpty(Boolean.FALSE).build();
+    dj = FormatJson.builder().compatibleEmpty(Boolean.TRUE).build();
     assertTrue(dj.isCompatibleEmpty());
 
     dj = FormatJson.builder().outputNullValues(null).build();
     assertTrue(dj.isOutputNullValues());
     dj = FormatJson.builder().outputNullValues(Boolean.FALSE).build();
     assertFalse(dj.isOutputNullValues());
-    dj = FormatJson.builder().outputNullValues(Boolean.FALSE).build();
+    dj = FormatJson.builder().outputNullValues(Boolean.TRUE).build();
     assertTrue(dj.isOutputNullValues());
   }
   
