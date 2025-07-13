@@ -319,7 +319,7 @@ public class FormatJson extends AbstractTextFormat implements Format {
      * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder outputNullValues(final Boolean value) {
-      this.outputNullValues = value == null ? false : value;
+      this.outputNullValues = value == null ? true : value;
       return this;
     }
     

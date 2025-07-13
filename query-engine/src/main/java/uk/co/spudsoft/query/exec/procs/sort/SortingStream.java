@@ -225,7 +225,7 @@ public final class SortingStream<T> implements ReadStream<T> {
     return future;
   }
 
-  private Future<Void> writeAllItems(SerializeWriteStream<T> stream, List<T> items) {
+  Future<Void> writeAllItems(SerializeWriteStream<T> stream, List<T> items) {
     Promise<Void> promise = Promise.promise();
 
     writeItemsIteratively(stream, items.listIterator(), promise);
