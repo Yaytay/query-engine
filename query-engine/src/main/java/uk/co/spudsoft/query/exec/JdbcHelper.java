@@ -592,6 +592,7 @@ public class JdbcHelper {
    * @return A Future that will be completed when all the results have been processed.
    * @throws Exception if anything goes wrong.
    */
+  @SuppressFBWarnings(value = "SQL_INJECTION_JDBC", justification = "Must only be called with trusted SQL")
   public <R> R runSqlSelectOnConnectionSynchronously(Connection conn
           , String sql
           , SqlConsumer<PreparedStatement> prepareStatement

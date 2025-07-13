@@ -785,7 +785,7 @@ public class AuditorPersistenceImpl implements Auditor {
     }).map(v -> pipeline);
   }
 
-  @SuppressFBWarnings("SQL_INJECTION_JDBC")
+  @SuppressFBWarnings(value = "SQL_INJECTION_JDBC", justification = "SQL is generated from known strings")
   private void runRateLimitRulesSqlInTransaction(Connection conn, String sql, List<Object> args, List<RateLimitRule> rules, String requestId, Instant now) throws Throwable {
     jdbcHelper.runSqlSelectOnConnectionSynchronously(conn,
             sql,
