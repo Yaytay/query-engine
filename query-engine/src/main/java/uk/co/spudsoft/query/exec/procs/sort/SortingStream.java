@@ -179,21 +179,40 @@ public final class SortingStream<T> implements ReadStream<T> {
   }
 
   private void handleInputEnd(Void v) {
-    if (state.get() != State.COLLECTING.ordinal()) {
+    if (!state.compareAndSet(State.COLLECTING.ordinal(), State.MERGING.ordinal())) {
+      handleException(new IllegalStateException("Invalid state transition"));
       return;
     }
 
     logger.trace("Input ended, transitioning to merge phase");
 
-    startMergePhase()
-        .onFailure(this::handleException);
+    Future.all(pendingChunkFlushes)
+            .compose(v1 -> {
+              logger.trace("Starting merge phase with {} temp files and {} items in memory", tempFiles.size(), currentChunk.size());
+
+              // Choose merge strategy
+              if (tempFiles.isEmpty()) {
+                // All data fits in memory - sort it
+                Collections.sort(currentChunk, comparator);
+                mergeState = new InMemoryMergeState();
+              } else {
+                // Need to merge files
+                mergeState = new BufferedFileMergeState();
+              }
+
+              return mergeState.initialize()
+                  .onSuccess(v2 -> {
+                    logger.trace("Merge state initialized, scheduling output processing");
+                    // Ensure we start processing if handlers are already set
+                    if (dataHandler != null && demand.get() > 0) {
+                      scheduleProcessOutput();
+                    }
+                  });
+            })
+            .onFailure(this::handleException);
   }
 
   private Future<Void> flushChunkAsync(List<T> chunkToFlush) {
-    if (chunkToFlush.isEmpty()) {
-      return Future.succeededFuture();
-    }
-
     // Sort the chunk
     Collections.sort(chunkToFlush, comparator);
 
@@ -271,37 +290,6 @@ public final class SortingStream<T> implements ReadStream<T> {
     } else {
       endFuture.onComplete(promise);
     }
-  }
-
-  private Future<Void> startMergePhase() {
-    if (!state.compareAndSet(State.COLLECTING.ordinal(), State.MERGING.ordinal())) {
-      return Future.failedFuture(new IllegalStateException("Invalid state transition"));
-    }
-
-    return Future.all(pendingChunkFlushes)
-            .compose(v1 -> {
-              logger.trace("Starting merge phase with {} temp files and {} items in memory", tempFiles.size(), currentChunk.size());
-
-              // Choose merge strategy
-              if (tempFiles.isEmpty()) {
-                // All data fits in memory - sort it
-                Collections.sort(currentChunk, comparator);
-                mergeState = new InMemoryMergeState();
-              } else {
-                // Need to merge files
-                mergeState = new BufferedFileMergeState();
-              }
-
-              return mergeState.initialize()
-                  .onSuccess(v -> {
-                    logger.trace("Merge state initialized, scheduling output processing");
-                    // Ensure we start processing if handlers are already set
-                    if (dataHandler != null && demand.get() > 0) {
-                      scheduleProcessOutput();
-                    }
-                  });
-            });
-
   }
 
   private void scheduleProcessOutput() {
@@ -557,13 +545,9 @@ public final class SortingStream<T> implements ReadStream<T> {
       return Future.all(fileOpenFutures)
           .compose(v -> {
             // Initialize all sources
-            List<Future<Void>> initFutures = new ArrayList<>();
             for (BufferedMergeSource source : sources) {
-              initFutures.add(source.initialize());
+              source.initialize();
             }
-            return Future.all(initFutures);
-          })
-          .compose(v -> {
             // Fill initial buffers
             List<Future<Void>> fillFutures = new ArrayList<>();
             for (BufferedMergeSource source : sources) {
@@ -667,7 +651,7 @@ public final class SortingStream<T> implements ReadStream<T> {
     protected final Queue<T> buffer = new ArrayDeque<>();
     protected boolean ended = false;
 
-    abstract Future<Void> initialize();
+    abstract void initialize();
     abstract Future<Void> fillBuffer(int targetSize);
     abstract void cleanup();
 
@@ -698,8 +682,7 @@ public final class SortingStream<T> implements ReadStream<T> {
     }
 
     @Override
-    Future<Void> initialize() {
-      return Future.succeededFuture();
+    void initialize() {
     }
 
     @Override
@@ -725,7 +708,7 @@ public final class SortingStream<T> implements ReadStream<T> {
     }
 
     @Override
-    Future<Void> initialize() {
+    void initialize() {
       if (!streamStarted) {
         streamStarted = true;
 
@@ -740,7 +723,9 @@ public final class SortingStream<T> implements ReadStream<T> {
           ended = true;
           streamEnded = true;
           logger.trace("{} ended after reading {} items, buffer size: {}", this, totalItemsRead, buffer.size());
-          completeFillIfWaiting();
+          if (fillPromise != null) {
+            completeFill();
+          }
         });
 
         readStream.exceptionHandler(ex -> {
@@ -751,7 +736,6 @@ public final class SortingStream<T> implements ReadStream<T> {
           }
         });
       }
-      return Future.succeededFuture();
     }
 
     @Override
@@ -779,19 +763,14 @@ public final class SortingStream<T> implements ReadStream<T> {
     private void checkFillComplete() {
       if (fillPromise != null && (buffer.size() >= targetFillSize || streamEnded)) {
         logger.trace("{} fill complete, buffer size: {}, target was: {}", this, buffer.size(), targetFillSize);
-        completeFillIfWaiting();
+        completeFill();
       }
     }
 
-    private void completeFillIfWaiting() {
-      if (fillPromise != null) {
-        fillPromise.complete();
-        fillPromise = null;
-        logger.trace("{} complete, promise signalled", this);
-      } else {
-        logger.trace("{} complete, noone waiting", this);
-      }
-      scheduleProcessOutput();
+    private void completeFill() {
+      fillPromise.complete();
+      fillPromise = null;
+      logger.trace("{} complete, promise signalled", this);
     }
 
     @Override
