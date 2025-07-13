@@ -71,6 +71,20 @@ public class FormatJsonTest {
     
     dj = FormatJson.builder().booleanFormat("['true','false']").build();
     assertEquals("['true','false']", dj.getBooleanFormat());
+
+    dj = FormatJson.builder().compatibleEmpty(null).build();
+    assertFalse(dj.isCompatibleEmpty());
+    dj = FormatJson.builder().compatibleEmpty(Boolean.FALSE).build();
+    assertFalse(dj.isCompatibleEmpty());
+    dj = FormatJson.builder().compatibleEmpty(Boolean.FALSE).build();
+    assertTrue(dj.isCompatibleEmpty());
+
+    dj = FormatJson.builder().outputNullValues(null).build();
+    assertTrue(dj.isOutputNullValues());
+    dj = FormatJson.builder().outputNullValues(Boolean.FALSE).build();
+    assertFalse(dj.isOutputNullValues());
+    dj = FormatJson.builder().outputNullValues(Boolean.FALSE).build();
+    assertTrue(dj.isOutputNullValues());
   }
   
   @Test
