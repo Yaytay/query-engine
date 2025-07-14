@@ -18,7 +18,6 @@ package uk.co.spudsoft.query.exec.procs.sort;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.file.FileSystem;
 import io.vertx.core.streams.ReadStream;
@@ -27,19 +26,18 @@ import io.vertx.junit5.VertxTestContext;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
-import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
 @ExtendWith(VertxExtension.class)
 public class SortingStream_FileBufferedSourceExceptionHandlerTest {
@@ -62,8 +60,12 @@ public class SortingStream_FileBufferedSourceExceptionHandlerTest {
           return writeAllItems(writeStream, testData);
         })
         .compose(v -> {
+          List<String> inputData = new ArrayList<>(20);
+          for (int i = 0; i < 20; ++i) {
+            inputData.add("item " + i);
+          }
           // Now create a SortingStream that will use file-based merging
-          ReadStream<String> inputStream = createInputStreamThatTriggersFileMerge();
+          ReadStream<String> inputStream = new ListReadStream<>(vertx.getOrCreateContext(), inputData);
           
           SortingStream<String> sortingStream = new SortingStream<>(
               context,
@@ -109,36 +111,7 @@ public class SortingStream_FileBufferedSourceExceptionHandlerTest {
         })
         .onFailure(testContext::failNow);
   }
-  
-  @SuppressWarnings("unchecked")
-  private ReadStream<String> createInputStreamThatTriggersFileMerge() {
-    // Create a mock input stream that provides enough data to trigger file-based merging
-    ReadStream<String> mockStream = Mockito.mock(ReadStream.class);
     
-    when(mockStream.handler(any())).thenAnswer(invocation -> {
-      Handler<String> handler = invocation.getArgument(0);
-      
-      // Simulate providing data that exceeds memory limit
-      for (int i = 0; i < 20; i++) {
-        handler.handle("item" + i);
-      }
-      
-      return mockStream;
-    });
-    
-    when(mockStream.endHandler(any())).thenAnswer(invocation -> {
-      Handler<Void> handler = invocation.getArgument(0);
-      // Simulate stream end after a short delay
-      handler.handle(null);
-      return mockStream;
-    });
-    
-    when(mockStream.exceptionHandler(any())).thenReturn(mockStream);
-    when(mockStream.resume()).thenReturn(mockStream);
-    
-    return mockStream;
-  }
-  
   private String createFailingDeserializer(byte[] data) {
     // This deserializer will throw an exception when called
     throw new RuntimeException("Deserializer test exception");

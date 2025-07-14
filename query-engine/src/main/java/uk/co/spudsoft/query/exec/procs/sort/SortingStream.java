@@ -70,7 +70,7 @@ public final class SortingStream<T> implements ReadStream<T> {
   private Handler<Throwable> exceptionHandler;
 
   // State management
-  private final AtomicInteger state = new AtomicInteger(State.COLLECTING.ordinal());
+  private final AtomicInteger state = new AtomicInteger(State.PENDING.ordinal());
   private final AtomicLong demand = new AtomicLong(0);
   private final AtomicBoolean processing = new AtomicBoolean(false);
 
@@ -110,6 +110,7 @@ public final class SortingStream<T> implements ReadStream<T> {
   }
 
   private enum State {
+    PENDING,      // Not yet started collecting input
     COLLECTING,   // Still collecting input
     MERGING,      // Merging sorted chunks
     COMPLETED,    // All data emitted
@@ -159,10 +160,8 @@ public final class SortingStream<T> implements ReadStream<T> {
     input.handler(this::handleInputItem);
     input.endHandler(this::handleInputEnd);
     input.exceptionHandler(this::handleException);
-
-    // Start reading input
-    input.resume();
   }
+
 
   private void handleInputItem(T item) {
     if (state.get() != State.COLLECTING.ordinal()) {
@@ -413,6 +412,9 @@ public final class SortingStream<T> implements ReadStream<T> {
 
   @Override
   public ReadStream<T> resume() {
+    if (state.compareAndSet(State.PENDING.ordinal(), State.COLLECTING.ordinal())) {
+      input.resume();
+    }
     demand.set(Long.MAX_VALUE);
 
     // If we're already in merge phase and have a handler, start processing
@@ -430,6 +432,9 @@ public final class SortingStream<T> implements ReadStream<T> {
 
   @Override
   public ReadStream<T> fetch(long amount) {
+    if (state.compareAndSet(State.PENDING.ordinal(), State.COLLECTING.ordinal())) {
+      input.resume();
+    }
     if (amount < 0) {
       throw new IllegalArgumentException("Fetch amount cannot be negative");
     }

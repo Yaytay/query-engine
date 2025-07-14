@@ -234,6 +234,7 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
       item = deserializer.deserialize(bytes);
     } catch (Throwable ex) {
       handleException(ex);
+      return ;
     }        
     synchronized (lock) {
       if (demand < Long.MAX_VALUE) {

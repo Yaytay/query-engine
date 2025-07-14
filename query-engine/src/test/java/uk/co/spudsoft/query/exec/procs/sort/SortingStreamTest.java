@@ -133,7 +133,7 @@ public class SortingStreamTest {
     });
     ss.handler(item -> {
       logger.debug("Received {}", item);
-      throw new IllegalStateException("Testing");
+      throw new IllegalStateException("Testing exception from handler");
     });
     ss.fetch(4);
   }
