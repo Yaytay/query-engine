@@ -146,8 +146,12 @@ public class SortingStreamTest {
 
     @Override
     protected void callHandler(Integer item, Handler<Integer> handlerCaptured, Handler<Throwable> exceptionHandlerCaptured) {
-      if (item == 560 && exceptionHandlerCaptured != null) {
-        exceptionHandlerCaptured.handle(new IllegalStateException("Testing input exception"));
+      if (item > 500 && item < 600) {
+        if (exceptionHandlerCaptured != null) {
+          exceptionHandlerCaptured.handle(new IllegalStateException("Testing input exception"));
+        } else {
+          logger.warn("Supposed to report an exxception by exceptionHandler not captured");
+        }
       } else {
         super.callHandler(item, handlerCaptured, exceptionHandlerCaptured); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
       }

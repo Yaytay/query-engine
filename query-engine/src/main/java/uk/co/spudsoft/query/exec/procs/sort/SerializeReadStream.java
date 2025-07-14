@@ -133,7 +133,7 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
       synchronized (lock) {
         ended = true;
       }
-      context.runOnContext(this::process);
+      context.runOnContext(v1 -> this.process());
     });
     
     // Initialize processing
@@ -159,7 +159,7 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
    * 
    * Loops until no more work is possible.
    */
-  private void process(Void v) {
+  private void process() {
     int iterations = 0;
     while (true) {
       Buffer headBuffer = null;
@@ -261,7 +261,7 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
       file.fetch(2);
     }
     context.runOnContext(v -> {
-      process(null);
+      process();
     });
   }
   
@@ -305,7 +305,7 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
     }
     file.resume();
     context.runOnContext(v -> {
-      process(null);
+      process();
     });
     return this;
   }
@@ -325,7 +325,7 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
       }
     }
     context.runOnContext(v -> {
-      process(null);
+      process();
     });
     file.fetch(2);
     return this;
