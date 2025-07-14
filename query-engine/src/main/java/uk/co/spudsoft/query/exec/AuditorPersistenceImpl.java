@@ -723,11 +723,15 @@ public class AuditorPersistenceImpl implements Auditor {
      List<RateLimitRule> rules = pipeline.getRateLimitRules();
 
     logger.debug("Performing rate limit check with {} rules", rules.size());
-    if (CollectionUtils.isEmpty(rules)) {
-      return Future.succeededFuture(pipeline);
-    }
-
     Instant now = LocalDateTime.now(ZoneOffset.UTC).toInstant(ZoneOffset.UTC);
+    if (CollectionUtils.isEmpty(rules)) {
+      return jdbcHelper.runSqlUpdate("markRateLimitRulesProcessed", markRateLimitRulesProcessed, ps -> {
+        Timestamp ts = Timestamp.from(now);        
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+        ps.setTimestamp(1, ts, cal);
+        ps.setString(2, context.getRunID());
+      }).map(v -> pipeline);
+    }
 
     List<Object> args = new ArrayList<>();
     StringBuilder sql = new StringBuilder();

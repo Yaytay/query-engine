@@ -412,7 +412,7 @@ public class QueryRouter implements Handler<RoutingContext> {
     }
     
     HttpServerResponse response = routingContext.response();
-    response.putHeader("Content-Type", "texxt/plain");
+    response.putHeader("Content-Type", "text/plain");
     response.setStatusCode(statusCode)
             .end(message);
   }

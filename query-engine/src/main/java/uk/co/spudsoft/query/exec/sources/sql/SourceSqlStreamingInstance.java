@@ -160,6 +160,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     
     SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(url);
     connectOptions.setTracingPolicy(TracingPolicy.IGNORE);
+    connectOptions.setConnectTimeout(6000);
     try {
       processCredentials(endpoint, connectOptions, executor, requestContext);
     } catch (ServiceException ex) {
