@@ -33,7 +33,6 @@ import org.hamcrest.Matchers;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -189,9 +188,8 @@ public class SortingStreamTest {
     });
     ss.handler(item -> {
       logger.debug("Received {}", item);
-      throw new IllegalStateException("Testing");
     });
-    ss.fetch(4);
+    ss.resume();
   }
 
   @Test
