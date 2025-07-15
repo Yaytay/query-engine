@@ -20,6 +20,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.streams.ReadStream;
 import java.util.Objects;
 import java.util.function.Predicate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link io.vertx.core.streams.ReadStream} that wraps another ReadStream and evaluates a predicate on each item handled to and only passes it on if the predicate returns true.
@@ -30,6 +32,8 @@ import java.util.function.Predicate;
  */
 public class FilteringStream<T> implements ReadStream<T> {
 
+  private static final Logger logger = LoggerFactory.getLogger(FilteringStream.class);
+  
   private final ReadStream<T> source;
   private final Predicate<T> predicate;
 
@@ -71,9 +75,14 @@ public class FilteringStream<T> implements ReadStream<T> {
       .endHandler(v -> notifyTerminalHandler(getEndHandler(), null))
       .handler(item -> {
         boolean emit;
-        synchronized (this) {
-          received++;
-          emit = !stopped && predicate.test(item);
+        try {
+          synchronized (this) {
+            received++;
+            emit = !stopped && predicate.test(item);
+          }
+        } catch (Throwable ex) {
+          logger.warn("Failed to evaluate predicate: ", ex);
+          emit = false;
         }
         if (emit) {
           handler.handle(item);

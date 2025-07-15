@@ -183,7 +183,7 @@ public class AllFiltersIT {
     body = given()
             .queryParam("minDate", "1971-05-06")
             .queryParam("maxId", "20")
-            .queryParam("_query", "dataId==4;colour=ne=golden")
+            .queryParam("_query", "dataId==4")
             .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
             .then()
@@ -202,6 +202,25 @@ public class AllFiltersIT {
     body = given()
             .queryParam("minDate", "1971-05-06")
             .queryParam("maxId", "20")
+            .queryParam("_query", "colour==beige and dataId=le=40")
+            .log().all()
+            .get("/query/sub1/sub2/AllDynamicIT.tsv")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .extract().body().asString();
+    
+    int rows6 = body.split("\n").length;
+    assertThat(body, startsWith("\"dataId\"\t\"instant\""));
+    assertThat(body, not(containsString("\t\t\t\t\t\t\t")));
+    assertThat(body, containsString("BoolField"));
+    assertThat(body, containsString("TextField"));
+    assertThat(body, containsString("5\t\"1971-05-11T15:00\""));
+    assertEquals(2, rows6);
+
+    body = given()
+            .queryParam("minDate", "1971-05-06")
+            .queryParam("maxId", "20")
             .queryParam("_query", "colour==beige;dataId=le=40")
             .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
@@ -210,13 +229,34 @@ public class AllFiltersIT {
             .statusCode(200)
             .extract().body().asString();
     
+    int rows7 = body.split("\n").length;
     assertThat(body, startsWith("\"dataId\"\t\"instant\""));
     assertThat(body, not(containsString("\t\t\t\t\t\t\t")));
     assertThat(body, containsString("BoolField"));
     assertThat(body, containsString("TextField"));
-    assertThat(body, containsString("4\t\"1971-05-10T12:00\""));
-    assertEquals(2, rows5);
+    assertThat(body, not(containsString("5\t\"1971-05-11T15:00\"")));
+    assertEquals(1, rows7);
 
+
+    body = given()
+            .queryParam("minDate", "1971-05-06")
+            .queryParam("maxId", "20")
+            .queryParam("_query", "colour==\"beige\";dataId=le=40")
+            .log().all()
+            .get("/query/sub1/sub2/AllDynamicIT.tsv")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .extract().body().asString();
+    
+    int rows8 = body.split("\n").length;
+    assertThat(body, startsWith("\"dataId\"\t\"instant\""));
+    assertThat(body, not(containsString("\t\t\t\t\t\t\t")));
+    assertThat(body, containsString("BoolField"));
+    assertThat(body, containsString("TextField"));
+    assertThat(body, not(containsString("5\t\"1971-05-11T15:00\"")));
+    assertEquals(1, rows8);
+    
     
     body = given()
             .queryParam("minDate", "1971-05-06")
@@ -231,6 +271,7 @@ public class AllFiltersIT {
     
     assertThat(body, equalTo("Invalid argument to _query filter, should be a valid RSQL expression"));
 
+    
     body = given()
             .queryParam("minDate", "1971-05-06")
             .queryParam("maxId", "20")
@@ -262,8 +303,8 @@ public class AllFiltersIT {
     assertThat(body, containsString("TextField"));
     assertThat(body, containsString("\"first\"\t\"one\""));
     assertThat(body, containsString("\"second\"\t\"two,four\""));
-    int rows6 = body.split("\n").length;
-    assertEquals(13, rows6);
+    int rows9 = body.split("\n").length;
+    assertEquals(13, rows9);
 
 
     body = given()
@@ -284,8 +325,8 @@ public class AllFiltersIT {
     assertThat(body, containsString("TextField"));
     assertThat(body, not(containsString("\"first\"\t\"one\"")));
     assertThat(body, containsString("\"second\"\t\"two,four\""));
-    int rows7 = body.split("\n").length;
-    assertEquals(13, rows7);
+    int rows10 = body.split("\n").length;
+    assertEquals(13, rows10);
     
     long start = System.currentTimeMillis();
     
@@ -303,8 +344,8 @@ public class AllFiltersIT {
     assertThat(body, containsString("TextField"));
     assertThat(body, not(containsString("\"first\"\t\"one\"")));
     assertThat(body, containsString("\"second\"\t\"two,four\""));
-    int rows8 = body.split("\n").length;
-    assertEquals(12, rows8);
+    int rows11 = body.split("\n").length;
+    assertEquals(12, rows11);
     
     long end = System.currentTimeMillis();
     long duration1 = end - start;
@@ -341,8 +382,8 @@ public class AllFiltersIT {
     assertThat(body, containsString("TextField"));
     assertThat(body, containsString("\"first\"\t\"one\""));
     assertThat(body, containsString("\"second\"\t\"two,four\""));
-    rows8 = body.split("\n").length;
-    assertEquals(22, rows8);
+    rows11 = body.split("\n").length;
+    assertEquals(22, rows11);
     
     end = System.currentTimeMillis();
     duration1 = end - start;
