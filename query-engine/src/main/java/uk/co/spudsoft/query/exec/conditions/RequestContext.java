@@ -296,7 +296,7 @@ public class RequestContext {
           if (spanContext.getTraceId().equals(spanContext.getSpanId())) {
             return spanContext.getSpanId();
           } else {
-            return spanContext.getTraceId() + "/" + spanContext.getSpanId();
+            return spanContext.getTraceId() + ":" + spanContext.getSpanId();
           }
         }
       }

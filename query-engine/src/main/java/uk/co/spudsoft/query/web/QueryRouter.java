@@ -188,10 +188,10 @@ public class QueryRouter implements Handler<RoutingContext> {
                   .build();
           requestContextBuilder.buildRequestContext(request)
                   .compose(requestContext -> {
-                    response.headersEndHandler(v -> {
+                    routingContext.addHeadersEndHandler(v -> {
                       requestContext.setHeadersSentTime(System.currentTimeMillis());
                     });
-                    response.bodyEndHandler(v -> {
+                    routingContext.addBodyEndHandler(v -> {
                       auditor.recordResponse(requestContext, response);
                     });
 

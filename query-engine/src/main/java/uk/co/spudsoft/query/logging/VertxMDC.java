@@ -49,7 +49,7 @@ public class VertxMDC implements MDCAdapter {
   /**
    * Constructor.
    */
-  public VertxMDC() {
+  private VertxMDC() {
   }
   
   private static class MdcData {

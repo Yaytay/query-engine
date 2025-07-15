@@ -16,10 +16,13 @@
  */
 package uk.co.spudsoft.query.web;
 
+import io.opentelemetry.api.trace.Span;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.logging.VertxMDCSpanProcessor;
 
 /**
  * Simple Vertx HTTP logger.
@@ -38,6 +41,14 @@ public class LoggingRouter implements Handler<RoutingContext> {
   @Override
   public void handle(RoutingContext routingContext) {
     long start = System.currentTimeMillis();
+    
+    if (Vertx.currentContext() != null) {
+      Span currentSpan = Span.current();
+      if (currentSpan != null) {
+        VertxMDCSpanProcessor.toMdc(currentSpan.getSpanContext());
+      }
+    }
+    
     logger.info("Request: {} {}", routingContext.request().method(), routingContext.request().uri());
     routingContext.addHeadersEndHandler(v -> {
       long end = System.currentTimeMillis();
@@ -49,7 +60,7 @@ public class LoggingRouter implements Handler<RoutingContext> {
     });
     routingContext.addEndHandler(v -> {
       long end = System.currentTimeMillis();
-      logger.info("Complete: {}s", routingContext.response().getStatusCode(), routingContext.response().bytesWritten(), (end - start) / 1000.0);
+      logger.info("Complete: {} {} {}s", routingContext.response().getStatusCode(), routingContext.response().bytesWritten(), (end - start) / 1000.0);
     });
     routingContext.next();
   }

@@ -77,7 +77,7 @@ public class LoggingConfiguration {
 
     loggerContext.reset();
     
-    loggerContext.setMDCAdapter(new VertxMDC());
+    loggerContext.setMDCAdapter(VertxMDC.INSTANCE);
     
     ConsoleAppender<ILoggingEvent> appender;
     if ("true".equalsIgnoreCase(env.get("LOGGING_AS_JSON"))) {
@@ -107,7 +107,7 @@ public class LoggingConfiguration {
 
     loggerContext.reset();
     
-    loggerContext.setMDCAdapter(new VertxMDC());
+    loggerContext.setMDCAdapter(VertxMDC.INSTANCE);
     
     if (!Strings.isNullOrEmpty(options.getConfigFile())) {
       if (configureFromFile(loggerContext, options.getConfigFile())) {

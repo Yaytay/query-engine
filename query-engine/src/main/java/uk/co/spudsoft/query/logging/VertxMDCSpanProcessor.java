@@ -16,10 +16,13 @@
  */
 package uk.co.spudsoft.query.logging;
 
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.SpanProcessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * SpanProcessor to put span details into {@link VertxMDC}.
@@ -28,16 +31,30 @@ import io.opentelemetry.sdk.trace.SpanProcessor;
  */
 public class VertxMDCSpanProcessor implements SpanProcessor {
 
+  private static final Logger logger = LoggerFactory.getLogger(VertxMDCSpanProcessor.class);
+  
   /**
    * Constructor.
    */
   public VertxMDCSpanProcessor() {
   }
+  
+  /**
+   * Store the OpenTelemetry SpanContext into the {@link VertxMDC} where it can be picked up by logs.
+   * 
+   * It can be necessary to call this if the OpenTelemetry Span is created before there is a VertxMDC context
+   * to store the IDs into.
+   * 
+   * @param spanContext The OpenTelemetry SpanContext to be recorded.
+   */
+  public static void toMdc(SpanContext spanContext) {
+    VertxMDC.INSTANCE.put("traceId", spanContext.getTraceId());
+    VertxMDC.INSTANCE.put("spanId", spanContext.getSpanId());
+  }
 
   @Override
   public void onStart(Context cntxt, ReadWriteSpan rws) {
-    VertxMDC.INSTANCE.put("traceId", rws.getSpanContext().getTraceId());
-    VertxMDC.INSTANCE.put("spanId", rws.getSpanContext().getSpanId());
+    toMdc(rws.getSpanContext());
   }
 
   @Override
