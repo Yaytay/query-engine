@@ -149,7 +149,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
       index = 0;
       for (Entry<String, String> entry : params.entries()) {
         ProcessorInstance processor = filterFactory.createFilter(vertx, sourceNameTracker, context, entry.getKey(), entry.getValue(), processorName(null, parentName, "F", index++, entry.getKey()));
-        if (processor != null) {
+        if (processor != null) {          
           result.add(processor);
         }
       }

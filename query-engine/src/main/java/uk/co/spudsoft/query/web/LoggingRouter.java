@@ -38,10 +38,18 @@ public class LoggingRouter implements Handler<RoutingContext> {
   @Override
   public void handle(RoutingContext routingContext) {
     long start = System.currentTimeMillis();
-    logger.info("{} {}", routingContext.request().method(), routingContext.request().uri());
+    logger.info("Request: {} {}", routingContext.request().method(), routingContext.request().uri());
     routingContext.addHeadersEndHandler(v -> {
       long end = System.currentTimeMillis();
-      logger.info("{} {}", routingContext.response().getStatusCode(), (end - start) / 1000.0);
+      logger.info("Headers end: {} {}s", routingContext.response().getStatusCode(), (end - start) / 1000.0);
+    });
+    routingContext.addBodyEndHandler(v -> {
+      long end = System.currentTimeMillis();
+      logger.info("Body end: {} {} {}s", routingContext.response().getStatusCode(), routingContext.response().bytesWritten(), (end - start) / 1000.0);
+    });
+    routingContext.addEndHandler(v -> {
+      long end = System.currentTimeMillis();
+      logger.info("Complete: {}s", routingContext.response().getStatusCode(), routingContext.response().bytesWritten(), (end - start) / 1000.0);
     });
     routingContext.next();
   }
