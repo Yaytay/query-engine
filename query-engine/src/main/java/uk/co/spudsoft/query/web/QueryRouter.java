@@ -250,8 +250,8 @@ public class QueryRouter implements Handler<RoutingContext> {
                       internalError(ar.cause(), routingContext, outputAllErrorMessages);
                       pipelineExecutor.progressNotification(pipelineTitle[0], null, null, null, true, false, "Pipeline failed: ", ar.cause());
                     }
-                    vertx.getOrCreateContext().removeLocal(SourceInstance.SOURCE_CONTEXT_KEY);
                     logger.info("Request completed");
+                    vertx.getOrCreateContext().removeLocal(SourceInstance.SOURCE_CONTEXT_KEY);
                   });
         }
       } catch (ServiceException ex) {
