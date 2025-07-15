@@ -344,6 +344,7 @@ public class AuditorPersistenceImpl implements Auditor {
   private String recordRequest = """
                   insert into #SCHEMA#.#request# (
                     #id#
+                    , #runid#
                     , #timestamp#
                     , #processId#
                     , #url#
@@ -362,6 +363,7 @@ public class AuditorPersistenceImpl implements Auditor {
                     , #roles#
                   ) values (
                     ?
+                    , ?
                     , ?
                     , ?
                     , ?
@@ -645,6 +647,7 @@ public class AuditorPersistenceImpl implements Auditor {
     return jdbcHelper.runSqlUpdate("recordRequest", recordRequest, ps -> {
                     int param = 1;
                     ps.setString(param++, JdbcHelper.limitLength(context.getRequestId(), 100));
+                    ps.setString(param++, JdbcHelper.limitLength(context.getRunID(), 100));
                     JdbcHelper.setLocalDateTimeUTC(ps, param++, LocalDateTime.now(ZoneOffset.UTC));
                     ps.setString(param++, JdbcHelper.limitLength(PROCESS_ID, 1000));
                     ps.setString(param++, JdbcHelper.limitLength(context.getUrl(), 1000));
@@ -729,7 +732,7 @@ public class AuditorPersistenceImpl implements Auditor {
         Timestamp ts = Timestamp.from(now);        
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
         ps.setTimestamp(1, ts, cal);
-        ps.setString(2, context.getRunID());
+        ps.setString(2, context.getRequestId());
       }).map(v -> pipeline);
     }
 

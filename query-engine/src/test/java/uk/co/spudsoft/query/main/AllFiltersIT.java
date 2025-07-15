@@ -183,7 +183,7 @@ public class AllFiltersIT {
     body = given()
             .queryParam("minDate", "1971-05-06")
             .queryParam("maxId", "20")
-            .queryParam("_query", "dataId==4")
+            .queryParam("_query", "dataId==4;colour=ne=golden")
             .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
             .then()
@@ -199,6 +199,25 @@ public class AllFiltersIT {
     int rows5 = body.split("\n").length;
     assertEquals(2, rows5);
 
+    body = given()
+            .queryParam("minDate", "1971-05-06")
+            .queryParam("maxId", "20")
+            .queryParam("_query", "colour==beige;dataId=le=40")
+            .log().all()
+            .get("/query/sub1/sub2/AllDynamicIT.tsv")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .extract().body().asString();
+    
+    assertThat(body, startsWith("\"dataId\"\t\"instant\""));
+    assertThat(body, not(containsString("\t\t\t\t\t\t\t")));
+    assertThat(body, containsString("BoolField"));
+    assertThat(body, containsString("TextField"));
+    assertThat(body, containsString("4\t\"1971-05-10T12:00\""));
+    assertEquals(2, rows5);
+
+    
     body = given()
             .queryParam("minDate", "1971-05-06")
             .queryParam("maxId", "20")
@@ -235,7 +254,7 @@ public class AllFiltersIT {
             .then()
             .log().all()
             .statusCode(200)
-            .extract().body().asString();
+            .extract().body().asString();  
     
     assertThat(body, startsWith("\"dataId\"\t\"instant\""));
     assertThat(body, not(containsString("\t\t\t\t\t\t\t")));

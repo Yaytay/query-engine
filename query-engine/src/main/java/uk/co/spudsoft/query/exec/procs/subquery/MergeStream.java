@@ -323,11 +323,9 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
       
       if (capturedHandler != null) {
         if (!innerJoin || (mergeSecondary != null && !mergeSecondary.isEmpty())) {
-          if (mergePrimary != null) {
-            V result = merger.apply(mergePrimary, mergeSecondary);
-            logger.trace("Outputting {}", result);
-            capturedHandler.handle(result);
-          }
+          V result = merger.apply(mergePrimary, mergeSecondary);
+          logger.trace("Outputting {}", result);
+          capturedHandler.handle(result);
         }
       }
       if (capturedEndHandler != null) {
