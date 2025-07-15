@@ -23,6 +23,8 @@ import io.vertx.core.Vertx;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.filters.Filter;
 
 /**
@@ -30,6 +32,8 @@ import uk.co.spudsoft.query.exec.filters.Filter;
  * @author jtalbut
  */
 public class FilterFactory {
+  
+  private static final Logger logger = LoggerFactory.getLogger(FilterFactory.class);
   
   private final Map<String, Filter> filters;
   private final List<String> sortedKeys;
@@ -66,6 +70,7 @@ public class FilterFactory {
   public ProcessorInstance createFilter(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String arg, String value, String name) {
     Filter filter = filters.get(arg);
     if (filter != null) {
+      logger.debug("Creating processor from {}={}", arg, value);
       return filter.createProcessor(vertx, sourceNameTracker, context, value, name);
     } else {
       return null;
