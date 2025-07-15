@@ -63,6 +63,7 @@ public class RequestContextHandler implements Handler<RoutingContext> {
               event.next();
             })
             .onFailure(ex -> {
+              Vertx.currentContext().putLocal(KEY, new RequestContext(null, event.request(), null));
               QueryRouter.internalError(ex, event, outputAllErrorMessages);
             });
   }
