@@ -26,8 +26,6 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.FormatDelimited;
