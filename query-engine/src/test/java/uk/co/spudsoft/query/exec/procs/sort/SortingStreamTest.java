@@ -23,6 +23,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.streams.ReadStream;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -30,6 +31,9 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.hamcrest.Matchers;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -193,6 +197,9 @@ public class SortingStreamTest {
     ss.handler(item -> {
       logger.debug("Received {}", item);
     });
+    ss.fetch(0);
+    ss.fetch(Long.MAX_VALUE - 1);
+    ss.fetch(Long.MAX_VALUE - 1);
     ss.resume();
   }
 
@@ -350,7 +357,54 @@ public class SortingStreamTest {
 
   @Test
   // @Disabled
-  public void testEmptyStreamHandling(Vertx vertx, VertxTestContext testContext, TestInfo testInfo) {
+  public void testFetchBeforeReady(Vertx vertx, VertxTestContext testContext, TestInfo testInfo) throws InterruptedException, NoSuchFieldException, IllegalAccessException {
+    logger.debug("{}.{}", testInfo.getTestClass().get().getSimpleName(), testInfo.getTestMethod().get().getName());
+    // Test SortingStream with empty input
+    List<Integer> input = new ArrayList<>();
+
+    ListReadStream<Integer> lrs = new ListReadStream<>(vertx.getOrCreateContext(), input);
+
+    SortingStream<Integer> ss = new SortingStream<>(
+            vertx.getOrCreateContext(),
+            vertx.fileSystem(),
+            Comparator.naturalOrder(),
+            i -> SerializeWriteStream.byteArrayFromInt(i),
+            b -> SerializeReadStream.intFromByteArray(b),
+             "target/temp/" + testInfo.getTestClass().get().getSimpleName() + "_" + testInfo.getTestMethod().get().getName(),
+             testInfo.getTestClass().get().getSimpleName() + "_" + testInfo.getTestMethod().get().getName(),
+            1000,
+            i -> 16,
+            lrs
+    );
+
+    ss.fetch(Long.MAX_VALUE);
+    
+    // Just enough to cede control of this thread
+    Thread.sleep(10);
+    
+    ss.handler(null);
+    
+    // At this point the stream will have completed and no handlers will have been called.
+    // The only way to test this is to look at the state
+    
+    // Get the private state field using reflection
+    Field stateField = SortingStream.class.getDeclaredField("state");
+    stateField.setAccessible(true);
+    AtomicInteger stateValue = (AtomicInteger) stateField.get(ss);
+
+    // Get the actual state ordinal value
+    int currentState = stateValue.get();
+
+    assertThat(currentState, greaterThan(1)); // COLLECTING.ordinal() is 1 based on the enum order, must be beyond that state
+    assertThat(currentState, not(equalTo(4))); // FAILED.ordinal() is 4 based on the enum order, must not be in error    
+    
+    testContext.completeNow();
+    
+  }
+  
+  @Test
+  // @Disabled
+  public void testEmptyStreamHandling(Vertx vertx, VertxTestContext testContext, TestInfo testInfo) throws InterruptedException {
     logger.debug("{}.{}", testInfo.getTestClass().get().getSimpleName(), testInfo.getTestMethod().get().getName());
     // Test SortingStream with empty input
     List<Integer> input = new ArrayList<>();
@@ -373,6 +427,8 @@ public class SortingStreamTest {
     List<Integer> captured = new ArrayList<>();
     AtomicInteger handlerCallCount = new AtomicInteger(0);
 
+    ss.handler(null);
+    
     ss.handler(item -> {
       handlerCallCount.incrementAndGet();
       captured.add(item);
@@ -389,10 +445,10 @@ public class SortingStreamTest {
     ss.exceptionHandler(ex -> {
       testContext.failNow(ex);
     });
-
-    ss.fetch(Long.MAX_VALUE);
+    
+    ss.fetch(Long.MAX_VALUE);    
   }
-
+  
   @Test
   // @Disabled
   public void testSingleItemStream(Vertx vertx, VertxTestContext testContext, TestInfo testInfo) {

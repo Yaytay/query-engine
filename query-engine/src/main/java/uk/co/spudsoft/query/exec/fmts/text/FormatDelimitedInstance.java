@@ -232,6 +232,11 @@ public final class FormatDelimitedInstance implements FormatInstance {
   
   static String encodeCloseQuote(FormatDelimited defn, String string) {
     if (!Strings.isNullOrEmpty(defn.getCloseQuote())) {
+      // Early exit if string doesn't contain the close quote
+      if (!string.contains(defn.getCloseQuote())) {
+        return string;
+      }
+
       String replacement = null;
       if (!Strings.isNullOrEmpty(defn.getEscapeCloseQuote())) {
         replacement = defn.getEscapeCloseQuote() + defn.getCloseQuote();
@@ -239,13 +244,13 @@ public final class FormatDelimitedInstance implements FormatInstance {
         replacement = defn.getReplaceCloseQuote();
       }
       if (replacement != null) {
-        replacement = Matcher.quoteReplacement(replacement);
-        string = string.replaceAll(Pattern.quote(defn.getCloseQuote()), replacement);
+        // Use replace() instead of replaceAll() for literal string replacement
+        string = string.replace(defn.getCloseQuote(), replacement);
       }
     }
     return string;
   }
-  
+
   @Override
   public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStreamWithTypes input) {
     this.types = input.getTypes();

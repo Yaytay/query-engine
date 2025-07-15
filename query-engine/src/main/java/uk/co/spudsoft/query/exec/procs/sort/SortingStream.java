@@ -417,10 +417,7 @@ public final class SortingStream<T> implements ReadStream<T> {
     }
     demand.set(Long.MAX_VALUE);
 
-    // If we're already in merge phase and have a handler, start processing
-    if (state.get() == State.MERGING.ordinal() && dataHandler != null) {
-      scheduleProcessOutput();
-    }
+    scheduleProcessingIfInMergeStateWithHandler();
 
     return this;
   }
@@ -455,12 +452,16 @@ public final class SortingStream<T> implements ReadStream<T> {
 
     demand.set(newDemand);
 
+    scheduleProcessingIfInMergeStateWithHandler();
+
+    return this;
+  }
+
+  private void scheduleProcessingIfInMergeStateWithHandler() {
     // If we're already in merge phase and have a handler, start processing
     if (state.get() == State.MERGING.ordinal() && dataHandler != null) {
       scheduleProcessOutput();
     }
-
-    return this;
   }
 
   @Override
