@@ -163,9 +163,16 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     connectOptions.setConnectTimeout(6000);
     
     connectOptions.setIdleTimeoutUnit(TimeUnit.SECONDS);
-    connectOptions.setIdleTimeout(137);
-    connectOptions.setReadIdleTimeout(157);
-    connectOptions.setWriteIdleTimeout(600);
+    
+    if (endpoint.getIdleTimeout() != null && endpoint.getIdleTimeout() >= 0L) {
+      connectOptions.setIdleTimeout(endpoint.getIdleTimeout());
+    }
+    if (endpoint.getReadIdleTimeout() != null && endpoint.getReadIdleTimeout() >= 0L) {
+      connectOptions.setReadIdleTimeout(endpoint.getReadIdleTimeout());
+    }
+    if (endpoint.getWriteIdleTimeout() != null && endpoint.getWriteIdleTimeout() >= 0L) {
+      connectOptions.setWriteIdleTimeout(endpoint.getWriteIdleTimeout());
+    }
         
     try {
       processCredentials(endpoint, connectOptions, executor, requestContext);

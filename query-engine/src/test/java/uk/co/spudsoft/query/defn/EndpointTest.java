@@ -66,4 +66,22 @@ public class EndpointTest {
     Endpoint instance = Endpoint.builder().secret("secret").build();
     assertEquals("secret", instance.getSecret());    
   }
+  
+  @Test
+  public void testGetIdleTimeout() {
+    Endpoint instance = Endpoint.builder().idleTimeout(5000).build();
+    assertEquals(5000, instance.getIdleTimeout());
+  }
+
+  @Test
+  public void testGetReadIdleTimeout() {
+    Endpoint instance = Endpoint.builder().readIdleTimeout(3000).build();
+    assertEquals(3000, instance.getReadIdleTimeout());
+  }
+
+  @Test
+  public void testGetWriteIdleTimeout() {
+    Endpoint instance = Endpoint.builder().writeIdleTimeout(2000).build();
+    assertEquals(2000, instance.getWriteIdleTimeout());
+  }  
 }

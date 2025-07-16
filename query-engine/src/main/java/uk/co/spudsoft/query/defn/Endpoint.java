@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 jtalbut
+ * Copyright (C) 2025 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,26 +24,25 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import uk.co.spudsoft.params4j.SecretsSerializer;
 
 /**
- * Definition of an endpoint that can be used for querying data.
- * An Endpoint represents a connection to a data source, where a {@link Source} represents an actual data query.
- * For {@link EndpointType#HTTP} {@link Source}s there is often a one-to-one relationship between {@link Source} and Endpoint, but for {@link EndpointType#SQL} Sources there
- * are often multiple {@link Source}s for a single Endpoint.
- * 
+ * Definition of an endpoint that can be used for querying data. An Endpoint represents a connection to a data source, where a
+ * {@link Source} represents an actual data query. For {@link EndpointType#HTTP} {@link Source}s there is often a one-to-one
+ * relationship between {@link Source} and Endpoint, but for {@link EndpointType#SQL} Sources there are often multiple
+ * {@link Source}s for a single Endpoint.
+ *
  * The credentials for an Endpoint can be specified in three ways:
  * <ul>
- * <li>By including them in the URL specified in the Endpoint definition.
- * This is the least secure option as the URL value will be written to log entries.
- * <li>By explicitly setting username/password on the Endpoint.
- * The password will not be logged, but will be in your configuration files and thus in your source repo.
- * <li>By using secrets set in the configuration of the query engine.
- * This is the most secure option as it puts the responsibility on the deployment to protect the credentials.
+ * <li>By including them in the URL specified in the Endpoint definition. This is the least secure option as the URL value will be
+ * written to log entries.
+ * <li>By explicitly setting username/password on the Endpoint. The password will not be logged, but will be in your configuration
+ * files and thus in your source repo.
+ * <li>By using secrets set in the configuration of the query engine. This is the most secure option as it puts the responsibility
+ * on the deployment to protect the credentials.
  * </ul>
- * 
- * If the secret field is set it will take precedence over both the username and the password set in the Endpoint
- * , as a result it is not valid to set either username or password at the same time as secret.
- * The same does not apply to the condition field, that can be set on both the Endpoint and the Secret (and both conditions
- * must be met for the Endpoint to work).
- * 
+ *
+ * If the secret field is set it will take precedence over both the username and the password set in the Endpoint , as a result it
+ * is not valid to set either username or password at the same time as secret. The same does not apply to the condition field,
+ * that can be set on both the Endpoint and the Secret (and both conditions must be met for the Endpoint to work).
+ *
  * @author jtalbut
  */
 @JsonDeserialize(builder = Endpoint.Builder.class)
@@ -75,7 +74,7 @@ import uk.co.spudsoft.params4j.SecretsSerializer;
 )
 
 public class Endpoint {
-  
+
   private final String name;
   private final EndpointType type;
   private final String url;
@@ -84,10 +83,13 @@ public class Endpoint {
   private final String username;
   private final String password;
   private final Condition condition;
+  private final Integer idleTimeout;
+  private final Integer readIdleTimeout;
+  private final Integer writeIdleTimeout;
 
   /**
    * Validate the configuration.
-   * 
+   *
    * @throws IllegalArgumentException if the definition is not valid.
    */
   public void validate() throws IllegalArgumentException {
@@ -97,51 +99,53 @@ public class Endpoint {
     if (condition != null) {
       condition.validate();
     }
-    if (Strings.isNullOrEmpty(url) && Strings.isNullOrEmpty(urlTemplate))  {
+    if (Strings.isNullOrEmpty(url) && Strings.isNullOrEmpty(urlTemplate)) {
       throw new IllegalArgumentException("Endpoint " + name + " has neither url nor urlTemplate set.");
     }
-    if (!Strings.isNullOrEmpty(url) && !Strings.isNullOrEmpty(urlTemplate))  {
+    if (!Strings.isNullOrEmpty(url) && !Strings.isNullOrEmpty(urlTemplate)) {
       throw new IllegalArgumentException("Endpoint " + name + " has both url and urlTemplate set, they are mutually incompatible.");
     }
-    if (!Strings.isNullOrEmpty(username) && !Strings.isNullOrEmpty(secret))  {
+    if (!Strings.isNullOrEmpty(username) && !Strings.isNullOrEmpty(secret)) {
       throw new IllegalArgumentException("Endpoint " + name + " has both username and secret set, they are mutually incompatible.");
     }
-    if (!Strings.isNullOrEmpty(password) && !Strings.isNullOrEmpty(secret))  {
+    if (!Strings.isNullOrEmpty(password) && !Strings.isNullOrEmpty(secret)) {
       throw new IllegalArgumentException("Endpoint " + name + " has both password and secret set, they are mutually incompatible.");
     }
   }
-  
+
   /**
    * Get the name of the Endpoint, that will be used to refer to it in Sources.
+   *
    * @return the name of the Endpoint.
    */
   @Schema(description = """
                         <P>The name of the Endpoint, that will be used to refer to it in Sources.
-                        """
-          , maxLength = 100
-          , requiredMode = Schema.RequiredMode.REQUIRED
+                        """,
+           maxLength = 100,
+           requiredMode = Schema.RequiredMode.REQUIRED
   )
   public String getName() {
     return name;
   }
-  
+
   /**
    * Get the type of Endpoint being configured.
+   *
    * @return the type of Endpoint being configured.
    */
   @Schema(description = """
                         <P>The type of Endpoint being configured</P>
-                        """
-          , requiredMode = Schema.RequiredMode.REQUIRED
+                        """,
+           requiredMode = Schema.RequiredMode.REQUIRED
   )
   public EndpointType getType() {
     return type;
   }
 
   /**
-   * Get a URL that defined the Endpoint.
-   * Invalid if the URLTemplate value is set to a non-empty string.
-   * For security reasons the URL should not contain credentials - the URL may be logged but the username and password will not be.
+   * Get a URL that defined the Endpoint. Invalid if the URLTemplate value is set to a non-empty string. For security reasons the
+   * URL should not contain credentials - the URL may be logged but the username and password will not be.
+   *
    * @return a URL that defined the Endpoint.
    */
   @Schema(description = """
@@ -153,19 +157,20 @@ public class Endpoint {
                         For security reasons the URL should not contain credentials - the URL may be logged but the username and password
                         fields of the Endpoint will not be.
                         </P>
-                        """
-          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
-          , maxLength = 1000
-          , format = "uri"
+                        """,
+           requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+           maxLength = 1000,
+           format = "uri"
   )
   public String getUrl() {
     return url;
   }
 
   /**
-   * Get a StringTemplate that will be rendered as the URL for the Endpoint.
-   * Invalid if the URL value is set to a non-empty string.
-   * For security reasons the URL should not contain credentials - the URL may be logged but the username and password will not be.
+   * Get a StringTemplate that will be rendered as the URL for the Endpoint. Invalid if the URL value is set to a non-empty
+   * string. For security reasons the URL should not contain credentials - the URL may be logged but the username and password
+   * will not be.
+   *
    * @return a StringTemplate that will be rendered as the URL for the Endpoint.
    */
   @Schema(description = """
@@ -177,17 +182,18 @@ public class Endpoint {
                         For security reasons the URL should not contain credentials - the URL may be logged but the username and password
                         fields of the Endpoint will not be.
                         </P>
-                        """
-          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
-          , maxLength = 1000000
+                        """,
+           requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+           maxLength = 1000000
   )
   public String getUrlTemplate() {
     return urlTemplate;
-  }    
+  }
 
   /**
-   * Get the name of the secret that contains the credentials to be used for the connection.
-   * Invalid if the username or password are set.
+   * Get the name of the secret that contains the credentials to be used for the connection. Invalid if the username or password
+   * are set.
+   *
    * @return the name of secret that contains the credentials to be used for the connection.
    */
   @Schema(description = """
@@ -201,16 +207,17 @@ public class Endpoint {
                         which unfortuantely means it is not possible to list the known secrets of your live instance here.
                         Please ask your systems administrator for this information.
                         </P>
-                        """
-          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
-          , maxLength = 100
+                        """,
+           requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+           maxLength = 100
   )
   public String getSecret() {
     return secret;
   }
-  
+
   /**
    * Get a username that should be used when communicating with the Endpoint.
+   *
    * @return a username that should be used when communicating with the Endpoint.
    */
   @Schema(description = """
@@ -221,9 +228,9 @@ public class Endpoint {
                         <P>
                         The username will be logged.
                         </P>
-                        """
-          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
-          , maxLength = 100
+                        """,
+           requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+           maxLength = 100
   )
   public String getUsername() {
     return username;
@@ -231,6 +238,7 @@ public class Endpoint {
 
   /**
    * Get a password that should be used when communicating with the Endpoint.
+   *
    * @return a password that should be used when communicating with the Endpoint.
    */
   @JsonSerialize(using = SecretsSerializer.class)
@@ -247,9 +255,9 @@ public class Endpoint {
                         This is not a security best practice.
                         Please use secrets instead of username/password for live deployments.
                         </P>
-                        """
-          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
-          , maxLength = 1000
+                        """,
+           requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+           maxLength = 1000
   )
   public String getPassword() {
     return password;
@@ -257,17 +265,69 @@ public class Endpoint {
 
   /**
    * Get a condition that must be passed for the endpoint to be used.
+   *
    * @return a condition that must be passed for the endpoint to be used.
    */
   @Schema(description = """
                         <P>A condition that must be passed for the endpoint to be used.</P>
-                        """
-          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+                        """,
+           requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
   public Condition getCondition() {
     return condition;
   }
-  
+
+  /**
+   * Get the idle timeout for the endpoint connection.
+   *
+   * @return the idle timeout in milliseconds.
+   */
+  @Schema(description = """
+                        <P>The idle timeout for the endpoint connection in milliseconds.</P>
+                        <P>
+                        This controls the maximum time a connection can remain idle before being closed.
+                        </P>
+                        """,
+           requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  public Integer getIdleTimeout() {
+    return idleTimeout;
+  }
+
+  /**
+   * Get the read idle timeout for the endpoint connection.
+   *
+   * @return the read idle timeout in milliseconds.
+   */
+  @Schema(description = """
+                        <P>The read idle timeout for the endpoint connection in milliseconds.</P>
+                        <P>
+                        This controls the maximum time a connection can remain idle on read operations before being closed.
+                        </P>
+                        """,
+           requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  public Integer getReadIdleTimeout() {
+    return readIdleTimeout;
+  }
+
+  /**
+   * Get the write idle timeout for the endpoint connection.
+   *
+   * @return the write idle timeout in milliseconds.
+   */
+  @Schema(description = """
+                        <P>The write idle timeout for the endpoint connection in milliseconds.</P>
+                        <P>
+                        This controls the maximum time a connection can remain idle on write operations before being closed.
+                        </P>
+                        """,
+           requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  public Integer getWriteIdleTimeout() {
+    return writeIdleTimeout;
+  }
+
   /**
    * Builder class for {@link Endpoint} objects.
    */
@@ -282,12 +342,16 @@ public class Endpoint {
     private String username;
     private String password;
     private Condition condition;
+    private Integer idleTimeout;
+    private Integer readIdleTimeout;
+    private Integer writeIdleTimeout;
 
     private Builder() {
     }
 
     /**
      * Set the name of the Endpoint in the builder.
+     *
      * @param value the name of the Endpoint.
      * @return this, so that the builder may be used fluently.
      */
@@ -298,6 +362,7 @@ public class Endpoint {
 
     /**
      * Set the type of the Endpoint in the builder.
+     *
      * @param value the type of the Endpoint.
      * @return this, so that the builder may be used fluently.
      */
@@ -308,6 +373,7 @@ public class Endpoint {
 
     /**
      * Set the URL of the Endpoint in the builder.
+     *
      * @param value the URL of the Endpoint.
      * @return this, so that the builder may be used fluently.
      */
@@ -318,6 +384,7 @@ public class Endpoint {
 
     /**
      * Set the UrlTemplate of the Endpoint in the builder.
+     *
      * @param value the UrlTemplate of the Endpoint.
      * @return this, so that the builder may be used fluently.
      */
@@ -328,6 +395,7 @@ public class Endpoint {
 
     /**
      * Set the name of secret that contains the credentials to be used for the Endpoint in the builder.
+     *
      * @param value the name of secret that contains the credentials to be used for the Endpoint.
      * @return this, so that the builder may be used fluently.
      */
@@ -338,6 +406,7 @@ public class Endpoint {
 
     /**
      * Set the username of the Endpoint in the builder.
+     *
      * @param value the username of the Endpoint.
      * @return this, so that the builder may be used fluently.
      */
@@ -348,6 +417,7 @@ public class Endpoint {
 
     /**
      * Set the password of the Endpoint in the builder.
+     *
      * @param value the password of the Endpoint.
      * @return this, so that the builder may be used fluently.
      */
@@ -358,6 +428,7 @@ public class Endpoint {
 
     /**
      * Set the condition on the Endpoint in the builder.
+     *
      * @param value the condition on the Endpoint.
      * @return this, so that the builder may be used fluently.
      */
@@ -367,23 +438,58 @@ public class Endpoint {
     }
 
     /**
+     * Set the idle timeout of the Endpoint in the builder.
+     *
+     * @param value the idle timeout in milliseconds.
+     * @return this, so that the builder may be used fluently.
+     */
+    public Builder idleTimeout(final Integer value) {
+      this.idleTimeout = value;
+      return this;
+    }
+
+    /**
+     * Set the read idle timeout of the Endpoint in the builder.
+     *
+     * @param value the read idle timeout in milliseconds.
+     * @return this, so that the builder may be used fluently.
+     */
+    public Builder readIdleTimeout(final Integer value) {
+      this.readIdleTimeout = value;
+      return this;
+    }
+
+    /**
+     * Set the write idle timeout of the Endpoint in the builder.
+     *
+     * @param value the write idle timeout in milliseconds.
+     * @return this, so that the builder may be used fluently.
+     */
+    public Builder writeIdleTimeout(final Integer value) {
+      this.writeIdleTimeout = value;
+      return this;
+    }
+
+    /**
      * Construct a new Endpoint object.
+     *
      * @return a new Endpoint object.
      */
     public Endpoint build() {
-      return new Endpoint(name, type, url, urlTemplate, secret, username, password, condition);
+      return new Endpoint(name, type, url, urlTemplate, secret, username, password, condition, idleTimeout, readIdleTimeout, writeIdleTimeout);
     }
   }
 
   /**
    * Construct a new {@link uk.co.spudsoft.query.defn.Endpoint.Builder} object.
+   *
    * @return a new {@link uk.co.spudsoft.query.defn.Endpoint.Builder} object.
    */
   public static Endpoint.Builder builder() {
     return new Endpoint.Builder();
   }
 
-  private Endpoint(final String name, final EndpointType type, final String url, final String urlTemplate, final String secret, final String username, final String password, final Condition condition) {
+  private Endpoint(final String name, final EndpointType type, final String url, final String urlTemplate, final String secret, final String username, final String password, final Condition condition, final Integer idleTimeout, final Integer readIdleTimeout, final Integer writeIdleTimeout) {
     this.name = name;
     this.type = type;
     this.url = url;
@@ -392,7 +498,9 @@ public class Endpoint {
     this.username = username;
     this.password = password;
     this.condition = condition;
+    this.idleTimeout = idleTimeout;
+    this.readIdleTimeout = readIdleTimeout;
+    this.writeIdleTimeout = writeIdleTimeout;
   }
 
-  
 }

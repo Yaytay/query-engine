@@ -39,6 +39,7 @@ import java.lang.management.ManagementFactory;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -196,12 +197,14 @@ public class AuditorPersistenceImpl implements Auditor {
   @Override
   public void prepare() throws Exception {
     DataSourceConfig dataSourceConfig = configuration.getDataSource();
-    SQLException lastSQLException[] = new SQLException[1];
-    LiquibaseException lastLiquibaseException[] = new LiquibaseException[1];
+    SQLException lastSQLException = null;
+    LiquibaseException lastLiquibaseException = null;
 
     if (dataSourceConfig == null || Strings.isNullOrEmpty(dataSourceConfig.getUrl())) {
       throw new IllegalStateException("AuditorPersistenceImpl configured without datasource");
     }
+
+    String url = dataSourceConfig.getUrl();
 
     if (Strings.isNullOrEmpty(dataSourceConfig.getSchema())) {
       recordRequest = recordRequest.replaceAll("#SCHEMA#.", "");
@@ -234,98 +237,91 @@ public class AuditorPersistenceImpl implements Auditor {
     Boolean done = Boolean.FALSE;
     for (int retry = 0; !done && (configuration.getRetryLimit() < 0 || retry <= configuration.getRetryLimit()); ++retry) {
       logger.debug("Running liquibase, attempt {}", retry);
+      String username = dataSourceConfig.getAdminUser() == null ? null : dataSourceConfig.getAdminUser().getUsername();
+      String password = dataSourceConfig.getAdminUser() == null ? null : dataSourceConfig.getAdminUser().getPassword();
+      try (Connection jdbcConnection = DriverManager.getConnection(url, username, password)) {
+        DatabaseMetaData dmd = jdbcConnection.getMetaData();
+        quote = dmd.getIdentifierQuoteString();
+        recordRequest = recordRequest.replaceAll("#", quote);
+        recordFile = recordFile.replaceAll("#", quote);
+        recordException = recordException.replaceAll("#", quote);
+        recordResponse = recordResponse.replaceAll("#", quote);
+        getHistory = getHistory.replaceAll("#", quote);
+        getHistoryCount = getHistoryCount.replaceAll("#", quote);
+        getCacheFile = getCacheFile.replaceAll("#", quote);
+        recordCacheFile = recordCacheFile.replaceAll("#", quote);
+        recordCacheFileUsed = recordCacheFileUsed.replaceAll("#", quote);
+        deleteCacheFile = deleteCacheFile.replaceAll("#", quote);
+        countOutstandingRequests = countOutstandingRequests.replaceAll("#", quote);
+        markRateLimitRulesProcessed = markRateLimitRulesProcessed.replaceAll("#", quote);
 
-      done = jdbcHelper.runOnConnectionSynchronously("AuditorPersistenceImpl.prepare", connection -> {
-        try {
-          DatabaseMetaData dmd = connection.getMetaData();
-          quote = dmd.getIdentifierQuoteString();
-          recordRequest = recordRequest.replaceAll("#", quote);
-          recordFile = recordFile.replaceAll("#", quote);
-          recordException = recordException.replaceAll("#", quote);
-          recordResponse = recordResponse.replaceAll("#", quote);
-          getHistory = getHistory.replaceAll("#", quote);
-          getHistoryCount = getHistoryCount.replaceAll("#", quote);
-          getCacheFile = getCacheFile.replaceAll("#", quote);
-          recordCacheFile = recordCacheFile.replaceAll("#", quote);
-          recordCacheFileUsed = recordCacheFileUsed.replaceAll("#", quote);
-          deleteCacheFile = deleteCacheFile.replaceAll("#", quote);
-          countOutstandingRequests = countOutstandingRequests.replaceAll("#", quote);
-          markRateLimitRulesProcessed = markRateLimitRulesProcessed.replaceAll("#", quote);
-
-          String databaseProduct = dmd.getDatabaseProductName();
-          logger.debug("Database product: {}", databaseProduct);
-          switch (databaseProduct) {
-            case "PostgreSQL":
-              this.offsetLimitType = OffsetLimitType.limitOffset;
-              break;
-            case "MySQL":
-              this.offsetLimitType = OffsetLimitType.limitOffset;
-              break;
-            case "Microsoft SQL Server":
-              this.offsetLimitType = OffsetLimitType.offsetFetch;
-              break;
-            default:
-              this.offsetLimitType = OffsetLimitType.limitOffset;
-              break;
-          }
-
-          Map<String, Object> liquibaseConfig = new HashMap<>();
-          Scope.child(liquibaseConfig, () -> {
-
-            Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
-            if (!Strings.isNullOrEmpty(dataSourceConfig.getSchema())) {
-              logger.trace("Setting default schema to {}", dataSourceConfig.getSchema());
-              database.setDefaultSchemaName(dataSourceConfig.getSchema());
-            }
-
-            CommandScope updateCommand = new CommandScope(UpdateCommandStep.COMMAND_NAME);
-            updateCommand.addArgumentValue(DbUrlConnectionArgumentsCommandStep.DATABASE_ARG, database);
-            updateCommand.addArgumentValue(UpdateCommandStep.CHANGELOG_FILE_ARG, CHANGESET_RESOURCE_PATH);
-            updateCommand.addArgumentValue(UpdateCommandStep.CONTEXTS_ARG, null);
-            updateCommand.addArgumentValue(UpdateCommandStep.LABEL_FILTER_ARG, null);
-            updateCommand.addArgumentValue(ChangeExecListenerCommandStep.CHANGE_EXEC_LISTENER_ARG, null);
-            updateCommand.addArgumentValue(DatabaseChangelogCommandStep.CHANGELOG_PARAMETERS, null);
-            updateCommand.execute();
-          });
-
-          logger.info("Database updated");
-          lastSQLException[0] = null;
-          lastLiquibaseException[0] = null;
-
-
-        } catch (Throwable ex) {
-          lastLiquibaseException[0] = null;
-          lastSQLException[0] = null;
-          if (ex instanceof LiquibaseException le) {
-            logger.error("Failed to config database: {}", ex.getMessage());
-            lastLiquibaseException[0] = le;
-          } else if (ex instanceof SQLException se) {
-            logger.error("Failed to update database: {}", ex);
-            lastSQLException[0] = se;
-          } else {
-            logger.error("Error attempting to update database: {}", ex.getMessage());
-          }
-          if (baseSqlExceptionIsNonexistantDriver(ex)) {
-            return Boolean.TRUE;
-          } else {
-            return Boolean.FALSE;
-          }
+        String databaseProduct = dmd.getDatabaseProductName();
+        logger.debug("Database product: {}", databaseProduct);
+        switch (databaseProduct) {
+          case "PostgreSQL":
+            this.offsetLimitType = OffsetLimitType.limitOffset;
+            break;
+          case "MySQL":
+            this.offsetLimitType = OffsetLimitType.limitOffset;
+            break;
+          case "Microsoft SQL Server":
+            this.offsetLimitType = OffsetLimitType.offsetFetch;
+            break;
+          default:
+            this.offsetLimitType = OffsetLimitType.limitOffset;
+            break;
         }
-        return Boolean.TRUE;
-      });
-      if (!done) {
-        try {
-          Thread.sleep(retryBaseMs + retry * retryIncrementMs);
-        } catch (InterruptedException ex) {
-          logger.warn("Liquibase retry delay interrupted");
+
+        Map<String, Object> liquibaseConfig = new HashMap<>();
+        Scope.child(liquibaseConfig, () -> {
+
+          Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(jdbcConnection));
+          if (!Strings.isNullOrEmpty(dataSourceConfig.getSchema())) {
+            logger.trace("Setting default schema to {}", dataSourceConfig.getSchema());
+            database.setDefaultSchemaName(dataSourceConfig.getSchema());
+          }
+
+          CommandScope updateCommand = new CommandScope(UpdateCommandStep.COMMAND_NAME);
+          updateCommand.addArgumentValue(DbUrlConnectionArgumentsCommandStep.DATABASE_ARG, database);
+          updateCommand.addArgumentValue(UpdateCommandStep.CHANGELOG_FILE_ARG, CHANGESET_RESOURCE_PATH);
+          updateCommand.addArgumentValue(UpdateCommandStep.CONTEXTS_ARG, null);
+          updateCommand.addArgumentValue(UpdateCommandStep.LABEL_FILTER_ARG, null);
+          updateCommand.addArgumentValue(ChangeExecListenerCommandStep.CHANGE_EXEC_LISTENER_ARG, null);
+          updateCommand.addArgumentValue(DatabaseChangelogCommandStep.CHANGELOG_PARAMETERS, null);
+          updateCommand.execute();
+        });
+
+        logger.info("Database updated");
+        lastSQLException = null;
+        lastLiquibaseException = null;
+        break;
+      } catch (Throwable ex) {
+        lastLiquibaseException = null;
+        lastSQLException = null;
+        if (ex instanceof LiquibaseException le) {
+          logger.error("Failed to config database: {}", ex.getMessage());
+          lastLiquibaseException = le;
+        } else if (ex instanceof SQLException se) {
+          logger.error("Failed to update database: {}", ex);
+          lastSQLException = se;
+        } else {
+          logger.error("Error attempting to update database: {}", ex.getMessage());
+        }
+        if (baseSqlExceptionIsNonexistantDriver(ex)) {
+          throw ex;
         }
       }
+      try {
+        Thread.sleep(retryBaseMs + retry * retryIncrementMs);
+      } catch (InterruptedException ex) {
+        logger.warn("Liquibase retry delay interrupted");
+      }
     }
-    if (lastSQLException[0] != null) {
-      throw lastSQLException[0];
+    if (lastSQLException != null) {
+      throw lastSQLException;
     }
-    if (lastLiquibaseException[0] != null) {
-      throw lastLiquibaseException[0];
+    if (lastLiquibaseException != null) {
+      throw lastLiquibaseException;
     }
 
     prepared = true;
