@@ -219,6 +219,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
               if (logger.isDebugEnabled()) {
                 logger.debug("Executing SQL stream on {} with {}", connection, args.deepToString());
               }
+              // RowStream<Row> rowStream = preparedStatement.createStream(definition.getStreamingFetchSize(), args);
               MetadataRowStreamImpl rowStream = new MetadataRowStreamImpl(preparedStatement, context, definition.getStreamingFetchSize(), args);
               rowStream.exceptionHandler(ex -> {
                 logger.error("Exception occured in stream: ", ex);

@@ -102,8 +102,6 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
     rowStream.handler(row -> {
       try {
         handledRows = true;
-        Context context = Vertx.currentContext();
-        logger.trace("RowStream context: {}", context);
         DataRow dataRow = sqlRowToDataRow(row);
         logger.trace("{} Received row: {}", this, dataRow);
         handler.handle(dataRow);

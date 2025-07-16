@@ -108,6 +108,7 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
         if (cursor == null) {
           rowHandler = handler;
           c = cursor = ps.cursor(params);
+          logger.trace("Cursor created");
           if (readInProgress) {
             return this;
           }
@@ -142,6 +143,7 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
     if (amount < 0L) {
       throw new IllegalArgumentException("Invalid fetch amount " + amount);
     }
+    logger.trace("Fetch called with {}", amount);
     synchronized (this) {
       demand += amount;
       if (demand < 0L) {
@@ -166,6 +168,7 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
   @Override
   public void handle(AsyncResult<RowSet<Row>> ar) {
     if (ar.failed()) {
+      logger.warn("Failed to get RowSet");
       Handler<Throwable> handler;
       synchronized (this) {
         readInProgress = false;
@@ -178,6 +181,7 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
       }
     } else {
       RowSet<Row> rowSet = ar.result();
+      logger.debug("Got RowSet {}/{}", rowSet.rowCount(), rowSet.size());
       Handler<List<ColumnDescriptor>> colDescHandler = null;
       synchronized (this) {
         readInProgress = false;
@@ -222,8 +226,10 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
 
   @SuppressWarnings({"unchecked", "rawtypes"})
   private void checkPending() {
+    logger.trace("checkPending");
     synchronized (this) {
       if (emitting) {
+        logger.trace("already emitting");
         return;
       }
       emitting = true;
@@ -232,6 +238,7 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
       synchronized (this) {
         if (demand == 0L) {
           emitting = false;
+          logger.trace("0 demand");
           break;
         }
         Handler handler;
@@ -239,9 +246,6 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
         if (result != null) {
           handler = rowHandler;
           event = result.next();
-          if (logger.isTraceEnabled()) {
-            logger.trace("got row: {}", io.vertx.core.json.Json.encode(event));
-          }
           if (demand != Long.MAX_VALUE) {
             demand--;
           }
@@ -250,6 +254,7 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
             result = null;
           }
         } else {
+          logger.trace("no result");
           emitting = false;
           if (readInProgress) {
             logger.trace("readInProgress");
