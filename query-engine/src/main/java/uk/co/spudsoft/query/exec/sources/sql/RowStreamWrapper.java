@@ -17,11 +17,9 @@
 package uk.co.spudsoft.query.exec.sources.sql;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
 import io.vertx.core.streams.ReadStream;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.SqlConnection;
