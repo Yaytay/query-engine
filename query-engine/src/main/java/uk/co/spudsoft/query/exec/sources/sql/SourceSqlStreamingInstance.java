@@ -161,6 +161,12 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(url);
     connectOptions.setTracingPolicy(TracingPolicy.IGNORE);
     connectOptions.setConnectTimeout(6000);
+    
+    connectOptions.setIdleTimeoutUnit(TimeUnit.SECONDS);
+    connectOptions.setIdleTimeout(137);
+    connectOptions.setReadIdleTimeout(157);
+    connectOptions.setWriteIdleTimeout(179);
+        
     try {
       processCredentials(endpoint, connectOptions, executor, requestContext);
     } catch (ServiceException ex) {
@@ -185,6 +191,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     String sql = queryAndArgs.query();
     Tuple args = Tuple.from(queryAndArgs.args());
     
+    long start = System.currentTimeMillis();
     return pool.getConnection()
             .recover(ex -> {
               logger.warn("Failed to connect to data source: ", ex);
@@ -218,7 +225,8 @@ public class SourceSqlStreamingInstance extends AbstractSource {
             })
             .onFailure(ex -> {
               addNameToContextLocalData();
-              logger.warn("SQL source failed: ", ex);
+              long end = System.currentTimeMillis();
+              logger.warn("SQL source failed (after {}s): ", (end - start) / 1000.0, ex);
               if (connection != null) {
                 connection.close();
               }
