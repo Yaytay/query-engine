@@ -35,7 +35,8 @@ import uk.co.spudsoft.query.exec.Types;
 
 
 /**
- * {@link io.vertx.core.streams.ReadStream}&lt;{@link uk.co.spudsoft.query.exec.DataRow}&gt; that works with {@link MetadataRowStreamImpl} to be able to report metadata after initialization even when no rows are returned.
+ * {@link io.vertx.core.streams.ReadStream}&lt;{@link uk.co.spudsoft.query.exec.DataRow}&gt; that works with {@link MetadataRowStreamImpl} 
+ * to be able to report metadata after initialization even when no rows are returned.
  * 
  * @author jtalbut
  */
@@ -52,7 +53,8 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
 
   private Handler<Throwable> exceptionHandler;
   private Handler<DataRow> handler;
-  private boolean handledRows;
+  
+  private long rowCount;
   
   private final Promise<Void> readyPromise = Promise.promise();
   
@@ -72,6 +74,7 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
     this.transaction = transaction;
     this.rowStream = rowStream;
     this.types = new Types();
+    
     rowStream.coloumnDescriptorHandler(columnDescriptors -> {
       for (ColumnDescriptor cd : columnDescriptors) {
         logger.trace("Field {} is of JDBC type {} (aka {})", cd.name(), cd.jdbcType(), cd.typeName());
@@ -87,7 +90,7 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
     rowStream.pause();
     rowStream.exceptionHandler(ex -> {
       sourceNameTracker.addNameToContextLocalData();
-      logger.error("Exception in RowStream: ", ex);
+      logger.error("Exception in RowStream after {} rows: ", rowCount, ex);
       readyPromise.tryFail(ex);
       Handler<Throwable> capturedExceptionHandler;
       synchronized (this) {
@@ -99,9 +102,11 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
     });
     rowStream.handler(row -> {
       try {
-        handledRows = true;
+        ++rowCount;
         DataRow dataRow = sqlRowToDataRow(row);
-        logger.trace("{} Received row: {}", this, dataRow);
+        if (rowCount % 1000 == 0) {
+          logger.trace("{} Received {} rows", this, rowCount);
+        }
         handler.handle(dataRow);
       } catch (Throwable ex) {
         logger.warn("Exception processing row (with types {}): ", types, ex);
@@ -193,8 +198,8 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
   public RowStreamWrapper endHandler(Handler<Void> endHandler) {
     rowStream.endHandler(ehv -> {
       sourceNameTracker.addNameToContextLocalData();
-      if (handledRows) {
-        logger.trace("Finished row stream after handling some rows");
+      if (rowCount > 0) {
+        logger.trace("Finished row stream after handling {} rows", rowCount);
       } else {
         logger.trace("Finished row stream without handling any rows");
       }

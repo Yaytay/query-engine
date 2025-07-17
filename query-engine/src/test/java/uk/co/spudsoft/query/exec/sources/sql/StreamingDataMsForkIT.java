@@ -36,7 +36,9 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
+import uk.co.spudsoft.query.logging.VertxMDC;
 import uk.co.spudsoft.query.main.sample.AbstractSampleDataLoader;
 import uk.co.spudsoft.query.main.sample.SampleDataLoaderMsSQL;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMsSQL;
@@ -73,6 +75,7 @@ public class StreamingDataMsForkIT {
   SourceNameTracker sourceNameTracker = new SourceNameTracker() {
     @Override
     public void addNameToContextLocalData() {
+      VertxMDC.INSTANCE.put(SourceInstance.SOURCE_CONTEXT_KEY, this.getClass().getSimpleName());
     }
   };
   
@@ -128,7 +131,7 @@ public class StreamingDataMsForkIT {
               if (logger.isDebugEnabled()) {
                 logger.debug("Executing SQL stream on {}", connection);
               }
-              MetadataRowStreamImpl rowStream = new MetadataRowStreamImpl(preparedStatement, vertx.getOrCreateContext(), 100, Tuple.tuple());
+              MetadataRowStreamImpl rowStream = new MetadataRowStreamImpl(sourceNameTracker, preparedStatement, vertx.getOrCreateContext(), 100, Tuple.tuple());
               rowStream.exceptionHandler(ex -> {
                 logger.error("Exception occured in stream: ", ex);
               });

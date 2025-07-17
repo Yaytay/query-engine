@@ -66,7 +66,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
   private SqlConnection connection;
   private PreparedStatement preparedStatement;
   private Transaction transaction;
-
+  
   /**
    * Constructor.
    * @param vertx The Vert.x instance.
@@ -220,8 +220,9 @@ public class SourceSqlStreamingInstance extends AbstractSource {
                 logger.debug("Executing SQL stream on {} with {}", connection, args.deepToString());
               }
               // RowStream<Row> rowStream = preparedStatement.createStream(definition.getStreamingFetchSize(), args);
-              MetadataRowStreamImpl rowStream = new MetadataRowStreamImpl(preparedStatement, context, definition.getStreamingFetchSize(), args);
+              MetadataRowStreamImpl rowStream = new MetadataRowStreamImpl(this, preparedStatement, context, definition.getStreamingFetchSize(), args);
               rowStream.exceptionHandler(ex -> {
+                addNameToContextLocalData();                
                 logger.error("Exception occured in stream: ", ex);
               });
               rowStreamWrapper = new RowStreamWrapper(this, connection, transaction, rowStream, definition.getColumnTypeOverrideMap());
