@@ -31,9 +31,13 @@ public enum SourceType {
    */
   TEST, 
   /**
-   * The SQL source that pulls data from a database.
+   * The SQL source that pulls data from a database using the Vertx drivers.
    */
   SQL, 
+  /**
+   * The SQL source that pulls data from a database using JDBC.
+   */
+  JDBC, 
   /**
    * The HTTP source that can pull data from an HTTP endpoint that outputs JSON.
    */

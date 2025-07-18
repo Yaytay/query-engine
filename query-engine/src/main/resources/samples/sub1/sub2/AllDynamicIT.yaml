@@ -37,16 +37,16 @@ arguments:
     possibleValuesUrl: http://localhost:8000/query/demo/LookupValues
 sourceEndpoints:
   - name: MySQL
-    type: SQL
-    urlTemplate: "mysql://localhost:2001/test"
+    type: JDBC
+    urlTemplate: "jdbc:mysql://localhost:2001/test"
     secret: AllFiltersProtectedCredentials
     idleTimeout: 1000
     readIdleTimeout: 1000
     writeIdleTimeout: 1000
 source:
-  type: SQL
+  type: JDBC
   endpoint: MySQL
-  streamingFetchSize: 7
+  streamingFetchSize: -2147483648
   connectionTimeout: PT10S
   replaceDoubleQuotes: true  
   query: |
@@ -82,6 +82,7 @@ processors:
   childValueColumn: value
   input:
     source:
+      type: JDBC
       endpoint: MySQL
       streamingFetchSize: 10
       replaceDoubleQuotes: true  
@@ -99,18 +100,21 @@ processors:
   fieldValueColumnName: badField,textValue
   fieldDefns: 
     source:
-      type: SQL
+      type: JDBC
       endpoint: MySQL
       streamingFetchSize: 10
       replaceDoubleQuotes: true  
       query: select "fieldId" as id, name, type, case when "name" = 'TextField' then null else "valueField" end as "valueField" from "Fields" order by "fieldId"
   fieldValues: 
     source:    
-      type: SQL
+      type: JDBC
       endpoint: MySQL
       streamingFetchSize: 10
       replaceDoubleQuotes: true  
       query:  select "dataId", "fieldId", "dateValue", "timeValue", "dateTimeValue", "longValue", "doubleValue", "boolValue", "textValue" from "FieldValues" order by "dataId", "fieldId"
+      columnTypeOverrides:
+        - column: boolValue
+          type: Boolean
       
 - type: LIMIT
   limit: 1000

@@ -34,6 +34,11 @@ public enum EndpointType {
   SQL
   , 
   /**
+   * The endpoint is a datasource compatible with the JDBC.
+   */
+  JDBC
+  , 
+  /**
    * The endpoint returns JSON or XML data from an http/https URL.
    */
   HTTP

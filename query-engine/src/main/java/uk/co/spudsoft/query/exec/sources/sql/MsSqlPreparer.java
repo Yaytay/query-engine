@@ -30,7 +30,7 @@ public class MsSqlPreparer extends AbstractSqlPreparer {
   }
   
   @Override
-  void generateParameterNumber(StringBuilder builder, int number) {
+  protected void generateParameterNumber(StringBuilder builder, int number) {
     builder.append("@p").append(number);
   }
   

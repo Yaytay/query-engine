@@ -486,7 +486,7 @@ public class JdbcHelper {
    */
   @SuppressFBWarnings(value = "SQL_INJECTION_JDBC", justification = "SQL is generated from static strings")
   public int runSqlUpdateSynchronously(String name, String sql, SqlConsumer<PreparedStatement> prepareStatement) throws Exception {
-    logger.trace("Executing update ({}: {}): {}", name, sql);
+    logger.trace("Executing update ({}: {})", name, sql);
     String logMessage = "Failed to get connection ({}): ";
     try {
       Connection conn = dataSource.getConnection();

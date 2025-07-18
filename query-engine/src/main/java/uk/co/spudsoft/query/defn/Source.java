@@ -38,6 +38,7 @@ import uk.co.spudsoft.query.exec.SourceInstance;
   defaultImpl = SourceSql.class)
 @JsonSubTypes({ 
   @Type(value = SourceSql.class, name = "SQL"), 
+  @Type(value = SourceJdbc.class, name = "JDBC"), 
   @Type(value = SourceTest.class, name = "TEST") 
 })
 @Schema(description = """
@@ -46,6 +47,7 @@ import uk.co.spudsoft.query.exec.SourceInstance;
         , discriminatorProperty = "type"
         , discriminatorMapping = {
           @DiscriminatorMapping(schema = SourceSql.class, value = "SQL")
+          , @DiscriminatorMapping(schema = SourceJdbc.class, value = "JDBC")
           , @DiscriminatorMapping(schema = SourceTest.class, value = "TEST")
         }
 )

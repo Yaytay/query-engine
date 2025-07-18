@@ -216,7 +216,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
           doEmit();
         }
       }
-      if (secondaryRows.size() > this.secondaryStreamBufferHighThreshold) {
+      if (secondaryRows.size() > this.secondaryStreamBufferHighThreshold && !primaryEnded) {
         logger.trace("Pausing secondary stream at {}", secondaryRows.size());
         secondaryStream.pause();
       } else if (secondaryRows.size() < this.secondaryStreamBufferLowThreshold) {

@@ -38,7 +38,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 import org.mockito.MockedStatic;
 import uk.co.spudsoft.query.main.Credentials;
-import uk.co.spudsoft.query.main.DataSourceConfig;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -64,6 +63,7 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import uk.co.spudsoft.query.main.DataSourceConfig;
 
 /**
  * Exhaustive unit tests for JdbcHelper.createDataSource method.

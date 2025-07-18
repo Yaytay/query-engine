@@ -502,5 +502,5 @@ public class Endpoint {
     this.readIdleTimeout = readIdleTimeout;
     this.writeIdleTimeout = writeIdleTimeout;
   }
-
+  
 }

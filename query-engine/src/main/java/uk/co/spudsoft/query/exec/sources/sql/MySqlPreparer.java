@@ -30,12 +30,12 @@ public class MySqlPreparer extends AbstractSqlPreparer {
   }
   
   @Override
-  void generateParameterNumber(StringBuilder builder, int number) {
+  protected void generateParameterNumber(StringBuilder builder, int number) {
     builder.append("?");
   }
 
   @Override
-  boolean hasNumberedParameters() {
+  protected boolean hasNumberedParameters() {
     return false;
   }
 

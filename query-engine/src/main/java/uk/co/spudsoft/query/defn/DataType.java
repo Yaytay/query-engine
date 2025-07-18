@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.defn;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.sql.JDBCType;
+import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -260,6 +261,9 @@ public enum DataType {
         case Instant tv -> {
           return LocalDate.ofInstant(tv, ZoneOffset.UTC);
         }
+        case java.sql.Date tv -> {
+          return tv.toLocalDate();
+        }
         case Date tv -> {
           return LocalDate.ofInstant(tv.toInstant(), ZoneOffset.UTC);
         }
@@ -316,6 +320,9 @@ public enum DataType {
         }
         case Instant tv -> {
           return LocalTime.ofInstant(tv, ZoneOffset.UTC);
+        }
+        case java.sql.Time tv -> {
+          return tv.toLocalTime();
         }
         case Date tv -> {
           return LocalTime.ofInstant(tv.toInstant(), ZoneOffset.UTC);

@@ -18,7 +18,9 @@ package uk.co.spudsoft.query.exec.sources.sql;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,10 +56,9 @@ public abstract class AbstractSqlPreparer {
    * @param query The modified SQL statement.
    * @param args The arguments for the SQL statement.
    */
-  record QueryAndArgs(String query, List<Object> args) {
-
+  @SuppressFBWarnings(value = {"EI_EXPOSE_REP", "EI_EXPOSE_REP2"}, justification = "Do not modify args obtained from a QueryAndArgs")
+  public record QueryAndArgs(String query, List<Object> args) {
   }
-
   ;
   
   /**
@@ -80,7 +81,7 @@ public abstract class AbstractSqlPreparer {
    *
    * @return true if the SQL driver uses numbers to identify parameters, rather than position.
    */
-  boolean hasNumberedParameters() {
+  protected boolean hasNumberedParameters() {
     return true;
   }
 
@@ -99,7 +100,7 @@ public abstract class AbstractSqlPreparer {
    * @param builder The StringBuilder container the resulting SQL statement.
    * @param number The number of the parameter to be appended.
    */
-  abstract void generateParameterNumber(StringBuilder builder, int number);
+  protected abstract void generateParameterNumber(StringBuilder builder, int number);
 
   /**
    * Prepare SQL statements for passing to the driver - primarily to permit named parameters in the SQL.
@@ -125,7 +126,7 @@ public abstract class AbstractSqlPreparer {
    * @param argSrc The arguments passed in the pipeline, after having been parsed and had default values set.
    * @return A {@link QueryAndArgs} object representing the corrected SQL and the arguments to pass to the driver.
    */
-  QueryAndArgs prepareSqlStatement(String definitionSql, Boolean replaceDoubleQuotes, ImmutableMap<String, ArgumentInstance> argSrc) {
+  public QueryAndArgs prepareSqlStatement(String definitionSql, Boolean replaceDoubleQuotes, ImmutableMap<String, ArgumentInstance> argSrc) {
 
     if (replaceDoubleQuotes != null && replaceDoubleQuotes && !"\"".equals(getQuoteCharacter()) && definitionSql.contains("\"")) {
       definitionSql = definitionSql.replaceAll("\"", getQuoteCharacter());
@@ -133,7 +134,7 @@ public abstract class AbstractSqlPreparer {
 
     List<Object> args = new ArrayList<>();
     if (Strings.isNullOrEmpty(definitionSql)) {
-      return new QueryAndArgs(definitionSql, args);
+      return new QueryAndArgs(definitionSql, Collections.<Object>emptyList());
     }
     Map<String, Integer> baseNumberedArgs = hasNumberedParameters() ? new HashMap<>() : null;
 
@@ -156,7 +157,7 @@ public abstract class AbstractSqlPreparer {
 
     String sql = builder.toString();
     logger.debug("Running SQL {} with args {}", sql, args);
-    return new QueryAndArgs(sql, args);
+    return new QueryAndArgs(sql, Collections.unmodifiableList(args));
   }
 
   /**

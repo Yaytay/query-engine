@@ -63,6 +63,8 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
   private boolean readInProgress;
   private Iterator<Row> result;
   
+  private long rowSetCount = 0;
+  
   /**
    * Constructor.
    * @param sourceNameTracker The object used to identify this source in the Vert.x context for logging purposes.
@@ -175,7 +177,7 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
     sourceNameTracker.addNameToContextLocalData();
     
     if (ar.failed()) {
-      logger.warn("Failed to get RowSet: ", ar.cause());
+      logger.warn("Failed to get RowSet {}: ", ++rowSetCount, ar.cause());
       Handler<Throwable> handler;
       synchronized (this) {
         readInProgress = false;
@@ -188,7 +190,7 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
       }
     } else {
       RowSet<Row> rowSet = ar.result();
-      logger.debug("Got RowSet {}/{}", rowSet.rowCount(), rowSet.size());
+      logger.debug("Got RowSet {} {}/{}", ++rowSetCount, rowSet.rowCount(), rowSet.size());
       Handler<List<ColumnDescriptor>> colDescHandler;
       synchronized (this) {
         readInProgress = false;

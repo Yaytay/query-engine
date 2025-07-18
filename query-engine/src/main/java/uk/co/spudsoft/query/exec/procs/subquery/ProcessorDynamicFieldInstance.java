@@ -131,11 +131,23 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
                           return null;
                         } else {
                           Object id = row.get(definition.getFieldIdColumn());
+                          if (id == null) {
+                            logger.debug("Skipping field defn row ({}) with no id", row.toString());
+                            return null;
+                          }
                           String name = Objects.toString(row.get(definition.getFieldNameColumn()));
+                          if (Strings.isNullOrEmpty(name)) {
+                            logger.debug("Skipping field defn row ({}) with no name", row.toString());
+                            return null;
+                          }
                           String key = definition.isUseCaseInsensitiveFieldNames() ? name.toLowerCase(Locale.ROOT) : name;
                           DataType type = DataType.valueOf(Objects.toString(row.get(definition.getFieldTypeColumn())));
+                          if (type == null) {
+                            logger.debug("Skipping field defn row ({}) because type ({}) is not understood", row.toString(), row.get(definition.getFieldTypeColumn()));
+                            return null;
+                          }
                           Comparable<?> valueColumn = row.get(definition.getFieldColumnColumn());
-                          String column = valueColumn == null ? null : Objects.toString(valueColumn);                          
+                          String column = valueColumn == null ? null : Objects.toString(valueColumn);
                           return new FieldDefn(id, key, name, type, column);
                         }
                       });
@@ -164,7 +176,7 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
       boolean added = false;
       parentRow.putTypeIfAbsent(fieldDefn.key, fieldDefn.name, fieldDefn.type);
       for (DataRow row : childRows) {
-        if (fieldDefn.id.equals(row.get(definition.getValuesFieldIdColumn()))) {
+        if (fieldDefn.id != null && fieldDefn.id.equals(row.get(definition.getValuesFieldIdColumn()))) {
           if (Strings.isNullOrEmpty(fieldDefn.column)) {
             for (String valueFieldName : this.fieldValueColumnNames) {
               Comparable<?> value = row.get(valueFieldName);

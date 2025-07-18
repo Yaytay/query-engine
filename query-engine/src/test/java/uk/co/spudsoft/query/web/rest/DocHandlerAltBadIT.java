@@ -61,6 +61,6 @@ public class DocHandlerAltBadIT {
       , "--alternativeDocumentation=target/wibbly/wobbly/non-existent"
     }, stdout, System.getenv());
 
-    assertEquals(1, statusCode);
+    assertEquals(3, statusCode);
   }  
 }

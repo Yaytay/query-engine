@@ -401,7 +401,7 @@ public class Main extends Application {
           prop.appendEnv(usage, maxNameLen, "--", NAME, "\n");
         }
         stdout.println(usage.toString());
-        return Future.succeededFuture(1);
+        return Future.succeededFuture(2);
       }
     }
 
@@ -429,7 +429,8 @@ public class Main extends Application {
       usage.append(ex.getMessage()).append("\n");
       buildUsage(usage, p4j, false);
       stdout.println(usage.toString());
-      return Future.succeededFuture(1);
+      logger.error("Invalid parameter: {}", ex.getMessage());
+      return Future.succeededFuture(3);
     } catch (Throwable ex) {
       StringBuilder usage = new StringBuilder();
       usage.append("Failed to validate parameters:\n");
@@ -442,7 +443,7 @@ public class Main extends Application {
       usage.append(ex.getMessage()).append("\n");
       buildUsage(usage, p4j, false);
       stdout.println(usage.toString());
-      return Future.succeededFuture(1);
+      return Future.succeededFuture(4);
     }
 
     ProcessorSortInstance.setMemoryLimit(params.getProcessors().getInMemorySortLimitBytes());
@@ -519,7 +520,7 @@ public class Main extends Application {
       defnLoader = new PipelineDefnLoader(meterRegistry, vertx, params.getPipelineCache(), dirCache);
     } catch (Throwable ex) {
       logger.error("Unable to config pipeline loader: ", ex);
-      return Future.succeededFuture(2);
+      return Future.succeededFuture(7);
     }
 
     UpCheckHandler upCheck = new UpCheckHandler(up);
@@ -642,7 +643,7 @@ public class Main extends Application {
             .compose(v -> {
               logger.info("Started on port {}", port);
               if (params.isExitOnRun()) {
-                return Future.succeededFuture(1);
+                return Future.succeededFuture(9);
               }
               return Future.succeededFuture(0);
             })
