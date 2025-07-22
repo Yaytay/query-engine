@@ -124,32 +124,9 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
     
     return executor.initializePipeline(childPipeline)
             .compose(v -> {
-              return ReadStreamToList.map(
-                      fieldDefnStreamCapture.getReadStream().getStream()
+              return ReadStreamToList.map(fieldDefnStreamCapture.getReadStream().getStream()
                       , row -> {
-                        if (row.isEmpty()) {
-                          return null;
-                        } else {
-                          Object id = row.get(definition.getFieldIdColumn());
-                          if (id == null) {
-                            logger.debug("Skipping field defn row ({}) with no id", row.toString());
-                            return null;
-                          }
-                          String name = Objects.toString(row.get(definition.getFieldNameColumn()));
-                          if (Strings.isNullOrEmpty(name)) {
-                            logger.debug("Skipping field defn row ({}) with no name", row.toString());
-                            return null;
-                          }
-                          String key = definition.isUseCaseInsensitiveFieldNames() ? name.toLowerCase(Locale.ROOT) : name;
-                          DataType type = DataType.valueOf(Objects.toString(row.get(definition.getFieldTypeColumn())));
-                          if (type == null) {
-                            logger.debug("Skipping field defn row ({}) because type ({}) is not understood", row.toString(), row.get(definition.getFieldTypeColumn()));
-                            return null;
-                          }
-                          Comparable<?> valueColumn = row.get(definition.getFieldColumnColumn());
-                          String column = valueColumn == null ? null : Objects.toString(valueColumn);
-                          return new FieldDefn(id, key, name, type, column);
-                        }
+                        return rowToFieldDefn(definition, row);
                       });
             })
             .compose(collated -> {
@@ -163,6 +140,45 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
               }
               return initializeChildStream(executor, pipeline, "fieldValues", definition.getFieldValues()).map(rswt -> rswt.getStream());
             });
+  }
+
+  static FieldDefn rowToFieldDefn(ProcessorDynamicField definition, DataRow row) {
+    if (row.isEmpty()) {
+      return null;
+    } else {
+      Object id = row.get(definition.getFieldIdColumn());
+      if (id == null) {
+        logger.debug("Skipping field defn row ({}) with no id", row.toString());
+        return null;
+      }
+      Object fieldNameObject = row.get(definition.getFieldNameColumn());
+      if (fieldNameObject == null) {
+        logger.debug("Skipping field defn row ({}) because field name column {} is null", row.toString(), definition.getFieldNameColumn());
+        return null;
+      }
+      String fieldNameString = (fieldNameObject instanceof String s) ? s : fieldNameObject.toString();      
+      if (Strings.isNullOrEmpty(fieldNameString)) {
+        logger.debug("Skipping field defn row ({}) with no name", row.toString());
+        return null;
+      }
+      String key = definition.isUseCaseInsensitiveFieldNames() ? fieldNameString.toLowerCase(Locale.ROOT) : fieldNameString;
+      Object fieldTypeObject = row.get(definition.getFieldTypeColumn());
+      if (fieldTypeObject == null) {
+        logger.debug("Skipping field defn row ({}) because field type column {} is null", row.toString(), definition.getFieldTypeColumn());
+        return null;
+      }
+      String fieldTypeString = (fieldTypeObject instanceof String s) ? s : fieldTypeObject.toString();
+      DataType type;
+      try {
+        type = DataType.valueOf(fieldTypeString);
+      } catch (Throwable ex) {
+        logger.debug("Skipping field defn row ({}) because type ({}) is not understood", row.toString(), fieldTypeString);
+        return null;
+      }
+      Comparable<?> valueColumn = row.get(definition.getFieldColumnColumn());
+      String column = valueColumn == null ? null : Objects.toString(valueColumn);
+      return new FieldDefn(id, key, fieldNameString, type, column);
+    }
   }
   
   @Override

@@ -806,7 +806,8 @@ public class Main extends Application {
         extractSampleFile(baseConfigFile, "samples/sub1/sub2/AllDynamicIT.yaml", sampleDataLoads);
         extractSampleFile(baseConfigFile, "samples/sub1/sub2/ConcurrentRulesIT.yaml", sampleDataLoads);
         extractSampleFile(baseConfigFile, "samples/sub1/sub2/ConditionalArgument.yaml", sampleDataLoads);
-        extractSampleFile(baseConfigFile, "samples/sub1/sub2/DynamicEndpointPipelineIT.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/sub1/sub2/DynamicEndpointPipelineJdbcIT.yaml", sampleDataLoads);
+        extractSampleFile(baseConfigFile, "samples/sub1/sub2/DynamicEndpointPipelineSqlIT.yaml", sampleDataLoads);
         extractSampleFile(baseConfigFile, "samples/sub1/sub2/EmptyDataIT.yaml", sampleDataLoads);
         extractSampleFile(baseConfigFile, "samples/sub1/sub2/JsonToPipelineIT.json", sampleDataLoads);
         extractSampleFile(baseConfigFile, "samples/sub1/sub2/LookupIT.yaml", sampleDataLoads);

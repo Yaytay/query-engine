@@ -84,10 +84,10 @@ public final class SourceJdbc implements Source {
       throw new IllegalArgumentException("Neither endpoint nor endpointTemplate specified in JDBC source");
     }
     if (Strings.isNullOrEmpty(query) && Strings.isNullOrEmpty(queryTemplate)) {
-      throw new IllegalArgumentException("Query not specified in JDBC source");
+      throw new IllegalArgumentException("Neither query nor queryTemplate specified in JDBC source");
     }
     if (!Strings.isNullOrEmpty(query) && !Strings.isNullOrEmpty(queryTemplate)) {
-      throw new IllegalArgumentException("Both query and quueryTemplate specified in JDBC source");
+      throw new IllegalArgumentException("Both query and queryTemplate specified in JDBC source");
     }
     if (connectionTimeout != null) {
       if (connectionTimeout.getSeconds() < 0) {

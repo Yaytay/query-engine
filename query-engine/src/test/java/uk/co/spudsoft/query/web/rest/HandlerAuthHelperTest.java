@@ -38,21 +38,21 @@ public class HandlerAuthHelperTest {
     
     Context vertxContext = mock(Context.class);
     
-    when(vertxContext.getLocal("req")).thenReturn(null);
+    when(vertxContext.get("req")).thenReturn(null);
     assertNull(HandlerAuthHelper.getRequestContext(vertxContext, false));
 
     RequestContext emptyRequestContext = new RequestContext(null, null, null, null, null, null, null, null, null, null);
-    when(vertxContext.getLocal("req")).thenReturn(emptyRequestContext);
+    when(vertxContext.get("req")).thenReturn(emptyRequestContext);
     assertEquals(emptyRequestContext, HandlerAuthHelper.getRequestContext(vertxContext, false));
     
-    when(vertxContext.getLocal("req")).thenReturn(null);
+    when(vertxContext.get("req")).thenReturn(null);
     assertThrows(ServiceException.class, () -> { HandlerAuthHelper.getRequestContext(vertxContext, true); });
     
-    when(vertxContext.getLocal("req")).thenReturn(emptyRequestContext);
+    when(vertxContext.get("req")).thenReturn(emptyRequestContext);
     assertThrows(ServiceException.class, () -> { HandlerAuthHelper.getRequestContext(vertxContext, true); });
     
     RequestContext fullRequestContext = new RequestContext(null, null, null, null, null, null, null, null, null, new Jwt(null, null, null, null));
-    when(vertxContext.getLocal("req")).thenReturn(fullRequestContext);
+    when(vertxContext.get("req")).thenReturn(fullRequestContext);
     assertEquals(fullRequestContext, HandlerAuthHelper.getRequestContext(vertxContext, true));
     
   }

@@ -111,6 +111,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     }
   }
   
+  @SuppressFBWarnings(value = "UL_UNRELEASED_LOCK_EXCEPTION_PATH", justification = "False positive, which is a shame because it's a useful test")
   private void resultSetWalker() {
     
     sourceNameTracker.addNameToContextLocalData();
@@ -177,25 +178,6 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     }
     return row;
   }
-    
-  /**
-   * Add an item to the queue of items to be sent (and emit it if appropriate).
-   * @param item The item to add.
-   * @return this, so that this method may be used in a fluent manner.
-   */
-  private JdbcReadStream add(DataRow item) {
-    if (completed) {
-      throw new IllegalStateException("Last item has already been sent");
-    }
-    queueLock.lock();
-    try {
-      items.add(item);
-    } finally {
-      queueLock.unlock();
-    }
-    checkProcessing("Item added");
-    return this;
-  }
 
   /**
    * Mark that no more items will be added.
@@ -215,6 +197,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     return this;
   }
   
+  @SuppressFBWarnings(value = "UL_UNRELEASED_LOCK_EXCEPTION_PATH", justification = "False positive, which is a shame because it's a useful test")
   private void process() {
     Handler<Void> endHandlerCaptured = null;
     sourceNameTracker.addNameToContextLocalData();

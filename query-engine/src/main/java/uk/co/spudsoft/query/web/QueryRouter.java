@@ -205,7 +205,7 @@ public class QueryRouter implements Handler<RoutingContext> {
                   .compose(requestContext -> {
                     try {
                       logger.trace("Request context: {}", requestContext);
-                      Vertx.currentContext().putLocal("req", requestContext);
+                      Vertx.currentContext().put("req", requestContext);
                       
                       return loader.loadPipeline(query, requestContext, (file, ex) -> auditor.recordFileDetails(requestContext, file, null));
                     } catch (Throwable ex) {
@@ -370,7 +370,7 @@ public class QueryRouter implements Handler<RoutingContext> {
       FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), responseStream);
       SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), pipelineExecutor, ROOT_SOURCE_DEFAULT_NAME);
       
-      Vertx.currentContext().putLocal("pipeline", pipeline);
+      Vertx.currentContext().put("pipeline", pipeline);
       
       Map<String, ArgumentInstance> arguments = pipelineExecutor.prepareArguments(requestContext, pipeline.getArguments(), routingContext.request().params());
       instance = new PipelineInstance(

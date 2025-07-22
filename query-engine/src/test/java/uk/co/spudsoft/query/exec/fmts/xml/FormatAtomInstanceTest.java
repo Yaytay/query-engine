@@ -103,7 +103,7 @@ public class FormatAtomInstanceTest {
       , null
     );
     Context context = mock(Context.class);
-    when(context.getLocal("req")).thenReturn(req);
+    when(context.get("req")).thenReturn(req);
 
     FormatAtomInstance instance = defn.createInstance(vertx, context, writeStream);
 

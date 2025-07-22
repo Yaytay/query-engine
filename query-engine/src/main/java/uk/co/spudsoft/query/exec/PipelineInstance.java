@@ -105,7 +105,7 @@ public class PipelineInstance {
    * @return The {@link Pipeline} definition found in the Vert.x {@link Context}, if any.
    */
   public static Pipeline getPipelineDefinition(Context context) {
-    return context == null ? null : context.getLocal("pipeline");
+    return context == null ? null : context.get("pipeline");
   }
   
   /**

@@ -58,12 +58,12 @@ public class RequestContextHandler implements Handler<RoutingContext> {
     requestContextBuilder
             .buildRequestContext(event.request())
             .onSuccess(requestContext -> {
-              Vertx.currentContext().putLocal(KEY, requestContext);
+              Vertx.currentContext().put(KEY, requestContext);
               logger.debug("Context found for request to {}", event.request().absoluteURI());
               event.next();
             })
             .onFailure(ex -> {
-              Vertx.currentContext().putLocal(KEY, new RequestContext(null, event.request(), null));
+              Vertx.currentContext().put(KEY, new RequestContext(null, event.request(), null));
               QueryRouter.internalError(ex, event, outputAllErrorMessages);
             });
   }
@@ -74,7 +74,7 @@ public class RequestContextHandler implements Handler<RoutingContext> {
    * @return The RequestContext, if it has been successfully added.
    */
   public static RequestContext getRequestContext(Context context) {
-    return context == null ? null : context.getLocal(KEY);
+    return context == null ? null : context.get(KEY);
   }
 
 }

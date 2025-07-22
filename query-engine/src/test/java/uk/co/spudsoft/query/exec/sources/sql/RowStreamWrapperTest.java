@@ -29,7 +29,9 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.DataRow;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -155,5 +157,37 @@ public class RowStreamWrapperTest {
     wrapper.close();
     verify(rowStream, times(1)).close();
   }
-  
+
+  @Test
+  void testRowStreamExceptionHandlerIsCalled() {
+    // Arrange
+    MetadataRowStreamImpl rowStream = mock(MetadataRowStreamImpl.class);
+
+    // Capture the exception handler set by RowStreamWrapper
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<Handler<Throwable>> exceptionHandlerCaptor = ArgumentCaptor.forClass(Handler.class);
+    when(rowStream.coloumnDescriptorHandler(any())).thenReturn(rowStream);
+    when(rowStream.exceptionHandler(exceptionHandlerCaptor.capture())).thenReturn(rowStream);
+    when(rowStream.handler(any())).thenReturn(rowStream);
+    when(rowStream.pause()).thenReturn(rowStream);
+
+    // Provide a dummy SourceNameTracker (lambda, as allowed in the constructor)
+    RowStreamWrapper wrapper = new RowStreamWrapper(() -> {
+    }, null, null, rowStream, null);
+
+    // Register an exception handler with the wrapper
+    AtomicBoolean customExceptionHandlerCalled = new AtomicBoolean(false);
+    wrapper.exceptionHandler(t -> customExceptionHandlerCalled.set(true));
+
+    // Act: fire an exception through rowStream's exception handler (the lambda from the wrapper's constructor)
+    Handler<Throwable> handlerSetByWrapper = exceptionHandlerCaptor.getValue();
+    assertNotNull(handlerSetByWrapper);
+
+    Throwable testException = new RuntimeException("Test exception");
+    handlerSetByWrapper.handle(testException);
+
+    // Assert: our handler should be called
+    assertTrue(customExceptionHandlerCalled.get(), "Exception handler should have been called");
+  }
+
 }

@@ -91,7 +91,7 @@ public class AllFiltersIT {
       , "--httpServerOptions.tracingPolicy=ALWAYS"
       , "--pipelineCache.maxDuration=PT10M"
       , "--logging.jsonFormat=false"
-      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec\\\\.sources=TRACE"
+      // , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec\\\\.sources=TRACE"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--sampleDataLoads[0].url=" + postgres.getVertxUrl()

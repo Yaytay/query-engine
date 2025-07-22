@@ -84,7 +84,6 @@ public class SourceJdbcInstance extends AbstractSource {
   @Override
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
 
-
     RequestContext requestContext = RequestContextHandler.getRequestContext(vertx.getOrCreateContext());
     this.addNameToContextLocalData();
     

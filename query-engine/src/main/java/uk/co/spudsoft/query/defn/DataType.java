@@ -18,7 +18,6 @@ package uk.co.spudsoft.query.defn;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.sql.JDBCType;
-import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
