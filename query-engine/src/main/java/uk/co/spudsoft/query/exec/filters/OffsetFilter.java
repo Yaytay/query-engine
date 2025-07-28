@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.filters;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import org.slf4j.Logger;
@@ -48,7 +49,7 @@ public class OffsetFilter implements Filter {
   }
 
   @Override
-  public ProcessorInstance createProcessor(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String argument, String name) throws IllegalArgumentException {
+  public ProcessorInstance createProcessor(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, String argument, String name) throws IllegalArgumentException {
     int value;
     try {
       value = Integer.parseInt(argument);
@@ -57,7 +58,7 @@ public class OffsetFilter implements Filter {
       throw new IllegalArgumentException("Invalid argument to _offset filter, should be an integer");
     }
     ProcessorOffset definition = ProcessorOffset.builder().offset(value).build();
-    return definition.createInstance(vertx, sourceNameTracker, context, name);
+    return definition.createInstance(vertx, sourceNameTracker, context, meterRegistry, name);
   }
   
 }

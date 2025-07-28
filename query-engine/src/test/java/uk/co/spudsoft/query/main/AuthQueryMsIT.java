@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -133,6 +134,7 @@ public class AuthQueryMsIT {
       , "--session.oauth.Test.credentials.id=bdab017f4732085a51f9"
       , "--session.oauth.Test.credentials.secret=" + System.getProperty("queryEngineGithubSecret")
       , "--session.oauth.Test.pkce=false"
+      , "--securityHeaders.referrerPolicy=strict-origin-when-cross-origin"
     }, stdout, System.getenv());
     
     RestAssured.port = main.getPort();
@@ -143,6 +145,8 @@ public class AuthQueryMsIT {
             .then()
             .log().ifError()
             .statusCode(200)
+            .header("X-Frame-Options", equalTo("DENY"))
+            .header("Referrer-Policy", equalTo("strict-origin-when-cross-origin"))
             .extract().body().asString();
     
     assertThat(body, startsWith("openapi: 3.1.0"));

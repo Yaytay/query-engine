@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.exec;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import java.util.List;
@@ -62,16 +63,17 @@ public class FilterFactory {
    * @param vertx the Vert.x instance.
    * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
    * @param context the Vert.x context.
+   * @param meterRegistry MeterRegistry for production of metrics.
    * @param arg the query string parameter name (the key for the filter).
    * @param value the value of the query string parameter, that must be parsed into the configuration for this {@link ProcessorInstance}.
    * @param name the generated name of the processor to be used in logging and tracking
    * @return a newly created {@link ProcessorInstance} of the appropriate type.
    */
-  public ProcessorInstance createFilter(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String arg, String value, String name) {
+  public ProcessorInstance createFilter(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, String arg, String value, String name) {
     Filter filter = filters.get(arg);
     if (filter != null) {
       logger.debug("Creating processor from {}={}", arg, value);
-      return filter.createProcessor(vertx, sourceNameTracker, context, value, name);
+      return filter.createProcessor(vertx, sourceNameTracker, context, meterRegistry, value, name);
     } else {
       return null;
     }

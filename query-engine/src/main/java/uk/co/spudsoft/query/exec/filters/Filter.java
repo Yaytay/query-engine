@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.filters;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
@@ -45,10 +46,11 @@ public interface Filter {
    * @param vertx the Vert.x instance.
    * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
    * @param context the Vert.x context.
+   * @param meterRegistry MeterRegistry for production of metrics.
    * @param argument the value of the query string parameter, that must be parsed into the configuration for this {@link ProcessorInstance}.
    * @param name the generated name of the processor to be used in logging and tracking.
    * @return a newly created {@link ProcessorInstance} of the appropriate type.
    */
-  ProcessorInstance createProcessor(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String argument, String name);
+  ProcessorInstance createProcessor(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, String argument, String name);
   
 }

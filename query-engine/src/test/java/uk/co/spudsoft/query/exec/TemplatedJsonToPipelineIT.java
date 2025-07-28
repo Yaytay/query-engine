@@ -70,7 +70,7 @@ public class TemplatedJsonToPipelineIT {
     CacheConfig cacheConfig = new CacheConfig();
     cacheConfig.setMaxDuration(Duration.ZERO);
     PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*"), null));
-    PipelineExecutorImpl executor = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
+    PipelineExecutorImpl executor = new PipelineExecutorImpl(meterRegistry, new FilterFactory(Collections.emptyList()), null);
 
     MultiMap params = MultiMap.caseInsensitiveMultiMap();
 
@@ -106,7 +106,7 @@ public class TemplatedJsonToPipelineIT {
             .compose(pipeline -> {
               Format chosenFormat = executor.getFormat(pipeline.getFormats(), null);
               FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), new ListingWriteStream<>(new ArrayList<>()));
-              SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), executor, "source");
+              SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), meterRegistry, executor, "source");
               PipelineInstance instance = new PipelineInstance(
                       executor.prepareArguments(req, pipeline.getArguments(), params)
                       , pipeline.getSourceEndpointsMap()

@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
@@ -51,8 +52,8 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 public final class SourceSql implements Source {
 
   @Override
-  public SourceInstance createInstance(Vertx vertx, Context context, SharedMap sharedMap, String defaultName) {
-    return new SourceSqlStreamingInstance(vertx, context, sharedMap, this, defaultName);
+  public SourceInstance createInstance(Vertx vertx, Context context, MeterRegistry meterRegistry, SharedMap sharedMap, String defaultName) {
+    return new SourceSqlStreamingInstance(vertx, context, meterRegistry, sharedMap, this, defaultName);
   }
 
   /**

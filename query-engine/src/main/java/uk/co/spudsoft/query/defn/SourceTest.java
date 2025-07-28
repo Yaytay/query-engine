@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.defn;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.Strings;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
@@ -118,7 +119,7 @@ public class SourceTest implements Source {
   }
   
   @Override
-  public SourceTestInstance createInstance(Vertx vertx, Context context, SharedMap sharedMap, String defaultName) {
+  public SourceTestInstance createInstance(Vertx vertx, Context context, MeterRegistry meterRegistry, SharedMap sharedMap, String defaultName) {
     return new SourceTestInstance(context, this, defaultName);
   }
   

@@ -45,6 +45,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -320,7 +321,7 @@ public class LoginRouterWithDiscoveryIT {
             .then()
             .log().all()
             .statusCode(307)
-            .header("Location", startsWith("http://fred?access_token="))
+            .header("Location", equalTo("http://fred"))
             .extract().cookies();
     logger.debug("Cookies: {}", cookies);
     assertTrue(cookies.containsKey("qe-session"));
@@ -337,6 +338,30 @@ public class LoginRouterWithDiscoveryIT {
             .log().ifError()
             .statusCode(200)
             .extract().body().asString();
+
+    body = given()
+            .cookies(cookies)
+            .log().all()
+            .get("/api/history")
+            .then()
+            .log().ifError()
+            .statusCode(200)
+            .extract().body().asString();
+    logger.info("History: {}", body);
+
+    body = given()
+            .cookies(cookies)
+            .queryParam("key", postgres.getName())
+            .queryParam("port", postgres.getPort())
+            .queryParam("_runid", UUID.randomUUID().toString())
+            .accept("text/html, application/xhtml+xml, image/webp, image/apng, application/xml; q=0.9, application/signed-exchange; v=b3; q=0.9, */*; q=0.8")
+            .log().all()
+            .get("/query/sub1/sub2/TemplatedJsonToPipelineIT")
+            .then()
+            .log().ifError()
+            .statusCode(200)
+            .extract().body().asString();
+    assertThat(body, startsWith("[{\"dataId\":1,\"instant\":\"1971-05-07T03:00\",\"ref\":\"antiquewhite\",\"value\":\"first\",\"children\":\"one\",\"DateField\":\"2023-05-05\",\"TimeField\":null,\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null},{\"dataId\":2,\"instant\":\"1971-05-08T06:00\",\"ref\":\"aqua\",\"value\":\"second\",\"children\":\"two,four\",\"DateField\":\"2023-05-04\",\"TimeField\":\"23:58\",\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null},"));
 
     body = given()
             .cookies(cookies)

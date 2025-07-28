@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.filters;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import java.util.ArrayList;
@@ -46,7 +47,7 @@ public class WithoutFilter implements Filter {
   }
 
   @Override
-  public ProcessorInstance createProcessor(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String argument, String name) {
+  public ProcessorInstance createProcessor(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, String argument, String name) {
     List<ProcessorMapLabel> relabels = new ArrayList<>();
     
     String sourceLabel = argument;
@@ -54,7 +55,7 @@ public class WithoutFilter implements Filter {
     relabels.add(ProcessorMapLabel.builder().sourceLabel(sourceLabel).newLabel(newLabel).build());
 
     ProcessorMap definition = ProcessorMap.builder().relabels(relabels).build();
-    return definition.createInstance(vertx, sourceNameTracker, context, name);
+    return definition.createInstance(vertx, sourceNameTracker, context, meterRegistry, name);
   }
   
 }

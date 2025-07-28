@@ -19,6 +19,8 @@ package uk.co.spudsoft.query.exec;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.net.MediaType;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
@@ -59,19 +61,23 @@ public class PipelineExecutorImpl implements PipelineExecutor {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(PipelineExecutorImpl.class);
 
+  private final MeterRegistry meterRegistry;
   private final FilterFactory filterFactory;
   private final Map<String, ProtectedCredentials> secrets;
   private final Map<String, Object> sharedMap;
 
   /**
    * Constructor.
+   * @param meterRegistry MeterRegistry for production of metrics.
    * @param filterFactory The {@link FilterFactory} for creating {@link ProcessorInstance} objects from command line arguments.
    * @param secrets The preconfigured secrets that can be used by pipelines.
    */
-  public PipelineExecutorImpl(FilterFactory filterFactory, Map<String, ProtectedCredentials> secrets) {
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "MeterRegistry is designed to be modified")
+  public PipelineExecutorImpl(MeterRegistry meterRegistry, FilterFactory filterFactory, Map<String, ProtectedCredentials> secrets) {
+    this.meterRegistry = meterRegistry;
     this.filterFactory = filterFactory;
     this.secrets = ImmutableCollectionTools.copy(secrets);
-    this.sharedMap = new HashMap<>();
+    this.sharedMap = new HashMap<>();    
   }
 
   @Override
@@ -132,14 +138,14 @@ public class PipelineExecutorImpl implements PipelineExecutor {
       if (condition == null) {
         String name = processorName(processor.getName(), parentName, "P", index++, processor);
         logger.debug("Added {} processor named {} with no condition", processor.getType(), name);
-        result.add(processor.createInstance(vertx, sourceNameTracker, context, name));
+        result.add(processor.createInstance(vertx, sourceNameTracker, context, meterRegistry, name));
       } else {
         ConditionInstance cond = new ConditionInstance(condition.getExpression());
         RequestContext requestContext = RequestContextHandler.getRequestContext(context);
         if (cond.evaluate(requestContext, null)) {
           String name = processorName(processor.getName(), parentName, "P", index++, processor);
           logger.debug("Added {} processor named {} because condition {} met", processor.getType(), name, cond);
-          result.add(processor.createInstance(vertx, sourceNameTracker, context, name));
+          result.add(processor.createInstance(vertx, sourceNameTracker, context, meterRegistry, name));
         } else {
           logger.debug("Skipped {} processor {} because condition {} not met", processor.getType(), processor.getName(), cond);
         }
@@ -148,7 +154,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     if (params != null) {
       index = 0;
       for (Entry<String, String> entry : params.entries()) {
-        ProcessorInstance processor = filterFactory.createFilter(vertx, sourceNameTracker, context, entry.getKey(), entry.getValue(), processorName(null, parentName, "F", index++, entry.getKey()));
+        ProcessorInstance processor = filterFactory.createFilter(vertx, sourceNameTracker, context, meterRegistry, entry.getKey(), entry.getValue(), processorName(null, parentName, "F", index++, entry.getKey()));
         if (processor != null) {          
           result.add(processor);
         }
@@ -163,7 +169,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     List<PreProcessorInstance> result = new ArrayList<>();
     int index = 0;
     for (DynamicEndpoint de : definition.getDynamicEndpoints()) {
-      result.add(de.createInstance(vertx, context, index++));
+      result.add(de.createInstance(vertx, context, meterRegistry, index++));
     }
     return result;
   }

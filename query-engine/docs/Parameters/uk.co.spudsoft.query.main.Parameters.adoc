@@ -245,8 +245,8 @@ The path must be valid (Query Engine will not start if it is not), but may be se
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Map.html[Map]<link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String], link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]>
 | The additional data that is made available via the request object.
 
-The uk.co.spudsoft.query.exec.conditions.RequestContext  is made available in both 
- uk.co.spudsoft.query.exec.conditions.ConditionInstance s and various templates 
+The uk.co.spudsoft.query.exec.conditions.RequestContext  is made available in both
+ uk.co.spudsoft.query.exec.conditions.ConditionInstance s and various templates
  (such as  and ).
  By default this context contains information specific to the request, and very little information about
  the service it is running in.
@@ -259,4 +259,17 @@ The entire requestContextEnvironment is also available (with no change)
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | Set the URL to redirect requests to / to.By default requests to / redirect to /openapi and display the OpenAPI docs.
  This is not much use in a path hijack situation, so allow for the provision of an alternative.
+| [[securityHeaders]]securityHeaders
+| uk.co.spudsoft.query.main.SecurityHeadersConfig
+| Set the security headers configuration.
+
+The following response headers can be configured:
+ 
+ * X-Frame-Options - Controls whether the page can be displayed in a frame</li> 
+ * Referrer-Policy - Controls how much referrer information should be included with requests</li> 
+ * Permissions-Policy - Controls which features and APIs can be used in the browser</li> 
+ 
+
+
+All of these values are optional, the default values are secure, but may be too restrictive in some environments.
 |===

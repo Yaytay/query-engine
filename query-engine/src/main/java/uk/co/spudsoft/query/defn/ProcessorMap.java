@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
@@ -45,7 +46,7 @@ public class ProcessorMap implements Processor {
   private final ImmutableList<ProcessorMapLabel> relabels;
 
   @Override
-  public ProcessorMapInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String name) {
+  public ProcessorMapInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, String name) {
     return new ProcessorMapInstance(vertx, sourceNameTracker, context, this, name);
   }
 

@@ -65,7 +65,7 @@ class SourceJdbcTest {
             .type(SourceType.JDBC)
             .build();
 
-    SourceJdbcInstance inst = (SourceJdbcInstance) src.createInstance(vertx, ctx, sharedMap, "defaultName");
+    SourceJdbcInstance inst = (SourceJdbcInstance) src.createInstance(vertx, ctx, null, sharedMap, "defaultName");
     assertNotNull(inst);
     assertEquals("SourceX", inst.getName());
   }
@@ -82,7 +82,7 @@ class SourceJdbcTest {
             .type(SourceType.JDBC)
             .build();
 
-    SourceJdbcInstance inst = (SourceJdbcInstance) src.createInstance(vertx, ctx, sharedMap, "Dflt");
+    SourceJdbcInstance inst = (SourceJdbcInstance) src.createInstance(vertx, ctx, null, sharedMap, "Dflt");
     assertNotNull(inst);
     assertEquals("Dflt", inst.getName());
   }

@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.DiscriminatorMapping;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
@@ -57,12 +58,13 @@ public interface Source {
    * Create a new {@link SourceInstance} specialized for this Source instance.
    * @param vertx The Vert.x instance.
    * @param context The Vert.x context.
+   * @param meterRegistry MeterRegistry for production of metrics.
    * @param sharedMap Pooling map.
    * @param defaultName The name to use for the SourceInstance if no other name is provided in the definition.
    * @return A newly created instance of an implementation of {@link SourceInstance}.
    */
   @JsonIgnore
-  SourceInstance createInstance(Vertx vertx, Context context, SharedMap sharedMap, String defaultName);
+  SourceInstance createInstance(Vertx vertx, Context context, MeterRegistry meterRegistry, SharedMap sharedMap, String defaultName);
   
   /**
    * The type of Source being configured.

@@ -20,6 +20,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
@@ -32,7 +34,11 @@ import io.vertx.core.net.HostAndPort;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -73,6 +79,13 @@ public class RequestContextBuilder {
   private final ImmutableList<String> audList;
   private final String sessionCookieName;
   private final ImmutableMap<String, String> requestContextEnvironment;
+  
+  private record TimestampedToken(LocalDateTime expiry, String token){};
+  
+  private final MeterRegistry meterRegistry;
+  
+  private final Map<String, TimestampedToken> credentialsCache = new HashMap<>();
+
 
   /**
    * Constructor.
@@ -86,6 +99,7 @@ public class RequestContextBuilder {
    * @param discoverer The Open ID Discovery handler that will be used for locating the auth URL for the host. This does not have
    * to be the same discoverer as used by the validator, but it will be more efficient if it is (shared cache).
    * @param loginDao DAO for accessing tokens from cookies.
+   * @param meterRegistry MeterRegistry for production of metrics.
    * @param basicAuthConfig Configuration of the handling of Basic Auth credentials in requests.
    * @param enableBearerAuth When set to false no bearer authentication will be permitted.
    * @param openIdIntrospectionHeaderName The name of the header that will contain the payload from a token as Json (that may be
@@ -104,6 +118,7 @@ public class RequestContextBuilder {
            JwtValidator validator,
            OpenIdDiscoveryHandler discoverer,
            LoginDao loginDao,
+           MeterRegistry meterRegistry,
            BasicAuthConfig basicAuthConfig,
            boolean enableBearerAuth,
            String openIdIntrospectionHeaderName,
@@ -117,6 +132,7 @@ public class RequestContextBuilder {
     this.validator = validator;
     this.discoverer = discoverer;
     this.loginDao = loginDao;
+    this.meterRegistry = meterRegistry;
     this.basicAuthConfig = basicAuthConfig;
     this.enableBearerAuth = enableBearerAuth;
     this.openIdIntrospectionHeaderName = openIdIntrospectionHeaderName;
@@ -125,6 +141,18 @@ public class RequestContextBuilder {
     this.audList = ImmutableCollectionTools.copy(requiredAuds);
     this.sessionCookieName = sessionCookie;
     this.requestContextEnvironment = ImmutableCollectionTools.copy(requestContextEnvironment);
+    
+    if (meterRegistry != null) {
+      meterRegistry.gauge("queryengine.cache.size"
+              , Arrays.asList(
+                      Tag.of("cachename", "credentials")
+              )
+              , credentialsCache, cache -> {
+        synchronized (cache) {
+          return cache.size();
+        }
+      });
+    }
   }
 
   static String ensureNonBlankStartsWith(String path, String start) {
@@ -240,6 +268,36 @@ public class RequestContextBuilder {
     }
   }
 
+  private String getCachedToken(String credentials) {
+    synchronized (credentialsCache) {
+      TimestampedToken timestampedToken = credentialsCache.get(credentials);
+      if (timestampedToken == null) {
+        return null;
+      } else {
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+        if (timestampedToken.expiry.isAfter(now)) {
+          return timestampedToken.token;
+        } else {
+          // Remove all other expired tokens now
+          credentialsCache.entrySet().removeIf(entry -> entry.getValue().expiry.isBefore(now));
+          return null;
+        }
+      }
+    }
+  }
+  
+  private void cacheToken(String credentials, LocalDateTime expiration, String token) {
+    if (expiration != null) {
+      LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+      // Only cache tokens that are going to last for at least another minute
+      if (expiration.isAfter(now.plusMinutes(1))) {
+        synchronized (token) {
+          credentialsCache.put(credentials, new TimestampedToken(expiration, token));
+        }
+      }
+    }
+  }
+  
   /**
    * Validate a JWT using the configured rules.
    *
@@ -272,52 +330,61 @@ public class RequestContextBuilder {
         return Future.failedFuture(new ServiceException(401, "Forbidden"));
       }
 
-      String credentials = authHeader.substring(BASIC.length());
+      String encodedCredentials = authHeader.substring(BASIC.length());
+      String decodedCredentials;
       try {
-        credentials = new String(Base64.getDecoder().decode(credentials), StandardCharsets.UTF_8);
+        decodedCredentials = new String(Base64.getDecoder().decode(encodedCredentials), StandardCharsets.UTF_8);
       } catch (Throwable ex) {
         logger.warn("Failed to decode credentials using base64, will try again with base64url: ", ex);
-        credentials = new String(Base64.getUrlDecoder().decode(credentials), StandardCharsets.UTF_8);
+        decodedCredentials = new String(Base64.getUrlDecoder().decode(encodedCredentials), StandardCharsets.UTF_8);
       }
-      int colon = credentials.indexOf(":");
-      String username = credentials.substring(0, colon);
-      String password = credentials.substring(colon + 1);
-      int at = username.indexOf("@");
-      String domain = null;
-      String usernameWithoutDomain = username;
-      if (at > 0) {
-        domain = username.substring(at + 1);
-        usernameWithoutDomain = username.substring(0, at);
-      }
-      request.pause();
+      
+      int colon = decodedCredentials.indexOf(":");
+      String username = decodedCredentials.substring(0, colon);
+      String password = decodedCredentials.substring(colon + 1);
 
       Future<String> tokenFuture = null;
-      if (basicAuthConfig.getIdpMap() == null || basicAuthConfig.getIdpMap().isEmpty()) {
-        if (basicAuthConfig.getDefaultIdp() == null && Strings.isNullOrEmpty(basicAuthConfig.getAuthorizationPath())) {
-          tokenFuture = discoverer.performOpenIdDiscovery(baseRequestUrl(request))
-                  .compose(dd -> {
-                    if (basicAuthConfig.getGrantType() == BasicAuthGrantType.clientCredentials) {
-                      return performClientCredentialsGrant(dd.getTokenEndpoint(), username, password);
-                    } else {
-                      Endpoint endpoint = new Endpoint();
-                      endpoint.setUrl(dd.getAuthorizationEndpoint());
-                      endpoint.setCredentials(basicAuthConfig.getDiscoveryEndpointCredentials());
-                      return performResourceOwnerPasswordCredentials(endpoint, username, password);
-                    }
-                  });
+
+      String cachedToken = getCachedToken(encodedCredentials);
+      if (cachedToken != null) {
+        tokenFuture = Future.succeededFuture(cachedToken);
+      } else {
+        int at = username.indexOf("@");
+        String domain = null;
+        String usernameWithoutDomain = username;
+        if (at > 0) {
+          domain = username.substring(at + 1);
+          usernameWithoutDomain = username.substring(0, at);
         }
-      }
-      if (tokenFuture == null) {
-        Endpoint authEndpoint;
-        try {
-          authEndpoint = findAuthEndpoint(basicAuthConfig, domain, baseRequestUrl(request), basicAuthConfig.getGrantType() == BasicAuthGrantType.resourceOwnerPasswordCredentials);
-        } catch (Throwable ex) {
-          return Future.failedFuture(ex);
+        request.pause();
+
+        if (basicAuthConfig.getIdpMap() == null || basicAuthConfig.getIdpMap().isEmpty()) {
+          if (basicAuthConfig.getDefaultIdp() == null && Strings.isNullOrEmpty(basicAuthConfig.getAuthorizationPath())) {
+            tokenFuture = discoverer.performOpenIdDiscovery(baseRequestUrl(request))
+                    .compose(dd -> {
+                      if (basicAuthConfig.getGrantType() == BasicAuthGrantType.clientCredentials) {
+                        return performClientCredentialsGrant(dd.getTokenEndpoint(), username, password);
+                      } else {
+                        Endpoint endpoint = new Endpoint();
+                        endpoint.setUrl(dd.getAuthorizationEndpoint());
+                        endpoint.setCredentials(basicAuthConfig.getDiscoveryEndpointCredentials());
+                        return performResourceOwnerPasswordCredentials(endpoint, username, password);
+                      }
+                    });
+          }
         }
-        if (basicAuthConfig.getGrantType() == BasicAuthGrantType.clientCredentials) {
-          tokenFuture = performClientCredentialsGrant(authEndpoint.getUrl(), usernameWithoutDomain, password);
-        } else {
-          tokenFuture = performResourceOwnerPasswordCredentials(authEndpoint, usernameWithoutDomain, password);
+        if (tokenFuture == null) {
+          Endpoint authEndpoint;
+          try {
+            authEndpoint = findAuthEndpoint(basicAuthConfig, domain, baseRequestUrl(request), basicAuthConfig.getGrantType() == BasicAuthGrantType.resourceOwnerPasswordCredentials);
+          } catch (Throwable ex) {
+            return Future.failedFuture(ex);
+          }
+          if (basicAuthConfig.getGrantType() == BasicAuthGrantType.clientCredentials) {
+            tokenFuture = performClientCredentialsGrant(authEndpoint.getUrl(), usernameWithoutDomain, password);
+          } else {
+            tokenFuture = performResourceOwnerPasswordCredentials(authEndpoint, usernameWithoutDomain, password);
+          }
         }
       }
 
@@ -325,7 +392,10 @@ public class RequestContextBuilder {
               .compose(token -> {
                 logger.debug("Login for {} got token: {}", username, token);
                 request.resume();
-                return validateToken(request, token);
+                return validateToken(request, token)
+                        .onSuccess(jwt -> {
+                          cacheToken(encodedCredentials, jwt.getExpirationLocalDateTime(), token);
+                        });
               })
               .onFailure(ex -> {
                 request.resume();

@@ -16,9 +16,7 @@
  */
 package uk.co.spudsoft.query.web;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
-import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import java.io.File;
 import org.junit.jupiter.api.BeforeAll;
@@ -103,7 +101,9 @@ public class UiRouterIT {
             .log().all()
             .statusCode(200)
             .contentType(ContentType.HTML)
+            .header("X-Frame-Options", "SAMEORIGIN")
             .extract().body().asString()
+            
             ;
         
     String index2 = given()

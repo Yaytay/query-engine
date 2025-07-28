@@ -88,7 +88,7 @@ public class RequestContextBuilderBasicAuthClientCredentialsTest {
   public void testBuildRequestContext(Vertx vertx, VertxTestContext testContext) throws Exception {
     BasicAuthConfig authConfig = new BasicAuthConfig();
     authConfig.setGrantType(BasicAuthGrantType.clientCredentials);
-    RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx), validator, discoverer, new LoginDaoMemoryImpl(Duration.ZERO), authConfig, true, null, true, null, Collections.singletonList("aud"), null, null);
+    RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx), validator, discoverer, new LoginDaoMemoryImpl(Duration.ZERO), null, authConfig, true, null, true, null, Collections.singletonList("aud"), null, null);
 
     destServer = vertx.createHttpServer();
     Router router = Router.router(vertx);
@@ -139,9 +139,9 @@ public class RequestContextBuilderBasicAuthClientCredentialsTest {
       MultiMap form = ctx.request().formAttributes();
       if ("client_credentials".equals(form.get("grant_type")) && "username".equals(form.get("client_id")) && "password".equals(form.get("client_secret"))) {
         JsonObject result = new JsonObject();
-        long now = System.currentTimeMillis() / 1000;
+        long nowSeconds = System.currentTimeMillis() / 1000;
         try {
-          String token = tokenBuilder.buildToken(JsonWebAlgorithm.RS256, "kid", ctx.request().scheme() + "://" + ctx.request().authority().toString(), "username", Arrays.asList("aud"), now - 1, now + 60, null);
+          String token = tokenBuilder.buildToken(JsonWebAlgorithm.RS256, "kid", ctx.request().scheme() + "://" + ctx.request().authority().toString(), "username", Arrays.asList("aud"), nowSeconds - 1, nowSeconds + 100, null);
           result.put("access_token", token);
         } catch (Throwable ex) {
           HttpServerResponse response = ctx.response();
@@ -183,6 +183,27 @@ public class RequestContextBuilderBasicAuthClientCredentialsTest {
               destPort = srv.actualPort();
             })
             .compose(srv -> {
+              String url = "http://localhost:" + destPort + "/dest";
+              logger.debug("Making request to {}", url);
+              return webClient.getAbs(url)
+                      .putHeader("Authorization", "Basic dXNlcm5hbWU6cGFzc3dvcmQ")
+                      .as(BodyCodec.string())
+                      .send();
+            })
+            .compose(response -> {
+              if (response.statusCode() == 200) {
+                testContext.verify(() -> {
+                  assertEquals("Hello username", response.body());
+                });
+                testContext.completeNow();
+              } else {
+                logger.error("Failed with {}: {}", response.statusCode(), response.bodyAsString());
+                testContext.failNow("Failed with " + response.statusCode());
+              }
+              return Future.succeededFuture();
+            })
+            .compose(srv -> {
+              // Repeat request to get auth form cache
               String url = "http://localhost:" + destPort + "/dest";
               logger.debug("Making request to {}", url);
               return webClient.getAbs(url)

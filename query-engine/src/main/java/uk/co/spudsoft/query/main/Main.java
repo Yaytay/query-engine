@@ -136,6 +136,7 @@ import uk.co.spudsoft.query.web.LoginDaoPersistenceImpl;
 import uk.co.spudsoft.query.web.RequestContextHandler;
 import uk.co.spudsoft.query.web.LoginRouter;
 import uk.co.spudsoft.query.web.QueryRouter;
+import uk.co.spudsoft.query.web.SecurityHeadersRouter;
 import uk.co.spudsoft.query.web.UiRouter;
 import uk.co.spudsoft.query.web.rest.AuthConfigHandler;
 import uk.co.spudsoft.query.web.rest.DocHandler;
@@ -183,9 +184,9 @@ public class Main extends Application {
   private static final Object OPEN_TELEMETRY_LOCK = new Object();
 
   private volatile int port;
-  
+
   private JdbcHelper jdbcHelper;
-  
+
 
   /**
    * Constructor.
@@ -307,7 +308,7 @@ public class Main extends Application {
       localVertx.close();
     }
   }
-  
+
   /**
    * Method to allow test code to call main with no risk of System.exit being called.
    * @param args Command line arguments.
@@ -470,7 +471,7 @@ public class Main extends Application {
 
     vertx = vertxBuilder.build();
     meterRegistry = (PrometheusMeterRegistry) BackendRegistries.getDefaultNow();
-    
+
     LoginDao loginDao;
     if (params.getPersistence().getDataSource() != null
             && !Strings.isNullOrEmpty(params.getPersistence().getDataSource().getUrl())) {
@@ -532,8 +533,25 @@ public class Main extends Application {
 
     Router router = Router.router(vertx);
     Router mgmtRouter = Router.router(vertx);
-    
+
     router.route().handler(new LoggingRouter());
+    List<String> logoUrls = new ArrayList<>();
+    if (params.getSession() != null && params.getSession().getOauth() != null) {
+      logoUrls = params.getSession().getOauth().values().stream().map(o -> o.getLogoUrl()).toList();
+    }
+    List<String> inlineStyleHashes = Arrays.asList(
+            "'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='"
+            , "'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='"
+    );
+    List<String> contentEndpoints = 
+            Strings.isNullOrEmpty(params.getManagementEndpointUrl()) ? null : Arrays.asList(params.getManagementEndpointUrl());
+    SecurityHeadersConfig secHdrs = params.getSecurityHeaders();
+    if (secHdrs == null) {
+      router.route().handler(new SecurityHeadersRouter(logoUrls, inlineStyleHashes, contentEndpoints, null, null, null));
+    } else {
+      router.route().handler(new SecurityHeadersRouter(logoUrls, inlineStyleHashes, contentEndpoints
+              , secHdrs.getXFrameOptions(), secHdrs.getReferrerPolicy(), secHdrs.getPermissionsPolicy()));
+    }
 
     ManagementRoute.deployStandardMgmtEndpoints(mgmtRouter, router, params.getManagementEndpoints(), new AtomicReference<>(params));
     if (ManagementRoute.mgmtEndpointPermitted(params.getManagementEndpoints(), "up")) {
@@ -593,9 +611,9 @@ public class Main extends Application {
     OpenApiHandler openApiHandler = new OpenApiHandler(this, openApiConfig, "/api", params.getOpenApiExplorerUrl());
     ModelConverters.getInstance(true).addConverter(new OpenApiModelConverter());
 
-    PipelineExecutor pipelineExecutor = new PipelineExecutorImpl(filterFactory, params.getSecrets());
+    PipelineExecutor pipelineExecutor = new PipelineExecutorImpl(meterRegistry, filterFactory, params.getSecrets());
     vertx.fileSystem().mkdirs(params.getOutputCacheDir());
-    router.route(QueryRouter.PATH_ROOT + "/*").handler(new QueryRouter(vertx, auditor, rcb, defnLoader, pipelineExecutor, params.getOutputCacheDir(), outputAllErrorMessages()));
+    router.route(QueryRouter.PATH_ROOT + "/*").handler(new QueryRouter(vertx, meterRegistry, auditor, rcb, defnLoader, pipelineExecutor, params.getOutputCacheDir(), outputAllErrorMessages()));
 
     ManagementRoute.createAndDeploy(vertx
             , router, params.getHttpServerOptions()
@@ -611,7 +629,7 @@ public class Main extends Application {
     RequestContextHandler rch = new RequestContextHandler(vertx, rcb, outputAllErrorMessages());
     router.route("/api/*").handler(rch);
     router.route("/api/*").handler(new JaxRsHandler(vertx, meterRegistry, "/api", controllers, providers));
-    router.route("/ui/*").handler(UiRouter.create(vertx, "/ui", "/www", "/www/index.html"));
+    router.route("/ui/*").handler(UiRouter.create(vertx, meterRegistry, "/ui", "/www", "/www/index.html"));
     router.getWithRegex("/openapi\\..*").blockingHandler(openApiHandler);
     router.get("/openapi").handler(openApiHandler.getUiHandler());
     if (!params.getSession().getOauth().isEmpty()) {
@@ -713,7 +731,7 @@ public class Main extends Application {
         tempDir = System.getProperty("java.io.tmpdir");
       }
       String basePath = (tempDir.endsWith("/") ? tempDir + "database-locks" : tempDir + File.separator + "database-locks");
-      
+
       if (Strings.isNullOrEmpty(url)) {
         logger.warn("No URL configured for sample data loader {}", source);
         return performSampleDataLoads(basePath, iter);
@@ -900,6 +918,7 @@ public class Main extends Application {
             , jwtValidator
             , openIdDiscoveryHandler
             , loginDao
+            , meterRegistry
             , params.getBasicAuth()
             , params.isEnableBearerAuth()
             , params.getOpenIdIntrospectionHeaderName()

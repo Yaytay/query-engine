@@ -108,6 +108,7 @@ public class AllFiltersIT {
       , "--secrets.AllFiltersProtectedCredentials.password=" + mysql.getPassword()
       , "--secrets.AllFiltersProtectedCredentials.condition=true"
       , "--outputCacheDir=target/temp/" + this.getClass().getSimpleName() + "/cache"
+      , "--securityHeaders.xFrameOptions=SAMEORIGIN"
     }, stdout, System.getenv());
     
     RestAssured.port = main.getPort();
@@ -119,6 +120,8 @@ public class AllFiltersIT {
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
             .then()
             .header("Content-Disposition", equalTo("attachment; filename=\"dynamism.txt\""))
+            .header("X-Frame-Options", equalTo("SAMEORIGIN"))
+            .header("Referrer-Policy", "same-origin")
             .log().all()
             .statusCode(200)
             .extract().body().asString();

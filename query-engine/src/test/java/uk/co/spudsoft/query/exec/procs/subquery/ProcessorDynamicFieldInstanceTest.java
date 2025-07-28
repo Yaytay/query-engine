@@ -43,7 +43,7 @@ public class ProcessorDynamicFieldInstanceTest {
   @Test
   public void testGetId() {
     ProcessorDynamicField defn = ProcessorDynamicField.builder().name("id").build();
-    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstance(null, null, null, defn, "P0-DynamicField");
+    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstance(null, null, null, null, defn, "P0-DynamicField");
     assertEquals("P0-DynamicField", instance.getName());
   }
 
@@ -53,7 +53,7 @@ public class ProcessorDynamicFieldInstanceTest {
             .useCaseInsensitiveFieldNames(false)
             .valuesFieldIdColumn("fieldId")
             .build();
-    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstance(null, null, null, defn, "P0-DynamicField",
+    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstance(null, null, null, null, defn, "P0-DynamicField",
              Arrays.asList(
                     new FieldDefn(0, "field", "field", DataType.String, "stringValue"),
                      new FieldDefn(1, "Field", "Field", DataType.String, "stringValue")
@@ -91,7 +91,7 @@ public class ProcessorDynamicFieldInstanceTest {
             .useCaseInsensitiveFieldNames(true)
             .valuesFieldIdColumn("fieldId")
             .build();
-    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstance(null, null, null, defn, "P0-DynamicField",
+    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstance(null, null, null, null, defn, "P0-DynamicField",
              Arrays.asList(
                     new FieldDefn(0, "field", "field", DataType.String, "stringValue"),
                      new FieldDefn(1, "field", "Field", DataType.String, "stringValue")
@@ -128,7 +128,7 @@ public class ProcessorDynamicFieldInstanceTest {
             .useCaseInsensitiveFieldNames(true)
             .valuesFieldIdColumn("fieldId")
             .build();
-    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstance(null, null, null, defn, "P0-DynamicField",
+    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstance(null, null, null, null, defn, "P0-DynamicField",
              Arrays.asList(
                     new FieldDefn(1, "field", "Field", DataType.String, "stringValue"),
                      new FieldDefn(0, "field", "field", DataType.String, "stringValue")
@@ -165,7 +165,7 @@ public class ProcessorDynamicFieldInstanceTest {
             .useCaseInsensitiveFieldNames(true)
             .valuesFieldIdColumn("fieldId")
             .build();
-    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstance(null, null, null, defn, "P0-DynamicField",
+    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstance(null, null, null, null, defn, "P0-DynamicField",
              Arrays.asList(
                     new FieldDefn(0, "field", "Field", DataType.String, "stringValue"),
                      new FieldDefn(1, "field", "field", DataType.String, "stringValue")
@@ -204,7 +204,7 @@ public class ProcessorDynamicFieldInstanceTest {
             .useCaseInsensitiveFieldNames(true)
             .valuesFieldIdColumn("fieldId")
             .build();
-    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstance(null, null, null, defn, "P0-DynamicField",
+    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstance(null, null, null, null, defn, "P0-DynamicField",
              Arrays.asList(
                     new FieldDefn(0, "field", "Field", DataType.String, "stringValue"),
                      new FieldDefn(1, "field", "field", DataType.String, "stringValue")

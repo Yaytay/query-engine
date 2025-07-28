@@ -82,7 +82,7 @@ public class PipelineExecutorImplTest {
             .source(SourceTest.builder().name("test").build())
             .formats(Arrays.asList(FormatDelimited.builder().build()))
             .build();
-    PipelineExecutorImpl instance = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
+    PipelineExecutorImpl instance = new PipelineExecutorImpl(null, new FilterFactory(Collections.emptyList()), null);
     instance.validatePipeline(definition).onComplete(testContext.succeedingThenComplete());
   }
 
@@ -97,7 +97,7 @@ public class PipelineExecutorImplTest {
                     )
             )
             .build();
-    PipelineExecutorImpl instance = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
+    PipelineExecutorImpl instance = new PipelineExecutorImpl(null, new FilterFactory(Collections.emptyList()), null);
     List<ProcessorInstance> results = instance.createProcessors(vertx, () -> {}, vertx.getOrCreateContext(), definition, null, null);
     assertThat(results, hasSize(2));
     assertEquals(1, ((ProcessorLimitInstance) results.get(0)).getLimit());
@@ -119,7 +119,7 @@ public class PipelineExecutorImplTest {
             , null
     );
     
-    PipelineExecutorImpl instance = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
+    PipelineExecutorImpl instance = new PipelineExecutorImpl(null, new FilterFactory(Collections.emptyList()), null);
     Map<String, ArgumentInstance> result = instance.prepareArguments(
             req
             , Arrays.asList(
@@ -167,7 +167,7 @@ public class PipelineExecutorImplTest {
                     )
             )
             .build();
-    PipelineExecutorImpl instance = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
+    PipelineExecutorImpl instance = new PipelineExecutorImpl(null, new FilterFactory(Collections.emptyList()), null);
     List<ProcessorInstance> processors = instance.createProcessors(vertx, () -> {}, vertx.getOrCreateContext(), definition, null, null);
     
     RequestContext req = new RequestContext(
@@ -196,7 +196,7 @@ public class PipelineExecutorImplTest {
             );
     
     SourceTest sourceDefn = SourceTest.builder().name("test").rowCount(7).build();
-    SourceInstance source = sourceDefn.createInstance(vertx, vertx.getOrCreateContext(), instance, "source");
+    SourceInstance source = sourceDefn.createInstance(vertx, vertx.getOrCreateContext(), null, instance, "source");
     FormatDelimited destDefn = FormatDelimited.builder().build();
     FormatInstance dest = destDefn.createInstance(vertx, vertx.getOrCreateContext(), new LoggingWriteStream<>(rows -> {}));
     
@@ -285,7 +285,7 @@ public class PipelineExecutorImplTest {
             , FormatXlsx.builder().build()
     );
     
-    PipelineExecutorImpl instance = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
+    PipelineExecutorImpl instance = new PipelineExecutorImpl(null, new FilterFactory(Collections.emptyList()), null);
     
     assertEquals(FormatType.JSON, instance.getFormat(formats, drBlank).getType());
     assertEquals(FormatType.XLSX, instance.getFormat(formats, drFormat).getType());
@@ -305,7 +305,7 @@ public class PipelineExecutorImplTest {
   public void testValidatePipeline() {
     Pipeline pipeline = Pipeline.builder().build();
 
-    PipelineExecutorImpl instance = new PipelineExecutorImpl(new FilterFactory(Collections.emptyList()), null);
+    PipelineExecutorImpl instance = new PipelineExecutorImpl(null, new FilterFactory(Collections.emptyList()), null);
     Future<Pipeline> future = instance.validatePipeline(pipeline);
     assertTrue(future.failed());
     assertThat(future.cause(), instanceOf(IllegalArgumentException.class));

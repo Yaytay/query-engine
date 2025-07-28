@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.exec.sources.jdbc;
 
 import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -71,10 +72,11 @@ public class SourceJdbcInstance extends AbstractSource {
    * Constructor.
    * @param vertx The Vert.x instance.
    * @param context The Vert.x context.
+   * @param meterRegistry MeterRegistry for production of metrics.
    * @param definition The {@link SourceSql} definition.
    * @param defaultName The name to use for the SourceInstance if no other name is provided in the definition.
    */
-  public SourceJdbcInstance(Vertx vertx, Context context, SourceJdbc definition, String defaultName) {
+  public SourceJdbcInstance(Vertx vertx, Context context, MeterRegistry meterRegistry, SourceJdbc definition, String defaultName) {
     super(Strings.isNullOrEmpty(definition.getName()) ? defaultName : definition.getName());
     this.vertx = vertx;
     this.context = context;

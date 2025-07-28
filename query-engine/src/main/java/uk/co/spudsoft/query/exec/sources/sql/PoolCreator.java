@@ -18,11 +18,15 @@ package uk.co.spudsoft.query.exec.sources.sql;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.binder.cache.GuavaCacheMetrics;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.SqlConnectOptions;
+import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
@@ -36,7 +40,14 @@ public class PoolCreator {
   
   private static final Logger logger = LoggerFactory.getLogger(PoolCreator.class);
   
-  private final Cache<JsonObject, Pool> poolCache = CacheBuilder.newBuilder()
+  private final Cache<JsonObject, Pool> poolCache;
+
+  /**
+   * Constructor.
+   * @param meterRegistry MeterRegistry for production of metrics.
+   */
+  public PoolCreator(MeterRegistry meterRegistry) {
+    poolCache = CacheBuilder.newBuilder()
           .recordStats()
           .expireAfterAccess(1, TimeUnit.MINUTES)
           .maximumSize(100)
@@ -46,11 +57,18 @@ public class PoolCreator {
             ((Pool) notification.getValue()).close();
           })
           .build();
-
-  /**
-   * Constructor.
-   */
-  public PoolCreator() {
+    if (meterRegistry != null) {
+      GuavaCacheMetrics.monitor(meterRegistry, poolCache, "pool");
+      meterRegistry.gauge("queryengine.cache.size"
+              , Arrays.asList(
+                      Tag.of("cachename", "pool")
+              )
+              , poolCache, cache -> {
+        synchronized (cache) {
+          return cache.size();
+        }
+      });
+    }
   }
   
   /**

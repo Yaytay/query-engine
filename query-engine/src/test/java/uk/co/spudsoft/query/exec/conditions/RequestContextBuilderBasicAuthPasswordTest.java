@@ -88,7 +88,7 @@ public class RequestContextBuilderBasicAuthPasswordTest {
   public void testBuildRequestContext(Vertx vertx, VertxTestContext testContext) throws Exception {
     BasicAuthConfig authConfig = new BasicAuthConfig();
     authConfig.setGrantType(BasicAuthGrantType.resourceOwnerPasswordCredentials);
-    RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx), validator, discoverer, new LoginDaoMemoryImpl(Duration.ZERO), authConfig, true, null, true, null, Collections.singletonList("aud"), null, null);
+    RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx), validator, discoverer, new LoginDaoMemoryImpl(Duration.ZERO), null, authConfig, true, null, true, null, Collections.singletonList("aud"), null, null);
 
     destServer = vertx.createHttpServer();
     Router router = Router.router(vertx);

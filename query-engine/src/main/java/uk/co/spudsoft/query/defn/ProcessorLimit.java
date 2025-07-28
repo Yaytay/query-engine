@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.defn;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
@@ -41,7 +42,7 @@ public class ProcessorLimit implements Processor {
   private final int limit;
 
   @Override
-  public ProcessorLimitInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String name) {
+  public ProcessorLimitInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, String name) {
     return new ProcessorLimitInstance(vertx, sourceNameTracker, context, this, name);
   }
 

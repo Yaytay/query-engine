@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.exec.procs.subquery;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -55,6 +56,11 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
    * Vertx context used by this class.
    */
   protected final Context context;
+
+  /**  
+   * MeterRegistry for production of metrics.
+   */
+  protected final MeterRegistry meterRegistry;
   
   /**
    * The name to use in logs for this processor.
@@ -78,6 +84,7 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
    * @param vertx The vertx instance.
    * @param sourceNameTracker Source name tracker used to identify source names in log messages
    * @param context Vertx context used by this class.
+   * @param meterRegistry MeterRegistry for production of metrics.
    * @param name The name to use in logs for this processor - not nullable.
    * @param parentIdColumns The columns from the parent dataset that identifies a row.
    * @param childIdColumns The columns from the child dataset that identifies a row.
@@ -87,11 +94,12 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")  
   @SuppressWarnings("this-escape")
-  public AbstractJoiningProcessor(Logger logger, Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String name, List<String> parentIdColumns, List<String> childIdColumns, boolean innerJoin) {
+  public AbstractJoiningProcessor(Logger logger, Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, String name, List<String> parentIdColumns, List<String> childIdColumns, boolean innerJoin) {
     this.logger = logger;
     this.vertx = vertx;
     this.sourceNameTracker = sourceNameTracker;
     this.context = context;
+    this.meterRegistry = meterRegistry;
     this.name = name;
     this.parentIdColumns = parentIdColumns;
     this.childIdColumns = childIdColumns;
@@ -115,7 +123,7 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
    * @return A Future that will be completed with a {@link ReadStreamWithTypes} when initialization has completed.
    */
   protected Future<ReadStreamWithTypes> initializeChildStream(PipelineExecutor executor, PipelineInstance pipeline, String fieldName, SourcePipeline sourcePipeline) {
-    SourceInstance sourceInstance = sourcePipeline.getSource().createInstance(vertx, context, executor, this.getName() + "." + fieldName);
+    SourceInstance sourceInstance = sourcePipeline.getSource().createInstance(vertx, context, meterRegistry, executor, this.getName() + "." + fieldName);
     FormatCaptureInstance sinkInstance = new FormatCaptureInstance();
     
     PipelineInstance childPipeline = new PipelineInstance(

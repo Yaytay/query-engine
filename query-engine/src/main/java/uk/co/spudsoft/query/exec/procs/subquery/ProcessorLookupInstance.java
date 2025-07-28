@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.exec.procs.subquery;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.tsegismont.streamutils.impl.MappingStream;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -61,6 +62,7 @@ public class ProcessorLookupInstance implements ProcessorInstance {
   private final Vertx vertx;
   private final SourceNameTracker sourceNameTracker;
   private final Context context;
+  private final MeterRegistry meterRegistry;
   private final String name;
 
   private final ProcessorLookup definition;
@@ -76,14 +78,16 @@ public class ProcessorLookupInstance implements ProcessorInstance {
    * @param vertx the Vert.x instance.
    * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
    * @param context the Vert.x context.
+   * @param meterRegistry MeterRegistry for production of metrics.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
-  public ProcessorLookupInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorLookup definition, String name) {
+  public ProcessorLookupInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, ProcessorLookup definition, String name) {
     this.vertx = vertx;
     this.sourceNameTracker = sourceNameTracker;
     this.context = context;
+    this.meterRegistry = meterRegistry;
     this.name = name;
     this.definition = definition;
   }
@@ -97,7 +101,7 @@ public class ProcessorLookupInstance implements ProcessorInstance {
 
   @Override
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStreamWithTypes input) {
-    SourceInstance sourceInstance = definition.getMap().getSource().createInstance(vertx, context, executor, getName() + ".map");
+    SourceInstance sourceInstance = definition.getMap().getSource().createInstance(vertx, context, meterRegistry, executor, getName() + ".map");
     FormatCaptureInstance fieldDefnStreamCapture = new FormatCaptureInstance();
     PipelineInstance childPipeline = new PipelineInstance(
             pipeline.getArgumentInstances()

@@ -67,12 +67,12 @@ public class SourceSqlStreamingInstanceTest {
     vertx.getOrCreateContext().runOnContext(v -> {
       Context context = vertx.getOrCreateContext();
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
-      PipelineExecutor pipelineExecutor = new PipelineExecutorImpl(filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
+      PipelineExecutor pipelineExecutor = new PipelineExecutorImpl(null, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
       
       SourceSql definition = SourceSql.builder()
               .endpoint("bob")
               .build();
-      SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, context, pipelineExecutor, definition, "test");
+      SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, context, null, pipelineExecutor, definition, "test");
       
       Pipeline pipeline = Pipeline.builder()
               .sourceEndpoints(
@@ -127,12 +127,12 @@ public class SourceSqlStreamingInstanceTest {
     vertx.getOrCreateContext().runOnContext(v -> {
       Context context = vertx.getOrCreateContext();
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
-      PipelineExecutor pipelineExecutor = new PipelineExecutorImpl(filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
+      PipelineExecutor pipelineExecutor = new PipelineExecutorImpl(null, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
       
       SourceSql definition = SourceSql.builder()
               .endpoint("bob")
               .build();
-      SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, context, pipelineExecutor, definition, "test");
+      SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, context, null, pipelineExecutor, definition, "test");
       
       Pipeline pipeline = Pipeline.builder()
               .sourceEndpoints(

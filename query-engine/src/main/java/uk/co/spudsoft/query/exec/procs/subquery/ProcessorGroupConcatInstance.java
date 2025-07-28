@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.exec.procs.subquery;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -61,12 +62,13 @@ import uk.co.spudsoft.query.exec.Types;
    * @param vertx the Vert.x instance.
    * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
    * @param context the Vert.x context.
+   * @param meterRegistry MeterRegistry for production of metrics.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
-  public ProcessorGroupConcatInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorGroupConcat definition, String name) {
-    super(logger, vertx, sourceNameTracker, context, name, definition.getParentIdColumns(), definition.getChildIdColumns(), definition.isInnerJoin());
+  public ProcessorGroupConcatInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, ProcessorGroupConcat definition, String name) {
+    super(logger, vertx, sourceNameTracker, context, meterRegistry, name, definition.getParentIdColumns(), definition.getChildIdColumns(), definition.isInnerJoin());
     this.definition = definition;
     this.childIdColumns = ImmutableSet.copyOf(definition.getChildIdColumns());
   }

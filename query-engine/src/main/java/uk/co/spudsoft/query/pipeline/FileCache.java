@@ -20,11 +20,13 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.binder.cache.GuavaCacheMetrics;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.FileSystem;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -79,6 +81,15 @@ public class FileCache<T> {
     this.cache = cacheBuilder.build();
     if (meterRegistry != null) {
       GuavaCacheMetrics.monitor(meterRegistry, cache, name);
+      meterRegistry.gauge("queryengine.cache.size"
+              , Arrays.asList(
+                      Tag.of("cachename", name)
+              )
+              , cache, c -> {
+        synchronized (c) {
+          return c.size();
+        }
+      });
     }
   }
   

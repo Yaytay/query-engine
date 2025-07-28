@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.web;
 import com.google.common.base.Strings;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -76,6 +77,7 @@ public class QueryRouter implements Handler<RoutingContext> {
   public static final String ROOT_SOURCE_DEFAULT_NAME = "Source";
   
   private final Vertx vertx;
+  private final MeterRegistry meterRegistry;
   private final Auditor auditor;
   private final RequestContextBuilder requestContextBuilder;
   private final PipelineDefnLoader loader;
@@ -87,6 +89,7 @@ public class QueryRouter implements Handler<RoutingContext> {
    * Constructor.
    * 
    * @param vertx Vertx instance.
+   * @param meterRegistry MeterRegistry for production of metrics.
    * @param auditor Auditor interface for tracking requests.
    * @param requestContextBuilder The builder that does the actual work.
    * @param loader Pipeline loader.
@@ -96,6 +99,7 @@ public class QueryRouter implements Handler<RoutingContext> {
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The PipelineDefnLoader is mutable because it changes the filesystem")
   public QueryRouter(Vertx vertx
+          , MeterRegistry meterRegistry
           , Auditor auditor
           , RequestContextBuilder requestContextBuilder
           , PipelineDefnLoader loader
@@ -104,6 +108,7 @@ public class QueryRouter implements Handler<RoutingContext> {
           , boolean outputAllErrorMessages
   ) {
     this.vertx = vertx;
+    this.meterRegistry = meterRegistry;
     this.auditor = auditor;
     this.requestContextBuilder = requestContextBuilder;
     this.loader = loader;
@@ -368,7 +373,7 @@ public class QueryRouter implements Handler<RoutingContext> {
       }
       
       FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), responseStream);
-      SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), pipelineExecutor, ROOT_SOURCE_DEFAULT_NAME);
+      SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), meterRegistry, pipelineExecutor, ROOT_SOURCE_DEFAULT_NAME);
       
       Vertx.currentContext().put("pipeline", pipeline);
       

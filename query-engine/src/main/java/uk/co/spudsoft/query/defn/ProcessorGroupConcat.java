@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
@@ -61,8 +62,8 @@ public class ProcessorGroupConcat implements Processor {
   private final String delimiter;
   
   @Override
-  public ProcessorGroupConcatInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String name) {
-    return new ProcessorGroupConcatInstance(vertx, sourceNameTracker, context, this, name);
+  public ProcessorGroupConcatInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, String name) {
+    return new ProcessorGroupConcatInstance(vertx, sourceNameTracker, context, meterRegistry, this, name);
   }
 
   @Override

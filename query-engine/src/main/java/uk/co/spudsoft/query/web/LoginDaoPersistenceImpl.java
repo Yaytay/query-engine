@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.web;
 import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import java.io.IOException;
@@ -28,6 +29,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -86,6 +88,18 @@ public class LoginDaoPersistenceImpl implements LoginDao {
     this.configuration = configuration;
     this.purgeDelay = purgeDelay;
     this.jdbcHelper = jdbcHelper;
+    
+    if (meterRegistry != null) {
+      meterRegistry.gauge("queryengine.cache.size"
+              , Arrays.asList(
+                      Tag.of("cachename", "token")
+              )
+              , tokenCache, cache -> {
+        synchronized (cache) {
+          return cache.size();
+        }
+      });      
+    }
   }
 
   private String recordLogin = """

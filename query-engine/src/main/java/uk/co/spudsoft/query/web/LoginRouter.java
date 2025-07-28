@@ -48,6 +48,7 @@ import uk.co.spudsoft.jwtvalidatorvertx.JwtValidator;
 import uk.co.spudsoft.jwtvalidatorvertx.OpenIdDiscoveryHandler;
 import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 import uk.co.spudsoft.query.main.AuthEndpoint;
+import uk.co.spudsoft.query.main.Coalesce;
 import uk.co.spudsoft.query.main.CookieConfig;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 import uk.co.spudsoft.query.main.SessionConfig;
@@ -65,7 +66,7 @@ public class LoginRouter implements Handler<RoutingContext> {
   private static final Base64.Encoder RAW_BASE64_URLENCODER = Base64.getUrlEncoder().withoutPadding();
 
   private static final SecureRandom RANDOM = getFastestSecureRandom();
-
+  
   /**
    * Choose the best available SecureRandom implementation.
    * @return the best available SecureRandom implementation. 
@@ -103,7 +104,6 @@ public class LoginRouter implements Handler<RoutingContext> {
   private final boolean outputAllErrorMessages;
   private final ImmutableList<String> requiredAuds;
   private final CookieConfig sessionCookie;
-
   /**
    * Factory method.
    *
@@ -414,8 +414,6 @@ public class LoginRouter implements Handler<RoutingContext> {
               }
             })
             .compose(jwt -> {
-              String targetUrl = buildTargetUrlWithAccessToken(requestDataAndAuthEndpoint.requestData.targetUrl(), accessTokenPtr[0]);
-
               String id = createRandomSessionId();
               long maxAge = jwt.getExpiration() - (System.currentTimeMillis() / 1000);
               Cookie cookie = createCookie(sessionCookie, maxAge, wasTls(event.request()), domain(event.request()), id);
@@ -424,7 +422,7 @@ public class LoginRouter implements Handler<RoutingContext> {
                       .compose(v -> {
                         return event.response()
                                 .addCookie(cookie)
-                                .putHeader("Location", targetUrl)
+                                .putHeader("Location", requestDataAndAuthEndpoint.requestData.targetUrl())
                                 .setStatusCode(307)
                                 .end();
                       });
@@ -433,13 +431,6 @@ public class LoginRouter implements Handler<RoutingContext> {
               QueryRouter.internalError(ex, event, outputAllErrorMessages);
             });
     return false;
-  }
-
-  private static String buildTargetUrlWithAccessToken(String targetUrl, String accessToken) {
-    String targetUrlBase = targetUrl;
-    return targetUrlBase
-            + (targetUrlBase.contains("?") ? "&" : "?")
-            + "access_token=" + accessToken;
   }
 
   private Cookie getSessionCookie(HttpServerRequest request) {
@@ -452,6 +443,8 @@ public class LoginRouter implements Handler<RoutingContext> {
     return null;
   }
 
+  
+  
   /**
    * Create a cookie according to the passed in values.
    *
@@ -467,7 +460,7 @@ public class LoginRouter implements Handler<RoutingContext> {
     cookie.setHttpOnly(config.isHttpOnly() == null ? false : config.isHttpOnly());
     cookie.setSecure(config.isSecure() == null ? wasTls : config.isSecure());
     cookie.setDomain(config.getDomain() != null ? config.getDomain() : domain);
-    cookie.setPath(config.getPath() != null ? config.getPath() : "/");
+    cookie.setPath(Coalesce.coalesce(config.getPath(), "/"));
     if (config.getSameSite() != null) {
       cookie.setSameSite(config.getSameSite());
     }
@@ -496,10 +489,9 @@ public class LoginRouter implements Handler<RoutingContext> {
               })
               .onSuccess(jwt -> {
                 logger.debug("Request has valid session cookie, skipping login");
-                String targetUrlWithToken = buildTargetUrlWithAccessToken(targetUrl, token[0]);
 
                 event.response()
-                        .putHeader("Location", targetUrlWithToken)
+                        .putHeader("Location", targetUrl)
                         .setStatusCode(307)
                         .end();
               });

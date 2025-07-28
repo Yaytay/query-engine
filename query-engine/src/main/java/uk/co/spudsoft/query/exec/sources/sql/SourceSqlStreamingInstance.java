@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.exec.sources.sql;
 
 import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -71,11 +72,12 @@ public class SourceSqlStreamingInstance extends AbstractSource {
    * Constructor.
    * @param vertx The Vert.x instance.
    * @param context The Vert.x context.
+   * @param meterRegistry MeterRegistry for production of metrics.
    * @param sharedMap Pooling map.
    * @param definition The {@link SourceSql} definition.
    * @param defaultName The name to use for the SourceInstance if no other name is provided in the definition.
    */
-  public SourceSqlStreamingInstance(Vertx vertx, Context context, SharedMap sharedMap, SourceSql definition, String defaultName) {
+  public SourceSqlStreamingInstance(Vertx vertx, Context context, MeterRegistry meterRegistry, SharedMap sharedMap, SourceSql definition, String defaultName) {
     super(Strings.isNullOrEmpty(definition.getName()) ? defaultName : definition.getName());
     this.vertx = vertx;
     
@@ -83,7 +85,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     if (pco instanceof PoolCreator pc) {
       this.poolCreator = pc;
     } else {
-      this.poolCreator = new PoolCreator();
+      this.poolCreator = new PoolCreator(meterRegistry);
       sharedMap.put(PoolCreator.class.toString(), this.poolCreator);
     }
 

@@ -66,7 +66,7 @@ public class ProcessorQueryInstanceTest {
     
     Context context = vertx.getOrCreateContext();
         
-    ProcessorQueryInstance instance = ProcessorQuery.builder().expression("value!=three").build().createInstance(vertx, () -> {}, context, "P0-Query");
+    ProcessorQueryInstance instance = ProcessorQuery.builder().expression("value!=three").build().createInstance(vertx, () -> {}, context, null, "P0-Query");
     assertEquals("P0-Query", instance.getName());
     
     Future<?> initFuture = instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(context, rowsList), types));

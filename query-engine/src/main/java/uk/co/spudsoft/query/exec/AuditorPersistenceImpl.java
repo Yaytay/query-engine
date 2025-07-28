@@ -694,7 +694,7 @@ public class AuditorPersistenceImpl implements Auditor {
 
   @Override
   public void recordResponse(RequestContext context, HttpServerResponse response) {
-    JsonObject headers = multiMapToJson(context.getHeaders());
+    JsonObject headers = multiMapToJson(response.headers());
     logger.info("Request complete: {} {} bytes in {}s {}"
             , response.getStatusCode()
             , response.bytesWritten()

@@ -52,7 +52,7 @@ public class Parameters {
    * Defaults to the value of System.getProperty("java.io.tmpdir").
    */
   private String tempDir = System.getProperty("java.io.tmpdir");
-  
+
   /**
    * The HttpServerOptions that will be used when creating the HTTP server.
    */
@@ -102,7 +102,7 @@ public class Parameters {
    * This is not much use in a path hijack situation, so allow for the provision of an alternative.
    */
   private String rootRedirectUrl;
-  
+
   /**
    * The directory to contain cached output.
    * This is the on-disc caching of stream output, controlled by the cacheDuration value in individual pipelines.
@@ -310,12 +310,12 @@ public class Parameters {
    * The path must be valid (Query Engine will not start if it is not), but may be set to "/dev/null" in which case no documentation will be served at all.
    */
   private String alternativeDocumentation;
-  
+
   /**
    * Additional data that is made available via the request object.
    * <p>
-   * The {@link uk.co.spudsoft.query.exec.conditions.RequestContext} is made available in both 
-   * {@link uk.co.spudsoft.query.exec.conditions.Condition}s and various templates 
+   * The {@link uk.co.spudsoft.query.exec.conditions.RequestContext} is made available in both
+   * {@link uk.co.spudsoft.query.exec.conditions.Condition}s and various templates
    * (such as {@link uk.co.spudsoft.query.defn.SourceSql#queryTemplate} and {@link uk.co.spudsoft.query.defn.Endpoint#urlTemplate}).
    * By default this context contains information specific to the request, and very little information about
    * the service it is running in.
@@ -325,6 +325,20 @@ public class Parameters {
    * add additional environmental information to the context.
    */
   private Map<String, String> requestContextEnvironment = new HashMap<>();
+
+  /**
+   * Configuration of security headers.
+   * <P>
+   * The following response headers can be configured:
+   * <ul>
+   * <li>X-Frame-Options - Controls whether the page can be displayed in a frame</li>
+   * <li>Referrer-Policy - Controls how much referrer information should be included with requests</li>
+   * <li>Permissions-Policy - Controls which features and APIs can be used in the browser</li>
+   * </ul>
+   * <P>
+   * All of these values are optional, the default values are secure, but may be too restrictive in some environments.
+   */
+  private SecurityHeadersConfig securityHeaders;
 
   /**
    * Constructor.
@@ -1091,7 +1105,7 @@ public class Parameters {
    * <p>
    * The path must be valid (Query Engine will not start if it is not), but may be set to "/dev/null" in which case no documentation will be served at all.
    * @return the path to alternative documentation to make available.
-   */  
+   */
   public String getAlternativeDocumentation() {
     return alternativeDocumentation;
   }
@@ -1119,8 +1133,8 @@ public class Parameters {
   /**
    * The additional data that is made available via the request object.
    * <p>
-   * The {@link uk.co.spudsoft.query.exec.conditions.RequestContext} is made available in both 
-   * {@link uk.co.spudsoft.query.exec.conditions.ConditionInstance}s and various templates 
+   * The {@link uk.co.spudsoft.query.exec.conditions.RequestContext} is made available in both
+   * {@link uk.co.spudsoft.query.exec.conditions.ConditionInstance}s and various templates
    * (such as {@link uk.co.spudsoft.query.defn.SourceSql#queryTemplate} and {@link uk.co.spudsoft.query.defn.Endpoint#urlTemplate}).
    * By default this context contains information specific to the request, and very little information about
    * the service it is running in.
@@ -1138,8 +1152,8 @@ public class Parameters {
   /**
    * The additional data that is made available via the request object.
    * <p>
-   * The {@link uk.co.spudsoft.query.exec.conditions.RequestContext} is made available in both 
-   * {@link uk.co.spudsoft.query.exec.conditions.ConditionInstance}s and various templates 
+   * The {@link uk.co.spudsoft.query.exec.conditions.RequestContext} is made available in both
+   * {@link uk.co.spudsoft.query.exec.conditions.ConditionInstance}s and various templates
    * (such as {@link uk.co.spudsoft.query.defn.SourceSql#queryTemplate} and {@link uk.co.spudsoft.query.defn.Endpoint#urlTemplate}).
    * By default this context contains information specific to the request, and very little information about
    * the service it is running in.
@@ -1156,10 +1170,10 @@ public class Parameters {
 
   /**
    * Get the URL to redirect requests to / to.
-   * 
+   *
    * By default requests to / redirect to /openapi and display the OpenAPI docs.
    * This is not much use in a path hijack situation, so allow for the provision of an alternative.
-   * 
+   *
    * @return the URL to redirect requests to / to.
    */
   public String getRootRedirectUrl() {
@@ -1168,14 +1182,50 @@ public class Parameters {
 
   /**
    * Set the URL to redirect requests to / to.
-   * 
+   *
    * By default requests to / redirect to /openapi and display the OpenAPI docs.
    * This is not much use in a path hijack situation, so allow for the provision of an alternative.
-   * 
+   *
    * @param rootRedirectUrl the URL to redirect requests to / to.
    */
   public void setRootRedirectUrl(String rootRedirectUrl) {
     this.rootRedirectUrl = rootRedirectUrl;
+  }
+
+  /**
+   * Get the security headers configuration.
+   * <P>
+   * The following response headers can be configured:
+   * <ul>
+   * <li>X-Frame-Options - Controls whether the page can be displayed in a frame</li>
+   * <li>Referrer-Policy - Controls how much referrer information should be included with requests</li>
+   * <li>Permissions-Policy - Controls which features and APIs can be used in the browser</li>
+   * </ul>
+   * <P>
+   * All of these values are optional, the default values are secure, but may be too restrictive in some environments.
+   *
+   * @return the security headers configuration.
+   */
+  public SecurityHeadersConfig getSecurityHeaders() {
+    return securityHeaders;
+  }
+
+  /**
+   * Set the security headers configuration.
+   * <P>
+   * The following response headers can be configured:
+   * <ul>
+   * <li>X-Frame-Options - Controls whether the page can be displayed in a frame</li>
+   * <li>Referrer-Policy - Controls how much referrer information should be included with requests</li>
+   * <li>Permissions-Policy - Controls which features and APIs can be used in the browser</li>
+   * </ul>
+   * <P>
+   * All of these values are optional, the default values are secure, but may be too restrictive in some environments.
+   *
+   * @param securityHeaders the security headers configuration.
+   */
+  public void setSecurityHeaders(SecurityHeadersConfig securityHeaders) {
+    this.securityHeaders = securityHeaders;
   }
 
   /**
@@ -1216,7 +1266,7 @@ public class Parameters {
       basicAuth.validate("basicAuth");
     }
     if (!Strings.isNullOrEmpty(alternativeDocumentation)) {
-      if (!"/dev/null".equals(alternativeDocumentation)) {        
+      if (!"/dev/null".equals(alternativeDocumentation)) {
         File altDocFile = new File(alternativeDocumentation);
         if (!altDocFile.isDirectory()) {
           throw new IllegalArgumentException("The alternativeDocumentation value does not point to a directory.");

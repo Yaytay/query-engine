@@ -18,6 +18,11 @@ package uk.co.spudsoft.query.web;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.ImmutableMap;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.binder.cache.GuavaCacheMetrics;
+import static io.netty.handler.codec.http.HttpHeaderNames.X_FRAME_OPTIONS;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
@@ -32,6 +37,8 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.impl.Utils;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,21 +62,26 @@ public class UiRouter implements Handler<RoutingContext> {
   
   private final long bootTime = System.currentTimeMillis();
 
+  private final Map<String, String> pathCspMap = ImmutableMap.<String, String>builder()
+          .put("/index.html", "default-src 'self' 'sha256-GCoez1mDsbThY8diormWuepHO+IOb9/MxWt3wZH5+Fs=' 'sha256-uyCb6HK6D9ebM/jHz2e/N3b441L00QG/aknT2VzHqXU='")
+          .build();
+  
   /**
    * Factory method.
    * @param vertx The Vert.x instance.
+   * @param meterRegistry MeterRegistry for production of metrics.
    * @param stripPath Any path that starts with this will have it stripped before further processing.
    * @param baseResourcePath The physical path to the UI resources.
    * @param defaultFilePath If the requested file does not exist as a resource this file is returned instead.
    * @return a newly created UiRouter instance.
    */
-  public static UiRouter create(Vertx vertx, String stripPath, String baseResourcePath, String defaultFilePath) {
-    return new UiRouter(vertx, stripPath, baseResourcePath, defaultFilePath);
+  public static UiRouter create(Vertx vertx, MeterRegistry meterRegistry, String stripPath, String baseResourcePath, String defaultFilePath) {
+    return new UiRouter(vertx, meterRegistry, stripPath, baseResourcePath, defaultFilePath);
   }
 
   private record LoadedFile(String path, byte[] contents) {}
   
-  private UiRouter(Vertx vertx, String stripPath, String baseResourcePath, String defaultFilePath) {
+  private UiRouter(Vertx vertx, MeterRegistry meterRegistry, String stripPath, String baseResourcePath, String defaultFilePath) {
     this.vertx = vertx;
     this.stripPath = stripPath;
     this.baseResourcePath = baseResourcePath;
@@ -79,6 +91,18 @@ public class UiRouter implements Handler<RoutingContext> {
             .maximumSize(150)
             .recordStats()
             .build();
+    if (meterRegistry != null) {
+      GuavaCacheMetrics.monitor(meterRegistry, cache, "uifiles");
+      meterRegistry.gauge("queryengine.cache.size"
+              , Arrays.asList(
+                      Tag.of("cachename", "uifiles")
+              )
+              , cache, c -> {
+        synchronized (c) {
+          return c.size();
+        }
+      });
+    }
   }
   
   @Override
@@ -105,6 +129,8 @@ public class UiRouter implements Handler<RoutingContext> {
       }
       String path = baseResourcePath + strippedPath;
               
+      logger.debug("UI request for {}", path);
+
       byte[] fileBody = cache.getIfPresent(path);
       if (fileBody != null) {
         sendFile(context, new LoadedFile(path, fileBody));
@@ -147,8 +173,12 @@ public class UiRouter implements Handler<RoutingContext> {
       } else {
         headers.add(HttpHeaders.CONTENT_TYPE, contentType);
       }
+
+      if (contentType.contains("html")) {
+        logger.debug("Adding X-Frame-Options header");
+        context.response().headers().add(X_FRAME_OPTIONS, "SAMEORIGIN");
+      }
     }
-    
     
     long maxAgeSeconds = 86400;
     if (loadedFile.path.endsWith("index.html")) {

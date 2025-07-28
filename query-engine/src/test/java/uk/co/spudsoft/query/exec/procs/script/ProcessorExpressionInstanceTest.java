@@ -44,7 +44,7 @@ public class ProcessorExpressionInstanceTest {
   @Test
   public void testGetId() {
     ProcessorExpression definition = ProcessorExpression.builder().name("id").build();
-    ProcessorExpressionInstance instance = definition.createInstance(null, null, null, "P0-Expression");
+    ProcessorExpressionInstance instance = definition.createInstance(null, null, null, null, "P0-Expression");
     assertEquals("P0-Expression", instance.getName());
   }
 
@@ -53,7 +53,7 @@ public class ProcessorExpressionInstanceTest {
     
     ProcessorExpression definition = ProcessorExpression.builder().name("id").predicate("iteration < 2").build();
 
-    ProcessorExpressionInstance instance = definition.createInstance(vertx, mock(SourceNameTracker.class), vertx.getOrCreateContext(), "P0-Expression");
+    ProcessorExpressionInstance instance = definition.createInstance(vertx, mock(SourceNameTracker.class), vertx.getOrCreateContext(), null, "P0-Expression");
     
     Types types = new Types();
     ListReadStream<DataRow> inputStream = new ListReadStream<>(vertx.getOrCreateContext(), Arrays.asList(

@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.defn;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
@@ -42,7 +43,7 @@ public class ProcessorQuery implements Processor {
   private final String expression;
 
   @Override
-  public ProcessorQueryInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String name) {
+  public ProcessorQueryInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, String name) {
     return new ProcessorQueryInstance(vertx, sourceNameTracker, context, this, name);
   }
 

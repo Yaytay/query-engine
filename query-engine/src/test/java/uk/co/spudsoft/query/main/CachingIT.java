@@ -103,6 +103,7 @@ public class CachingIT {
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--outputCacheDir=" + cacheDir
+      , "--securityHeaders.referrerPolicy=bibble"
     }, stdout, System.getenv());
     
     RestAssured.port = main.getPort();
@@ -120,6 +121,8 @@ public class CachingIT {
             .then()
             .log().all()
             .statusCode(200)
+            .header("X-Frame-Options", equalTo("DENY"))
+            .header("Referrer-Policy", equalTo("same-origin"))
             .extract().response();
     
     long end = System.currentTimeMillis();

@@ -43,7 +43,7 @@ public class AbstractJoiningProcessorTest {
   private static final class TestClass extends AbstractJoiningProcessor {
 
     public TestClass(List<String> parentIdColumns, List<String> childIdColumns) {
-      super(logger, null, null, null, null, parentIdColumns, childIdColumns, true);
+      super(logger, null, null, null, null, null, parentIdColumns, childIdColumns, true);
     }
 
     @Override

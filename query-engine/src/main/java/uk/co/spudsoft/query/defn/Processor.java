@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.defn;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.DiscriminatorMapping;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Context;
@@ -81,11 +82,12 @@ public interface Processor {
    * @param vertx The Vert.x instance.
    * @param sourceNameTracker The {@link SourceNameTracker} used to enable child {@link uk.co.spudsoft.query.exec.SourceInstance} objects to identify themselves to logs.
    * @param context The Vert.x (@link Context} to use for any asynchronous tasks that must be performed.
+   * @param meterRegistry MeterRegistry for production of metrics.
    * @param name The name of this processor, either from the definition or generated.
    * @return a newly created {@link ProcessorInstance}.
    */
   @JsonIgnore
-  ProcessorInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String name);
+  ProcessorInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, String name);
   
   /**
    * The type of Processor being configured.

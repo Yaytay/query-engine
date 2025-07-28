@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.filters;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import org.slf4j.Logger;
@@ -56,7 +57,7 @@ public class QueryFilter implements Filter {
   }
   
   @Override
-  public ProcessorInstance createProcessor(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, String argument, String name) throws IllegalArgumentException {
+  public ProcessorInstance createProcessor(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, String argument, String name) throws IllegalArgumentException {
     try {
       argument = FiqlToRsqlConverter.convertFiqlToRsql(argument);
       ProcessorQueryInstance.RSQL_PARSER.parse(argument);
@@ -65,7 +66,7 @@ public class QueryFilter implements Filter {
       throw new IllegalArgumentException("Invalid argument to _query filter, should be a valid RSQL expression");
     }
     ProcessorQuery definition = ProcessorQuery.builder().expression(argument).build();
-    return definition.createInstance(vertx, sourceNameTracker, context, name);
+    return definition.createInstance(vertx, sourceNameTracker, context, meterRegistry, name);
   }
   
 }

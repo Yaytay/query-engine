@@ -61,12 +61,12 @@ public class SourceJdbcInstanceTest {
     vertx.getOrCreateContext().runOnContext(v -> {
       Context context = vertx.getOrCreateContext();
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
-      PipelineExecutor pipelineExecutor = new PipelineExecutorImpl(filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
+      PipelineExecutor pipelineExecutor = new PipelineExecutorImpl(null, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
       
       SourceJdbc definition = SourceJdbc.builder()
               .endpoint("bob")
               .build();
-      SourceJdbcInstance instance = new SourceJdbcInstance(vertx, context, definition, "test");
+      SourceJdbcInstance instance = new SourceJdbcInstance(vertx, context, null, definition, "test");
       
       Pipeline pipeline = Pipeline.builder()
               .sourceEndpoints(
@@ -121,12 +121,12 @@ public class SourceJdbcInstanceTest {
     vertx.getOrCreateContext().runOnContext(v -> {
       Context context = vertx.getOrCreateContext();
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
-      PipelineExecutor pipelineExecutor = new PipelineExecutorImpl(filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
+      PipelineExecutor pipelineExecutor = new PipelineExecutorImpl(null, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
       
       SourceJdbc definition = SourceJdbc.builder()
               .endpoint("bob")
               .build();
-      SourceJdbcInstance instance = new SourceJdbcInstance(vertx, context, definition, "test");
+      SourceJdbcInstance instance = new SourceJdbcInstance(vertx, context, null, definition, "test");
       
       Pipeline pipeline = Pipeline.builder()
               .sourceEndpoints(
