@@ -217,7 +217,7 @@ class SecurityHeadersRouterTest {
     handlerCaptor.getValue().handle(null);
 
     verify(responseHeaders).add("Strict-Transport-Security", "max-age=63072000");
-    verify(responseHeaders).add("Content-Security-Policy", "default-src 'self'; img-src 'self'; style-src 'self'; connect-src 'self'; script-src 'self'");
+    verify(responseHeaders).add("Content-Security-Policy", "default-src 'self'; img-src 'self'; style-src 'self' 'unsafe-hashes'; connect-src 'self'; script-src 'self' 'unsafe-eval'");
     verify(responseHeaders).add("X-Frame-Options", "DENY");
     verify(responseHeaders).add("X-Content-Type-Options", "nosniff");
     verify(responseHeaders).add("Referrer-Policy", "same-origin");
@@ -247,7 +247,7 @@ class SecurityHeadersRouterTest {
 
     // Should not add HSTS for HTTP requests
     verify(responseHeaders, never()).add("Strict-Transport-Security", "max-age=63072000");
-    verify(responseHeaders).add("Content-Security-Policy", "default-src 'self'; img-src 'self'; style-src 'self'; connect-src 'self'; script-src 'self'");
+    verify(responseHeaders).add("Content-Security-Policy", "default-src 'self'; img-src 'self'; style-src 'self' 'unsafe-hashes'; connect-src 'self'; script-src 'self' 'unsafe-eval'");
     verify(responseHeaders).add("X-Frame-Options", "DENY");
     verify(responseHeaders).add("X-Content-Type-Options", "nosniff");
     verify(responseHeaders).add("Referrer-Policy", "same-origin");
