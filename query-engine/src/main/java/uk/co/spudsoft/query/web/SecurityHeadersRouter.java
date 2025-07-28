@@ -70,22 +70,35 @@ public class SecurityHeadersRouter implements Handler<RoutingContext> {
           .add("unsafe-url")
           .build();
   
+  private static void appendSources(StringBuilder builder, String name, String extra, List<String> sources) {
+    builder.append("; ").append(name).append(" 'self'");
+    if (!Strings.isNullOrEmpty(extra)) {
+      builder.append(" ").append(extra);
+    }
+    if (sources != null && !sources.isEmpty()) {
+      for (String src : sources) {
+        builder.append(" ").append(src);
+      }
+    }
+  }  
+  
   /**
    * Constructor.
    * 
-   * @param logoUrls Set of URLs to add to the img-src content security policy.
-   * @param inlineStyleHashes Set of hashes to add to the style-src content security policy.
-   * @param contentEndpoints Additional endpoints to add to the connect-src policy.
+   * @param cspImageSrcs Set of URLs to add to the img-src content security policy.
+   * @param cspStyleSrcs Set of hashes to add to the style-src content security policy.
+   * @param cspContentSrcs Additional endpoints to add to the connect-src policy.
+   * @param cspScriptSrcs Additional endpoints to add to the script-src policy.
    * @param xFrameOptions Value to use for the X-Frame-Options header.
    * @param referrerPolicy Value to use for the Referrer-Policy header.
    * @param permissionsPolicy Value to use for the Permissions-Policy header.
    */
-  public SecurityHeadersRouter(List<String> logoUrls, List<String> inlineStyleHashes, List<String> contentEndpoints, String xFrameOptions, String referrerPolicy, String permissionsPolicy) {
+  public SecurityHeadersRouter(List<String> cspImageSrcs, List<String> cspStyleSrcs, List<String> cspContentSrcs, List<String> cspScriptSrcs, String xFrameOptions, String referrerPolicy, String permissionsPolicy) {
     StringBuilder builder = new StringBuilder();
     builder.append("default-src 'self'; img-src 'self'");
     
-    if (logoUrls != null) {
-      for (String url : logoUrls) {
+    if (cspImageSrcs != null) {
+      for (String url : cspImageSrcs) {
         try {
           URI uri = URI.create(url);
           if (!Strings.isNullOrEmpty(uri.getHost())) {
@@ -96,19 +109,9 @@ public class SecurityHeadersRouter implements Handler<RoutingContext> {
         }
       }
     }
-    builder.append("; style-src 'self'");
-    if (inlineStyleHashes != null && !inlineStyleHashes.isEmpty()) {
-      builder.append(" unsafe-hashes");
-      for (String hash : inlineStyleHashes) {
-        builder.append(" ").append(hash);
-      }
-    }
-    builder.append("; connect-src 'self'");
-    if (contentEndpoints != null && !contentEndpoints.isEmpty()) {
-      for (String contentEndpoint : contentEndpoints) {
-        builder.append(" ").append(contentEndpoint);
-      }
-    }
+    appendSources(builder, "style-src", "'unsafe-hashes'", cspStyleSrcs);
+    appendSources(builder, "connect-src", null, cspContentSrcs);
+    appendSources(builder, "script-src", "'unsafe-eval'", cspScriptSrcs);
     this.csp = builder.toString();
     
     if (!Strings.isNullOrEmpty(xFrameOptions)) {

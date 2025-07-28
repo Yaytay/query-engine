@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2025 jtalbut
  *
@@ -34,7 +35,7 @@ import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for SecurityHeadersRouter.
- *
+ * 
  * @author jtalbut
  */
 class SecurityHeadersRouterTest {
@@ -47,7 +48,7 @@ class SecurityHeadersRouterTest {
     MultiMap requestHeaders = mock(MultiMap.class);
     MultiMap responseHeaders = mock(MultiMap.class);
 
-    SecurityHeadersRouter router = new SecurityHeadersRouter(Collections.emptyList(), Collections.emptyList(), null, null, null, null);
+    SecurityHeadersRouter router = new SecurityHeadersRouter(null, null, null, null, null, null, null);
 
     setupMocks(routingContext, request, response, requestHeaders, responseHeaders, "https", null);
 
@@ -74,9 +75,10 @@ class SecurityHeadersRouterTest {
     MultiMap responseHeaders = mock(MultiMap.class);
 
     SecurityHeadersRouter router = new SecurityHeadersRouter(
-      Collections.emptyList(),
-      Collections.emptyList(),
-      Collections.emptyList(),
+      null,
+      null,
+      null,
+      null,
       "SAMEORIGIN",
       "no-referrer",
       "geolocation=(), camera=()"
@@ -107,9 +109,10 @@ class SecurityHeadersRouterTest {
     MultiMap responseHeaders = mock(MultiMap.class);
 
     SecurityHeadersRouter router = new SecurityHeadersRouter(
-      Collections.emptyList(),
-      Collections.emptyList(),
-      Arrays.asList("http://nonexistant/"), 
+      null,
+      null,
+      Arrays.asList("http://nonexistant/"),
+      null,
       "INVALID",
       null,
       null
@@ -139,9 +142,10 @@ class SecurityHeadersRouterTest {
     MultiMap responseHeaders = mock(MultiMap.class);
 
     SecurityHeadersRouter router = new SecurityHeadersRouter(
-      Collections.emptyList(),
-      Collections.emptyList(),
-      null, 
+      null,
+      null,
+      null,
+      null,
       null,
       "invalid-policy",
       null
@@ -175,7 +179,7 @@ class SecurityHeadersRouterTest {
       "https://cdn.example.com/assets/logo.svg"
     );
 
-    SecurityHeadersRouter router = new SecurityHeadersRouter(logoUrls, Collections.emptyList(), null, null, null, null);
+    SecurityHeadersRouter router = new SecurityHeadersRouter(logoUrls, null, null, null, null, null, null);
 
     setupMocks(routingContext, request, response, requestHeaders, responseHeaders, "https", null);
 
@@ -200,7 +204,7 @@ class SecurityHeadersRouterTest {
     MultiMap requestHeaders = mock(MultiMap.class);
     MultiMap responseHeaders = mock(MultiMap.class);
 
-    SecurityHeadersRouter router = new SecurityHeadersRouter(Collections.emptyList(), Collections.emptyList(), null, null, null, null);
+    SecurityHeadersRouter router = new SecurityHeadersRouter(null, null, null, null, null, null, null);
 
     setupMocks(routingContext, request, response, requestHeaders, responseHeaders, "https", null);
 
@@ -213,7 +217,7 @@ class SecurityHeadersRouterTest {
     handlerCaptor.getValue().handle(null);
 
     verify(responseHeaders).add("Strict-Transport-Security", "max-age=63072000");
-    verify(responseHeaders).add("Content-Security-Policy", "default-src 'self'; img-src 'self'; style-src 'self'; connect-src 'self'");
+    verify(responseHeaders).add("Content-Security-Policy", "default-src 'self'; img-src 'self'; style-src 'self'; connect-src 'self'; script-src 'self'");
     verify(responseHeaders).add("X-Frame-Options", "DENY");
     verify(responseHeaders).add("X-Content-Type-Options", "nosniff");
     verify(responseHeaders).add("Referrer-Policy", "same-origin");
@@ -229,7 +233,7 @@ class SecurityHeadersRouterTest {
     MultiMap requestHeaders = mock(MultiMap.class);
     MultiMap responseHeaders = mock(MultiMap.class);
 
-    SecurityHeadersRouter router = new SecurityHeadersRouter(Collections.emptyList(), Collections.emptyList(), null, null, null, null);
+    SecurityHeadersRouter router = new SecurityHeadersRouter(null, null, null, null, null, null, null);
 
     setupMocks(routingContext, request, response, requestHeaders, responseHeaders, "http", null);
 
@@ -243,14 +247,14 @@ class SecurityHeadersRouterTest {
 
     // Should not add HSTS for HTTP requests
     verify(responseHeaders, never()).add("Strict-Transport-Security", "max-age=63072000");
-    verify(responseHeaders).add("Content-Security-Policy", "default-src 'self'; img-src 'self'; style-src 'self'; connect-src 'self'");
+    verify(responseHeaders).add("Content-Security-Policy", "default-src 'self'; img-src 'self'; style-src 'self'; connect-src 'self'; script-src 'self'");
     verify(responseHeaders).add("X-Frame-Options", "DENY");
     verify(responseHeaders).add("X-Content-Type-Options", "nosniff");
     verify(responseHeaders).add("Referrer-Policy", "same-origin");
     verify(responseHeaders).contains("Permissions-Policy");
     verify(routingContext).next();
   }
-
+  
   @Test
   void testHandleWithXForwardedProtoHttps() {
     RoutingContext routingContext = mock(RoutingContext.class);
@@ -259,7 +263,7 @@ class SecurityHeadersRouterTest {
     MultiMap requestHeaders = mock(MultiMap.class);
     MultiMap responseHeaders = mock(MultiMap.class);
 
-    SecurityHeadersRouter router = new SecurityHeadersRouter(Collections.emptyList(), Collections.emptyList(), null, null, null, null);
+    SecurityHeadersRouter router = new SecurityHeadersRouter(null, null, null, null, null, null, null);
 
     setupMocks(routingContext, request, response, requestHeaders, responseHeaders, "http", "https");
 
@@ -284,7 +288,7 @@ class SecurityHeadersRouterTest {
     MultiMap requestHeaders = mock(MultiMap.class);
     MultiMap responseHeaders = mock(MultiMap.class);
 
-    SecurityHeadersRouter router = new SecurityHeadersRouter(Collections.emptyList(), Collections.emptyList(), null, null, null, null);
+    SecurityHeadersRouter router = new SecurityHeadersRouter(null, null, null, null, null, null, null);
 
     setupMocks(routingContext, request, response, requestHeaders, responseHeaders, "https", null);
 
@@ -382,7 +386,7 @@ class SecurityHeadersRouterTest {
       MultiMap requestHeaders = mock(MultiMap.class);
       MultiMap responseHeaders = mock(MultiMap.class);
 
-      SecurityHeadersRouter router = new SecurityHeadersRouter(Collections.emptyList(), Collections.emptyList(), null, null, policy, null);
+      SecurityHeadersRouter router = new SecurityHeadersRouter(null, null, null, null, null, policy, null);
 
       setupMocks(routingContext, request, response, requestHeaders, responseHeaders, "https", null);
 
@@ -411,12 +415,13 @@ class SecurityHeadersRouterTest {
       MultiMap responseHeaders = mock(MultiMap.class);
 
       SecurityHeadersRouter router = new SecurityHeadersRouter(
-              Collections.emptyList()
-              , Collections.emptyList()
-              , null
-              , validOptions[i]
-              , null
-              , null
+              null,
+              null,
+              null,
+              null,
+              validOptions[i],
+              null,
+              null
       );
 
       setupMocks(routingContext, request, response, requestHeaders, responseHeaders, "https", null);

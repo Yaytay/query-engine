@@ -539,17 +539,18 @@ public class Main extends Application {
     if (params.getSession() != null && params.getSession().getOauth() != null) {
       logoUrls = params.getSession().getOauth().values().stream().map(o -> o.getLogoUrl()).toList();
     }
-    List<String> inlineStyleHashes = Arrays.asList(
-            "'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='"
-            , "'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='"
+    List<String> cspStyleSrcs = Arrays.asList(
+              "'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='"
+              , "https://cdn.form.io/"
     );
-    List<String> contentEndpoints = 
+    List<String> cspContentSrcs = 
             Strings.isNullOrEmpty(params.getManagementEndpointUrl()) ? null : Arrays.asList(params.getManagementEndpointUrl());
+    List<String> cspScriptSrcs = Arrays.asList("'unsafe-inline'", "'unsafe-eval'", "https://cdn.form.io/");
     SecurityHeadersConfig secHdrs = params.getSecurityHeaders();
     if (secHdrs == null) {
-      router.route().handler(new SecurityHeadersRouter(logoUrls, inlineStyleHashes, contentEndpoints, null, null, null));
+      router.route().handler(new SecurityHeadersRouter(logoUrls, cspStyleSrcs, cspContentSrcs, cspScriptSrcs, null, null, null));
     } else {
-      router.route().handler(new SecurityHeadersRouter(logoUrls, inlineStyleHashes, contentEndpoints
+      router.route().handler(new SecurityHeadersRouter(logoUrls, cspStyleSrcs, cspContentSrcs, cspScriptSrcs
               , secHdrs.getXFrameOptions(), secHdrs.getReferrerPolicy(), secHdrs.getPermissionsPolicy()));
     }
 
