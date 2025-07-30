@@ -390,12 +390,17 @@ public class RequestContextBuilder {
 
       return tokenFuture
               .compose(token -> {
-                logger.debug("Login for {} got token: {}", username, token);
-                request.resume();
-                return validateToken(request, token)
-                        .onSuccess(jwt -> {
-                          cacheToken(encodedCredentials, jwt.getExpirationLocalDateTime(), token);
-                        });
+                if (token == null) {
+                  logger.debug("Login for {} failed", username);
+                  return Future.failedFuture(new ServiceException(401, "Invalid credentials"));
+                } else {
+                  logger.debug("Login for {} got token: {}", username, token);
+                  request.resume();
+                  return validateToken(request, token)
+                          .onSuccess(jwt -> {
+                            cacheToken(encodedCredentials, jwt.getExpirationLocalDateTime(), token);
+                          });
+                }
               })
               .onFailure(ex -> {
                 request.resume();
