@@ -310,7 +310,7 @@ public class LoginRouter implements Handler<RoutingContext> {
       handleLoginRequest(event);
     } else if (event.request().path().endsWith("/login/return")) {
       handleLoginResponse(event);
-    } else if (event.request().path().endsWith("/login/logout")) {
+    } else if (event.request().path().endsWith("/logout")) {
       handleLogout(event);
     } else {
       event.next();
