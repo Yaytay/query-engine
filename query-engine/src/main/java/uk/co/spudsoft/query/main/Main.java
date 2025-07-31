@@ -637,7 +637,7 @@ public class Main extends Application {
       LoginRouter loginRouter = LoginRouter.create(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, rcb, params.getSession(), params.getJwt().getRequiredAudiences(), outputAllErrorMessages(), params.getSession().getSessionCookie());
       router.get("/login").handler(loginRouter);
       router.get("/login/return").handler(loginRouter);
-      router.get("/login/logout").handler(loginRouter);
+      router.get("/logout").handler(loginRouter);
     }
     router.route("/").handler(rc -> {
       rc.response().setStatusCode(307);

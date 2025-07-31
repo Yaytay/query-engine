@@ -36,6 +36,7 @@ public class MimeTypes {
     OVERRIDE.put("yaml", "application/yaml");
     OVERRIDE.put("yml", "application/yaml");
     OVERRIDE.put("webmanifest", "application/json");
+    OVERRIDE.put("js", "application/javascript");
   };
 
   private MimeTypes() {

@@ -164,6 +164,7 @@ public class UiRouter implements Handler<RoutingContext> {
     HttpServerResponse response = context.response();
     String extension = getFileExtension(loadedFile.path);
     String contentType = extension == null ? "text/html" : MimeTypes.getMimeTypeForExtension(extension);
+    logger.debug("File {} has extension {} and content type {}", loadedFile.path, extension, contentType);
     
     MultiMap headers = response.headers();
     

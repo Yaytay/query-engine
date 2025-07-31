@@ -336,7 +336,7 @@ public class LoginRouterWithDiscoveryWithoutPersistenceIT {
             .cookies(cookies)
             .redirects().follow(false)
             .log().all()
-            .get("/login/logout")
+            .get("/logout")
             .then()
             .log().all()
             .statusCode(307)

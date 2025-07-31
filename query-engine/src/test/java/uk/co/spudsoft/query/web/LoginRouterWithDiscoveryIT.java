@@ -21,7 +21,6 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import io.netty.handler.codec.http.QueryStringDecoder;
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
 import io.vertx.core.json.JsonArray;
@@ -379,7 +378,7 @@ public class LoginRouterWithDiscoveryIT {
             .cookies(cookies)
             .redirects().follow(false)
             .log().all()
-            .get("/login/logout")
+            .get("/logout")
             .then()
             .log().all()
             .statusCode(307)

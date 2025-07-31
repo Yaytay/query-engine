@@ -17,7 +17,6 @@
 package uk.co.spudsoft.query.web;
 
 import io.netty.handler.codec.http.QueryStringDecoder;
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
 import java.io.ByteArrayOutputStream;

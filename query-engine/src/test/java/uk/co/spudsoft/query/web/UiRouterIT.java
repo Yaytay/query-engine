@@ -31,9 +31,12 @@ import io.restassured.http.ContentType;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.lang.invoke.MethodHandles;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import uk.co.spudsoft.query.main.Main;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.TestInstance;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 
@@ -102,10 +105,9 @@ public class UiRouterIT {
             .statusCode(200)
             .contentType(ContentType.HTML)
             .header("X-Frame-Options", "SAMEORIGIN")
-            .extract().body().asString()
-            
+            .extract().body().asString()            
             ;
-        
+    
     String index2 = given()
             .log().all()
             .get("/ui/index.html")
@@ -177,6 +179,14 @@ public class UiRouterIT {
     
     // Note that the following tests will all fail if the UI files have not been added
     // The UI files are added automatically in a clean build if the "ui" profile is enabled.
+    
+    // Extract the module path from the HTML via regex
+    Pattern modulePattern = Pattern.compile("<script[^>]*type=\"module\"[^>]*src=\"([^\"]*)\"[^>]*>");
+    Matcher matcher = modulePattern.matcher(root);
+    assertTrue(matcher.find());
+    String modulePath = "/ui" + matcher.group(1).substring(1);
+        
+    when().get(modulePath).then().header("Content-Type", equalTo("application/javascript"));
     when().get("/ui/android-chrome-192x192.png").then().header("Content-Type", equalTo("image/png"));
     when().get("/ui/browserconfig.xml").then().header("Content-Type", equalTo("application/xml"));
     when().get("/ui/favicon.ico").then().header("Content-Type", equalTo("image/x-icon"));
