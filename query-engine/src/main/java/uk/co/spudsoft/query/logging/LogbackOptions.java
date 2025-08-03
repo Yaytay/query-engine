@@ -62,7 +62,7 @@ public class LogbackOptions {
    * <P>
    * By default logging is all to stdout and is at INFO level for all loggers.
    * The format used is 
-   * <pre>"%date{yyyy-MM-dd HH:mm:ss.SSS, UTC} [%thread] %-5level %logger{36} %X{traceId:-#}:%X{spanId:-#} %X{source:-#} - %msg%n"</pre> 
+   * <pre>"%date{yyyy-MM-dd HH:mm:ss.SSS, UTC} [%thread] %-5level %logger{36} %X{requestId:-#} %X{source:-#} - %msg%n"</pre> 
    * which is a fairly standard format with the addition of fields for the trace and source details.
    * @param configFile the location of a standard logback configuration file.
    * @return this, so that the method may be called in a fluent manner.

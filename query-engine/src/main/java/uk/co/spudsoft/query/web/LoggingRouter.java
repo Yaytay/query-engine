@@ -16,13 +16,11 @@
  */
 package uk.co.spudsoft.query.web;
 
-import io.opentelemetry.api.trace.Span;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.logging.VertxMDCSpanProcessor;
+import uk.co.spudsoft.query.exec.conditions.RequestContext;
 
 /**
  * Simple Vertx HTTP logger.
@@ -41,13 +39,8 @@ public class LoggingRouter implements Handler<RoutingContext> {
   @Override
   public void handle(RoutingContext routingContext) {
     long start = System.currentTimeMillis();
-    
-    if (Vertx.currentContext() != null) {
-      Span currentSpan = Span.current();
-      if (currentSpan != null) {
-        VertxMDCSpanProcessor.toMdc(currentSpan.getSpanContext());
-      }
-    }
+
+    RequestContext.storeRequestId();
     
     logger.info("Request: {} {}", routingContext.request().method(), routingContext.request().uri());
     routingContext.addHeadersEndHandler(v -> {

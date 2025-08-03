@@ -132,6 +132,7 @@ public class ServerProviderMySQL extends AbstractServerProvider implements Serve
                 .withPassword(ROOT_PASSWORD)
                 .withExposedPorts(3306)
                 .withDatabaseName("test")
+                .withUrlParam("openTelemetry", "DISABLED")
                 ;
       }
       if (!mysqlserver.isRunning()) {

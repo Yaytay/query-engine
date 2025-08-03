@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableSet;
 import inet.ipaddr.IPAddressString;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
-import io.vertx.core.Context;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.Cookie;
@@ -43,6 +42,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
+import uk.co.spudsoft.query.logging.VertxMDC;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 
@@ -55,7 +55,9 @@ public class RequestContext {
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(RequestContext.class);
-
+  
+  private static final String REQUEST_ID = "requestId";
+  
   private static final Base64.Decoder B64 = Base64.getDecoder();
 
   private final long startTime;
@@ -101,7 +103,7 @@ public class RequestContext {
   public RequestContext(Map<String, String> environment, HttpServerRequest request, Jwt jwt) {
     this.environment = ImmutableCollectionTools.copy(environment);
     this.startTime = System.currentTimeMillis();
-    this.requestId = extractRequestId();
+    this.requestId = retrieveRequestId();
     this.url = request.absoluteURI();
     this.uri = parseURI(request.absoluteURI());
     this.clientIp = extractRemoteIp(request);
@@ -281,27 +283,46 @@ public class RequestContext {
   public String getRunID() {
     return runId;
   }
-
+  
   /**
-   * Either use the zipkin span ID (combined with the trace ID if they are not the same) or a random UUID as a unique ID for this request.
-   * @return either the zipkin span ID (combined with the trace ID if they are not the same) or a random UUID as a unique ID for this request.
+   * Generate a requestId, store it in MDC and return it.
+   * 
+   * The request ID is usually generated from the OpenTelemetry trace/span IDs, falling back to a random UUID.
+   * 
+   * @return the request ID.
    */
-  public static String extractRequestId() {
-    Context context = Vertx.currentContext();
-    if (context != null) {
-      Span span = Span.current();
-      if (span != null) {
-        SpanContext spanContext = span.getSpanContext();
+  public static String storeRequestId() {
+    String requestId = null;
+    if (Vertx.currentContext() != null) {
+      Span currentSpan = Span.current();
+      if (currentSpan != null) {
+        SpanContext spanContext = currentSpan.getSpanContext();
         if (spanContext.isValid()) {
-          if (spanContext.getTraceId().equals(spanContext.getSpanId())) {
-            return spanContext.getSpanId();
-          } else {
-            return spanContext.getTraceId() + ":" + spanContext.getSpanId();
-          }
+          requestId = spanContext.getTraceId() + ":" + spanContext.getSpanId();
         }
       }
     }
-    return UUID.randomUUID().toString();
+    if (requestId == null) {
+      requestId = UUID.randomUUID().toString();
+    }
+    VertxMDC.INSTANCE.put(REQUEST_ID, requestId);
+    return requestId;
+  }
+
+  /**
+   * Retrieve the requestId from MDC.
+   * 
+   * If there is no request Id in MDC {@link #storeRequestId()} is called.
+   * 
+   * @return the requestId found in MDC.
+   */
+  public static String retrieveRequestId() {
+    String requestId = VertxMDC.INSTANCE.get(REQUEST_ID);
+    if (requestId == null) {
+      return storeRequestId();
+    } else {
+      return requestId;
+    }
   }
 
   /**

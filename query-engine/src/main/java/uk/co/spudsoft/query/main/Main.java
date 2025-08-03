@@ -110,6 +110,7 @@ import uk.co.spudsoft.query.exec.FilterFactory;
 import uk.co.spudsoft.query.exec.JdbcHelper;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineExecutorImpl;
+import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 import uk.co.spudsoft.query.exec.filters.LimitFilter;
 import uk.co.spudsoft.query.exec.filters.MapFilter;
@@ -119,7 +120,7 @@ import uk.co.spudsoft.query.exec.filters.SortFilter;
 import uk.co.spudsoft.query.exec.filters.WithoutFilter;
 import uk.co.spudsoft.query.exec.procs.sort.ProcessorSortInstance;
 import uk.co.spudsoft.query.json.ObjectMapperConfiguration;
-import uk.co.spudsoft.query.logging.VertxMDCSpanProcessor;
+import uk.co.spudsoft.query.logging.VertxMDC;
 import static uk.co.spudsoft.query.main.TracingSampler.alwaysOff;
 import static uk.co.spudsoft.query.main.TracingSampler.alwaysOn;
 import static uk.co.spudsoft.query.main.TracingSampler.parent;
@@ -272,6 +273,7 @@ public class Main extends Application {
     Future<Void> httpServerCloseFuture = httpServer == null ? Future.succeededFuture() : httpServer.close();
     httpServerCloseFuture
             .compose(v -> {
+              VertxMDC.INSTANCE.remove(SourceInstance.SOURCE_CONTEXT_KEY);
               if (auditor == null) {
                 return Future.succeededFuture();
               } else {
@@ -279,6 +281,7 @@ public class Main extends Application {
               }
             })
             .compose(v -> {
+              VertxMDC.INSTANCE.remove(SourceInstance.SOURCE_CONTEXT_KEY);
               if (jdbcHelper == null) {
                 return Future.succeededFuture();
               } else {
@@ -286,6 +289,7 @@ public class Main extends Application {
               }
             })
             .onComplete(ar -> {
+              VertxMDC.INSTANCE.remove(SourceInstance.SOURCE_CONTEXT_KEY);
               if (ar.failed()) {
                 logger.error("Graceful shutdown failed: ", ar.cause());
               } else {
@@ -467,6 +471,8 @@ public class Main extends Application {
     OpenTelemetry openTelemetry = buildOpenTelemetry(params.getTracing());
     if (openTelemetry != null) {
       vertxBuilder = vertxBuilder.withTracer(new OpenTelemetryTracingFactory(openTelemetry));
+    } else {
+      logger.warn("OpenTelemetry NOT set");
     }
 
     vertx = vertxBuilder.build();
@@ -982,7 +988,6 @@ public class Main extends Application {
     }
 
     SdkTracerProvider sdkTracerProvider = builder
-            .addSpanProcessor(new VertxMDCSpanProcessor())
             .setResource(resourceBuilder.build())
             .setSampler(sampler)
             .build();

@@ -3,7 +3,7 @@
   <appender name="STDOUTPUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
       <charset>UTF-8</charset>
-      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} %line %X{traceId:-#}:%X{spanId:-#} %X{source:-#} - %msg%n</pattern>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} %line %X{requestId:-#} %X{source:-#} - %msg%n</pattern>
     </encoder>
   </appender>
   <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator" />

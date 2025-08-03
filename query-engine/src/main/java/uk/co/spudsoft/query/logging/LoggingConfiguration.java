@@ -32,6 +32,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import org.slf4j.LoggerFactory;
@@ -62,7 +63,8 @@ public class LoggingConfiguration {
       if (k.startsWith("LOGGING_LEVEL_")) {
         try {
           String log = k.substring(14);
-          log = log.toLowerCase().replaceAll("_", ".");
+          log = log.toLowerCase(Locale.ROOT).replaceAll("_", ".");
+          v = v.toUpperCase(Locale.ROOT);
           Level level = Level.valueOf(v);
           levelEnvs.put(log, level);
         } catch (Throwable ex) {
@@ -183,7 +185,7 @@ public class LoggingConfiguration {
     ConsoleAppender<ILoggingEvent> ca = createConsoleAppender(loggerContext);
 
     PatternLayout layout = new PatternLayout();
-    layout.setPattern("%date{yyyy-MM-dd HH:mm:ss.SSS, UTC} [%thread] %-5level %logger{36} %X{traceId:-#}:%X{spanId:-#} %X{runId:-#} %X{source:-#} %X{process:-#} - %msg%n");
+    layout.setPattern("%date{yyyy-MM-dd HH:mm:ss.SSS, UTC} [%thread] %-5level %logger{36} %X{requestId:-#} %X{runId:-#} %X{source:-#} %X{process:-#} - %msg%n");
 
     LayoutWrappingEncoder<ILoggingEvent> encoder = new LayoutWrappingEncoder<>();
     encoder.setContext(loggerContext);
