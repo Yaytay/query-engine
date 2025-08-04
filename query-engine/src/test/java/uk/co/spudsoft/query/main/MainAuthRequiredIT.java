@@ -124,7 +124,7 @@ public class MainAuthRequiredIT {
             .log().all()
             ;
            
-    // Autho config does not require auth
+    // Auth config does not require auth
     String authConfig = given()
             .log().all()
             .get("/api/auth-config")

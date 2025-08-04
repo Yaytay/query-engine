@@ -30,6 +30,7 @@ import jakarta.ws.rs.container.Suspended;
 import jakarta.ws.rs.core.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
 import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.main.Version;
 import static uk.co.spudsoft.query.web.rest.InfoHandler.reportError;
@@ -81,11 +82,13 @@ public class SessionHandler {
   ) {
     try {
       RequestContext requestContext = HandlerAuthHelper.getRequestContext(Vertx.currentContext(), requireSession);
+      Jwt jwt = requestContext.getJwt();
 
       Profile profile = new Profile(
               requestContext.getUsername()
               , requestContext.getName()
               , Version.MAVEN_PROJECT_NAME + " " + Version.MAVEN_PROJECT_VERSION
+              , jwt == null ? null : jwt.getPayloadAsString()
       );
 
       response.resume(profile);

@@ -181,7 +181,7 @@ public class MainIT {
     }
             , stdout
             , ImmutableMap.<String, String>builder()
-                    .put("LOGGING_AS_JSON", "tRue")
+                    .put("LOGGING_AS_JSON", "false")
                     .put("LOGGING_LEVEL_UK_co_sPuDsoft_query_logging", "trace")
                     .build());
     assertEquals(0, stdoutStream.size());

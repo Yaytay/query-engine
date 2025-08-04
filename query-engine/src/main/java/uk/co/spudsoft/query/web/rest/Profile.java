@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.web.rest;
 
+import com.fasterxml.jackson.annotation.JsonRawValue;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
@@ -32,6 +33,9 @@ public class Profile {
   private final String username;
   private final String fullname;
   private final String version;
+  private final String claims;
+  
+  
 
   /**
    * Constructor.
@@ -39,11 +43,14 @@ public class Profile {
    * @param username The username from the token ({@link uk.co.spudsoft.query.exec.conditions.RequestContext#getUsername()}).
    * @param fullname The full name from the token ({@link uk.co.spudsoft.query.exec.conditions.RequestContext#getName()}).
    * @param version The version of the Query Engine ({@link uk.co.spudsoft.query.main.Version}).
+   * @param claims The claims from the JWT token.
    */
-  public Profile(String username, String fullname, String version) {
+  public Profile(String username, String fullname, String version, String claims) {
     this.username = username;
     this.fullname = fullname;
     this.version = version;
+    this.claims = claims;
+    
   }
 
   /**
@@ -105,4 +112,17 @@ public class Profile {
     return version;
   }
 
+  /**
+   * Get the claims from the JWT representing the user.
+   * @return the claims from the JWT representing the user.
+   */
+  @Schema(description = """
+                        The claims from the JWT representing the user.
+                        """
+          , type = "object"
+  )
+  @JsonRawValue
+  public String getClaims() {
+    return claims;
+  }
 }

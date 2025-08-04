@@ -24,6 +24,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.Cookie;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
@@ -384,25 +385,23 @@ public class LoginRouter implements Handler<RoutingContext> {
               .sendForm(body);
     })
             .compose(codeResponse -> {
+              Buffer body = codeResponse.body();
               if (codeResponse.statusCode() != 200) {
-                String responseBody = codeResponse.bodyAsString();
                 logger.warn("Failed to get access token from {} ({}): {}",
-                         requestDataAndAuthEndpoint.authEndpoint.getTokenEndpoint(), codeResponse.statusCode(), responseBody);
+                         requestDataAndAuthEndpoint.authEndpoint.getTokenEndpoint(), codeResponse.statusCode(), body);
                 return Future.failedFuture(new IllegalStateException("Failed to get access token from provider"));
               } else {
-                JsonObject body;
+                JsonObject jsonBody;
                 try {
-                  body = codeResponse.bodyAsJsonObject();
+                  jsonBody = body.toJsonObject();
                 } catch (Throwable ex) {
-                  String stringBody = codeResponse.bodyAsString();
-                  logger.warn("Failed to get access token ({}): {}", codeResponse.statusCode(), stringBody);
+                  logger.warn("Failed to get access token ({}): {}", codeResponse.statusCode(), body);
                   return Future.failedFuture(new IllegalStateException("Failed to get access token from provider"));
                 }
-                logger.debug("Access token response: {}", body);
-                accessTokenPtr[0] = body.getString("access_token");
+                logger.debug("Access token response: {}", jsonBody);
+                accessTokenPtr[0] = jsonBody.getString("access_token");
                 if (Strings.isNullOrEmpty(accessTokenPtr[0])) {
-                  String stringBody = codeResponse.bodyAsString();
-                  logger.warn("Failed to get access token ({}): {}", codeResponse.statusCode(), stringBody);
+                  logger.warn("Failed to get access token ({}): {}", codeResponse.statusCode(), body);
                   return Future.failedFuture(new IllegalStateException("Failed to get access token from provider"));
                 }
 

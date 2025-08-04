@@ -269,17 +269,23 @@ public class RequestContextBuilder {
   }
 
   private String getCachedToken(String credentials) {
+    int colonPos = credentials.indexOf(":");
+    String username = colonPos > 0 ? credentials.substring(0, colonPos) : credentials;            
     synchronized (credentialsCache) {
       TimestampedToken timestampedToken = credentialsCache.get(credentials);
       if (timestampedToken == null) {
+        logger.debug("No token for {} in cache", username);
         return null;
       } else {
         LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         if (timestampedToken.expiry.isAfter(now)) {
+          logger.debug("Found token for {} in cache", username);
           return timestampedToken.token;
         } else {
-          // Remove all other expired tokens now
+          // Remove all expired tokens now
           credentialsCache.entrySet().removeIf(entry -> entry.getValue().expiry.isBefore(now));
+          logger.debug("Found token for {} in cache but it expired at {}, there are now {} entries in the cache"
+                  , username, timestampedToken.token, credentialsCache.size());
           return null;
         }
       }
@@ -325,6 +331,8 @@ public class RequestContextBuilder {
 
     } else if (authHeader.startsWith(BASIC)) {
 
+      request.pause();
+
       if (basicAuthConfig == null || (basicAuthConfig.getGrantType() == null)) {
         logger.warn("Request includes basic authentication credentials but system is not configured to handle them.");
         return Future.failedFuture(new ServiceException(401, "Forbidden"));
@@ -345,7 +353,7 @@ public class RequestContextBuilder {
 
       Future<String> tokenFuture = null;
 
-      String cachedToken = getCachedToken(encodedCredentials);
+      String cachedToken = getCachedToken(decodedCredentials);
       if (cachedToken != null) {
         tokenFuture = Future.succeededFuture(cachedToken);
       } else {
@@ -356,12 +364,11 @@ public class RequestContextBuilder {
           domain = username.substring(at + 1);
           usernameWithoutDomain = username.substring(0, at);
         }
-        request.pause();
-
         if (basicAuthConfig.getIdpMap() == null || basicAuthConfig.getIdpMap().isEmpty()) {
           if (basicAuthConfig.getDefaultIdp() == null && Strings.isNullOrEmpty(basicAuthConfig.getAuthorizationPath())) {
             tokenFuture = discoverer.performOpenIdDiscovery(baseRequestUrl(request))
                     .compose(dd -> {
+                      logger.debug("Discovery data: {}", dd);
                       if (basicAuthConfig.getGrantType() == BasicAuthGrantType.clientCredentials) {
                         return performClientCredentialsGrant(dd.getTokenEndpoint(), username, password);
                       } else {
@@ -391,14 +398,16 @@ public class RequestContextBuilder {
       return tokenFuture
               .compose(token -> {
                 if (token == null) {
-                  logger.debug("Login for {} failed", username);
+                  logger.info("Login for {} failed", username);
                   return Future.failedFuture(new ServiceException(401, "Invalid credentials"));
                 } else {
                   logger.debug("Login for {} got token: {}", username, token);
-                  request.resume();
                   return validateToken(request, token)
-                          .onSuccess(jwt -> {
-                            cacheToken(encodedCredentials, jwt.getExpirationLocalDateTime(), token);
+                          .onComplete(ar -> {
+                            if (ar.succeeded()) {
+                              cacheToken(encodedCredentials, ar.result().getExpirationLocalDateTime(), token);
+                            }
+                            request.resume();
                           });
                 }
               })
@@ -534,13 +543,15 @@ public class RequestContextBuilder {
     return webClient.postAbs(tokenEndpoint)
             .sendForm(form)
             .compose(response -> {
+              Buffer body = response.body();
               try {
-                logger.trace("CCG request to {} returned: {} {}", tokenEndpoint, response.statusCode(), response.bodyAsString());
-                JsonObject body = response.bodyAsJsonObject();
-                String token = body.getString("access_token");
+                logger.trace("CCG request to {} returned: {} {}", tokenEndpoint, response.statusCode(), body);
+                JsonObject bodyJson = body.toJsonObject();
+                String token = bodyJson.getString("access_token");
                 logger.debug("Client {}@{} got token {}", clientId, tokenEndpoint, token);
                 return Future.succeededFuture(token);
               } catch (Throwable ex) {
+                logger.warn("CCG request to {} returned: {} {}", tokenEndpoint, response.statusCode(), body);
                 logger.warn("Failed to process client credentials grant for {}@{}: ", clientId, tokenEndpoint, ex);
                 return Future.failedFuture(ex);
               }
@@ -560,13 +571,15 @@ public class RequestContextBuilder {
     return request
             .sendForm(form)
             .compose(response -> {
+              Buffer body = response.body();
               try {
-                logger.trace("ROPC request to {} returned: {} {}", authEndpoint, response.statusCode(), response.bodyAsString());
-                JsonObject body = response.bodyAsJsonObject();
-                String token = body.getString("access_token");
+                logger.trace("ROPC request to {} returned: {} {}", authEndpoint, response.statusCode(), body);
+                JsonObject bodyJson = body.toJsonObject();
+                String token = bodyJson.getString("access_token");
                 logger.debug("User {}@{} got token {}", username, authEndpoint, token);
                 return Future.succeededFuture(token);
               } catch (Throwable ex) {
+                logger.warn("ROPC request to {} returned: {} {}", authEndpoint, response.statusCode(), body);
                 logger.warn("Failed to process client credentials grant for {}@{}: ", username, authEndpoint, ex);
                 return Future.failedFuture(ex);
               }
