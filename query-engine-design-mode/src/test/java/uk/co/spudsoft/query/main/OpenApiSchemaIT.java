@@ -283,7 +283,10 @@ public class OpenApiSchemaIT {
     
     String type = schema.getString("type");
     if ("object".equals(type) && schema.containsKey("additionalProperties")) {
-      return name + " is a map (object with additionalProperties), please change to a List";
+      // Profile claims have to be a map
+      if (!"Profile.claims".equals(name)) {
+        return name + " is a map (object with additionalProperties), please change to a List";
+      }
     }
     if (isTopLevelSchema) {
       // Must either have a type, or have an allOf with a ref and then a type
