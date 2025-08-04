@@ -204,11 +204,13 @@ public class OpenApiSchemaIT {
       }
     } else if ("object".equals(type)) {
       if (schema.containsKey("additionalProperties")) {
-        JsonObject addProp = schema.getJsonObject("additionalProperties");
-        String ref = addProp.getString("$ref");
-        if (ref != null) {
-          ref = ref.replaceAll("#/components/schemas/", "");
-          type = "map to " + ref + " objects";
+        Object addProps = schema.getValue("additionalProperties");
+        if (addProps instanceof JsonObject addProp) {
+          String ref = addProp.getString("$ref");
+          if (ref != null) {
+            ref = ref.replaceAll("#/components/schemas/", "");
+            type = "map to " + ref + " objects";
+          }
         }
       }
     } else if ("string".equals(type)) {
@@ -279,7 +281,10 @@ public class OpenApiSchemaIT {
     
     String type = schema.getString("type");
     if ("object".equals(type) && schema.containsKey("additionalProperties")) {
-      return name + " is a map (object with additionalProperties), please change to a List";
+      // Profile claims have to be a map
+      if (!"Profile.claims".equals(name)) {
+        return name + " is a map (object with additionalProperties), please change to a List";
+      }
     }
     if (isTopLevelSchema) {
       // Must either have a type, or have an allOf with a ref and then a type

@@ -118,8 +118,23 @@ public class Profile {
    */
   @Schema(description = """
                         The claims from the JWT representing the user.
+                        The type will be an object with string keys.
                         """
-          , type = "object"
+          , types = {"object"}
+          , implementation = Object.class
+          , additionalProperties = Schema.AdditionalPropertiesValue.TRUE
+          , example = """
+                      {
+                        "sub": "user123",
+                        "iss": "http://issuer-endpoint/token",
+                        "exp": 1754310371,
+                        "nbf": 1754306771,
+                        "preferred_username": "john.doe",
+                        "name": "John Doe",
+                        "email": "john.doe@example.com",
+                        "aud": "query-engine"
+                      }
+                      """
   )
   @JsonRawValue
   public String getClaims() {
