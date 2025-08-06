@@ -73,7 +73,7 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
   
   private RequestContext requestContext;
   private Pipeline pipeline;
-  private final ImmutableMap<String, Object> arguments;
+  private ImmutableMap<String, Object> arguments;
   
   private Types types;
   
@@ -92,7 +92,6 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
     this.context = context;
     this.definition = definition;
     this.name = name;
-    this.arguments = ImmutableCollectionTools.copy(requestContext == null ? null : requestContext.getArguments());
   }
   
   @Override
@@ -191,6 +190,7 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStreamWithTypes input) {
     this.pipeline = pipeline.getDefinition();
     this.requestContext = pipeline.getRequestContext();
+    this.arguments = ImmutableCollectionTools.copy(requestContext == null ? null : requestContext.getArguments());
     try {
       engine = Engine.newBuilder()
               .option("engine.WarnInterpreterOnly", "false")

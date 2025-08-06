@@ -56,13 +56,11 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
 @TestInstance(Lifecycle.PER_CLASS)
 public class ScriptQueryIT {
   
-  private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
   private static final ServerProviderMySQL mysql = new ServerProviderMySQL().init();
 
   private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
   
   private JdkJwksHandler jwks;
-  private TokenBuilder tokenBuilder;
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ScriptQueryIT.class);
@@ -74,7 +72,6 @@ public class ScriptQueryIT {
     confsDir.mkdirs();
 
     Cache<String, AlgorithmAndKeyPair> keyCache = AlgorithmAndKeyPair.createCache(Duration.ofMinutes(1));
-    tokenBuilder = new JdkTokenBuilder(keyCache);
 
     jwks = JdkJwksHandler.create();
     logger.debug("Starting JWKS endpoint");

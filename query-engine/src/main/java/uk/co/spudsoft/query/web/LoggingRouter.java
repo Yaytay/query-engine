@@ -51,28 +51,23 @@ public class LoggingRouter implements Handler<RoutingContext> {
     long start = System.currentTimeMillis();
 
     HttpServerRequest request = routingContext.request();
-    RequestContext requestContext = RequestContext.retrieveRequestContext(routingContext);
-    if (requestContext != null) {
-      logger.debug("LoggingRouter already called for {}", requestContext.getRequestId());
-    } else {
-      requestContext = new RequestContext(requestContextEnvironment, request);
-      requestContext.storeInRoutingContext(routingContext);
+    RequestContext requestContext = new RequestContext(requestContextEnvironment, request);
+    requestContext.storeInRoutingContext(routingContext);
 
-      logger.info("Request: {} {}", routingContext.request().method(), routingContext.request().uri());
+    logger.info("Request: {} {}", routingContext.request().method(), routingContext.request().uri());
 
-      routingContext.addHeadersEndHandler(v -> {
-        long end = System.currentTimeMillis();
-        logger.info("Headers end: {} {}s", routingContext.response().getStatusCode(), (end - start) / 1000.0);
-      });
-      routingContext.addBodyEndHandler(v -> {
-        long end = System.currentTimeMillis();
-        logger.info("Body end: {} {} {}s", routingContext.response().getStatusCode(), routingContext.response().bytesWritten(), (end - start) / 1000.0);
-      });
-      routingContext.addEndHandler(v -> {
-        long end = System.currentTimeMillis();
-        logger.info("Complete: {} {} {}s", routingContext.response().getStatusCode(), routingContext.response().bytesWritten(), (end - start) / 1000.0);
-      });
-    }
+    routingContext.addHeadersEndHandler(v -> {
+      long end = System.currentTimeMillis();
+      logger.info("Headers end: {} {}s", routingContext.response().getStatusCode(), (end - start) / 1000.0);
+    });
+    routingContext.addBodyEndHandler(v -> {
+      long end = System.currentTimeMillis();
+      logger.info("Body end: {} {} {}s", routingContext.response().getStatusCode(), routingContext.response().bytesWritten(), (end - start) / 1000.0);
+    });
+    routingContext.addEndHandler(v -> {
+      long end = System.currentTimeMillis();
+      logger.info("Complete: {} {} {}s", routingContext.response().getStatusCode(), routingContext.response().bytesWritten(), (end - start) / 1000.0);
+    });
     routingContext.next();
   }
 }

@@ -149,9 +149,9 @@ public class DynamicEndpointPipelineJdbcIT {
               return pool.preparedQuery("insert into DynamicEndpoint (endpointKey, type, url, username, password, useCondition) values (?, ?, ?, ?, ?, ?)")
                   .executeBatch(
                           Arrays.asList(
-                                  Tuple.of("my", "SQL", serverProviderMy.getJdbcUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
-                                  , Tuple.of("ms", "SQL", serverProviderMs.getJdbcUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
-                                  , Tuple.of("pg", "SQL", serverProviderPg.getJdbcUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
+                                  Tuple.of("my", "JDBC", serverProviderMy.getJdbcUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
+                                  , Tuple.of("ms", "JDBC", serverProviderMs.getJdbcUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
+                                  , Tuple.of("pg", "JDBC", serverProviderPg.getJdbcUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
                           )
                   );
             })
@@ -253,9 +253,9 @@ public class DynamicEndpointPipelineJdbcIT {
               return pool.preparedQuery("insert into DynamicEndpoint (endpointKey, type, url, username, password, useCondition) values (?, ?, ?, ?, ?, ?)")
                   .executeBatch(
                           Arrays.asList(
-                                  Tuple.of("my", "SQL", serverProviderMy.getJdbcUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
-                                  , Tuple.of("ms", "SQL", serverProviderMs.getJdbcUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
-                                  , Tuple.of("pg", "SQL", serverProviderPg.getJdbcUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
+                                  Tuple.of("my", "JDBC", serverProviderMy.getJdbcUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
+                                  , Tuple.of("ms", "JDBC", serverProviderMs.getJdbcUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
+                                  , Tuple.of("pg", "JDBC", serverProviderPg.getJdbcUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
                           )
                   );
             })
@@ -352,9 +352,9 @@ public class DynamicEndpointPipelineJdbcIT {
               return pool.preparedQuery("insert into DynamicEndpoint (endpointKey, type, url, username, password, useCondition) values (?, ?, ?, ?, ?, ?)")
                   .executeBatch(
                           Arrays.asList(
-                                  Tuple.of("my", "SQL", serverProviderMy.getJdbcUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
-                                  , Tuple.of("ms", "SQL", serverProviderMs.getJdbcUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
-                                  , Tuple.of("pg", "SQL", serverProviderPg.getJdbcUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
+                                  Tuple.of("my", "JDBC", serverProviderMy.getJdbcUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
+                                  , Tuple.of("ms", "JDBC", serverProviderMs.getJdbcUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
+                                  , Tuple.of("pg", "JDBC", serverProviderPg.getJdbcUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
                           )
                   );
             })
@@ -398,7 +398,7 @@ public class DynamicEndpointPipelineJdbcIT {
                 });
               } else {
                 testContext.verify(() -> {
-                  assertThat(ar.cause(), instanceOf(NullPointerException.class));
+                  assertThat(ar.cause(), instanceOf(ServiceException.class));
                   logger.debug("Cause: {}", ar.cause().getMessage());
                 });
                 testContext.completeNow();
@@ -448,9 +448,9 @@ public class DynamicEndpointPipelineJdbcIT {
               return pool.preparedQuery("insert into DynamicEndpoint (endpointKey, type, url, username, password, useCondition) values (?, ?, ?, ?, ?, ?)")
                   .executeBatch(
                           Arrays.asList(
-                                  Tuple.of("my", "SQL", serverProviderMy.getJdbcUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
-                                  , Tuple.of("ms", "SQL", serverProviderMs.getJdbcUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
-                                  , Tuple.of("pg", "SQL", serverProviderPg.getJdbcUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
+                                  Tuple.of("my", "JDBC", serverProviderMy.getJdbcUrl(), serverProviderMy.getUser(), serverProviderMy.getPassword(), null)
+                                  , Tuple.of("ms", "JDBC", serverProviderMs.getJdbcUrl(), serverProviderMs.getUser(), serverProviderMs.getPassword(), null)
+                                  , Tuple.of("pg", "JDBC", serverProviderPg.getJdbcUrl(), serverProviderPg.getUser(), serverProviderPg.getPassword(), null)
                           )
                   );
             })
