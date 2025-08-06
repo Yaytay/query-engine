@@ -14,8 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package uk.co.spudsoft.query.exec.conditions;
+package uk.co.spudsoft.query.main;
 
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import inet.ipaddr.IPAddressString;
 import io.vertx.core.net.impl.HostAndPortImpl;
 import io.vertx.core.net.impl.SocketAddressImpl;
@@ -24,61 +25,51 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.impl.RoutingContextImpl;
 import org.junit.jupiter.api.Test;
 
-import uk.co.spudsoft.query.main.BasicAuthConfig;
 
 import java.util.HashMap;
 import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import uk.co.spudsoft.query.main.Endpoint;
 
 /**
  *
  * @author jtalbut
  */
-public class RequestContextBuilderTest {
+public class AuthenticatorTest {
 
   @Test
   public void testEnsureNonBlankStartsWith() {
-    assertEquals("", RequestContextBuilder.ensureNonBlankStartsWith(null, "/"));
-    assertEquals("", RequestContextBuilder.ensureNonBlankStartsWith("", "/"));
-    assertEquals("/bob", RequestContextBuilder.ensureNonBlankStartsWith("bob", "/"));
-    assertEquals("/fred", RequestContextBuilder.ensureNonBlankStartsWith("/fred", "/"));
+    assertEquals("", Authenticator.ensureNonBlankStartsWith(null, "/"));
+    assertEquals("", Authenticator.ensureNonBlankStartsWith("", "/"));
+    assertEquals("/bob", Authenticator.ensureNonBlankStartsWith("bob", "/"));
+    assertEquals("/fred", Authenticator.ensureNonBlankStartsWith("/fred", "/"));
   }
   
-  @Test
-  public void testBuildRequestContextAllNulls() {
-    RequestContextBuilder builder = new RequestContextBuilder(null, null, null, null, null, null, true, null, false, null, null, null, null);
-    HttpServerRequest request = mock(HttpServerRequest.class);
-    when(request.remoteAddress()).thenReturn(new SocketAddressImpl(0, "1.2.3.4"));
-    RequestContext context = builder.buildRequestContext(request).result();
-    assertNotNull(context);
-    assertEquals(new IPAddressString("1.2.3.4"), context.getClientIp());
-  }
-
   @Test
   public void testHap() {
     HttpServerRequest request = mock(HttpServerRequest.class);
     when(request.authority()).thenReturn(new HostAndPortImpl("bob", 1234));
     when(request.scheme()).thenReturn("http");
-    assertEquals("http://bob:1234", RequestContextBuilder.baseRequestUrl(request));
+    assertEquals("http://bob:1234", Authenticator.baseRequestUrl(request));
 
     when(request.authority()).thenReturn(new HostAndPortImpl("bob", 80));
     when(request.scheme()).thenReturn("http");
-    assertEquals("http://bob", RequestContextBuilder.baseRequestUrl(request));
+    assertEquals("http://bob", Authenticator.baseRequestUrl(request));
 
     when(request.authority()).thenReturn(new HostAndPortImpl("bob", 1234));
     when(request.scheme()).thenReturn("https");
-    assertEquals("https://bob:1234", RequestContextBuilder.baseRequestUrl(request));
+    assertEquals("https://bob:1234", Authenticator.baseRequestUrl(request));
 
     when(request.authority()).thenReturn(new HostAndPortImpl("bob", 443));
     when(request.scheme()).thenReturn("https");
-    assertEquals("https://bob", RequestContextBuilder.baseRequestUrl(request));
+    assertEquals("https://bob", Authenticator.baseRequestUrl(request));
 
     when(request.authority()).thenReturn(null);
     when(request.scheme()).thenReturn("https");
-    assertEquals("https://", RequestContextBuilder.baseRequestUrl(request));
+    assertEquals("https://", Authenticator.baseRequestUrl(request));
   }
 
   @Test
@@ -91,7 +82,7 @@ public class RequestContextBuilderTest {
     when(basicAuthConfig.getDefaultIdp()).thenReturn(new Endpoint("https://default-idp.example.com", null));
 
     // Call the method with any domain (should use default IdP)
-    Endpoint result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "example.com", "http://example.com", false);
+    Endpoint result = Authenticator.findAuthEndpoint(basicAuthConfig, "example.com", "http://example.com", false);
 
     // Verify result
     assertEquals("https://default-idp.example.com", result.getUrl());
@@ -107,7 +98,7 @@ public class RequestContextBuilderTest {
     when(basicAuthConfig.getDefaultIdp()).thenReturn(new Endpoint("https://default-idp.example.com", null));
 
     // Call the method with any domain (should use default IdP)
-    Endpoint result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "example.com", "http://example.com", false);
+    Endpoint result = Authenticator.findAuthEndpoint(basicAuthConfig, "example.com", "http://example.com", false);
 
     // Verify result
     assertEquals("https://default-idp.example.com", result.getUrl());
@@ -124,7 +115,7 @@ public class RequestContextBuilderTest {
 
     // Call the method - should throw IllegalStateException
     IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-      RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "example.com", "http://example.com", false);
+      Authenticator.findAuthEndpoint(basicAuthConfig, "example.com", "http://example.com", false);
     });
 
     // Verify exception message
@@ -145,7 +136,7 @@ public class RequestContextBuilderTest {
     when(basicAuthConfig.getDefaultIdp()).thenReturn(new Endpoint("https://default-idp.example.com", null));
 
     // Call the method with empty domain (should use default IdP)
-    Endpoint result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "", "http://example.com", false);
+    Endpoint result = Authenticator.findAuthEndpoint(basicAuthConfig, "", "http://example.com", false);
 
     // Verify result
     assertEquals("https://default-idp.example.com", result.getUrl());
@@ -165,7 +156,7 @@ public class RequestContextBuilderTest {
     when(basicAuthConfig.getDefaultIdp()).thenReturn(new Endpoint("https://default-idp.example.com", null));
 
     // Call the method with null domain (should use default IdP)
-    Endpoint result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, null, "http://example.com", false);
+    Endpoint result = Authenticator.findAuthEndpoint(basicAuthConfig, null, "http://example.com", false);
 
     // Verify result
     assertEquals("https://default-idp.example.com", result.getUrl());
@@ -186,7 +177,7 @@ public class RequestContextBuilderTest {
 
     // Call the method with empty domain - should throw IllegalStateException
     IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-      RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "", "http://example.com", false);
+      Authenticator.findAuthEndpoint(basicAuthConfig, "", "http://example.com", false);
     });
 
     // Verify exception message
@@ -207,7 +198,7 @@ public class RequestContextBuilderTest {
     when(basicAuthConfig.getIdpMap()).thenReturn(idpMap);
 
     // Call the method with a domain that exists in the map
-    Endpoint result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "example.com", "http://example.com", false);
+    Endpoint result = Authenticator.findAuthEndpoint(basicAuthConfig, "example.com", "http://example.com", false);
 
     // Verify result
     assertEquals("https://example-idp.com", result.getUrl());
@@ -227,7 +218,7 @@ public class RequestContextBuilderTest {
     when(basicAuthConfig.getDefaultIdp()).thenReturn(new Endpoint("https://default-idp.example.com", null));
 
     // Call the method with domain not in the map (should use default IdP)
-    Endpoint result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "unmapped.com", "http://example.com", false);
+    Endpoint result = Authenticator.findAuthEndpoint(basicAuthConfig, "unmapped.com", "http://example.com", false);
 
     // Verify result
     assertEquals("https://default-idp.example.com", result.getUrl());
@@ -248,7 +239,7 @@ public class RequestContextBuilderTest {
 
     // Call the method with domain not in the map - should throw IllegalStateException
     IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-      RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "unmapped.com", "http://example.com", false);
+      Authenticator.findAuthEndpoint(basicAuthConfig, "unmapped.com", "http://example.com", false);
     });
 
     // Verify exception message
@@ -269,7 +260,7 @@ public class RequestContextBuilderTest {
     when(basicAuthConfig.getDefaultIdp()).thenReturn(new Endpoint("https://default-idp.example.com", null));
 
     // Call the method with domain mapped to empty string (should use default IdP)
-    Endpoint result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "example.com", "http://example.com", false);
+    Endpoint result = Authenticator.findAuthEndpoint(basicAuthConfig, "example.com", "http://example.com", false);
 
     // Verify result
     assertEquals("https://default-idp.example.com", result.getUrl());
@@ -284,7 +275,7 @@ public class RequestContextBuilderTest {
     when(basicAuthConfig.getAuthorizationPath()).thenReturn("/auth/token");
 
     // Call the method with domain mapped to empty string (should use default IdP)
-    Endpoint result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "example.com", "https://example.com/", false);
+    Endpoint result = Authenticator.findAuthEndpoint(basicAuthConfig, "example.com", "https://example.com/", false);
 
     // Verify result
     assertEquals("https://example.com/auth/token", result.getUrl());
@@ -299,7 +290,7 @@ public class RequestContextBuilderTest {
     when(basicAuthConfig.getAuthorizationPath()).thenReturn("auth/token");
 
     // Call the method with domain mapped to empty string (should use default IdP)
-    Endpoint result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "example.com", "https://example.com/", false);
+    Endpoint result = Authenticator.findAuthEndpoint(basicAuthConfig, "example.com", "https://example.com/", false);
 
     // Verify result
     assertEquals("https://example.com/auth/token", result.getUrl());
@@ -314,7 +305,7 @@ public class RequestContextBuilderTest {
     when(basicAuthConfig.getAuthorizationPath()).thenReturn("auth/token");
 
     // Call the method with domain mapped to empty string (should use default IdP)
-    Endpoint result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "example.com", "https://example.com", false);
+    Endpoint result = Authenticator.findAuthEndpoint(basicAuthConfig, "example.com", "https://example.com", false);
 
     // Verify result
     assertEquals("https://example.com/auth/token", result.getUrl());
@@ -330,7 +321,7 @@ public class RequestContextBuilderTest {
     when(basicAuthConfig.getAuthorizationPath()).thenReturn("/auth/token");
 
     // Call the method with domain mapped to empty string (should use default IdP)
-    Endpoint result = RequestContextBuilder.findAuthEndpoint(basicAuthConfig, "example.com", "https://example.com", false);
+    Endpoint result = Authenticator.findAuthEndpoint(basicAuthConfig, "example.com", "https://example.com", false);
 
     // Verify result
     assertEquals("https://example.com/auth/token", result.getUrl());
@@ -340,7 +331,7 @@ public class RequestContextBuilderTest {
   void testFindAuthEndpoint_NullConfig() {
     // Call the method with null config - should throw NullPointerException
     assertThrows(NullPointerException.class, () -> {
-      RequestContextBuilder.findAuthEndpoint(null, "example.com", "http://example.com", false);
+      Authenticator.findAuthEndpoint(null, "example.com", "http://example.com", false);
     });
   }
 }

@@ -116,11 +116,13 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
     SourceInstance sourceInstance = definition.getFieldDefns().getSource().createInstance(vertx, context, meterRegistry, executor, getName() + ".fieldDefns");
     FormatCaptureInstance fieldDefnStreamCapture = new FormatCaptureInstance();
     PipelineInstance childPipeline = new PipelineInstance(
-            pipeline.getArgumentInstances()
+            pipeline.getRequestContext()
+            , pipeline.getDefinition()
+            , pipeline.getArgumentInstances()
             , pipeline.getSourceEndpoints()
             , null
             , sourceInstance
-            , executor.createProcessors(vertx, sourceInstance, context, definition.getFieldDefns(), null, this.getName())
+            , executor.createProcessors(vertx, sourceInstance, context, pipeline.getRequestContext(), definition.getFieldDefns(), null, this.getName())
             , fieldDefnStreamCapture
     );
     

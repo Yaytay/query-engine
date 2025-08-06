@@ -14,11 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package uk.co.spudsoft.query.exec.conditions;
+package uk.co.spudsoft.query.main;
 
 import com.google.common.cache.Cache;
+import inet.ipaddr.IPAddressString;
 import io.vertx.core.Future;
-import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
@@ -28,7 +28,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.codec.BodyCodec;
-import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.io.IOException;
@@ -37,6 +36,7 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -52,8 +52,7 @@ import uk.co.spudsoft.jwtvalidatorvertx.JwtValidator;
 import uk.co.spudsoft.jwtvalidatorvertx.OpenIdDiscoveryHandler;
 import uk.co.spudsoft.jwtvalidatorvertx.impl.JWKSOpenIdDiscoveryHandlerImpl;
 import uk.co.spudsoft.jwtvalidatorvertx.jdk.JdkTokenBuilder;
-import uk.co.spudsoft.query.main.BasicAuthConfig;
-import uk.co.spudsoft.query.main.BasicAuthGrantType;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.web.LoginDaoMemoryImpl;
 
 /**
@@ -62,9 +61,9 @@ import uk.co.spudsoft.query.web.LoginDaoMemoryImpl;
  */
 @ExtendWith(VertxExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class RequestContextBuilderBasicAuthClientCredentialsTest {
+public class AuthenticatorBearerAuthTest {
 
-  private static final Logger logger = LoggerFactory.getLogger(RequestContextBuilderBasicAuthClientCredentialsTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(AuthenticatorBearerAuthTest.class);
 
   private OpenIdDiscoveryHandler discoverer;
   private JwtValidator validator;
@@ -86,9 +85,7 @@ public class RequestContextBuilderBasicAuthClientCredentialsTest {
 
   @Test
   public void testBuildRequestContext(Vertx vertx, VertxTestContext testContext) throws Exception {
-    BasicAuthConfig authConfig = new BasicAuthConfig();
-    authConfig.setGrantType(BasicAuthGrantType.clientCredentials);
-    RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx), validator, discoverer, new LoginDaoMemoryImpl(Duration.ZERO), null, authConfig, true, null, true, null, Collections.singletonList("aud"), null, null);
+    Authenticator rcb = new Authenticator(WebClient.create(vertx), validator, discoverer, new LoginDaoMemoryImpl(Duration.ZERO), null, null, true, null, true, null, Collections.singletonList("aud"), null);
 
     destServer = vertx.createHttpServer();
     Router router = Router.router(vertx);
@@ -99,8 +96,7 @@ public class RequestContextBuilderBasicAuthClientCredentialsTest {
     router.route(HttpMethod.GET, "/.well-known/openid-configuration").handler(ctx -> {
       logger.info("Got request to {}", ctx.request().uri());
       JsonObject result = new JsonObject();
-      result.put("token_endpoint", RequestContextBuilder.baseRequestUrl(ctx.request()) + "/auth");
-      result.put("jwks_uri", RequestContextBuilder.baseRequestUrl(ctx.request()) + "/jwks");
+      result.put("jwks_uri", ctx.request().scheme() + "://" + ctx.request().authority().toString() + "/jwks");
       HttpServerResponse response = ctx.response();
       response.setStatusCode(200);
       response.end(result.toBuffer());
@@ -132,48 +128,37 @@ public class RequestContextBuilderBasicAuthClientCredentialsTest {
       response.end(jwkSet.toBuffer());
     });
 
-    router.route(HttpMethod.POST, "/auth")
-            .handler(BodyHandler.create().setUploadsDirectory("target/file-uploads"))
-            .handler(ctx -> {
-      logger.info("Got request to {}", ctx.request().uri());
-      MultiMap form = ctx.request().formAttributes();
-      if ("client_credentials".equals(form.get("grant_type")) && "username".equals(form.get("client_id")) && "password".equals(form.get("client_secret"))) {
-        JsonObject result = new JsonObject();
-        long nowSeconds = System.currentTimeMillis() / 1000;
-        try {
-          String token = tokenBuilder.buildToken(JsonWebAlgorithm.RS256, "kid", ctx.request().scheme() + "://" + ctx.request().authority().toString(), "username", Arrays.asList("aud"), nowSeconds - 1, nowSeconds + 100, null);
-          result.put("access_token", token);
-        } catch (Throwable ex) {
-          HttpServerResponse response = ctx.response();
-          response.setStatusCode(500);
-          response.end("Failed to generate token");
-          return;
-        }
-        HttpServerResponse response = ctx.response();
-        response.setStatusCode(200);
-        response.end(result.toBuffer());
-      } else {
-        HttpServerResponse response = ctx.response();
-        response.setStatusCode(401);
-        response.end("Bad credentials");
-      }
-    });
-
+    RequestContext requestContext = new RequestContext(
+           null
+            , UUID.randomUUID().toString()
+            , "url"
+            , "host"
+            , "path"
+            , null
+            , null
+            , null
+            , new IPAddressString("127.0.0.1")
+            , null
+    );
+    
     router.route(HttpMethod.GET, "/dest")
             .handler(ctx -> {
               logger.info("Got request to {}", ctx.request().uri());
-              rcb.buildRequestContext(ctx.request())
+              rcb.authenticate(ctx, requestContext)
                       .onFailure(ex -> {
                         logger.error("Failed to build request context: ", ex);
                         HttpServerResponse response = ctx.response();
                         response.setStatusCode(500);
                         response.end(ex.getMessage());
                       })
-                      .onSuccess(requestContext -> {
-                        logger.info("Request context: {}", requestContext);
+                      .onSuccess(req -> {
+                        logger.info("Request context: {}", req);
+                        testContext.verify(() -> {
+                          assertEquals(requestContext, req);
+                        });
                         HttpServerResponse response = ctx.response();
                         response.setStatusCode(200);
-                        response.end("Hello " + requestContext.getName());
+                        response.end("Hello " + req.getName());
                       });
             });
 
@@ -183,31 +168,17 @@ public class RequestContextBuilderBasicAuthClientCredentialsTest {
               destPort = srv.actualPort();
             })
             .compose(srv -> {
-              String url = "http://localhost:" + destPort + "/dest";
-              logger.debug("Making request to {}", url);
-              return webClient.getAbs(url)
-                      .putHeader("Authorization", "Basic dXNlcm5hbWU6cGFzc3dvcmQ")
-                      .as(BodyCodec.string())
-                      .send();
-            })
-            .compose(response -> {
-              if (response.statusCode() == 200) {
-                testContext.verify(() -> {
-                  assertEquals("Hello username", response.body());
-                });
-                testContext.completeNow();
-              } else {
-                logger.error("Failed with {}: {}", response.statusCode(), response.bodyAsString());
-                testContext.failNow("Failed with " + response.statusCode());
+              long now = System.currentTimeMillis() / 1000;
+              String token;
+              try {
+                token = tokenBuilder.buildToken(JsonWebAlgorithm.RS256, "kid", "http://localhost:" + destPort, "username", Arrays.asList("aud"), now - 1, now + 60, null);
+              } catch(Throwable ex) {
+                return Future.failedFuture(ex);
               }
-              return Future.succeededFuture();
-            })
-            .compose(srv -> {
-              // Repeat request to get auth form cache
               String url = "http://localhost:" + destPort + "/dest";
               logger.debug("Making request to {}", url);
               return webClient.getAbs(url)
-                      .putHeader("Authorization", "Basic dXNlcm5hbWU6cGFzc3dvcmQ")
+                      .putHeader("Authorization", "Bearer " + token)
                       .as(BodyCodec.string())
                       .send();
             })

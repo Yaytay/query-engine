@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import uk.co.spudsoft.query.exec.FormatInstance;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 
 /**
  * Test class for AbstractTextFormat.
@@ -73,10 +74,10 @@ public class AbstractTextFormatTest {
     }
 
     @Override
-    public FormatInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
+    public FormatInstance createInstance(Vertx vertx, RequestContext requestContext, WriteStream<Buffer> writeStream) {
       throw new UnsupportedOperationException("Not supported yet.");
     }
-
+    
   }
 
   /**
@@ -258,7 +259,7 @@ public class AbstractTextFormatTest {
         validate(FormatType.Delimited, "\"", "\"");
       }
       @Override
-      public FormatInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
+      public FormatInstance createInstance(Vertx vertx, RequestContext requestContext, WriteStream<Buffer> writeStream) {
         throw new UnsupportedOperationException("Not supported yet.");
       }
     };
@@ -273,7 +274,7 @@ public class AbstractTextFormatTest {
         validate(FormatType.Delimited, "\"", "\"");
       }
       @Override
-      public FormatInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
+      public FormatInstance createInstance(Vertx vertx, RequestContext requestContext, WriteStream<Buffer> writeStream) {
         throw new UnsupportedOperationException("Not supported yet.");
       }
     };
@@ -299,7 +300,7 @@ public class AbstractTextFormatTest {
         validate(FormatType.Delimited, null, null);
       }
       @Override
-      public FormatInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
+      public FormatInstance createInstance(Vertx vertx, RequestContext requestContext, WriteStream<Buffer> writeStream) {
         throw new UnsupportedOperationException("Not supported yet.");
       }
     };

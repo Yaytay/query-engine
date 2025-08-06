@@ -19,7 +19,7 @@ package uk.co.spudsoft.query.exec.notifications;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.ProgressNotificationHandler;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 
 /**
  * Simple logging instance of the {@link ProgressNotificationHandler}.

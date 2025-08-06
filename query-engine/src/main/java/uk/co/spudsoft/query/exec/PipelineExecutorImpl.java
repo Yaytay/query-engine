@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec;
 
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.net.MediaType;
@@ -49,8 +50,6 @@ import uk.co.spudsoft.query.main.ProtectedCredentials;
 import uk.co.spudsoft.query.defn.Format;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
 import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
-import uk.co.spudsoft.query.web.RequestContextHandler;
 
 /**
  * Concrete implementation of PipelineExecutor interface.
@@ -129,7 +128,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
   }
   
   @Override
-  public List<ProcessorInstance> createProcessors(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, SourcePipeline definition, MultiMap params, String parentName) {
+  public List<ProcessorInstance> createProcessors(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, RequestContext requestContext, SourcePipeline definition, MultiMap params, String parentName) {
     List<ProcessorInstance> result = new ArrayList<>();
     
     int index = 0;
@@ -141,7 +140,6 @@ public class PipelineExecutorImpl implements PipelineExecutor {
         result.add(processor.createInstance(vertx, sourceNameTracker, context, meterRegistry, name));
       } else {
         ConditionInstance cond = new ConditionInstance(condition.getExpression());
-        RequestContext requestContext = RequestContextHandler.getRequestContext(context);
         if (cond.evaluate(requestContext, null)) {
           String name = processorName(processor.getName(), parentName, "P", index++, processor);
           logger.debug("Added {} processor named {} because condition {} met", processor.getType(), name, cond);
@@ -352,7 +350,9 @@ public class PipelineExecutorImpl implements PipelineExecutor {
   }  
   
   @Override
-  public void progressNotification(String pipelineTitle
+  public void progressNotification(
+          RequestContext requestContext
+          , String pipelineTitle
           , String sourceName
           , String processorName
           , Long count
@@ -362,7 +362,6 @@ public class PipelineExecutorImpl implements PipelineExecutor {
           , Object... arguments
   ) {
     ProgressNotificationHandler handler = ProgressNotificationHandler.getNotificationHandler();
-    RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
     if (requestContext != null && handler != null) {
       handler.event(requestContext.getRunID(), requestContext, pipelineTitle, sourceName, processorName, count, completed, succeeded, message, arguments);
     }
@@ -378,12 +377,14 @@ public class PipelineExecutorImpl implements PipelineExecutor {
           , Object... arguments
   ) {
     ProgressNotificationHandler handler = ProgressNotificationHandler.getNotificationHandler();
-    RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
-    if (requestContext != null && handler != null) {
-      String pipelineTitle = pipeline == null ? null : pipeline.getDefinition().getTitle();
-      String sourceName = source == null ? null : source.getName();
-      String processorName = processor == null ? null : processor.getName();
-      handler.event(requestContext.getRunID(), requestContext, pipelineTitle, sourceName, processorName, count, completed, succeeded, message, arguments);
+    if (pipeline != null) {
+      RequestContext requestContext = pipeline.getRequestContext();
+      if (handler != null) {
+        String pipelineTitle = pipeline.getDefinition().getTitle();
+        String sourceName = source == null ? null : source.getName();
+        String processorName = processor == null ? null : processor.getName();
+        handler.event(requestContext.getRunID(), requestContext, pipelineTitle, sourceName, processorName, count, completed, succeeded, message, arguments);
+      }
     }
   }
   

@@ -33,7 +33,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.dircache.DirCache;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.main.CacheConfig;
 
 /**

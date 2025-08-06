@@ -111,7 +111,6 @@ import uk.co.spudsoft.query.exec.JdbcHelper;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineExecutorImpl;
 import uk.co.spudsoft.query.exec.SourceInstance;
-import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
 import uk.co.spudsoft.query.exec.filters.LimitFilter;
 import uk.co.spudsoft.query.exec.filters.MapFilter;
 import uk.co.spudsoft.query.exec.filters.OffsetFilter;
@@ -134,7 +133,7 @@ import uk.co.spudsoft.query.web.LoggingRouter;
 import uk.co.spudsoft.query.web.LoginDao;
 import uk.co.spudsoft.query.web.LoginDaoMemoryImpl;
 import uk.co.spudsoft.query.web.LoginDaoPersistenceImpl;
-import uk.co.spudsoft.query.web.RequestContextHandler;
+import uk.co.spudsoft.query.web.AuthenticationRouter;
 import uk.co.spudsoft.query.web.LoginRouter;
 import uk.co.spudsoft.query.web.QueryRouter;
 import uk.co.spudsoft.query.web.SecurityHeadersRouter;
@@ -540,7 +539,7 @@ public class Main extends Application {
     Router router = Router.router(vertx);
     Router mgmtRouter = Router.router(vertx);
 
-    router.route().handler(new LoggingRouter());
+    router.route().handler(new LoggingRouter(params.getRequestContextEnvironment()));
     List<String> logoUrls = new ArrayList<>();
     if (params.getSession() != null && params.getSession().getOauth() != null) {
       logoUrls = params.getSession().getOauth().values().stream().map(o -> o.getLogoUrl()).toList();
@@ -590,9 +589,9 @@ public class Main extends Application {
     corsHandler.allowCredentials(true);
     router.route("/*").handler(corsHandler);
 
-    RequestContextBuilder rcb;
+    Authenticator authenticator;
     try {
-      rcb = createRequestContextBuilder(params, loginDao);
+      authenticator = createAuthenticator(params, loginDao);
     } catch (Throwable ex) {
       logger.error("Failed to create request context builder: ", ex);
       return Future.succeededFuture(-2);
@@ -620,7 +619,7 @@ public class Main extends Application {
 
     PipelineExecutor pipelineExecutor = new PipelineExecutorImpl(meterRegistry, filterFactory, params.getSecrets());
     vertx.fileSystem().mkdirs(params.getOutputCacheDir());
-    router.route(QueryRouter.PATH_ROOT + "/*").handler(new QueryRouter(vertx, meterRegistry, auditor, rcb, defnLoader, pipelineExecutor, params.getOutputCacheDir(), outputAllErrorMessages()));
+    router.route(QueryRouter.PATH_ROOT + "/*").handler(new QueryRouter(vertx, meterRegistry, auditor, authenticator, defnLoader, pipelineExecutor, params.getOutputCacheDir(), outputAllErrorMessages()));
 
     ManagementRoute.createAndDeploy(vertx
             , router, params.getHttpServerOptions()
@@ -633,14 +632,14 @@ public class Main extends Application {
     router.get("/api").handler(rc -> {
       rc.response().setStatusCode(301).putHeader("Location", "../openapi").end();
     });
-    RequestContextHandler rch = new RequestContextHandler(vertx, rcb, outputAllErrorMessages());
+    AuthenticationRouter rch = new AuthenticationRouter(vertx, authenticator, outputAllErrorMessages());
     router.route("/api/*").handler(rch);
     router.route("/api/*").handler(new JaxRsHandler(vertx, meterRegistry, "/api", controllers, providers));
     router.route("/ui/*").handler(UiRouter.create(vertx, meterRegistry, "/ui", "/www", "/www/index.html"));
     router.getWithRegex("/openapi\\..*").blockingHandler(openApiHandler);
     router.get("/openapi").handler(openApiHandler.getUiHandler());
     if (!params.getSession().getOauth().isEmpty()) {
-      LoginRouter loginRouter = LoginRouter.create(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, rcb, params.getSession(), params.getJwt().getRequiredAudiences(), outputAllErrorMessages(), params.getSession().getSessionCookie());
+      LoginRouter loginRouter = LoginRouter.create(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, authenticator, params.getSession(), params.getJwt().getRequiredAudiences(), outputAllErrorMessages(), params.getSession().getSessionCookie());
       router.get("/login").handler(loginRouter);
       router.get("/login/return").handler(loginRouter);
       router.get("/logout").handler(loginRouter);
@@ -894,12 +893,12 @@ public class Main extends Application {
   }
 
   /**
-   * Create the {@link RequestContextBuilder} that will be used for creating {@link uk.co.spudsoft.query.exec.conditions.RequestContext} instances.
-   * @param params the {@link Parameters} for configuring the {@link RequestContextBuilder}.
-   * @param loginDao this {@link LoginDao} passed to the {@link RequestContextBuilder}.
-   * @return a newly created {@link RequestContextBuilder}.
+   * Create the {@link Authenticator} that will be used for updating {@link uk.co.spudsoft.query.exec.context.RequestContext} instances.
+   * @param params the {@link Parameters} for configuring the {@link Authenticator}.
+   * @param loginDao this {@link LoginDao} passed to the {@link Authenticator}.
+   * @return a newly created {@link Authenticator}.
    */
-  protected RequestContextBuilder createRequestContextBuilder(Parameters params, LoginDao loginDao) {
+  protected Authenticator createAuthenticator(Parameters params, LoginDao loginDao) {
     JwtValidationConfig jwtConfig = params.getJwt();
     IssuerAcceptabilityHandler iah = IssuerAcceptabilityHandler.create(jwtConfig.getAcceptableIssuerRegexes()
                     , jwtConfig.getAcceptableIssuersFile()
@@ -921,7 +920,7 @@ public class Main extends Application {
       jwtValidator.setTimeLeeway(jwtConfig.getPermittedTimeSkew());
     }
 
-    RequestContextBuilder rcb = new RequestContextBuilder(WebClient.create(vertx)
+    Authenticator rcb = new Authenticator(WebClient.create(vertx)
             , jwtValidator
             , openIdDiscoveryHandler
             , loginDao
@@ -933,7 +932,6 @@ public class Main extends Application {
             , jwtConfig.getIssuerHostPath()
             , jwtConfig.getRequiredAudiences()
             , params.getSession().getSessionCookie() != null ? params.getSession().getSessionCookie().getName() : null
-            , params.getRequestContextEnvironment()
     );
     return rcb;
   }

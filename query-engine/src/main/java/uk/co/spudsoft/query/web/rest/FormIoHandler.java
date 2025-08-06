@@ -23,7 +23,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
+import io.vertx.ext.web.RoutingContext;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -32,6 +32,7 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.container.Suspended;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.StreamingOutput;
@@ -40,7 +41,7 @@ import java.io.OutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.FilterFactory;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader.PipelineAndFile;
 import uk.co.spudsoft.query.web.formio.FormBuilder;
@@ -115,6 +116,7 @@ public class FormIoHandler {
    * Get the formio definition of a single pipeline.
    * 
    * @param response JAX-RS Asynchronous response, connected to the Vertx request by the RESTeasy JAX-RS implementation.
+   * @param routingContext The Vert.x {@link RoutingContext}.
    * @param path The path to the pipeline that is to be loaded and have it's arguments converted to a form.
    * @param columns The number of columns that the form should occupy.
    */
@@ -132,7 +134,8 @@ public class FormIoHandler {
           )
   )
   public void getFormIO(
-          @Suspended final AsyncResponse response
+          @Context RoutingContext routingContext
+          , @Suspended final AsyncResponse response
           , @Schema(
                   description = "The path to the quiery, as returned by a call to get /api/info/available"
             )
@@ -159,7 +162,7 @@ public class FormIoHandler {
     int colCount = columns == null ? 1 : columns;
     
     try {
-      RequestContext requestContext = HandlerAuthHelper.getRequestContext(Vertx.currentContext(), requireSession);
+      RequestContext requestContext = HandlerAuthHelper.getRequestContext(routingContext, requireSession);
 
       loader.loadPipeline(path, requestContext, null)
               .compose(pipelineAndFile -> {

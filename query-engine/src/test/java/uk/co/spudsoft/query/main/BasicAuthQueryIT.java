@@ -70,6 +70,7 @@ public class BasicAuthQueryIT {
   private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
   
   private static final String BASIC_CREDS = Base64.getEncoder().encodeToString("Username:Password".getBytes(StandardCharsets.UTF_8));
+  private static final String BAD_CREDS = Base64.getEncoder().encodeToString("SomeoneElse:Password".getBytes(StandardCharsets.UTF_8));
   
   private JdkJwksHandler jwks;
   private TokenBuilder tokenBuilder;
@@ -274,6 +275,18 @@ public class BasicAuthQueryIT {
                                 <tr class="dataRow oddRow" ><td class="oddRow oddCol">3</td><td class="oddRow evenCol">1971-05-09T09:00</td><td class="oddRow oddCol">aquamarine</td><td class="oddRow evenCol">third</td><td class="oddRow oddCol">three,six,nine</td></tr>
                                 """));
 
+    body = given()
+            .header(new Header("Authorization", "Basic " + BAD_CREDS))
+            .queryParam("key", postgres.getName())
+            .queryParam("port", postgres.getPort())
+            .log().all()
+            .get("/query/sub1/sub2/TemplatedYamlToPipelineIT.html")
+            .then()
+            .log().ifError()
+            .statusCode(401)
+            .extract().body().asString();
+    assertEquals("Invalid credentials", body);
+    
     body = given()
             .header(new Header("Authorization", "Basic " + BASIC_CREDS))
             .log().all()

@@ -59,7 +59,7 @@ import uk.co.spudsoft.dircache.DirCacheTree;
 import uk.co.spudsoft.query.main.CacheConfig;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.json.ObjectMapperConfiguration;
 import uk.co.spudsoft.query.web.ServiceException;
 
@@ -517,40 +517,41 @@ public final class PipelineDefnLoader {
    * @param context The request context.
    * @param parseErrorHandler Handler for any exceptions that occur during the loading of the file.
    * @return A Future that will be completed with a {@link PipelineAndFile} when then pipeline has been read.
-   * @throws IOException if an IO error occurs.
-   * @throws ServiceException If the path is not valid.
    */
-  public Future<PipelineAndFile> loadPipeline(String srcPath, RequestContext context, BiConsumer<DirCacheTree.File, Throwable> parseErrorHandler) throws IOException, ServiceException {
-    String path = validatePath(srcPath);
-    
-    return findSource(context, path)
-            .compose(file -> {
-              try {
-                return readPipelineFromFile(file, context)
-                        .onSuccess(paf -> {
-                          if (logger.isDebugEnabled()) {
-                            try {
-                              logger.debug("Loaded {} as {}", srcPath, JSON_OBJECT_MAPPER.writeValueAsString(paf.pipeline));
-                            } catch (Throwable ex) {
-                              logger.debug("Loaded {} but failed to convert it to JSON: ", srcPath, ex);
+  public Future<PipelineAndFile> loadPipeline(String srcPath, RequestContext context, BiConsumer<DirCacheTree.File, Throwable> parseErrorHandler) {
+    try {
+      String path = validatePath(srcPath);
+      return findSource(context, path)
+              .compose(file -> {
+                try {
+                  return readPipelineFromFile(file, context)
+                          .onSuccess(paf -> {
+                            if (logger.isDebugEnabled()) {
+                              try {
+                                logger.debug("Loaded {} as {}", srcPath, JSON_OBJECT_MAPPER.writeValueAsString(paf.pipeline));
+                              } catch (Throwable ex) {
+                                logger.debug("Loaded {} but failed to convert it to JSON: ", srcPath, ex);
+                              }
                             }
-                          }
-                        })
-                        .recover(ex -> {
-                          logger.warn("Failed to parse file {}: ", srcPath, ex);
-                          if (parseErrorHandler != null) {
-                            parseErrorHandler.accept(file, ex);
-                          }
-                          return Future.failedFuture(ex);
-                        });
-              } catch (Throwable ex) {
-                logger.warn("Failed to parse file {}: ", srcPath, ex);
-                if (parseErrorHandler != null) {
-                  parseErrorHandler.accept(file, ex);
+                          })
+                          .recover(ex -> {
+                            logger.warn("Failed to parse file {}: ", srcPath, ex);
+                            if (parseErrorHandler != null) {
+                              parseErrorHandler.accept(file, ex);
+                            }
+                            return Future.failedFuture(ex);
+                          });
+                } catch (Throwable ex) {
+                  logger.warn("Failed to parse file {}: ", srcPath, ex);
+                  if (parseErrorHandler != null) {
+                    parseErrorHandler.accept(file, ex);
+                  }
+                  return Future.failedFuture(ex);
                 }
-                return Future.failedFuture(ex);
-              }
-            });
+              });
+    } catch (Throwable ex) {
+      return Future.failedFuture(ex);
+    }
   }
 
 

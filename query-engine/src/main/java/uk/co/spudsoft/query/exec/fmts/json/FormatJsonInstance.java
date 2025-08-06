@@ -20,9 +20,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import static io.vertx.sqlclient.impl.Utils.toJson;
@@ -39,14 +37,13 @@ import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormattingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.fmts.CustomDecimalFormatter;
 import uk.co.spudsoft.query.exec.fmts.ValueFormatters;
-import uk.co.spudsoft.query.web.RequestContextHandler;
 
 
 /**
@@ -80,10 +77,11 @@ public final class FormatJsonInstance implements FormatInstance {
   /**
    * Constructor.
    * @param outputStream The WriteStream that the data is to be sent to.
+   * @param requestContext The context of the request being output - if nothing else this must be updated with the row count on completion.
    * @param defn The definition of the output.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "FormatJsonInstance is a wrapper around WriteStream<Buffer>, it will make mutating calls to it")
-  public FormatJsonInstance(WriteStream<Buffer> outputStream, FormatJson defn) {
+  public FormatJsonInstance(WriteStream<Buffer> outputStream, RequestContext requestContext, FormatJson defn) {
     this.outputStream = outputStream;
     this.defn = defn;
     
@@ -117,14 +115,8 @@ public final class FormatJsonInstance implements FormatInstance {
                 return Future.failedFuture(ex);
               }
             }
-            , rows -> {              
-              Context vertxContext = Vertx.currentContext();
-              if (vertxContext != null) {
-                RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
-                if (requestContext != null) {
-                  requestContext.setRowsWritten(rows);
-                }
-              }              
+            , rows -> {
+              requestContext.setRowsWritten(rows);
               return end();
             }
     );

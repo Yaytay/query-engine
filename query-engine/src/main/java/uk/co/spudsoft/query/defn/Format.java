@@ -22,11 +22,11 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.common.net.MediaType;
 import io.swagger.v3.oas.annotations.media.DiscriminatorMapping;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 
 /**
  * The configuration for the final WriteStream of a pipeline.
@@ -131,14 +131,13 @@ public interface Format {
   /**
    * Create a FormatInstance.
    * Each implementation of a FormatInstance should subclass this class and provide a concrete implementation of this method.
-   * Note that the context passed in to this method may not be the same as that returned by vertx.getOrCreateContext.
-   * @param vertx The Vertx instance that will be used for the data processing.
-   * @param context The Vertx context that will be used for this format.
+   * @param vertx The Vert.x instance that will be used for the data processing.
+   * @param requestContext The context of the request being output - if nothing else this must be updated with the row count on completion.
    * @param writeStream The write stream that will contain the result.
    * @return a newly created FormatInstance object that will be used for processing the pipeline format.
    */
   @JsonIgnore
-  FormatInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream);
+  FormatInstance createInstance(Vertx vertx, RequestContext requestContext, WriteStream<Buffer> writeStream);
 
   /**
    * Get the type of Format being configured.

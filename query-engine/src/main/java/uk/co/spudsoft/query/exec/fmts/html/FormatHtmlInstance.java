@@ -17,10 +17,8 @@
 package uk.co.spudsoft.query.exec.fmts.html;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -37,13 +35,12 @@ import uk.co.spudsoft.query.defn.FormatHtml;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.DataRow;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormattingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.fmts.ValueFormatters;
-import uk.co.spudsoft.query.web.RequestContextHandler;
 
 /**
  * Output {@link uk.co.spudsoft.query.exec.FormatInstance} that generates HTML output.
@@ -84,11 +81,12 @@ public class FormatHtmlInstance implements FormatInstance {
   /**
    * Constructor.
    *
-   * @param defn The definition of the format to be output
+   * @param defn The definition of the format to be output.
+   * @param requestContext The context of the request.
    * @param outputStream The WriteStream that the data is to be sent to.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "FormatHtmlInstance is a wrapper around WriteStream<Buffer>, it will make mutating calls to it")
-  public FormatHtmlInstance(FormatHtml defn, WriteStream<Buffer> outputStream) {
+  public FormatHtmlInstance(FormatHtml defn, RequestContext requestContext, WriteStream<Buffer> outputStream) {
     this.outputStream = outputStream;
     this.finalPromise = Promise.<Void>promise();
 
@@ -111,29 +109,23 @@ public class FormatHtmlInstance implements FormatInstance {
               }
             },
             rows -> {
-              Context vertxContext = Vertx.currentContext();
-              if (vertxContext != null) {
-                RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
-                if (requestContext != null) {
-                  requestContext.setRowsWritten(rows);
-                }
-              }
+              requestContext.setRowsWritten(rows);
+              Buffer buffer;
               if (!started.get()) {
                 started.set(true);
                 String headerAndClose = headerFromRow()
                         .append(ENDHEAD)
                         .append(CLOSE)
                         .toString();
-                Buffer buffer = Buffer.buffer(headerAndClose);
-                return outputStream.write(buffer)
-                        .compose(v2 -> outputStream.end());
+                buffer = Buffer.buffer(headerAndClose);
               } else {
-                return outputStream.write(Buffer.buffer(CLOSE))
-                        .compose(v2 -> outputStream.end())
-                        .andThen(ar -> {
-                          finalPromise.handle(ar);
-                        });
+                buffer = Buffer.buffer(CLOSE);
               }
+              return outputStream.write(buffer)
+                      .compose(v2 -> outputStream.end())
+                      .andThen(ar -> {
+                        finalPromise.handle(ar);
+                      });
             }
     );
   }

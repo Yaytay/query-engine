@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.fmts.xlsx;
 
+import inet.ipaddr.IPAddressString;
 import io.vertx.core.Vertx;
 import io.vertx.core.file.FileSystem;
 import io.vertx.core.file.OpenOptions;
@@ -36,6 +37,7 @@ import uk.co.spudsoft.query.defn.FormatXlsxColours;
 import uk.co.spudsoft.query.exec.ColumnDefn;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
@@ -75,10 +77,12 @@ public class FormatXlsxInstanceTest {
       fs.mkdirBlocking("target/temp");
     }
 
+    RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.0"), null);
+    
     fs.open("target/temp/FormatXlsxInstanceTest.xlsx", new OpenOptions().setCreate(true))
       .compose(writeStream -> {
 
-        FormatXlsxInstance instance = (FormatXlsxInstance) defn.createInstance(vertx, null, writeStream);
+        FormatXlsxInstance instance = (FormatXlsxInstance) defn.createInstance(vertx, requestContext, writeStream);
 
         Types types = new Types(buildTypes());
         List<DataRow> rowsList = new ArrayList<>();

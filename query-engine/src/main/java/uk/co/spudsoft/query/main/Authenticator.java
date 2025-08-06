@@ -14,11 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package uk.co.spudsoft.query.exec.conditions;
+package uk.co.spudsoft.query.main;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
@@ -31,6 +30,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.HostAndPort;
+import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
 import java.nio.charset.StandardCharsets;
@@ -47,11 +47,8 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
 import uk.co.spudsoft.jwtvalidatorvertx.JwtValidator;
 import uk.co.spudsoft.jwtvalidatorvertx.OpenIdDiscoveryHandler;
-import uk.co.spudsoft.query.main.Endpoint;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.logging.VertxMDC;
-import uk.co.spudsoft.query.main.BasicAuthConfig;
-import uk.co.spudsoft.query.main.BasicAuthGrantType;
-import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 import uk.co.spudsoft.query.web.LoginDao;
 import uk.co.spudsoft.query.web.ServiceException;
 
@@ -60,9 +57,9 @@ import uk.co.spudsoft.query.web.ServiceException;
  *
  * @author jtalbut
  */
-public class RequestContextBuilder {
+public class Authenticator {
 
-  private static final Logger logger = LoggerFactory.getLogger(RequestContextBuilder.class);
+  private static final Logger logger = LoggerFactory.getLogger(Authenticator.class);
 
   private static final String BASIC = "Basic ";
   private static final String BEARER = "Bearer ";
@@ -78,7 +75,6 @@ public class RequestContextBuilder {
   private final String issuerHostPath;
   private final ImmutableList<String> audList;
   private final String sessionCookieName;
-  private final ImmutableMap<String, String> requestContextEnvironment;
   
   private record TimestampedToken(LocalDateTime expiry, String token){};
   
@@ -111,10 +107,9 @@ public class RequestContextBuilder {
    * token is acceptable).
    * @param sessionCookie The name of the session cookie that should contain the ID of a previously recorded JWT. Only valid if
    * login is enabled.
-   * @param requestContextEnvironment The additional data that is made available via the request object.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The WebClient should be created specifically for use by the RequestContextBuilder.")
-  public RequestContextBuilder(WebClient webClient,
+  public Authenticator(WebClient webClient,
            JwtValidator validator,
            OpenIdDiscoveryHandler discoverer,
            LoginDao loginDao,
@@ -125,8 +120,7 @@ public class RequestContextBuilder {
            boolean deriveIssuerFromHost,
            String issuerHostPath,
            List<String> requiredAuds,
-           String sessionCookie,
-           Map<String, String> requestContextEnvironment
+           String sessionCookie
   ) {
     this.webClient = webClient;
     this.validator = validator;
@@ -140,7 +134,6 @@ public class RequestContextBuilder {
     this.issuerHostPath = ensureNonBlankStartsWith(issuerHostPath, "/");
     this.audList = ImmutableCollectionTools.copy(requiredAuds);
     this.sessionCookieName = sessionCookie;
-    this.requestContextEnvironment = ImmutableCollectionTools.copy(requestContextEnvironment);
     
     if (meterRegistry != null) {
       meterRegistry.gauge("queryengine.cache.size"
@@ -230,22 +223,25 @@ public class RequestContextBuilder {
    *
    * This builder may perform multiple asynchronous authentication requests.
    *
-   * @param request The HttpServerRequest to process.
+   * @param routingContext The Vert.x RoutingContext.
+   * @param requestContext The request context.
    * @return A Future that will be completed with a newly constructed RequestContext when it is ready.
    */
-  public Future<RequestContext> buildRequestContext(HttpServerRequest request) {
+  public Future<RequestContext> authenticate(RoutingContext routingContext, RequestContext requestContext) {
+
+    HttpServerRequest request = routingContext.request();    
 
     String runId = request.params() == null ? null : request.params().get("_runid");
     VertxMDC.INSTANCE.put("runId", runId);
     if (!Strings.isNullOrEmpty(runId)) {
       logger.info("RunID: {}", runId);
     }
-
+    
     Cookie sessionCookie = getSessionCookie(request);
     if (sessionCookie != null) {
 
       request.pause();
-
+      
       return loginDao.getToken(sessionCookie.getValue())
               .compose(token -> {
                 if (token == null) {
@@ -257,14 +253,15 @@ public class RequestContextBuilder {
               })
               .compose(jwt -> {
                 request.resume();
-                return build(requestContextEnvironment, request, jwt);
+                requestContext.setJwt(jwt);
+                return Future.succeededFuture(requestContext);
               }, ex -> {
                 request.resume();
                 logger.info("Failed to validate token from cookie {}: {}", sessionCookie.getValue(), ex.getMessage());
-                return buildRequestContextWithoutCookie(request);
+                return buildRequestContextWithoutCookie(routingContext, requestContext);
               });
     } else {
-      return buildRequestContextWithoutCookie(request);
+      return buildRequestContextWithoutCookie(routingContext, requestContext);
     }
   }
 
@@ -316,18 +313,21 @@ public class RequestContextBuilder {
     return validator.validateToken(issuer(request), token, audList, false);
   }
 
-  private Future<RequestContext> buildRequestContextWithoutCookie(HttpServerRequest request) {
+  private Future<RequestContext> buildRequestContextWithoutCookie(RoutingContext routingContext, RequestContext requestContext) {
+    
+    HttpServerRequest request = routingContext.request();
+    
     String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
     String openIdIntrospectionHeader = Strings.isNullOrEmpty(openIdIntrospectionHeaderName) ? null : request.getHeader(openIdIntrospectionHeaderName);
 
     if (!Strings.isNullOrEmpty(openIdIntrospectionHeader)) {
 
-      return buildFromBase64Json(requestContextEnvironment, request, openIdIntrospectionHeader);
+      return buildFromBase64Json(requestContext, openIdIntrospectionHeader);
 
     } else if (Strings.isNullOrEmpty(authHeader)) {
 
-      return build(requestContextEnvironment, request, null);
+      return Future.succeededFuture(requestContext);
 
     } else if (authHeader.startsWith(BASIC)) {
 
@@ -406,6 +406,7 @@ public class RequestContextBuilder {
                           .onComplete(ar -> {
                             if (ar.succeeded()) {
                               cacheToken(encodedCredentials, ar.result().getExpirationLocalDateTime(), token);
+                              requestContext.setJwt(ar.result());
                             }
                             request.resume();
                           });
@@ -414,9 +415,7 @@ public class RequestContextBuilder {
               .onFailure(ex -> {
                 request.resume();
               })
-              .compose(jwt -> {
-                return build(requestContextEnvironment, request, jwt);
-              });
+              .map(jwt -> requestContext);
 
     } else if (authHeader.startsWith(BEARER)) {
 
@@ -433,19 +432,21 @@ public class RequestContextBuilder {
                 request.resume();
               })
               .compose(jwt -> {
+                logger.trace("Storing JWT in RequestContext@{}", System.identityHashCode(requestContext));
+                requestContext.setJwt(jwt);
                 request.resume();
-                return build(requestContextEnvironment, request, jwt);
+                return Future.succeededFuture(requestContext);
               });
 
     } else {
 
       logger.warn("Unable to process auth header: {}", authHeader);
-      return build(requestContextEnvironment, request, null);
+      return Future.succeededFuture(requestContext);
 
     }
   }
 
-  static Future<RequestContext> buildFromBase64Json(Map<String, String> environment, HttpServerRequest request, String base64Json) {
+  static Future<RequestContext> buildFromBase64Json(RequestContext requestContext, String base64Json) {
     try {
       String json = base64Json;
       try {
@@ -454,18 +455,8 @@ public class RequestContextBuilder {
       } catch (Throwable ex) {
       }
       Jwt jwt = new Jwt(null, new JsonObject(json), null, null);
-      RequestContext result = new RequestContext(environment, request, jwt);
-      return Future.succeededFuture(result);
-    } catch (Throwable ex) {
-      logger.warn("Failed to create RequestContext: ", ex);
-      return Future.failedFuture(ex);
-    }
-  }
-
-  static Future<RequestContext> build(Map<String, String> environment, HttpServerRequest request, Jwt jwt) {
-    try {
-      RequestContext result = new RequestContext(environment, request, jwt);
-      return Future.succeededFuture(result);
+      requestContext.setJwt(jwt);
+      return Future.succeededFuture(requestContext);
     } catch (Throwable ex) {
       logger.warn("Failed to create RequestContext: ", ex);
       return Future.failedFuture(ex);

@@ -18,10 +18,8 @@ package uk.co.spudsoft.query.exec.fmts.text;
 
 import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import java.nio.charset.StandardCharsets;
@@ -32,13 +30,12 @@ import uk.co.spudsoft.query.defn.FormatDelimited;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormattingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.fmts.ValueFormatters;
-import uk.co.spudsoft.query.web.RequestContextHandler;
 
 /**
  * Output {@link uk.co.spudsoft.query.exec.FormatInstance} that generates text output.
@@ -68,10 +65,11 @@ public final class FormatDelimitedInstance implements FormatInstance {
   /**
    * Constructor.
    * @param defn The definition of the format to be output
+   * @param requestContext The context of the request being output - if nothing else this must be updated with the row count on completion.
    * @param outputStream The WriteStream that the data is to be sent to.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "FormatJsonInstance is a wrapper around WriteStream<Buffer>, it will make mutating calls to it")
-  public FormatDelimitedInstance(FormatDelimited defn, WriteStream<Buffer> outputStream) {
+  public FormatDelimitedInstance(FormatDelimited defn, RequestContext requestContext, WriteStream<Buffer> outputStream) {
     this.defn = defn;
     this.outputStream = outputStream;
     this.finalPromise = Promise.<Void>promise();
@@ -91,13 +89,7 @@ public final class FormatDelimitedInstance implements FormatInstance {
               if (!started.get()) {
                 outputHeader();
               }
-              Context vertxContext = Vertx.currentContext();
-              if (vertxContext != null) {
-                RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
-                if (requestContext != null) {
-                  requestContext.setRowsWritten(rowCount);
-                }
-              }              
+              requestContext.setRowsWritten(rowCount);
               return outputStream.end()
                       .andThen(ar -> {
                         finalPromise.handle(ar);

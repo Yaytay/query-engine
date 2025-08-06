@@ -22,13 +22,14 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.vertx.core.Vertx;
+import io.vertx.ext.web.RoutingContext;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.container.Suspended;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.slf4j.Logger;
@@ -36,7 +37,7 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.AuditHistory;
 import uk.co.spudsoft.query.exec.AuditHistorySortOrder;
 import uk.co.spudsoft.query.exec.Auditor;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import static uk.co.spudsoft.query.web.rest.InfoHandler.reportError;
 
 /**
@@ -72,6 +73,7 @@ public class HistoryHandler {
    * This probably uses dynamic SQL for the sorting, which is secure because of the use of the enum for sortOrder.
    * 
    * @param response JAX-RS Asynchronous response, connected to the Vertx request by the RESTeasy JAX-RS implementation.
+   * @param routingContext The Vert.x {@link RoutingContext}.
    * @param skipRows Number of rows to skip, for paging.
    * @param maxRows Maximum number of rows to return, for paging.
    * @param sortOrder The field to sort by.
@@ -97,7 +99,8 @@ public class HistoryHandler {
           )
   )
   public void getHistory(
-          @Suspended final AsyncResponse response
+          @Context RoutingContext routingContext
+          , @Suspended final AsyncResponse response
           , @Schema(
                   description = "The number of rows to skip in the results, to implement paging"
                   , minimum = "0"
@@ -132,7 +135,7 @@ public class HistoryHandler {
             Boolean sortDescending
   ) {
     try {
-      RequestContext requestContext = HandlerAuthHelper.getRequestContext(Vertx.currentContext(), true);
+      RequestContext requestContext = HandlerAuthHelper.getRequestContext(routingContext, true);
       
       skipRows = boundInt(skipRows, 0, 0, 1000000);
       maxRows = boundInt(maxRows, 1000000, 0, 1000000);

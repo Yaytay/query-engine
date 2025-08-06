@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import uk.co.spudsoft.query.exec.FilterFactory;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 
 /**
  *

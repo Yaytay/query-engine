@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.web;
 
+import inet.ipaddr.IPAddressString;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
@@ -37,7 +38,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import uk.co.spudsoft.query.defn.FormatDelimited;
 import uk.co.spudsoft.query.exec.AuditorMemoryImpl;
-import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
+import uk.co.spudsoft.query.exec.PipelineExecutor;
+import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.main.Authenticator;
 
 /**
  *
@@ -50,7 +53,7 @@ public class QueryRouterTest {
   public void testBadMethod(Vertx vertx) {
 
     PipelineDefnLoader loader = mock(PipelineDefnLoader.class);
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, null, null, null, true, null, false, null, Collections.singletonList("aud"), null, null);
+    Authenticator rcb = new Authenticator(null, null, null, null, null, null, true, null, false, null, Collections.singletonList("aud"), null);
     QueryRouter router = new QueryRouter(vertx, null, new AuditorMemoryImpl(vertx), rcb, loader, null, System.getProperty("java.io.tmpdir"), true);
 
     RoutingContext routingContext = mock(RoutingContext.class);
@@ -67,9 +70,12 @@ public class QueryRouterTest {
   public void testShortPath(Vertx vertx) {
 
     PipelineDefnLoader loader = mock(PipelineDefnLoader.class);
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, null, null, null, true, null, false, null, Collections.singletonList("aud"), null, null);
-    QueryRouter router = new QueryRouter(vertx, null, new AuditorMemoryImpl(vertx), rcb, loader, null, System.getProperty("java.io.tmpdir"), true);
+    Authenticator rcb = new Authenticator(null, null, null, null, null, null, true, null, false, null, Collections.singletonList("aud"), null);
+    PipelineExecutor pipelineExecutor = mock(PipelineExecutor.class);
+    QueryRouter router = new QueryRouter(vertx, null, new AuditorMemoryImpl(vertx), rcb, loader, pipelineExecutor, System.getProperty("java.io.tmpdir"), true);
 
+    RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "", null, null, null, new IPAddressString("127.0.0.0"), null);
+    
     RoutingContext routingContext = mock(RoutingContext.class);
     HttpServerRequest request = mock(HttpServerRequest.class);
     when(routingContext.request()).thenReturn(request);
@@ -78,11 +84,12 @@ public class QueryRouterTest {
     HttpServerResponse response = mock(HttpServerResponse.class);
     when(routingContext.response()).thenReturn(response);
     when(response.setStatusCode(400)).thenReturn(response);
+    when(routingContext.get(RequestContext.class.getName())).thenReturn(requestContext);
 
     router.handle(routingContext);
 
     verify(response).setStatusCode(400);
-    verify(response).send("Invalid path");
+    verify(response).end("Invalid path (from ServiceException@uk.co.spudsoft.query.web.QueryRouter:178)");
   }
 
   @Test

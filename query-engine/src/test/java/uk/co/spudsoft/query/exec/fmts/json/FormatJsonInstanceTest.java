@@ -44,7 +44,7 @@ public class FormatJsonInstanceTest {
     FormatJson definition = FormatJson.builder()
             .outputNullValues(false)
             .build();
-    FormatJsonInstance instance = new FormatJsonInstance(null, definition);
+    FormatJsonInstance instance = new FormatJsonInstance(null, null, definition);
     // Create a test DataRow with different types of data
     Types types = new Types();
     DataRow row = DataRow.create(types,
@@ -84,7 +84,7 @@ public class FormatJsonInstanceTest {
     FormatJson definition = FormatJson.builder()
             .outputNullValues(false)
             .build();
-    FormatJsonInstance instance = new FormatJsonInstance(null, definition);
+    FormatJsonInstance instance = new FormatJsonInstance(null, null, definition);
     // Create a test DataRow with different types of data
     Types types = new Types();
     DataRow row = DataRow.create(types,
@@ -128,7 +128,7 @@ public class FormatJsonInstanceTest {
             .timeFormat("h:mm a")
             .decimalFormat("0.00")
             .build();
-    FormatJsonInstance instance = new FormatJsonInstance(null, definition);
+    FormatJsonInstance instance = new FormatJsonInstance(null, null, definition);
     // Create a test DataRow with different types of data
     Types types = new Types();
     DataRow row = DataRow.create(types,
@@ -158,7 +158,7 @@ public class FormatJsonInstanceTest {
             .dateTimeFormat("uuuu-MM-dd'T'HH:mm:ss")
             .timeFormat("HH:mm:ss")            
             .build();
-    FormatJsonInstance instance = new FormatJsonInstance(null, definition);
+    FormatJsonInstance instance = new FormatJsonInstance(null, null, definition);
     // Create a test DataRow with different types of data
     Types types = new Types();
     DataRow row = DataRow.create(types,
@@ -185,7 +185,7 @@ public class FormatJsonInstanceTest {
             .dateTimeFormat("EPOCH_SECONDS")
             .timeFormat("h:mm a")
             .build();
-    FormatJsonInstance instance = new FormatJsonInstance(null, definition);
+    FormatJsonInstance instance = new FormatJsonInstance(null, null, definition);
     // Create a test DataRow with different types of data
     Types types = new Types();
     DataRow row = DataRow.create(types,
@@ -210,7 +210,7 @@ public class FormatJsonInstanceTest {
             .dateTimeFormat("EPOCH_MILLISECONDS")
             .timeFormat("h:mm a")
             .build();
-    FormatJsonInstance instance = new FormatJsonInstance(null, definition);
+    FormatJsonInstance instance = new FormatJsonInstance(null, null, definition);
     // Create a test DataRow with different types of data
     Types types = new Types();
     DataRow row = DataRow.create(types,
@@ -232,7 +232,7 @@ public class FormatJsonInstanceTest {
   public void testToJsonWithEmptyRow() throws IOException {
     FormatJson definition = FormatJson.builder()
             .build();
-    FormatJsonInstance instance = new FormatJsonInstance(null, definition);
+    FormatJsonInstance instance = new FormatJsonInstance(null, null, definition);
 
     // Test with an empty row
     JsonObject result = new JsonObject(instance.toJsonBuffer(DataRow.EMPTY_ROW, true));
@@ -264,7 +264,7 @@ public class FormatJsonInstanceTest {
     FormatJson definition = FormatJson.builder()
             .dateTimeFormat("ISO_LOCAL_DATE_TIME")
             .build();
-    FormatJsonInstance instance = new FormatJsonInstance(null, definition);
+    FormatJsonInstance instance = new FormatJsonInstance(null, null, definition);
     // Create a test DataRow with different types of data
     Types types = new Types();
     DataRow row = DataRow.create(types,

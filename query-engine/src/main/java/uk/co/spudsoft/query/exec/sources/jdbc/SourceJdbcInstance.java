@@ -42,12 +42,11 @@ import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
 import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.sources.AbstractSource;
 import uk.co.spudsoft.query.exec.sources.sql.AbstractSqlPreparer;
 import uk.co.spudsoft.query.exec.sources.sql.SourceSqlStreamingInstance;
 import uk.co.spudsoft.query.main.ProtectedCredentials;
-import uk.co.spudsoft.query.web.RequestContextHandler;
 import uk.co.spudsoft.query.web.ServiceException;
 
 /**
@@ -86,7 +85,7 @@ public class SourceJdbcInstance extends AbstractSource {
   @Override
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
 
-    RequestContext requestContext = RequestContextHandler.getRequestContext(vertx.getOrCreateContext());
+    RequestContext requestContext = pipeline.getRequestContext();
     this.addNameToContextLocalData();
     
     String endpointName = definition.getEndpoint();

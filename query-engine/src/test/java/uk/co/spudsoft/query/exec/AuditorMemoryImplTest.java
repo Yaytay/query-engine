@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec;
 
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import inet.ipaddr.IPAddressString;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -34,7 +35,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
 import uk.co.spudsoft.query.defn.RateLimitRule;
 import uk.co.spudsoft.query.defn.RateLimitScopeType;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
 
 
 /**
@@ -58,8 +58,13 @@ public class AuditorMemoryImplTest {
     
     assertTrue(auditor.deleteCacheFile(context.getRequestId()).succeeded());
     // This won't do anything, but equally won't barf
-    assertTrue(auditor.deleteCacheFile(context2.getRequestId()).succeeded());
-    
+    assertTrue(auditor.deleteCacheFile(context2.getRequestId()).succeeded());    
+  }
+  
+  private static AuditorMemoryImpl.AuditRow makeAuditRow(String id, LocalDateTime timestamp, String processId, String url, String clientIp, String host, String path, String arguments, String headers, String openIdDetails, String issuer, String subject, String username, String name, String groups) {
+    AuditorMemoryImpl.AuditRow row = new AuditorMemoryImpl.AuditRow(id, timestamp, processId, url, clientIp, host, path, arguments, headers);
+    row.setTokenDetails(openIdDetails, issuer, subject, username, name, groups);
+    return row;
   }
   
   @Test
@@ -67,13 +72,13 @@ public class AuditorMemoryImplTest {
     
     RateLimitRule rule;
     
-    AuditorMemoryImpl.AuditRow goodRow = new AuditorMemoryImpl.AuditRow(
+    AuditorMemoryImpl.AuditRow goodRow = makeAuditRow(
             "id", LocalDateTime.MIN, "processId", "url", "127.0.0.1", "host", "path", "arguments", "headers", "openIdDetails", "issuer", "subject", "username", "name", "groups"
     );
-    AuditorMemoryImpl.AuditRow badRow = new AuditorMemoryImpl.AuditRow(
+    AuditorMemoryImpl.AuditRow badRow = makeAuditRow(
             "id", LocalDateTime.MIN, "processId", "url", "127.0.0.2", "host2", "path2", "arguments", "headers", "openIdDetails", "issuer2", "subject2", "username2", "name", "groups"
     );
-    AuditorMemoryImpl.AuditRow nullRow = new AuditorMemoryImpl.AuditRow(
+    AuditorMemoryImpl.AuditRow nullRow = makeAuditRow(
             "id", LocalDateTime.MIN, "processId", "url", null, null, null, null, "headers", "openIdDetails", null, null, null, "name", "groups"
     );
     

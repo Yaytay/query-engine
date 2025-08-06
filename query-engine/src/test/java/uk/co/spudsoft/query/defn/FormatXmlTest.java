@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.defn;
 
+import inet.ipaddr.IPAddressString;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -31,6 +32,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 
 class FormatXmlTest {
 
@@ -119,12 +121,13 @@ class FormatXmlTest {
       .build();
 
     Vertx vertx = mock(Vertx.class);
-    Context context = mock(Context.class);
     @SuppressWarnings("unchecked")
     WriteStream<Buffer> writeStream = mock(WriteStream.class);
 
+    RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.0"), null);
+    
     // Act
-    FormatInstance instance = formatXml.createInstance(vertx, context, writeStream);
+    FormatInstance instance = formatXml.createInstance(vertx, requestContext, writeStream);
 
     // Assert
     assertNotNull(instance);

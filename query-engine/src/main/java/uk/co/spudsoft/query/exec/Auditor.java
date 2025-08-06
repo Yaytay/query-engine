@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec;
 
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServerResponse;
@@ -28,7 +29,6 @@ import java.util.List;
 import liquibase.exception.LiquibaseException;
 import uk.co.spudsoft.dircache.DirCacheTree.File;
 import uk.co.spudsoft.query.defn.Pipeline;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
 
 /**
  * The main class for tracking requests to the Query Engine and for accessing that tracking.
@@ -66,7 +66,7 @@ public interface Auditor {
   Future<Void> waitForOutstandingRequests(long timeoutMs);
   
   /**
-   * Record a request.
+   * Record the basic information from a request.
    * <p>
    * This must be the first method to call as it is the one that creates the row with the given {@link RequestContext#requestId}.
    * @param context The context for the request to be recorded.

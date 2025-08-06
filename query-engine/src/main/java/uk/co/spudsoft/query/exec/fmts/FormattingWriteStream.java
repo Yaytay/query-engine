@@ -22,6 +22,8 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.procs.AsyncHandler;
@@ -35,6 +37,8 @@ import uk.co.spudsoft.query.logging.VertxMDC;
  * @author jtalbut
  */
 public class FormattingWriteStream implements WriteStream<DataRow> {
+  
+  private static final Logger logger = LoggerFactory.getLogger(FormattingWriteStream.class);
   
   private final WriteStream<Buffer> outputStream;
   private boolean initialized;
@@ -97,16 +101,25 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
     write(data).onComplete(handler);
   }
 
+  private Future<Void> handleTermination() {
+    try {
+      return terminate.handle(rowCount);
+    } catch (Throwable ex) {
+      logger.error("Termination callback failed: ", ex);
+      return Future.failedFuture(ex);
+    }
+  }
+  
   @Override
   public void end(Handler<AsyncResult<Void>> handler) {
     lastProcessFuture.andThen(v -> {
       if (initialized) {
         VertxMDC.INSTANCE.remove(SourceInstance.SOURCE_CONTEXT_KEY);
-        terminate.handle(rowCount).onComplete(handler);      
+        handleTermination().onComplete(handler);      
       } else {
         initialize.handle(null).compose(v2 -> {
           VertxMDC.INSTANCE.remove(SourceInstance.SOURCE_CONTEXT_KEY);
-          return terminate.handle(rowCount);
+          return handleTermination();
         }).onComplete(handler);
       }
     });

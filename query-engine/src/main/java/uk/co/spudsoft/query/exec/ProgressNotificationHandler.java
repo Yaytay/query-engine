@@ -16,9 +16,9 @@
  */
 package uk.co.spudsoft.query.exec;
 
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
 
 /**
  * Handler for receiving messages during the progress of a pipeline.

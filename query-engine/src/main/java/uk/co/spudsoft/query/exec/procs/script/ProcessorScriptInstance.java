@@ -41,10 +41,9 @@ import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.procs.query.FilteringStream;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
-import uk.co.spudsoft.query.web.RequestContextHandler;
 
 
 /**
@@ -72,8 +71,8 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
   private Source predicateSource;
   private Source processSource;
   
-  private final RequestContext requestContext;
-  private final Pipeline pipeline;
+  private RequestContext requestContext;
+  private Pipeline pipeline;
   private final ImmutableMap<String, Object> arguments;
   
   private Types types;
@@ -93,8 +92,6 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
     this.context = context;
     this.definition = definition;
     this.name = name;
-    this.requestContext = RequestContextHandler.getRequestContext(context);
-    this.pipeline = PipelineInstance.getPipelineDefinition(context);
     this.arguments = ImmutableCollectionTools.copy(requestContext == null ? null : requestContext.getArguments());
   }
   
@@ -192,6 +189,8 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
 
   @Override
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStreamWithTypes input) {
+    this.pipeline = pipeline.getDefinition();
+    this.requestContext = pipeline.getRequestContext();
     try {
       engine = Engine.newBuilder()
               .option("engine.WarnInterpreterOnly", "false")

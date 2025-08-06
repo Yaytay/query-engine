@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec;
 
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
@@ -57,7 +58,6 @@ import static uk.co.spudsoft.query.exec.AuditHistorySortOrder.id;
 import static uk.co.spudsoft.query.exec.AuditHistorySortOrder.responseStreamStart;
 import static uk.co.spudsoft.query.exec.AuditHistorySortOrder.timestamp;
 import static uk.co.spudsoft.query.exec.AuditorPersistenceImpl.multiMapToJson;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.main.ExceptionToString;
 
 /**
@@ -114,7 +114,7 @@ public class AuditorMemoryImpl implements Auditor {
     private LocalDateTime cacheDeleted;
     private String cacheFile;
 
-    AuditRow(String id, LocalDateTime timestamp, String processId, String url, String clientIp, String host, String path, String arguments, String headers, String openIdDetails, String issuer, String subject, String username, String name, String groups) {
+    AuditRow(String id, LocalDateTime timestamp, String processId, String url, String clientIp, String host, String path, String arguments, String headers) {
       this.id = id;
       this.timestamp = timestamp;
       this.processId = processId;
@@ -124,6 +124,9 @@ public class AuditorMemoryImpl implements Auditor {
       this.path = path;
       this.arguments = arguments;
       this.headers = headers;
+    }
+    
+    void setTokenDetails(String openIdDetails, String issuer, String subject, String username, String name, String groups) {
       this.openIdDetails = openIdDetails;
       this.issuer = issuer;
       this.subject = subject;
@@ -286,8 +289,6 @@ public class AuditorMemoryImpl implements Auditor {
   public Future<Void> recordRequest(RequestContext context) {
     JsonObject headers = multiMapToJson(context.getHeaders());
     JsonObject arguments = multiMapToJson(context.getParams());
-    JsonArray groups = Auditor.listToJson(context.getGroups());
-    String openIdDetails = context.getJwt() == null ? null : context.getJwt().getPayloadAsString();
 
     logger.info("Request: {} {} {} {} {} {} {} {} {} {} {}",
              context.getUrl(),
@@ -295,12 +296,7 @@ public class AuditorMemoryImpl implements Auditor {
              context.getHost(),
              context.getPath(),
              arguments,
-             headers,
-             context.getIssuer(),
-             context.getSubject(),
-             context.getUsername(),
-             context.getName(),
-             context.getGroups()
+             headers
     );
     
     AuditRow row = new AuditRow(
@@ -313,12 +309,17 @@ public class AuditorMemoryImpl implements Auditor {
       , JdbcHelper.limitLength(context.getPath(), 250)
       , JdbcHelper.toString(arguments)
       , JdbcHelper.toString(headers)
-      , openIdDetails
-      , JdbcHelper.limitLength(context.getIssuer(), 1000)
-      , JdbcHelper.limitLength(context.getSubject(), 1000)
-      , JdbcHelper.limitLength(context.getUsername(), 1000)
-      , JdbcHelper.limitLength(context.getName(), 1000)
-      , JdbcHelper.toString(groups)
+    );
+    
+    JsonArray groups = Auditor.listToJson(context.getGroups());
+    String openIdDetails = context.getJwt() == null ? null : context.getJwt().getPayloadAsString();
+
+    row.setTokenDetails(openIdDetails
+            , JdbcHelper.limitLength(context.getIssuer(), 1000)
+            , JdbcHelper.limitLength(context.getSubject(), 1000)
+            , JdbcHelper.limitLength(context.getUsername(), 1000)
+            , JdbcHelper.limitLength(context.getName(), 1000)
+            , JdbcHelper.toString(groups)
     );
 
     synchronized (auditRows) {
@@ -329,7 +330,7 @@ public class AuditorMemoryImpl implements Auditor {
     }
     return Future.succeededFuture();
   }
-  
+
   private static class RateLimitCounts {
     private int outstanding;
     private int total;

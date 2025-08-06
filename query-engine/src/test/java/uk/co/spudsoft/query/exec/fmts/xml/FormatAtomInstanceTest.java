@@ -36,7 +36,7 @@ import uk.co.spudsoft.query.exec.ColumnDefn;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
 import java.io.File;
@@ -93,7 +93,7 @@ public class FormatAtomInstanceTest {
     RequestContext req = new RequestContext(
       null
       , null
-      , null
+      , "/data/atom"
       , "localhost"
       , "/data/atom"
       , new HeadersMultiMap()
@@ -102,10 +102,8 @@ public class FormatAtomInstanceTest {
       , new IPAddressString("127.0.0.1")
       , null
     );
-    Context context = mock(Context.class);
-    when(context.get("req")).thenReturn(req);
 
-    FormatAtomInstance instance = defn.createInstance(vertx, context, writeStream);
+    FormatAtomInstance instance = defn.createInstance(vertx, req, writeStream);
 
     Types types = new Types(buildTypes());
     List<DataRow> rowsList = new ArrayList<>();

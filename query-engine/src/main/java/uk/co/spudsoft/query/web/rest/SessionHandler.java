@@ -21,24 +21,25 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.vertx.core.Vertx;
+import io.vertx.ext.web.RoutingContext;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.container.Suspended;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.main.Version;
 import static uk.co.spudsoft.query.web.rest.InfoHandler.reportError;
 
 /**
  * JAX-RS class implementing the REST API for reporting the user's profile data.
  * <p>
- * The information presented comes from the {@link uk.co.spudsoft.query.exec.conditions.RequestContext}.
+ * The information presented comes from the {@link uk.co.spudsoft.query.exec.context.RequestContext}.
  *
  * @author jtalbut
  */
@@ -62,8 +63,9 @@ public class SessionHandler {
   }
   
   /**
-   * Get the {@link Profile} data from the {@link uk.co.spudsoft.query.exec.conditions.RequestContext}.
+   * Get the {@link Profile} data from the {@link uk.co.spudsoft.query.exec.context.RequestContext}.
    * @param response JAX-RS Asynchronous response, connected to the Vertx request by the RESTeasy JAX-RS implementation.
+   * @param routingContext The Vert.x {@link RoutingContext}.
    */
   @GET
   @Path("/profile")
@@ -78,10 +80,11 @@ public class SessionHandler {
           )
   )
   public void getProfile(
-          @Suspended final AsyncResponse response
+          @Context RoutingContext routingContext
+          , @Suspended final AsyncResponse response
   ) {
     try {
-      RequestContext requestContext = HandlerAuthHelper.getRequestContext(Vertx.currentContext(), requireSession);
+      RequestContext requestContext = HandlerAuthHelper.getRequestContext(routingContext, requireSession);
       Jwt jwt = requestContext.getJwt();
 
       Profile profile = new Profile(

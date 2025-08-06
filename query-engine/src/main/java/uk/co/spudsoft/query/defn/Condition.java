@@ -41,7 +41,7 @@ import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
  * <P>
  * The context of a Condition includes three variables:
  * <UL>
- * <LI>a variable of type {@link uk.co.spudsoft.query.exec.conditions.RequestContext} called &quot;req&quot; that includes:
+ * <LI>a variable of type {@link uk.co.spudsoft.query.exec.context.RequestContext} called &quot;req&quot; that includes:
  * <UL>
  * <LI>requestId
  * A unique ID for the request.  If Distributed Tracing is enabled this will be the Span ID, otherwise it will be a random UUID.

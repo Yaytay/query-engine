@@ -42,7 +42,7 @@ import uk.co.spudsoft.query.defn.FormatJson;
 import uk.co.spudsoft.query.defn.FormatXlsx;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.FilterFactory;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader.PipelineAndFile;
 

@@ -46,7 +46,7 @@ import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineExecutorImpl;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
 import uk.co.spudsoft.query.main.ProtectedCredentials;
 
@@ -102,13 +102,15 @@ public class SourceSqlStreamingInstanceTest {
       );
       
       PipelineInstance pipelineInstance = new PipelineInstance(
-                        pipelineExecutor.prepareArguments(req, pipeline.getArguments(), params)
-                        , pipeline.getSourceEndpointsMap()
-                        , pipelineExecutor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
-                        , instance
-                        , Collections.emptyList()
-                        , new FormatCaptureInstance()
-                );
+              req
+              , pipeline
+              , pipelineExecutor.prepareArguments(req, pipeline.getArguments(), params)
+              , pipeline.getSourceEndpointsMap()
+              , pipelineExecutor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
+              , instance
+              , Collections.emptyList()
+              , new FormatCaptureInstance()
+      );
       
       Future<ReadStreamWithTypes> future = instance.initialize(pipelineExecutor, pipelineInstance);
       testContext.verify(() -> {
@@ -165,13 +167,15 @@ public class SourceSqlStreamingInstanceTest {
       );
       
       PipelineInstance pipelineInstance = new PipelineInstance(
-                        pipelineExecutor.prepareArguments(req, pipeline.getArguments(), params)
-                        , pipeline.getSourceEndpointsMap()
-                        , pipelineExecutor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
-                        , instance
-                        , Collections.emptyList()
-                        , new FormatCaptureInstance()
-                );
+              req
+              , pipeline
+              , pipelineExecutor.prepareArguments(req, pipeline.getArguments(), params)
+              , pipeline.getSourceEndpointsMap()
+              , pipelineExecutor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
+              , instance
+              , Collections.emptyList()
+              , new FormatCaptureInstance()
+      );
       
       Future<ReadStreamWithTypes> future = instance.initialize(pipelineExecutor, pipelineInstance);
       testContext.verify(() -> {

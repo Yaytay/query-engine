@@ -24,13 +24,14 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.vertx.core.Vertx;
+import io.vertx.ext.web.RoutingContext;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.container.Suspended;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.io.File;
@@ -267,7 +268,8 @@ public class DocHandler {
   /**
    * Return a tree of available documentation.
    *
-   * @param response JAX-RS Asynchronous response, connected to the Vertx request by the RESTeasy JAX-RS implementation.
+   * @param response JAX-RS Asynchronous response, connected to the Vert.x request by the RESTeasy JAX-RS implementation.
+   * @param routingContext The Vert.x routing context.
    */
   @GET
   @Path("/")
@@ -285,10 +287,11 @@ public class DocHandler {
           )
   )
   public void getAvailable(
-          @Suspended final AsyncResponse response
+          @Context RoutingContext routingContext
+          , @Suspended final AsyncResponse response
   ) {
     try {
-      HandlerAuthHelper.getRequestContext(Vertx.currentContext(), requireSession);
+      HandlerAuthHelper.getRequestContext(routingContext, requireSession);
 
       if (docsRoot == null) {
         logger.info("Request for documentation when disabled");

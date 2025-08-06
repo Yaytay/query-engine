@@ -127,11 +127,13 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
     FormatCaptureInstance sinkInstance = new FormatCaptureInstance();
     
     PipelineInstance childPipeline = new PipelineInstance(
-            pipeline.getArgumentInstances()
+            pipeline.getRequestContext()
+            , pipeline.getDefinition()
+            , pipeline.getArgumentInstances()
             , pipeline.getSourceEndpoints()
             , null
             , sourceInstance
-            , executor.createProcessors(vertx, sourceInstance, context, sourcePipeline, null, name)
+            , executor.createProcessors(vertx, sourceInstance, context, pipeline.getRequestContext(), sourcePipeline, null, name)
             , sinkInstance
     );
     return executor.initializePipeline(childPipeline)            

@@ -16,13 +16,12 @@
  */
 package uk.co.spudsoft.query.exec;
 
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.vertx.core.Context;
 import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import java.util.HashMap;
 import java.util.List;
@@ -34,9 +33,7 @@ import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 import uk.co.spudsoft.query.defn.Endpoint;
 import uk.co.spudsoft.query.defn.Pipeline;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
-import uk.co.spudsoft.query.web.RequestContextHandler;
 
 /**
  * An Instance of a Pipeline.
@@ -63,6 +60,8 @@ public class PipelineInstance {
 
   /**
    * Constructor.
+   * @param requestContext  The {@link RequestContext} for the request.
+   * @param definition The definition of the {@link Pipeline}.
    * @param argumentInstances the arguments passed in to the request, matched to argument in the {@link Pipeline} definition.
    * @param sourceEndpoints The set of {@link Endpoint} definitions from the {@link Pipeline} definition.
    * @param preProcessors The {@link PreProcessorInstance} objects instantiated from the {@link Pipeline} definition.
@@ -70,16 +69,19 @@ public class PipelineInstance {
    * @param processors The {@link ProcessorInstance} objects instantiated from the {@link Pipeline} definition.
    * @param sink The {@link FormatInstance} object that will handle the output.
    */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Definition must not be modified, RequestContext may be modified by permitted setters")
   public PipelineInstance(
-          final Map<String, ArgumentInstance> argumentInstances
+          final RequestContext requestContext
+          , final Pipeline definition
+          , final Map<String, ArgumentInstance> argumentInstances
           , final Map<String, Endpoint> sourceEndpoints
           , final List<PreProcessorInstance> preProcessors
           , final SourceInstance source
           , final List<ProcessorInstance> processors
           , final FormatInstance sink
   ) {
-    this.definition = getPipelineDefinition(Vertx.currentContext());
-    this.requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
+    this.definition = definition;
+    this.requestContext = requestContext;
     this.argumentInstances = ImmutableCollectionTools.copy(argumentInstances);
     this.arguments = buildArgumentMap(argumentInstances);
     this.sourceEndpoints = sourceEndpoints == null ? new HashMap<>() : new HashMap<>(sourceEndpoints);
@@ -91,21 +93,21 @@ public class PipelineInstance {
   }
 
   /**
+   * Get the {@link RequestContext}.
+   * @return the {@link RequestContext}.
+   */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "RequestContext may be modified by permitted setters")
+  public RequestContext getRequestContext() {
+    return requestContext;
+  }
+
+  /**
    * Get the pipeline definition.
    * @return the pipeline definition.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Definition should not be modified")
   public Pipeline getDefinition() {
     return definition;
-  }
-  
-  /**
-   * Get the definition of the currently executing {@link Pipeline}.
-   * @param context The Vert.x {@link Context} that should contain the {@link Pipeline} definition.
-   * @return The {@link Pipeline} definition found in the Vert.x {@link Context}, if any.
-   */
-  public static Pipeline getPipelineDefinition(Context context) {
-    return context == null ? null : context.get("pipeline");
   }
   
   /**

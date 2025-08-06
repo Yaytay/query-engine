@@ -104,11 +104,13 @@ public class ProcessorLookupInstance implements ProcessorInstance {
     SourceInstance sourceInstance = definition.getMap().getSource().createInstance(vertx, context, meterRegistry, executor, getName() + ".map");
     FormatCaptureInstance fieldDefnStreamCapture = new FormatCaptureInstance();
     PipelineInstance childPipeline = new PipelineInstance(
-            pipeline.getArgumentInstances()
+            pipeline.getRequestContext()
+            , pipeline.getDefinition()
+            , pipeline.getArgumentInstances()
             , pipeline.getSourceEndpoints()
             , null
             , sourceInstance
-            , executor.createProcessors(vertx, sourceInstance, context, definition.getMap(), null, getName())
+            , executor.createProcessors(vertx, sourceInstance, context, pipeline.getRequestContext(), definition.getMap(), null, getName())
             , fieldDefnStreamCapture
     );
     

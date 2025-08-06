@@ -51,6 +51,7 @@ import static uk.co.spudsoft.query.defn.DataType.Float;
 import static uk.co.spudsoft.query.defn.DataType.Integer;
 import static uk.co.spudsoft.query.defn.DataType.Null;
 import static uk.co.spudsoft.query.defn.DataType.Time;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.ValueFormatters;
 
 /**
@@ -90,23 +91,24 @@ public final class FormatAtomInstance implements FormatInstance {
    * Constructor.
    *
    * @param definition The formatting definition for the output.
-   * @param requestUrl The base URL (or path) that was used for this request.
+   * @param requestContext The context of the request being output - if nothing else this must be updated with the row count on completion.
    * @param outputStream The WriteStream that the data is to be sent to.
    */
-  public FormatAtomInstance(FormatAtom definition, String requestUrl, WriteStream<Buffer> outputStream) {
+  public FormatAtomInstance(FormatAtom definition, RequestContext requestContext, WriteStream<Buffer> outputStream) {
     this.defn = definition;
-    this.requestUrl = requestUrl;
+    this.requestUrl = requestContext.getUrl();
     this.baseUrl = endsWith(requestUrl, "/");
     this.streamWrapper = new OutputWriteStreamWrapper(outputStream);
     this.valueFormatters = defn.toValueFormatters("", "", false);
     this.formattingStream = FormatXmlInstance.createFormattingWriteStream(
-      outputStream,
-      streamWrapper,
-      started,
-      this::start,
-      this::outputRow,
-      this::close
-    );
+            requestContext,
+            outputStream,
+            streamWrapper,
+            started,
+            this::start,
+            this::outputRow,
+            this::close
+          );
   }
 
   /**

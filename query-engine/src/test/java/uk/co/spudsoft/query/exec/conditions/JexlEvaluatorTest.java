@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.conditions;
 
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import inet.ipaddr.IPAddressString;
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.Cookie;

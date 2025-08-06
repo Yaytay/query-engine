@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.fmts.xml;
 
+import inet.ipaddr.IPAddressString;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.FileSystem;
@@ -47,6 +48,7 @@ import java.util.List;
 
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 
 /**
  *
@@ -83,8 +85,9 @@ public class FormatRssInstanceTest {
     if (!fs.existsBlocking("target/temp")) {
       fs.mkdirBlocking("target/temp");
     }
+    RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.0"), null);
     WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setCreate(true).setSync(true));
-    FormatRssInstance instance = defn.createInstance(vertx, null, writeStream);
+    FormatRssInstance instance = defn.createInstance(vertx, requestContext, writeStream);
 
     Types types = new Types(buildTypes());
     List<DataRow> rowsList = new ArrayList<>();

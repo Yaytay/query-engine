@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package uk.co.spudsoft.query.exec.conditions;
+package uk.co.spudsoft.query.exec.context;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -28,6 +28,7 @@ import io.vertx.core.http.Cookie;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.core.net.HostAndPort;
+import io.vertx.ext.web.RoutingContext;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -51,12 +52,14 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
  *
  * @author jtalbut
  */
-public class RequestContext {
+public final class RequestContext {
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(RequestContext.class);
   
-  private static final String REQUEST_ID = "requestId";
+  private static final String REQUEST_ID = RequestContext.class.getPackageName() + ".RequestId";
+  
+  private static final String REQUEST_CONTEXT = RequestContext.class.getName();
   
   private static final Base64.Decoder B64 = Base64.getDecoder();
 
@@ -84,7 +87,7 @@ public class RequestContext {
 
   private final IPAddressString clientIp;
 
-  private final Jwt jwt;
+  private Jwt jwt;
 
   private long headersSentTime;
 
@@ -97,24 +100,25 @@ public class RequestContext {
    *
    * @param environment Additional data to make available.
    * @param request HttpServerRequest to extract the context from.
-   * @param jwt JsonWebToken extracted from the request.
    *
    */
-  public RequestContext(Map<String, String> environment, HttpServerRequest request, Jwt jwt) {
+  public RequestContext(Map<String, String> environment, HttpServerRequest request) {
     this.environment = ImmutableCollectionTools.copy(environment);
     this.startTime = System.currentTimeMillis();
-    this.requestId = retrieveRequestId();
+    this.requestId = generateRequestId();
     this.url = request.absoluteURI();
     this.uri = parseURI(request.absoluteURI());
     this.clientIp = extractRemoteIp(request);
     this.host = extractHost(request);
     this.path = request.path();
     this.params = request.params();
-    // this.arguments = multiMapToMap(request.params());
     this.headers = request.headers();
     this.cookies = ImmutableSet.copyOf(request.cookies());
-    this.jwt = jwt;
     this.runId = this.params == null ? null : this.params.get("_runid");
+    
+    VertxMDC.INSTANCE.put(REQUEST_ID, this.requestId);
+    logger.trace("Created {} RequestContext@{} from HttpServerRequest", requestId, System.identityHashCode(this));
+
   }
 
   /**
@@ -145,6 +149,7 @@ public class RequestContext {
     this.clientIp = clientIp;
     this.jwt = jwt;
     this.runId = params == null ? null : params.get("_runid");
+    logger.trace("Created {} RequestContext@{} from values", requestId, System.identityHashCode(this));
   }
 
   private static URI parseURI(String url) {
@@ -260,6 +265,14 @@ public class RequestContext {
   }
 
   /**
+   * Set the JWT found in (or created for) the request context.
+   * @param jwt the JWT found in (or created for) the request context.
+   */
+  public void setJwt(Jwt jwt) {
+    this.jwt = jwt;
+  }
+
+  /**
    * Get the absolute URL used for the request.
    * @return Get the absolute URL used for the request.
    */
@@ -291,7 +304,7 @@ public class RequestContext {
    * 
    * @return the request ID.
    */
-  public static String storeRequestId() {
+  private static String generateRequestId() {
     String requestId = null;
     if (Vertx.currentContext() != null) {
       Span currentSpan = Span.current();
@@ -305,24 +318,33 @@ public class RequestContext {
     if (requestId == null) {
       requestId = UUID.randomUUID().toString();
     }
-    VertxMDC.INSTANCE.put(REQUEST_ID, requestId);
     return requestId;
   }
 
   /**
    * Retrieve the requestId from MDC.
    * 
-   * If there is no request Id in MDC {@link #storeRequestId()} is called.
-   * 
    * @return the requestId found in MDC.
    */
   public static String retrieveRequestId() {
-    String requestId = VertxMDC.INSTANCE.get(REQUEST_ID);
-    if (requestId == null) {
-      return storeRequestId();
-    } else {
-      return requestId;
-    }
+    return VertxMDC.INSTANCE.get(REQUEST_ID);
+  }
+  
+  /**
+   * Store the requestContext into the Vert.x RoutingContext.
+   * @param routingContext the Vert.x routing context.
+   */
+  public void storeInRoutingContext(RoutingContext routingContext) {
+    routingContext.put(REQUEST_CONTEXT, this);
+  }
+  
+  /**
+   * Retrieve the requestContext from the Vert.x RoutingContext.
+   * @param routingContext the Vert.x routing context.
+   * @return the request context.
+   */
+  public static RequestContext retrieveRequestContext(RoutingContext routingContext) {
+    return routingContext.get(REQUEST_CONTEXT);
   }
 
   /**

@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec;
 
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
@@ -75,7 +76,6 @@ import uk.co.spudsoft.dircache.DirCacheTree;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.defn.RateLimitRule;
 import uk.co.spudsoft.query.defn.RateLimitScopeType;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.main.Persistence;
 import uk.co.spudsoft.query.main.DataSourceConfig;
 import uk.co.spudsoft.query.main.ExceptionToString;
@@ -208,6 +208,7 @@ public class AuditorPersistenceImpl implements Auditor {
 
     if (Strings.isNullOrEmpty(dataSourceConfig.getSchema())) {
       recordRequest = recordRequest.replaceAll("#SCHEMA#.", "");
+      recordTokenDetails = recordTokenDetails.replaceAll("#SCHEMA", "");
       recordFile = recordFile.replaceAll("#SCHEMA#.", "");
       recordException = recordException.replaceAll("#SCHEMA#.", "");
       recordResponse = recordResponse.replaceAll("#SCHEMA#.", "");
@@ -221,6 +222,7 @@ public class AuditorPersistenceImpl implements Auditor {
       markRateLimitRulesProcessed = markRateLimitRulesProcessed.replaceAll("#SCHEMA#.", "");
     } else {
       recordRequest = recordRequest.replaceAll("SCHEMA", dataSourceConfig.getSchema());
+      recordTokenDetails = recordTokenDetails.replaceAll("SCHEMA", dataSourceConfig.getSchema());
       recordFile = recordFile.replaceAll("SCHEMA", dataSourceConfig.getSchema());
       recordException = recordException.replaceAll("SCHEMA", dataSourceConfig.getSchema());
       recordResponse = recordResponse.replaceAll("SCHEMA", dataSourceConfig.getSchema());
@@ -243,6 +245,7 @@ public class AuditorPersistenceImpl implements Auditor {
         DatabaseMetaData dmd = jdbcConnection.getMetaData();
         quote = dmd.getIdentifierQuoteString();
         recordRequest = recordRequest.replaceAll("#", quote);
+        recordTokenDetails = recordTokenDetails.replaceAll("#", quote);
         recordFile = recordFile.replaceAll("#", quote);
         recordException = recordException.replaceAll("#", quote);
         recordResponse = recordResponse.replaceAll("#", quote);
@@ -357,7 +360,7 @@ public class AuditorPersistenceImpl implements Auditor {
                     , #name#
                     , #groups#
                     , #roles#
-                  ) values (
+                    ) values (
                     ?
                     , ?
                     , ?
@@ -377,6 +380,23 @@ public class AuditorPersistenceImpl implements Auditor {
                     , ?
                     , ?
                   )""";
+
+  private String recordTokenDetails = """
+                  update
+                    #SCHEMA#.#request#
+                  set
+                    #openIdDetails# = ?
+                    , #audience# = ?
+                    , #issuer# = ?
+                    , #subject# = ?
+                    , #username# = ?
+                    , #name# = ?
+                    , #groups# = ?
+                    , #roles# = ?
+                  where
+                    #id# = ?
+                  )""";
+
   private String recordFile = """
            update
             #SCHEMA#.#request#
@@ -388,15 +408,16 @@ public class AuditorPersistenceImpl implements Auditor {
            where
             #id# = ?""";
   private String recordException = """
-           update
-            #SCHEMA#.#request#
-           set
-            #exceptionTime# = ?
-            , #exceptionClass# = ?
-            , #exceptionMessage# = ?
-            , #exceptionStackTrace# = ?
-           where
-            #id# = ?""";
+                                    update
+                                      #SCHEMA#.#request#
+                                    set
+                                      #exceptionTime# = ?
+                                      , #exceptionClass# = ?
+                                      , #exceptionMessage# = ?
+                                      , #exceptionStackTrace# = ?
+                                    where
+                                      #id# = ?
+                                   """;
   private String recordResponse = """
            update
             #SCHEMA#.#request#
@@ -619,27 +640,21 @@ public class AuditorPersistenceImpl implements Auditor {
 
     JsonObject headers = multiMapToJson(context.getHeaders());
     JsonObject arguments = multiMapToJson(context.getParams());
-    JsonArray audience = Auditor.listToJson(context.getAudience());
-    JsonArray groups = Auditor.listToJson(context.getGroups());
-    JsonArray roles = Auditor.listToJson(context.getRoles());
-    String openIdDetails = context.getJwt() == null ? null : context.getJwt().getPayloadAsString();
 
-    logger.info("Request: {} {} {} {} {} {} {} {} {} {} {} {} {}",
+    logger.info("Request: {} {} {} {} {} {}",
              context.getUrl(),
              context.getClientIp(),
              context.getHost(),
              context.getPath(),
              arguments,
-             headers,
-             context.getAudience(),
-             context.getIssuer(),
-             context.getSubject(),
-             context.getUsername(),
-             context.getName(),
-             context.getGroups(),
-             context.getRoles()
+             headers
     );
 
+    JsonArray audience = Auditor.listToJson(context.getAudience());
+    JsonArray groups = Auditor.listToJson(context.getGroups());
+    JsonArray roles = Auditor.listToJson(context.getRoles());
+    String openIdDetails = context.getJwt() == null ? null : context.getJwt().getPayloadAsString();
+    
     return jdbcHelper.runSqlUpdate("recordRequest", recordRequest, ps -> {
                     int param = 1;
                     ps.setString(param++, JdbcHelper.limitLength(context.getRequestId(), 100));
@@ -652,6 +667,7 @@ public class AuditorPersistenceImpl implements Auditor {
                     ps.setString(param++, JdbcHelper.limitLength(context.getPath(), 250));
                     ps.setString(param++, JdbcHelper.toString(arguments));
                     ps.setString(param++, JdbcHelper.toString(headers));
+                    
                     ps.setString(param++, openIdDetails);
                     ps.setString(param++, JdbcHelper.toString(audience));
                     ps.setString(param++, JdbcHelper.limitLength(context.getIssuer(), 1000));
@@ -660,12 +676,8 @@ public class AuditorPersistenceImpl implements Auditor {
                     ps.setString(param++, JdbcHelper.limitLength(context.getName(), 1000));
                     ps.setString(param++, JdbcHelper.toString(groups));
                     ps.setString(param++, JdbcHelper.toString(roles));
-    })
-            .recover(ex -> {
-              logger.error("Audit record failed: ", ex);
-              return Future.succeededFuture();
-            })
-            .mapEmpty();
+                    
+    }).mapEmpty();
   }
 
   @Override

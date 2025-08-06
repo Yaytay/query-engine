@@ -22,16 +22,14 @@ import io.swagger.v3.oas.annotations.extensions.Extension;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.vertx.core.Vertx;
 import java.util.List;
 import uk.co.spudsoft.query.defn.Argument;
 import uk.co.spudsoft.query.defn.ArgumentValue;
 import uk.co.spudsoft.query.defn.Condition;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
-import uk.co.spudsoft.query.web.RequestContextHandler;
 
 /**
  * An Argument represents a named piece of data that will be passed in to a pipeline.
@@ -69,9 +67,10 @@ public final class ArgumentDetails {
 
   /**
    * Constructor - create an ArgumentDetails from an Argument.
+   * @param requestContext The request context.
    * @param argument The Argument to represent.
    */
-  public ArgumentDetails(Argument argument) {
+  public ArgumentDetails(RequestContext requestContext, Argument argument) {
     
     if (argument.isHidden()) {
       throw new IllegalStateException("Attempt to output hidden argument");
@@ -80,7 +79,6 @@ public final class ArgumentDetails {
       defaultValue = null;
     } else {
       JexlEvaluator evaluator = new JexlEvaluator(argument.getDefaultValueExpression());
-      RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
       this.defaultValue = evaluator.evaluateAsObject(requestContext, null);
     }
 

@@ -1133,14 +1133,14 @@ public class Parameters {
   /**
    * The additional data that is made available via the request object.
    * <p>
-   * The {@link uk.co.spudsoft.query.exec.conditions.RequestContext} is made available in both
+   * The {@link uk.co.spudsoft.query.exec.context.RequestContext} is made available in both
    * {@link uk.co.spudsoft.query.exec.conditions.ConditionInstance}s and various templates
    * (such as {@link uk.co.spudsoft.query.defn.SourceSql#queryTemplate} and {@link uk.co.spudsoft.query.defn.Endpoint#urlTemplate}).
    * By default this context contains information specific to the request, and very little information about
    * the service it is running in.
    * <P>
    * The entire requestContextEnvironment is also available (with no change)
-   * using {@link uk.co.spudsoft.query.exec.conditions.RequestContext#getEnv}, providing a way to
+   * using {@link uk.co.spudsoft.query.exec.context.RequestContext#getEnv}, providing a way to
    * add additional environmental information to the context.
    * @return the additional data that is made available via the request object.
    */
@@ -1152,14 +1152,14 @@ public class Parameters {
   /**
    * The additional data that is made available via the request object.
    * <p>
-   * The {@link uk.co.spudsoft.query.exec.conditions.RequestContext} is made available in both
+   * The {@link uk.co.spudsoft.query.exec.context.RequestContext} is made available in both
    * {@link uk.co.spudsoft.query.exec.conditions.ConditionInstance}s and various templates
    * (such as {@link uk.co.spudsoft.query.defn.SourceSql#queryTemplate} and {@link uk.co.spudsoft.query.defn.Endpoint#urlTemplate}).
    * By default this context contains information specific to the request, and very little information about
    * the service it is running in.
    * <P>
    * The entire requestContextEnvironment is also available (with no change)
-   * using {@link uk.co.spudsoft.query.exec.conditions.RequestContext#getEnv}, providing a way to
+   * using {@link uk.co.spudsoft.query.exec.context.RequestContext#getEnv}, providing a way to
    * add additional environmental information to the context.
    * @param requestContextEnvironment the additional data that is made available via the request object.
    */

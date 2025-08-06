@@ -17,9 +17,7 @@
 package uk.co.spudsoft.query.exec.fmts.xlsx;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import java.io.IOException;
@@ -45,7 +43,7 @@ import uk.co.spudsoft.query.defn.FormatXlsxFont;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormattingWriteStream;
 import uk.co.spudsoft.xlsx.ColourDefinition;
 import uk.co.spudsoft.xlsx.ColumnDefinition;
@@ -56,7 +54,6 @@ import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.main.Coalesce;
-import uk.co.spudsoft.query.web.RequestContextHandler;
 
 /**
  * Output {@link uk.co.spudsoft.query.exec.FormatInstance} that generates XLSX output.
@@ -84,10 +81,11 @@ public class FormatXlsxInstance implements FormatInstance {
   /**
    * Constructor.
    * @param definition The formatting definition for the output.
+   * @param requestContext The context of the request being output - if nothing else this must be updated with the row count on completion.
    * @param outputStream The WriteStream that the data is to be sent to.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "FormatXlsxInstance is a wrapper around WriteStream<Buffer>, it will make mutating calls to it")
-  public FormatXlsxInstance(FormatXlsx definition, WriteStream<Buffer> outputStream) {
+  public FormatXlsxInstance(FormatXlsx definition, RequestContext requestContext, WriteStream<Buffer> outputStream) {
     this.definition = definition;    
     outputStream.setWriteQueueMaxSize(1000);
     this.streamWrapper = new OutputWriteStreamWrapper(outputStream);
@@ -97,7 +95,7 @@ public class FormatXlsxInstance implements FormatInstance {
               logger.info("Got row {}", row);
               if (!started.get()) {
                 started.set(true);
-                TableDefinition tableDefinition = tableDefinition();
+                TableDefinition tableDefinition = tableDefinition(requestContext);
                 writer = new XlsxWriter(tableDefinition);
                 try {
                   writer.startFile(streamWrapper);
@@ -115,16 +113,10 @@ public class FormatXlsxInstance implements FormatInstance {
               return Future.succeededFuture();
             }
             , rows -> {
-              Context vertxContext = Vertx.currentContext();
-              if (vertxContext != null) {
-                RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
-                if (requestContext != null) {
-                  requestContext.setRowsWritten(rows);
-                }
-              }
+              requestContext.setRowsWritten(rows);
               if (!started.get()) {
                 started.set(true);
-                TableDefinition tableDefintion = tableDefinition();
+                TableDefinition tableDefintion = tableDefinition(requestContext);
                 writer = new XlsxWriter(tableDefintion);
                 try {
                   writer.startFile(streamWrapper);
@@ -141,17 +133,6 @@ public class FormatXlsxInstance implements FormatInstance {
               }
             }
     );
-  }
-    
-  private String getUsernameFromContext() {
-    Context vertxContext = Vertx.currentContext();
-    if (vertxContext != null) {
-      RequestContext requestContext = RequestContextHandler.getRequestContext(vertxContext);
-      if (requestContext != null) {
-        return requestContext.getUsername();
-      }      
-    }
-    return "Unknown";
   }
   
   static FontDefinition getFontDefinition(FormatXlsxFont defn) {
@@ -188,7 +169,7 @@ public class FormatXlsxInstance implements FormatInstance {
     };
   }
     
-  private TableDefinition tableDefinition() {
+  private TableDefinition tableDefinition(RequestContext requestContext) {
     List<ColumnDefinition> columns = new ArrayList<>(types.size());
     FormatXlsxColumn nonFormat = FormatXlsxColumn.builder().build();
     types.forEach((cd) -> {
@@ -205,7 +186,7 @@ public class FormatXlsxInstance implements FormatInstance {
     TableDefinition defn = new TableDefinition(
             "SpudSoft Query Engine"
             , Coalesce.coalesce(definition.getSheetName(), "Data")
-            , Coalesce.coalesce(definition.getCreator(), getUsernameFromContext(), "Data")
+            , Coalesce.coalesce(definition.getCreator(), requestContext.getUsername(), "Data")
             , definition.isGridLines()
             , definition.isHeaders()
             , getFontDefinition(definition.getHeaderFont())

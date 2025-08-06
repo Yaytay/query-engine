@@ -119,10 +119,6 @@ public class AuthQueryIT {
       , "--sampleDataLoads[1].url=" + mysql.getVertxUrl()
       , "--sampleDataLoads[1].user.username=" + mysql.getUser()
       , "--sampleDataLoads[1].user.password=" + mysql.getPassword()
-      , "--sampleDataLoads[2].url=sqlserver://localhost:1234/test"
-      , "--sampleDataLoads[2].adminUser.username=sa"
-      , "--sampleDataLoads[2].adminUser.password=unknown"
-      , "--sampleDataLoads[3].url=wibble"
       , "--session.requireSession=true"
       , "--session.oauth.Test.logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
       , "--session.oauth.Test.authorizationEndpoint=https://github.com/login/oauth/authorize"

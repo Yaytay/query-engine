@@ -16,16 +16,18 @@
  */
 package uk.co.spudsoft.query.exec.conditions;
 
+import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.main.Authenticator;
 import com.google.common.collect.ImmutableMap;
-import io.netty.handler.codec.http.QueryStringDecoder;
-import io.vertx.core.MultiMap;
+import inet.ipaddr.IPAddressString;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonObject;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -33,7 +35,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
 import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.RequestContextTest;
 import uk.co.spudsoft.query.web.LoginDaoMemoryImpl;
 
 /**
@@ -54,18 +58,6 @@ public class ConditionInstanceTest {
   }
 
 
-  static MultiMap params(String uri) {
-    QueryStringDecoder queryStringDecoder = new QueryStringDecoder(uri);
-    Map<String, List<String>> prms = queryStringDecoder.parameters();
-    MultiMap params = MultiMap.caseInsensitiveMultiMap();
-    if (!prms.isEmpty()) {
-      for (Map.Entry<String, List<String>> entry: prms.entrySet()) {
-        params.add(entry.getKey(), entry.getValue());
-      }
-    }
-    return params;
-  }
-
   private static final String OPENID = Base64.getEncoder().encodeToString("{\"jti\":\"a28849b9-3624-42c3-aaad-21c5f80ffc55\",\"exp\":1653142100,\"nbf\":0,\"iat\":1653142040,\"iss\":\"http://ca.localtest.me\",\"aud\":\"security-admin-console\",\"sub\":\"af78202f-b54a-439d-913c-0bbe99ba6bf8\",\"typ\":\"Bearer\",\"azp\":\"QE2\",\"scope\":\"openid profile email qe2\",\"email_verified\":false,\"name\":\"Bob Fred\",\"preferred_username\":\"bob.fred\",\"given_name\":\"Bob\",\"family_name\":\"Fred\",\"email\":\"bob@localtest.me\",\"groups\":[\"group1\",\"group2\",\"group3\"]}".getBytes(StandardCharsets.UTF_8));
   private static final String OPENID2 = Base64.getEncoder().encodeToString("{\"jti\":\"a28849b9-3624-42c3-aaad-21c5f80ffc55\",\"exp\":1653142100,\"nbf\":0,\"iat\":1653142040,\"iss\":\"http://ca.localtest.me\",\"aud\":[\"service-query-engine\", \"client-root-bob.fred.net\", \"thingummy\"],\"sub\":\"af78202f-b54a-439d-913c-0bbe99ba6bf8\",\"typ\":\"Bearer\",\"azp\":\"QE2\",\"scope\":\"openid profile email qe2\",\"email_verified\":false,\"name\":\"Bob Fred\",\"preferred_username\":\"bob.fred\",\"given_name\":\"Bob\",\"family_name\":\"Fred\",\"email\":\"bob@localtest.me\",\"groups\":[\"group1\",\"group2\",\"group3\"]}".getBytes(StandardCharsets.UTF_8));
     
@@ -79,11 +71,23 @@ public class ConditionInstanceTest {
     HttpServerRequest req = mock(HttpServerRequest.class);
     when(req.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
-    when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3&param3=true"));
+    when(req.params()).thenReturn(RequestContextTest.params("http://bob/fred?param1=value1&param2=value2&param1=value3&param3=true"));
 
-    RequestContextBuilder rcb = new RequestContextBuilder(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null
-            , ImmutableMap.<String, String>builder().put("ev1", "good").put("ev2", "bad").build());
-    RequestContext ctx = rcb.buildRequestContext(req).result();
+    Authenticator rcb = new Authenticator(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
+
+    Map<String, String> environment = ImmutableMap.<String, String>builder().put("ev1", "good").put("ev2", "bad").build();
+    
+    RequestContext ctx = new RequestContext(environment
+            , UUID.randomUUID().toString()
+            , "http://bob/fred?param1=value1&param2=value2&param1=value3&param3=true"
+            , "bob"
+            , "/fred"
+            , RequestContextTest.params("http://bob/fred?param1=value1&param2=value2&param1=value3&param3=true")
+            , RequestContextTest.params("X-Forwarded-For=111.122.133.144&X-OpenID-Introspection=" + OPENID)
+            , null
+            , new IPAddressString("127.0.0.1")
+            , new Jwt(null, new JsonObject(new String(Base64.getDecoder().decode(OPENID))), null, null)
+    );
 
     assertFalse(new ConditionInstance("request").evaluate(ctx, DataRow.EMPTY_ROW));
     assertTrue(new ConditionInstance("request.jwt.hasGroup('group1')").evaluate(ctx, DataRow.EMPTY_ROW));
@@ -106,8 +110,9 @@ public class ConditionInstanceTest {
     assertFalse(new ConditionInstance("'good' == request.env['ev3']").evaluate(ctx, null));
     assertFalse(new ConditionInstance("'good' == request.env.ev3").evaluate(ctx, null));
     
-    when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID2);
-    ctx = rcb.buildRequestContext(req).result();
+    ctx.setJwt(
+            new Jwt(null, new JsonObject(new String(Base64.getDecoder().decode(OPENID2))), null, null)
+    );
 
     assertTrue(new ConditionInstance("firstMatchingStringWithPrefix(request.getAudience(), 'client-root-', true) =~ ['bob-sandbox.fred.net', 'bob.fred.net']").evaluate(ctx, null));
     assertTrue(new ConditionInstance("firstMatchingStringWithPrefix(request.audience, 'client-root-', true) =~ ['bob-sandbox.fred.net', 'bob.fred.net']").evaluate(ctx, null));

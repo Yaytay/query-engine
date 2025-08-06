@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec;
 
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
@@ -27,7 +28,6 @@ import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.main.ProtectedCredentials;
 import uk.co.spudsoft.query.defn.Format;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
 
 /**
  * Public interface to execute a pipeline.
@@ -70,12 +70,13 @@ public interface PipelineExecutor extends SharedMap {
    * @param vertx The Vert.x instance.
    * @param sourceNameTracker Helper to allow any {@link SourceInstance} objects to identify themselves to the {@link Context} for logging.
    * @param context The Vert.x {@link Context} for any asynchronous processing.
+   * @param requestContext The context of the request.
    * @param definition The definition of the {@link SourcePipeline pipeline}.
    * @param params The original parameters, for identifying {@link uk.co.spudsoft.query.exec.filters.Filter} arguments.
    * @param parentName The name of any parent Processor, used in generation of a default name for the processors.
    * @return all of the {@link ProcessorInstance} objects specified in the {@link Pipeline} definition and {@link uk.co.spudsoft.query.exec.filters.Filter} arguments in the query string.
    */
-  List<ProcessorInstance> createProcessors(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, SourcePipeline definition, MultiMap params, String parentName);
+  List<ProcessorInstance> createProcessors(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, RequestContext requestContext, SourcePipeline definition, MultiMap params, String parentName);
   
   /**
    * Create any {@link PreProcessorInstance} objects specified in the {@link Pipeline} definition. 
@@ -110,6 +111,7 @@ public interface PipelineExecutor extends SharedMap {
   /**
    * Report an event relating to the current run.
    * 
+   * @param requestContext The context of the request.
    * @param pipelineTitle The title of the pipeline.
    * @param sourceName The source that this message relates to - may be null.
    * @param processorName The processor that this message relates to - may be null.
@@ -119,7 +121,9 @@ public interface PipelineExecutor extends SharedMap {
    * @param message The message, which may contain slf4j formatting instructions.
    * @param arguments Arguments to the message.
    */
-  void progressNotification(String pipelineTitle
+  void progressNotification(
+          RequestContext requestContext          
+          , String pipelineTitle
           , String sourceName
           , String processorName
           , Long count

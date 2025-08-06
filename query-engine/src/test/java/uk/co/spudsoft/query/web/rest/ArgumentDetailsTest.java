@@ -32,26 +32,26 @@ public class ArgumentDetailsTest {
   @Test
   public void testConstructor() {
     Argument arg1 = Argument.builder().name("bob").build();
-    ArgumentDetails ad = new ArgumentDetails(arg1);
+    ArgumentDetails ad = new ArgumentDetails(null, arg1);
     assertEquals("bob", ad.getName());
     
     Argument arg2 = Argument.builder().name("bob").hidden(true).build();
     assertEquals("Attempt to output hidden argument", assertThrows(IllegalStateException.class, () -> {
-      new ArgumentDetails(arg2);
+      new ArgumentDetails(null, arg2);
     }).getMessage());
   }
   
   @Test
   public void testDependsUpon() {
     Argument arg = Argument.builder().dependsUpon(Arrays.asList("one", "two")).build();
-    ArgumentDetails ad = new ArgumentDetails(arg);
+    ArgumentDetails ad = new ArgumentDetails(null, arg);
     assertEquals(Arrays.asList("one", "two"), ad.getDependsUpon());
   }
   
   @Test
   public void testPossibleValues() {
     Argument arg = Argument.builder().possibleValues(Arrays.asList(ArgumentValue.builder().value("one").build(), ArgumentValue.builder().value("two").build())).build();
-    ArgumentDetails ad = new ArgumentDetails(arg);
+    ArgumentDetails ad = new ArgumentDetails(null, arg);
     assertEquals(Arrays.asList(ArgumentValue.builder().value("one").build(), ArgumentValue.builder().value("two").build()), ad.getPossibleValues());
   }
 

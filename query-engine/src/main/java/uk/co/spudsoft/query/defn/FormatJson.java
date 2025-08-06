@@ -21,13 +21,13 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.Strings;
 import com.google.common.net.MediaType;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import java.time.format.DateTimeFormatter;
 import uk.co.spudsoft.query.exec.fmts.json.FormatJsonInstance;
 import uk.co.spudsoft.query.exec.FormatInstance;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 
 /**
  * Output the data stream in JSON.
@@ -48,8 +48,8 @@ public class FormatJson extends AbstractTextFormat implements Format {
   private final boolean outputNullValues;
 
   @Override
-  public FormatInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
-    return new FormatJsonInstance(writeStream, this);
+  public FormatInstance createInstance(Vertx vertx, RequestContext requestContext, WriteStream<Buffer> writeStream) {
+    return new FormatJsonInstance(writeStream, requestContext, this);
   }
 
   @Override

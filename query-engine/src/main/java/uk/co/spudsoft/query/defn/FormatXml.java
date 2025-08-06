@@ -26,7 +26,6 @@ import com.google.common.net.MediaType;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
@@ -36,6 +35,7 @@ import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
@@ -148,8 +148,8 @@ public class FormatXml extends AbstractTextFormat implements Format {
 
 
   @Override
-  public FormatXmlInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
-    return new FormatXmlInstance(this, writeStream);
+  public FormatXmlInstance createInstance(Vertx vertx, RequestContext requestContext, WriteStream<Buffer> writeStream) {
+    return new FormatXmlInstance(this, requestContext, writeStream);
   }
 
   @Override

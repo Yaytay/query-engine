@@ -21,6 +21,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.net.impl.SocketAddressImpl;
 import io.vertx.ext.web.RoutingContext;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import uk.co.spudsoft.query.exec.AuditorMemoryImpl;
 
 @ExtendWith(MockitoExtension.class)
 class LoggingRouterTest {
@@ -44,8 +46,9 @@ class LoggingRouterTest {
     when(routingContext.request()).thenReturn(request);
     when(request.method()).thenReturn(HttpMethod.GET);
     when(request.uri()).thenReturn("/test/path");
+    when(request.remoteAddress()).thenReturn(new SocketAddressImpl(37, "127.0.0.0"));
 
-    LoggingRouter loggingRouter = new LoggingRouter();
+    LoggingRouter loggingRouter = new LoggingRouter(null);
 
     // Act
     loggingRouter.handle(routingContext);
@@ -73,8 +76,9 @@ class LoggingRouterTest {
     when(request.uri()).thenReturn("/test/path");
     when(response.getStatusCode()).thenReturn(200);
     when(response.bytesWritten()).thenReturn(1024L);
+    when(request.remoteAddress()).thenReturn(new SocketAddressImpl(37, "127.0.0.0"));
 
-    LoggingRouter loggingRouter = new LoggingRouter();
+    LoggingRouter loggingRouter = new LoggingRouter(null);
 
     // Capture the handlers
     ArgumentCaptor<Handler<Void>> headersEndCaptor = ArgumentCaptor.forClass(Handler.class);
@@ -102,6 +106,6 @@ class LoggingRouterTest {
   @Test
   void testConstructor() {
     // Test that constructor doesn't throw any exceptions
-    assertDoesNotThrow(() -> new LoggingRouter());
+    assertDoesNotThrow(() -> new LoggingRouter(null));
   }
 }

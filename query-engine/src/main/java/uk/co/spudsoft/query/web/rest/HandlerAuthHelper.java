@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 jtalbut
+ * Copyright (C) 2025 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,14 +16,13 @@
  */
 package uk.co.spudsoft.query.web.rest;
 
-import io.vertx.core.Context;
+import io.vertx.ext.web.RoutingContext;
 import jakarta.ws.rs.core.Response;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
-import uk.co.spudsoft.query.web.RequestContextHandler;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.web.ServiceException;
 
 /**
- * Helper class for extracting a {@link uk.co.spudsoft.query.exec.conditions.RequestContext} from a Vertx {@link io.vertx.core.Context}.
+ * Helper class for extracting a {@link uk.co.spudsoft.query.exec.context.RequestContext} from a Vert.x {@link io.vertx.ext.web.RoutingContext}.
  * 
  * @author jtalbut
  */
@@ -32,19 +31,17 @@ public class HandlerAuthHelper {
   private HandlerAuthHelper() {}
 
   /**
-   * Extract a {@link uk.co.spudsoft.query.exec.conditions.RequestContext} from a Vertx {@link io.vertx.core.Context}.
-   * @param context The Vertx Context.
+   * Extract a {@link uk.co.spudsoft.query.exec.context.RequestContext} from a Vert.x {@link io.vertx.ext.web.RoutingContext}.
+   * @param routingContext The Vert.x {@link io.vertx.ext.web.RoutingContext}.
    * @param required If true, the method will throw a ServiceException if the request does not have an authenticated request context.
-   * @return a valid {@link uk.co.spudsoft.query.exec.conditions.RequestContext}.
+   * @return a valid {@link uk.co.spudsoft.query.exec.context.RequestContext}.
    * @throws ServiceException if the request does not have an authenticated request context.
    */
-  public static RequestContext getRequestContext(Context context, boolean required) throws ServiceException {
-    RequestContext requestContext = RequestContextHandler.getRequestContext(context);
+  public static RequestContext getRequestContext(RoutingContext routingContext, boolean required) throws ServiceException {
+    RequestContext requestContext = RequestContext.retrieveRequestContext(routingContext);
     if (required) {
-      if (requestContext == null) {
-        throw new ServiceException(Response.Status.UNAUTHORIZED.getStatusCode(), "");
-      } else if (!requestContext.isAuthenticated()) {
-        throw new ServiceException(Response.Status.UNAUTHORIZED.getStatusCode(), "");
+      if (requestContext == null || !requestContext.isAuthenticated()) {
+        throw new ServiceException(Response.Status.UNAUTHORIZED.getStatusCode(), "Unauthorized");
       }
     }
     return requestContext;

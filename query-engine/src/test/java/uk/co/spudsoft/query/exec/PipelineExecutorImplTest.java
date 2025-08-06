@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec;
 
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.net.MediaType;
 import inet.ipaddr.IPAddressString;
@@ -23,6 +24,7 @@ import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.impl.headers.HeadersMultiMap;
+import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -53,8 +55,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
@@ -64,7 +64,6 @@ import uk.co.spudsoft.query.defn.FormatType;
 import uk.co.spudsoft.query.defn.FormatXlsx;
 import uk.co.spudsoft.query.exec.fmts.logger.LoggingWriteStream;
 import uk.co.spudsoft.query.defn.Format;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
 
 /**
  *
@@ -98,7 +97,7 @@ public class PipelineExecutorImplTest {
             )
             .build();
     PipelineExecutorImpl instance = new PipelineExecutorImpl(null, new FilterFactory(Collections.emptyList()), null);
-    List<ProcessorInstance> results = instance.createProcessors(vertx, () -> {}, vertx.getOrCreateContext(), definition, null, null);
+    List<ProcessorInstance> results = instance.createProcessors(vertx, () -> {}, vertx.getOrCreateContext(), null, definition, null, null);
     assertThat(results, hasSize(2));
     assertEquals(1, ((ProcessorLimitInstance) results.get(0)).getLimit());
     assertEquals(2, ((ProcessorLimitInstance) results.get(1)).getLimit());
@@ -168,7 +167,6 @@ public class PipelineExecutorImplTest {
             )
             .build();
     PipelineExecutorImpl instance = new PipelineExecutorImpl(null, new FilterFactory(Collections.emptyList()), null);
-    List<ProcessorInstance> processors = instance.createProcessors(vertx, () -> {}, vertx.getOrCreateContext(), definition, null, null);
     
     RequestContext req = new RequestContext(
             null
@@ -183,6 +181,8 @@ public class PipelineExecutorImplTest {
             , null
     );
     
+    List<ProcessorInstance> processors = instance.createProcessors(vertx, () -> {}, vertx.getOrCreateContext(), req, definition, null, null);
+
     Map<String, ArgumentInstance> arguments = instance.prepareArguments(
             req
             , 
@@ -198,9 +198,9 @@ public class PipelineExecutorImplTest {
     SourceTest sourceDefn = SourceTest.builder().name("test").rowCount(7).build();
     SourceInstance source = sourceDefn.createInstance(vertx, vertx.getOrCreateContext(), null, instance, "source");
     FormatDelimited destDefn = FormatDelimited.builder().build();
-    FormatInstance dest = destDefn.createInstance(vertx, vertx.getOrCreateContext(), new LoggingWriteStream<>(rows -> {}));
+    FormatInstance dest = destDefn.createInstance(vertx, req, new LoggingWriteStream<>(rows -> {}));
     
-    PipelineInstance pi = new PipelineInstance(arguments, null, null, source, processors, dest);
+    PipelineInstance pi = new PipelineInstance(req, definition, arguments, null, null, source, processors, dest);
     
     instance.initializePipeline(pi);
     pi.getFinalPromise().future().onComplete(testContext.succeedingThenComplete());    
@@ -413,9 +413,8 @@ public class PipelineExecutorImplTest {
             .defaultValueExpression("firstMatchingStringWithPrefix(request.groups, '/Department_', true)")
             .build();
     
-    Jwt jwt = mock(Jwt.class);
-    when(jwt.getGroups()).thenReturn(Arrays.asList("Bob", "/Department_First department"));
-    requestContext = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), jwt);
+    Jwt jwt = new Jwt(new JsonObject(), new JsonObject().put("groups", Arrays.asList("Bob", "/Department_First department")), null, null);
+    requestContext.setJwt(jwt);
             
     values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null);
     assertNotNull(values);

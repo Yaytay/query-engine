@@ -25,21 +25,22 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
 import io.vertx.core.file.FileSystemException;
+import io.vertx.ext.web.RoutingContext;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.container.Suspended;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.io.FileNotFoundException;
 import java.nio.file.NoSuchFileException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.main.ExceptionToString;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 import uk.co.spudsoft.query.web.ServiceException;
@@ -76,6 +77,7 @@ public class InfoHandler {
   
   /**
    * Get a list of available pipelines from the {@link uk.co.spudsoft.query.pipeline.PipelineDefnLoader}.
+   * @param routingContext The Vert.x {@link RoutingContext}.
    * @param response JAX-RS Asynchronous response, connected to the Vertx request by the RESTeasy JAX-RS implementation.
    */
   @GET
@@ -94,10 +96,13 @@ public class InfoHandler {
           )
   )
   public void getAvailable(
-          @Suspended final AsyncResponse response
+          @Context RoutingContext routingContext
+          , @Suspended final AsyncResponse response
   ) {
     try {
-      RequestContext requestContext = HandlerAuthHelper.getRequestContext(Vertx.currentContext(), requireSession);
+      logger.debug("RequestId: {}", RequestContext.retrieveRequestId());
+      // RoutingContext routingContext = RoutingContextInjector.getContext(httpServerRequest);
+      RequestContext requestContext = HandlerAuthHelper.getRequestContext(routingContext, requireSession);
 
       loader.getAccessible(requestContext)
               .onSuccess(ap -> {
@@ -117,6 +122,7 @@ public class InfoHandler {
    * Get details of a pipeline that would be needed for a UI to run the pipeline without using formio.
    * 
    * @param response JAX-RS Asynchronous response, connected to the Vertx request by the RESTeasy JAX-RS implementation.
+   * @param routingContext The Vert.x {@link RoutingContext}.
    * @param path The path to the pipeline that is to be loaded and have it's arguments converted to a form.
    */
   @GET
@@ -134,23 +140,24 @@ public class InfoHandler {
           )
   )
   public void getDetails(
-          @Suspended final AsyncResponse response
+          @Context RoutingContext routingContext
           , @Schema(
                   description = "The path to the quiery, as returned by a call to get /api/info/available"
             )
             @PathParam("path")
             String path
+          , @Suspended final AsyncResponse response
   ) {
-    
     try {
-      RequestContext requestContext = HandlerAuthHelper.getRequestContext(Vertx.currentContext(), requireSession);
+      RequestContext requestContext = HandlerAuthHelper.getRequestContext(routingContext, requireSession);
 
       loader.loadPipeline(path, requestContext, null)
               .compose(pipelineAndFile -> {
                 try {
                   return Future.succeededFuture(
                           new PipelineDetails(
-                                  pipelineAndFile.file().getName()
+                                  requestContext
+                                  , pipelineAndFile.file().getName()
                                   , path
                                   , pipelineAndFile.pipeline().getTitle()
                                   , pipelineAndFile.pipeline().getDescription()

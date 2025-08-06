@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.conditions;
 
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.DataRow;

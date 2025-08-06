@@ -34,17 +34,17 @@ public class PipelineDetailsTest {
   
   @Test
   public void testConstructor() {
-    PipelineDetails pd = new PipelineDetails(null, null, null, null, null, null, null);
+    PipelineDetails pd = new PipelineDetails(null, null, null, null, null, null, null, null);
     assertNull(pd.getArgumentGroups());
     assertNull(pd.getArguments());
     assertNull(pd.getFormats());
     
-    pd = new PipelineDetails(null, null, null, null, new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+    pd = new PipelineDetails(null, null, null, null, null, new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
     assertNull(pd.getArgumentGroups());
     assertNull(pd.getArguments());
     assertNull(pd.getFormats());
     
-    pd = new PipelineDetails(null, null, null, null
+    pd = new PipelineDetails(null, null, null, null, null
             , Arrays.asList(
                     ArgumentGroup.builder().name("group1").build()
             )

@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec;
 
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import inet.ipaddr.IPAddressString;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -45,7 +46,6 @@ import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import uk.co.spudsoft.dircache.DirCache;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
 import uk.co.spudsoft.query.defn.Format;
 
 
@@ -105,14 +105,16 @@ public class TemplatedJsonToPipelineIT {
             .compose(pipelineAndFile -> executor.validatePipeline(pipelineAndFile.pipeline()))
             .compose(pipeline -> {
               Format chosenFormat = executor.getFormat(pipeline.getFormats(), null);
-              FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), new ListingWriteStream<>(new ArrayList<>()));
+              FormatInstance formatInstance = chosenFormat.createInstance(vertx, req, new ListingWriteStream<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), meterRegistry, executor, "source");
               PipelineInstance instance = new PipelineInstance(
-                      executor.prepareArguments(req, pipeline.getArguments(), params)
+                      req
+                      , pipeline
+                      , executor.prepareArguments(req, pipeline.getArguments(), params)
                       , pipeline.getSourceEndpointsMap()
                       , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
                       , sourceInstance
-                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline, null, null)
+                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), req, pipeline, null, null)
                       , formatInstance
               );
       

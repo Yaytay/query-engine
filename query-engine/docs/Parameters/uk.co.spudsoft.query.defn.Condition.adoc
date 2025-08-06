@@ -16,7 +16,7 @@ Conditions can be applied to:
 
 The context of a Condition includes three variables:
  
- * a variable of type uk.co.spudsoft.query.exec.conditions.RequestContext  called "req" that includes:
+ * a variable of type uk.co.spudsoft.query.exec.context.RequestContext  called "req" that includes:
  
  * requestId
  A unique ID for the request.  If Distributed Tracing is enabled this will be the Span ID, otherwise it will be a random UUID.

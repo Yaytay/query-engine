@@ -35,10 +35,9 @@ import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.PreProcessorInstance;
 import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
-import uk.co.spudsoft.query.web.RequestContextHandler;
 import uk.co.spudsoft.query.web.ServiceException;
 
 /**
@@ -92,11 +91,13 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
     SourceInstance sourceInstance = definition.getInput().getSource().createInstance(vertx, context, meterRegistry, executor, "Dynamic Endpoint Source");
     FormatCaptureInstance format = new FormatCaptureInstance();
     PipelineInstance dePipeline = new PipelineInstance(
-            pipeline.getArgumentInstances()
+            pipeline.getRequestContext()
+            , pipeline.getDefinition()
+            , pipeline.getArgumentInstances()
             , pipeline.getSourceEndpoints()
             , null
             , sourceInstance
-            , executor.createProcessors(vertx, sourceInstance, context, definition.getInput(), null, name)
+            , executor.createProcessors(vertx, sourceInstance, context, pipeline.getRequestContext(), definition.getInput(), null, name)
             , format
     );
     return executor.initializePipeline(dePipeline)
@@ -114,7 +115,7 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
                   processEndpoint(pipeline, row);
                 }
               } catch (IllegalArgumentException ex) {
-                return Future.failedFuture(new ServiceException(500, "Unable to process DynamicEncpoint: " + ex.getMessage()));
+                return Future.failedFuture(new ServiceException(500, "Unable to process DynamicEndpoint: " + ex.getMessage()));
               }
               logger.debug("de pipeline completed");
               return Future.succeededFuture();
@@ -164,7 +165,7 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
             .build();
         
     if (!Strings.isNullOrEmpty(condition)) {
-      RequestContext requestContext = RequestContextHandler.getRequestContext(context);
+      RequestContext requestContext = pipeline.getRequestContext();
       ConditionInstance cond = new ConditionInstance(condition);
       if (cond.evaluate(requestContext, data)) {
         pipeline.getSourceEndpoints().put(key, endpoint);      

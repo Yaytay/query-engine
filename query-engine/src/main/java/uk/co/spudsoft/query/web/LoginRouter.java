@@ -47,7 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.jwtvalidatorvertx.JwtValidator;
 import uk.co.spudsoft.jwtvalidatorvertx.OpenIdDiscoveryHandler;
-import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
+import uk.co.spudsoft.query.main.Authenticator;
 import uk.co.spudsoft.query.main.AuthEndpoint;
 import uk.co.spudsoft.query.main.Coalesce;
 import uk.co.spudsoft.query.main.CookieConfig;
@@ -97,7 +97,7 @@ public class LoginRouter implements Handler<RoutingContext> {
   private final LoginDao loginDao;
   private final OpenIdDiscoveryHandler openIdDiscoveryHandler;
   private final JwtValidator jwtValidator;
-  private final RequestContextBuilder requestContextBuilder;
+  private final Authenticator requestContextBuilder;
   private final int stateLength;
   private final int codeVerifierLength;
   private final int nonceLength;
@@ -114,7 +114,7 @@ public class LoginRouter implements Handler<RoutingContext> {
    * for performing OpenID Connect Discovery.
    * @param jwtValidator Handler from <a href="https://github.com/Yaytay/jwt-validator-vertx">jwt-validator-vertx</a> for
    * validating JWTs.
-   * @param requestContextBuilder Creator of {@link uk.co.spudsoft.query.exec.conditions.RequestContext} objects, used here for
+   * @param requestContextBuilder Creator of {@link uk.co.spudsoft.query.exec.context.RequestContext} objects, used here for
    * some utility functions.
    * @param sessionConfig Configuration data.
    * @param requiredAuds A valid JWT must contain at least one of these audience values.
@@ -129,7 +129,7 @@ public class LoginRouter implements Handler<RoutingContext> {
            LoginDao loginDao,
            OpenIdDiscoveryHandler openIdDiscoveryHandler,
            JwtValidator jwtValidator,
-           RequestContextBuilder requestContextBuilder,
+           Authenticator requestContextBuilder,
            SessionConfig sessionConfig,
            List<String> requiredAuds,
            boolean outputAllErrorMessages,
@@ -176,7 +176,7 @@ public class LoginRouter implements Handler<RoutingContext> {
    * for performing OpenID Connect Discovery.
    * @param jwtValidator Handler from <a href="https://github.com/Yaytay/jwt-validator-vertx">jwt-validator-vertx</a> for
    * validating JWTs.
-   * @param requestContextBuilder Creator of {@link uk.co.spudsoft.query.exec.conditions.RequestContext} objects, used here for
+   * @param requestContextBuilder Creator of {@link uk.co.spudsoft.query.exec.context.RequestContext} objects, used here for
    * some utility functions.
    * @param sessionConfig Configuration data.
    * @param requiredAuds A valid JWT must contain at least one of these audience values.
@@ -191,7 +191,7 @@ public class LoginRouter implements Handler<RoutingContext> {
            LoginDao loginDao,
            OpenIdDiscoveryHandler openIdDiscoveryHandler,
            JwtValidator jwtValidator,
-           RequestContextBuilder requestContextBuilder,
+           Authenticator requestContextBuilder,
            SessionConfig sessionConfig,
            List<String> requiredAuds,
            boolean outputAllErrorMessages,
@@ -253,9 +253,9 @@ public class LoginRouter implements Handler<RoutingContext> {
     if (portNum < 0) {
       portNum = request.authority().port();
     }
-    if (RequestContextBuilder.isStandardHttpsPort(scheme, portNum)) {
+    if (Authenticator.isStandardHttpsPort(scheme, portNum)) {
       port = "";
-    } else if (RequestContextBuilder.isStandardHttpPort(scheme, portNum)) {
+    } else if (Authenticator.isStandardHttpPort(scheme, portNum)) {
       port = "";
     } else {
       port = ":" + Integer.toString(portNum);

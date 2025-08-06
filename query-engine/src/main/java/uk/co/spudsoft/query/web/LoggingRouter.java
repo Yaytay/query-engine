@@ -16,47 +16,63 @@
  */
 package uk.co.spudsoft.query.web;
 
+import com.google.common.collect.ImmutableMap;
 import io.vertx.core.Handler;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.RoutingContext;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
  * Simple Vertx HTTP logger.
- * 
+ *
  * @author jtalbut
  */
 public class LoggingRouter implements Handler<RoutingContext> {
+
   private static final Logger logger = LoggerFactory.getLogger(LoggingRouter.class);
+
+  private final ImmutableMap<String, String> requestContextEnvironment;
 
   /**
    * Default constructor.
+   *
+   * @param requestContextEnvironment The additional data that is made available via the request object.
    */
-  public LoggingRouter() {
+  public LoggingRouter(Map<String, String> requestContextEnvironment) {
+    this.requestContextEnvironment = ImmutableCollectionTools.copy(requestContextEnvironment);
   }
 
   @Override
   public void handle(RoutingContext routingContext) {
     long start = System.currentTimeMillis();
 
-    RequestContext.storeRequestId();
-    
-    logger.info("Request: {} {}", routingContext.request().method(), routingContext.request().uri());
-    routingContext.addHeadersEndHandler(v -> {
-      long end = System.currentTimeMillis();
-      logger.info("Headers end: {} {}s", routingContext.response().getStatusCode(), (end - start) / 1000.0);
-    });
-    routingContext.addBodyEndHandler(v -> {
-      long end = System.currentTimeMillis();
-      logger.info("Body end: {} {} {}s", routingContext.response().getStatusCode(), routingContext.response().bytesWritten(), (end - start) / 1000.0);
-    });
-    routingContext.addEndHandler(v -> {
-      long end = System.currentTimeMillis();
-      logger.info("Complete: {} {} {}s", routingContext.response().getStatusCode(), routingContext.response().bytesWritten(), (end - start) / 1000.0);
-    });
+    HttpServerRequest request = routingContext.request();
+    RequestContext requestContext = RequestContext.retrieveRequestContext(routingContext);
+    if (requestContext != null) {
+      logger.debug("LoggingRouter already called for {}", requestContext.getRequestId());
+    } else {
+      requestContext = new RequestContext(requestContextEnvironment, request);
+      requestContext.storeInRoutingContext(routingContext);
+
+      logger.info("Request: {} {}", routingContext.request().method(), routingContext.request().uri());
+
+      routingContext.addHeadersEndHandler(v -> {
+        long end = System.currentTimeMillis();
+        logger.info("Headers end: {} {}s", routingContext.response().getStatusCode(), (end - start) / 1000.0);
+      });
+      routingContext.addBodyEndHandler(v -> {
+        long end = System.currentTimeMillis();
+        logger.info("Body end: {} {} {}s", routingContext.response().getStatusCode(), routingContext.response().bytesWritten(), (end - start) / 1000.0);
+      });
+      routingContext.addEndHandler(v -> {
+        long end = System.currentTimeMillis();
+        logger.info("Complete: {} {} {}s", routingContext.response().getStatusCode(), routingContext.response().bytesWritten(), (end - start) / 1000.0);
+      });
+    }
     routingContext.next();
   }
-
 }
-

@@ -39,7 +39,7 @@ public class PipelineInstanceTest {
   @Test
   public void testRenderTemplate() {
     
-    PipelineInstance instance = new PipelineInstance(null, null, null, null, null, null);
+    PipelineInstance instance = new PipelineInstance(null, null, null, null, null, null, null, null);
     assertNull(instance.renderTemplate("test", null));
     assertEquals("", instance.renderTemplate("test", ""));
     
@@ -52,6 +52,7 @@ public class PipelineInstanceTest {
   @Test
   public void testRenderTemplateWithArgs() {
     PipelineInstance instance1 = new PipelineInstance(
+            null, null, 
             ImmutableMap.<String, ArgumentInstance>builder()
                     .put("port"
                             , new ArgumentInstance(

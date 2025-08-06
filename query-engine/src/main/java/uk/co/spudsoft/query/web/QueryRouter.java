@@ -43,8 +43,8 @@ import uk.co.spudsoft.query.exec.FormatRequest;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.SourceInstance;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
-import uk.co.spudsoft.query.exec.conditions.RequestContextBuilder;
+import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.main.Authenticator;
 import uk.co.spudsoft.query.main.ExceptionToString;
 import uk.co.spudsoft.query.defn.Format;
 import uk.co.spudsoft.query.defn.Pipeline;
@@ -80,7 +80,7 @@ public class QueryRouter implements Handler<RoutingContext> {
   private final Vertx vertx;
   private final MeterRegistry meterRegistry;
   private final Auditor auditor;
-  private final RequestContextBuilder requestContextBuilder;
+  private final Authenticator authenticator;
   private final PipelineDefnLoader loader;
   private final PipelineExecutor pipelineExecutor;
   private final String outputCacheDir;
@@ -92,7 +92,7 @@ public class QueryRouter implements Handler<RoutingContext> {
    * @param vertx Vertx instance.
    * @param meterRegistry MeterRegistry for production of metrics.
    * @param auditor Auditor interface for tracking requests.
-   * @param requestContextBuilder The builder that does the actual work.
+   * @param authenticator The builder that does the actual work.
    * @param loader Pipeline loader.
    * @param pipelineExecutor Pipeline executor.
    * @param outputCacheDir Directory to store output in where output caching is enabled (see {@link uk.co.spudsoft.query.defn.Pipeline#cacheDuration}).
@@ -102,7 +102,7 @@ public class QueryRouter implements Handler<RoutingContext> {
   public QueryRouter(Vertx vertx
           , MeterRegistry meterRegistry
           , Auditor auditor
-          , RequestContextBuilder requestContextBuilder
+          , Authenticator authenticator
           , PipelineDefnLoader loader
           , PipelineExecutor pipelineExecutor
           , String outputCacheDir
@@ -111,7 +111,7 @@ public class QueryRouter implements Handler<RoutingContext> {
     this.vertx = vertx;
     this.meterRegistry = meterRegistry;
     this.auditor = auditor;
-    this.requestContextBuilder = requestContextBuilder;
+    this.authenticator = authenticator;
     this.loader = loader;
     this.pipelineExecutor = pipelineExecutor;
     this.outputCacheDir = outputCacheDir;
@@ -164,109 +164,91 @@ public class QueryRouter implements Handler<RoutingContext> {
     
     HttpServerRequest request = routingContext.request();
     String pipelineTitle[] = new String[1];
+    RequestContext requestContext = RequestContext.retrieveRequestContext(routingContext);
+    logger.trace("Retrieved RequestContext@{}", System.identityHashCode(requestContext));
     if (request.method() == HttpMethod.GET) {
-      try {
-        String path = request.path();
-        if (path.length() < 1 + PATH_ROOT.length()) {
-          logger.warn("Invalid request, path too short: ", request.path());
-          throw new ServiceException(400, "Invalid path");
-        } else {
-          HttpServerResponse response = routingContext.response();
-          WriteStream<Buffer> responseStream = response;
-          response.setChunked(true);
-          path = path.substring(PATH_ROOT.length() + 1);
-          
-          if (path.contains(";")) {
-            path = removeMatrixParams(path);
-          }
-          
-          String extension = null;
-          int dotPos = indexOfLastDotAfterLastSlash(path);
-          if (dotPos > 0) {
-            extension = path.substring(dotPos + 1);
-            path = path.substring(0, dotPos);
-          }
-          String query = path;
-          FormatRequest formatRequest = FormatRequest.builder()
-                  .name(request.getParam("_fmt"))
-                  .extension(extension)
-                  .accept(request.getHeader("Accept"))
-                  .build();
-          requestContextBuilder.buildRequestContext(request)
-                  .compose(requestContext -> {
-                    routingContext.addHeadersEndHandler(v -> {
-                      requestContext.setHeadersSentTime(System.currentTimeMillis());
-                    });
-                    routingContext.addBodyEndHandler(v -> {
-                      auditor.recordResponse(requestContext, response);
-                    });
+      authenticator.authenticate(routingContext, requestContext)
+              .compose(req -> {
+                return auditor.recordRequest(req);
+              })
+              .compose(v -> {
+                String path = request.path();
+                if (path.length() < 1 + PATH_ROOT.length()) {
+                  logger.warn("Invalid request, path too short: ", request.path());
+                  return Future.failedFuture(new ServiceException(400, "Invalid path"));
+                }
+                HttpServerResponse response = routingContext.response();
+                WriteStream<Buffer> responseStream = response;
+                response.setChunked(true);
+                path = path.substring(PATH_ROOT.length() + 1);
 
-                    if (!Strings.isNullOrEmpty(requestContext.getRunID())) {
-                      ProgressNotificationHandler progressNotificationHandler = new LoggingNotificationHandler();
-                      ProgressNotificationHandler.storeNotificationHandler(progressNotificationHandler);
-                    }
-                    
-                    return auditor.recordRequest(requestContext).map(v -> requestContext);
-                  })
-                  .compose(requestContext -> {
-                    try {
-                      logger.trace("Request context: {}", requestContext);
-                      Vertx.currentContext().put("req", requestContext);
-                      
-                      return loader.loadPipeline(query, requestContext, (file, ex) -> auditor.recordFileDetails(requestContext, file, null));
-                    } catch (Throwable ex) {
-                      return Future.failedFuture(ex);
-                    }
-                  })
-                  .compose(pipelineAndFile -> {
-                    pipelineTitle[0] = pipelineAndFile.pipeline().getTitle();
-                    RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
-                    
-                    return auditor.recordFileDetails(requestContext, pipelineAndFile.file(), pipelineAndFile.pipeline())
-                            .map(v -> pipelineAndFile.pipeline());
-                  })
-                  .compose(pipeline -> {
-                    return pipelineExecutor.validatePipeline(pipeline);
-                  })
-                  .compose(pipeline -> {
-                    RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
-                    return auditor.runRateLimitRules(requestContext, pipeline);
-                  })
-                  .compose(pipeline -> {
-                    responseStream.exceptionHandler(ex -> {
-                      logger.warn("Exception in response stream: ", ex);
-                    });
-                    // Four options:
-                    // 1. No caching involved
-                    // 2. Valid cache file avavailable, If-Modified-Since is before cacheExpiry - return 304 with Last-Modified
-                    // 3. Valid cache file avavailable
-                    // 4. Generate cache file
-                    if (pipeline.supportsCaching()) {
-                      return runCachedPipeline(pipeline, formatRequest, response, responseStream, routingContext);
-                    } else {
-                      return runPipeline(pipeline, formatRequest, response, responseStream, routingContext);
-                    }
-                  })
-                  .onComplete(ar -> {
-                    if (ar.succeeded()) {
-                      pipelineExecutor.progressNotification(pipelineTitle[0], null, null, null, true, true, "Pipeline completed.");                    
-                    } else {
-                      RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
-                      auditor.recordException(requestContext, ar.cause());
-                      internalError(ar.cause(), routingContext, outputAllErrorMessages);
-                      pipelineExecutor.progressNotification(pipelineTitle[0], null, null, null, true, false, "Pipeline failed: ", ar.cause());
-                    }
-                    logger.info("Request completed");
-                    VertxMDC.INSTANCE.clear();
-                  });
-        }
-      } catch (ServiceException ex) {
-        logger.warn("ServiceException: ", ex);
-        routingContext.response().setStatusCode(ex.getStatusCode()).send(ex.getMessage());
-      } catch (Throwable ex) {
-        logger.warn("Failed: ", ex);
-        routingContext.response().setStatusCode(500).send("Failed");
-      }
+                if (path.contains(";")) {
+                  path = removeMatrixParams(path);
+                }
+
+                String extension = null;
+                int dotPos = indexOfLastDotAfterLastSlash(path);
+                if (dotPos > 0) {
+                  extension = path.substring(dotPos + 1);
+                  path = path.substring(0, dotPos);
+                }
+                String query = path;
+                FormatRequest formatRequest = FormatRequest.builder()
+                        .name(request.getParam("_fmt"))
+                        .extension(extension)
+                        .accept(request.getHeader("Accept"))
+                        .build();
+                routingContext.addHeadersEndHandler(v1 -> {
+                  requestContext.setHeadersSentTime(System.currentTimeMillis());
+                });
+                routingContext.addBodyEndHandler(v1 -> {
+                  auditor.recordResponse(requestContext, response);
+                });
+
+                if (!Strings.isNullOrEmpty(requestContext.getRunID())) {
+                  ProgressNotificationHandler progressNotificationHandler = new LoggingNotificationHandler();
+                  ProgressNotificationHandler.storeNotificationHandler(progressNotificationHandler);
+                }
+                return loader.loadPipeline(query, requestContext, (file, ex) -> auditor.recordFileDetails(requestContext, file, null))
+                        .compose(pipelineAndFile -> {
+                          pipelineTitle[0] = pipelineAndFile.pipeline().getTitle();
+
+                          return auditor.recordFileDetails(requestContext, pipelineAndFile.file(), pipelineAndFile.pipeline())
+                                  .map(v2 -> pipelineAndFile.pipeline());
+                        })
+                        .compose(pipeline -> {
+                          return pipelineExecutor.validatePipeline(pipeline);
+                        })
+                        .compose(pipeline -> {
+                          return auditor.runRateLimitRules(requestContext, pipeline);
+                        })
+                        .compose(pipeline -> {
+                          responseStream.exceptionHandler(ex -> {
+                            logger.warn("Exception in response stream: ", ex);
+                          });
+                          // Four options:
+                          // 1. No caching involved
+                          // 2. Valid cache file avavailable, If-Modified-Since is before cacheExpiry - return 304 with Last-Modified
+                          // 3. Valid cache file avavailable
+                          // 4. Generate cache file
+                          if (pipeline.supportsCaching()) {
+                            return runCachedPipeline(pipeline, formatRequest, response, responseStream, routingContext);
+                          } else {
+                            return runPipeline(pipeline, formatRequest, response, responseStream, routingContext);
+                          }
+                        });
+              })
+              .onComplete(ar -> {
+                if (ar.succeeded()) {
+                  pipelineExecutor.progressNotification(requestContext, pipelineTitle[0], null, null, null, true, true, "Pipeline completed.");                    
+                } else {
+                  auditor.recordException(requestContext, ar.cause());
+                  internalError(ar.cause(), routingContext, outputAllErrorMessages);
+                  pipelineExecutor.progressNotification(requestContext, pipelineTitle[0], null, null, null, true, false, "Pipeline failed: ", ar.cause());
+                }
+                logger.info("Request completed");
+                VertxMDC.INSTANCE.clear();
+              });
     } else {
       routingContext.next();
     }
@@ -285,7 +267,7 @@ public class QueryRouter implements Handler<RoutingContext> {
   
   private Future<Void> runCachedPipeline(Pipeline pipeline, FormatRequest formatRequest, HttpServerResponse response, WriteStream<Buffer> responseStream, RoutingContext routingContext) {
 
-    RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
+    RequestContext requestContext = RequestContext.retrieveRequestContext(routingContext);
     
     return auditor.getCacheFile(requestContext, pipeline)
             .compose(cacheDetails -> {
@@ -361,7 +343,7 @@ public class QueryRouter implements Handler<RoutingContext> {
   private Future<Void> runPipeline(Pipeline pipeline, FormatRequest formatRequest, HttpServerResponse response, WriteStream<Buffer> responseStream, RoutingContext routingContext) {
     PipelineInstance instance;
     try {
-      RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
+      RequestContext requestContext = RequestContext.retrieveRequestContext(routingContext);
       
       Format chosenFormat = pipelineExecutor.getFormat(pipeline.getFormats(), formatRequest);
       response.headers().set("Content-Type", chosenFormat.getMediaType().toString());
@@ -373,18 +355,20 @@ public class QueryRouter implements Handler<RoutingContext> {
         routingContext.lastModified(Instant.ofEpochMilli(requestContext.getStartTime()));
       }
       
-      FormatInstance formatInstance = chosenFormat.createInstance(vertx, Vertx.currentContext(), responseStream);
+      FormatInstance formatInstance = chosenFormat.createInstance(vertx, requestContext, responseStream);
       SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), meterRegistry, pipelineExecutor, ROOT_SOURCE_DEFAULT_NAME);
       
       Vertx.currentContext().put("pipeline", pipeline);
       
       Map<String, ArgumentInstance> arguments = pipelineExecutor.prepareArguments(requestContext, pipeline.getArguments(), routingContext.request().params());
       instance = new PipelineInstance(
-              arguments
+              requestContext
+              , pipeline
+              , arguments
               , pipeline.getSourceEndpointsMap()
               , pipelineExecutor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
               , sourceInstance
-              , pipelineExecutor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), pipeline, routingContext.request().params(), null)
+              , pipelineExecutor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), requestContext, pipeline, routingContext.request().params(), null)
               , formatInstance
       );
       logger.debug("Instance: {}", instance);

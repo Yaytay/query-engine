@@ -28,7 +28,6 @@ import java.time.ZoneId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.DataType;
-import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.defn.ProcessorExpression;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
@@ -38,10 +37,9 @@ import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.procs.query.FilteringStream;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
-import uk.co.spudsoft.query.web.RequestContextHandler;
 
 /**
  * Use a JEXL expression to set a field, or to evaluate a predicate, on each row.
@@ -57,12 +55,10 @@ public class ProcessorExpressionInstance implements ProcessorInstance {
   
   private final String name;
   private final SourceNameTracker sourceNameTracker;
-  private final Context context;
   private final ProcessorExpression definition;
   private ReadStream<DataRow> stream;
   
-  private final RequestContext requestContext;
-  private final Pipeline pipeline;
+  private RequestContext requestContext;
   private final ImmutableMap<String, Object> arguments;
   
   private Types types;
@@ -82,10 +78,7 @@ public class ProcessorExpressionInstance implements ProcessorInstance {
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
   public ProcessorExpressionInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorExpression definition, String name) {
     this.sourceNameTracker = sourceNameTracker;
-    this.context = context;
     this.definition = definition;
-    this.requestContext = RequestContextHandler.getRequestContext(context);
-    this.pipeline = PipelineInstance.getPipelineDefinition(context);
     this.arguments = ImmutableCollectionTools.copy(requestContext == null ? null : requestContext.getArguments());
     this.name = name;
   }
@@ -115,6 +108,7 @@ public class ProcessorExpressionInstance implements ProcessorInstance {
   
   @Override
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStreamWithTypes input) {
+    this.requestContext = pipeline.getRequestContext();
     this.types = input.getTypes();
     this.stream = input.getStream();
     

@@ -23,6 +23,7 @@ import java.util.List;
 import uk.co.spudsoft.query.defn.Argument;
 import uk.co.spudsoft.query.defn.ArgumentGroup;
 import uk.co.spudsoft.query.defn.Format;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 
 /**
  * Representation of a Pipeline for display in a custom UI.
@@ -51,6 +52,7 @@ public class PipelineDetails {
    * 
    * As an implementation detail it's worth noting that for better JSON output we prefer null values over empty ones here.
    *
+   * @param requestContext The {@link RequestContext} used to generate {@link ArgumentDetails}.
    * @param name The name of the file.
    * @param path The full path to the file.
    * @param title The title of the pipeline, extracted from the file.
@@ -59,7 +61,7 @@ public class PipelineDetails {
    * @param arguments The arguments to the pipeline, extracted from the file.
    * @param formats The output formats that the pipeline supports, extracted from the file.
    */
-  public PipelineDetails(String name, String path, String title, String description, List<ArgumentGroup> argumentGroups, List<Argument> arguments, List<Format> formats) {
+  public PipelineDetails(RequestContext requestContext, String name, String path, String title, String description, List<ArgumentGroup> argumentGroups, List<Argument> arguments, List<Format> formats) {
     this.name = name;
     this.path = path;
     this.title = title;
@@ -74,7 +76,7 @@ public class PipelineDetails {
     } else {
       this.arguments = arguments.stream()
               .filter(a -> !a.isHidden())
-              .map(a -> new ArgumentDetails(a))
+              .map(a -> new ArgumentDetails(requestContext, a))
               .collect(ImmutableList.toImmutableList())
               ;
     }

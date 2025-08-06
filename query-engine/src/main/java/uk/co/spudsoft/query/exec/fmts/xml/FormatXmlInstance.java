@@ -17,9 +17,7 @@
 package uk.co.spudsoft.query.exec.fmts.xml;
 
 import com.ctc.wstx.stax.WstxOutputFactory;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import org.slf4j.Logger;
@@ -32,10 +30,9 @@ import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormattingWriteStream;
 import uk.co.spudsoft.query.exec.fmts.xlsx.OutputWriteStreamWrapper;
-import uk.co.spudsoft.query.web.RequestContextHandler;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
@@ -90,21 +87,23 @@ public final class FormatXmlInstance implements FormatInstance {
   /**
    * Constructor.
    * @param definition The formatting definition for the output.
+   * @param requestContext The context of the request being output - if nothing else this must be updated with the row count on completion.
    * @param outputStream The WriteStream that the data is to be sent to.
    */
-  public FormatXmlInstance(FormatXml definition, WriteStream<Buffer> outputStream) {
+  public FormatXmlInstance(FormatXml definition, RequestContext requestContext, WriteStream<Buffer> outputStream) {
     this.defn = definition;
     outputStream.setWriteQueueMaxSize(1000);
     this.streamWrapper = new OutputWriteStreamWrapper(outputStream);
     this.valueFormatters = defn.toValueFormatters("", "", false);
     this.formattingStream = createFormattingWriteStream(
-      outputStream,
-      streamWrapper,
-      started,
-      this::start,
-      this::outputRow,
-      this::close
-    );
+            requestContext,
+            outputStream,
+            streamWrapper,
+            started,
+            this::start,
+            this::outputRow,
+            this::close
+          );
   }
 
   /**
@@ -144,12 +143,13 @@ public final class FormatXmlInstance implements FormatInstance {
    * @return A configured FormattingWriteStream.
    */
   static FormattingWriteStream createFormattingWriteStream(
-    WriteStream<Buffer> outputStream,
-    OutputWriteStreamWrapper streamWrapper,
-    AtomicBoolean started,
-    StartFunction startFunction,
-    ProcessRowFunction processRowFunction,
-    CloseFunction closeFunction) {
+          RequestContext requestContext,
+          WriteStream<Buffer> outputStream,
+          OutputWriteStreamWrapper streamWrapper,
+          AtomicBoolean started,
+          StartFunction startFunction,
+          ProcessRowFunction processRowFunction,
+          CloseFunction closeFunction) {
 
     return new FormattingWriteStream(streamWrapper
       , v -> Future.succeededFuture()
@@ -174,28 +174,22 @@ public final class FormatXmlInstance implements FormatInstance {
       return Future.succeededFuture();
     }
       , rows -> {
-      Context vertxContext = Vertx.currentContext();
-      if (vertxContext != null) {
-        RequestContext requestContext = RequestContextHandler.getRequestContext(Vertx.currentContext());
-        if (requestContext != null) {
-          requestContext.setRowsWritten(rows);
+        requestContext.setRowsWritten(rows);
+        if (!started.get()) {
+          try {
+            startFunction.start();
+          } catch (Throwable ex) {
+            logger.warn("Failed to start XML writer: ", ex);
+            return Future.failedFuture(ex);
+          }
         }
-      }
-      if (!started.get()) {
         try {
-          startFunction.start();
+          closeFunction.close();
+          return Future.succeededFuture();
         } catch (Throwable ex) {
-          logger.warn("Failed to start XML writer: ", ex);
           return Future.failedFuture(ex);
         }
       }
-      try {
-        closeFunction.close();
-        return Future.succeededFuture();
-      } catch (Throwable ex) {
-        return Future.failedFuture(ex);
-      }
-    }
     );
   }
 

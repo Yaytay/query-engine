@@ -21,14 +21,12 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.net.MediaType;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 
-import uk.co.spudsoft.query.exec.conditions.RequestContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.xml.FormatAtomInstance;
-import uk.co.spudsoft.query.web.RequestContextHandler;
 
 import static uk.co.spudsoft.query.defn.FormatXml.NAME_CHAR_REGEX;
 import static uk.co.spudsoft.query.defn.FormatXml.NAME_START_REGEX;
@@ -77,9 +75,8 @@ public class FormatAtom extends AbstractTextFormat implements Format {
   }
 
   @Override
-  public FormatAtomInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
-    RequestContext reqCtx = RequestContextHandler.getRequestContext(context);
-    return new FormatAtomInstance(this, reqCtx.getPath(), writeStream);
+  public FormatAtomInstance createInstance(Vertx vertx, RequestContext requestContext, WriteStream<Buffer> writeStream) {
+    return new FormatAtomInstance(this, requestContext, writeStream);
   }
 
   @Override

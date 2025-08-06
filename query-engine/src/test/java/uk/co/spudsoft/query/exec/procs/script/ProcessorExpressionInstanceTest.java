@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.procs.script;
 
+import inet.ipaddr.IPAddressString;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -25,11 +26,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import uk.co.spudsoft.query.defn.ProcessorExpression;
 import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
@@ -64,7 +68,12 @@ public class ProcessorExpressionInstanceTest {
     ));
     ReadStreamWithTypes input = new ReadStreamWithTypes(inputStream, types);
     
-    instance.initialize(null, null, null, 0, input)
+    RequestContext context = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    
+    PipelineInstance pipeline = mock(PipelineInstance.class);
+    when(pipeline.getRequestContext()).thenReturn(context);
+    
+    instance.initialize(null, pipeline, null, 0, input)
             .compose(output -> {
               return ReadStreamToList.capture(output.getStream());
             })

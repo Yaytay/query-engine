@@ -25,13 +25,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.net.MediaType;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import java.util.List;
 import uk.co.spudsoft.query.exec.fmts.xlsx.FormatXlsxInstance;
 import uk.co.spudsoft.query.exec.FormatInstance;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
@@ -73,8 +73,8 @@ public class FormatXlsx implements Format {
   private final ImmutableMap<String, FormatXlsxColumn> columnsMap;
   
   @Override
-  public FormatInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
-    return new FormatXlsxInstance(this, writeStream);
+  public FormatInstance createInstance(Vertx vertx, RequestContext requestContext, WriteStream<Buffer> writeStream) {
+    return new FormatXlsxInstance(this, requestContext, writeStream);
   }
 
   @Override

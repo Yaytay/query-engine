@@ -94,7 +94,7 @@ public class ProcessorExpression implements Processor {
    * <P>
    * The script should return a value that is either true or false, if the value is false the row will be discarded.
    * <p>
-   * The context of the evaluation includes a variable of type {@link uk.co.spudsoft.query.exec.conditions.RequestContext} called &quot;req&quot; that includes:
+   * The context of the evaluation includes a variable of type {@link uk.co.spudsoft.query.exec.context.RequestContext} called &quot;req&quot; that includes:
    * <UL>
    * <LI>requestId
    * A unique ID for the request.  If Distributed Tracing is enabled this will be the Span ID, otherwise it will be a random UUID.
@@ -224,7 +224,7 @@ public class ProcessorExpression implements Processor {
   /**
    * A JEXL expression that is evaluated, then parsed/cast to the fieldType and then assigned to the field.
    * <p>
-   * The context of the evaluation includes a variable of type {@link uk.co.spudsoft.query.exec.conditions.RequestContext} called &quot;req&quot; that includes:
+   * The context of the evaluation includes a variable of type {@link uk.co.spudsoft.query.exec.context.RequestContext} called &quot;req&quot; that includes:
    * <UL>
    * <LI>requestId
    * A unique ID for the request.  If Distributed Tracing is enabled this will be the Span ID, otherwise it will be a random UUID.

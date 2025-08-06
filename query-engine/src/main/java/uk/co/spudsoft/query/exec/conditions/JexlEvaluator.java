@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.conditions;
 
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.HashMap;
 import java.util.Map;
@@ -82,8 +83,8 @@ public class JexlEvaluator {
                                   "io.vertx.core.http.impl.headers.*"
                                   , "uk.co.spudsoft.jwtvalidatorvertx.*"
                                   , "uk.co.spudsoft.query.exec.conditions.*"
+                                  , "uk.co.spudsoft.query.exec.context.*"
                                   , "java.time.*"
-                                   
                           )
           )
           .strict(false)

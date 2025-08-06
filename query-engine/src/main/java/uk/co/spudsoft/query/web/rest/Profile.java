@@ -40,8 +40,8 @@ public class Profile {
   /**
    * Constructor.
    * 
-   * @param username The username from the token ({@link uk.co.spudsoft.query.exec.conditions.RequestContext#getUsername()}).
-   * @param fullname The full name from the token ({@link uk.co.spudsoft.query.exec.conditions.RequestContext#getName()}).
+   * @param username The username from the token ({@link uk.co.spudsoft.query.exec.context.RequestContext#getUsername()}).
+   * @param fullname The full name from the token ({@link uk.co.spudsoft.query.exec.context.RequestContext#getName()}).
    * @param version The version of the Query Engine ({@link uk.co.spudsoft.query.main.Version}).
    * @param claims The claims from the JWT token.
    */
@@ -56,7 +56,7 @@ public class Profile {
   /**
    * The username from the token.
    * <p>
-   * See {@link uk.co.spudsoft.query.exec.conditions.RequestContext#getUsername()}.
+   * See {@link uk.co.spudsoft.query.exec.context.RequestContext#getUsername()}.
    * 
    * @return username from the token.
    */
@@ -78,7 +78,7 @@ public class Profile {
   /**
    * The full name from the token.
    * <p>
-   * See {@link uk.co.spudsoft.query.exec.conditions.RequestContext#getName()}.
+   * See {@link uk.co.spudsoft.query.exec.context.RequestContext#getName()}.
    * 
    * @return full name from the token.
    */

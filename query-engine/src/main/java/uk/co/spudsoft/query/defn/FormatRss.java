@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.net.MediaType;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
@@ -29,6 +28,7 @@ import uk.co.spudsoft.query.exec.fmts.xml.FormatRssInstance;
 
 import static uk.co.spudsoft.query.defn.FormatXml.NAME_CHAR_REGEX;
 import static uk.co.spudsoft.query.defn.FormatXml.NAME_START_REGEX;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 
 /**
  * Output the data stream in RSS.
@@ -72,8 +72,8 @@ public class FormatRss extends AbstractTextFormat implements Format {
   }
 
   @Override
-  public FormatRssInstance createInstance(Vertx vertx, Context context, WriteStream<Buffer> writeStream) {
-    return new FormatRssInstance(this, writeStream);
+  public FormatRssInstance createInstance(Vertx vertx, RequestContext requestContext, WriteStream<Buffer> writeStream) {
+    return new FormatRssInstance(this, requestContext, writeStream);
   }
 
   @Override
