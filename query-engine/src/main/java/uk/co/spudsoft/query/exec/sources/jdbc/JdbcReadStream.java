@@ -69,6 +69,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
   private volatile boolean emitting;
   private volatile boolean ended;
   private volatile boolean completed;
+  private long rowsOutput;
   
   /**
    * Constructor.
@@ -116,13 +117,18 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     
     sourceNameTracker.addNameToContextLocalData();
     ResultSetMetaData rsmeta = null;
-    int rowsSinceBlock = 0;
+    long rows = 0;
     try {
       while (rs.next()) {
         if (rsmeta == null) {
           rsmeta = rs.getMetaData();
         }
         DataRow row = dataRowFromResult(rsmeta, rs);
+        if (rows % 10000 == 0) {
+          logger.debug("Received {} rows", rows);
+        }
+        ++rows;
+                
         logger.trace("resultSetWalker: Taking out queue lock for results walker");
         queueLock.lock();
         try {
@@ -202,6 +208,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     Handler<Void> endHandlerCaptured = null;
     sourceNameTracker.addNameToContextLocalData();
     logger.trace("Starting to process {} {} ({}) {} {}", ended, emitting, completed, demand, items.size());
+    long rows = 0;
     while (!ended && emitting) {
       Handler<Throwable> exceptionHandlerCaptured;
       Handler<DataRow> handlerCaptured = null;
@@ -220,6 +227,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
         exceptionHandlerCaptured = exceptionHandler;
         if (!items.isEmpty()) {
           item =  items.pop();
+          rows = ++rowsOutput;
           handlerCaptured = handler;
           if (items.size() < fetchSize / 2) {
             logger.trace("Signalling notFull");
@@ -247,6 +255,10 @@ public class JdbcReadStream implements ReadStream<DataRow> {
             logger.warn("Exception handling item in QueueReadStream: ", ex);
           }
         }
+        if (rows % 10000 == 0) {
+          logger.debug("Passed on {} rows", rows);
+        }
+        ++rows;
       }
     }
     if (completed && !ended) {
