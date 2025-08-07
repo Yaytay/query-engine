@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="false" scan="true" scanPeriod="10 minutes">
+  <conversionRule conversionWord="vcl" converterClass="io.reactiverse.contextual.logging.LogbackConverter"/>
   <appender name="STDOUTPUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
       <charset>UTF-8</charset>
-      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} %line %X{requestId:-#} %X{source:-#} - %msg%n</pattern>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} %line %vcl{requestId:-#} %vcl{source:-#} - %msg%n</pattern>
     </encoder>
   </appender>
   <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator" />

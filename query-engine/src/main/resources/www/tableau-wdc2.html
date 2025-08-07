@@ -1,0 +1,236 @@
+<html>
+    <head>
+        <title>SpudSoft Query Engine Web Data Connector</title>
+        <meta http-equiv="Cache-Control" content="no-store" />
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.js" type="text/javascript"></script>
+        <script src="https://connectors.tableau.com/libs/tableauwdc-2.2.latest.js" type="text/javascript"></script>        
+        <script type="text/javascript">
+
+$(document).ready(function () {
+
+    var wdc = tableau.makeConnector();
+
+    wdc.getSchema = function(schemaCallback) {
+
+        retrieveJsonData(function(url, data){
+
+            tableau.log("JSON data retrieved for schema: " + JSON.stringify(data.meta));
+
+            var colInfo = []
+            if (data.meta) {
+                tableau.log("Got metadata:" + JSON.stringify(data.meta));
+                var fields = data.meta.fields;
+                for (var key in fields) {
+                    tableau.log("Looking at key: " + key);
+                    if (!fields.hasOwnProperty(key)) 
+                        continue;
+
+                    if (fields[key] === 'time') {
+                        fields[key] = 'datetime';
+                    }
+                    var dataType = tableau.dataTypeEnum[fields[key]];
+                    if (!dataType) {
+                        dataType = tableau.dataTypeEnum.string;
+                    }
+
+                    tableau.log("Adding colInfo");
+                    colInfo.push({
+                        id: key.replace(/[^\w\d]/g, '_')
+                        , alias: key
+                        , dataType: dataType
+                    });
+                }
+            }
+
+            var name = ((data.meta.name) ? data.meta.name : url)
+            var tableInfo = {
+                id: name.replace(/[^\w\d]/g, '_')
+                , alias: name
+                , description: ((data.meta.description) ? data.meta.description : "SpudSoft Data Feed")
+                , columns : colInfo
+            };
+            tableau.log("TableInfo: " + JSON.stringify(tableInfo));
+            schemaCallback([tableInfo]);
+        });
+    };
+
+    wdc.getData = function(table, doneCallback) {
+
+        retrieveJsonData(function(url, data){
+
+            tableau.log("JSON data retrieved: " + JSON.stringify(data));
+            tableau.log("JSON data retrieved for " + data.data.length + " rows");
+            table.appendRows(data.data);
+            doneCallback();
+        });
+    };
+
+    tableau.registerConnector(wdc);
+
+    if (tableau.connectionData) {
+        var conData = JSON.parse(tableau.connectionData);
+        if (conData) {
+            $('input[name=jsonUrl]').val(conData.jsonUrl);
+        }
+        if (tableau.username) {
+            $('input[name=jsonUsername]').val(tableau.username);
+        }
+        if (tableau.password) {
+            $('input[name=jsonPassword]').val(tableau.password);
+        }
+    }
+    if (!$('input[name=jsonUrl]').val()) {
+        $('input[name=jsonUrl]').val(localStorage.getItem('LastQEWdcUrl'));
+    }
+    if (!$('input[name=jsonUrl]').val()) {
+        $('input[name=jsonUrl]').val(window.location.protocol + '//' + window.location.host + '/data/');
+    }
+    if (!$('input[name=jsonUsername]').val()) {
+        $('input[name=jsonUsername]').val(localStorage.getItem('LastQEWdcUsername'));
+    }    
+    var cancel = function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+    };
+    $("#submit").click(function (e) {
+        cancel(e);
+        tableau.log("Submitting");
+        var jsonUrl = $('input[name=jsonUrl]')[0].value.trim();
+        var jsonUsername = $('input[name=jsonUsername]')[0].value.trim();
+        var jsonPassword = $('input[name=jsonPassword]')[0].value.trim();
+        tableau.log("With: " + jsonUrl + " (" + jsonUsername + ")");
+
+        localStorage.setItem('LastQEWdcUsername', jsonUsername);        
+        localStorage.setItem('LastQEWdcUrl', jsonUrl);
+        
+        tableau.connectionName = "SpudSoft Data Feed";
+        tableau.connectionData = JSON.stringify({"jsonUrl": jsonUrl});
+        tableau.username = jsonUsername;
+        tableau.password = jsonPassword;
+        tableau.log("Pre Submit");
+        tableau.submit();
+        tableau.log("Post Submit");
+    });
+});
+
+function retrieveJsonData(retrieveDataCallback) {
+    tableau.log("retrieveJsonData");
+    var conData = JSON.parse(tableau.connectionData);
+    if (!window.cachedTableData) {
+        tableau.log("Not cached");
+        if (conData.jsonUrl) {
+            var url = conData.jsonUrl;
+            tableau.log("Making AJAX request of " + url);
+            tableau.log("Credentials " + tableau.username + ":" + tableau.password);
+            $.ajax({
+                url: url,
+                xhrFields: { withCredentials: true }, 
+                beforeSend : function(req) {
+                    req.setRequestHeader('Authorization', 'Basic ' + btoa(tableau.username + ":" + tableau.password));
+                    return true;
+                },
+                method: 'GET',
+                cache: false,
+                dataType: 'json',
+                async: true,
+                // username: tableau.username,
+                // password: tableau.password,
+                timeout: 60 * 1000,
+                success: function (data) {
+                    tableau.log("Success callback");
+                    window.cachedTableData = data;
+                    retrieveDataCallback(url, window.cachedTableData);
+                },
+                error: function( jqXHR, textStatus, errorThrown ) {
+                    tableau.log("Failed to get data:" + textStatus + " - " + errorThrown);
+                    tableau.abortWithError("unable to get data: " + textStatus + " - " + errorThrown);
+                }
+            });
+            return;
+        }
+    } else {
+        tableau.log("Cached");        
+    }
+    retrieveDataCallback(conData.jsonUrl, window.cachedTableData);
+}
+
+        </script>
+
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: arial;
+                font-size: 14px;
+                background: #f2f2f2;
+            }
+            label {
+                width: 100%;
+                display: inline-block;
+                font-weight: bold;
+                color: #666666;
+            }
+            input[type=text] {
+                border-radius:4px;
+                border:1px solid #cccccc;
+                height:25px;
+                width:99%;
+                margin-bottom:20px;
+                padding-left:2px;
+            }
+            input[type=password] {
+                border-radius:4px;
+                border:1px solid #cccccc;
+                height:25px;
+                width:99%;
+                margin-bottom:20px;
+                padding-left:2px;
+            }
+            #inputForm {
+                width: 35%;
+                margin: 0 auto;
+                background: #ffffff;
+                margin-top: 40px;
+                border: 1px solid #cccccc;
+                padding: 25px 15px 45px;
+                border-radius: 2px;
+            }
+            input[type="submit"] {
+                background: #81A18A;
+                border: 0px;
+                color: #fff;
+                float: right;
+                padding: 5px 10px;
+                cursor: pointer;
+                display:inline-block;
+                border-radius:2px;
+            }
+            input[type="submit"]:hover, input[type="submit"]:focus  {
+                background:#4E6153;
+                transition:0.5s;
+            }
+            @media screen and (max-width: 766px) {
+                #inputForm {
+                    width:80%;
+                }
+            }
+        </style>
+    </head>
+    <body>
+
+        <form id="inputForm" action="">
+            <label>Enter a URL for JSON data:</label>
+            <input type="text" name="jsonUrl" size="150" />
+            <br>
+            <label>Username: </label>
+            <input type="text" name="jsonUsername" size="50" />
+            <br>
+            <labeL>Password:</label>
+            <input type="password" name="jsonPassword" size="50" />
+            <br>
+            <input type="button" id="submit" value="Submit">
+        </form>
+
+    </body>
+
+</html>

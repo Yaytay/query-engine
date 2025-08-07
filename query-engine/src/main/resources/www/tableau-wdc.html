@@ -1,0 +1,251 @@
+<html>
+    <head>
+        <title>SpudSoft Web DB Query</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js" type="text/javascript"></script>
+        <script src="https://connectors.tableau.com/libs/tableauwdc-2.2.0.js" type="text/javascript"></script>
+        <script type="text/javascript">
+
+            (function () {
+
+                var myConnector = tableau.makeConnector();
+
+                myConnector.init = function () {
+                    tableau.connectionName = 'SpudSoft Query Engine';
+                    tableau.initCallback();
+                };
+
+                myConnector.getColumnHeaders = function () {
+                                        tableau.log("getColumnHeaders");
+                    _retrieveJsonData(function (tableData) {
+                        var headers = tableData.headers;
+                        var fieldNames = [];
+                        var fieldTypes = [];
+
+                        for (var fieldName in headers) {
+                            if (headers.hasOwnProperty(fieldName)) {
+                                fieldNames.push(fieldName);
+                                fieldTypes.push(headers[fieldName]);
+                            }
+                        }
+                        tableau.headersCallback(fieldNames, fieldTypes); // tell tableau about the fields and their types
+                    });
+                };
+
+                myConnector.getTableData = function (lastRecordToken) {
+                                        tableau.log("getTableData");
+                    _retrieveJsonData(function (tableData) {
+                        var rowData = tableData.rowData;
+                        tableau.dataCallback(rowData, rowData.length.toString(), false);
+                    });
+                };
+
+                tableau.registerConnector(myConnector);
+            })();
+
+            function _retrieveJsonData(retrieveDataCallback) {
+                tableau.log("_retrieveJsonData");
+                if (!window.cachedTableData) {
+                    tableau.log("Not cached");
+                    var conData = JSON.parse(tableau.connectionData);
+                    if (conData.jsonUrl) {
+                        var successCallback = function (data)
+                        {
+                            tableau.log("Success callback");
+                            window.cachedTableData = _jsToTable(data);
+                            retrieveDataCallback(window.cachedTableData);
+                        };
+                        // Go get the json data
+                        // This is the first, and most basic, of many attempts to get the data.
+                        // We make different attempts that use different approaches, because if
+                        // the server we are requesting data from has not enabled CORS, then the
+                        // request will fail. In that case we try different proxies to try to get
+                        // around the same origin policy. This is not as clean as it could be, but
+                        // for a general purpose connector, we want to make every attempt we can
+                        // to pull in the data
+                        _ajaxRequestHelper(conData.jsonUrl, tableau.username, tableau.password, successCallback);
+                        return;
+                    }
+                    try {
+                        window.cachedTableData = _jsToTable(JSON.parse(conData.jsonString));
+                    } catch (e) {
+                        tableau.abortWithError("unable to parse json data");
+                        return;
+                    }
+                }
+                retrieveDataCallback(window.cachedTableData);
+            }
+
+            function _ajaxRequestHelper(url, username, password, successCallback) {
+                tableau.log("_ajaxRequestHelper");
+                var xhr = $.ajax({
+                    url: url,
+                    xhrFields: { withCredentials: true }, 
+                    beforeSend : function(req) {
+                        req.setRequestHeader('Authorization', 'Basic ' + btoa(tableau.username + ":" + tableau.password));
+                    },
+                    dataType: 'json',
+                    username: username,
+                    password: password,
+                    success: successCallback,
+                    async: true,
+                    timeout: 60 * 60 * 1000,
+                    error: function( jqXHR, textStatus, errorThrown ) {
+                        tableau.log("failed to get data:" + textStatus + " - " + errorThrown);
+                        tableau.abortWithError("unable to get data: " + textStatus + " - " + errorThrown);
+                    }
+                });
+            }
+
+            // Takes a hierarchical javascript object and tries to turn it into a table
+            // Returns an object with headers and the row level data
+            function _jsToTable(objectBlob) {
+                var rowData = objectBlob["data"];//_flattenData(objectBlob);
+                var headers = objectBlob["header"];
+                if (!headers) {
+                    headers = _extractHeaders(rowData);
+                }
+                tableau.log("headers:" + JSON.stringify(headers));
+                return {"headers": headers, "rowData": rowData};
+            }
+
+            // Given an array of js objects, returns a map from data column name to data type
+            function _extractHeaders(rowData) {
+                tableau.log("_extractHeaders");
+                tableau.log("examining " + rowData.length + " rows");
+                var toRet = {};
+                for (var row = 0; row < rowData.length; ++row) {
+                    var rowLine = rowData[row];
+                    for (var key in rowLine) {
+                        if (rowLine.hasOwnProperty(key)) {
+                            if (!(key in toRet)) {
+                                toRet[key] = _determineType(rowLine[key]);
+                            }
+                        }
+                    }
+                }
+                return toRet;
+            }
+
+            // Given a primitive, tries to make a guess at the data type of the input
+            function _determineType(primitive) {
+                // possible types: 'float', 'date', 'datetime', 'bool', 'string', 'int'
+                if (parseInt(primitive) == primitive)
+                    return 'int';
+                if (parseFloat(primitive) == primitive)
+                    return 'float';
+                if (isFinite(new Date(primitive).getTime()))
+                    return 'datetime';
+                return 'string';
+            }
+
+            function _submitToJsonToTableau(jsonUrl, jsonUsername, jsonPassword) {
+                var conData = {"jsonUrl": jsonUrl};
+                tableau.connectionData = JSON.stringify(conData);
+                tableau.username = jsonUsername;
+                tableau.password = jsonPassword;
+                tableau.log("Now");
+                tableau.submit();
+                tableau.log("Done");
+            }
+
+            $(document).ready(function () {
+                                if (tableau.connectionData) {
+                                        var conData = JSON.parse(tableau.connectionData);
+                                        if (conData) {
+                                                $('input[name=jsonUrl]').val(conData.jsonUrl);
+                                        }
+                                        if (tableau.username) {
+                                                $('input[name=jsonUsername]').val(tableau.username);
+                                        }
+                                        if (tableau.password) {
+                                                $('input[name=jsonPassword]').val(tableau.password);
+                                        }
+                                }
+                var cancel = function (e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                };
+                $("#submit").click(function (e) { // This event fires when a button is clicked
+                    // Since we use a form for input, make sure to stop the default form behavior
+                    cancel(e);
+                    tableau.log("Submitting");
+                    var jsonUrl = $('input[name=jsonUrl]')[0].value.trim();
+                    var jsonUsername = $('input[name=jsonUsername]')[0].value.trim();
+                    var jsonPassword = $('input[name=jsonPassword]')[0].value.trim();
+                    tableau.log("With: " + jsonUrl + " (" + jsonUsername + ")");
+                    _submitToJsonToTableau(jsonUrl, jsonUsername, jsonPassword);
+                });
+            });
+
+        </script>
+
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: arial;
+                font-size: 14px;
+                background: #f2f2f2;
+            }
+            label {
+                width: 100%;
+                display: inline-block;
+                font-weight: bold;
+                color: #666666;
+            }
+            input[type=text] {
+                border-radius:4px;
+                border:1px solid #cccccc;
+                height:25px;
+                width:99%;
+                margin-bottom:20px;
+                padding-left:2px;
+            }
+            #inputForm {
+                width: 35%;
+                margin: 0 auto;
+                background: #ffffff;
+                margin-top: 40px;
+                border: 1px solid #cccccc;
+                padding: 25px 15px 45px;
+                border-radius: 2px;
+            }
+            input[type="submit"] {
+                background: #81A18A;
+                border: 0px;
+                color: #fff;
+                float: right;
+                padding: 5px 10px;
+                cursor: pointer;
+                display:inline-block;
+                border-radius:2px;
+            }
+            input[type="submit"]:hover, input[type="submit"]:focus  {
+                background:#4E6153;
+                transition:0.5s;
+            }
+            @media screen and (max-width: 766px) {
+                #inputForm {
+                    width:80%;
+                }
+            }
+        </style>
+    </head>
+    <body>
+
+        <form id="inputForm" action="">
+            <label>Enter a URL for JSON data:</label>
+            <input type="text" name="jsonUrl" size="150" value="" />
+            <br>
+            <label>Username: </label>
+            <input type="text" name="jsonUsername" size="50" />
+            <br>
+            <labeL>Password:</label>
+            <input type="text" name="jsonPassword" size="50" />
+            <br>
+            <input type="button" id="submit" value="Submit">
+        </form>
+
+    </body>
+
+</html>

@@ -33,8 +33,10 @@ import java.io.PrintStream;
 import java.lang.invoke.MethodHandles;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import static org.hamcrest.MatcherAssert.assertThat;
 import uk.co.spudsoft.query.main.Main;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.TestInstance;
@@ -155,6 +157,30 @@ public class UiRouterIT {
             ;
     
     assertEquals(root, help);
+        
+    String wdc = given()
+            .log().all()
+            .get("/ui/tableau-wdc.html")
+            .then()
+            .log().ifError()
+            .statusCode(200)
+            .contentType(ContentType.HTML)
+            .extract().body().asString()
+            ;
+    
+    assertThat(wdc, startsWith("<html>\n    <head>\n        <title>SpudSoft Web DB Query</title>"));
+        
+    wdc = given()
+            .log().all()
+            .get("/ui/tableau-wdc2.html")
+            .then()
+            .log().ifError()
+            .statusCode(200)
+            .contentType(ContentType.HTML)
+            .extract().body().asString()
+            ;
+    
+    assertThat(wdc, startsWith("<html>\n    <head>\n        <title>SpudSoft Query Engine Web Data Connector</title>"));
         
     String notfound = given()
             .log().all()

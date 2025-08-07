@@ -190,7 +190,11 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
       }
     } else {
       RowSet<Row> rowSet = ar.result();
-      logger.debug("Got RowSet {} {}/{}", ++rowSetCount, rowSet.rowCount(), rowSet.size());
+      if (rowSetCount % 100 == 0) {
+        logger.debug("Got RowSet {}", ++rowSetCount);
+      } else {
+        logger.trace("Got RowSet {}", ++rowSetCount);
+      }
       Handler<List<ColumnDescriptor>> colDescHandler;
       synchronized (this) {
         readInProgress = false;

@@ -89,7 +89,7 @@ public class QueryRouterTest {
     router.handle(routingContext);
 
     verify(response).setStatusCode(400);
-    verify(response).end("Invalid path (from ServiceException@uk.co.spudsoft.query.web.QueryRouter:178)");
+    verify(response).end("Invalid path (from ServiceException@uk.co.spudsoft.query.web.QueryRouter:177)");
   }
 
   @Test

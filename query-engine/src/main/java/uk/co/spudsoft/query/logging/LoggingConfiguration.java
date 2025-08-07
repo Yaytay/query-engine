@@ -23,10 +23,12 @@ import ch.qos.logback.classic.encoder.JsonEncoder;
 import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
+import ch.qos.logback.core.CoreConstants;
 import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
 import ch.qos.logback.core.joran.spi.JoranException;
 import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.reactiverse.contextual.logging.LogbackConverter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -79,8 +81,6 @@ public class LoggingConfiguration {
 
     loggerContext.reset();
     
-    loggerContext.setMDCAdapter(VertxMDC.INSTANCE);
-    
     ConsoleAppender<ILoggingEvent> appender;
     if ("true".equalsIgnoreCase(env.get("LOGGING_AS_JSON"))) {
       appender = configureForJson(loggerContext);
@@ -108,8 +108,6 @@ public class LoggingConfiguration {
     }
 
     loggerContext.reset();
-    
-    loggerContext.setMDCAdapter(VertxMDC.INSTANCE);
     
     if (!Strings.isNullOrEmpty(options.getConfigFile())) {
       if (configureFromFile(loggerContext, options.getConfigFile())) {
@@ -183,9 +181,17 @@ public class LoggingConfiguration {
 
   private static ConsoleAppender<ILoggingEvent> configureForText(LoggerContext loggerContext) {
     ConsoleAppender<ILoggingEvent> ca = createConsoleAppender(loggerContext);
+    
+    @SuppressWarnings("unchecked")
+    Map<String, String> ruleRegistry = (Map) loggerContext.getObject(CoreConstants.PATTERN_RULE_REGISTRY);
+    if (ruleRegistry == null) {
+        ruleRegistry = new HashMap<>();
+        loggerContext.putObject(CoreConstants.PATTERN_RULE_REGISTRY, ruleRegistry);
+    }
+    ruleRegistry.put("vcl", LogbackConverter.class.getName());
 
     PatternLayout layout = new PatternLayout();
-    layout.setPattern("%date{yyyy-MM-dd HH:mm:ss.SSS, UTC} [%thread] %-5level %logger{36} %X{requestId:-#} %X{runId:-#} %X{source:-#} %X{process:-#} - %msg%n");
+    layout.setPattern("%date{yyyy-MM-dd HH:mm:ss.SSS, UTC} [%thread] %-5level %logger{36} %vcl{requestId:-#} %vcl{runId:-#} - %msg%n");
 
     LayoutWrappingEncoder<ILoggingEvent> encoder = new LayoutWrappingEncoder<>();
     encoder.setContext(loggerContext);

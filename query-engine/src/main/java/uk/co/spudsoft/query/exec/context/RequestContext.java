@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableSet;
 import inet.ipaddr.IPAddressString;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.reactiverse.contextual.logging.ContextualData;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.Cookie;
@@ -43,7 +44,6 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
-import uk.co.spudsoft.query.logging.VertxMDC;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 
@@ -115,8 +115,9 @@ public final class RequestContext {
     this.headers = request.headers();
     this.cookies = ImmutableSet.copyOf(request.cookies());
     this.runId = this.params == null ? null : this.params.get("_runid");
-    
-    VertxMDC.INSTANCE.put(REQUEST_ID, this.requestId);
+
+    ContextualData.put(REQUEST_ID, this.requestId);
+
     logger.debug("Created {} RequestContext@{} from HttpServerRequest", requestId, System.identityHashCode(this));
 
   }
@@ -327,7 +328,7 @@ public final class RequestContext {
    * @return the requestId found in MDC.
    */
   public static String retrieveRequestId() {
-    return VertxMDC.INSTANCE.get(REQUEST_ID);
+    return ContextualData.get(REQUEST_ID);
   }
   
   /**

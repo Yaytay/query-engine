@@ -53,7 +53,6 @@ import uk.co.spudsoft.query.exec.CachingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.exec.ProgressNotificationHandler;
 import uk.co.spudsoft.query.exec.notifications.LoggingNotificationHandler;
-import uk.co.spudsoft.query.logging.VertxMDC;
 
 
 /**
@@ -247,7 +246,6 @@ public class QueryRouter implements Handler<RoutingContext> {
                   pipelineExecutor.progressNotification(requestContext, pipelineTitle[0], null, null, null, true, false, "Pipeline failed: ", ar.cause());
                 }
                 logger.info("Request completed");
-                VertxMDC.INSTANCE.clear();
               });
     } else {
       routingContext.next();

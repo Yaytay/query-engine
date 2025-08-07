@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
+import io.reactiverse.contextual.logging.ContextualData;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
@@ -48,7 +49,6 @@ import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
 import uk.co.spudsoft.jwtvalidatorvertx.JwtValidator;
 import uk.co.spudsoft.jwtvalidatorvertx.OpenIdDiscoveryHandler;
 import uk.co.spudsoft.query.exec.context.RequestContext;
-import uk.co.spudsoft.query.logging.VertxMDC;
 import uk.co.spudsoft.query.web.LoginDao;
 import uk.co.spudsoft.query.web.ServiceException;
 
@@ -232,7 +232,9 @@ public class Authenticator {
     HttpServerRequest request = routingContext.request();    
 
     String runId = request.params() == null ? null : request.params().get("_runid");
-    VertxMDC.INSTANCE.put("runId", runId);
+    if (runId != null) {
+      ContextualData.put("runId", runId);
+    }
     if (!Strings.isNullOrEmpty(runId)) {
       logger.info("RunID: {}", runId);
     }

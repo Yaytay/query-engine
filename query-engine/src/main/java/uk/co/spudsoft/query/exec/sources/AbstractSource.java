@@ -16,9 +16,9 @@
  */
 package uk.co.spudsoft.query.exec.sources;
 
+import io.reactiverse.contextual.logging.ContextualData;
 import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
-import uk.co.spudsoft.query.logging.VertxMDC;
 
 /**
  * Abstract class to aid the implementation of {@link uk.co.spudsoft.query.exec.SourceInstance} classes.
@@ -44,6 +44,6 @@ public abstract class AbstractSource implements SourceInstance, SourceNameTracke
 
   @Override
   public void addNameToContextLocalData() {
-    VertxMDC.INSTANCE.put(SourceInstance.SOURCE_CONTEXT_KEY, name);
+    ContextualData.put(SourceInstance.SOURCE_CONTEXT_KEY, name);
   }
 }

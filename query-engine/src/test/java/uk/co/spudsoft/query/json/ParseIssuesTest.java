@@ -53,7 +53,7 @@ public class ParseIssuesTest {
                                             "title": "Students",
                                             "description": "Feed of student data from targetconnect",
                                             "sourceEndpoints": [{
-                                                "url": "mysql://mysql.uat-swarm-01.gti-prod.zone/targetconnect_master_uat6",
+                                                "url": "mysql://mysql.zone/targetconnect_master_uat6",
                                                 "secret": "tc-master",
                                                 "name": "master"
                                               }
