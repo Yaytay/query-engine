@@ -104,7 +104,7 @@ public class PipelineExecutorImplTest {
   }
 
   @Test
-  public void testPrepareArguments() {
+  public void testPrepareArguments() throws Throwable {
     RequestContext req = new RequestContext(
             null
             , null
@@ -155,7 +155,7 @@ public class PipelineExecutorImplTest {
 
   @Test
   @Timeout(timeUnit = TimeUnit.SECONDS, value = 60)
-  public void testInitializePipeline(Vertx vertx, VertxTestContext testContext) {
+  public void testInitializePipeline(Vertx vertx, VertxTestContext testContext) throws Throwable {
     
     Pipeline definition = Pipeline.builder()
             .source(SourceTest.builder().name("test").build())
@@ -324,15 +324,18 @@ public class PipelineExecutorImplTest {
   }
 
   @Test
-  public void testAddCastItem() {
+  public void testAddCastItem() throws Throwable {
     ImmutableList.Builder<Comparable<?>> builder = ImmutableList.<Comparable<?>>builder();
-    PipelineExecutorImpl.addCastItem(builder, DataType.Time, "12:34");
-    PipelineExecutorImpl.addCastItem(builder, DataType.Long, "12:34");
+    PipelineExecutorImpl.addCastItem("test", builder, DataType.Time, "12:34");
+    assertEquals("The argument \"test\" was passed a value which cannot be converted to Long.", assertThrows(IllegalArgumentException.class, () -> {
+      PipelineExecutorImpl.addCastItem("test", builder, DataType.Long, "12:34");
+    }).getMessage());
+    
     assertEquals(Arrays.asList(LocalTime.of(12, 34)), builder.build());
   }
 
   @Test
-  public void testEvaluateDefaultValues() {
+  public void testEvaluateDefaultValues() throws Throwable {
     RequestContext requestContext = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     
     Argument arg = Argument.builder()

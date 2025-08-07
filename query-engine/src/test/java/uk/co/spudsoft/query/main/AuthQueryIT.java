@@ -265,6 +265,19 @@ public class AuthQueryIT {
     
     body = given()
             .header(new Header("Authorization", "Bearer " + token))
+            .queryParam("key", "unknown")
+            .queryParam("port", postgres.getPort())
+            .log().all()
+            .get("/query/sub1/sub2/TemplatedYamlToPipelineIT.tsv")
+            .then()
+            .log().ifError()
+            .statusCode(400)
+            .extract().body().asString();
+        
+    assertThat(body, equalTo("The argument \"key\" was passed a value which is not permitted."));
+    
+    body = given()
+            .header(new Header("Authorization", "Bearer " + token))
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
             .log().all()
@@ -275,6 +288,20 @@ public class AuthQueryIT {
             .extract().body().asString();
         
     assertThat(body, startsWith("\"dataId\"\t\"instant\"\t\"ref\"\t\"value\"\t\"children\"\n1\t\"1971-05-07T03:00\"\t\"antiquewhite\"\t\"first\"\t\"one\""));
+    
+    body = given()
+            .header(new Header("Authorization", "Bearer " + token))
+            .queryParam("key", postgres.getName())
+            .queryParam("port", "notanumber")
+            .log().all()
+            .get("/query/sub1/sub2/TemplatedYamlToPipelineIT.tsv")
+            .then()
+            .log().ifError()
+            .statusCode(400)
+            .extract().body().asString();
+        
+    assertThat(body, equalTo("The argument \"port\" was passed a value which cannot be converted to Integer."));
+    
     
     body = given()
             .header(new Header("Authorization", "Bearer " + token))
@@ -307,7 +334,7 @@ public class AuthQueryIT {
     logger.debug("History: {}", body);
     
     JsonObject history1 = new JsonObject(body);
-    assertEquals(6, history1.getJsonArray("rows").size());    
+    assertEquals(8, history1.getJsonArray("rows").size());    
     assertEquals(6, history1.getInteger("totalRows"));    
     assertEquals(0, history1.getInteger("firstRow"));
     assertThat(history1.getJsonArray("rows").getJsonObject(0).getString("subject"), startsWith("sub"));
@@ -326,7 +353,7 @@ public class AuthQueryIT {
     
     JsonObject history2 = new JsonObject(body);
     assertEquals(3, history2.getJsonArray("rows").size());    
-    assertEquals(6, history2.getInteger("totalRows"));    
+    assertEquals(8, history2.getInteger("totalRows"));    
     assertEquals(2, history2.getInteger("firstRow"));
     assertThat(history2.getJsonArray("rows").getJsonObject(0).getString("subject"), startsWith("sub"));
     assertEquals("Full Name", history2.getJsonArray("rows").getJsonObject(0).getString("name"));

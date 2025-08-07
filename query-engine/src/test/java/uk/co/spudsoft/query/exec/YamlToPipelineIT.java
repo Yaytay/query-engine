@@ -110,16 +110,21 @@ public class YamlToPipelineIT {
               Format chosenFormat = executor.getFormat(pipeline.getFormats(), null);
               FormatInstance formatInstance = chosenFormat.createInstance(vertx, req, new ListingWriteStream<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), meterRegistry, executor, "source");
-              PipelineInstance instance = new PipelineInstance(
-                      req
-                      , pipeline
-                      , executor.prepareArguments(req, pipeline.getArguments(), args)
-                      , pipeline.getSourceEndpointsMap()
-                      , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
-                      , sourceInstance
-                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), req, pipeline, null, null)
-                      , formatInstance
-              );
+              PipelineInstance instance;
+              try {
+                instance = new PipelineInstance(
+                        req
+                        , pipeline
+                        , executor.prepareArguments(req, pipeline.getArguments(), args)
+                        , pipeline.getSourceEndpointsMap()
+                        , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
+                        , sourceInstance
+                        , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), req, pipeline, null, null)
+                        , formatInstance
+                );
+              } catch (Throwable ex) {
+                return Future.failedFuture(ex);
+              }
       
               assertNotNull(instance);
 
@@ -189,16 +194,21 @@ public class YamlToPipelineIT {
               Format chosenFormat = executor.getFormat(pipeline.getFormats(), null);
               FormatInstance formatInstance = chosenFormat.createInstance(vertx, req, new ListingWriteStream<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), meterRegistry, executor, "source");
-              PipelineInstance instance = new PipelineInstance(
-                      req
-                      , pipeline
-                      , executor.prepareArguments(req, pipeline.getArguments(), args)
-                      , pipeline.getSourceEndpointsMap()
-                      , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
-                      , sourceInstance
-                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), req, pipeline, null, null)
-                      , formatInstance
-              );
+              PipelineInstance instance;
+              try {
+                instance = new PipelineInstance(
+                        req
+                        , pipeline
+                        , executor.prepareArguments(req, pipeline.getArguments(), args)
+                        , pipeline.getSourceEndpointsMap()
+                        , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
+                        , sourceInstance
+                        , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), req, pipeline, null, null)
+                        , formatInstance
+                );
+              } catch (Throwable ex) {
+                return Future.failedFuture(ex);
+              }
       
               assertNotNull(instance);
 

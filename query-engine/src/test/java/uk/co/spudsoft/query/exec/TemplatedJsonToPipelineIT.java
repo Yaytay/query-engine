@@ -72,7 +72,7 @@ public class TemplatedJsonToPipelineIT {
     PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*"), null));
     PipelineExecutorImpl executor = new PipelineExecutorImpl(meterRegistry, new FilterFactory(Collections.emptyList()), null);
 
-    MultiMap params = MultiMap.caseInsensitiveMultiMap();
+    MultiMap args = MultiMap.caseInsensitiveMultiMap();
 
     RequestContext req = new RequestContext(
             null
@@ -80,7 +80,7 @@ public class TemplatedJsonToPipelineIT {
             , null
             , "localhost"
             , null
-            , params
+            , args
             , new HeadersMultiMap().add("Host", "localhost:123")
             , null
             , new IPAddressString("127.0.0.1")
@@ -95,8 +95,8 @@ public class TemplatedJsonToPipelineIT {
             })
             .compose(v -> {
               try {
-                params.add("key", serverProvider.getName());
-                params.add("port", Integer.toString(serverProvider.getPort()));
+                args.add("key", serverProvider.getName());
+                args.add("port", Integer.toString(serverProvider.getPort()));
                 return loader.loadPipeline("sub1/sub2/TemplatedJsonToPipelineIT", req, null);
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);
@@ -107,16 +107,21 @@ public class TemplatedJsonToPipelineIT {
               Format chosenFormat = executor.getFormat(pipeline.getFormats(), null);
               FormatInstance formatInstance = chosenFormat.createInstance(vertx, req, new ListingWriteStream<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), meterRegistry, executor, "source");
-              PipelineInstance instance = new PipelineInstance(
-                      req
-                      , pipeline
-                      , executor.prepareArguments(req, pipeline.getArguments(), params)
-                      , pipeline.getSourceEndpointsMap()
-                      , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
-                      , sourceInstance
-                      , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), req, pipeline, null, null)
-                      , formatInstance
-              );
+              PipelineInstance instance;
+              try {
+                instance = new PipelineInstance(
+                        req
+                        , pipeline
+                        , executor.prepareArguments(req, pipeline.getArguments(), args)
+                        , pipeline.getSourceEndpointsMap()
+                        , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
+                        , sourceInstance
+                        , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), req, pipeline, null, null)
+                        , formatInstance
+                );
+              } catch (Throwable ex) {
+                return Future.failedFuture(ex);
+              }
       
               assertNotNull(instance);
 

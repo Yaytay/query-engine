@@ -52,8 +52,9 @@ public interface PipelineExecutor extends SharedMap {
    * @param definitions The {@link Argument} definitions from the {@link Pipeline} definition.
    * @param valuesMap The map of query string parameters received.
    * @return a {@link Map} of argument names to {@link ArgumentInstance} objects with correctly typed {@link ArgumentInstance#values values}.
+   * @throws Throwable - any kind of exception if arguments cannot be converted to the appropriate type.
    */
-  Map<String, ArgumentInstance> prepareArguments(RequestContext requestContext, List<Argument> definitions, MultiMap valuesMap);
+  Map<String, ArgumentInstance> prepareArguments(RequestContext requestContext, List<Argument> definitions, MultiMap valuesMap) throws Throwable;
   
   /**
    * Validate a {@link Pipeline} definition.

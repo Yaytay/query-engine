@@ -101,16 +101,22 @@ public class SourceSqlStreamingInstanceTest {
               , null
       );
       
-      PipelineInstance pipelineInstance = new PipelineInstance(
-              req
-              , pipeline
-              , pipelineExecutor.prepareArguments(req, pipeline.getArguments(), params)
-              , pipeline.getSourceEndpointsMap()
-              , pipelineExecutor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
-              , instance
-              , Collections.emptyList()
-              , new FormatCaptureInstance()
-      );
+      PipelineInstance pipelineInstance;
+      try {
+        pipelineInstance= new PipelineInstance(
+                req
+                , pipeline
+                , pipelineExecutor.prepareArguments(req, pipeline.getArguments(), params)
+                , pipeline.getSourceEndpointsMap()
+                , pipelineExecutor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
+                , instance
+                , Collections.emptyList()
+                , new FormatCaptureInstance()
+        );
+      } catch (Throwable ex) {
+        testContext.failNow(ex);
+        return;
+      }
       
       Future<ReadStreamWithTypes> future = instance.initialize(pipelineExecutor, pipelineInstance);
       testContext.verify(() -> {
@@ -166,16 +172,22 @@ public class SourceSqlStreamingInstanceTest {
               , null
       );
       
-      PipelineInstance pipelineInstance = new PipelineInstance(
-              req
-              , pipeline
-              , pipelineExecutor.prepareArguments(req, pipeline.getArguments(), params)
-              , pipeline.getSourceEndpointsMap()
-              , pipelineExecutor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
-              , instance
-              , Collections.emptyList()
-              , new FormatCaptureInstance()
-      );
+      PipelineInstance pipelineInstance;
+      try {
+        pipelineInstance= new PipelineInstance(
+                req
+                , pipeline
+                , pipelineExecutor.prepareArguments(req, pipeline.getArguments(), params)
+                , pipeline.getSourceEndpointsMap()
+                , pipelineExecutor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
+                , instance
+                , Collections.emptyList()
+                , new FormatCaptureInstance()
+        );
+      } catch (Throwable ex) {
+        testContext.failNow(ex);
+        return;
+      }
       
       Future<ReadStreamWithTypes> future = instance.initialize(pipelineExecutor, pipelineInstance);
       testContext.verify(() -> {

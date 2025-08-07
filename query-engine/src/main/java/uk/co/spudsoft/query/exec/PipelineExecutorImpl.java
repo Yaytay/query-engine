@@ -181,15 +181,16 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     return false;
   }
   
-  static void addCastItem(ImmutableList.Builder<Comparable<?>> builder, DataType type, Object item) {
+  static void addCastItem(String name, ImmutableList.Builder<Comparable<?>> builder, DataType type, Object item) throws IllegalArgumentException {
     try {
       builder.add(type.cast(item));
     } catch (Throwable ex) {
       logger.warn("Unable to cast '{}' ({}) as {}: ", item, item.getClass(), type, ex);
+      throw new IllegalArgumentException("The argument \"" + name + "\" was passed a value which cannot be converted to " + type.name() + ".");
     }
   }
   
-  static ImmutableList<Comparable<?>> evaluateDefaultValues(Argument arg, RequestContext requestContext, Pattern permittedValuesPattern) {
+  static ImmutableList<Comparable<?>> evaluateDefaultValues(Argument arg, RequestContext requestContext, Pattern permittedValuesPattern) throws Throwable {
     JexlEvaluator evaluator = new JexlEvaluator(arg.getDefaultValueExpression());
     Object raw = evaluator.evaluateAsObject(requestContext, null);
     if (raw == null) {
@@ -204,7 +205,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
           }
         }
         if (item != null) {
-          addCastItem(builder, arg.getType(), item);
+          addCastItem(arg.getName(), builder, arg.getType(), item);
         }
       }
     } else if (raw instanceof List<?> rawList) {
@@ -215,7 +216,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
           }
         }
         if (item != null) {
-          addCastItem(builder, arg.getType(), item);
+          addCastItem(arg.getName(), builder, arg.getType(), item);
         }
       }
     } else {
@@ -224,12 +225,12 @@ public class PipelineExecutorImpl implements PipelineExecutor {
           validateArgumentValue(arg, permittedValuesPattern, stringItem, true);
         }
       }
-      addCastItem(builder, arg.getType(), raw);
+      addCastItem(arg.getName(), builder, arg.getType(), raw);
     }
     return builder.build();
   }
 
-  static ImmutableList<Comparable<?>> castAndValidatePassedValues(Argument arg, RequestContext requestContext, Pattern permittedValuesPattern, List<String> values) {
+  static ImmutableList<Comparable<?>> castAndValidatePassedValues(Argument arg, RequestContext requestContext, Pattern permittedValuesPattern, List<String> values) throws Throwable {
     ImmutableList.Builder<Comparable<?>> builder = ImmutableList.<Comparable<?>>builder();
     for (Object item : values) {
       if (arg.isValidate()) {
@@ -238,7 +239,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
         }
       }
       if (item != null) {
-        addCastItem(builder, arg.getType(), item);
+        addCastItem(arg.getName(), builder, arg.getType(), item);
       }
     }
     return builder.build();
@@ -268,7 +269,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
   }
 
   @Override
-  public Map<String, ArgumentInstance> prepareArguments(RequestContext requestContext, List<Argument> definitions, MultiMap valuesMap) {
+  public Map<String, ArgumentInstance> prepareArguments(RequestContext requestContext, List<Argument> definitions, MultiMap valuesMap) throws Throwable {
         
     Map<String, ArgumentInstance> result = new HashMap<>();
     Map<String, Object> arguments = new HashMap<>();
