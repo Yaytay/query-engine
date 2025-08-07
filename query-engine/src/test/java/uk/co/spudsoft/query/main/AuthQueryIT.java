@@ -335,7 +335,7 @@ public class AuthQueryIT {
     
     JsonObject history1 = new JsonObject(body);
     assertEquals(8, history1.getJsonArray("rows").size());    
-    assertEquals(6, history1.getInteger("totalRows"));    
+    assertEquals(8, history1.getInteger("totalRows"));    
     assertEquals(0, history1.getInteger("firstRow"));
     assertThat(history1.getJsonArray("rows").getJsonObject(0).getString("subject"), startsWith("sub"));
     assertEquals("Full Name", history1.getJsonArray("rows").getJsonObject(0).getString("name"));

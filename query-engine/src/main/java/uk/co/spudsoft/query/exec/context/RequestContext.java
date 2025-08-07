@@ -57,7 +57,7 @@ public final class RequestContext {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(RequestContext.class);
   
-  private static final String REQUEST_ID = RequestContext.class.getPackageName() + ".RequestId";
+  private static final String REQUEST_ID = "requestId";
   
   private static final String REQUEST_CONTEXT = RequestContext.class.getName();
   
@@ -117,7 +117,7 @@ public final class RequestContext {
     this.runId = this.params == null ? null : this.params.get("_runid");
     
     VertxMDC.INSTANCE.put(REQUEST_ID, this.requestId);
-    logger.trace("Created {} RequestContext@{} from HttpServerRequest", requestId, System.identityHashCode(this));
+    logger.debug("Created {} RequestContext@{} from HttpServerRequest", requestId, System.identityHashCode(this));
 
   }
 
