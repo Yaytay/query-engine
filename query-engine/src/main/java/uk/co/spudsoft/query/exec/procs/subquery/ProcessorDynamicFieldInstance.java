@@ -40,6 +40,7 @@ import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
+import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
  * {@link uk.co.spudsoft.query.exec.ProcessorInstance} to generate fields dynamically from a query producing key/value pairs.
@@ -73,7 +74,12 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
   }
     
   private final List<String> fieldValueColumnNames;
-  private List<FieldDefn> fields; // Protected for the benefit of unit tests only
+  
+  /**
+   * List of fields discovered during initialization.
+   * This is only protected for the benefit of tests, this class should be considered final for production use.
+   */
+  protected ImmutableList<FieldDefn> fields; // Protected for the benefit of unit tests only
   
   /**
    * Constructor.
@@ -86,20 +92,6 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
   public ProcessorDynamicFieldInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, ProcessorDynamicField definition, String name) {
-    this(vertx, sourceNameTracker, context, meterRegistry, definition, name, null);
-  }
-
-  /**
-   * Constructor.
-   * @param vertx the Vert.x instance.
-   * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
-   * @param context the Vert.x context.
-   * @param definition the definition of this processor.
-   * @param name the name of this processor, used in tracking and logging.
-   * @param fields override the collection of fields for testing
-   */
-  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
-  ProcessorDynamicFieldInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, ProcessorDynamicField definition, String name, List<FieldDefn> fields) {
     super(logger, vertx, sourceNameTracker, context, meterRegistry, name, definition.getParentIdColumns(), definition.getValuesParentIdColumns(), definition.isInnerJoin());
     this.definition = definition;    
     if (Strings.isNullOrEmpty(definition.getFieldValueColumnName())) {
@@ -107,7 +99,6 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
     } else {
       this.fieldValueColumnNames = ImmutableList.copyOf(definition.getFieldValueColumnName().split(","));
     }
-    this.fields = fields;
   }
 
   @Override
@@ -134,13 +125,13 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
                       });
             })
             .compose(collated -> {
-              fields = collated;
+              fields = ImmutableCollectionTools.copy(collated);
               for (FieldDefn field : fields) {
                 types.putIfAbsent(field.key, field.name, field.type);
               }
               if (logger.isTraceEnabled()) {
                 logger.trace("Defined dynamic fields: {}", Json.encode(fields));
-                logger.trace("Dynamic field types: {}", types);
+                logger.debug("Dynamic field types: {}", types);
               }
               return initializeChildStream(executor, pipeline, "fieldValues", definition.getFieldValues()).map(rswt -> rswt.getStream());
             });
