@@ -209,6 +209,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     sourceNameTracker.addNameToContextLocalData();
     logger.trace("Starting to process {} {} ({}) {} {}", ended, emitting, completed, demand, items.size());
     long rows = 0;
+    boolean done = false;
     while (!ended && emitting) {
       Handler<Throwable> exceptionHandlerCaptured;
       Handler<DataRow> handlerCaptured = null;
@@ -238,6 +239,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
         } else {
           logger.trace("Stop emitting, no items");
           emitting = false;
+          done = completed;
           notFull.signal();
         }
       } finally {
@@ -261,7 +263,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
         ++rows;
       }
     }
-    if (completed && !ended) {
+    if (done && !ended) {
       endHandlerCaptured = endHandler;
       if (endHandlerCaptured != null) {
         logger.trace("Calling endHandler"); 
