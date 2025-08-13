@@ -205,7 +205,7 @@ public class MainQueryForkIT {
             .statusCode(200)
             .extract().body().asString();
     
-    assertThat(body, startsWith("[{\"dataId\":1,\"instant\":\"1971-05-07T03:00\",\"ref\":\"antiquewhite\",\"value\":\"first\",\"children\":\"one\",\"DateField\":\"2023-05-05\",\"TimeField\":null,\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null},{\"dataId\":2,\"instant\":\"1971-05-08T06:00\",\"ref\":\"aqua\",\"value\":\"second\",\"children\":\"two,four\",\"DateField\":\"2023-05-04\",\"TimeField\":\"23:58\",\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null},"));
+    assertThat(body, startsWith("[\n{\"dataId\":1,\"instant\":\"1971-05-07T03:00\",\"ref\":\"antiquewhite\",\"value\":\"first\",\"children\":\"one\",\"DateField\":\"2023-05-05\",\"TimeField\":null,\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null},\n{\"dataId\":2,\"instant\":\"1971-05-08T06:00\",\"ref\":\"aqua\",\"value\":\"second\",\"children\":\"two,four\",\"DateField\":\"2023-05-04\",\"TimeField\":\"23:58\",\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null},"));
     
     body = given()
             .queryParam("key", mysql.getName())
@@ -218,7 +218,7 @@ public class MainQueryForkIT {
             .extract().body().asString();
     
     // Note that MySQL doesn't do booleans
-    assertThat(body, startsWith("[{\"dataId\":1,\"instant\":\"1971-05-07T03:00\",\"ref\":\"antiquewhite\",\"value\":\"first\",\"children\":\"one\",\"DateField\":\"2023-05-05\",\"TimeField\":null,\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null},{\"dataId\":2,\"instant\":\"1971-05-08T06:00\",\"ref\":\"aqua\",\"value\":\"second\",\"children\":\"two,four\",\"DateField\":\"2023-05-04\",\"TimeField\":\"23:58\",\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null},"));
+    assertThat(body, startsWith("[\n{\"dataId\":1,\"instant\":\"1971-05-07T03:00\",\"ref\":\"antiquewhite\",\"value\":\"first\",\"children\":\"one\",\"DateField\":\"2023-05-05\",\"TimeField\":null,\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null},\n{\"dataId\":2,\"instant\":\"1971-05-08T06:00\",\"ref\":\"aqua\",\"value\":\"second\",\"children\":\"two,four\",\"DateField\":\"2023-05-04\",\"TimeField\":\"23:58\",\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null},"));
     
     byte[] bodyBytes = given()
             .queryParam("key", postgres.getName())
@@ -255,7 +255,7 @@ public class MainQueryForkIT {
             .statusCode(200)
             .extract().body().asString();
     
-    assertThat(body, startsWith("[{\"dataId\":1,\"instant\":\"1971-05-07T03:00\",\"ref\":\"antiquewhite\",\"value\":\"first\",\"children\":\"one\"},"));
+    assertThat(body, startsWith("[\n{\"dataId\":1,\"instant\":\"1971-05-07T03:00\",\"ref\":\"antiquewhite\",\"value\":\"first\",\"children\":\"one\"},"));
     
     body = given()
             .queryParam("key", postgres.getName())
@@ -267,8 +267,8 @@ public class MainQueryForkIT {
             .statusCode(200)
             .extract().body().asString();
     
-    assertThat(body, startsWith("{\"meta\":{\"fields\":{\"dataId\":\"int\",\"instant\":\"datetime\",\"ref\":\"string\",\"value\":\"string\",\"children\":\"string\"}},\"data\":[{\"dataId\":1,\"instant\":\"1971-05-07 03:00:00\",\"ref\":\"antiquewhite\",\"value\":\"first\",\"children\":\"one\"},"));
-    assertThat(body, endsWith(",{\"dataId\":13,\"instant\":\"1971-05-20 15:00:00\",\"ref\":\"cadetblue\",\"value\":\"thirteenth\",\"children\":\"thirteen,twenty six,thirty nine,fifty two,sixty five,seventy eight\"}]}"));
+    assertThat(body, startsWith("{\"meta\":{\"fields\":{\"dataId\":\"int\",\"instant\":\"datetime\",\"ref\":\"string\",\"value\":\"string\",\"children\":\"string\"}},\"data\":[\n{\"dataId\":1,\"instant\":\"1971-05-07 03:00:00\",\"ref\":\"antiquewhite\",\"value\":\"first\",\"children\":\"one\"},"));
+    assertThat(body, endsWith(",\n{\"dataId\":13,\"instant\":\"1971-05-20 15:00:00\",\"ref\":\"cadetblue\",\"value\":\"thirteenth\",\"children\":\"thirteen,twenty six,thirty nine,fifty two,sixty five,seventy eight\"}\n]}"));
     
     body = given()
             .queryParam("key", postgres.getName())

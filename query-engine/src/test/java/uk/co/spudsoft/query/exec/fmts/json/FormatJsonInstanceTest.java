@@ -127,6 +127,7 @@ public class FormatJsonInstanceTest {
             .dateTimeFormat("d MMMM uuuu h:mm a")
             .timeFormat("h:mm a")
             .decimalFormat("0.00")
+            .prettiness(0)
             .build();
     FormatJsonInstance instance = new FormatJsonInstance(null, null, definition);
     // Create a test DataRow with different types of data
@@ -139,10 +140,10 @@ public class FormatJsonInstanceTest {
     );
 
     // Convert to JSON
-    Buffer bufferJson = instance.toJsonBuffer(row, true);
+    Buffer bufferJson = instance.toJsonBuffer(row, false);
     JsonObject result = new JsonObject(bufferJson);
     String stringJson = bufferJson.toString(StandardCharsets.UTF_8);
-    
+
     assertEquals("{\"dateValue\":\"15 May 2023\",\"timeValue\":\"1:45 pm\",\"dateTimeValue\":\"15 May 2023 1:45 pm\",\"decimalValue\":12.00}", stringJson.replaceAll("PM", "pm"));
 
     // Date/time values might be formatted as strings
@@ -156,7 +157,7 @@ public class FormatJsonInstanceTest {
     FormatJson definition = FormatJson.builder()
             .dateFormat("uuuu-MM-dd")
             .dateTimeFormat("uuuu-MM-dd'T'HH:mm:ss")
-            .timeFormat("HH:mm:ss")            
+            .timeFormat("HH:mm:ss")
             .build();
     FormatJsonInstance instance = new FormatJsonInstance(null, null, definition);
     // Create a test DataRow with different types of data
@@ -240,27 +241,25 @@ public class FormatJsonInstanceTest {
     // Result should be an empty JSON object
     assertEquals(0, result.size());
   }
-  
+
   @Test
   public void testPredefinedFormat() throws IOException {
     ObjectMapperConfiguration.configureObjectMapper(DatabindCodec.mapper());
-    
+
     assertEquals("\"2023-05-15T13:45:30\"", Json.encode(LocalDateTime.of(2023, 5, 15, 13, 45, 30)));
     assertEquals("\"2023-05-15T13:45:30.000123\"", Json.encode(LocalDateTime.of(2023, 5, 15, 13, 45, 30, 123000)));
     assertEquals("\"2023-05-15T13:45:30.123\"", Json.encode(LocalDateTime.of(2023, 5, 15, 13, 45, 30, 123000000)));
     assertEquals("\"2023-05-15T13:45:30.12\"", Json.encode(LocalDateTime.of(2023, 5, 15, 13, 45, 30, 120000000)));
     assertEquals("\"2023-05-15T13:45:30.1\"", Json.encode(LocalDateTime.of(2023, 5, 15, 13, 45, 30, 100000000)));
     assertEquals("\"2023-05-15T13:45:00\"", Json.encode(LocalDateTime.of(2023, 5, 15, 13, 45, 0)));
-    
-    
+
     assertEquals("2023-05-15T13:45:30", DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.of(2023, 5, 15, 13, 45, 30)));
     assertEquals("2023-05-15T13:45:30.000123", DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.of(2023, 5, 15, 13, 45, 30, 123000)));
     assertEquals("2023-05-15T13:45:30.123", DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.of(2023, 5, 15, 13, 45, 30, 123000000)));
     assertEquals("2023-05-15T13:45:30.12", DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.of(2023, 5, 15, 13, 45, 30, 120000000)));
     assertEquals("2023-05-15T13:45:30.1", DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.of(2023, 5, 15, 13, 45, 30, 100000000)));
     assertEquals("2023-05-15T13:45:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.of(2023, 5, 15, 13, 45, 0)));
-    
-    
+
     FormatJson definition = FormatJson.builder()
             .dateTimeFormat("ISO_LOCAL_DATE_TIME")
             .build();
@@ -276,6 +275,5 @@ public class FormatJsonInstanceTest {
 
     // Date/time values might be formatted as strings
     assertEquals("2023-05-15T13:45:30.12", result.getValue("dateTimeValue"));
-    
   }
 }

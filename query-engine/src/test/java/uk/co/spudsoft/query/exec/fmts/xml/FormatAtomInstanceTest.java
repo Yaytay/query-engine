@@ -17,7 +17,6 @@
 package uk.co.spudsoft.query.exec.fmts.xml;
 
 import inet.ipaddr.IPAddressString;
-import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.FileSystem;
@@ -52,8 +51,6 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  *
@@ -62,19 +59,18 @@ import static org.mockito.Mockito.when;
 @ExtendWith(VertxExtension.class)
 public class FormatAtomInstanceTest {
 
-
-  private List<ColumnDefn> buildTypes() {
-    return Arrays.asList(
-      new ColumnDefn("Boolean", DataType.Boolean)
-      , new ColumnDefn("Date", DataType.Date)
-      , new ColumnDefn("DateTime", DataType.DateTime)
-      , new ColumnDefn("Double", DataType.Double)
-      , new ColumnDefn("Float", DataType.Float)
-      , new ColumnDefn("Integer", DataType.Integer)
-      , new ColumnDefn("Long", DataType.Long)
-      , new ColumnDefn("String", DataType.String)
-      , new ColumnDefn("Time", DataType.Time)
-    );
+  private Types buildTypes() {
+    Types types = new Types();
+    types.putIfAbsent("Boolean", DataType.Boolean);
+    types.putIfAbsent("Date", DataType.Date);
+    types.putIfAbsent("DateTime", DataType.DateTime);
+    types.putIfAbsent("Double", DataType.Double);
+    types.putIfAbsent("Float", DataType.Float);
+    types.putIfAbsent("Integer", DataType.Integer);
+    types.putIfAbsent("Long", DataType.Long);
+    types.putIfAbsent("String", DataType.String);
+    types.putIfAbsent("Time", DataType.Time);
+    return types;
   }
 
   @Test
@@ -105,7 +101,7 @@ public class FormatAtomInstanceTest {
 
     FormatAtomInstance instance = defn.createInstance(vertx, req, writeStream);
 
-    Types types = new Types(buildTypes());
+    Types types = buildTypes();
     List<DataRow> rowsList = new ArrayList<>();
     for (int i = 0; i < 10; ++i) {
       rowsList.add(createDataRow(types, i));

@@ -27,7 +27,6 @@ import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -111,15 +110,6 @@ public class DataRow {
     types.putIfAbsent(key, name, type);
   }
 
-  /**
-   * Create a DataRow with the given types.
-   * @param types List of {@link ColumnDefn} objects that make up the row.
-   * @return a newly created DataRow.
-   */
-  public static DataRow create(List<ColumnDefn> types) {
-    return new DataRow(new Types(types), new LinkedHashMap<>());
-  }
-  
   /**
    * Return true if no fields have been set on this DataRow.
    * @return true if no fields have been set on this DataRow.

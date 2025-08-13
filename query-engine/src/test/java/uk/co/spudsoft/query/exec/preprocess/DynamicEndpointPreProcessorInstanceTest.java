@@ -16,14 +16,12 @@
  */
 package uk.co.spudsoft.query.exec.preprocess;
 
-import java.util.Arrays;
-import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.Test;
 import uk.co.spudsoft.query.defn.DataType;
-import uk.co.spudsoft.query.exec.ColumnDefn;
 import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.Types;
 import static uk.co.spudsoft.query.exec.preprocess.DynamicEndpointPreProcessorInstance.getField;
 
 /**
@@ -37,11 +35,10 @@ public class DynamicEndpointPreProcessorInstanceTest {
    */
   @Test
   public void testGetField() {
-    List<ColumnDefn> dataTypes = Arrays.asList(
-            new ColumnDefn("string", DataType.String)
-            , new ColumnDefn("int", DataType.Integer)
-    );
-    DataRow dataRow = DataRow.create(dataTypes);
+    Types types = new Types();
+    types.putIfAbsent("string", DataType.String);
+    types.putIfAbsent("int", DataType.Integer);
+    DataRow dataRow = DataRow.create(types);
     dataRow.put("string", "test");
     dataRow.put("int", 7);
     assertNull(getField(dataRow, null));

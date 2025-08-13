@@ -30,7 +30,6 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.FormatRss;
-import uk.co.spudsoft.query.exec.ColumnDefn;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
@@ -43,7 +42,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.startsWith;
@@ -57,20 +55,19 @@ import uk.co.spudsoft.query.exec.context.RequestContext;
 @ExtendWith(VertxExtension.class)
 public class FormatRssInstanceTest {
 
-
-  private List<ColumnDefn> buildTypes() {
-    return Arrays.asList(
-      new ColumnDefn("title", DataType.String)
-      , new ColumnDefn("description", DataType.String)
-      , new ColumnDefn("Boolean", DataType.Boolean)
-      , new ColumnDefn("Date", DataType.Date)
-      , new ColumnDefn("DateTime", DataType.DateTime)
-      , new ColumnDefn("Double", DataType.Double)
-      , new ColumnDefn("Float", DataType.Float)
-      , new ColumnDefn("Integer", DataType.Integer)
-      , new ColumnDefn("Long", DataType.Long)
-      , new ColumnDefn("Time", DataType.Time)
-    );
+  private Types buildTypes() {
+    Types types = new Types();
+    types.putIfAbsent("title", DataType.String);
+    types.putIfAbsent("description", DataType.String);
+    types.putIfAbsent("Boolean", DataType.Boolean);
+    types.putIfAbsent("Date", DataType.Date);
+    types.putIfAbsent("DateTime", DataType.DateTime);
+    types.putIfAbsent("Double", DataType.Double);
+    types.putIfAbsent("Float", DataType.Float);
+    types.putIfAbsent("Integer", DataType.Integer);
+    types.putIfAbsent("Long", DataType.Long);
+    types.putIfAbsent("Time", DataType.Time);
+    return types;
   }
 
   @Test
@@ -89,7 +86,7 @@ public class FormatRssInstanceTest {
     WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setCreate(true).setSync(true));
     FormatRssInstance instance = defn.createInstance(vertx, requestContext, writeStream);
 
-    Types types = new Types(buildTypes());
+    Types types = buildTypes();
     List<DataRow> rowsList = new ArrayList<>();
     for (int i = 0; i < 10; ++i) {
       rowsList.add(createDataRow(types, i));

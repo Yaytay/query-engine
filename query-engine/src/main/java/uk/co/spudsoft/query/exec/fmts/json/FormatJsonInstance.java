@@ -23,9 +23,9 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
-import static io.vertx.sqlclient.impl.Utils.toJson;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
@@ -64,10 +64,15 @@ public final class FormatJsonInstance implements FormatInstance {
   
   private static final Buffer EMPTY_OBJECT = Buffer.buffer("{}");
   private static final Buffer OPEN_ARRAY = Buffer.buffer("[");
+  private static final Buffer OPEN_ARRAY_NL = Buffer.buffer("[\n  ");
   private static final Buffer COMMA = Buffer.buffer(",");
   private static final Buffer CLOSE_ARRAY = Buffer.buffer("]");
   private static final Buffer CLOSE_ARRAY_AND_OBJECT = Buffer.buffer("]}");
+  private static final Buffer NL_CLOSE_ARRAY = Buffer.buffer("\n]");
+  private static final Buffer NL_CLOSE_ARRAY_AND_OBJECT = Buffer.buffer("\n]}");
+  private static final Buffer NL_CLOSE_ARRAY_AND_OBJECT_INDENTED = Buffer.buffer("\n  ]\n}");
   private final AtomicBoolean started = new AtomicBoolean();
+  private final int baseIndent;
   private Types types;
   private String title;
   private String description;
@@ -86,6 +91,8 @@ public final class FormatJsonInstance implements FormatInstance {
     this.defn = defn;
     
     this.valueFormatters = defn.toValueFormatters("\"", "\"", true);
+    
+    this.baseIndent = Strings.isNullOrEmpty(defn.getDataName()) ? 1 : 2;
 
     this.formattingStream = new FormattingWriteStream(outputStream
             , v -> {
@@ -117,7 +124,11 @@ public final class FormatJsonInstance implements FormatInstance {
             }
             , rows -> {
               requestContext.setRowsWritten(rows);
-              return end();
+              try {
+                return end();
+              } catch (Throwable ex) {
+                return Future.failedFuture(ex);
+              }
             }
     );
   }
@@ -126,6 +137,12 @@ public final class FormatJsonInstance implements FormatInstance {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     
     try (JsonGenerator gen = JSON_FACTORY.createGenerator(out)) {
+      if (defn.getPrettiness() > 1) {
+        gen.setPrettyPrinter(new PrettyPrinterIndent(baseIndent));
+      }
+      if (defn.getPrettiness() == 1) {
+        gen.writeRaw('\n');
+      }
       gen.writeStartObject();
       
       row.forEach((cd, value) -> {
@@ -194,62 +211,94 @@ public final class FormatJsonInstance implements FormatInstance {
             }
           }
         } catch (Throwable ex) {
-          logger.warn("Failed to write JSON field {} with value {} ({})", cd.name(), value, value == null ? null : value.getClass());
+          logger.warn("Failed to write JSON field {} with value {} ({})", cd.name(), value, value == null ? null : value.getClass(), ex);
         }
         
       });
-      
       gen.writeEndObject();
     }
     
     return Buffer.buffer(out.toByteArray());
   }
   
-  private Buffer start() {
+  private Buffer start() throws IOException {
     if (Strings.isNullOrEmpty(defn.getDataName())) {
-      return OPEN_ARRAY;
+      if (defn.getPrettiness() > 1) {
+        return OPEN_ARRAY_NL;
+      } else {
+        return OPEN_ARRAY;
+      }
     } else {
       String start;
       if (Strings.isNullOrEmpty(defn.getMetadataName())) {
-        start = "{\"" + defn.getDataName() + "\":" + OPEN_ARRAY;
+        if (defn.getPrettiness() > 1) {
+          start = "{\n  \"" + defn.getDataName() + "\" : " + OPEN_ARRAY;
+        } else {
+          start = "{\"" + defn.getDataName() + "\":" + OPEN_ARRAY;
+        }
       } else {
         logger.debug("Data types: {}", types);
-        Types metaTypes = new Types();
-        types.forEach((cd -> {
-          metaTypes.putIfAbsent(cd.name(), DataType.String);
-        }));
-        logger.debug("Meta types: {}", metaTypes);
-        DataRow metaRow = DataRow.create(metaTypes);
-        types.forEach(cd -> {
-          String typeName = cd.typeName();
-          if (defn.isCompatibleTypeNames()) {
-            if (cd.type() == DataType.Boolean) {
-              typeName = "bool";
-            } else if (cd.type() == DataType.Integer || cd.type() == DataType.Long) {
-              typeName = "int";
-            } else {
-              typeName = typeName.toLowerCase(Locale.ROOT);
-            }
+        
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        try (JsonGenerator gen = JSON_FACTORY.createGenerator(out)) {
+          if (defn.getPrettiness() > 1) {
+            gen.setPrettyPrinter(new PrettyPrinterIndent(1));
           }
-          metaRow.put(cd.name(), typeName);
-        });
-        String insertTitle = "";
-        if (!Strings.isNullOrEmpty(title)) {
-          insertTitle = "\"name\":\"" + title + "\",";
+          
+          gen.writeStartObject();
+          if (!Strings.isNullOrEmpty(title)) {
+            gen.writeStringField("name", title);
+          }
+          if (!Strings.isNullOrEmpty(description)) {
+            gen.writeStringField("description", description.trim());            
+          }
+          gen.writeFieldName("fields");
+          
+          gen.writeStartObject();
+          types.forEach(cd -> {
+            String typeName = cd.typeName();
+            if (defn.isCompatibleTypeNames()) {
+              if (cd.type() == DataType.Boolean) {
+                typeName = "bool";
+              } else if (cd.type() == DataType.Integer || cd.type() == DataType.Long) {
+                typeName = "int";
+              } else {
+                typeName = typeName.toLowerCase(Locale.ROOT);
+              }
+            }
+            try {
+              gen.writeStringField(cd.name(), typeName);
+            } catch (Throwable ex) {
+              logger.warn("Failed to write JSON meta {} with value {}", cd.name(), typeName, ex);
+            }
+            
+          });
+          gen.writeEndObject();
+          
+          gen.writeEndObject();
         }
-        String insertDesc = "";
-        if (!Strings.isNullOrEmpty(description)) {
-          insertDesc = "\"description\":\"" + description.trim() + "\",";
+
+        if (defn.getPrettiness() > 1) {
+          start = "{\n  \"" + defn.getMetadataName() + "\" : " + out.toString(StandardCharsets.UTF_8) + ",\n  \"" + defn.getDataName() + "\" : " + OPEN_ARRAY;
+        } else {
+          start = "{\"" + defn.getMetadataName() + "\":" + out.toString(StandardCharsets.UTF_8) + ",\"" + defn.getDataName() + "\":" + OPEN_ARRAY;
         }
-        start = "{\"" + defn.getMetadataName() + "\":{" + insertTitle + insertDesc + "\"fields\":" + toJson(metaRow).toString() + "},\"" + defn.getDataName() + "\":" + OPEN_ARRAY;
       }
       return Buffer.buffer(start);
     }
   }
-  
-  private Future<Void> end() {
+
+  private Future<Void> end() throws IOException {
     if (started.get()) {
-      Buffer tail = Strings.isNullOrEmpty(defn.getDataName()) ? CLOSE_ARRAY : CLOSE_ARRAY_AND_OBJECT;
+      Buffer tail;
+      if (defn.getPrettiness() > 1) {
+        tail = Strings.isNullOrEmpty(defn.getDataName()) ? NL_CLOSE_ARRAY : NL_CLOSE_ARRAY_AND_OBJECT_INDENTED;
+      } else if (defn.getPrettiness() == 1) {
+        tail = Strings.isNullOrEmpty(defn.getDataName()) ? NL_CLOSE_ARRAY : NL_CLOSE_ARRAY_AND_OBJECT;
+      } else {
+        tail = Strings.isNullOrEmpty(defn.getDataName()) ? CLOSE_ARRAY : CLOSE_ARRAY_AND_OBJECT;
+      }
       return outputStream.end(tail);
     } else {
       if (defn.isCompatibleEmpty()) {

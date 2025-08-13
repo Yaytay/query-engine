@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 jtalbut
+ * Copyright (C) 2025 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,29 +14,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package uk.co.spudsoft.query.exec.fmts.json;
 
-package uk.co.spudsoft.query.main;
+import com.fasterxml.jackson.core.util.DefaultIndenter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 
 /**
- * Set the version from the pom.
- * <p>
- * This file is updated by com.google.code.maven-replacer-plugin/replacer maven plugin.
+ * A simple PrettyPrinter implementation that always uses "\n" as the newline character and that allows the specification of an initial nesting amount.
  * 
  * @author jtalbut
  */
-public final class Version {
+public class PrettyPrinterIndent extends DefaultPrettyPrinter {
 
-  /**
-   * The project name, as set in the Maven pom.xml.
-   */
-  public static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
+  private static final long serialVersionUID = 1L;
   
   /**
-   * The project version, as set in the Maven pom.xml.
+   * Constructor.
+   * 
+   * @param initialNesting The amount of nesting to begin with.
    */
-  public static final String MAVEN_PROJECT_VERSION = "0.0.146-main";
-
-  private Version() {
+  public PrettyPrinterIndent(int initialNesting) {
+    this._nesting = initialNesting;
+    this._objectIndenter = new DefaultIndenter("  ", "\n");
   }
-  
+
 }

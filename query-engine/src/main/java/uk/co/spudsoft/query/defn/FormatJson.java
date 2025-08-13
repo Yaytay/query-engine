@@ -46,6 +46,7 @@ public class FormatJson extends AbstractTextFormat implements Format {
   private final boolean compatibleTypeNames;
   private final boolean compatibleEmpty;
   private final boolean outputNullValues;
+  private final int prettiness;
 
   @Override
   public FormatInstance createInstance(Vertx vertx, RequestContext requestContext, WriteStream<Buffer> writeStream) {
@@ -59,7 +60,7 @@ public class FormatJson extends AbstractTextFormat implements Format {
       throw new IllegalArgumentException("metadataName is set, but dataName is not");
     }
   }
-  
+
   /**
    * Get the extension of the format.
    * The extension is used to determine the format based upon the URL path and also to set the default filename for the content-disposition header.
@@ -93,7 +94,7 @@ public class FormatJson extends AbstractTextFormat implements Format {
    * By default this is the only contents in the output (the root of the JSON will be an array).
    * <P>
    * If dataName is set the output will instead be an object containing the array.
-   * 
+   *
    * @return name of the parent data element in the output JSON.
    */
   @Schema(description = """
@@ -106,8 +107,8 @@ public class FormatJson extends AbstractTextFormat implements Format {
                         If dataName is set the output will instead be an object containing the array.
                         </P>
                         """
-          , maxLength = 100
-          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    , maxLength = 100
+    , requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
   public String getDataName() {
     return dataName;
@@ -126,7 +127,7 @@ public class FormatJson extends AbstractTextFormat implements Format {
    * <LI>The name of the feed.
    * <LI>An object describing the type of each field in the output.
    * </UL>
-   * 
+   *
    * @return name of the parent data element in the output JSON.
    */
   @Schema(description = """
@@ -143,8 +144,8 @@ public class FormatJson extends AbstractTextFormat implements Format {
                         <LI>An object describing the type of each field in the output.
                         </UL>
                         """
-          , maxLength = 100
-          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    , maxLength = 100
+    , requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
   public String getMetadataName() {
     return metadataName;
@@ -160,7 +161,7 @@ public class FormatJson extends AbstractTextFormat implements Format {
    * If compatibleTypeNames is true the type names will all be in lower case and boolean will be shortened to bool.
    * <p>
    * The default is to not output metadata at all, and to not change the case of type names if metadata is output.
-   * 
+   *
    * @return true if the types output in the metadata structure should be in lowercase.
    */
   @Schema(description = """
@@ -174,8 +175,8 @@ public class FormatJson extends AbstractTextFormat implements Format {
                         <p>
                         The default is to not output metadata at all, and to not change the case of type names if metadata is output.
                         """
-          , defaultValue = "false"
-          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    , defaultValue = "false"
+    , requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
   public boolean isCompatibleTypeNames() {
     return compatibleTypeNames;
@@ -184,11 +185,11 @@ public class FormatJson extends AbstractTextFormat implements Format {
   /**
    * When set to true a JSON feed that has no data will be output as an empty JSON object.
    * <P>
-   * This means that no metadata will be output, and no "data" field will be output - there will be nothing but an empty object 
+   * This means that no metadata will be output, and no "data" field will be output - there will be nothing but an empty object
    * regardless of the rest of the configuration.
    * <P>
    * This is only relevant if the feed has no rows to output.
-   * 
+   *
    * @return true if an empty result should consist of nothing but an empty JSON object.
    */
   @Schema(description = """
@@ -199,8 +200,8 @@ public class FormatJson extends AbstractTextFormat implements Format {
                         <P>
                         This is only relevant if the feed has no rows to output.
                         """
-          , defaultValue = "false"
-          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    , defaultValue = "false"
+    , requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
   public boolean isCompatibleEmpty() {
     return compatibleEmpty;
@@ -213,7 +214,7 @@ public class FormatJson extends AbstractTextFormat implements Format {
    * By setting this to false, null fields will be omitted completely from the output.
    * <P>
    * In order to avoid confusing consumers of the stream the first row output will always contain all the fields.
-   * 
+   *
    * @return false if null fields should be removed from the output after the first row.
    */
   @Schema(description = """
@@ -224,16 +225,55 @@ public class FormatJson extends AbstractTextFormat implements Format {
                         <P>
                         In order to avoid confusing consumers of the stream the first row output will always contain all the fields.
                         """
-          , defaultValue = "true"
-          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+    , defaultValue = "true"
+    , requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
   public boolean isOutputNullValues() {
     return outputNullValues;
   }
-  
+
+  /**
+   * Controls the level of JSON formatting prettiness.
+   * <P>
+   * A value of 0 (or less) produces compact JSON output with no extra whitespace.
+   * A value of 1 (the default) produces JSON with one newline character after each row.
+   * A value of 2 (or more) outputs each field on a separate line and indents each field with whitespace.
+   * 
+   * Any values greater than 1 make use of Jackson PrettyPrinters and are inherently slower and a lot more verbose.
+   * Avoid values greater than 1 for large datasets.
+   * Furthermore there won't be any attempt to make values greater than 1 <em>increase</em> verbosity as numbers increase
+   * - they will simply be used for different configurations of PrettyPrinter.
+   *
+   * The current maximum value is 2.
+   * 
+   * @return the prettiness level for JSON output formatting.
+   */
+  @Schema(description = """
+                        Controls the level of JSON formatting prettiness.
+                        <P>
+                        A value of 0 (or less) produces compact JSON output with no extra whitespace.
+                        A value of 1 (the default) produces JSON with one newline character after each row.
+                        A value of 2 (or more) outputs each field on a separate line and indents each field with whitespace.
+                        <P>
+                        Any values greater than 1 make use of Jackson PrettyPrinters and are inherently slower and a lot more verbose.
+                        Avoid values greater than 1 for large datasets.
+                        Furthermore there won't be any attempt to make values greater than 1 <em>increase</em> verbosity as numbers increase
+                        - they will simply be used for different configurations of PrettyPrinter.
+                        <P>
+                        The current maximum value is 2.
+                        """
+    , defaultValue = "0"
+    , minimum = "0"
+    , maximum = "2"
+    , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  public int getPrettiness() {
+    return prettiness;
+  }
+
   /**
    * Get the Java format to use for date fields.
-   * 
+   *
    * @return the Java format to use for date fields.
    */
   @Override
@@ -246,7 +286,7 @@ public class FormatJson extends AbstractTextFormat implements Format {
    * Get the Java format to use for time columns.
    * <P>
    * To be processed by a Java {@link DateTimeFormatter}.
-   * 
+   *
    * @return the Java format to use for time columns.
    */
   @Override
@@ -266,10 +306,11 @@ public class FormatJson extends AbstractTextFormat implements Format {
     private boolean compatibleTypeNames;
     private boolean compatibleEmpty;
     private boolean outputNullValues = true;
-    
+    private int prettiness = 1;
+
     private Builder() {
       super(FormatType.JSON, "json", null, "json", null, MediaType.parse("application/json"), false
-              , null, null, null, null, null
+        , null, null, null, null, null
       );
     }
 
@@ -322,7 +363,17 @@ public class FormatJson extends AbstractTextFormat implements Format {
       this.outputNullValues = value == null ? true : value;
       return this;
     }
-    
+
+    /**
+     * Set the {@link FormatJson#prettiness} value in the builder.
+     * @param value The value for the {@link FormatJson#prettiness}.
+     * @return this, so that this builder may be used in a fluent manner.
+     */
+    public Builder prettiness(final Integer value) {
+      this.prettiness = value == null ? 0 : value;
+      return this;
+    }
+
     /**
      * Construct a new instance of the FormatJson class.
      * @return a new instance of the FormatJson class.
@@ -348,6 +399,7 @@ public class FormatJson extends AbstractTextFormat implements Format {
     this.compatibleTypeNames = builder.compatibleTypeNames;
     this.compatibleEmpty = builder.compatibleEmpty;
     this.outputNullValues = builder.outputNullValues;
+    this.prettiness = builder.prettiness;
   }
-  
+
 }

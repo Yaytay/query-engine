@@ -49,18 +49,6 @@ public class Types {
    */
   public Types() {
   }
-
-  /**
-   * Copy constructor.
-   * @param types The Types object to copy from.
-   */
-  public Types(List<ColumnDefn> types) {
-    int i = 0;
-    for (ColumnDefn defn : types) {
-      defns.add(defn);
-      indices.put(defn.key(), i++);
-    }
-  }
   
   /**
    * Get the type of one field.
