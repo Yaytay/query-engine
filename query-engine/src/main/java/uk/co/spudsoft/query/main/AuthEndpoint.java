@@ -55,6 +55,8 @@ public class AuthEndpoint {
   private boolean nonce = true;
   private String authorizationEndpoint;
   private String tokenEndpoint;
+  private String endSessionEndpoint;
+  private String revocationEndpoint;
 
   private String issuer;
   
@@ -189,6 +191,69 @@ public class AuthEndpoint {
     this.tokenEndpoint = tokenEndpoint;
   }
 
+  /**
+   * The endpoint to use for frontchannel logout.
+   * <P>
+   * The appropriate value is returned as "end_session_endpoint" in OpenID Discovery data.
+   * <P>
+   * When used, a request to the logout endpoint will result in a redirect to this URL with a query string parameter of 
+   * post_logout_redirect_uri set to the Query Engine start page.
+   * <P>
+   * This endpoint will not be used at all if backchannel logout works (via {@link #getRevocationEndpoint()}.
+   * @return the endpoint to use for frontchannel logout.
+   */
+  public String getEndSessionEndpoint() {
+    return endSessionEndpoint;
+  }
+
+  /**
+   * The endpoint to use for frontchannel logout.
+   * <P>
+   * The appropriate value is returned as "end_session_endpoint" in OpenID Discovery data.
+   * <P>
+   * When used, a request to the logout endpoint will result in a redirect to this URL with a query string parameter of 
+   * post_logout_redirect_uri set to the Query Engine start page.
+   * <P>
+   * This endpoint will not be used at all if backchannel logout works (via {@link #getRevocationEndpoint()}.
+   * @param endSessionEndpoint the endpoint to use for frontchannel logout. 
+   */
+  public void setEndSessionEndpoint(String endSessionEndpoint) {
+    this.endSessionEndpoint = endSessionEndpoint;
+  }
+
+  /**
+   * The endpoint to use for backchannel logout.
+   * <P>
+   * The appropriate value is returned as "revocation_endpoint" in OpenID Discovery data.
+   * <P>
+   * When used, a request to the logout endpoint will make a request from the back end to this endpoint passing in id_token,
+   * post_logout_redirect_uri and client_id.
+   * <P>
+   * This endpoint will not be used at all if no id_token is received from the authorisation endpoint during login.
+   * Some OpenID providers require the "openid" scope to be specified in order for them to generate an id_token.
+   * @return the endpoint to use for backchannel logout.
+   */
+  public String getRevocationEndpoint() {
+    return revocationEndpoint;
+  }
+
+  /**
+   * The endpoint to use for backchannel logout.
+   * <P>
+   * The appropriate value is returned as "revocation_endpoint" in OpenID Discovery data.
+   * <P>
+   * When used, a request to the logout endpoint will make a request from the back end to this endpoint passing in id_token,
+   * post_logout_redirect_uri and client_id.
+   * <P>
+   * This endpoint will not be used at all if no id_token is received from the authorisation endpoint during login.
+   * Some OpenID providers require the "openid" scope to be specified in order for them to generate an id_token.
+   * @param revocationEndpoint the endpoint to use for backchannel logout.
+   */
+  public void setRevocationEndpoint(String revocationEndpoint) {
+    this.revocationEndpoint = revocationEndpoint;
+  }
+  
+  
   /**
    * The client credentials to use when communicating with the OAuth endpoint.
    * @return the client credentials to use when communicating with the OAuth endpoint.

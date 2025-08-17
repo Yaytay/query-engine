@@ -143,49 +143,6 @@ public class AuditorPersistenceImpl implements Auditor {
     this.retryIncrementMs = audit.getRetryIncrement() == null ? 0 : audit.getRetryIncrement().toMillis();
     this.jdbcHelper = jdbcHelper;
   }
-
-
-  @Override
-  public Future<Void> waitForOutstandingRequests(long timeoutMs) {
-    Promise<Void> promise = Promise.promise();
-    
-    LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
-    Timestamp relevanceThreshold = Timestamp.from(now.minusDays(1).toInstant(ZoneOffset.UTC));
-    waitForOutstandingRequests(promise, relevanceThreshold, System.currentTimeMillis() + timeoutMs);
-    return promise.future();
-  }
-  
-  private void waitForOutstandingRequests(Promise<Void> promise, Timestamp relevanceThreshold, long terminalTime) {
-    
-    jdbcHelper.runSqlSelect(countOutstandingRequests, ps -> {
-      Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-      ps.setTimestamp(1, relevanceThreshold, cal);
-    }, rs -> {
-      while (rs.next()) {
-        return rs.getLong(1);
-      }
-      return null;
-    })
-            .onComplete(ar -> {
-              if (ar.failed()) {
-                promise.fail(ar.cause());
-              } else {
-                Long count = ar.result();
-                if (count == null) {
-                  promise.fail(new IllegalStateException("Outstanding requests query returned null"));
-                } else if (count == 0) {
-                  promise.complete();
-                } else if (System.currentTimeMillis() > terminalTime) {
-                  promise.fail(new TimeoutException("Outstanding requests (" + count + ") remain after timeout"));
-                } else {
-                  logger.info("There are {} outstanding requests to be resolved", count);
-                  vertx.setTimer(500, l -> {
-                    waitForOutstandingRequests(promise, relevanceThreshold, terminalTime);
-                  });
-                }
-              }
-            });
-  }
   
   /**
    *
@@ -206,36 +163,6 @@ public class AuditorPersistenceImpl implements Auditor {
 
     String url = dataSourceConfig.getUrl();
 
-    if (Strings.isNullOrEmpty(dataSourceConfig.getSchema())) {
-      recordRequest = recordRequest.replaceAll("#SCHEMA#.", "");
-      recordTokenDetails = recordTokenDetails.replaceAll("#SCHEMA", "");
-      recordFile = recordFile.replaceAll("#SCHEMA#.", "");
-      recordException = recordException.replaceAll("#SCHEMA#.", "");
-      recordResponse = recordResponse.replaceAll("#SCHEMA#.", "");
-      getHistory = getHistory.replaceAll("#SCHEMA#.", "");
-      getHistoryCount = getHistoryCount.replaceAll("#SCHEMA#.", "");
-      getCacheFile = getCacheFile.replaceAll("#SCHEMA#.", "");
-      recordCacheFile = recordCacheFile.replaceAll("#SCHEMA#.", "");
-      recordCacheFileUsed = recordCacheFileUsed.replaceAll("#SCHEMA#.", "");
-      deleteCacheFile = deleteCacheFile.replaceAll("#SCHEMA#.", "");
-      countOutstandingRequests = countOutstandingRequests.replaceAll("#SCHEMA#.", "");
-      markRateLimitRulesProcessed = markRateLimitRulesProcessed.replaceAll("#SCHEMA#.", "");
-    } else {
-      recordRequest = recordRequest.replaceAll("SCHEMA", dataSourceConfig.getSchema());
-      recordTokenDetails = recordTokenDetails.replaceAll("SCHEMA", dataSourceConfig.getSchema());
-      recordFile = recordFile.replaceAll("SCHEMA", dataSourceConfig.getSchema());
-      recordException = recordException.replaceAll("SCHEMA", dataSourceConfig.getSchema());
-      recordResponse = recordResponse.replaceAll("SCHEMA", dataSourceConfig.getSchema());
-      getHistory = getHistory.replaceAll("SCHEMA", dataSourceConfig.getSchema());
-      getHistoryCount = getHistoryCount.replaceAll("SCHEMA", dataSourceConfig.getSchema());
-      getCacheFile = getCacheFile.replaceAll("SCHEMA", dataSourceConfig.getSchema());
-      recordCacheFile = recordCacheFile.replaceAll("SCHEMA", dataSourceConfig.getSchema());
-      recordCacheFileUsed = recordCacheFileUsed.replaceAll("SCHEMA", dataSourceConfig.getSchema());
-      deleteCacheFile = deleteCacheFile.replaceAll("SCHEMA", dataSourceConfig.getSchema());
-      countOutstandingRequests = countOutstandingRequests.replaceAll("SCHEMA", dataSourceConfig.getSchema());
-      markRateLimitRulesProcessed = markRateLimitRulesProcessed.replaceAll("SCHEMA", dataSourceConfig.getSchema());
-    }
-
     Boolean done = Boolean.FALSE;
     for (int retry = 0; !done && (configuration.getRetryLimit() < 0 || retry <= configuration.getRetryLimit()); ++retry) {
       logger.debug("Running liquibase, attempt {}", retry);
@@ -244,19 +171,8 @@ public class AuditorPersistenceImpl implements Auditor {
       try (Connection jdbcConnection = DriverManager.getConnection(url, username, password)) {
         DatabaseMetaData dmd = jdbcConnection.getMetaData();
         quote = dmd.getIdentifierQuoteString();
-        recordRequest = recordRequest.replaceAll("#", quote);
-        recordTokenDetails = recordTokenDetails.replaceAll("#", quote);
-        recordFile = recordFile.replaceAll("#", quote);
-        recordException = recordException.replaceAll("#", quote);
-        recordResponse = recordResponse.replaceAll("#", quote);
-        getHistory = getHistory.replaceAll("#", quote);
-        getHistoryCount = getHistoryCount.replaceAll("#", quote);
-        getCacheFile = getCacheFile.replaceAll("#", quote);
-        recordCacheFile = recordCacheFile.replaceAll("#", quote);
-        recordCacheFileUsed = recordCacheFileUsed.replaceAll("#", quote);
-        deleteCacheFile = deleteCacheFile.replaceAll("#", quote);
-        countOutstandingRequests = countOutstandingRequests.replaceAll("#", quote);
-        markRateLimitRulesProcessed = markRateLimitRulesProcessed.replaceAll("#", quote);
+        
+        SqlTemplate.initializeAll(dataSourceConfig, quote);
 
         String databaseProduct = dmd.getDatabaseProductName();
         logger.debug("Database product: {}", databaseProduct);
@@ -340,7 +256,8 @@ public class AuditorPersistenceImpl implements Auditor {
     }
   }
 
-  private String recordRequest = """
+  private enum SqlTemplate {
+    RECORD_REQUEST("""
                   insert into #SCHEMA#.#request# (
                     #id#
                     , #runid#
@@ -379,9 +296,9 @@ public class AuditorPersistenceImpl implements Auditor {
                     , ?
                     , ?
                     , ?
-                  )""";
-
-  private String recordTokenDetails = """
+                  )"""
+    ),
+    RECORD_TOKEN_DETAILS("""
                   update
                     #SCHEMA#.#request#
                   set
@@ -395,9 +312,9 @@ public class AuditorPersistenceImpl implements Auditor {
                     , #roles# = ?
                   where
                     #id# = ?
-                  )""";
-
-  private String recordFile = """
+                  )"""
+    ),
+    RECORD_FILE("""
            update
             #SCHEMA#.#request#
            set
@@ -406,8 +323,9 @@ public class AuditorPersistenceImpl implements Auditor {
             , #fileModified# = ?
             , #fileHash# = ?
            where
-            #id# = ?""";
-  private String recordException = """
+            #id# = ?"""
+    ),
+    RECORD_EXCEPTION("""
                                     update
                                       #SCHEMA#.#request#
                                     set
@@ -417,8 +335,9 @@ public class AuditorPersistenceImpl implements Auditor {
                                       , #exceptionStackTrace# = ?
                                     where
                                       #id# = ?
-                                   """;
-  private String recordResponse = """
+                                   """
+    ),
+    RECORD_RESPONSE("""
            update
             #SCHEMA#.#request#
            set
@@ -430,16 +349,18 @@ public class AuditorPersistenceImpl implements Auditor {
             , #responseSize# = ?
             , #responseHeaders# = ?
            where
-            #id# = ?""";
-  private String getHistoryCount = """
+            #id# = ?"""
+    ),
+    GET_HISTORY_COUNT("""
           select count(*)
           from
             #SCHEMA#.#request#
           where
             #issuer# = ?
             and #subject# = ?
-          """;
-  private String getHistory = """
+          """
+    ),
+    GET_HISTORY("""
           select
              #timestamp#
              , #id#
@@ -461,8 +382,9 @@ public class AuditorPersistenceImpl implements Auditor {
              #issuer# = ?
              and #subject# = ?
            order by
-             #ORDERBY# ASCDESC""";
-  private String getCacheFile = """
+             #ORDERBY# ASCDESC"""
+    ),
+    GET_CACHE_FILE("""
           select
             #id#
             , #cacheFile#
@@ -477,8 +399,9 @@ public class AuditorPersistenceImpl implements Auditor {
             and #fileHash# = ?
           order by
             responseTime desc
-          """;
-  private String recordCacheFile = """
+          """
+    ),
+    RECORD_CACHE_FILE("""
           update
             #SCHEMA#.#request#
           set
@@ -488,24 +411,27 @@ public class AuditorPersistenceImpl implements Auditor {
             , #cacheDeleted# = null
           where
             #id# = ?
-          """;
-  private String recordCacheFileUsed = """
+          """
+    ),
+    RECORD_CACHE_FILE_USED("""
           update
             #SCHEMA#.#request#
           set
             #cacheFile# = ?
           where
             #id# = ?
-          """;
-  private String deleteCacheFile = """
+          """
+    ),
+    DELETE_CACHE_FILE("""
           update
             #SCHEMA#.#request#
           set
             #cacheDeleted# = ?
           where
             #id# = ?
-          """;
-  private String countOutstandingRequests = """
+          """
+    ),
+    COUNT_OUTSTANDING_REQUESTS("""
           select
             count(*)
           from
@@ -513,15 +439,40 @@ public class AuditorPersistenceImpl implements Auditor {
           where
             #responseTime# is null
             and #timestamp# > ?
-          """;
-  private String markRateLimitRulesProcessed = """
+          """
+    ),
+    MARK_RATE_LIMIT_RULES_PROCESSED("""
           update
             #SCHEMA#.#request#
           set
             #rulesProcessed# = ?
           where
             #id# = ?
-          """;
+          """
+    );
+    
+    private final String template;
+    private String sql;
+
+    SqlTemplate(String template) {
+        this.template = template;
+    }
+
+    public String sql() {
+        return sql;
+    }  
+
+    public static void initializeAll(DataSourceConfig dataSourceConfig, String quote) {
+        String schemaPrefix = Strings.isNullOrEmpty(dataSourceConfig.getSchema()) 
+            ? "" 
+            : dataSourceConfig.getSchema() + ".";
+            
+        for (SqlTemplate template : SqlTemplate.values()) {
+            String processed = template.template.replaceAll("#SCHEMA#\\.", schemaPrefix);
+            template.sql = processed.replaceAll("#", quote);
+        }
+    }
+  }
 
   private boolean baseSqlExceptionIsNonexistantDriver(Throwable ex) {
     while (ex != null) {
@@ -589,7 +540,7 @@ public class AuditorPersistenceImpl implements Auditor {
 
     String cacheKey = buildCacheKey(context);
 
-    return jdbcHelper.runSqlSelect(getCacheFile, ps -> {
+    return jdbcHelper.runSqlSelect(SqlTemplate.GET_CACHE_FILE.sql(), ps -> {
         ps.setString(1, cacheKey);
         JdbcHelper.setLocalDateTimeUTC(ps, 2, LocalDateTime.now(ZoneOffset.UTC));
         ps.setString(3, pipeline.getSha256());
@@ -603,7 +554,7 @@ public class AuditorPersistenceImpl implements Auditor {
 
   @Override
   public Future<Void> recordCacheFile(RequestContext context, String fileName, LocalDateTime expiry) {
-    return jdbcHelper.runSqlUpdate("recordCacheFile", recordCacheFile, ps -> {
+    return jdbcHelper.runSqlUpdate("recordCacheFile", SqlTemplate.RECORD_CACHE_FILE.sql(), ps -> {
                     int param = 1;
                     ps.setString(param++, buildCacheKey(context));
                     ps.setString(param++, fileName);
@@ -614,7 +565,7 @@ public class AuditorPersistenceImpl implements Auditor {
 
   @Override
   public Future<Void> recordCacheFileUsed(RequestContext context, String fileName) {
-    return jdbcHelper.runSqlUpdate("recordCacheFileUsed", recordCacheFileUsed, ps -> {
+    return jdbcHelper.runSqlUpdate("recordCacheFileUsed", SqlTemplate.RECORD_CACHE_FILE_USED.sql(), ps -> {
                     int param = 1;
                     ps.setString(param++, fileName);
                     ps.setString(param++, context.getRequestId());
@@ -623,7 +574,7 @@ public class AuditorPersistenceImpl implements Auditor {
 
   @Override
   public Future<Void> deleteCacheFile(String auditId) {
-    return jdbcHelper.runSqlUpdate("deleteCacheFile", deleteCacheFile, ps -> {
+    return jdbcHelper.runSqlUpdate("deleteCacheFile", SqlTemplate.DELETE_CACHE_FILE.sql(), ps -> {
                     int param = 1;
                     ps.setString(param++, auditId);
                     JdbcHelper.setLocalDateTimeUTC(ps, param++, LocalDateTime.now(ZoneOffset.UTC));
@@ -655,7 +606,7 @@ public class AuditorPersistenceImpl implements Auditor {
     JsonArray roles = Auditor.listToJson(context.getRoles());
     String openIdDetails = context.getJwt() == null ? null : context.getJwt().getPayloadAsString();
     
-    return jdbcHelper.runSqlUpdate("recordRequest", recordRequest, ps -> {
+    return jdbcHelper.runSqlUpdate("recordRequest", SqlTemplate.RECORD_REQUEST.sql(), ps -> {
                     int param = 1;
                     ps.setString(param++, JdbcHelper.limitLength(context.getRequestId(), 100));
                     ps.setString(param++, JdbcHelper.limitLength(context.getRunID(), 100));
@@ -683,7 +634,7 @@ public class AuditorPersistenceImpl implements Auditor {
   @Override
   public Future<Void> recordFileDetails(RequestContext context, DirCacheTree.File file, Pipeline pipeline) {
     logger.info("File: {} {} {}", file.getPath(), file.getSize(), file.getModified());
-    return jdbcHelper.runSqlUpdate("recordFile", recordFile, ps -> {
+    return jdbcHelper.runSqlUpdate("recordFile", SqlTemplate.RECORD_FILE.sql(), ps -> {
              ps.setString(1, JdbcHelper.limitLength(JdbcHelper.toString(file.getPath()), 1000));
              ps.setLong(2, file.getSize());
              JdbcHelper.setLocalDateTimeUTC(ps, 3, file.getModified());
@@ -695,7 +646,7 @@ public class AuditorPersistenceImpl implements Auditor {
   @Override
   public void recordException(RequestContext context, Throwable ex) {
     logger.info("Exception: {} {}", ex.getClass().getCanonicalName(), ex.getMessage());
-    jdbcHelper.runSqlUpdate("recordException", recordException, ps -> {
+    jdbcHelper.runSqlUpdate("recordException", SqlTemplate.RECORD_EXCEPTION.sql(), ps -> {
              JdbcHelper.setLocalDateTimeUTC(ps, 1, LocalDateTime.now(ZoneOffset.UTC));
              ps.setString(2, JdbcHelper.limitLength(ex.getClass().getCanonicalName(), 1000));
              ps.setString(3, JdbcHelper.limitLength(ex.getMessage(), 1000));
@@ -713,7 +664,7 @@ public class AuditorPersistenceImpl implements Auditor {
             , (System.currentTimeMillis() - context.getStartTime()) / 1000.0
             , headers
     );
-    jdbcHelper.runSqlUpdate("recordResponse", recordResponse, ps -> {
+    jdbcHelper.runSqlUpdate("recordResponse", SqlTemplate.RECORD_RESPONSE.sql(), ps -> {
              JdbcHelper.setLocalDateTimeUTC(ps, 1, LocalDateTime.now(ZoneOffset.UTC));
              if (context.getHeadersSentTime() > 0) {
                ps.setLong(2, context.getHeadersSentTime() - context.getStartTime());
@@ -736,7 +687,7 @@ public class AuditorPersistenceImpl implements Auditor {
     logger.debug("Performing rate limit check with {} rules", rules.size());
     Instant now = LocalDateTime.now(ZoneOffset.UTC).toInstant(ZoneOffset.UTC);
     if (CollectionUtils.isEmpty(rules)) {
-      return jdbcHelper.runSqlUpdate("markRateLimitRulesProcessed", markRateLimitRulesProcessed, ps -> {
+      return jdbcHelper.runSqlUpdate("markRateLimitRulesProcessed", SqlTemplate.MARK_RATE_LIMIT_RULES_PROCESSED.sql(), ps -> {
         Timestamp ts = Timestamp.from(now);        
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
         ps.setTimestamp(1, ts, cal);
@@ -849,7 +800,7 @@ public class AuditorPersistenceImpl implements Auditor {
               }
               return null;
             });
-    int rowsAffected = jdbcHelper.runSqlUpdateOnConnectionSynchronously(conn, markRateLimitRulesProcessed, ps -> { 
+    int rowsAffected = jdbcHelper.runSqlUpdateOnConnectionSynchronously(conn, SqlTemplate.MARK_RATE_LIMIT_RULES_PROCESSED.sql(), ps -> { 
       Timestamp ts = Timestamp.from(now);        
       Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
       ps.setTimestamp(1, ts, cal);
@@ -975,7 +926,7 @@ public class AuditorPersistenceImpl implements Auditor {
   }
 
   private Future<Long> countRows(String issuerArg, String subjectArg) {
-    return jdbcHelper.runSqlSelect(getHistoryCount, ps -> {
+    return jdbcHelper.runSqlSelect(SqlTemplate.GET_HISTORY_COUNT.sql(), ps -> {
       int param = 1;
       ps.setString(param++, JdbcHelper.limitLength(issuerArg, 1000));
       ps.setString(param++, JdbcHelper.limitLength(subjectArg, 1000));
@@ -994,7 +945,7 @@ public class AuditorPersistenceImpl implements Auditor {
           , AuditHistorySortOrder sortOrder, boolean sortDescending
   ) {
 
-    String sql = getHistory;
+    String sql = SqlTemplate.GET_HISTORY.sql();
     sql = sql.replaceAll("ORDERBY", SORT_COLUMN_NAMES.get(sortOrder));
     sql = sql.replaceAll("ASCDESC", sortDescending ? "desc" : "asc");
 
@@ -1066,6 +1017,48 @@ public class AuditorPersistenceImpl implements Auditor {
       logger.warn("Arguments from database ({}) for id {} failed to parse: ", value.replaceAll("[\r\n]", ""), id, ex);
     }
     return arguments;
+  }
+
+  @Override
+  public Future<Void> waitForOutstandingRequests(long timeoutMs) {
+    Promise<Void> promise = Promise.promise();
+    
+    LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+    Timestamp relevanceThreshold = Timestamp.from(now.minusDays(1).toInstant(ZoneOffset.UTC));
+    waitForOutstandingRequests(promise, relevanceThreshold, System.currentTimeMillis() + timeoutMs);
+    return promise.future();
+  }
+  
+  private void waitForOutstandingRequests(Promise<Void> promise, Timestamp relevanceThreshold, long terminalTime) {
+    
+    jdbcHelper.runSqlSelect(SqlTemplate.COUNT_OUTSTANDING_REQUESTS.sql(), ps -> {
+      Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+      ps.setTimestamp(1, relevanceThreshold, cal);
+    }, rs -> {
+      while (rs.next()) {
+        return rs.getLong(1);
+      }
+      return null;
+    })
+            .onComplete(ar -> {
+              if (ar.failed()) {
+                promise.fail(ar.cause());
+              } else {
+                Long count = ar.result();
+                if (count == null) {
+                  promise.fail(new IllegalStateException("Outstanding requests query returned null"));
+                } else if (count == 0) {
+                  promise.complete();
+                } else if (System.currentTimeMillis() > terminalTime) {
+                  promise.fail(new TimeoutException("Outstanding requests (" + count + ") remain after timeout"));
+                } else {
+                  logger.info("There are {} outstanding requests to be resolved", count);
+                  vertx.setTimer(500, l -> {
+                    waitForOutstandingRequests(promise, relevanceThreshold, terminalTime);
+                  });
+                }
+              }
+            });
   }
 
 }

@@ -65,13 +65,16 @@ public class LoginDaoMemoryImpl implements LoginDao {
   private static class Token {
     private final LocalDateTime expiry;
     private final String token;
+    private final String provider;
+    private final String idToken;
 
-    Token(LocalDateTime expiry, String token) {
+    Token(LocalDateTime expiry, String token, String provider, String idToken) {
       this.expiry = expiry;
       this.token = token;
+      this.provider = provider;
+      this.idToken = idToken;
     }
-  }
-  
+  }  
   
   private final Map<String, Data> data = new HashMap<>();
   private final Map<String, Token> tokens = new HashMap<>();
@@ -163,9 +166,9 @@ public class LoginDaoMemoryImpl implements LoginDao {
   }
 
   @Override
-  public Future<Void> storeToken(String id, LocalDateTime expiry, String token) {
+  public Future<Void> storeToken(String id, LocalDateTime expiry, String token, String provider, String idToken) {
     synchronized (tokens) {
-      tokens.put(id, new Token(expiry, token));
+      tokens.put(id, new Token(expiry, token, provider, idToken));
     }
     return Future.succeededFuture();
   }
@@ -187,6 +190,23 @@ public class LoginDaoMemoryImpl implements LoginDao {
     }
   }
 
+  @Override
+  public Future<ProviderAndIdToken> getProviderAndIdToken(String id) {
+    synchronized (tokens) {
+      Token token = tokens.get(id);
+      if (token == null) {
+        return Future.succeededFuture();
+      }
+      LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+      if (token.expiry.isBefore(now)) {
+        tokens.remove(id);        
+        token = null;
+        tokens.entrySet().removeIf(entry -> entry.getValue().expiry.isBefore(now));
+      }      
+      return Future.succeededFuture(token == null ? null : new LoginDao.ProviderAndIdToken(token.provider, token.idToken));
+    }
+  }
+  
   @Override
   public Future<Void> removeToken(String id) {
     synchronized (tokens) {

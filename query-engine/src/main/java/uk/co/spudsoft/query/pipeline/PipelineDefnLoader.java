@@ -260,6 +260,7 @@ public final class PipelineDefnLoader {
                   return Future.failedFuture(new ServiceException(403, "Forbidden"));
                 }
               } catch (Throwable ex) {
+                logger.error("Failed to evalue {}: ", permsFile, ex);
                 return Future.failedFuture(ex);
               }
             });

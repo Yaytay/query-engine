@@ -77,9 +77,11 @@ public interface LoginDao {
    * @param id The ID to use for the token - this is the value of the session cookie.
    * @param expiry The date/time at which the token expires.
    * @param token The token to be stored (a JWT).
+   * @param provider The OAuth provider.
+   * @param idToken The OIDC ID Token from the authentication endpoint.
    * @return A Future that will be completed when the token has been stored.
    */
-  Future<Void> storeToken(String id, LocalDateTime expiry, String token);
+  Future<Void> storeToken(String id, LocalDateTime expiry, String token, String provider, String idToken);
 
   /**
    * Get a token by its ID.
@@ -89,6 +91,22 @@ public interface LoginDao {
    * @return A Future that will be completed with the token.
    */
   Future<String> getToken(String id);
+  
+  /**
+   * A Record containing the provider and the idToken for use when logging out.
+   * 
+   * @param provider The name of the provider, for locating its configuration.
+   * @param idToken The id token provided when the user logged in, may be null.
+   */
+  record ProviderAndIdToken(String provider, String idToken) {};
+  
+  /**
+   * Get the name of the provider and the ID token to use for logging out.
+   * 
+   * @param id The ID of the token - this is the value of the session cookie.
+   * @return A Future containing a Record containing the provider and the idToken for use when logging out.
+   */
+  Future<ProviderAndIdToken> getProviderAndIdToken(String id);  
 
   /**
    * Remove a token from the data store.

@@ -1,0 +1,11 @@
+databaseChangeLog:
+- changeSet:
+    id: 5_0_1-1
+    author: jtalbut (generated)
+    runWith: jdbc
+    changes:
+    - addColumn:
+        tableName: session
+        columns:
+        - {column: {name: idToken, type: clob, constraints: {nullable: true}}}
+        - {column: {name: provider, type: nvarchar(100), constraints: {nullable: true}}}

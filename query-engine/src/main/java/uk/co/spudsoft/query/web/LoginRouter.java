@@ -355,6 +355,7 @@ public class LoginRouter implements Handler<RoutingContext> {
     RequestDataAndAuthEndpoint requestDataAndAuthEndpoint = new RequestDataAndAuthEndpoint();
     logger.debug("State: {}", state);
     String[] accessTokenPtr = new String[1];
+    String[] idTokenPtr = new String[1];
     loginDao.getRequestData(state)
             .compose(requestData -> {
               requestDataAndAuthEndpoint.requestData = requestData;
@@ -400,6 +401,17 @@ public class LoginRouter implements Handler<RoutingContext> {
                 }
                 logger.debug("Access token response: {}", jsonBody);
                 accessTokenPtr[0] = jsonBody.getString("access_token");
+                idTokenPtr[0] = jsonBody.getString("id_token");
+                
+                if (!Strings.isNullOrEmpty(accessTokenPtr[0]) && Strings.isNullOrEmpty(idTokenPtr[0]) && !Strings.isNullOrEmpty(requestDataAndAuthEndpoint.authEndpoint.getRevocationEndpoint())) {
+                  if (requestDataAndAuthEndpoint.authEndpoint.getScope() != null && requestDataAndAuthEndpoint.authEndpoint.getScope().contains("openid")) {
+                    logger.warn("No id_token found in response from OAuth provider that has revocation endpoint ({}), consult their documentation."
+                            , requestDataAndAuthEndpoint.requestData.provider());
+                  } else {
+                    logger.warn("No id_token found in response from OAuth provider that has revocation endpoint ({}), you probably need to add openid to the scope for the provider."
+                            , requestDataAndAuthEndpoint.requestData.provider());
+                  }
+                }
                 if (Strings.isNullOrEmpty(accessTokenPtr[0])) {
                   logger.warn("Failed to get access token ({}): {}", codeResponse.statusCode(), body);
                   return Future.failedFuture(new IllegalStateException("Failed to get access token from provider"));
@@ -417,7 +429,7 @@ public class LoginRouter implements Handler<RoutingContext> {
               long maxAge = jwt.getExpiration() - (System.currentTimeMillis() / 1000);
               Cookie cookie = createCookie(sessionCookie, maxAge, wasTls(event.request()), domain(event.request()), id);
 
-              return loginDao.storeToken(id, jwt.getExpirationLocalDateTime(), accessTokenPtr[0])
+              return loginDao.storeToken(id, jwt.getExpirationLocalDateTime(), accessTokenPtr[0], requestDataAndAuthEndpoint.requestData.provider(), idTokenPtr[0])
                       .compose(v -> {
                         return event.response()
                                 .addCookie(cookie)

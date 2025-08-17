@@ -102,7 +102,8 @@ public class LoginDaoPersistenceImpl implements LoginDao {
     }
   }
 
-  private String recordLogin = """
+  private enum SqlTemplate {
+    RECORD_LOGIN("""
                   insert into #SCHEMA#.#login# (
                     #state#
                     , #provider#
@@ -119,25 +120,25 @@ public class LoginDaoPersistenceImpl implements LoginDao {
                     , ?
                     , ?
                     , ?
-                  )""";
-  
-  private String markUsed = """
+                  )"""
+    ),
+    MARK_USED("""
                   update
                     #SCHEMA#.#login#
                   set
                     #completed# = ?
                   where
                     #state# = ?
-                  """;
-  
-  private String purgeLogins = """
+                  """
+    ),
+    PURGE_LOGINS("""
                   delete from
                     #SCHEMA#.#login#
                   where
                     #timestamp# < ?
-                  """;
-  
-  private String getData = """
+                  """
+    ),
+    GET_DATA("""
                   select
                      #provider#
                      , #code_verifier#
@@ -149,21 +150,25 @@ public class LoginDaoPersistenceImpl implements LoginDao {
                   where
                     #state# = ?
                     and #completed# is null
-                  """;
-  
-  private String storeToken = """
+                  """
+    ),
+    STORE_TOKEN("""
                   insert into #SCHEMA#.#session# (
                     #id#
                     , #expiry#
                     , #token#
+                    , #provider#
+                    , #idToken#
                   ) values (
                     ?
                     , ?
                     , ?
+                    , ?
+                    , ?
                   )
-                  """;
-  
-  private String getToken = """
+                  """
+    ),
+    GET_TOKEN("""
                   select
                     #expiry#
                     , #token#
@@ -171,22 +176,56 @@ public class LoginDaoPersistenceImpl implements LoginDao {
                     #SCHEMA#.#session#
                   where
                     #id# = ?
-                  """;
-  
-  private String deleteToken = """
+                  """),
+    GET_PROVIDER_AND_IDTOKEN("""
+                  select
+                    #provider#
+                    , #idToken#
+                  from
+                    #SCHEMA#.#session#
+                  where
+                    #id# = ?
+                  """
+    ),
+    DELETE_TOKEN("""
                   delete from
                     #SCHEMA#.#session#
                   where
                     #id# = ?
-                  """;
-  
-  private String expireTokens = """
+                  """
+    ),
+    EXPIRE_TOKENS("""
                   delete from
                     #SCHEMA#.#session#
                   where
                     #expiry# < ?
-                  """;
+                  """
+    );
     
+    private final String template;
+    private String sql;
+
+    SqlTemplate(String template) {
+        this.template = template;
+    }
+
+    public String sql() {
+        return sql;
+    }  
+
+    public static void initializeAll(DataSourceConfig dataSourceConfig, String quote) {
+        String schemaPrefix = Strings.isNullOrEmpty(dataSourceConfig.getSchema()) 
+            ? "" 
+            : dataSourceConfig.getSchema() + ".";
+            
+        for (SqlTemplate template : SqlTemplate.values()) {
+            String processed = template.template.replaceAll("#SCHEMA#\\.", schemaPrefix);
+            template.sql = processed.replaceAll("#", quote);
+        }
+    }
+  }
+  
+  
   /**
    *
    * @throws IOException if the resource accessor fails.
@@ -209,38 +248,10 @@ public class LoginDaoPersistenceImpl implements LoginDao {
         throw new IllegalStateException("No persistence URL provided, should not have reached here");
       }
 
-      if (Strings.isNullOrEmpty(dataSourceConfig.getSchema())) {
-        recordLogin = recordLogin.replaceAll("#SCHEMA#.", "");
-        markUsed = markUsed.replaceAll("#SCHEMA#.", "");
-        purgeLogins = purgeLogins.replaceAll("#SCHEMA#.", "");
-        getData = getData.replaceAll("#SCHEMA#.", "");
-        storeToken = storeToken.replaceAll("#SCHEMA#.", "");
-        getToken = getToken.replaceAll("#SCHEMA#.", "");
-        deleteToken = deleteToken.replaceAll("#SCHEMA#.", "");
-        expireTokens = expireTokens.replaceAll("#SCHEMA#.", "");
-      } else {
-        recordLogin = recordLogin.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
-        markUsed = markUsed.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
-        purgeLogins = purgeLogins.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
-        getData = getData.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
-        storeToken = storeToken.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
-        getToken = getToken.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
-        deleteToken = deleteToken.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
-        expireTokens = expireTokens.replaceAll("#SCHEMA#", dataSourceConfig.getSchema());
-      }
-
-      jdbcHelper.runOnConnectionSynchronously("LoginDaoPersistenceImpl.prepare", connection -> {
-        quote = connection.getMetaData().getIdentifierQuoteString();
-        recordLogin = recordLogin.replaceAll("#", quote);
-        markUsed = markUsed.replaceAll("#", quote);
-        purgeLogins = purgeLogins.replaceAll("#", quote);
-        getData = getData.replaceAll("#", quote);
-        storeToken = storeToken.replaceAll("#", quote);
-        getToken = getToken.replaceAll("#", quote);
-        deleteToken = deleteToken.replaceAll("#", quote);
-        expireTokens = expireTokens.replaceAll("#", quote);
-        return null;
+      quote = jdbcHelper.runOnConnectionSynchronously("LoginDaoPersistenceImpl.prepare", connection -> {
+        return connection.getMetaData().getIdentifierQuoteString();
       });
+      SqlTemplate.initializeAll(dataSourceConfig, quote);
       
       timezoneHandlingTest();
       
@@ -254,7 +265,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
         LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         tokenCache.entrySet().removeIf(entry -> entry.getValue().expiry.isBefore(now));
         cacheSize = tokenCache.size();        
-        jdbcHelper.runSqlUpdate("purgeLogins", purgeLogins, ps -> {
+        jdbcHelper.runSqlUpdate("purgeLogins", SqlTemplate.PURGE_LOGINS.sql(), ps -> {
           JdbcHelper.setLocalDateTimeUTC(ps, 1, LocalDateTime.now(ZoneOffset.UTC));
         });
       }
@@ -265,7 +276,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
   @SuppressFBWarnings(value = "SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING", justification = "Generated SQL is safe")
   void timezoneHandlingTest() throws Exception {
     
-    int purgedTokens = jdbcHelper.runSqlUpdateSynchronously("purgeLogins", purgeLogins, ps -> {
+    int purgedTokens = jdbcHelper.runSqlUpdateSynchronously("purgeLogins", SqlTemplate.PURGE_LOGINS.sql(), ps -> {
       JdbcHelper.setLocalDateTimeUTC(ps, 1, LocalDateTime.now(ZoneOffset.UTC).minusMonths(1));
     });
     logger.info("Purged {} expired tokens on startup", purgedTokens);
@@ -275,11 +286,13 @@ public class LoginDaoPersistenceImpl implements LoginDao {
     String token = "Startup test " + ManagementFactory.getRuntimeMXBean().getName();
     int rows;
     try {
-      rows = jdbcHelper.runSqlUpdateSynchronously("storeToken", storeToken, ps -> {
+      rows = jdbcHelper.runSqlUpdateSynchronously("storeToken", SqlTemplate.STORE_TOKEN.sql(), ps -> {
         int param = 1;
         ps.setString(param++, startupTestSessionId);
         JdbcHelper.setLocalDateTimeUTC(ps, param++, expiry);
         ps.setString(param++, token);
+        ps.setString(param++, null);
+        ps.setString(param++, null);
       });
     } catch (Throwable ex) {
       throw new IllegalStateException("Startup test for timezone handling failed.  The tuple (" + startupTestSessionId + ", " + expiry + ", \"" + token + "\") could not be written to the session table: ", ex);
@@ -289,7 +302,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
     }
     TimestampedToken testToken;
     try {
-      testToken = jdbcHelper.runSqlSelectSynchronously(getToken, ps -> {
+      testToken = jdbcHelper.runSqlSelectSynchronously(SqlTemplate.GET_TOKEN.sql(), ps -> {
         ps.setString(1, startupTestSessionId);
       }, rs -> {
         TimestampedToken result = null;
@@ -324,7 +337,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
              targetUrl
     );
     
-    return jdbcHelper.runSqlUpdate("recordLogin", recordLogin, ps -> {
+    return jdbcHelper.runSqlUpdate("recordLogin", SqlTemplate.RECORD_LOGIN.sql(), ps -> {
                     int param = 1; 
                     ps.setString(param++, JdbcHelper.limitLength(state, 300));
                     ps.setString(param++, JdbcHelper.limitLength(provider, 300));
@@ -338,7 +351,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
 
   @Override
   public Future<Void> markUsed(String state) {
-    return jdbcHelper.runSqlUpdate("markUsed", markUsed, ps -> {
+    return jdbcHelper.runSqlUpdate("markUsed", SqlTemplate.MARK_USED.sql(), ps -> {
                     int param = 1; 
                     JdbcHelper.setLocalDateTimeUTC(ps, param++, LocalDateTime.now(ZoneOffset.UTC));
                     ps.setString(param++, JdbcHelper.limitLength(state, 300));
@@ -355,7 +368,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
   
   @Override
   public Future<RequestData> getRequestData(String state) {
-    return jdbcHelper.runSqlSelect(getData, ps -> {
+    return jdbcHelper.runSqlSelect(SqlTemplate.GET_DATA.sql(), ps -> {
         ps.setString(1, state);
       }, rs -> {
         RequestData result = null;
@@ -373,13 +386,15 @@ public class LoginDaoPersistenceImpl implements LoginDao {
   }
 
   @Override
-  public Future<Void> storeToken(String id, LocalDateTime expiry, String token) {
+  public Future<Void> storeToken(String id, LocalDateTime expiry, String token, String provider, String idToken) {
     cacheToken(id, new TimestampedToken(expiry, token));
-    return jdbcHelper.runSqlUpdate("storeToken", storeToken, ps -> {
+    return jdbcHelper.runSqlUpdate("storeToken", SqlTemplate.STORE_TOKEN.sql(), ps -> {
                     int param = 1; 
                     ps.setString(param++, id);
                     JdbcHelper.setLocalDateTimeUTC(ps, param++, expiry);
                     ps.setString(param++, token);
+                    ps.setString(param++, provider);
+                    ps.setString(param++, idToken);
     })
             .mapEmpty();
   }
@@ -400,7 +415,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
       }
     }
     
-    return jdbcHelper.runSqlSelect(getToken, ps -> {
+    return jdbcHelper.runSqlSelect(SqlTemplate.GET_TOKEN.sql(), ps -> {
         ps.setString(1, id);
       }, rs -> {
         while (rs.next()) {
@@ -415,8 +430,8 @@ public class LoginDaoPersistenceImpl implements LoginDao {
         if (tt != null) {
           logger.debug("Now: {}, Expiry: {}", now, tt.expiry);
           if (now.isAfter(tt.expiry)) {
-            jdbcHelper.runSqlUpdate("deleteToken", deleteToken, ps -> ps.setString(1, id));
-            jdbcHelper.runSqlUpdate("expireTokens", expireTokens, ps -> JdbcHelper.setLocalDateTimeUTC(ps, 1, now));
+            jdbcHelper.runSqlUpdate("deleteToken", SqlTemplate.DELETE_TOKEN.sql(), ps -> ps.setString(1, id));
+            jdbcHelper.runSqlUpdate("expireTokens", SqlTemplate.EXPIRE_TOKENS.sql(), ps -> JdbcHelper.setLocalDateTimeUTC(ps, 1, now));
             return Future.succeededFuture(null);
           } else {
             cacheToken(id, tt);
@@ -424,10 +439,23 @@ public class LoginDaoPersistenceImpl implements LoginDao {
           }
         }
         return Future.succeededFuture(null);
-      });
-            
+      });            
   }
 
+  @Override
+  public Future<ProviderAndIdToken> getProviderAndIdToken(String id) {
+    return jdbcHelper.runSqlSelect(SqlTemplate.GET_PROVIDER_AND_IDTOKEN.sql(), ps -> {
+        ps.setString(1, id);
+      }, rs -> {
+        while (rs.next()) {
+          String provider = rs.getString(1);
+          String idToken = rs.getString(2);
+          return new LoginDao.ProviderAndIdToken(provider, idToken);
+        }
+        return null;
+      });    
+  }
+  
   /**
    * Store a token in the local cache.
    * @param id Token ID.
@@ -461,7 +489,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
     synchronized (tokenCache) {
       tokenCache.remove(id);
     }
-    return jdbcHelper.runSqlUpdate("deleteToken", deleteToken, ps -> ps.setString(1, id)).mapEmpty();    
+    return jdbcHelper.runSqlUpdate("deleteToken", SqlTemplate.DELETE_TOKEN.sql(), ps -> ps.setString(1, id)).mapEmpty();    
   }
   
   /**

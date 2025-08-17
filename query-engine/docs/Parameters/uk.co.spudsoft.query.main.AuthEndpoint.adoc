@@ -49,6 +49,31 @@ The issuer provided must still be valid according to the xref:uk.co.spudsoft.que
 | [[tokenEndpoint]]tokenEndpoint
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | The OAuth token endpoint.
+| [[endSessionEndpoint]]endSessionEndpoint
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
+| The endpoint to use for frontchannel logout.
+
+The appropriate value is returned as "end_session_endpoint" in OpenID Discovery data.
+ 
+
+When used, a request to the logout endpoint will result in a redirect to this URL with a query string parameter of 
+ post_logout_redirect_uri set to the Query Engine start page.
+ 
+
+This endpoint will not be used at all if backchannel logout works (via xref:uk.co.spudsoft.query.main.AuthEndpoint.adoc[#getRevocationEndpoint()] .
+| [[revocationEndpoint]]revocationEndpoint
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
+| The endpoint to use for backchannel logout.
+
+The appropriate value is returned as "revocation_endpoint" in OpenID Discovery data.
+ 
+
+When used, a request to the logout endpoint will make a request from the back end to this endpoint passing in id_token,
+ post_logout_redirect_uri and client_id.
+ 
+
+This endpoint will not be used at all if no id_token is received from the authorisation endpoint during login.
+ Some OpenID providers require the "openid" scope to be specified in order for them to generate an id_token.
 | [[credentials]]credentials
 | xref:uk.co.spudsoft.query.main.ClientCredentials.adoc[ClientCredentials]
 | The client credentials to use when communicating with the OAuth endpoint.

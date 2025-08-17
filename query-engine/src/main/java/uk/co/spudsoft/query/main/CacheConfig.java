@@ -35,7 +35,7 @@ public class CacheConfig {
   
   private int maxItems = 100;
   private Duration maxDuration = null;
-  private Duration purgePeriod = Duration.of(1, ChronoUnit.HOURS);
+  private Duration purgePeriod = Duration.of(10, ChronoUnit.MINUTES);
 
   /**
    * Constructor.
