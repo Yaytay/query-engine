@@ -29,7 +29,7 @@ public class PipelineParsingErrorHandlerTest {
     ObjectMapper mapper = new ObjectMapper();
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true);
     mapper.registerModule(new JavaTimeModule());
-    mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    mapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
     mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     mapper.setDefaultMergeable(Boolean.TRUE);
     mapper.addHandler(new PipelineParsingErrorHandler());
