@@ -120,7 +120,7 @@ public final class PipelineDefnLoader {
     ObjectMapper mapper = new ObjectMapper(jf);
     ObjectMapperConfiguration.configureObjectMapper(mapper);
     mapper.setDefaultMergeable(Boolean.TRUE);
-    mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    mapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
     mapper.addHandler(PROBLEM_HANDLER);
     mapper.registerModule(new JavaTimeModule());
     return mapper;

@@ -46,7 +46,7 @@
       See https://github.com/oracle/graal/issues/7651
     -->
     <graalvm.version>23.1.8</graalvm.version>
-    <jackson.version>2.19.2</jackson.version>
+    <jackson.version>2.20.0</jackson.version>
 
     <!-- The qe-version property exists so that the design mode project can override it to run with a specific version -->
     <qe-version>${project.version}</qe-version>
@@ -205,7 +205,7 @@
         <plugin>
           <groupId>com.github.spotbugs</groupId>
           <artifactId>spotbugs-maven-plugin</artifactId>
-          <version>4.9.3.2</version>
+          <version>4.9.4.0</version>
           <configuration>
             <fork>true</fork>
             <effort>Max</effort>
@@ -254,7 +254,7 @@
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>11.0.0</version>
+              <version>11.0.1</version>
             </dependency>
           </dependencies>
         </plugin>
@@ -581,7 +581,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.11.2</version>
+          <version>3.11.3</version>
           <executions>
             <execution>
               <id>attach-javadocs</id>
