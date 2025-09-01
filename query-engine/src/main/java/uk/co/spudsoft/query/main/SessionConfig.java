@@ -155,6 +155,12 @@ public class SessionConfig {
 
   /**
    * Configuration of the cookie used for the session.
+   * 
+   * When Query Engine is configured in a path-hijack configuration it is important
+   * that the session cookie path matches the root path for the Query Engine.
+   * Without this it is possible for multiple session cookies to exist for the same user
+   * concurrently.
+   * 
    * @return configuration of the cookie used for the session.
    */
   @SuppressFBWarnings("EI_EXPOSE_REP")
@@ -164,6 +170,12 @@ public class SessionConfig {
 
   /**
    * Configuration of the cookie used for the session.
+   * 
+   * When Query Engine is configured in a path-hijack configuration it is important
+   * that the session cookie path matches the root path for the Query Engine.
+   * Without this it is possible for multiple session cookies to exist for the same user
+   * concurrently.
+   * 
    * @param sessionCookie configuration of the cookie used for the session.
    */
   @SuppressFBWarnings("EI_EXPOSE_REP2")

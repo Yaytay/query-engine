@@ -37,5 +37,8 @@ A scheduled task is set up to run this often that will remove any expired sessio
 | Map of OAuth endpoints that the user can choose from when logging in.
 | [[sessionCookie]]sessionCookie
 | xref:uk.co.spudsoft.query.main.CookieConfig.adoc[CookieConfig]
-| Configuration of the cookie used for the session.
+| Configuration of the cookie used for the session.When Query Engine is configured in a path-hijack configuration it is important
+ that the session cookie path matches the root path for the Query Engine.
+ Without this it is possible for multiple session cookies to exist for the same user
+ concurrently.
 |===

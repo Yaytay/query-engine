@@ -16,17 +16,23 @@
  */
 package uk.co.spudsoft.query.web;
 
+import io.vertx.core.MultiMap;
 import io.vertx.core.http.Cookie;
 import io.vertx.core.http.CookieSameSite;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.net.HostAndPort;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,30 +44,36 @@ import uk.co.spudsoft.query.main.CookieConfig;
  * @author jtalbut
  */
 public class LoginRouterTest {
-  
+
   private static final Logger logger = LoggerFactory.getLogger(LoginRouterTest.class);
-  
+
   @Test
   public void testRedirectUri() {
     HttpServerRequest request = mock(HttpServerRequest.class);
-    when(request.getHeader("X-Forwarded-Proto")).thenReturn("http");
-    when(request.getHeader("X-Forwarded-Host")).thenReturn("host");
+    MultiMap headers = MultiMap.caseInsensitiveMultiMap();
+    headers.add("X-Forwarded-Proto", "http");
+    headers.add("X-Forwarded-Host", "host");
     when(request.authority()).thenReturn(HostAndPort.create("hap", 80));
+    when(request.scheme()).thenReturn("http");
+    when(request.headers()).thenReturn(headers);
     assertEquals("http://host/login/return", LoginRouter.redirectUri(request));
-    
-    when(request.getHeader("X-Forwarded-Port")).thenReturn("456");
-    when(request.getHeader("X-Forwarded-Proto")).thenReturn("http");
-    when(request.getHeader("X-Forwarded-Host")).thenReturn(null);
+
+    headers = MultiMap.caseInsensitiveMultiMap();
+    headers.add("X-Forwarded-Port", "456");
+    headers.add("X-Forwarded-Proto", "http");
     when(request.authority()).thenReturn(HostAndPort.create("hap", 123));
+    when(request.scheme()).thenReturn("http");
+    when(request.headers()).thenReturn(headers);
     assertEquals("http://hap:456/login/return", LoginRouter.redirectUri(request));
-    
-    when(request.getHeader("X-Forwarded-Port")).thenReturn(null);
-    when(request.getHeader("X-Forwarded-Proto")).thenReturn("https");
-    when(request.getHeader("X-Forwarded-Host")).thenReturn(null);
+
+    headers = MultiMap.caseInsensitiveMultiMap();
+    headers.add("X-Forwarded-Proto", "https");
     when(request.authority()).thenReturn(HostAndPort.create("hap", 443));
+    when(request.scheme()).thenReturn("http");
+    when(request.headers()).thenReturn(headers);
     assertEquals("https://hap/login/return", LoginRouter.redirectUri(request));
   }
-  
+
   @Test
   public void testShouldDiscover() {
     AuthEndpoint authEndpoint = new AuthEndpoint();
@@ -85,12 +97,12 @@ public class LoginRouterTest {
       String challenge = LoginRouter.createCodeChallenge(codeVerifier);
       logger.debug("{}: {} => {}", i, codeVerifier.length(), challenge.length());
     }
+    assertEquals(assertThrows(IllegalArgumentException.class, () -> {
+      LoginRouter.randomString(0);
+    }).getMessage(), "Length must be positive");
+
   }
 
-  @Test
-  public void testHandle() {
-  }
-  
   @Test
   public void testCreateCookie() {
     CookieConfig nameOnly = new CookieConfig("fred");
@@ -103,7 +115,7 @@ public class LoginRouterTest {
     assertEquals("domain", cookie.getDomain());
     assertEquals(null, cookie.getSameSite());
     assertEquals("value", cookie.getValue());
-    
+
     CookieConfig path = new CookieConfig("fred");
     path.setPath("/bob");
     cookie = LoginRouter.createCookie(path, 11, false, "domain", "value");
@@ -115,7 +127,7 @@ public class LoginRouterTest {
     assertEquals("domain", cookie.getDomain());
     assertEquals(null, cookie.getSameSite());
     assertEquals("value", cookie.getValue());
-    
+
     CookieConfig secure = new CookieConfig("fred");
     secure.setSecure(Boolean.FALSE);
     cookie = LoginRouter.createCookie(secure, 10, true, "domain", "value");
@@ -127,7 +139,7 @@ public class LoginRouterTest {
     assertEquals("domain", cookie.getDomain());
     assertEquals(null, cookie.getSameSite());
     assertEquals("value", cookie.getValue());
-    
+
     CookieConfig http = new CookieConfig("fred");
     http.setHttpOnly(Boolean.TRUE);
     cookie = LoginRouter.createCookie(http, 10, true, "domain", "value");
@@ -139,7 +151,7 @@ public class LoginRouterTest {
     assertEquals("domain", cookie.getDomain());
     assertEquals(null, cookie.getSameSite());
     assertEquals("value", cookie.getValue());
-    
+
     CookieConfig domain = new CookieConfig("fred");
     domain.setDomain("other");
     cookie = LoginRouter.createCookie(domain, 10, true, "domain", "value");
@@ -151,7 +163,7 @@ public class LoginRouterTest {
     assertEquals("other", cookie.getDomain());
     assertEquals(null, cookie.getSameSite());
     assertEquals("value", cookie.getValue());
-    
+
     CookieConfig site = new CookieConfig("fred");
     site.setSameSite(CookieSameSite.STRICT);
     cookie = LoginRouter.createCookie(site, 10, true, "domain", "value");
@@ -163,7 +175,104 @@ public class LoginRouterTest {
     assertEquals("domain", cookie.getDomain());
     assertEquals(CookieSameSite.STRICT, cookie.getSameSite());
     assertEquals("value", cookie.getValue());
-    
+
   }
-  
+
+  @Test
+  public void testNoOAuth() {
+    assertThat(LoginRouter.deepCopyAuthEndpoints(null), notNullValue());
+  }
+
+  @Test
+  void testDomain_withForwardedHost() {
+    HttpServerRequest request = mock(HttpServerRequest.class);
+    when(request.getHeader("X-Forwarded-Host")).thenReturn("forwarded.example.com");
+
+    String result = LoginRouter.domain(request);
+
+    assertEquals("forwarded.example.com", result);
+    verify(request, never()).authority(); // Should not call authority when header exists
+  }
+
+  @Test
+  void testDomain_withoutForwardedHost() {
+    HttpServerRequest request = mock(HttpServerRequest.class);
+    HostAndPort authority = mock(HostAndPort.class);
+    when(request.getHeader("X-Forwarded-Host")).thenReturn(null);
+    when(request.authority()).thenReturn(authority);
+    when(authority.host()).thenReturn("direct.example.com");
+
+    String result = LoginRouter.domain(request);
+
+    assertEquals("direct.example.com", result);
+  }
+
+  @Test
+  void testDomain_withEmptyForwardedHost() {
+    HttpServerRequest request = mock(HttpServerRequest.class);
+    HostAndPort authority = mock(HostAndPort.class);
+    when(request.getHeader("X-Forwarded-Host")).thenReturn("");
+    when(request.authority()).thenReturn(authority);
+    when(authority.host()).thenReturn("direct.example.com");
+
+    String result = LoginRouter.domain(request);
+
+    assertEquals("direct.example.com", result);
+  }
+
+  @Test
+  void testWasTls_withHttpsForwardedProto() {
+    HttpServerRequest request = mock(HttpServerRequest.class);
+    when(request.getHeader("X-Forwarded-Proto")).thenReturn("https");
+
+    boolean result = LoginRouter.wasTls(request);
+
+    assertTrue(result);
+    verify(request, never()).isSSL(); // Should not call isSSL when header exists
+  }
+
+  @Test
+  void testWasTls_withHttpForwardedProto() {
+    HttpServerRequest request = mock(HttpServerRequest.class);
+    when(request.getHeader("X-Forwarded-Proto")).thenReturn("http");
+
+    boolean result = LoginRouter.wasTls(request);
+
+    assertFalse(result);
+    verify(request, never()).isSSL();
+  }
+
+  @Test
+  void testWasTls_withoutForwardedProto_sslTrue() {
+    HttpServerRequest request = mock(HttpServerRequest.class);
+    when(request.getHeader("X-Forwarded-Proto")).thenReturn(null);
+    when(request.isSSL()).thenReturn(true);
+
+    boolean result = LoginRouter.wasTls(request);
+
+    assertTrue(result);
+  }
+
+  @Test
+  void testWasTls_withoutForwardedProto_sslFalse() {
+    HttpServerRequest request = mock(HttpServerRequest.class);
+    when(request.getHeader("X-Forwarded-Proto")).thenReturn(null);
+    when(request.isSSL()).thenReturn(false);
+
+    boolean result = LoginRouter.wasTls(request);
+
+    assertFalse(result);
+  }
+
+  @Test
+  void testWasTls_withEmptyForwardedProto() {
+    HttpServerRequest request = mock(HttpServerRequest.class);
+    when(request.getHeader("X-Forwarded-Proto")).thenReturn("");
+    when(request.isSSL()).thenReturn(true);
+
+    boolean result = LoginRouter.wasTls(request);
+
+    assertTrue(result);
+  }
+
 }

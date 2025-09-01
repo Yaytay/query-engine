@@ -21,6 +21,7 @@ import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.function.Consumer;
 import uk.co.spudsoft.jwtvalidatorvertx.DiscoveryData;
 
 /**
@@ -81,6 +82,14 @@ public class AuthEndpoint {
     this.authorizationEndpoint = other.authorizationEndpoint;
     this.tokenEndpoint = other.tokenEndpoint;
     this.invalidDate = other.invalidDate;
+    this.endSessionEndpoint = other.endSessionEndpoint;
+    this.revocationEndpoint = other.revocationEndpoint;
+  }
+  
+  private void ifNotEmpty(String input, Consumer<String> setter) {
+    if (!Strings.isNullOrEmpty(input)) {
+      setter.accept(input);
+    }
   }
   
   /**
@@ -89,14 +98,10 @@ public class AuthEndpoint {
    * @param discoveryData Open ID Connector Discovery data downloaded.
    */
   public void updateFromOpenIdConfiguration(DiscoveryData discoveryData) {
-    String tempTokenEndpoint = discoveryData.getTokenEndpoint();
-    String tempAuthorizationEndpoint = discoveryData.getAuthorizationEndpoint();
-    if (tempTokenEndpoint != null) {
-      this.tokenEndpoint = tempTokenEndpoint;
-    }
-    if (tempAuthorizationEndpoint != null) {
-      this.authorizationEndpoint = tempAuthorizationEndpoint;
-    }
+    ifNotEmpty(discoveryData.getTokenEndpoint(), v -> this.tokenEndpoint = v);
+    ifNotEmpty(discoveryData.getAuthorizationEndpoint(), v -> this.authorizationEndpoint = v);
+    ifNotEmpty(discoveryData.getEndSessionEndpoint(), v -> this.endSessionEndpoint = v);
+    ifNotEmpty(discoveryData.getRevocationEndpoint(), v -> this.revocationEndpoint = v);
     this.invalidDate = LocalDateTime.now(ZoneOffset.UTC).plusDays(1);
   }
   
@@ -226,10 +231,9 @@ public class AuthEndpoint {
    * <P>
    * The appropriate value is returned as "revocation_endpoint" in OpenID Discovery data.
    * <P>
-   * When used, a request to the logout endpoint will make a request from the back end to this endpoint passing in id_token,
-   * post_logout_redirect_uri and client_id.
+   * When used, a request to the logout endpoint will make a request from the back end to this endpoint passing in 
+   * either the refresh_token (if one was provided) or the access_token.
    * <P>
-   * This endpoint will not be used at all if no id_token is received from the authorisation endpoint during login.
    * Some OpenID providers require the "openid" scope to be specified in order for them to generate an id_token.
    * @return the endpoint to use for backchannel logout.
    */
@@ -242,10 +246,9 @@ public class AuthEndpoint {
    * <P>
    * The appropriate value is returned as "revocation_endpoint" in OpenID Discovery data.
    * <P>
-   * When used, a request to the logout endpoint will make a request from the back end to this endpoint passing in id_token,
-   * post_logout_redirect_uri and client_id.
+   * When used, a request to the logout endpoint will make a request from the back end to this endpoint passing in 
+   * either the refresh_token (if one was provided) or the access_token.
    * <P>
-   * This endpoint will not be used at all if no id_token is received from the authorisation endpoint during login.
    * Some OpenID providers require the "openid" scope to be specified in order for them to generate an id_token.
    * @param revocationEndpoint the endpoint to use for backchannel logout.
    */

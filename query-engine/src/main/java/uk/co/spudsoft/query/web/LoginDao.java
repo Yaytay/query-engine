@@ -78,10 +78,11 @@ public interface LoginDao {
    * @param expiry The date/time at which the token expires.
    * @param token The token to be stored (a JWT).
    * @param provider The OAuth provider.
+   * @param refreshToken The OAuth refresh token from the authentication endpoint.
    * @param idToken The OIDC ID Token from the authentication endpoint.
    * @return A Future that will be completed when the token has been stored.
    */
-  Future<Void> storeToken(String id, LocalDateTime expiry, String token, String provider, String idToken);
+  Future<Void> storeTokens(String id, LocalDateTime expiry, String token, String provider, String refreshToken, String idToken);
 
   /**
    * Get a token by its ID.
@@ -96,23 +97,34 @@ public interface LoginDao {
    * A Record containing the provider and the idToken for use when logging out.
    * 
    * @param provider The name of the provider, for locating its configuration.
+   * @param accessToken The access token provided when the user logged in, may be null.
+   * @param refreshToken The refresh token provided when the user logged in, may be null.
    * @param idToken The id token provided when the user logged in, may be null.
+   * @param sessionId The session ID corresponding to this provider/token.
    */
-  record ProviderAndIdToken(String provider, String idToken) {};
+  record ProviderAndTokens(String provider
+          , String accessToken
+          , String refreshToken
+          , String idToken
+          , String sessionId
+          ) {};
   
   /**
    * Get the name of the provider and the ID token to use for logging out.
    * 
-   * @param id The ID of the token - this is the value of the session cookie.
-   * @return A Future containing a Record containing the provider and the idToken for use when logging out.
+   * There should never be multiple session IDs for a given session.
+   * If this does happen, please ensure that the path for the session cookie is configured correctly.
+   * 
+   * @param sessionId The ID of the token - this is the values of the session cookies.
+   * @return A Future containing a List of Records containing the provider and the idToken for use when logging out.
    */
-  Future<ProviderAndIdToken> getProviderAndIdToken(String id);  
+  Future<ProviderAndTokens> getProviderAndTokens(String sessionId);  
 
   /**
    * Remove a token from the data store.
-   * @param id The ID of the token - this is the value of the session cookie.
+   * @param sessionId The ID of the token - this is the value of the session cookie.
    * @return A Future that will be completed when the token has been removed.
    */
-  Future<Void> removeToken(String id);
+  Future<Void> removeToken(String sessionId);
 
 }

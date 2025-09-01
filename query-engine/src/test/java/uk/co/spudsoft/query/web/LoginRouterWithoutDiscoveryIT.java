@@ -104,11 +104,21 @@ public class LoginRouterWithoutDiscoveryIT {
             .log().all()
             .extract().body().asString()
             ;
-    assertEquals("Target URL not specified", body);
+    assertEquals("Return path not specified", body);
     
     body = given()
             .log().all()
-            .get("/login?return=http://fred/")
+            .get("/login?return=fred")
+            .then()
+            .statusCode(400)
+            .log().all()
+            .extract().body().asString()
+            ;
+    assertEquals("Return must be just a full path", body);
+    
+    body = given()
+            .log().all()
+            .get("/login?return=/fred/")
             .then()
             .statusCode(400)
             .log().all()
@@ -118,7 +128,7 @@ public class LoginRouterWithoutDiscoveryIT {
     
     body = given()
             .log().all()
-            .get("/login?return=http://fred/")
+            .get("/login?return=/fred/")
             .then()
             .statusCode(400)
             .log().all()
@@ -158,7 +168,7 @@ public class LoginRouterWithoutDiscoveryIT {
     
     body = given()
             .log().all()
-            .get("/login?return=http://fred/&provider=bob")
+            .get("/login?return=/fred/&provider=bob")
             .then()
             .statusCode(400)
             .log().all()
@@ -169,7 +179,7 @@ public class LoginRouterWithoutDiscoveryIT {
     // Provider is case sensistive
     body = given()
             .log().all()
-            .get("/login?return=http://fred/&provider=github")
+            .get("/login?return=/fred/&provider=github")
             .then()
             .statusCode(400)
             .log().all()
@@ -180,7 +190,7 @@ public class LoginRouterWithoutDiscoveryIT {
     String authUiUrl = given()
             .redirects().follow(false)
             .log().all()
-            .get("/login?provider=GitHub&return=http://fred")
+            .get("/login?provider=GitHub&return=/fred")
             .then()
             .statusCode(307)
             .log().all()

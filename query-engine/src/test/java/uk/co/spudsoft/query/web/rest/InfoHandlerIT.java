@@ -38,7 +38,7 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.TestInstance;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
-import uk.co.spudsoft.query.web.LoginRouterWithDiscoveryIT;
+import uk.co.spudsoft.query.web.MockOidcServer;
 
 
 /**
@@ -54,7 +54,7 @@ public class InfoHandlerIT {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(InfoHandlerIT.class);
   
-  private final int mgmtPort = LoginRouterWithDiscoveryIT.findUnusedPort();
+  private final int mgmtPort = MockOidcServer.findUnusedPort();
   
   private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
   

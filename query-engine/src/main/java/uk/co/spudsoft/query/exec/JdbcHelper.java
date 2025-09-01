@@ -547,7 +547,7 @@ public class JdbcHelper {
           , SqlConsumer<PreparedStatement> prepareStatement
           , SqlFunction<ResultSet, R> resultSetHandler
   ) throws Exception {
-    logger.info("Executing select: {}", sql);
+    logger.trace("Executing select: {}", sql);
     String logMessage = null;
     try {
       logMessage = "Failed to get connection: ";

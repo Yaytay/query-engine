@@ -23,6 +23,7 @@ import com.sun.net.httpserver.HttpServer;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.io.ByteArrayOutputStream;
@@ -202,11 +203,11 @@ public class LoginRouterWithDiscoveryWithoutPersistenceIT {
             .log().all()
             .extract().body().asString()
             ;
-    assertEquals("Target URL not specified", body);
+    assertEquals("Return path not specified", body);
     
     body = given()
             .log().all()
-            .get("/login?return=http://fred/")
+            .get("/login?return=/fred/")
             .then()
             .statusCode(400)
             .log().all()
@@ -216,7 +217,7 @@ public class LoginRouterWithDiscoveryWithoutPersistenceIT {
     
     body = given()
             .log().all()
-            .get("/login?return=http://fred/")
+            .get("/login?return=/fred/")
             .then()
             .statusCode(400)
             .log().all()
@@ -256,7 +257,7 @@ public class LoginRouterWithDiscoveryWithoutPersistenceIT {
     
     body = given()
             .log().all()
-            .get("/login?return=http://fred/&provider=bob")
+            .get("/login?return=/fred/&provider=bob")
             .then()
             .statusCode(400)
             .log().all()
@@ -267,7 +268,7 @@ public class LoginRouterWithDiscoveryWithoutPersistenceIT {
     // Provider is case sensistive
     body = given()
             .log().all()
-            .get("/login?return=http://fred/&provider=TEST")
+            .get("/login?return=/fred/&provider=TEST")
             .then()
             .statusCode(400)
             .log().all()
@@ -278,7 +279,7 @@ public class LoginRouterWithDiscoveryWithoutPersistenceIT {
     String authUiUrl = given()
             .redirects().follow(false)
             .log().all()
-            .get("/login?provider=test&return=http://fred")
+            .get("/login?provider=test&return=/fred")
             .then()
             .statusCode(307)
             .log().all()
@@ -303,7 +304,7 @@ public class LoginRouterWithDiscoveryWithoutPersistenceIT {
             .then()
             .log().all()
             .statusCode(307)
-            .header("Location", equalTo("http://fred"))
+            .header("Location", equalTo("http://localhost:" + Integer.toString(main.getPort()) + "/fred"))
             .extract().cookies()
             ;
     logger.debug("Cookies: {}", cookies);

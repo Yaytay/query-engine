@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.web;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hashing;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Future;
@@ -30,6 +31,7 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -37,9 +39,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -101,7 +101,7 @@ public class LoginRouter implements Handler<RoutingContext> {
   private final int stateLength;
   private final int codeVerifierLength;
   private final int nonceLength;
-  private final Map<String, AuthEndpoint> authEndpoints;
+  private final ImmutableMap<String, AuthEndpoint> authEndpoints;
   private final boolean outputAllErrorMessages;
   private final ImmutableList<String> requiredAuds;
   private final CookieConfig sessionCookie;
@@ -206,20 +206,25 @@ public class LoginRouter implements Handler<RoutingContext> {
     this.stateLength = sessionConfig.getStateLength();
     this.codeVerifierLength = sessionConfig.getCodeVerifierLength();
     this.nonceLength = sessionConfig.getNonceLength();
-    this.authEndpoints = new HashMap<>();
     // Deep copy of auth endpoints because they may be changed
-    if (sessionConfig.getOauth() != null) {
-      sessionConfig.getOauth().entrySet().stream().forEach(e -> {
-        this.authEndpoints.put(e.getKey(), new AuthEndpoint(e.getValue()));
-      });
-    }
+    this.authEndpoints = deepCopyAuthEndpoints(sessionConfig.getOauth());
     this.requiredAuds = ImmutableCollectionTools.copy(requiredAuds);
     this.outputAllErrorMessages = outputAllErrorMessages;
     this.sessionCookie = sessionCookie;
   }
 
+  static ImmutableMap<String, AuthEndpoint> deepCopyAuthEndpoints(Map<String, AuthEndpoint> authEndpoints) {
+    ImmutableMap.Builder<String, AuthEndpoint> builder = ImmutableMap.<String, AuthEndpoint>builder();
+    if (authEndpoints != null) {
+      authEndpoints.entrySet().stream().forEach(e -> {
+        builder.put(e.getKey(), new AuthEndpoint(e.getValue()));
+      });
+    }
+    return builder.build();
+  }
+  
   /**
-   * Return the base URL used to make this request with a suffix of /login/return.
+   * Return the base URL used to make this request with a path of /login/return.
    *
    * The following headers are used, if present:
    * <UL>
@@ -235,37 +240,39 @@ public class LoginRouter implements Handler<RoutingContext> {
    * @return The URL that should be used by an OpenID redirect.
    */
   static String redirectUri(HttpServerRequest request) {
-    String port = request.getHeader("X-Forwarded-Port");
-    String scheme = request.getHeader("X-Forwarded-Proto");
+    return OriginalUrl.get(
+            request.scheme()
+            , request.authority()
+            , "/login/return"
+            , null
+            , request.headers()
+    );
+  }
 
-    int portNum = -1;
-    if (!Strings.isNullOrEmpty(port)) {
-      try {
-        portNum = Integer.parseInt(port);
-      } catch (Throwable ex) {
-        logger.warn("Illegal X-Forward-Port header received: {}", port);
-      }
-    }
-
-    if (Strings.isNullOrEmpty(scheme)) {
-      scheme = request.scheme();
-    }
-    if (portNum < 0) {
-      portNum = request.authority().port();
-    }
-    if (Authenticator.isStandardHttpsPort(scheme, portNum)) {
-      port = "";
-    } else if (Authenticator.isStandardHttpPort(scheme, portNum)) {
-      port = "";
-    } else {
-      port = ":" + Integer.toString(portNum);
-    }
-
-    String host = request.getHeader("X-Forwarded-Host");
-    if (Strings.isNullOrEmpty(host)) {
-      host = request.authority().host();
-    }
-    return scheme + "://" + host + port + "/login/return";
+  /**
+   * Return the base URL used to make this request with a path of /.
+   *
+   * The following headers are used, if present:
+   * <UL>
+   * <LI>X-Forwarded-Proto
+   * <LI>X-Forwarded-Port
+   * <LI>X-Forwarded-Host
+   * </UL>
+   * Any components of the URL not found in headers is taken from the request.
+   *
+   * This method is not used when path hijacks are in operation (because login is not used when path hijacks are in operation).
+   *
+   * @param request The request.
+   * @return The URL that should be used by an OpenID redirect.
+   */
+  static String loggedOutUri(HttpServerRequest request) {
+    return OriginalUrl.get(
+            request.scheme()
+            , request.authority()
+            , "/"
+            , null
+            , request.headers()
+    );
   }
 
   /**
@@ -294,10 +301,11 @@ public class LoginRouter implements Handler<RoutingContext> {
    */
   static boolean wasTls(HttpServerRequest request) {
     String proto = request.getHeader("X-Forwarded-Proto");
-    if (Strings.isNullOrEmpty(proto)) {
+    if (!Strings.isNullOrEmpty(proto)) {
       return "https".equals(proto);
+    } else {
+      return request.isSSL();
     }
-    return request.isSSL();
   }
 
   static String createCodeChallenge(String codeVerifier) {
@@ -322,23 +330,110 @@ public class LoginRouter implements Handler<RoutingContext> {
 
     if (sessionCookie != null && !Strings.isNullOrEmpty(sessionCookie.getName())) {
 
-      Set<Cookie> cookies = event.request().cookies(sessionCookie.getName());
-      List<Future<Void>> futures = new ArrayList<>();
-      for (Cookie cookie : cookies) {
-        futures.add(loginDao.removeToken(cookie.getValue()));
-      }
-
-      Future.all(futures)
+      Cookie cookie = event.request().cookies(sessionCookie.getName()).stream().findFirst().orElse(null);
+      
+      loginDao.getProviderAndTokens(cookie.getValue())
+              .compose(providerAndTokens -> {
+                return loginDao.removeToken(providerAndTokens.sessionId()).map(v -> providerAndTokens);
+              })
+              .compose(providerAndTokens -> {
+                AuthEndpoint authEndpoint = authEndpoints.get(providerAndTokens.provider());
+                if (authEndpoint != null && !Strings.isNullOrEmpty(authEndpoint.getRevocationEndpoint())) {
+                  return performBackChannelLogout(
+                          authEndpoint
+                          , providerAndTokens.accessToken()
+                          , providerAndTokens.refreshToken()
+                  ).transform(ar -> {
+                    if (ar.failed()) {
+                      logger.debug("Back-channel logout failed: ", ar.cause());
+                      return Future.succeededFuture(providerAndTokens);
+                    } else {
+                      logger.debug("Back-channel logout succeeded");
+                      return Future.succeededFuture();
+                    }
+                  });
+                } else {
+                  return Future.succeededFuture(providerAndTokens);
+                }
+              })
               .onComplete(ar -> {
-                Cookie cookie = createCookie(sessionCookie, 0, wasTls(event.request()), domain(event.request()), "");
-
+                Cookie newCookie = createCookie(sessionCookie, 0, wasTls(event.request()), domain(event.request()), "");
+                if (ar.succeeded() && ar.result() != null) {
+                  LoginDao.ProviderAndTokens providerAndTokens = ar.result();
+                  AuthEndpoint authEndpoint = authEndpoints.get(providerAndTokens.provider());
+                  if (authEndpoint != null 
+                          && !Strings.isNullOrEmpty(authEndpoint.getEndSessionEndpoint())) {
+                    logger.debug("Performing front-channel logout using {}", authEndpoint.getEndSessionEndpoint());
+                    StringBuilder logoutUrl = new StringBuilder();
+                    logoutUrl.append(authEndpoint.getEndSessionEndpoint());
+                    logoutUrl.append(authEndpoint.getEndSessionEndpoint().contains("?") ? "&" : "?");
+                    if (!Strings.isNullOrEmpty(providerAndTokens.idToken())) {
+                      logoutUrl.append("id_token_hint=");
+                      logoutUrl.append(URLEncoder.encode(providerAndTokens.idToken(), StandardCharsets.UTF_8));
+                    }
+                    if (!Strings.isNullOrEmpty(authEndpoint.getCredentials().getId())) {
+                      logoutUrl.append("&client_id=");
+                      logoutUrl.append(URLEncoder.encode(authEndpoint.getCredentials().getId(), StandardCharsets.UTF_8));
+                    }
+                    logoutUrl.append("&post_logout_redirect_uri=")
+                            .append(URLEncoder.encode(loggedOutUri(event.request()), StandardCharsets.UTF_8));
+                    event.response()
+                            .addCookie(newCookie)
+                            .putHeader("Location", logoutUrl.toString())
+                            .setStatusCode(307)
+                            .end();
+                    return ;
+                  }
+                }
+                if (ar.failed()) {
+                  logger.warn("Failure during logout: ", ar.cause());
+                }
                 event.response()
-                        .addCookie(cookie)
+                        .addCookie(newCookie)
                         .putHeader("Location", "/")
                         .setStatusCode(307)
                         .end();
               });
     }
+  }
+
+  private Future<Void> performBackChannelLogout(AuthEndpoint authEndpoint, String accessToken, String refreshToken) {
+    logger.debug("Performing back-channel logout using {}", authEndpoint);
+    MultiMap body = MultiMap.caseInsensitiveMultiMap();
+    if (Strings.isNullOrEmpty(refreshToken)) {
+      body.add("token_type_hint", "access_token");
+      body.add("token", accessToken);
+    } else {
+      body.add("token_type_hint", "refresh_token");
+      body.add("token", refreshToken);
+    }
+    return webClient.requestAbs(HttpMethod.POST, authEndpoint.getRevocationEndpoint())
+            .basicAuthentication(authEndpoint.getCredentials().getId(), authEndpoint.getCredentials().getSecret())
+            .putHeader("Accept", "application/json")
+            .sendForm(body)
+            .onComplete(ar -> {
+              if (ar.failed()) {
+                logger.warn("Revocation request to {} failed: ", authEndpoint.getRevocationEndpoint(), ar.cause());
+              } else {
+                HttpResponse<Buffer> response = ar.result();
+                Buffer responseBody = response.body();
+                int statusCode = response.statusCode();
+                if (statusCode >= 200 && statusCode < 300) {
+                  logger.debug("Revocation request to {} returned {} with {}"
+                          , authEndpoint.getRevocationEndpoint()
+                          , response.statusCode()
+                          , responseBody
+                          );
+                } else {
+                  logger.warn("Revocation request to {} returned {} with {}"
+                          , authEndpoint.getRevocationEndpoint()
+                          , response.statusCode()
+                          , responseBody
+                          );
+                }
+              }
+            })
+            .map(v -> null);
   }
 
   private boolean handleLoginResponse(RoutingContext event) {
@@ -354,8 +449,7 @@ public class LoginRouter implements Handler<RoutingContext> {
     }
     RequestDataAndAuthEndpoint requestDataAndAuthEndpoint = new RequestDataAndAuthEndpoint();
     logger.debug("State: {}", state);
-    String[] accessTokenPtr = new String[1];
-    String[] idTokenPtr = new String[1];
+    String[] tokens = new String[3]; // {accessToken, refreshToken, idToken}
     loginDao.getRequestData(state)
             .compose(requestData -> {
               requestDataAndAuthEndpoint.requestData = requestData;
@@ -400,10 +494,11 @@ public class LoginRouter implements Handler<RoutingContext> {
                   return Future.failedFuture(new IllegalStateException("Failed to get access token from provider"));
                 }
                 logger.debug("Access token response: {}", jsonBody);
-                accessTokenPtr[0] = jsonBody.getString("access_token");
-                idTokenPtr[0] = jsonBody.getString("id_token");
+                tokens[0] = jsonBody.getString("access_token");
+                tokens[1] = jsonBody.getString("refresh_token");
+                tokens[2] = jsonBody.getString("id_token");
                 
-                if (!Strings.isNullOrEmpty(accessTokenPtr[0]) && Strings.isNullOrEmpty(idTokenPtr[0]) && !Strings.isNullOrEmpty(requestDataAndAuthEndpoint.authEndpoint.getRevocationEndpoint())) {
+                if (!Strings.isNullOrEmpty(tokens[0]) && Strings.isNullOrEmpty(tokens[2]) && !Strings.isNullOrEmpty(requestDataAndAuthEndpoint.authEndpoint.getRevocationEndpoint())) {
                   if (requestDataAndAuthEndpoint.authEndpoint.getScope() != null && requestDataAndAuthEndpoint.authEndpoint.getScope().contains("openid")) {
                     logger.warn("No id_token found in response from OAuth provider that has revocation endpoint ({}), consult their documentation."
                             , requestDataAndAuthEndpoint.requestData.provider());
@@ -412,13 +507,13 @@ public class LoginRouter implements Handler<RoutingContext> {
                             , requestDataAndAuthEndpoint.requestData.provider());
                   }
                 }
-                if (Strings.isNullOrEmpty(accessTokenPtr[0])) {
+                if (Strings.isNullOrEmpty(tokens[0])) {
                   logger.warn("Failed to get access token ({}): {}", codeResponse.statusCode(), body);
                   return Future.failedFuture(new IllegalStateException("Failed to get access token from provider"));
                 }
 
                 return jwtValidator.validateToken(requestDataAndAuthEndpoint.authEndpoint.getIssuer(),
-                         accessTokenPtr[0],
+                         tokens[0],
                          requiredAuds,
                          outputAllErrorMessages
                 );
@@ -429,7 +524,13 @@ public class LoginRouter implements Handler<RoutingContext> {
               long maxAge = jwt.getExpiration() - (System.currentTimeMillis() / 1000);
               Cookie cookie = createCookie(sessionCookie, maxAge, wasTls(event.request()), domain(event.request()), id);
 
-              return loginDao.storeToken(id, jwt.getExpirationLocalDateTime(), accessTokenPtr[0], requestDataAndAuthEndpoint.requestData.provider(), idTokenPtr[0])
+              return loginDao.storeTokens(id
+                      , jwt.getExpirationLocalDateTime()
+                      , tokens[0]
+                      , requestDataAndAuthEndpoint.requestData.provider()
+                      , tokens[1]
+                      , tokens[2]
+              )
                       .compose(v -> {
                         return event.response()
                                 .addCookie(cookie)
@@ -468,8 +569,8 @@ public class LoginRouter implements Handler<RoutingContext> {
    */
   static Cookie createCookie(CookieConfig config, long maxAge, boolean wasTls, String domain, String value) {
     Cookie cookie = Cookie.cookie(config.getName(), value);
-    cookie.setHttpOnly(config.isHttpOnly() == null ? false : config.isHttpOnly());
-    cookie.setSecure(config.isSecure() == null ? wasTls : config.isSecure());
+    cookie.setHttpOnly(config.isHttpOnly() == null ? false : Boolean.TRUE.equals(config.isHttpOnly()));
+    cookie.setSecure(config.isSecure() == null ? wasTls : Boolean.TRUE.equals(config.isSecure()));
     cookie.setDomain(config.getDomain() != null ? config.getDomain() : domain);
     cookie.setPath(Coalesce.coalesce(config.getPath(), "/"));
     if (config.getSameSite() != null) {
@@ -479,14 +580,28 @@ public class LoginRouter implements Handler<RoutingContext> {
     return cookie;
   }
 
+  private String buildCompleteRedirectUrl(HttpServerRequest request, String path) {
+    return OriginalUrl.get(
+            request.scheme()
+            , request.authority()
+            , path
+            , null
+            , request.headers()
+    );
+  }
+  
   private boolean handleLoginRequest(RoutingContext event) {
     String targetUrl = event.request().getParam("return");
     if (Strings.isNullOrEmpty(targetUrl)) {
-      QueryRouter.internalError(new IllegalArgumentException("Target URL not specified"), event, outputAllErrorMessages);
+      QueryRouter.internalError(new IllegalArgumentException("Return path not specified"), event, outputAllErrorMessages);
+      return true;
+    } else if (!targetUrl.startsWith("/")) {
+      QueryRouter.internalError(new IllegalArgumentException("Return must be just a full path"), event, outputAllErrorMessages);
       return true;
     }
     // /If there is a valid session cookie just use that access token
     Cookie cookie = getSessionCookie(event.request());
+    String redirectUrl = buildCompleteRedirectUrl(event.request(), targetUrl);
     if (cookie != null) {
       String token[] = new String[1];
       loginDao.getToken(cookie.getValue())
@@ -496,19 +611,19 @@ public class LoginRouter implements Handler<RoutingContext> {
               })
               .onFailure(ex -> {
                 logger.debug("Request has invalid session cookie, continuing with login");
-                performOAuthRedirect(event, targetUrl);
+                performOAuthRedirect(event, redirectUrl);
               })
               .onSuccess(jwt -> {
                 logger.debug("Request has valid session cookie, skipping login");
 
                 event.response()
-                        .putHeader("Location", targetUrl)
+                        .putHeader("Location", redirectUrl)
                         .setStatusCode(307)
                         .end();
               });
       return false;
     } else {
-      return performOAuthRedirect(event, targetUrl);
+      return performOAuthRedirect(event, redirectUrl);
     }
   }
 
@@ -531,7 +646,7 @@ public class LoginRouter implements Handler<RoutingContext> {
                 redirectToAuthEndpoint(event, authEndpoint, provider, targetUrl);
               })
               .onFailure(ex -> {
-                logger.warn("Failed to OpenID configuration for issuer {}: ", authEndpoint.getIssuer(), ex);
+                logger.warn("Failed to get OpenID configuration for issuer {}: ", authEndpoint.getIssuer(), ex);
                 QueryRouter.internalError(ex, event, outputAllErrorMessages);
               });
     } else {

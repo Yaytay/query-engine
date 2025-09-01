@@ -64,14 +64,16 @@ public class LoginDaoMemoryImpl implements LoginDao {
 
   private static class Token {
     private final LocalDateTime expiry;
-    private final String token;
+    private final String accessToken;
     private final String provider;
+    private final String refreshToken;
     private final String idToken;
 
-    Token(LocalDateTime expiry, String token, String provider, String idToken) {
+    Token(LocalDateTime expiry, String accessToken, String provider, String refreshToken, String idToken) {
       this.expiry = expiry;
-      this.token = token;
+      this.accessToken = accessToken;
       this.provider = provider;
+      this.refreshToken = refreshToken;
       this.idToken = idToken;
     }
   }  
@@ -166,9 +168,9 @@ public class LoginDaoMemoryImpl implements LoginDao {
   }
 
   @Override
-  public Future<Void> storeToken(String id, LocalDateTime expiry, String token, String provider, String idToken) {
+  public Future<Void> storeTokens(String id, LocalDateTime expiry, String token, String provider, String refreshToken, String idToken) {
     synchronized (tokens) {
-      tokens.put(id, new Token(expiry, token, provider, idToken));
+      tokens.put(id, new Token(expiry, token, provider, refreshToken, idToken));
     }
     return Future.succeededFuture();
   }
@@ -186,31 +188,36 @@ public class LoginDaoMemoryImpl implements LoginDao {
         token = null;
         tokens.entrySet().removeIf(entry -> entry.getValue().expiry.isBefore(now));
       }      
-      return Future.succeededFuture(token == null ? null : token.token);
+      return Future.succeededFuture(token == null ? null : token.accessToken);
     }
   }
 
   @Override
-  public Future<ProviderAndIdToken> getProviderAndIdToken(String id) {
+  public Future<ProviderAndTokens> getProviderAndTokens(String sessionId) {
+    LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+    ProviderAndTokens result = null;
     synchronized (tokens) {
-      Token token = tokens.get(id);
-      if (token == null) {
-        return Future.succeededFuture();
+      boolean purge = false;
+      Token token = tokens.get(sessionId);
+      if (token != null) {
+        if (token.expiry.isBefore(now)) {
+          tokens.remove(sessionId);        
+          purge = true;
+        } else {
+          result = new ProviderAndTokens(token.provider, token.accessToken, token.refreshToken, token.idToken, sessionId);
+        }
       }
-      LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
-      if (token.expiry.isBefore(now)) {
-        tokens.remove(id);        
-        token = null;
+      if (purge) {
         tokens.entrySet().removeIf(entry -> entry.getValue().expiry.isBefore(now));
-      }      
-      return Future.succeededFuture(token == null ? null : new LoginDao.ProviderAndIdToken(token.provider, token.idToken));
+      }
+      return Future.succeededFuture(result);
     }
   }
   
   @Override
-  public Future<Void> removeToken(String id) {
+  public Future<Void> removeToken(String sessionId) {
     synchronized (tokens) {
-      tokens.remove(id);
+      tokens.remove(sessionId);
       return Future.succeededFuture(null);
     }
   }

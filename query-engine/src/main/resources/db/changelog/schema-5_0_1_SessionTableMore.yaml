@@ -8,4 +8,5 @@ databaseChangeLog:
         tableName: session
         columns:
         - {column: {name: idToken, type: clob, constraints: {nullable: true}}}
+        - {column: {name: refreshToken, type: clob, constraints: {nullable: true}}}
         - {column: {name: provider, type: nvarchar(100), constraints: {nullable: true}}}

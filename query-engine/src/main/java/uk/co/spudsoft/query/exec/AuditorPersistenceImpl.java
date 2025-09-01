@@ -971,11 +971,11 @@ public class AuditorPersistenceImpl implements Auditor {
         String subject = rs.getString(7);
         String username = rs.getString(8);
         String name = rs.getString(9);
-        int responseCode = getInteger(rs, 10);
-        long responseRows = getLong(rs, 11);
-        long responseSize = getLong(rs, 12);
-        long responseStreamStartMs = rs.getLong(13);
-        long responseDurationMs = rs.getLong(14);
+        Integer responseCode = getInteger(rs, 10);
+        Long responseRows = getLong(rs, 11);
+        Long responseSize = getLong(rs, 12);
+        Long responseStreamStartMs = rs.getLong(13);
+        Long responseDurationMs = rs.getLong(14);
 
         AuditHistoryRow ah = new AuditHistoryRow(timestamp, id, path, arguments, host, issuer, subject, username, name, responseCode, responseRows, responseSize, responseStreamStartMs, responseDurationMs);
         builder.add(ah);

@@ -77,8 +77,8 @@ public class LoginDaoPersistenceImplIT {
     String id1 = UUID.randomUUID().toString();
     String id2 = UUID.randomUUID().toString();
     
-    instance.storeToken(id1, now.minusSeconds(1), "token1", "test", null)
-            .compose(v -> instance.storeToken(id2, now.plusSeconds(1), "token2", "test", null))
+    instance.storeTokens(id1, now.minusSeconds(1), "token1", "test", "refresh", "id")
+            .compose(v -> instance.storeTokens(id2, now.plusSeconds(1), "token2", "test", "refresh", "id"))
             .compose(v -> instance.getToken(id1))
             .onFailure(ex -> testContext.failNow("Failed to get token"))
             .onSuccess(s -> {
@@ -115,7 +115,7 @@ public class LoginDaoPersistenceImplIT {
     
     List<Future<Void>> futures = new ArrayList<>();
     for (int i = 0; i < 1500; ++i) {
-      futures.add(instance.storeToken(baseId + i, now.plusMinutes(1), "token", "test", null));
+      futures.add(instance.storeTokens(baseId + i, now.plusMinutes(1), "token", "test", null, null));
     }
     
     Future.all(futures)
@@ -153,8 +153,8 @@ public class LoginDaoPersistenceImplIT {
     String id1 = UUID.randomUUID().toString();
     String id2 = UUID.randomUUID().toString();
     
-    instance.storeToken(id1, now.minusSeconds(1), "token1", "test", null)
-            .compose(v -> instance.storeToken(id2, now.plusSeconds(1), "token2", "test", null))
+    instance.storeTokens(id1, now.minusSeconds(1), "token1", "test", null, null)
+            .compose(v -> instance.storeTokens(id2, now.plusSeconds(1), "token2", "test", null, null))
             .compose(v -> instance.getToken(id1))
             .onFailure(ex -> testContext.failNow("Failed to get token"))
             .onSuccess(s -> {
@@ -191,7 +191,7 @@ public class LoginDaoPersistenceImplIT {
     
     List<Future<Void>> futures = new ArrayList<>();
     for (int i = 0; i < 1500; ++i) {
-      futures.add(instance.storeToken(baseId + i, now.plusMinutes(1), "token", "test", null));
+      futures.add(instance.storeTokens(baseId + i, now.plusMinutes(1), "token", "test", null, null));
     }
     
     Future.all(futures)
@@ -229,8 +229,8 @@ public class LoginDaoPersistenceImplIT {
     String id1 = UUID.randomUUID().toString();
     String id2 = UUID.randomUUID().toString();
     
-    instance.storeToken(id1, now.minusSeconds(1), "token1", "test", null)
-            .compose(v -> instance.storeToken(id2, now.plusSeconds(1), "token2", "test", null))
+    instance.storeTokens(id1, now.minusSeconds(1), "token1", "test", null, null)
+            .compose(v -> instance.storeTokens(id2, now.plusSeconds(1), "token2", "test", null, null))
             .compose(v -> instance.getToken(id1))
             .onFailure(ex -> testContext.failNow("Failed to get token"))
             .onSuccess(s -> {
@@ -267,7 +267,7 @@ public class LoginDaoPersistenceImplIT {
     
     List<Future<Void>> futures = new ArrayList<>();
     for (int i = 0; i < 1500; ++i) {
-      futures.add(instance.storeToken(baseId + i, now.plusMinutes(1), "token", "test", null));
+      futures.add(instance.storeTokens(baseId + i, now.plusMinutes(1), "token", "test", null, null));
     }
     
     Future.all(futures)
