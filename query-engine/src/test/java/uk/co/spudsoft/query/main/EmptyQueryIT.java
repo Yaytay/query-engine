@@ -54,7 +54,7 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
  * @author jtalbut
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class EmptyQueryForkIT {
+public class EmptyQueryIT {
   
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
   private static final ServerProviderMySQL mysql = new ServerProviderMySQL().init();
@@ -62,7 +62,7 @@ public class EmptyQueryForkIT {
   private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
   
   @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(EmptyQueryForkIT.class);
+  private static final Logger logger = LoggerFactory.getLogger(EmptyQueryIT.class);
   
   @BeforeAll
   public void createDirs() {
@@ -78,7 +78,15 @@ public class EmptyQueryForkIT {
   public void testQuery() throws Exception {
     
     // Audit records should all have been sorted by main.shutdown
-    assertTrue(TestHelpers.getDirtyAudits(logger, mysql.getJdbcUrl(), mysql.getUser(), mysql.getPassword()).isEmpty());
+    try {
+      assertTrue(TestHelpers.getDirtyAudits(logger, mysql.getJdbcUrl(), mysql.getUser(), mysql.getPassword()).isEmpty());
+    } catch(java.sql.SQLSyntaxErrorException ex) {
+      if (ex.getMessage().contains("Table 'test.request' doesn't exist")) {
+        logger.info("Database is clean");
+      } else {
+        throw ex;
+      }
+    }
     
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
