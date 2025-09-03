@@ -470,7 +470,7 @@ public class FormBuilder {
           try {
             Boolean defaultBoolean = (Boolean) DataType.Boolean.cast(result);
             if (defaultBoolean != null) {
-              checkbox.withDefaultValue(defaultBoolean.toString());
+              checkbox.with("defaultValue", defaultBoolean);
             }
           } catch (Throwable ex) {
             checkbox.withDefaultValue(result.toString());
@@ -523,7 +523,7 @@ public class FormBuilder {
         Object result = evaluator.evaluateAsObject(requestContext, null);
         if (result != null) {
           description = description + "<p>Default: " + result.toString();
-        }        
+        }
       }
       number
             .withLabel(arg.getTitle())
