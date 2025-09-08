@@ -46,7 +46,7 @@ $(document).ready(function () {
             var tableInfo = {
                 id: name.replace(/[^\w\d]/g, '_')
                 , alias: name
-                , description: ((data.meta.description) ? data.meta.description : "SpudSoft Data Feed")
+                , description: ((data.meta.description) ? data.meta.description : "Query Engine Data")
                 , columns : colInfo
             };
             tableau.log("TableInfo: " + JSON.stringify(tableInfo));
@@ -104,7 +104,7 @@ $(document).ready(function () {
         localStorage.setItem('LastQEWdcUsername', jsonUsername);        
         localStorage.setItem('LastQEWdcUrl', jsonUrl);
         
-        tableau.connectionName = "SpudSoft Data Feed";
+        tableau.connectionName = "Query Engine Data";
         tableau.connectionData = JSON.stringify({"jsonUrl": jsonUrl});
         tableau.username = jsonUsername;
         tableau.password = jsonPassword;
