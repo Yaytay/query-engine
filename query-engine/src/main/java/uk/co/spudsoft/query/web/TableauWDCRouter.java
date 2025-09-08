@@ -88,13 +88,7 @@ public class TableauWDCRouter implements Handler<RoutingContext> {
     } else {
       // decode URL path
       String uriDecodedPath = URIDecoder.decodeURIComponent(context.normalizedPath(), false);
-      // if the normalized path is null it cannot be resolved
-      if (uriDecodedPath == null) {
-        logger.warn("Invalid path: " + request.path());
-        context.next();
-        return;
-      }
-      // will normalize and handle all paths as UNIX paths              
+
       logger.debug("UI request for {}", uriDecodedPath);
       
       if ("/tableau/wdc.html".equals(uriDecodedPath)
@@ -156,9 +150,6 @@ public class TableauWDCRouter implements Handler<RoutingContext> {
       byte[] body = is.readAllBytes();
       this.cachedContents = Buffer.buffer(body);
       return cachedContents;
-    } catch (Throwable ex) {
-      logger.warn("Failed to load UI resource ({}): ", path, ex);
-      throw ex;
     }
   }
   

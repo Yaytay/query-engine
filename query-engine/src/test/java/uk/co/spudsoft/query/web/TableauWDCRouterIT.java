@@ -102,6 +102,14 @@ public class TableauWDCRouterIT {
         
     given()
             .log().all()
+            .put("/tableau/wdc.html")
+            .then()
+            .log().ifError()
+            .statusCode(404)
+            ;
+        
+    given()
+            .log().all()
             .get("/tableau/nonexistent")
             .then()
             .log().ifError()
