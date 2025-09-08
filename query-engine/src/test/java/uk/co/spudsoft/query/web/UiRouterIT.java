@@ -168,7 +168,7 @@ public class UiRouterIT {
             .extract().body().asString()
             ;
     
-    assertThat(wdc, startsWith("<html>\n    <head>\n        <title>SpudSoft Web DB Query</title>"));
+    assertThat(wdc, equalTo(root));
         
     wdc = given()
             .log().all()
@@ -180,7 +180,7 @@ public class UiRouterIT {
             .extract().body().asString()
             ;
     
-    assertThat(wdc, startsWith("<html>\n    <head>\n        <title>SpudSoft Query Engine Web Data Connector</title>"));
+    assertThat(wdc, equalTo(root));
         
     String notfound = given()
             .log().all()

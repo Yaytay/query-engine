@@ -2,8 +2,8 @@
     <head>
         <title>SpudSoft Query Engine Web Data Connector</title>
         <meta http-equiv="Cache-Control" content="no-store" />
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.js" type="text/javascript"></script>
-        <script src="https://connectors.tableau.com/libs/tableauwdc-2.2.latest.js" type="text/javascript"></script>        
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.js" type="text/javascript"></script>
+        <script src="https://connectors.tableau.com/libs/tableauwdc-2.3.latest.js" type="text/javascript"></script>
         <script type="text/javascript">
 
 $(document).ready(function () {
@@ -94,6 +94,7 @@ $(document).ready(function () {
     };
     $("#submit").click(function (e) {
         cancel(e);
+        window.cachedTableData = null;
         tableau.log("Submitting");
         var jsonUrl = $('input[name=jsonUrl]')[0].value.trim();
         var jsonUsername = $('input[name=jsonUsername]')[0].value.trim();

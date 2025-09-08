@@ -135,6 +135,7 @@ import uk.co.spudsoft.query.web.AuthenticationRouter;
 import uk.co.spudsoft.query.web.LoginRouter;
 import uk.co.spudsoft.query.web.QueryRouter;
 import uk.co.spudsoft.query.web.SecurityHeadersRouter;
+import uk.co.spudsoft.query.web.TableauWDCRouter;
 import uk.co.spudsoft.query.web.UiRouter;
 import uk.co.spudsoft.query.web.rest.AuthConfigHandler;
 import uk.co.spudsoft.query.web.rest.DocHandler;
@@ -631,6 +632,7 @@ public class Main extends Application {
     router.route("/api/*").handler(rch);
     router.route("/api/*").handler(new JaxRsHandler(vertx, meterRegistry, "/api", controllers, providers));
     router.route("/ui/*").handler(UiRouter.create(vertx, meterRegistry, "/ui", "/www", "/www/index.html"));
+    router.route("/tableau*").handler(TableauWDCRouter.create(vertx));
     router.getWithRegex("/openapi\\..*").blockingHandler(openApiHandler);
     router.get("/openapi").handler(openApiHandler.getUiHandler());
     if (!params.getSession().getOauth().isEmpty()) {

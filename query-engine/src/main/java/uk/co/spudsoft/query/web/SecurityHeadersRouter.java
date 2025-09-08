@@ -70,7 +70,7 @@ public class SecurityHeadersRouter implements Handler<RoutingContext> {
           .add("unsafe-url")
           .build();
   
-  private static void appendSources(StringBuilder builder, String name, String extra, List<String> sources) {
+  static void appendSources(StringBuilder builder, String name, String extra, List<String> sources) {
     builder.append("; ").append(name).append(" 'self'");
     if (!Strings.isNullOrEmpty(extra)) {
       builder.append(" ").append(extra);
