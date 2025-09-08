@@ -33,6 +33,7 @@ import java.io.PrintStream;
 import java.lang.invoke.MethodHandles;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasLength;
 import uk.co.spudsoft.query.main.Main;
 import static org.hamcrest.Matchers.startsWith;
 import org.junit.jupiter.api.TestInstance;
@@ -99,6 +100,16 @@ public class TableauWDCRouterIT {
             ;
     
     assertThat(wdc, startsWith("<html>\n    <head>\n        <title>SpudSoft Query Engine Web Data Connector</title>\n"));
+        
+    given()
+            .log().all()
+            .head("/tableau/wdc.html")
+            .then()
+            .log().ifError()
+            .statusCode(200)
+            .contentType(ContentType.HTML)
+            .body(hasLength(0))
+            ;
         
     given()
             .log().all()
