@@ -258,7 +258,12 @@ public class AuditorMemoryImpl implements Auditor {
   
   @Override
   public void recordException(RequestContext context, Throwable ex) {
-    logger.info("Exception: {} {}", ex.getClass().getCanonicalName(), ex.getMessage());
+    logger.atInfo().setMessage("Exception: {} {}")
+            .addArgument(ex.getClass().getCanonicalName())
+            .addArgument(ex.getMessage())
+            .setCause(ex)
+            .addKeyValue(PROCESS_ID, SIZE)
+            .log();
     AuditRow row = find(context.getRequestId());
     if (row != null) {
       row.exceptionTime = LocalDateTime.now(ZoneOffset.UTC);

@@ -166,6 +166,9 @@ public enum DataType {
         case String tv -> {
           return java.lang.Integer.valueOf(tv);
         }
+        case Boolean bv -> {
+          return bv ? 1 : 0;
+        }
         default -> {
           logger.info("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
           return java.lang.Integer.valueOf(value.toString());
