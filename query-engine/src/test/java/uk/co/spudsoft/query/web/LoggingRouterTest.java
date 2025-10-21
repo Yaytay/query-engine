@@ -21,6 +21,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.net.impl.HostAndPortImpl;
 import io.vertx.core.net.impl.SocketAddressImpl;
 import io.vertx.ext.web.RoutingContext;
 import org.junit.jupiter.api.Test;
@@ -47,6 +48,8 @@ class LoggingRouterTest {
     when(request.method()).thenReturn(HttpMethod.GET);
     when(request.uri()).thenReturn("/test/path");
     when(request.remoteAddress()).thenReturn(new SocketAddressImpl(37, "127.0.0.0"));
+    when(request.scheme()).thenReturn("http");
+    when(request.authority()).thenReturn(HostAndPortImpl.parseAuthority("localhost", 80));
 
     LoggingRouter loggingRouter = new LoggingRouter(null);
 
@@ -77,6 +80,8 @@ class LoggingRouterTest {
     when(response.getStatusCode()).thenReturn(200);
     when(response.bytesWritten()).thenReturn(1024L);
     when(request.remoteAddress()).thenReturn(new SocketAddressImpl(37, "127.0.0.0"));
+    when(request.scheme()).thenReturn("http");
+    when(request.authority()).thenReturn(HostAndPortImpl.parseAuthority("localhost", 80));
 
     LoggingRouter loggingRouter = new LoggingRouter(null);
 
