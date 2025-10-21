@@ -46,6 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
+import uk.co.spudsoft.query.web.OriginalUrl;
 
 
 /**
@@ -107,8 +108,8 @@ public final class RequestContext {
     this.environment = ImmutableCollectionTools.copy(environment);
     this.startTime = System.currentTimeMillis();
     this.requestId = generateRequestId();
-    this.url = request.absoluteURI();
-    this.uri = parseURI(request.headers() == null ? null : request.headers().get("x-forwarded-proto"), request.absoluteURI());
+    this.url = OriginalUrl.get(request);
+    this.uri = parseURI(this.url);
     this.clientIp = extractRemoteIp(request);
     this.host = extractHost(request);
     this.path = request.path();
@@ -120,7 +121,6 @@ public final class RequestContext {
     ContextualData.put(REQUEST_ID, this.requestId);
 
     logger.debug("Created {} RequestContext@{} from HttpServerRequest", requestId, System.identityHashCode(this));
-
   }
 
   /**
@@ -141,7 +141,7 @@ public final class RequestContext {
     this.startTime = System.currentTimeMillis();
     this.requestId = requestId;
     this.url = url;
-    this.uri = parseURI(headers == null ? null : headers.get("x-forwarded-proto"), url);
+    this.uri = parseURI(url);
     this.host = host;
     this.path = path;
     this.params = params;
@@ -153,28 +153,12 @@ public final class RequestContext {
     this.runId = params == null ? null : params.get("_runid");
     logger.trace("Created {} RequestContext@{} from values", requestId, System.identityHashCode(this));
   }
-
-  private static URI parseURI(String forwardedProtoHeader, String url) {
+  
+  private static URI parseURI(String url) {
     if (url == null) {
       return null;
     } else {      
-      URI uri = URI.create(url);
-      if (forwardedProtoHeader != null) {
-        try {
-          uri = new URI(
-              forwardedProtoHeader,
-              uri.getUserInfo(),
-              uri.getHost(),
-              uri.getPort(),
-              uri.getPath(),
-              uri.getQuery(),
-              uri.getFragment()
-          );
-        } catch (URISyntaxException ex) {
-          logger.warn("Failed to update scheme in {} to {}: ", url, forwardedProtoHeader, ex);
-        }
-      }
-      return uri;
+      return URI.create(url);
     }
   }
 
