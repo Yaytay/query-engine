@@ -76,11 +76,14 @@ public class OriginalUrl {
     if (requestHostAndPort == null) {
       throw new IllegalArgumentException("Host and port from current request must be specified");
     }
-    String proto = coalesce(
-            headers.get("X-Forwarded-Proto")
-            , headers.get("X-Forwarded-Scheme")
-            , requestScheme
-    );
+    String proto = requestScheme;
+    if (headers != null) {
+      proto = coalesce(
+              headers.get("X-Forwarded-Proto")
+              , headers.get("X-Forwarded-Scheme")
+              , requestScheme
+      );
+    }
 
     HostAndPort hostAndPort = getHostAndPort(requestHostAndPort, headers);
 
@@ -125,7 +128,7 @@ public class OriginalUrl {
 
     String host = null;
     int port = -1;
-    String forwardedHost = headers.get("X-Forwarded-Host");
+    String forwardedHost = headers == null ? null : headers.get("X-Forwarded-Host");
     if (forwardedHost != null) {
       int colonPos = forwardedHost.indexOf(":");
       if (colonPos < 0) {
@@ -144,7 +147,7 @@ public class OriginalUrl {
     if (host == null) {
       host = requestHostAndPort.host();
     }
-    String forwardedPort = headers.get("X-Forwarded-Port");
+    String forwardedPort = headers == null ? null : headers.get("X-Forwarded-Port");
     if (forwardedPort != null) {
       try {
         port = Integer.parseInt(forwardedPort);

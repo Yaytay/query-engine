@@ -17,20 +17,18 @@
 package uk.co.spudsoft.query.exec;
 
 import uk.co.spudsoft.query.exec.context.RequestContext;
-import uk.co.spudsoft.query.main.Authenticator;
 import com.google.common.collect.ImmutableMap;
 import inet.ipaddr.IPAddressString;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.SocketAddress;
 import io.vertx.core.net.impl.HostAndPortImpl;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -42,7 +40,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
-import uk.co.spudsoft.query.web.LoginDaoMemoryImpl;
 
 
 /**
@@ -75,6 +72,7 @@ public class RequestContextTest {
 
     HttpServerRequest request = mock(HttpServerRequest.class);
     when(request.getHeader("X-Cluster-Client-IP")).thenReturn("111.122.133.144");
+    when(request.scheme()).thenReturn("http");
     assertEquals(new IPAddressString("111.122.133.144"), RequestContext.extractRemoteIp(request));
 
     request = mock(HttpServerRequest.class);
@@ -99,6 +97,8 @@ public class RequestContextTest {
 
     HttpServerRequest request = mock(HttpServerRequest.class);
     when(request.getHeader("X-Forwarded-Host")).thenReturn("bob");
+    when(request.getHeader("X-Forwarded-Proto")).thenReturn("https");
+    when(request.scheme()).thenReturn("http");
     assertEquals("bob", RequestContext.extractHost(request));
 
     request = mock(HttpServerRequest.class);
@@ -110,16 +110,21 @@ public class RequestContextTest {
 
   @Test
   public void testGetUser() {
-    HttpServerRequest req = mock(HttpServerRequest.class);
-    when(req.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
-    when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
-    when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
+    HttpServerRequest request = mock(HttpServerRequest.class);
+    MultiMap headers = new HeadersMultiMap();
+    headers.add("X-Forwarded-Proto", "https");
+    when(request.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
+    when(request.headers()).thenReturn(headers);
+    when(request.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
+    when(request.scheme()).thenReturn("http");
+    when(request.authority()).thenReturn(HostAndPortImpl.parseAuthority("localhost", 80));
+    when(request.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
 
-    RequestContext ctx = new RequestContext(null, req);
+    RequestContext ctx = new RequestContext(null, request);
     ctx.setJwt(new Jwt(null, new JsonObject(new String(Base64.getDecoder().decode(OPENID))), null, null));
 
     assertEquals("bob.fred", ctx.getJwt().getClaim("preferred_username"));
-    assertEquals("{\"clientIp\":\"111.122.133.144\", \"params\":{\"param1\":[\"value1\", \"value3\"], \"param2\":\"value2\"}, \"iss\":\"http://ca.localtest.me\", \"sub\":\"af78202f-b54a-439d-913c-0bbe99ba6bf8\"}", ctx.toString());
+    assertEquals("{\"url\":\"https://localhost\", \"clientIp\":\"111.122.133.144\", \"host\":\"localhost\", \"params\":{\"param1\":[\"value1\", \"value3\"], \"param2\":\"value2\"}, \"iss\":\"http://ca.localtest.me\", \"sub\":\"af78202f-b54a-439d-913c-0bbe99ba6bf8\"}", ctx.toString());
 
     assertEquals(Arrays.asList("value1", "value3"), ctx.getParams().getAll("param1"));
     assertEquals("value2", ctx.getParams().get("param2"));
@@ -128,12 +133,14 @@ public class RequestContextTest {
 
   @Test
   public void textGetAud() {
-    HttpServerRequest req = mock(HttpServerRequest.class);
-    when(req.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
-    when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
-    when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
+    HttpServerRequest request = mock(HttpServerRequest.class);
+    when(request.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
+    when(request.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
+    when(request.scheme()).thenReturn("http");
+    when(request.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
+    when(request.authority()).thenReturn(HostAndPortImpl.parseAuthority("localhost", 80));
 
-    RequestContext ctx = new RequestContext(null, req);
+    RequestContext ctx = new RequestContext(null, request);
     ctx.setJwt(new Jwt(null, new JsonObject(new String(Base64.getDecoder().decode(OPENID))), null, null));
 
     assertEquals("security-admin-console", ctx.getJwt().getClaim("aud"));
@@ -144,26 +151,32 @@ public class RequestContextTest {
   public void testGetClientIp() {
     HttpServerRequest request = mock(HttpServerRequest.class);
     when(request.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
+    when(request.scheme()).thenReturn("http");
+    when(request.authority()).thenReturn(HostAndPortImpl.parseAuthority("localhost", 80));
     RequestContext ctx = new RequestContext(null, request);
     assertEquals(new IPAddressString("111.122.133.144"), ctx.getClientIp());
 
-    assertEquals("{\"clientIp\":\"111.122.133.144\"}", ctx.toString());
+    assertEquals("{\"url\":\"http://localhost\", \"clientIp\":\"111.122.133.144\", \"host\":\"localhost\"}", ctx.toString());
   }
 
   @Test
   public void testGetArguments() {
     HttpServerRequest request = mock(HttpServerRequest.class);
     when(request.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
+    when(request.scheme()).thenReturn("http");
+    when(request.authority()).thenReturn(HostAndPortImpl.parseAuthority("localhost", 80));
     RequestContext ctx = new RequestContext(null, request);
     assertEquals(new IPAddressString("111.122.133.144"), ctx.getClientIp());
 
-    assertEquals("{\"clientIp\":\"111.122.133.144\"}", ctx.toString());
+    assertEquals("{\"url\":\"http://localhost\", \"clientIp\":\"111.122.133.144\", \"host\":\"localhost\"}", ctx.toString());
   }
 
   @Test
   public void testClientIpIsInV4() {
     HttpServerRequest request = mock(HttpServerRequest.class);
     when(request.getHeader("X-Cluster-Client-IP")).thenReturn("111.122.133.144");
+    when(request.scheme()).thenReturn("http");
+    when(request.authority()).thenReturn(HostAndPortImpl.parseAuthority("localhost", 80));
     RequestContext requestContext = new RequestContext(null, request);
     assertEquals(new IPAddressString("111.122.133.144"), requestContext.getClientIp());
     assertTrue(requestContext.clientIpIsIn("111.122.133.144"));
@@ -180,6 +193,8 @@ public class RequestContextTest {
   public void testClientIpIsInV6() {
     HttpServerRequest request = mock(HttpServerRequest.class);
     when(request.getHeader("X-Cluster-Client-IP")).thenReturn("fe80::14e0:18c7:e093:f8dd%18");
+    when(request.scheme()).thenReturn("http");
+    when(request.authority()).thenReturn(HostAndPortImpl.parseAuthority("localhost", 80));
     RequestContext requestContext = new RequestContext(null, request);
     assertEquals(new IPAddressString("fe80::14e0:18c7:e093:f8dd%18"), requestContext.getClientIp());
     assertTrue(requestContext.clientIpIsIn("fe80::14e0:18c7:e093:f8dd%18"));
@@ -191,12 +206,14 @@ public class RequestContextTest {
 
   @Test
   public void testGetName() {
-    HttpServerRequest req = mock(HttpServerRequest.class);
-    when(req.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
-    when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
-    when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
+    HttpServerRequest request = mock(HttpServerRequest.class);
+    when(request.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
+    when(request.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
+    when(request.scheme()).thenReturn("http");
+    when(request.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
+    when(request.authority()).thenReturn(HostAndPortImpl.parseAuthority("localhost", 80));
 
-    RequestContext ctx = new RequestContext(null, req);
+    RequestContext ctx = new RequestContext(null, request);
     ctx.setJwt(new Jwt(null, new JsonObject(new String(Base64.getDecoder().decode(OPENID))), null, null));
 
     assertEquals("Bob Fred", ctx.getName());
@@ -206,12 +223,14 @@ public class RequestContextTest {
 
   @Test
   public void testGetNameGivenNameAndFamilyName() {
-    HttpServerRequest req = mock(HttpServerRequest.class);
-    when(req.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
-    when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_GIVENNAME_FAMILYNAME);
-    when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
+    HttpServerRequest request = mock(HttpServerRequest.class);
+    when(request.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
+    when(request.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_GIVENNAME_FAMILYNAME);
+    when(request.scheme()).thenReturn("http");
+    when(request.authority()).thenReturn(HostAndPortImpl.parseAuthority("localhost", 80));
+    when(request.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
 
-    RequestContext ctx = new RequestContext(null, req);
+    RequestContext ctx = new RequestContext(null, request);
     ctx.setJwt(new Jwt(null, new JsonObject(new String(Base64.getDecoder().decode(OPENID_GIVENNAME_FAMILYNAME))), null, null));
 
     assertEquals("Bob Fred", ctx.getName());
@@ -221,12 +240,14 @@ public class RequestContextTest {
 
   @Test
   public void testGetNameGivenName() {
-    HttpServerRequest req = mock(HttpServerRequest.class);
-    when(req.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
-    when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_GIVENNAME);
-    when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
+    HttpServerRequest request = mock(HttpServerRequest.class);
+    when(request.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
+    when(request.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_GIVENNAME);
+    when(request.scheme()).thenReturn("http");
+    when(request.authority()).thenReturn(HostAndPortImpl.parseAuthority("localhost", 80));
+    when(request.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
 
-    RequestContext ctx = new RequestContext(null, req);
+    RequestContext ctx = new RequestContext(null, request);
     ctx.setJwt(new Jwt(null, new JsonObject(new String(Base64.getDecoder().decode(OPENID_GIVENNAME))), null, null));
 
     assertEquals("Bob", ctx.getName());
@@ -236,12 +257,14 @@ public class RequestContextTest {
 
   @Test
   public void testGetNameFamilyName() {
-    HttpServerRequest req = mock(HttpServerRequest.class);
-    when(req.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
-    when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_FAMILYNAME);
-    when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
+    HttpServerRequest request = mock(HttpServerRequest.class);
+    when(request.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
+    when(request.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_FAMILYNAME);
+    when(request.scheme()).thenReturn("http");
+    when(request.authority()).thenReturn(HostAndPortImpl.parseAuthority("localhost", 80));
+    when(request.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
 
-    RequestContext ctx = new RequestContext(null, req);
+    RequestContext ctx = new RequestContext(null, request);
     ctx.setJwt(new Jwt(null, new JsonObject(new String(Base64.getDecoder().decode(OPENID_FAMILYNAME))), null, null));
 
     assertEquals("Fred", ctx.getName());
@@ -251,12 +274,14 @@ public class RequestContextTest {
 
   @Test
   public void testGetNamePreferredUsername() {
-    HttpServerRequest req = mock(HttpServerRequest.class);
-    when(req.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
-    when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_PREFERREDUSERNAME);
-    when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
+    HttpServerRequest request = mock(HttpServerRequest.class);
+    when(request.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
+    when(request.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_PREFERREDUSERNAME);
+    when(request.scheme()).thenReturn("http");
+    when(request.authority()).thenReturn(HostAndPortImpl.parseAuthority("localhost", 80));
+    when(request.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
 
-    RequestContext ctx = new RequestContext(null, req);
+    RequestContext ctx = new RequestContext(null, request);
     ctx.setJwt(new Jwt(null, new JsonObject(new String(Base64.getDecoder().decode(OPENID_PREFERREDUSERNAME))), null, null));
 
     assertEquals("bob.fred", ctx.getName());
@@ -264,12 +289,14 @@ public class RequestContextTest {
 
   @Test
   public void testIsInGroup() {
-    HttpServerRequest req = mock(HttpServerRequest.class);
-    when(req.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
-    when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_PREFERREDUSERNAME);
-    when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
+    HttpServerRequest request = mock(HttpServerRequest.class);
+    when(request.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
+    when(request.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_PREFERREDUSERNAME);
+    when(request.scheme()).thenReturn("http");
+    when(request.authority()).thenReturn(HostAndPortImpl.parseAuthority("localhost", 80));
+    when(request.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
    
-    RequestContext ctx = new RequestContext(null, req);
+    RequestContext ctx = new RequestContext(null, request);
     ctx.setJwt(new Jwt(null, new JsonObject(new String(Base64.getDecoder().decode(OPENID_PREFERREDUSERNAME))), null, null));
     
     assertTrue(ctx.isInGroup("group1"));
@@ -279,12 +306,14 @@ public class RequestContextTest {
 
   @Test
   public void testGetEnvVar() {
-    HttpServerRequest req = mock(HttpServerRequest.class);
-    when(req.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
-    when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_PREFERREDUSERNAME);
-    when(req.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
+    HttpServerRequest request = mock(HttpServerRequest.class);
+    when(request.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
+    when(request.getHeader("X-OpenID-Introspection")).thenReturn(OPENID_PREFERREDUSERNAME);
+    when(request.scheme()).thenReturn("http");
+    when(request.authority()).thenReturn(HostAndPortImpl.parseAuthority("localhost", 80));
+    when(request.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
 
-    RequestContext ctx = new RequestContext(ImmutableMap.<String, String>builder().put("ev1", "good").put("ev2", "bad").build(), req);
+    RequestContext ctx = new RequestContext(ImmutableMap.<String, String>builder().put("ev1", "good").put("ev2", "bad").build(), request);
 
     assertEquals("good", ctx.getEnv().get("ev1"));
   }
