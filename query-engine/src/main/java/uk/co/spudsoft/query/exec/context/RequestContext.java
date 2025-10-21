@@ -31,6 +31,7 @@ import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.core.net.HostAndPort;
 import io.vertx.ext.web.RoutingContext;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -107,7 +108,7 @@ public final class RequestContext {
     this.startTime = System.currentTimeMillis();
     this.requestId = generateRequestId();
     this.url = request.absoluteURI();
-    this.uri = parseURI(request.absoluteURI());
+    this.uri = parseURI(request.headers() == null ? null : request.headers().get("x-forwarded-proto"), request.absoluteURI());
     this.clientIp = extractRemoteIp(request);
     this.host = extractHost(request);
     this.path = request.path();
@@ -140,7 +141,7 @@ public final class RequestContext {
     this.startTime = System.currentTimeMillis();
     this.requestId = requestId;
     this.url = url;
-    this.uri = parseURI(url);
+    this.uri = parseURI(headers == null ? null : headers.get("x-forwarded-proto"), url);
     this.host = host;
     this.path = path;
     this.params = params;
@@ -153,11 +154,27 @@ public final class RequestContext {
     logger.trace("Created {} RequestContext@{} from values", requestId, System.identityHashCode(this));
   }
 
-  private static URI parseURI(String url) {
+  private static URI parseURI(String forwardedProtoHeader, String url) {
     if (url == null) {
       return null;
-    } else {
-      return URI.create(url);
+    } else {      
+      URI uri = URI.create(url);
+      if (forwardedProtoHeader != null) {
+        try {
+          uri = new URI(
+              forwardedProtoHeader,
+              uri.getUserInfo(),
+              uri.getHost(),
+              uri.getPort(),
+              uri.getPath(),
+              uri.getQuery(),
+              uri.getFragment()
+          );
+        } catch (URISyntaxException ex) {
+          logger.warn("Failed to update scheme in {} to {}: ", url, forwardedProtoHeader, ex);
+        }
+      }
+      return uri;
     }
   }
 
