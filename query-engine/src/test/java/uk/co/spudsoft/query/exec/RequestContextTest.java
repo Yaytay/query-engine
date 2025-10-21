@@ -113,6 +113,7 @@ public class RequestContextTest {
     HttpServerRequest request = mock(HttpServerRequest.class);
     MultiMap headers = new HeadersMultiMap();
     headers.add("X-Forwarded-Proto", "https");
+    headers.add("X-Forwarded-Port", "443");
     when(request.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
     when(request.headers()).thenReturn(headers);
     when(request.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
@@ -124,7 +125,7 @@ public class RequestContextTest {
     ctx.setJwt(new Jwt(null, new JsonObject(new String(Base64.getDecoder().decode(OPENID))), null, null));
 
     assertEquals("bob.fred", ctx.getJwt().getClaim("preferred_username"));
-    assertEquals("{\"url\":\"https://localhost\", \"clientIp\":\"111.122.133.144\", \"host\":\"localhost\", \"params\":{\"param1\":[\"value1\", \"value3\"], \"param2\":\"value2\"}, \"iss\":\"http://ca.localtest.me\", \"sub\":\"af78202f-b54a-439d-913c-0bbe99ba6bf8\"}", ctx.toString());
+    assertEquals("{\"url\":\"https://localhost\", \"clientIp\":\"111.122.133.144\", \"host\":\"localhost\", \"params\":{\"param1\":[\"value1\", \"value3\"], \"param2\":\"value2\"}, \"headers\":{\"X-Forwarded-Port\":\"443\", \"X-Forwarded-Proto\":\"https\"}, \"iss\":\"http://ca.localtest.me\", \"sub\":\"af78202f-b54a-439d-913c-0bbe99ba6bf8\"}", ctx.toString());
 
     assertEquals(Arrays.asList("value1", "value3"), ctx.getParams().getAll("param1"));
     assertEquals("value2", ctx.getParams().get("param2"));
