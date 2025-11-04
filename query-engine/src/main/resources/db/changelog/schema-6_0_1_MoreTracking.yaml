@@ -13,5 +13,11 @@ databaseChangeLog:
         - {column: {name: username, type: varchar(1000), constraints: {nullable: false}}}
         - {column: {name: query, type: clob, constraints: {nullable: false}}}
         - {column: {name: arguments, type: clob, constraints: {nullable: true}}}
+
+    - createTable:
+        tableName: warnings
+        columns:
+        - {column: {name: id, type: varchar(100), constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_query}}}
+        - {column: {name: timestamp, type: timestamp, constraints: {nullable: false}}}
         - {column: {name: warnings, type: clob, constraints: {nullable: true}}}
 
