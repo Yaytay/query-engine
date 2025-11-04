@@ -1,9 +1,9 @@
-FROM azul/zulu-openjdk-alpine:21.0.7-jdk
+FROM azul/zulu-openjdk-alpine:25.0.1-jdk
 
 RUN jlink --output /qe-java --add-modules java.base,java.compiler,java.management,java.net.http,jdk.management,jdk.unsupported,java.sql.rowset,java.desktop,jdk.naming.dns,java.naming,java.security.jgss,java.security.sasl,java.smartcardio,java.xml.crypto,jdk.crypto.cryptoki,jdk.crypto.ec,jdk.security.jgss 
 
 
-FROM alpine:3.21.3
+FROM alpine:3.22.2
 
 ARG DEPS
 
