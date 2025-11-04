@@ -150,23 +150,29 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     PreparedStatement statement = null;
     ResultSet rs = null;
     ResultSetMetaData rsmeta = null;
+    
+    long start = System.currentTimeMillis();
 
     try {
       try {
+        logger.debug("{}: Connecting to {}", (System.currentTimeMillis() - start) / 1000.0, dataSourceUrl);
         connection = DriverManager.getConnection(dataSourceUrl, credentials[0], credentials[1]);
       } catch (Throwable ex) {
+        logger.warn("{}: Failed to connect to {} for {}: ", (System.currentTimeMillis() - start) / 1000.0, dataSourceUrl, credentials[0], ex);
         context.runOnContext(v -> {
           initPromise.fail(new RuntimeException("Failed to establish connection to JDBC URL (" + dataSourceUrl + "): ", ex));
         });
         return ;
       }
 
+      String preparedSql = null;
       try {
         AbstractSqlPreparer preparer = new JdbcSqlPreparer(connection);
         AbstractSqlPreparer.QueryAndArgs queryAndArgs = preparer.prepareSqlStatement(sql, definition.getReplaceDoubleQuotes(), pipeline.getArgumentInstances());
-        String preparedSql = queryAndArgs.query();
+        preparedSql = queryAndArgs.query();
 
         try {
+          logger.debug("{}: Preparing statement {}", (System.currentTimeMillis() - start) / 1000.0, preparedSql);
           statement = connection.prepareStatement(preparedSql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
           setFetchSize(definition, dataSourceUrl, statement);
           statement.setFetchDirection(ResultSet.FETCH_FORWARD);
@@ -180,6 +186,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
           }
         }
       } catch (Throwable ex) {
+        logger.warn("{}: Failed to prepare statement \"{}\": ", (System.currentTimeMillis() - start) / 1000.0, preparedSql, ex);
         context.runOnContext(v -> {
           initPromise.fail(new RuntimeException("Failed to prepare statement: ", ex));
         });
@@ -187,8 +194,10 @@ public class JdbcReadStream implements ReadStream<DataRow> {
       }
 
       try {
+        logger.debug("{}: Executing query", (System.currentTimeMillis() - start) / 1000.0);
         rs = statement.executeQuery();
         types = new Types();
+        logger.debug("{}: Getting metadata", (System.currentTimeMillis() - start) / 1000.0);
         rsmeta = rs.getMetaData();
         for (int i = 0; i < rsmeta.getColumnCount(); ++i) {
           String name = rsmeta.getColumnLabel(i + 1);
@@ -205,6 +214,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
           types.putIfAbsent(name, type);
         }
       } catch (Throwable ex) {
+        logger.warn("{}: Failed to execute statement: ", (System.currentTimeMillis() - start) / 1000.0, ex);
         context.runOnContext(v -> {
           initPromise.fail(new RuntimeException("Failed to execute statement: ", ex));
         });
@@ -215,6 +225,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
         initPromise.complete(new ReadStreamWithTypes(this, types));
       });
 
+      logger.debug("{}: Processing results", (System.currentTimeMillis() - start) / 1000.0);
       resultSetWalk(rs, rsmeta);
     } finally {
       if (statement != null) {
