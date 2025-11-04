@@ -84,7 +84,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Upload site reports on success
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: success()
       with:
         name: reports
@@ -94,7 +94,7 @@ jobs:
           query-engine-design-mode/target/site
 
     - name: Upload site reports on failure
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: failure()
       with:
         name: reports
