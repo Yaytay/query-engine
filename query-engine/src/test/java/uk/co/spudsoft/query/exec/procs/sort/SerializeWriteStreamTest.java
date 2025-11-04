@@ -141,7 +141,7 @@ public class SerializeWriteStreamTest {
         ++written;
         // Silly way to call it just to increase the coverage
         Promise<Void> promise = Promise.promise();
-        sws.write(written, promise);
+        sws.write(written).andThen(promise);
       }    
     }
   }

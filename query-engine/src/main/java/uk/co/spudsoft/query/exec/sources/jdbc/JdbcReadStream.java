@@ -16,26 +16,36 @@
  */
 package uk.co.spudsoft.query.exec.sources.jdbc;
 
+import com.microsoft.sqlserver.jdbc.SQLServerStatement;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.streams.ReadStream;
 import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.JDBCType;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayDeque;
 import java.util.Calendar;
 import java.util.Deque;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.DataType;
+import uk.co.spudsoft.query.defn.SourceJdbc;
 import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.PipelineInstance;
+import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.sources.sql.AbstractSqlPreparer;
 
 /**
  * Processor for converting a JDBC {@link ResultSet} into a Vert.x {@link ReadStream}.
@@ -50,10 +60,12 @@ public class JdbcReadStream implements ReadStream<DataRow> {
   
   private final SourceNameTracker sourceNameTracker;
   private final Context context;
-  private final Types types;
-  private final Connection connection;
-  private final ResultSet rs;
-  private final int fetchSize;
+  private final SourceJdbc definition;
+  private final int processingBatchSize;
+  private final Promise<ReadStreamWithTypes> initPromise;
+  
+  
+  private Types types;
   
   private final Deque<DataRow> items = new ArrayDeque<>();
   
@@ -75,28 +87,42 @@ public class JdbcReadStream implements ReadStream<DataRow> {
    * Constructor.
    * @param sourceNameTracker Name tracker to use for logging, must be called at each entry point.
    * @param context The Vert.x context to use for asynchronous method calls.
-   * @param types The types that are consistent across each row.
-   * @param connection The {@link Connection} that must be closed when the processing finishes.
-   * @param rs The {@link ResultSet} to read from.
-   * @param fetchSize The number of rows to buffer.
+   * @param definition The source definition.
+   * @param initPromise The promise to complete when the query starts returning data.
    */
   @SuppressFBWarnings("EI_EXPOSE_REP2")
-  public JdbcReadStream(SourceNameTracker sourceNameTracker, Context context, Types types, Connection connection, ResultSet rs, int fetchSize) {
+  public JdbcReadStream(SourceNameTracker sourceNameTracker
+          , Context context
+          , SourceJdbc definition
+          , Promise<ReadStreamWithTypes> initPromise
+  ) {
     this.sourceNameTracker = sourceNameTracker;
     this.context = context;
-    this.types = types;
-    this.connection = connection;
-    this.rs = rs;
-    this.fetchSize = fetchSize;
+    this.definition = definition;
+    this.processingBatchSize = definition.getProcessingBatchSize();
+    this.initPromise = initPromise;
   }
   
   /**
    * Start processing the {@link ResultSet} in a new thread.
    * 
    * @param name The name to assign to the new thread.
+   * @param dataSourceUrl The JDBC URL for the datasource.
+   * @param credentials The credentials to use to connect to the data source.
+   *    Two element array, the username and then the password.
+   * @param sql The SQL statement to execute.
+   * @param pipeline The {@link PipelineInstance} to use to obtain the arguments.
    */
-  public void start(String name) {
-    Thread thread = new Thread(this::resultSetWalker, name);
+  public void start(String name
+          , String dataSourceUrl
+          , String[] credentials
+          , String sql
+          , PipelineInstance pipeline
+  ) {
+    Thread thread = new Thread(() -> {
+      
+      runOnThread(dataSourceUrl, credentials, sql, pipeline);
+    }, name);
     thread.start();
   }
   
@@ -112,17 +138,130 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     }
   }
   
+  @SuppressFBWarnings("SQL_INJECTION_JDBC")
+  private void runOnThread(
+          String dataSourceUrl
+          , String[] credentials
+          , String sql
+          , PipelineInstance pipeline
+  ) throws RuntimeException {
+
+    Connection connection = null;
+    PreparedStatement statement = null;
+    ResultSet rs = null;
+    ResultSetMetaData rsmeta = null;
+
+    try {
+      try {
+        connection = DriverManager.getConnection(dataSourceUrl, credentials[0], credentials[1]);
+      } catch (Throwable ex) {
+        context.runOnContext(v -> {
+          initPromise.fail(new RuntimeException("Failed to establish connection to JDBC URL (" + dataSourceUrl + "): ", ex));
+        });
+        return ;
+      }
+
+      try {
+        AbstractSqlPreparer preparer = new JdbcSqlPreparer(connection);
+        AbstractSqlPreparer.QueryAndArgs queryAndArgs = preparer.prepareSqlStatement(sql, definition.getReplaceDoubleQuotes(), pipeline.getArgumentInstances());
+        String preparedSql = queryAndArgs.query();
+
+        try {
+          statement = connection.prepareStatement(preparedSql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+          setFetchSize(definition, dataSourceUrl, statement);
+          statement.setFetchDirection(ResultSet.FETCH_FORWARD);
+        } catch (Throwable ex) {
+          throw new RuntimeException("Failed to prepare statement for (" + sql + "): ", ex);
+        }
+
+        if (queryAndArgs.args() != null) {
+          for (int i = 0; i < queryAndArgs.args().size(); ++i) {
+            statement.setObject(i + 1, queryAndArgs.args().get(i));
+          }
+        }
+      } catch (Throwable ex) {
+        context.runOnContext(v -> {
+          initPromise.fail(new RuntimeException("Failed to prepare statement: ", ex));
+        });
+        return;
+      }
+
+      try {
+        rs = statement.executeQuery();
+        types = new Types();
+        rsmeta = rs.getMetaData();
+        for (int i = 0; i < rsmeta.getColumnCount(); ++i) {
+          String name = rsmeta.getColumnLabel(i + 1);
+          int jdbcType = rsmeta.getColumnType(i + 1);
+
+          DataType type = DataType.fromJdbcType(JDBCType.valueOf(jdbcType));
+
+          if (definition.getColumnTypeOverrideMap() != null) {
+            Map<String, DataType> ctomap = definition.getColumnTypeOverrideMap();
+            if (ctomap.containsKey(name)) {
+              type = ctomap.get(name);
+            }
+          }
+          types.putIfAbsent(name, type);
+        }
+      } catch (Throwable ex) {
+        context.runOnContext(v -> {
+          initPromise.fail(new RuntimeException("Failed to execute statement: ", ex));
+        });
+        return;
+      }
+
+      context.runOnContext(v -> {
+        initPromise.complete(new ReadStreamWithTypes(this, types));
+      });
+
+      resultSetWalk(rs, rsmeta);
+    } finally {
+      if (statement != null) {
+        try {
+          statement.close();
+        } catch (Throwable ex) {
+          logger.warn("Exception closing PreparedStatement: ", ex);
+        }
+      }
+      if (rs != null) {
+        try {
+          rs.close();
+        } catch (Throwable ex) {
+          logger.warn("Exception closing ResultSet: ", ex);
+        }
+      }
+      if (connection != null) {
+        try {
+          connection.close();
+        } catch (Throwable ex) {
+          logger.warn("Exception closing Connection: ", ex);
+        }
+      }
+    }
+  }
+
+  private static void setFetchSize(SourceJdbc definition, String finalUrl, PreparedStatement statement) throws SQLException {
+    if (definition.getJdbcFetchSize() < 0) {
+      if (finalUrl.startsWith("jdbc:mysql:")) {
+        statement.setFetchSize(Integer.MIN_VALUE);
+      } else if (statement.isWrapperFor(SQLServerStatement.class)) {
+        statement.unwrap(SQLServerStatement.class).setResponseBuffering("adaptive");
+      } else {
+        statement.setFetchSize(1000);
+      }
+    } else {
+      statement.setFetchSize(definition.getJdbcFetchSize());
+    }
+  }
+  
   @SuppressFBWarnings(value = "UL_UNRELEASED_LOCK_EXCEPTION_PATH", justification = "False positive, which is a shame because it's a useful test")
-  private void resultSetWalker() {
+  private void resultSetWalk(ResultSet rs, ResultSetMetaData rsmeta) {
     
     sourceNameTracker.addNameToContextLocalData();
-    ResultSetMetaData rsmeta = null;
     long rows = 0;
     try {
       while (rs.next()) {
-        if (rsmeta == null) {
-          rsmeta = rs.getMetaData();
-        }
         DataRow row = dataRowFromResult(rsmeta, rs);
         if (rows % 10000 == 0) {
           logger.debug("Received {} rows", rows);
@@ -133,10 +272,10 @@ public class JdbcReadStream implements ReadStream<DataRow> {
         queueLock.lock();
         try {
           items.add(row);
-          while (items.size() > fetchSize) {
-            logger.trace("resultSetWalker: Waiting until notFull ({} > {})", items.size(), fetchSize);
+          while (items.size() > processingBatchSize) {
+            logger.trace("resultSetWalker: Waiting until notFull ({} > {})", items.size(), processingBatchSize);
             notFull.await();
-            logger.trace("resultSetWalker: notFull ({} > {})", items.size(), fetchSize);
+            logger.trace("resultSetWalker: notFull ({} > {})", items.size(), processingBatchSize);
           }
           checkProcessing("resultSetWalker: starting process");
         } finally {
@@ -147,19 +286,9 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     } catch (Throwable ex) {
       logger.error("resultSetWalker: Failed to process resultset: ", ex);
     } finally {
-      try {
-        rs.close();
-      } catch (Throwable ex) {
-        logger.warn("resultSetWalker: Failed to close result set");
-      }
-      try {
-        connection.close();
-      } catch (Throwable ex) {
-        logger.warn("resultSetWalker: Failed to close connection");
-      }
+      logger.trace("resultSetWalker: Finished iterating rows");
+      complete();
     }
-    logger.trace("resultSetWalker: Finished iterating rows");
-    complete();
   }
   
   private DataRow dataRowFromResult(ResultSetMetaData rsmeta, ResultSet rs) throws SQLException {
@@ -230,11 +359,11 @@ public class JdbcReadStream implements ReadStream<DataRow> {
           item =  items.pop();
           rows = ++rowsOutput;
           handlerCaptured = handler;
-          if (items.size() < fetchSize / 2) {
+          if (items.size() < processingBatchSize / 2) {
             logger.trace("Signalling notFull");
             notFull.signal();
           } else {
-            logger.trace("Not signalling - buffer too full {} > {}", items.size(), fetchSize / 2);
+            logger.trace("Not signalling - buffer too full {} > {}", items.size(), processingBatchSize / 2);
           }
         } else {
           logger.trace("Stop emitting, no items");

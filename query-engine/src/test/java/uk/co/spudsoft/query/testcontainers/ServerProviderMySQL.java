@@ -82,8 +82,6 @@ public class ServerProviderMySQL extends AbstractServerProvider implements Serve
             .setUser("user")
             .setDatabase("test")
             .setPassword(AbstractServerProvider.ROOT_PASSWORD)
-            .setIdleTimeout(5)
-            .setIdleTimeoutUnit(TimeUnit.MINUTES)         
             ;
   }
 

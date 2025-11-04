@@ -92,8 +92,8 @@ public class FormatAtomInstanceTest {
       , "/data/atom"
       , "localhost"
       , "/data/atom"
-      , new HeadersMultiMap()
-      , new HeadersMultiMap().add("Host", "localhost:123")
+      , HeadersMultiMap.httpHeaders()
+      , HeadersMultiMap.httpHeaders().add("Host", "localhost:123")
       , null
       , new IPAddressString("127.0.0.1")
       , null

@@ -111,7 +111,7 @@ public class RequestContextTest {
   @Test
   public void testGetUser() {
     HttpServerRequest request = mock(HttpServerRequest.class);
-    MultiMap headers = new HeadersMultiMap();
+    MultiMap headers = HeadersMultiMap.httpHeaders();
     headers.add("X-Forwarded-Proto", "https");
     headers.add("X-Forwarded-Port", "443");
     when(request.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");

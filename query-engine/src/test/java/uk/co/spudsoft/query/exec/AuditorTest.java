@@ -57,7 +57,7 @@ public class AuditorTest {
   @Test
   public void testMultimapToJson() {
     assertNull(AuditorPersistenceImpl.multiMapToJson(null));
-    MultiMap map= new HeadersMultiMap()
+    MultiMap map= HeadersMultiMap.httpHeaders()
             .add("one", "first")
             .add("two", "second")
             .add("two", "third")

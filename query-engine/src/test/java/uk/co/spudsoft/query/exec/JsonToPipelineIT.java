@@ -79,7 +79,7 @@ public class JsonToPipelineIT {
             , "localhost"
             , null
             , null
-            , new HeadersMultiMap().add("Host", "localhost:123")
+            , HeadersMultiMap.httpHeaders().add("Host", "localhost:123")
             , null
             , new IPAddressString("127.0.0.1")
             , null

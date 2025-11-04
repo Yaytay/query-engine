@@ -16,13 +16,13 @@
  */
 package uk.co.spudsoft.query.web;
 
-import io.vertx.core.http.impl.MimeMapping;
+import io.vertx.core.http.MimeMapping;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Helper class for getting the MimeType of files.
- * Basically a wrapper around {@link io.vertx.core.http.impl.MimeMapping#getMimeTypeForExtension(java.lang.String)} with an override for some extensions.
+ * Basically a wrapper around {@link io.vertx.core.http.MimeMapping#mimeTypeForExtension(java.lang.String)} with an override for some extensions.
  * @author jtalbut
  */
 public class MimeTypes {
@@ -50,7 +50,7 @@ public class MimeTypes {
   public static String getMimeTypeForExtension(String ext) {
     String result = OVERRIDE.get(ext);
     if (result == null) {
-      result = MimeMapping.getMimeTypeForExtension(ext);
+      result = MimeMapping.mimeTypeForExtension(ext);
     }
     return result;
   }

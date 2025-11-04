@@ -3,24 +3,23 @@
 Configuration data for OAuth authentication.
 
 OAuth is only intended to be configured for the user interface when accessed directly, which is not the intended standard production deployment
- (where it is expected that the host will seamlessly provide a suitable JWT).
- 
+(where it is expected that the host will seamlessly provide a suitable JWT).
+
 
 OAuth can be useful in design mode where there is no host platform but JWTs are required for testing conditions.
- 
+
 
 Each of the AuthEndpoints configured is presented as an option to the user when they attempt to login via the UI.
- Login may be optional (controlled by ) - if login is optional the user must explicitly choose to login.
- 
+Login may be optional (controlled by ) - if login is optional the user must explicitly choose to login.
+
 
 The login mechanism is purely concerned with the generation of the JWT - the validation is still goverened by the xref:uk.co.spudsoft.query.main.JwtValidationConfig.adoc[JwtValidationConfig] .
- 
+
 
 The following properties are mandatory:
- 
- * name
- * issuer
- 
+* name
+* issuer
+
 
 
 Authentication will follow the standard OAuth 2.0 authorization code grant, with or without PKCE and nonce.
@@ -32,59 +31,70 @@ Authentication will follow the standard OAuth 2.0 authorization code grant, with
 | Details
 
 
+
 | [[logoUrl]]logoUrl
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | The URL to use to get a icon to display in the list of authentication endpoints in the login UI.
 
 This is optional - if not provided no icon will be displayed.
+
 | [[issuer]]issuer
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | The issuer that JWTs created by this login will use.
 
 The issuer provided must still be valid according to the xref:uk.co.spudsoft.query.main.JwtValidationConfig.adoc[JwtValidationConfig] , this is just used to identify the issuer 
- because the user is given a choice of login providers and the issuer cannot be extracted from the JWT.
+because the user is given a choice of login providers and the issuer cannot be extracted from the JWT.
+
 | [[authorizationEndpoint]]authorizationEndpoint
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | The OAuth authorization endpoint.
+
 | [[tokenEndpoint]]tokenEndpoint
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | The OAuth token endpoint.
+
 | [[endSessionEndpoint]]endSessionEndpoint
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | The endpoint to use for frontchannel logout.
 
 The appropriate value is returned as "end_session_endpoint" in OpenID Discovery data.
- 
+
 
 When used, a request to the logout endpoint will result in a redirect to this URL with a query string parameter of 
- post_logout_redirect_uri set to the Query Engine start page.
- 
+post_logout_redirect_uri set to the Query Engine start page.
+
 
 This endpoint will not be used at all if backchannel logout works (via xref:uk.co.spudsoft.query.main.AuthEndpoint.adoc[#getRevocationEndpoint()] .
+
 | [[revocationEndpoint]]revocationEndpoint
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | The endpoint to use for backchannel logout.
 
 The appropriate value is returned as "revocation_endpoint" in OpenID Discovery data.
- 
+
 
 When used, a request to the logout endpoint will make a request from the back end to this endpoint passing in 
- either the refresh_token (if one was provided) or the access_token.
- 
+either the refresh_token (if one was provided) or the access_token.
+
 
 Some OpenID providers require the "openid" scope to be specified in order for them to generate an id_token.
+
 | [[credentials]]credentials
 | xref:uk.co.spudsoft.query.main.ClientCredentials.adoc[ClientCredentials]
 | The client credentials to use when communicating with the OAuth endpoint.
+
 | [[scope]]scope
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | The scope(s) to specify in the OAuth request.
+
 | [[pkce]]pkce
 | boolean
 | True if the OAuth request will use PKCE.
+
 | [[nonce]]nonce
 | boolean
 | True if the OAuth request will include (and validate) a nonce value.
+
 | [[invalidDate]]invalidDate
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/time/LocalDateTime.html[LocalDateTime]
 | The date at which this endpoint should be refreshed via link:https://openid.net/specs/openid-connect-discovery-1_0.html[OpenID Connect Discovery] .

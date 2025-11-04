@@ -17,7 +17,6 @@
 package uk.co.spudsoft.query.exec.procs.sort;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
@@ -137,7 +136,7 @@ public class SerializeWriteStream<T> implements WriteStream<T> {
       writePromise = null;
     }
 
-    file.write(buffer.slice(0, pos), promise);
+    file.write(buffer.slice(0, pos)).onComplete(promise);
     return promise.future();
   }
 
@@ -184,25 +183,24 @@ public class SerializeWriteStream<T> implements WriteStream<T> {
   }
 
   @Override
-  public void write(T t, Handler<AsyncResult<Void>> hndlr) {
-    Future<Void> f = write(t);
-    f.onComplete(hndlr);
-  }
-
-  @Override
-  public void end(Handler<AsyncResult<Void>> hndlr) {
+  public Future<Void> end() {
     logger.trace("endHandler");
     if (writePos > 0) {
-      writeWriteBuffer(false)
-              .andThen(ar -> {
-                if (ar.succeeded()) {
-                  file.end(hndlr);
-                } else {
-                  hndlr.handle(ar);
-                }
-              });
+      Promise<Void> result = Promise.promise();
+
+      writeWriteBuffer(false).onComplete(writeResult -> {
+        file.end().onComplete(endResult -> {
+          if (writeResult.succeeded()) {
+            result.handle(endResult);
+          } else {
+            result.fail(writeResult.cause());
+          }
+        });
+      });
+
+      return result.future();
     } else {
-      file.end(hndlr);
+      return file.end();
     }
   }
 

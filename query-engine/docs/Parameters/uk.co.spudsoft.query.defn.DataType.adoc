@@ -9,36 +9,8 @@ The basic data types that values can have in Query Engine.
 | Details
 
 
-| [[jdbcType]]jdbcType
-| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.sql/java/sql/JDBCType.html[JDBCType]
-| 
 
-| [[bytes]]bytes
-| int
+| [[declaringClass]]declaringClass
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Class.html[Class]<E>
 | 
-
-| [[index]]index
-| int
-| 
-
-| [[VALUES]]VALUES
-| uk.co.spudsoft.query.defn.DataType[]
-| 
-
-| [[logger]]logger
-| link:https://www.slf4j.org/api/org/slf4j/Logger.html[Logger]
-| 
-
-| [[name]]name
-| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
-| 
-
-| [[ordinal]]ordinal
-| int
-| 
-
-| [[hash]]hash
-| int
-| 
-
 |===

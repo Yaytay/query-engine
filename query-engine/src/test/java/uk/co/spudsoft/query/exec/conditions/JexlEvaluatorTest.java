@@ -41,8 +41,8 @@ public class JexlEvaluatorTest {
   public void testDefaultValueExpressions() {
     
     
-    MultiMap params = new HeadersMultiMap();
-    MultiMap headers = new HeadersMultiMap();
+    MultiMap params = HeadersMultiMap.httpHeaders();
+    MultiMap headers = HeadersMultiMap.httpHeaders();
     Set<Cookie> cookies = new HashSet<>();
     Jwt jwt = new Jwt(new JsonObject()
             , new JsonObject()

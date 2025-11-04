@@ -27,6 +27,8 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.sqlclient.PoolOptions;
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
@@ -86,7 +88,7 @@ public class SourceSqlStreamingInstanceTest {
               .source(definition)
               .build();
       
-      MultiMap params = new HeadersMultiMap();
+      MultiMap params = HeadersMultiMap.httpHeaders();
       
       RequestContext req = new RequestContext(
               null
@@ -95,7 +97,7 @@ public class SourceSqlStreamingInstanceTest {
               , "localhost"
               , null
               , null
-              , new HeadersMultiMap().add("Host", "localhost:123")
+              , HeadersMultiMap.httpHeaders().add("Host", "localhost:123")
               , null
               , new IPAddressString("127.0.0.1")
               , null
@@ -157,7 +159,7 @@ public class SourceSqlStreamingInstanceTest {
               .source(definition)
               .build();
       
-      MultiMap params = new HeadersMultiMap();
+      MultiMap params = HeadersMultiMap.httpHeaders();
       
       RequestContext req = new RequestContext(
               null
@@ -166,7 +168,7 @@ public class SourceSqlStreamingInstanceTest {
               , "localhost"
               , null
               , null
-              , new HeadersMultiMap().add("Host", "localhost:123")
+              , HeadersMultiMap.httpHeaders().add("Host", "localhost:123")
               , null
               , new IPAddressString("127.0.0.1")
               , null
@@ -210,13 +212,22 @@ public class SourceSqlStreamingInstanceTest {
   
   @Test
   public void testPoolOptions() {
-    PoolOptions po = SourceSqlStreamingInstance.poolOptions(SourceSql.builder().build());
+    PoolOptions po = SourceSqlStreamingInstance.poolOptions(SourceSql.builder().build(), Endpoint.builder().build());
     assertEquals(PoolOptions.DEFAULT_CONNECTION_TIMEOUT, po.getConnectionTimeout());
     assertEquals(PoolOptions.DEFAULT_CONNECTION_TIMEOUT_TIME_UNIT, po.getConnectionTimeoutUnit());
     
-    po = SourceSqlStreamingInstance.poolOptions(SourceSql.builder().connectionTimeout(Duration.ofMillis(Long.MAX_VALUE)).build());
+    Endpoint endpoint = Endpoint.builder()
+            .connectionTimeout(Duration.ofDays(1))
+            .idleTimeout(Duration.ofMillis(12))
+            .build();
+    SourceSql source = SourceSql.builder()
+            .connectionTimeout(Duration.ofMillis(Long.MAX_VALUE))
+            .build();
+    po = SourceSqlStreamingInstance.poolOptions(source, endpoint);
     assertEquals(Integer.MAX_VALUE, po.getConnectionTimeout());
     assertEquals(TimeUnit.MILLISECONDS, po.getConnectionTimeoutUnit());
+    assertEquals(12, po.getIdleTimeout());
+    assertEquals(TimeUnit.MILLISECONDS, po.getIdleTimeoutUnit());
   }
   
   @Test
@@ -224,6 +235,14 @@ public class SourceSqlStreamingInstanceTest {
     assertEquals("two", SourceSqlStreamingInstance.coalesce(null, "two"));
     assertEquals("one", SourceSqlStreamingInstance.coalesce("one", "two"));
     assertNull(SourceSqlStreamingInstance.coalesce(null, null));
+  }
+  
+  @Test
+  public void isPositive() {
+    assertEquals(true, SourceSqlStreamingInstance.isPositive(Duration.of(1, ChronoUnit.MINUTES)));
+    assertEquals(false, SourceSqlStreamingInstance.isPositive(null));
+    assertEquals(false, SourceSqlStreamingInstance.isPositive(Duration.of(-1, ChronoUnit.DAYS)));
+    assertEquals(false, SourceSqlStreamingInstance.isPositive(Duration.of(0, ChronoUnit.DAYS)));
   }
   
 }

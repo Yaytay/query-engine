@@ -26,7 +26,6 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
-import io.vertx.core.net.impl.URIDecoder;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.impl.Utils;
 import java.io.IOException;
@@ -86,14 +85,11 @@ public class TableauWDCRouter implements Handler<RoutingContext> {
       logger.debug("{} request for {} ignored", request.method(), request.path());
       context.next();
     } else {
-      // decode URL path
-      String uriDecodedPath = URIDecoder.decodeURIComponent(context.normalizedPath(), false);
-
-      logger.debug("UI request for {}", uriDecodedPath);
+      logger.debug("UI request for {}", context.normalizedPath());
       
-      if ("/tableau/wdc.html".equals(uriDecodedPath)
-              || "/tableau-wdc.html".equals(uriDecodedPath)
-              || "/tableau-wdc2.html".equals(uriDecodedPath)
+      if ("/tableau/wdc.html".equals(context.normalizedPath())
+              || "/tableau-wdc.html".equals(context.normalizedPath())
+              || "/tableau-wdc2.html".equals(context.normalizedPath())
               ) {
         Buffer fileBody = cachedContents;
         if (fileBody != null) {

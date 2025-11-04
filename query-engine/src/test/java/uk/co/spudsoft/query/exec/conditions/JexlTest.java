@@ -84,7 +84,7 @@ public class JexlTest {
     JexlExpression expression = JEXL.createExpression(exp);
 
     JexlContext context = new MapContext();
-    MultiMap args = new HeadersMultiMap();
+    MultiMap args = HeadersMultiMap.httpHeaders();
     context.set("args", args);
 
     Object result = expression.evaluate(context);
@@ -115,7 +115,7 @@ public class JexlTest {
     JexlExpression expression = JEXL.createExpression(exp);
 
     JexlContext context = new MapContext();
-    MultiMap args = new HeadersMultiMap();
+    MultiMap args = HeadersMultiMap.httpHeaders();
     context.set("args", args);
     args.add("param1", "true");
 
@@ -147,7 +147,7 @@ public class JexlTest {
     JexlExpression expression = JEXL.createExpression(exp);
 
     JexlContext context = new MapContext();
-    MultiMap args = new HeadersMultiMap();
+    MultiMap args = HeadersMultiMap.httpHeaders();
     context.set("args", args);
     args.add("param1", "true");
 
@@ -179,7 +179,7 @@ public class JexlTest {
     JexlExpression expression = JEXL.createExpression(exp);
 
     JexlContext context = new MapContext();
-    MultiMap args = new HeadersMultiMap();
+    MultiMap args = HeadersMultiMap.httpHeaders();
     context.set("args", args);
     args.add("param1", "true");
 

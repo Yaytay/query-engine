@@ -19,3 +19,7 @@ databaseChangeLog:
   - include:
      relativeToChangelogFile: true
      file: schema-5_0_1_SessionTableMore.yaml
+
+  - include:
+     relativeToChangelogFile: true
+     file: schema-6_0_1_MoreTracking.yaml

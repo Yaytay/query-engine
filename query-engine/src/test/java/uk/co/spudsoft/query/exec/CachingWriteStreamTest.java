@@ -135,13 +135,8 @@ public class CachingWriteStreamTest {
     }
 
     @Override
-    public void write(T data, Handler<AsyncResult<Void>> handler) {
-      this.write(data).andThen(handler);
-    }
-
-    @Override
-    public void end(Handler<AsyncResult<Void>> handler) {
-      handler.handle(Future.succeededFuture());
+    public Future<Void> end() {
+      return Future.succeededFuture();
     }
 
     @Override

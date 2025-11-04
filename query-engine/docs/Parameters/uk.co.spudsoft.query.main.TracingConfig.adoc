@@ -3,10 +3,10 @@
 Configuration of distributed tracing.
 
 The Query Engine can use either Open Telemetry (using HTTP) or Zipkin.
- 
+
 
 All services participating in a distributed tracing must use the same propagation technique
- - it is important that  is configured correctly.
+- it is important that  is configured correctly.
 
 [cols="1,1a,4a",stripes=even]
 |===
@@ -15,26 +15,33 @@ All services participating in a distributed tracing must use the same propagatio
 | Details
 
 
+
 | [[serviceName]]serviceName
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | Set the service name to use in zipkin spans.
+
 | [[protocol]]protocol
 | uk.co.spudsoft.query.main.TracingProtocol
 | Set the protocol to use to send distributed tracing data.
+
 | [[url]]url
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | Set the URL to send distributed tracing data to.
+
 | [[sampler]]sampler
 | uk.co.spudsoft.query.main.TracingSampler
 | Set the sampler to use to decide whether or not a given span should be reported.
+
 | [[propagator]]propagator
 | uk.co.spudsoft.query.main.TracingPropagator
 | Get the propagator to use to encode spans in requests sent/received.All services in a given environment must use the same propagator.
+
 | [[rootSampler]]rootSampler
 | uk.co.spudsoft.query.main.TracingSampler
 | Get the sampler to use when sampler is set to  and there is no parent span.If this value is set to  it will be treated as .
- If this value is set to  the  will be used as the ratio.
- If sampler is not set to  this value is ignored.
+If this value is set to  the  will be used as the ratio.
+If sampler is not set to  this value is ignored.
+
 | [[sampleRatio]]sampleRatio
 | double
 | Set the sample ratio to use when sample is set to .If sampler is not set to  this value is ignored.

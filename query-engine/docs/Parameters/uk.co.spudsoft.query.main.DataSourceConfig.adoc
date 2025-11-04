@@ -9,75 +9,99 @@ Configuration data for communicating with a data source.
 | Details
 
 
+
 | [[url]]url
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | Set the URL to use for accessing the datasource.
+
 | [[schema]]schema
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | Set the schema to use for accessing the datasource.
+
 | [[user]]user
 | xref:uk.co.spudsoft.query.main.Credentials.adoc[Credentials]
 | Set the user to use for accessing the datasource for CRUD operations.
+
 | [[adminUser]]adminUser
 | xref:uk.co.spudsoft.query.main.Credentials.adoc[Credentials]
 | Set the user to use for accessing the datasource for DDL operations.
+
 | [[maxPoolSize]]maxPoolSize
 | int
 | Set the maximum number of concurrent connections that should be made to this datasource.
+
 | [[minimumIdle]]minimumIdle
 | int
 | Set the minimum number of idle connections that HikariCP tries to maintain in the pool.
+
 | [[connectionTimeout]]connectionTimeout
 | long
 | Set the maximum number of milliseconds that a client will wait for a connection from the pool.
+
 | [[idleTimeout]]idleTimeout
 | long
 | Set the maximum amount of time that a connection is allowed to sit idle in the pool.
+
 | [[keepaliveTime]]keepaliveTime
 | long
 | Set the frequency at which HikariCP will attempt to keep a connection alive.
+
 | [[maxLifetime]]maxLifetime
 | long
 | Set the maximum lifetime of a connection in the pool.
+
 | [[validationTimeout]]validationTimeout
 | long
 | Set the maximum amount of time that a connection will be tested for aliveness.
+
 | [[initializationFailTimeout]]initializationFailTimeout
 | long
 | Set the time that pool initialization will fail fast if the pool cannot be seeded.
+
 | [[leakDetectionThreshold]]leakDetectionThreshold
 | long
 | Set the amount of time that a connection can be out of the pool before a message is logged.
+
 | [[autoCommit]]autoCommit
 | boolean
 | Set the default auto-commit behavior of connections returned from the pool.
+
 | [[readOnly]]readOnly
 | boolean
 | Set the default read-only behavior of connections returned from the pool.
+
 | [[isolationLevel]]isolationLevel
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | Set the default transaction isolation level for connections returned from the pool.
+
 | [[catalog]]catalog
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | Set the default catalog for connections returned from the pool.
+
 | [[allowPoolSuspension]]allowPoolSuspension
 | boolean
 | Set whether the pool can be suspended and resumed through JMX.
+
 | [[registerMbeans]]registerMbeans
 | boolean
 | Set whether or not JMX Management Beans are registered.
+
 | [[driverClassName]]driverClassName
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | Set the fully qualified class name of the JDBC driver.
+
 | [[dataSourceClassName]]dataSourceClassName
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | Set the name of the DataSource class provided by the JDBC driver.
+
 | [[connectionTestQuery]]connectionTestQuery
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | Set the SQL query to be executed to test the validity of connections.
+
 | [[connectionInitSql]]connectionInitSql
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | Set the SQL statement that will be executed after every new connection creation.
+
 | [[poolName]]poolName
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | Set the user-defined name for the connection pool.

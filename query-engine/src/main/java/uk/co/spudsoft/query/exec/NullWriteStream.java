@@ -16,7 +16,6 @@
  */
 package uk.co.spudsoft.query.exec;
 
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.streams.WriteStream;
@@ -46,13 +45,8 @@ public class NullWriteStream<T> implements WriteStream<T> {
   }
 
   @Override
-  public void write(T data, Handler<AsyncResult<Void>> handler) {
-    this.write(data).andThen(handler);
-  }
-
-  @Override
-  public void end(Handler<AsyncResult<Void>> handler) {
-    handler.handle(Future.succeededFuture());
+  public Future<Void> end() {
+    return Future.succeededFuture();
   }
 
   @Override

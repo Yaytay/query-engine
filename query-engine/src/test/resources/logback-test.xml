@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="false" scan="true" scanPeriod="10 minutes">
-  <conversionRule conversionWord="vcl" converterClass="io.reactiverse.contextual.logging.LogbackConverter"/>
+  <conversionRule conversionWord="vcl" converterClass="io.reactiverse.contextual.logging.logback.LogbackConverter"/>
   <appender name="STDOUTPUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
       <charset>UTF-8</charset>

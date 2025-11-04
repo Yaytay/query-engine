@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableSet;
 import uk.co.spudsoft.query.logging.LoggingConfiguration;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.prometheus.PrometheusMeterRegistry;
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
@@ -58,7 +58,8 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.jackson.DatabindCodec;
-import io.vertx.ext.healthchecks.HealthCheckHandler;
+import io.vertx.core.tracing.TracingOptions;
+import io.vertx.ext.healthchecks.HealthChecks;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.handler.CorsHandler;
@@ -66,6 +67,7 @@ import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import io.vertx.micrometer.impl.PrometheusScrapingHandlerImpl;
+import io.vertx.tracing.opentelemetry.OpenTelemetryOptions;
 import io.vertx.tracing.opentelemetry.OpenTelemetryTracingFactory;
 import jakarta.ws.rs.core.Application;
 import java.io.File;
@@ -172,8 +174,8 @@ public class Main extends Application {
   private PipelineDefnLoader defnLoader;
   private Auditor auditor;
 
-  private HealthCheckHandler healthCheckHandler;
-  private HealthCheckHandler upCheckHandler;
+  private HealthChecks healthChecks;
+  private HealthChecks upChecks;
   private final AtomicBoolean up = new AtomicBoolean();
 
   private OpenIdDiscoveryHandler openIdDiscoveryHandler;
@@ -465,7 +467,10 @@ public class Main extends Application {
 
     OpenTelemetry openTelemetry = buildOpenTelemetry(params.getTracing());
     if (openTelemetry != null) {
-      vertxBuilder = vertxBuilder.withTracer(new OpenTelemetryTracingFactory(openTelemetry));
+      TracingOptions options = new OpenTelemetryOptions(openTelemetry);
+      OpenTelemetryTracingFactory tracingFactory = new OpenTelemetryTracingFactory();
+      tracingFactory.tracer(options);
+      vertxBuilder = vertxBuilder.withTracer(tracingFactory);
     } else {
       logger.warn("OpenTelemetry NOT set");
     }
@@ -526,11 +531,11 @@ public class Main extends Application {
     }
 
     UpCheckHandler upCheck = new UpCheckHandler(up);
-    healthCheckHandler = HealthCheckHandler.create(vertx);
-    healthCheckHandler.register("Up", upCheck);
-    healthCheckHandler.register("Auditor", auditor::healthCheck);
-    upCheckHandler = HealthCheckHandler.create(vertx);
-    upCheckHandler.register("Up", upCheck);
+    healthChecks = HealthChecks.create(vertx);
+    healthChecks.register("Up", upCheck);
+    healthChecks.register("Auditor", auditor::healthCheck);
+    upChecks = HealthChecks.create(vertx);
+    upChecks.register("Up", upCheck);
 
     Router router = Router.router(vertx);
     Router mgmtRouter = Router.router(vertx);
@@ -557,10 +562,10 @@ public class Main extends Application {
 
     ManagementRoute.deployStandardMgmtEndpoints(mgmtRouter, router, params.getManagementEndpoints(), new AtomicReference<>(params));
     if (ManagementRoute.mgmtEndpointPermitted(params.getManagementEndpoints(), "up")) {
-      mgmtRouter.get("/up").handler(upCheckHandler).setName("Up");
+      mgmtRouter.get("/up").handler(new HealthCheckHandler(upChecks)).setName("Up");
     }
     if (ManagementRoute.mgmtEndpointPermitted(params.getManagementEndpoints(), "health")) {
-      mgmtRouter.get("/health").handler(healthCheckHandler).setName("Health");
+      mgmtRouter.get("/health").handler(new HealthCheckHandler(healthChecks)).setName("Health");
     }
     if (ManagementRoute.mgmtEndpointPermitted(params.getManagementEndpoints(), "prometheus")) {
       mgmtRouter.get("/prometheus").handler(new PrometheusScrapingHandlerImpl()).setName("Prometheus");

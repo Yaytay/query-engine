@@ -21,7 +21,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.impl.ContextInternal;
+import io.vertx.core.Promise;
 import io.vertx.core.streams.ReadStream;
 import io.vertx.sqlclient.Cursor;
 import io.vertx.sqlclient.PreparedStatement;
@@ -49,7 +49,7 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
 
   private final SourceNameTracker sourceNameTracker;
   private final PreparedStatement ps;
-  private final ContextInternal context;
+  private final Context context;
   private final int fetch;
   private final Tuple params;
 
@@ -77,7 +77,7 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
   public MetadataRowStreamImpl(SourceNameTracker sourceNameTracker, PreparedStatement ps, Context context, int fetch, Tuple params) {
     this.sourceNameTracker = sourceNameTracker;
     this.ps = ps;
-    this.context = (ContextInternal) context;
+    this.context = context;
     this.fetch = fetch;
     this.params = params;
     this.demand = Long.MAX_VALUE;
@@ -135,7 +135,7 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
         return this;
       }
     }
-    c.read(fetch, this);
+    c.read(fetch).andThen(this);
     return this;
   }
 
@@ -226,15 +226,11 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
     if (c != null) {
       return c.close();
     } else {
-      return context.succeededFuture();
-    }
-  }
-
-  @Override
-  public void close(Handler<AsyncResult<Void>> completionHandler) {
-    Future<Void> fut = close();
-    if (completionHandler != null) {
-      fut.onComplete(completionHandler);
+      Promise<Void> promise = Promise.promise();
+      context.runOnContext(v -> {
+        promise.complete();
+      });
+      return promise.future();
     }
   }
 
@@ -281,7 +277,7 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
             } else if (cursor.hasMore()) {
               logger.trace("cursor has more, reading another {} rows", fetch);
               readInProgress = true;
-              cursor.read(fetch, this);
+              cursor.read(fetch).andThen(this);
               break;
             } else {
               logger.trace("cursor does not have more, closing");

@@ -9,9 +9,11 @@ Represents an endpoint that includes a URL and associated credentials for access
 | Details
 
 
+
 | [[url]]url
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | Sets the URL of the endpoint.
+
 | [[credentials]]credentials
 | xref:uk.co.spudsoft.query.main.Credentials.adoc[Credentials]
 | Sets the credentials associated with the endpoint.

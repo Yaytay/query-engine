@@ -32,21 +32,21 @@
 
   <properties>
     <!-- For production usage JDK must be compatible with GraalVM and must be receiving security updates, effectively meaning the most recent LTS -->
-    <jdk.version>21</jdk.version>
+    <jdk.version>25</jdk.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <argLine></argLine>
-    <vertx.version>4.5.21</vertx.version>
+    <vertx.version>5.0.5</vertx.version>
     <slf4j.version>2.0.17</slf4j.version>
-    <junit-jupiter.version>5.13.4</junit-jupiter.version>
-    <junit-platform.version>1.13.4</junit-platform.version>
+    <junit-jupiter.version>6.0.1</junit-jupiter.version>
+    <junit-platform.version>6.0.1</junit-platform.version>
     <testcontainers.version>1.21.3</testcontainers.version>
     <!-- 
       Graal versions are often tied in to JDK versions, cannot upgrade to 24+ until using JDK 22+ 
       See https://github.com/oracle/graal/issues/7651
     -->
-    <graalvm.version>23.1.8</graalvm.version>
-    <jackson.version>2.20.0</jackson.version>
+    <graalvm.version>25.0.1</graalvm.version>
+    <jackson.version>2.20.1</jackson.version>
 
     <!-- The qe-version property exists so that the design mode project can override it to run with a specific version -->
     <qe-version>${project.version}</qe-version>
@@ -66,9 +66,10 @@
 
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.14.0</version>
+          <version>3.14.1</version>
           <configuration>
             <source>${jdk.version}</source>
+            <release>${jdk.version}</release>
             <target>${jdk.version}</target>
             <encoding>${project.build.sourceEncoding}</encoding>
             <compilerArgs>
@@ -81,7 +82,7 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>versions-maven-plugin</artifactId>
-          <version>2.18.0</version>
+          <version>2.19.1</version>
           <executions>
             <execution>
               <id>display-plugin-updates</id>
@@ -103,7 +104,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-enforcer-plugin</artifactId>
-          <version>3.6.1</version>
+          <version>3.6.2</version>
           <executions>
             <execution>
               <id>enforce-versions</id>
@@ -116,7 +117,7 @@
                     <version>3.9.0</version>
                   </requireMavenVersion>
                   <requireJavaVersion>
-                    <version>[17.0,22)</version>
+                    <version>[17.0,26)</version>
                   </requireJavaVersion>
                 </rules>
               </configuration>
@@ -205,7 +206,7 @@
         <plugin>
           <groupId>com.github.spotbugs</groupId>
           <artifactId>spotbugs-maven-plugin</artifactId>
-          <version>4.9.4.2</version>
+          <version>4.9.8.1</version>
           <configuration>
             <fork>true</fork>
             <effort>Max</effort>
@@ -254,7 +255,7 @@
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>12.1.0</version>
+              <version>12.1.1</version>
             </dependency>
           </dependencies>
         </plugin>
@@ -262,7 +263,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.5.3</version>
+          <version>3.5.4</version>
           <configuration>
             <forkCount>1</forkCount>
             <parallel>none</parallel>
@@ -288,7 +289,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-failsafe-plugin</artifactId>
-          <version>3.5.3</version>
+          <version>3.5.4</version>
           <executions>
             <execution>
               <id>one-fork-integration-tests</id>
@@ -360,7 +361,7 @@
         <plugin>
           <groupId>org.jacoco</groupId>
           <artifactId>jacoco-maven-plugin</artifactId>
-          <version>0.8.13</version>
+          <version>0.8.14</version>
           <executions>
             <execution>
               <id>jacoco-initialize</id>
@@ -446,7 +447,7 @@
         <plugin>
           <groupId>org.owasp</groupId>
           <artifactId>dependency-check-maven</artifactId>
-          <version>12.1.3</version>
+          <version>12.1.8</version>
           <configuration>
             <failBuildOnCVSS>8</failBuildOnCVSS>
             <failOnError>false</failOnError>
@@ -470,7 +471,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
-          <version>3.8.1</version>
+          <version>3.9.0</version>
           <executions>
             <execution>
               <id>copy-dependencies</id>
@@ -561,7 +562,7 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>license-maven-plugin</artifactId>
-          <version>2.6.0</version>
+          <version>2.7.0</version>
           <executions>
             <execution>
               <id>download-licenses</id>
@@ -751,7 +752,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.13</version>
+        <version>0.8.14</version>
         <configuration>
           <dataFile>${project.build.directory}/jacoco-merged.exec</dataFile>
         </configuration>

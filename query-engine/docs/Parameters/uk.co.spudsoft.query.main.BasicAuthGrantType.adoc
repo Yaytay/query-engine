@@ -9,16 +9,8 @@ Represents the types of OAuth 2.0 grant types that utilize basic authentication 
 | Details
 
 
-| [[name]]name
-| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
-| 
 
-| [[ordinal]]ordinal
-| int
+| [[declaringClass]]declaringClass
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Class.html[Class]<E>
 | 
-
-| [[hash]]hash
-| int
-| 
-
 |===

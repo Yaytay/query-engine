@@ -59,8 +59,6 @@ public class MainIT {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(MainIT.class);
   
-  private final int mgmtPort = MockOidcServer.findUnusedPort();
-  
   private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
   
   @BeforeAll
@@ -146,6 +144,7 @@ public class MainIT {
   @Test
   public void testMainDaemon() throws Exception {
     logger.debug("Running testMainDaemon");
+    int mgmtPort = MockOidcServer.findUnusedPort();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
@@ -308,6 +307,24 @@ public class MainIT {
     // Note that ordering is NOT governed by the order of configuration
     assertEquals("[{\"name\":\"Thread Dump\",\"url\":\"http://localhost:" + mgmtPort + "/manage/threads\"},{\"name\":\"Up\",\"url\":\"http://localhost:" + mgmtPort + "/manage/up\"},{\"name\":\"Prometheus\",\"url\":\"http://localhost:" + mgmtPort + "/manage/prometheus\"}]", manageEndpointsString);
     
+     given()
+            .log().all()
+            .get(URI.create("http://localhost:" + mgmtPort + "/manage/up"))
+            .then()
+            .log().all()
+            .statusCode(200)
+            .body(equalTo(""))
+            ;
+    
+     // Health endpoint isn't enabled
+     given()
+            .log().all()
+            .get(URI.create("http://localhost:" + mgmtPort + "/manage/health"))
+            .then()
+            .log().all()
+            .statusCode(404)
+            ;
+    
     given()
             .config(RestAssuredConfig.config().redirect(redirectConfig().followRedirects(false)))
             .log().all()
@@ -338,14 +355,14 @@ public class MainIT {
             .extract().body().asString()
             ;
     assertEquals("[{\"name\":\"GitHub\",\"logo\":\"https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg\"}]", authConfig);
-            
-    
+                
     main.shutdown();
   }
   
   @Test
   public void testAuthRequired() throws Exception {
     logger.debug("Running testAuthRequired");
+    int mgmtPort = MockOidcServer.findUnusedPort();  
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);

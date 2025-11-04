@@ -16,10 +16,8 @@
  */
 package uk.co.spudsoft.query.exec.fmts.logger;
 
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Promise;
 import io.vertx.core.streams.WriteStream;
 import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
@@ -50,16 +48,9 @@ public class LoggingWriteStream<T> implements WriteStream<T> {
 
   @Override
   public Future<Void> write(T data) {
-    Promise<Void> promise = Promise.promise();
-    write(data, promise);
-    return promise.future();
-  }
-
-  @Override
-  public void write(T data, Handler<AsyncResult<Void>> handler) {
     logger.trace("Received: {}", data);
     count.incrementAndGet();
-    handler.handle(Future.succeededFuture());
+    return Future.succeededFuture();
   }
 
   public long getCount() {
@@ -67,11 +58,11 @@ public class LoggingWriteStream<T> implements WriteStream<T> {
   }
   
   @Override
-  public void end(Handler<AsyncResult<Void>> handler) {
+  public Future<Void> end() {
     if (endHandler != null) {
       endHandler.handle(count.get());
     }
-    handler.handle(Future.succeededFuture());
+    return Future.succeededFuture();
   }
 
   @Override

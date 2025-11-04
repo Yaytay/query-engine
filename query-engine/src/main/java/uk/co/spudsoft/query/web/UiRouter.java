@@ -31,13 +31,14 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
-import io.vertx.core.http.impl.HttpUtils;
-import io.vertx.core.net.impl.URIDecoder;
+import io.vertx.core.internal.net.RFC3986;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.impl.Utils;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
@@ -105,6 +106,33 @@ public class UiRouter implements Handler<RoutingContext> {
     }
   }
   
+  /**
+   * Remove . and .. path components.
+   * 
+   * This must be called with a URL path, NOT a filesystem path, as the latter can lead to a escape from the resource location.
+   * 
+   * @param path The input path that may contain dots.
+   * @return The path without any dots.
+   */
+  static String removeDots(String path) {
+    Deque<String> segments = new ArrayDeque<>();
+    for (String segment : path.split("/")) {
+      switch (segment) {
+        case "":
+        case ".":
+          break;
+        case "..":
+          if (!segments.isEmpty()) {
+            segments.removeLast();
+          }
+          break;
+        default:
+          segments.add(segment);
+      }
+    }
+    return "/" + String.join("/", segments);
+  }
+
   @Override
   public void handle(RoutingContext context) {
     HttpServerRequest request = context.request();
@@ -114,7 +142,7 @@ public class UiRouter implements Handler<RoutingContext> {
       context.next();
     } else {
       // decode URL path
-      String uriDecodedPath = URIDecoder.decodeURIComponent(context.normalizedPath(), false);
+      String uriDecodedPath = RFC3986.decodeURIComponent(context.normalizedPath(), false);
       // if the normalized path is null it cannot be resolved
       if (uriDecodedPath == null) {
         logger.warn("Invalid path: " + request.path());
@@ -122,7 +150,7 @@ public class UiRouter implements Handler<RoutingContext> {
         return;
       }
       // will normalize and handle all paths as UNIX paths
-      String normalizedPath = HttpUtils.removeDots(uriDecodedPath.replace('\\', '/'));
+      String normalizedPath = removeDots(uriDecodedPath.replace('\\', '/'));
       String strippedPath = normalizedPath.startsWith(stripPath) ? normalizedPath.substring(stripPath.length()) : normalizedPath;
       if (strippedPath.length() == 0) {
         strippedPath = "/index.html";
@@ -150,7 +178,16 @@ public class UiRouter implements Handler<RoutingContext> {
     }
   }
   
-  private String getFileExtension(String file) {
+  /**
+   * Return the file extension given a path or filename.
+   * 
+   * The extension is from the last dot to the end of the filename, as long as the dot is not the leading or trailing character
+   * (in which case null is returned).
+   * 
+   * @param file The filename.
+   * @return The extension.
+   */
+  static String getFileExtension(String file) {
     int li = file.lastIndexOf('.');
     if (li != -1 && li != file.length() - 1) {
       return file.substring(li + 1);

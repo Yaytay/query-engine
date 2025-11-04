@@ -21,30 +21,20 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.JDBCType;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.Endpoint;
 import uk.co.spudsoft.query.defn.SourceJdbc;
 import uk.co.spudsoft.query.defn.SourceSql;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
-import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
 import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.sources.AbstractSource;
-import uk.co.spudsoft.query.exec.sources.sql.AbstractSqlPreparer;
 import uk.co.spudsoft.query.exec.sources.sql.SourceSqlStreamingInstance;
 import uk.co.spudsoft.query.main.ProtectedCredentials;
 import uk.co.spudsoft.query.web.ServiceException;
@@ -140,91 +130,23 @@ public class SourceJdbcInstance extends AbstractSource {
       return Future.failedFuture(ex);
     }
     
-    return vertx.executeBlocking(() -> {
-      return runInitializationInWorker(finalUrl, credentials, finalQuery, pipeline, requestContext);
-    });
+    return runInitialization(finalUrl, credentials, finalQuery, pipeline, requestContext);
   }
 
   @SuppressFBWarnings(value = {"OBL_UNSATISFIED_OBLIGATION", "ODR_OPEN_DATABASE_RESOURCE", "SQL_INJECTION_JDBC"}, justification = "JDBC objects must be closed by JdbcReadStream")
-  private ReadStreamWithTypes runInitializationInWorker(String finalUrl, String[] credentials, String finalQuery, PipelineInstance pipeline, RequestContext requestContext) throws RuntimeException {
-    Connection connection;
-    try {
-      connection = DriverManager.getConnection(finalUrl, credentials[0], credentials[1]);
-    } catch (Throwable ex) {
-      throw new RuntimeException("Failed to establish connection to JDBC URL (" + finalUrl + "): ", ex);
-    }
+  private Future<ReadStreamWithTypes> runInitialization(String finalUrl, String[] credentials, String finalQuery, PipelineInstance pipeline, RequestContext requestContext) throws RuntimeException {
     
-    ResultSet rs;
-    Types types;
+    Promise<ReadStreamWithTypes> result = Promise.promise();
     
-    try {
-      AbstractSqlPreparer preparer = new JdbcSqlPreparer(connection);
-      AbstractSqlPreparer.QueryAndArgs queryAndArgs = preparer.prepareSqlStatement(finalQuery, definition.getReplaceDoubleQuotes(), pipeline.getArgumentInstances());
-      String sql = queryAndArgs.query();
-      
-      PreparedStatement statement;
-      try {
-        statement = connection.prepareStatement(sql);
-        setFetchSize(finalUrl, statement);
-        statement.setFetchDirection(ResultSet.FETCH_FORWARD);
-      } catch (Throwable ex) {
-        throw new RuntimeException("Failed to prepare statement for (" + sql + "): ", ex);
-      }
-      
-      if (queryAndArgs.args() != null) {
-        for (int i = 0; i < queryAndArgs.args().size(); ++i) {
-          statement.setObject(i + 1, queryAndArgs.args().get(i));
-        }
-      }
-      
-      rs = statement.executeQuery();
-      types = new Types();
-      ResultSetMetaData rsmeta = rs.getMetaData();
-      for (int i = 0; i < rsmeta.getColumnCount(); ++i) {
-        String name = rsmeta.getColumnLabel(i + 1);
-        int jdbcType = rsmeta.getColumnType(i + 1);
-        
-        DataType type = DataType.fromJdbcType(JDBCType.valueOf(jdbcType));
-        
-        if (definition.getColumnTypeOverrideMap() != null) {
-          Map<String, DataType> ctomap = definition.getColumnTypeOverrideMap();
-          if (ctomap.containsKey(name)) {
-            type = ctomap.get(name);
-          }
-        }
-        types.putIfAbsent(name, type);
-      }
-    } catch (Throwable ex) {
-      try {
-        connection.close();
-      } catch (Throwable ex2) {
-        logger.warn("Exception closing connection: ", ex2);
-      }
-      throw new RuntimeException("Failed to establish connection to JDBC URL (" + finalUrl + "): ", ex);
-    }
-    
-    jdbcReadStream = new JdbcReadStream(this, this.context, types, connection, rs, definition.getProcessingBatchSize());
-    
-    jdbcReadStream.start(requestContext.getRequestId() + ":" + getName());
+    jdbcReadStream = new JdbcReadStream(this, this.context, definition, result);
     jdbcReadStream.exceptionHandler(ex -> {
       addNameToContextLocalData();                
       logger.error("Exception occured in stream: ", ex);
     });
-    return new ReadStreamWithTypes(jdbcReadStream, types);
-  }
-
-  private void setFetchSize(String finalUrl, PreparedStatement statement) throws SQLException {
-    if (definition.getJdbcFetchSize() < 0) {
-      if (finalUrl.startsWith("jdbc:mysql:")) {
-        statement.setFetchSize(Integer.MIN_VALUE);
-      } else if (finalUrl.startsWith("jdbc:sqlserver:")) {
-        statement.setFetchSize(1000);
-      } else {
-        statement.setFetchSize(1000);
-      }
-    } else {
-      statement.setFetchSize(definition.getJdbcFetchSize());
-    }
+    
+    jdbcReadStream.start(requestContext.getRequestId() + ":" + getName(), finalUrl, credentials, finalQuery, pipeline);
+    
+    return result.future();
   }
   
   static String coalesce(String one, String two) {

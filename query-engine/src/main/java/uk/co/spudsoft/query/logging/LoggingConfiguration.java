@@ -28,7 +28,7 @@ import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
 import ch.qos.logback.core.joran.spi.JoranException;
 import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.reactiverse.contextual.logging.LogbackConverter;
+import io.reactiverse.contextual.logging.logback.LogbackConverter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;

@@ -46,13 +46,8 @@ public class ListingWriteStream<T> implements WriteStream<T> {
   }
 
   @Override
-  public void write(T data, Handler<AsyncResult<Void>> handler) {
-    write(data).andThen(handler);
-  }
-
-  @Override
-  public void end(Handler<AsyncResult<Void>> handler) {
-    handler.handle(Future.succeededFuture());
+  public Future<Void> end() {
+    return Future.succeededFuture();
   }
 
   @Override

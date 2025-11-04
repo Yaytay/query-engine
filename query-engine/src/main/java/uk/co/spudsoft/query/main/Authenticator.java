@@ -529,7 +529,7 @@ public class Authenticator {
 
   private Future<String> performClientCredentialsGrant(String tokenEndpoint, String clientId, String clientSecret) {
     logger.debug("Performing client_credentials request to {}", tokenEndpoint);
-    MultiMap form = new HeadersMultiMap();
+    MultiMap form = HeadersMultiMap.httpHeaders();
     form.add("grant_type", "client_credentials");
     form.add("client_id", clientId);
     form.add("client_secret", clientSecret);
@@ -553,7 +553,7 @@ public class Authenticator {
 
   private Future<String> performResourceOwnerPasswordCredentials(Endpoint authEndpoint, String username, String password) {
     logger.debug("Performing password request to {}", authEndpoint);
-    MultiMap form = new HeadersMultiMap();
+    MultiMap form = HeadersMultiMap.httpHeaders();
     form.add("grant_type", "password");
     form.add("username", username);
     form.add("password", password);

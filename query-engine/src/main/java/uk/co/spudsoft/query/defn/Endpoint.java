@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Strings;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.Duration;
 import uk.co.spudsoft.params4j.SecretsSerializer;
 
 /**
@@ -83,9 +84,8 @@ public class Endpoint {
   private final String username;
   private final String password;
   private final Condition condition;
-  private final Integer idleTimeout;
-  private final Integer readIdleTimeout;
-  private final Integer writeIdleTimeout;
+  private final Duration connectionTimeout;
+  private final Duration idleTimeout;
 
   /**
    * Validate the configuration.
@@ -278,6 +278,23 @@ public class Endpoint {
   }
 
   /**
+   * Get the connection timeout for the endpoint connection.
+   *
+   * @return the connection timeout in milliseconds.
+   */
+  @Schema(description = """
+                        <P>The connection timeout for the endpoint connection in milliseconds.</P>
+                        <P>
+                        This controls the maximum time a connection can remain connection before being closed.
+                        </P>
+                        """,
+           requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  public Duration getConnectionTimeout() {
+    return connectionTimeout;
+  }
+
+  /**
    * Get the idle timeout for the endpoint connection.
    *
    * @return the idle timeout in milliseconds.
@@ -290,42 +307,8 @@ public class Endpoint {
                         """,
            requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
-  public Integer getIdleTimeout() {
+  public Duration getIdleTimeout() {
     return idleTimeout;
-  }
-
-  /**
-   * Get the read idle timeout for the endpoint connection.
-   *
-   * @return the read idle timeout in milliseconds.
-   */
-  @Schema(description = """
-                        <P>The read idle timeout for the endpoint connection in milliseconds.</P>
-                        <P>
-                        This controls the maximum time a connection can remain idle on read operations before being closed.
-                        </P>
-                        """,
-           requiredMode = Schema.RequiredMode.NOT_REQUIRED
-  )
-  public Integer getReadIdleTimeout() {
-    return readIdleTimeout;
-  }
-
-  /**
-   * Get the write idle timeout for the endpoint connection.
-   *
-   * @return the write idle timeout in milliseconds.
-   */
-  @Schema(description = """
-                        <P>The write idle timeout for the endpoint connection in milliseconds.</P>
-                        <P>
-                        This controls the maximum time a connection can remain idle on write operations before being closed.
-                        </P>
-                        """,
-           requiredMode = Schema.RequiredMode.NOT_REQUIRED
-  )
-  public Integer getWriteIdleTimeout() {
-    return writeIdleTimeout;
   }
 
   /**
@@ -342,9 +325,8 @@ public class Endpoint {
     private String username;
     private String password;
     private Condition condition;
-    private Integer idleTimeout;
-    private Integer readIdleTimeout;
-    private Integer writeIdleTimeout;
+    private Duration connectionTimeout;
+    private Duration idleTimeout;
 
     private Builder() {
     }
@@ -438,35 +420,24 @@ public class Endpoint {
     }
 
     /**
+     * Set the connection timeout of the Endpoint in the builder.
+     *
+     * @param value the connection timeout in milliseconds.
+     * @return this, so that the builder may be used fluently.
+     */
+    public Builder connectionTimeout(final Duration value) {
+      this.connectionTimeout = value;
+      return this;
+    }
+
+    /**
      * Set the idle timeout of the Endpoint in the builder.
      *
      * @param value the idle timeout in milliseconds.
      * @return this, so that the builder may be used fluently.
      */
-    public Builder idleTimeout(final Integer value) {
+    public Builder idleTimeout(final Duration value) {
       this.idleTimeout = value;
-      return this;
-    }
-
-    /**
-     * Set the read idle timeout of the Endpoint in the builder.
-     *
-     * @param value the read idle timeout in milliseconds.
-     * @return this, so that the builder may be used fluently.
-     */
-    public Builder readIdleTimeout(final Integer value) {
-      this.readIdleTimeout = value;
-      return this;
-    }
-
-    /**
-     * Set the write idle timeout of the Endpoint in the builder.
-     *
-     * @param value the write idle timeout in milliseconds.
-     * @return this, so that the builder may be used fluently.
-     */
-    public Builder writeIdleTimeout(final Integer value) {
-      this.writeIdleTimeout = value;
       return this;
     }
 
@@ -476,7 +447,7 @@ public class Endpoint {
      * @return a new Endpoint object.
      */
     public Endpoint build() {
-      return new Endpoint(name, type, url, urlTemplate, secret, username, password, condition, idleTimeout, readIdleTimeout, writeIdleTimeout);
+      return new Endpoint(name, type, url, urlTemplate, secret, username, password, condition, connectionTimeout, idleTimeout);
     }
   }
 
@@ -489,7 +460,7 @@ public class Endpoint {
     return new Endpoint.Builder();
   }
 
-  private Endpoint(final String name, final EndpointType type, final String url, final String urlTemplate, final String secret, final String username, final String password, final Condition condition, final Integer idleTimeout, final Integer readIdleTimeout, final Integer writeIdleTimeout) {
+  private Endpoint(final String name, final EndpointType type, final String url, final String urlTemplate, final String secret, final String username, final String password, final Condition condition, final Duration connectionTimeout, final Duration idleTimeout) {
     this.name = name;
     this.type = type;
     this.url = url;
@@ -498,9 +469,8 @@ public class Endpoint {
     this.username = username;
     this.password = password;
     this.condition = condition;
+    this.connectionTimeout = connectionTimeout;
     this.idleTimeout = idleTimeout;
-    this.readIdleTimeout = readIdleTimeout;
-    this.writeIdleTimeout = writeIdleTimeout;
   }
   
 }

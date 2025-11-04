@@ -11,38 +11,40 @@ The cookie value is a randomly generated key pointing to the JWT generated durin
 | Details
 
 
+
 | [[name]]name
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | The name of the cookie.
 
 The name must be alphanumeric characters or any of the characters in "!#$%&'*+.^_`|~]+".
+
 | [[secure]]secure
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Boolean.html[Boolean]
 | The "secure" flag for the cookie.
 
 Optional, if not set the secure flag will be set if the request is recognised as coming over HTTPS.
+
 | [[httpOnly]]httpOnly
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Boolean.html[Boolean]
 | The httpOnly flag for the cookie.
 
 Optional, if not set the flag will be set to false.
+
 | [[domain]]domain
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | The domain to be specified in the cookie.
 
 Optional, if not set the domain used in the request will be set in the cookie.
+
 | [[path]]path
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | The path to be specified in the cookie.
 
 Optional, if not set the path in the cookie will be set to "/".
+
 | [[sameSite]]sameSite
 | link:https://vertx.io/docs/apidocs/io/vertx/core/http/CookieSameSite.html[CookieSameSite]
 | The SameSite value to set in the cookie.
 
 Optional, if not set same-site will not be set in the cookie.
-| [[VALID_NAME]]VALID_NAME
-| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/regex/Pattern.html[Pattern]
-| 
-
 |===

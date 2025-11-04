@@ -111,8 +111,8 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
             .compose(rows -> {
               logger.debug("de pipeline completed, processing {} rows", rows.size());
               try {
-                for (DataRow row : rows) {
-                  processEndpoint(pipeline, row);
+                for (int i = 0; i < rows.size(); ++i) {
+                  processEndpoint(pipeline, i, rows.get(i));
                 }
               } catch (IllegalArgumentException ex) {
                 return Future.failedFuture(new ServiceException(500, "Unable to process DynamicEndpoint: " + ex.getMessage()));
@@ -122,9 +122,8 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
             });
   }
   
-  private void processEndpoint(PipelineInstance pipeline, DataRow data) {
+  private void processEndpoint(PipelineInstance pipeline, int idx, DataRow data) {
     
-    logger.debug("Processing dynamic endpoint: {}", data);
     String type = getField(data, definition.getTypeField());    
     if (type == null) {
       type = EndpointType.SQL.name();
@@ -133,6 +132,7 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
     if (Strings.isNullOrEmpty(key)) {
       key = definition.getKey();
     }
+    logger.debug("Processing dynamic endpoint {}: {} ({})", idx, key, type);
     if (Strings.isNullOrEmpty(key)) {
       if (data.containsKey(definition.getKeyField())) {
         throw new IllegalArgumentException("No field with the name " + definition.getKeyField() + " was found in the resultset for the dynamic endpoint");

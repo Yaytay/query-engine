@@ -145,7 +145,7 @@ public final class RequestContext {
     this.path = path;
     this.params = params;
     this.arguments = multiMapToMap(params);
-    this.headers = headers == null ? new HeadersMultiMap() : headers;
+    this.headers = headers == null ? HeadersMultiMap.httpHeaders() : headers;
     this.cookies = ImmutableSet.copyOf(cookies == null ? Collections.emptySet() : cookies);
     this.clientIp = clientIp;
     this.jwt = jwt;

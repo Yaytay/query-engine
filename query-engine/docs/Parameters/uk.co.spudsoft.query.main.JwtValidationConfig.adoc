@@ -1,14 +1,14 @@
 = JwtValidationConfig
 
 JWT validation configuration.The JWT validator can be configured with either a dynamic or a static configuration.
- 
+
 
 With a dynamic configuration the issuer is derived from the Host (or X-Forwarded-Host) header (with a fixed suffix appended) and OpenID Discovery is used to determine the JWKS endpoint to use.
- Key IDs (kid) only have to be unique for each issuer.
- 
+Key IDs (kid) only have to be unique for each issuer.
+
 
 With a static configuration the issuer is not derived and any key from any of the configured JWKS endpoints may be used.
- Key IDs (kid) only have to be unique across all JWKS endpoints.
+Key IDs (kid) only have to be unique across all JWKS endpoints.
 
 [cols="1,1a,4a",stripes=even]
 |===
@@ -17,97 +17,107 @@ With a static configuration the issuer is not derived and any key from any of th
 | Details
 
 
+
 | [[issuerHostPath]]issuerHostPath
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | Set the path to be appended to the Host to derive the issuer.
 
 Usually an issuer has an empty path, being just https://host[:port]/ however it is perfectly valid for an issuer
- to have a path as long as, when ".well-known/openid-configuration" is appended to it it results in a valid URL
- to the OpenID configuration for that issuer.
- 
+to have a path as long as, when ".well-known/openid-configuration" is appended to it it results in a valid URL
+to the OpenID configuration for that issuer.
+
 
 This value is <em>not</em>  used to signify that the issuer should be derived from the header, that indication is driven entirely
- by the  value.
+by the  value.
+
 | [[requiredAudiences]]requiredAudiences
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html[List]<link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]>
 | Set the set of audience values, any one of which must be included in any token for the query engine to accept it.
 
 The token validation requires a non-empty intersection of the required audiences with the provided audiences.
+
 | [[acceptableIssuersFile]]acceptableIssuersFile
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | Set the path to the acceptable issuers file.
 
 This is a core security control and must be set as tightly as possible.
- 
+
 
 The file itself may be updated in a running system, but the path to the file is immutable.
- 
+
 
 An issuer is considered acceptable if it matches an entry in this file OR an acceptableIssuerRegex.
+
 | [[filePollPeriodDuration]]filePollPeriodDuration
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/time/Duration.html[Duration]
 | Get the time between checks of the file (also the time that the file must stabilise before it is re-read).
 
 Thus the delay between a change to the file being made and being picked up will be
- between filePollPeriodMs and 2 * filePollPeriodMs.
- 
+between filePollPeriodMs and 2 * filePollPeriodMs.
+
 
 Checks of the file are based entirely on the last-modified timestamp - if the file is on a filesystem that
- does not support the last-modified timestamp changes will never be picked up.
- 
+does not support the last-modified timestamp changes will never be picked up.
+
 
 Configuration files should specify this using link:https://en.wikipedia.org/wiki/ISO_8601#Durations[ISO860 Duration]  format, i.e. PT10S.
+
 | [[acceptableIssuerRegexes]]acceptableIssuerRegexes
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html[List]<link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]>
 | Set the list of regular expressions that are used to define acceptable token issuers.
 
 This is a core security control and must be set as tightly as possible.
- 
+
 
 An issuer is considered acceptable if it matches one of these regular expressions, OR it matches an entry in the acceptableIssuersFile.
+
 | [[defaultJwksCacheDuration]]defaultJwksCacheDuration
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/time/Duration.html[Duration]
 | Set the default period to cache JWKS data for.
 
 This is expected to be overridden by cache-control/max-age headers on the JWKS response, so the default value is usually reasonable.
- 
+
 
 Configuration files should specify this using link:https://en.wikipedia.org/wiki/ISO_8601#Durations[ISO860 Duration]  format, i.e. PT10S.
+
 | [[jwksEndpoints]]jwksEndpoints
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html[List]<link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]>
 | Get the explicitly configured endpoints that will be used to download JWK sets.
 
 If any values are set here they will be the only endpoints used for downloading JSON Web Keys.
- If this value is empty the issuer will be determined (typically from the Host header, see ), tested for acceptability, and used to perform OpenID Discovery.
- 
+If this value is empty the issuer will be determined (typically from the Host header, see ), tested for acceptability, and used to perform OpenID Discovery.
+
 
 In a SAAS deployment the appropriate setting depends on whether the clients share a single JWKS.
- If the JWKS is shared the URL for it should be provided here, if there is a separate pool of keys for each client then this setting should be left empty and OpenID Discovery will be used for each issuer.
- 
+If the JWKS is shared the URL for it should be provided here, if there is a separate pool of keys for each client then this setting should be left empty and OpenID Discovery will be used for each issuer.
+
 
 Regardless of how the JWKS endpoints are found, the acceptable issuers must be configured as tightly as possible.
+
 | [[requireExp]]requireExp
 | boolean
 | Set whether or tokens are required to have an exp (expiry timestamp) value.
 
 If a token has an exp value it must be valid.
- 
+
 
 Defaults to true.
+
 | [[requireNbf]]requireNbf
 | boolean
 | Set whether or tokens are required to have an nbf (not valid before timestamp) value.
 
 If a token has an nbf value it must be valid.
- 
+
 
 Defaults to true.
+
 | [[permittedTimeSkew]]permittedTimeSkew
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/time/Duration.html[Duration]
 | Set a value to enable systems to permit clock skew between (or just delay) between time values in tokens and the current wall time.
 
 As an example, if it takes 10ms to get a token to the validation code it is possible that a token that was valid when it was given out is no longer valid.
- 
+
 
 The default value is 0 and this should not usually be changed.
 |===

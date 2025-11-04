@@ -274,7 +274,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     Map<String, ArgumentInstance> result = new HashMap<>();
     Map<String, Object> arguments = new HashMap<>();
     if (valuesMap == null) {
-      valuesMap = new HeadersMultiMap();
+      valuesMap = HeadersMultiMap.httpHeaders();
     }
     for (Argument arg : definitions) {
       if (arg.isIgnored()) {

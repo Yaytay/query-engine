@@ -17,7 +17,6 @@
 package uk.co.spudsoft.query.exec.fmts.xlsx;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
@@ -66,7 +65,7 @@ public class OutputWriteStreamWrapper extends OutputStream implements WriteStrea
 
   @Override
   public void close() throws IOException {
-    outputStream.end(finalPromise);
+    outputStream.end().andThen(finalPromise);
   }
 
   @Override
@@ -94,22 +93,15 @@ public class OutputWriteStreamWrapper extends OutputStream implements WriteStrea
   }
 
   @Override
-  public void write(Buffer data, Handler<AsyncResult<Void>> handler) {
-    outputStream.write(data, handler);
-  }
-
-  @Override
-  public void end(Handler<AsyncResult<Void>> handler) {
-    outputStream.end(ar -> {
-      if (ar.succeeded()) {
-        finalPromise.tryComplete();
-      } else {
-        finalPromise.tryFail(ar.cause());
-      }
-      if (handler != null) {
-        handler.handle(ar);
-      }
-    });
+  public Future<Void> end() {
+    return outputStream.end()
+            .onComplete(ar -> {
+              if (ar.succeeded()) {
+                finalPromise.tryComplete();
+              } else {
+                finalPromise.tryFail(ar.cause());
+              }
+            });
   }
 
   @Override

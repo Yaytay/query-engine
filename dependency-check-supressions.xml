@@ -1,149 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
   <suppress>
-    <notes><![CDATA[False positive the issue is with Liquibase prior to v4.8.0, liquibase-slf4j is independent]]></notes>
-    <gav regex="false">com.mattbertolini:liquibase-slf4j:4.1.0</gav>
-    <cve>CVE-2022-0839</cve>
+    <notes><![CDATA[
+        The CVE relates to ICU4C.
+        ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org.graalvm.shadowed/icu4j.*</packageUrl>
+    <vulnerabilityName>CVE-2025-5222</vulnerabilityName>
   </suppress>
-    <suppress>
-        <notes><![CDATA[
-        CVE relates to pki-core, it's just picking up zipkin as a false positive.
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/io.zipkin..*/.*$</packageUrl>
-        <vulnerabilityName>CVE-2022-2393</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-        The CVE relates to SnakeYamls construction of Java objects, our use of Snakeyaml is always through Jackson, which only uses it for parsing the yaml.
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org.yaml/snakeyaml.*$</packageUrl>
-        <vulnerabilityName>CVE-2022-1471</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-        The CVE relates to ICU4C.
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org.graalvm.shadowed/icu4j.*</packageUrl>
-        <vulnerabilityName>CVE-2016-6293</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-        The CVE relates to ICU4C.
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org.graalvm.shadowed/icu4j.*</packageUrl>
-        <vulnerabilityName>CVE-2016-7415</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-        The CVE relates to ICU4C.
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org.graalvm.shadowed/icu4j.*</packageUrl>
-        <vulnerabilityName>CVE-2017-17484</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-        The CVE relates to ICU4C.
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org.graalvm.shadowed/icu4j.*</packageUrl>
-        <vulnerabilityName>CVE-2014-9911</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-        The CVE relates to ICU4C.
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org.graalvm.shadowed/icu4j.*</packageUrl>
-        <vulnerabilityName>CVE-2020-10531</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-        The CVE relates to ICU4C.
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org.graalvm.shadowed/icu4j.*</packageUrl>
-        <vulnerabilityName>CVE-2014-9654</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-        The CVE relates to ICU4C.
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org.graalvm.shadowed/icu4j.*</packageUrl>
-        <vulnerabilityName>CVE-2017-14952</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-        The CVE relates to ICU4C.
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org.graalvm.shadowed/icu4j.*</packageUrl>
-        <vulnerabilityName>CVE-2015-5922</vulnerabilityName>
-    </suppress>
-
-    <suppress>
-        <notes><![CDATA[
-        The CVE relates to the installation of mysql on Gentoo!
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/io.vertx/vertx-mysql-client.*</packageUrl>
-        <vulnerabilityName>CVE-2017-15945</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-        The CVE relates to mysql server.
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/io.vertx/vertx-mysql-client.*</packageUrl>
-        <vulnerabilityName>CVE-2009-4028</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-        The CVE relates to mysql server.
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/io.vertx/vertx-mysql-client.*</packageUrl>
-        <vulnerabilityName>CVE-2010-1621</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-        The CVE relates to mysql connector/j.
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/io.vertx/vertx-mysql-client.*</packageUrl>
-        <vulnerabilityName>CVE-2015-2575</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-        The CVE relates to mysql server.
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/io.vertx/vertx-mysql-client.*</packageUrl>
-        <vulnerabilityName>CVE-2007-5925</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-        The CVE relates to mysql server.
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/io.vertx/vertx-mysql-client.*</packageUrl>
-        <vulnerabilityName>CVE-2009-0819</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-        The CVE relates to mysql server.
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/io.vertx/vertx-mysql-client.*</packageUrl>
-        <vulnerabilityName>CVE-2010-3677</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-        The CVE relates to mysql server.
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/io.vertx/vertx-mysql-client.*</packageUrl>
-        <vulnerabilityName>CVE-2010-3682</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-        The CVE relates to mysql server.
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/io.vertx/vertx-mysql-client.*</packageUrl>
-        <vulnerabilityName>CVE-2010-1626</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-        The CVE relates to mysql server.
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/io.vertx/vertx-mysql-client.*</packageUrl>
-        <vulnerabilityName>CVE-2007-1420</vulnerabilityName>
-    </suppress>
+  <suppress>
+    <notes><![CDATA[
+   vertx-mysql-client-5.0.5.jar mistaken for mysql server
+   ]]></notes>
+    <packageUrl regex="true">^pkg:maven/io\.vertx/vertx-mysql-client@.*$</packageUrl>
+    <cpe>cpe:/a:mysql:mysql</cpe>
+  </suppress>
 </suppressions>

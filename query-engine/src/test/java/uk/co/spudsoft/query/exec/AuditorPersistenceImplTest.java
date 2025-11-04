@@ -406,19 +406,19 @@ public class AuditorPersistenceImplTest {
     assertNull(AuditorPersistenceImpl.multiMapToJson(null));
 
     // Test 2: Empty MultiMap
-    MultiMap emptyMap = new HeadersMultiMap();
+    MultiMap emptyMap = HeadersMultiMap.httpHeaders();
     JsonObject emptyResult = AuditorPersistenceImpl.multiMapToJson(emptyMap);
     assertNotNull(emptyResult);
     assertEquals(0, emptyResult.size());
 
     // Test 3: Single key-value pair
-    MultiMap singleMap = new HeadersMultiMap().add("key1", "value1");
+    MultiMap singleMap = HeadersMultiMap.httpHeaders().add("key1", "value1");
     JsonObject singleResult = AuditorPersistenceImpl.multiMapToJson(singleMap);
     assertEquals(1, singleResult.size());
     assertEquals("value1", singleResult.getString("key1"));
 
     // Test 4: Multiple different keys
-    MultiMap multipleKeysMap = new HeadersMultiMap()
+    MultiMap multipleKeysMap = HeadersMultiMap.httpHeaders()
             .add("key1", "value1")
             .add("key2", "value2")
             .add("key3", "value3");
@@ -429,7 +429,7 @@ public class AuditorPersistenceImplTest {
     assertEquals("value3", multipleKeysResult.getString("key3"));
 
     // Test 5: Duplicate keys (should create JsonArray)
-    MultiMap duplicateKeysMap = new HeadersMultiMap()
+    MultiMap duplicateKeysMap = HeadersMultiMap.httpHeaders()
             .add("duplicate", "first")
             .add("duplicate", "second");
     JsonObject duplicateKeysResult = AuditorPersistenceImpl.multiMapToJson(duplicateKeysMap);
@@ -438,7 +438,7 @@ public class AuditorPersistenceImplTest {
     assertEquals(expectedArray, duplicateKeysResult.getJsonArray("duplicate"));
 
     // Test 6: Multiple values for same key (more than 2)
-    MultiMap multipleValuesMap = new HeadersMultiMap()
+    MultiMap multipleValuesMap = HeadersMultiMap.httpHeaders()
             .add("multi", "first")
             .add("multi", "second")
             .add("multi", "third")
@@ -449,7 +449,7 @@ public class AuditorPersistenceImplTest {
     assertEquals(expectedMultiArray, multipleValuesResult.getJsonArray("multi"));
 
     // Test 7: Authorization header with Bearer token (should be protected)
-    MultiMap authBearerMap = new HeadersMultiMap()
+    MultiMap authBearerMap = HeadersMultiMap.httpHeaders()
             .add(HttpHeaders.AUTHORIZATION.toString(), "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c");
     JsonObject authBearerResult = AuditorPersistenceImpl.multiMapToJson(authBearerMap);
     assertEquals(1, authBearerResult.size());
@@ -459,7 +459,7 @@ public class AuditorPersistenceImplTest {
     assertFalse(protectedBearer.contains("SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"));
 
     // Test 8: Authorization header with Basic auth (should be protected)
-    MultiMap authBasicMap = new HeadersMultiMap()
+    MultiMap authBasicMap = HeadersMultiMap.httpHeaders()
             .add(HttpHeaders.AUTHORIZATION.toString(), "Basic dXNlcm5hbWU6cGFzc3dvcmQ=");
     JsonObject authBasicResult = AuditorPersistenceImpl.multiMapToJson(authBasicMap);
     assertEquals(1, authBasicResult.size());
@@ -480,7 +480,7 @@ public class AuditorPersistenceImplTest {
     assertEquals("Basic secret", authArray.getString(1)); // This isn't valid basic auth so it hasn't been protected
 
     // Test 10: Mixed scenario - single values, multiple values, and auth headers
-    MultiMap mixedMap = new HeadersMultiMap()
+    MultiMap mixedMap = HeadersMultiMap.httpHeaders()
             .add("single", "value")
             .add("multiple", "first")
             .add("multiple", "second")
@@ -514,7 +514,7 @@ public class AuditorPersistenceImplTest {
     assertEquals("text/html", acceptArray.getString(1));
 
     // Test 11: Empty string values
-    MultiMap emptyValueMap = new HeadersMultiMap()
+    MultiMap emptyValueMap = HeadersMultiMap.httpHeaders()
             .add("empty", "")
             .add("null-like", "null")
             .add("empty", "not-empty");
@@ -527,7 +527,7 @@ public class AuditorPersistenceImplTest {
     assertEquals("null", emptyValueResult.getString("null-like"));
 
     // Test 12: Special characters in keys and values
-    MultiMap specialCharsMap = new HeadersMultiMap()
+    MultiMap specialCharsMap = HeadersMultiMap.httpHeaders()
             .add("key-with-dashes", "value with spaces")
             .add("key_with_underscores", "value@with#special$chars")
             .add("UPPERCASE_KEY", "MixedCaseValue");

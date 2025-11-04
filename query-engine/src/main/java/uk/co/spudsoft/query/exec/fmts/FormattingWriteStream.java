@@ -17,7 +17,6 @@
 package uk.co.spudsoft.query.exec.fmts;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
@@ -94,11 +93,6 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
     });
   }
 
-  @Override
-  public void write(DataRow data, Handler<AsyncResult<Void>> handler) {
-    write(data).onComplete(handler);
-  }
-
   private Future<Void> handleTermination() {
     try {
       return terminate.handle(rowCount);
@@ -109,16 +103,18 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
   }
   
   @Override
-  public void end(Handler<AsyncResult<Void>> handler) {
-    lastProcessFuture.andThen(v -> {
-      if (initialized) {
-        handleTermination().onComplete(handler);      
-      } else {
-        initialize.handle(null).compose(v2 -> {
-          return handleTermination();
-        }).onComplete(handler);
-      }
-    });
+  public Future<Void> end() {
+    return lastProcessFuture
+            .compose(v -> {
+              if (initialized) {
+                return handleTermination();
+              } else {
+                return initialize
+                        .handle(null).compose(v2 -> {
+                          return handleTermination();
+                        });
+              }
+            });
   }
 
   @Override

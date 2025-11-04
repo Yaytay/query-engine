@@ -60,7 +60,12 @@
     </dependencies>
   </dependencyManagement>
 
-  <dependencies>    
+  <dependencies>
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
+      <version>2.5</version>
+    </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
@@ -74,45 +79,30 @@
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>dir-cache</artifactId>
-      <version>0.0.30</version>
+      <version>0.0.33</version>
     </dependency>
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>jwt-validator-vertx</artifactId>
-      <version>0.0.46</version>
+      <version>0.1.0</version>
     </dependency>
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>params4j</artifactId>
-      <version>0.0.30</version>
+      <version>0.1.1</version>
       <exclusions>
       </exclusions>
     </dependency>
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>xlsx-writer</artifactId>
-      <version>0.0.24</version>
+      <version>0.0.27</version>
     </dependency>
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>vertx-management-endpoints</artifactId>
-      <version>0.0.22</version>
+      <version>0.1.1</version>
       <exclusions>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>uk.co.spudsoft</groupId>
-      <artifactId>vertx-resteasy-helpers</artifactId>
-      <version>0.0.31</version>
-      <exclusions>
-        <exclusion>
-          <groupId>jakarta.activation</groupId>
-          <artifactId>jakarta.activation-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>jakarta.validation</groupId>
-          <artifactId>jakarta.validation-api</artifactId>
-        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -203,6 +193,21 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>uk.co.spudsoft</groupId>
+      <artifactId>vertx-resteasy-helpers</artifactId>
+      <version>0.1.0</version>
+      <exclusions>
+        <exclusion>
+          <groupId>jakarta.activation</groupId>
+          <artifactId>jakarta.activation-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>jakarta.validation</groupId>
+          <artifactId>jakarta.validation-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-exporter-otlp</artifactId>
       <exclusions>
@@ -243,6 +248,11 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>io.zipkin.zipkin2</groupId>
+      <artifactId>zipkin</artifactId>
+      <version>3.5.1</version>
+    </dependency>
+    <dependency>
       <groupId>io.zipkin.reporter2</groupId>
       <artifactId>zipkin-sender-urlconnection</artifactId>
       <version>3.5.1</version>
@@ -273,7 +283,7 @@
     <dependency>
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-registry-prometheus</artifactId>
-      <version>1.12.13</version>
+      <version>1.15.5</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -384,7 +394,7 @@
     <dependency>
       <groupId>org.liquibase</groupId>
       <artifactId>liquibase-core</artifactId>
-      <version>4.33.0</version>
+      <version>5.0.1</version>
       <exclusions>
         <exclusion>
           <groupId>javax.activation</groupId>
@@ -414,7 +424,7 @@
     <dependency>
       <groupId>com.mysql</groupId>
       <artifactId>mysql-connector-j</artifactId>
-      <version>9.4.0</version>
+      <version>9.5.0</version>
     </dependency>
     <dependency>
       <groupId>org.postgresql</groupId>
@@ -428,8 +438,8 @@
     </dependency>
     <dependency>
       <groupId>io.reactiverse</groupId>
-      <artifactId>reactiverse-contextual-logging</artifactId>
-      <version>1.2.1</version>
+      <artifactId>reactiverse-contextual-logging-logback</artifactId>
+      <version>2.0.0</version>
     </dependency>    
 
     <!-- Testing -->
@@ -549,7 +559,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.11.3</version>
         <executions>
           <execution>
             <id>attach-javadocs</id>
@@ -574,11 +583,12 @@
             <configuration>
               <useStandardDocletOptions>false</useStandardDocletOptions>
               <doclet>uk.co.spudsoft.params4j.doclet.AsciiDocDoclet</doclet>
+              <source>${jdk.version}</source>
               <docletArtifacts>
                 <docletArtifact>
                   <groupId>uk.co.spudsoft</groupId>
                   <artifactId>params4j</artifactId>
-                  <version>0.0.27</version>
+                  <version>0.1.1</version>
                   <classifier>doclet</classifier>
                 </docletArtifact>
               </docletArtifacts>
@@ -662,6 +672,10 @@
 
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>25</source>
+          <target>25</target>
+        </configuration>
       </plugin>
 
       <plugin>

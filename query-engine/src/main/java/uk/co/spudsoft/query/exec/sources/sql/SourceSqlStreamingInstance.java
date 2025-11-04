@@ -30,6 +30,7 @@ import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Transaction;
 import io.vertx.sqlclient.Tuple;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,17 +109,39 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     }
   }
   
-  static PoolOptions poolOptions(SourceSql definition) {
+  static boolean isPositive(Duration value) {
+    return (value != null && value.isPositive());
+  }
+
+  static PoolOptions poolOptions(SourceSql definition, Endpoint endpoint) {
     PoolOptions po = new PoolOptions();
-    if (definition.getConnectionTimeout() != null) {
-      long millis = definition.getConnectionTimeout().toMillis();
-      if (millis > Integer.MAX_VALUE) {
-        millis = Integer.MAX_VALUE;
-      }
-      po.setConnectionTimeout((int) millis);
-      po.setConnectionTimeoutUnit(TimeUnit.MILLISECONDS);
+    if (isPositive(definition.getConnectionTimeout())) {
+      setConnectionTimeout(definition.getConnectionTimeout(), po);
+    } else if (isPositive(endpoint.getConnectionTimeout())) {
+      setConnectionTimeout(endpoint.getConnectionTimeout(), po);
     }
+    
+    if (isPositive(definition.getIdleTimeout())) {
+      setIdleTimeout(definition.getIdleTimeout(), po);
+    } else if (isPositive(endpoint.getIdleTimeout())) {
+      setIdleTimeout(endpoint.getIdleTimeout(), po);
+    }
+    
     return po;
+  }
+
+  static void setConnectionTimeout(Duration duration, PoolOptions po) {
+    long millis = duration.toMillis();
+    millis = Math.min(millis, (long) Integer.MAX_VALUE);
+    po.setConnectionTimeout((int) millis);
+    po.setConnectionTimeoutUnit(TimeUnit.MILLISECONDS);
+  }
+
+  static void setIdleTimeout(Duration duration, PoolOptions po) {
+    long millis = duration.toMillis();
+    millis = Math.min(millis, (long) Integer.MAX_VALUE);
+    po.setIdleTimeout((int) millis);
+    po.setIdleTimeoutUnit(TimeUnit.MILLISECONDS);
   }
   
   @Override
@@ -161,26 +184,15 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     
     SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(url);
     connectOptions.setTracingPolicy(TracingPolicy.IGNORE);
-    connectOptions.setConnectTimeout(6000);
+
+    PoolOptions poolOptions = poolOptions(definition, endpoint);
     
-    connectOptions.setIdleTimeoutUnit(TimeUnit.SECONDS);
-    
-    if (endpoint.getIdleTimeout() != null && endpoint.getIdleTimeout() >= 0L) {
-      connectOptions.setIdleTimeout(endpoint.getIdleTimeout());
-    }
-    if (endpoint.getReadIdleTimeout() != null && endpoint.getReadIdleTimeout() >= 0L) {
-      connectOptions.setReadIdleTimeout(endpoint.getReadIdleTimeout());
-    }
-    if (endpoint.getWriteIdleTimeout() != null && endpoint.getWriteIdleTimeout() >= 0L) {
-      connectOptions.setWriteIdleTimeout(endpoint.getWriteIdleTimeout());
-    }
-        
     try {
       processCredentials(endpoint, connectOptions, executor, requestContext);
     } catch (ServiceException ex) {
       return Future.failedFuture(ex);
     }
-    Pool pool = poolCreator.pool(vertx, connectOptions, poolOptions(definition));
+    Pool pool = poolCreator.pool(vertx, connectOptions, poolOptions);
     Context context = vertx.getOrCreateContext();
     logger.trace("Outer context: {}", context);
     

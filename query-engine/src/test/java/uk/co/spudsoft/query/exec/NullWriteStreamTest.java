@@ -51,7 +51,7 @@ public class NullWriteStreamTest {
     assertFalse(stream.writeQueueFull());
     assertTrue(stream.write("3").succeeded());
     assertFalse(stream.writeQueueFull());
-    stream.write("4", ar -> {
+    stream.write("4").andThen(ar -> {
       testContext.verify(() -> {
         assertTrue(ar.succeeded());
       });

@@ -17,7 +17,6 @@
 package uk.co.spudsoft.query.exec;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -113,12 +112,7 @@ public final class CachingWriteStream implements WriteStream<Buffer> {
   }
 
   @Override
-  public void write(Buffer data, Handler<AsyncResult<Void>> handler) {
-    this.write(data).andThen(handler);
-  }
-
-  @Override
-  public void end(Handler<AsyncResult<Void>> handler) {
+  public Future<Void> end() {
     Future<Void> f1 = cacheStream.end()
             .recover(ex -> {
               logger.warn("Ignored error ending cache stream: ", ex);
@@ -127,10 +121,7 @@ public final class CachingWriteStream implements WriteStream<Buffer> {
             });
     Future<Void> f2 = destStream.end();
     
-    Future.all(f1, f2)
-            .andThen(ar -> {
-              handler.handle(f2);
-            });
+    return Future.all(f1, f2).mapEmpty();
   }
 
   @Override

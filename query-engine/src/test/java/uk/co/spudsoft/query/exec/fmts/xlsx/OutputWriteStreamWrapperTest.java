@@ -41,14 +41,14 @@ public class OutputWriteStreamWrapperTest {
   public void testWriteSingleByte() throws IOException {
     WriteStream<Buffer> mockStream = mock(WriteStream.class);
     when(mockStream.write(any(Buffer.class))).thenReturn(Future.succeededFuture());
-    
+
     OutputWriteStreamWrapper wrapper = new OutputWriteStreamWrapper(mockStream);
-    
+
     wrapper.write(65); // 'A'
-    
+
     ArgumentCaptor<Buffer> bufferCaptor = ArgumentCaptor.forClass(Buffer.class);
     verify(mockStream).write(bufferCaptor.capture());
-    
+
     Buffer capturedBuffer = bufferCaptor.getValue();
     assertEquals(1, capturedBuffer.length());
     assertEquals(65, capturedBuffer.getByte(0));
@@ -59,15 +59,15 @@ public class OutputWriteStreamWrapperTest {
   public void testWriteByteArray() throws IOException {
     WriteStream<Buffer> mockStream = mock(WriteStream.class);
     when(mockStream.write(any(Buffer.class))).thenReturn(Future.succeededFuture());
-    
+
     OutputWriteStreamWrapper wrapper = new OutputWriteStreamWrapper(mockStream);
-    
+
     byte[] data = "Hello World".getBytes();
     wrapper.write(data);
-    
+
     ArgumentCaptor<Buffer> bufferCaptor = ArgumentCaptor.forClass(Buffer.class);
     verify(mockStream).write(bufferCaptor.capture());
-    
+
     Buffer capturedBuffer = bufferCaptor.getValue();
     assertEquals(data.length, capturedBuffer.length());
     assertEquals("Hello World", capturedBuffer.toString());
@@ -78,15 +78,15 @@ public class OutputWriteStreamWrapperTest {
   public void testWriteByteArrayWithOffsetAndLength() throws IOException {
     WriteStream<Buffer> mockStream = mock(WriteStream.class);
     when(mockStream.write(any(Buffer.class))).thenReturn(Future.succeededFuture());
-    
+
     OutputWriteStreamWrapper wrapper = new OutputWriteStreamWrapper(mockStream);
-    
+
     byte[] data = "Hello World".getBytes();
     wrapper.write(data, 6, 5); // "World"
-    
+
     ArgumentCaptor<Buffer> bufferCaptor = ArgumentCaptor.forClass(Buffer.class);
     verify(mockStream).write(bufferCaptor.capture());
-    
+
     Buffer capturedBuffer = bufferCaptor.getValue();
     assertEquals(5, capturedBuffer.length());
     assertEquals("World", capturedBuffer.toString());
@@ -97,12 +97,12 @@ public class OutputWriteStreamWrapperTest {
   public void testWriteBuffer() {
     WriteStream<Buffer> mockStream = mock(WriteStream.class);
     when(mockStream.write(any(Buffer.class))).thenReturn(Future.succeededFuture());
-    
+
     OutputWriteStreamWrapper wrapper = new OutputWriteStreamWrapper(mockStream);
-    
+
     Buffer testBuffer = Buffer.buffer("Test Data");
     Future<Void> result = wrapper.write(testBuffer);
-    
+
     verify(mockStream).write(testBuffer);
     assertTrue(result.succeeded());
   }
@@ -111,15 +111,16 @@ public class OutputWriteStreamWrapperTest {
   @SuppressWarnings("unchecked")
   public void testWriteBufferWithHandler() {
     WriteStream<Buffer> mockStream = mock(WriteStream.class);
-    
+    when(mockStream.write(any(Buffer.class))).thenReturn(Future.succeededFuture());
+
     OutputWriteStreamWrapper wrapper = new OutputWriteStreamWrapper(mockStream);
-    
+
     Buffer testBuffer = Buffer.buffer("Test Data");
     Handler<AsyncResult<Void>> handler = mock(Handler.class);
-    
-    wrapper.write(testBuffer, handler);
-    
-    verify(mockStream).write(eq(testBuffer), eq(handler));
+
+    wrapper.write(testBuffer).andThen(handler);
+
+    verify(mockStream).write(eq(testBuffer));
   }
 
   @Test
@@ -127,9 +128,9 @@ public class OutputWriteStreamWrapperTest {
   public void testWriteQueueFull() {
     WriteStream<Buffer> mockStream = mock(WriteStream.class);
     when(mockStream.writeQueueFull()).thenReturn(true);
-    
+
     OutputWriteStreamWrapper wrapper = new OutputWriteStreamWrapper(mockStream);
-    
+
     assertTrue(wrapper.writeQueueFull());
     verify(mockStream).writeQueueFull();
   }
@@ -139,9 +140,9 @@ public class OutputWriteStreamWrapperTest {
   public void testWriteQueueNotFull() {
     WriteStream<Buffer> mockStream = mock(WriteStream.class);
     when(mockStream.writeQueueFull()).thenReturn(false);
-    
+
     OutputWriteStreamWrapper wrapper = new OutputWriteStreamWrapper(mockStream);
-    
+
     assertFalse(wrapper.writeQueueFull());
     verify(mockStream).writeQueueFull();
   }
@@ -151,11 +152,11 @@ public class OutputWriteStreamWrapperTest {
   public void testSetWriteQueueMaxSize() {
     WriteStream<Buffer> mockStream = mock(WriteStream.class);
     when(mockStream.setWriteQueueMaxSize(anyInt())).thenReturn(mockStream);
-    
+
     OutputWriteStreamWrapper wrapper = new OutputWriteStreamWrapper(mockStream);
-    
+
     wrapper.setWriteQueueMaxSize(500);
-    
+
     verify(mockStream).setWriteQueueMaxSize(500);
   }
 
@@ -165,12 +166,12 @@ public class OutputWriteStreamWrapperTest {
     WriteStream<Buffer> mockStream = mock(WriteStream.class);
     when(mockStream.writeQueueFull()).thenReturn(false);
     when(mockStream.drainHandler(any())).thenReturn(mockStream);
-    
+
     OutputWriteStreamWrapper wrapper = new OutputWriteStreamWrapper(mockStream);
-    
+
     Handler<Void> drainHandler = mock(Handler.class);
     wrapper.drainHandler(drainHandler);
-    
+
     verify(mockStream).drainHandler(drainHandler);
     verify(drainHandler).handle(null); // Should be called immediately when queue not full
   }
@@ -181,12 +182,12 @@ public class OutputWriteStreamWrapperTest {
     WriteStream<Buffer> mockStream = mock(WriteStream.class);
     when(mockStream.writeQueueFull()).thenReturn(true);
     when(mockStream.drainHandler(any())).thenReturn(mockStream);
-    
+
     OutputWriteStreamWrapper wrapper = new OutputWriteStreamWrapper(mockStream);
-    
+
     Handler<Void> drainHandler = mock(Handler.class);
     wrapper.drainHandler(drainHandler);
-    
+
     verify(mockStream).drainHandler(drainHandler);
     verify(drainHandler, never()).handle(null); // Should NOT be called when queue is full
   }
@@ -196,12 +197,12 @@ public class OutputWriteStreamWrapperTest {
   public void testExceptionHandler() {
     WriteStream<Buffer> mockStream = mock(WriteStream.class);
     when(mockStream.exceptionHandler(any())).thenReturn(mockStream);
-    
+
     OutputWriteStreamWrapper wrapper = new OutputWriteStreamWrapper(mockStream);
-    
+
     Handler<Throwable> exceptionHandler = mock(Handler.class);
     wrapper.exceptionHandler(exceptionHandler);
-    
+
     // Verify that the wrapper returns itself for fluent chaining
     assertSame(wrapper, wrapper.exceptionHandler(exceptionHandler));
   }
@@ -212,16 +213,16 @@ public class OutputWriteStreamWrapperTest {
     WriteStream<Buffer> mockStream = mock(WriteStream.class);
     ArgumentCaptor<Handler<Throwable>> handlerCaptor = ArgumentCaptor.forClass(Handler.class);
     when(mockStream.exceptionHandler(handlerCaptor.capture())).thenReturn(mockStream);
-    
+
     OutputWriteStreamWrapper wrapper = new OutputWriteStreamWrapper(mockStream);
-    
+
     Handler<Throwable> exceptionHandler = mock(Handler.class);
     wrapper.exceptionHandler(exceptionHandler);
-    
+
     // Simulate an exception from the underlying stream
     RuntimeException testException = new RuntimeException("Test exception");
     handlerCaptor.getValue().handle(testException);
-    
+
     verify(exceptionHandler).handle(testException);
   }
 
@@ -229,41 +230,45 @@ public class OutputWriteStreamWrapperTest {
   @SuppressWarnings("unchecked")
   public void testClose() throws IOException {
     WriteStream<Buffer> mockStream = mock(WriteStream.class);
-    
+    when(mockStream.end()).thenReturn(io.vertx.core.Future.succeededFuture());
+
     OutputWriteStreamWrapper wrapper = new OutputWriteStreamWrapper(mockStream);
-    
+
     wrapper.close();
-    
-    ArgumentCaptor<Handler<AsyncResult<Void>>> handlerCaptor = ArgumentCaptor.forClass(Handler.class);
-    verify(mockStream).end(handlerCaptor.capture());
+
+    verify(mockStream).end();
   }
 
   @Test
   @SuppressWarnings("unchecked")
   public void testEndWithHandler() {
     WriteStream<Buffer> mockStream = mock(WriteStream.class);
-    
+    // The wrapper's end() returns the Future from mockStream.end(), so stub it
+    when(mockStream.end()).thenReturn(Future.succeededFuture());
+
     OutputWriteStreamWrapper wrapper = new OutputWriteStreamWrapper(mockStream);
-    
+
     Handler<AsyncResult<Void>> endHandler = mock(Handler.class);
-    wrapper.end(endHandler);
-    
-    ArgumentCaptor<Handler<AsyncResult<Void>>> handlerCaptor = ArgumentCaptor.forClass(Handler.class);
-    verify(mockStream).end(handlerCaptor.capture());
-    
-    // Simulate successful completion
-    handlerCaptor.getValue().handle(Future.succeededFuture());
-    
-    verify(endHandler).handle(any(AsyncResult.class));
+
+    // Act: call wrapper.end() to obtain the future, then attach our handler to THAT future
+    Future<Void> returned = wrapper.end();
+    returned.andThen(endHandler);
+
+    // Verify we invoked end() on the underlying stream
+    verify(mockStream).end();
+
+    // Since we stubbed end() with a succeeded future, our handler should be invoked once
+    verify(endHandler, times(1)).handle(any(AsyncResult.class));
   }
 
   @Test
   @SuppressWarnings("unchecked")
   public void testGetFinalFuture() {
     WriteStream<Buffer> mockStream = mock(WriteStream.class);
-    
+    when(mockStream.end()).thenReturn(Future.succeededFuture());
+
     OutputWriteStreamWrapper wrapper = new OutputWriteStreamWrapper(mockStream);
-    
+
     Future<Void> finalFuture = wrapper.getFinalFuture();
     assertNotNull(finalFuture);
     assertFalse(finalFuture.isComplete());
@@ -273,20 +278,18 @@ public class OutputWriteStreamWrapperTest {
   @SuppressWarnings("unchecked")
   public void testGetFinalFutureCompletesOnSuccessfulEnd() {
     WriteStream<Buffer> mockStream = mock(WriteStream.class);
-    
+    when(mockStream.end()).thenReturn(Future.succeededFuture());
+
     OutputWriteStreamWrapper wrapper = new OutputWriteStreamWrapper(mockStream);
-    
+
     Future<Void> finalFuture = wrapper.getFinalFuture();
-    
-    Handler<AsyncResult<Void>> endHandler = mock(Handler.class);
-    wrapper.end(endHandler);
-    
-    ArgumentCaptor<Handler<AsyncResult<Void>>> handlerCaptor = ArgumentCaptor.forClass(Handler.class);
-    verify(mockStream).end(handlerCaptor.capture());
-    
-    // Simulate successful completion
-    handlerCaptor.getValue().handle(Future.succeededFuture());
-    
+
+    // Act
+    Future<Void> returned = wrapper.end();
+    // Returned future already succeeded due to stubbing above
+
+    // Assert
+    assertTrue(returned.succeeded());
     assertTrue(finalFuture.isComplete());
     assertTrue(finalFuture.succeeded());
   }
@@ -295,21 +298,19 @@ public class OutputWriteStreamWrapperTest {
   @SuppressWarnings("unchecked")
   public void testGetFinalFutureFailsOnEndFailure() {
     WriteStream<Buffer> mockStream = mock(WriteStream.class);
-    
-    OutputWriteStreamWrapper wrapper = new OutputWriteStreamWrapper(mockStream);
-    
-    Future<Void> finalFuture = wrapper.getFinalFuture();
-    
-    Handler<AsyncResult<Void>> endHandler = mock(Handler.class);
-    wrapper.end(endHandler);
-    
-    ArgumentCaptor<Handler<AsyncResult<Void>>> handlerCaptor = ArgumentCaptor.forClass(Handler.class);
-    verify(mockStream).end(handlerCaptor.capture());
-    
-    // Simulate failure
     RuntimeException testException = new RuntimeException("End failed");
-    handlerCaptor.getValue().handle(Future.failedFuture(testException));
-    
+    when(mockStream.end()).thenReturn(Future.failedFuture(testException));
+
+    OutputWriteStreamWrapper wrapper = new OutputWriteStreamWrapper(mockStream);
+
+    Future<Void> finalFuture = wrapper.getFinalFuture();
+
+    // Act
+    Future<Void> returned = wrapper.end();
+
+    // Assert
+    assertTrue(returned.failed());
+    assertEquals(testException, returned.cause());
     assertTrue(finalFuture.isComplete());
     assertTrue(finalFuture.failed());
     assertEquals(testException, finalFuture.cause());
