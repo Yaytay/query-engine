@@ -73,7 +73,7 @@ public class YamlToPipelineIT {
     CacheConfig cacheConfig = new CacheConfig();
     cacheConfig.setMaxDuration(Duration.ZERO);
     PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*"), null));
-    PipelineExecutorImpl executor = new PipelineExecutorImpl(meterRegistry, new FilterFactory(Collections.emptyList()), null);
+    PipelineExecutor executor = PipelineExecutor.create(meterRegistry, new FilterFactory(Collections.emptyList()), null);
 
     MultiMap args = MultiMap.caseInsensitiveMultiMap();
     
@@ -190,7 +190,7 @@ public class YamlToPipelineIT {
             })
             .compose(pipelineAndFile -> {
               Pipeline pipeline = pipelineAndFile.pipeline();
-              PipelineExecutorImpl executor = new PipelineExecutorImpl(meterRegistry, new FilterFactory(Collections.emptyList()), null);
+              PipelineExecutor executor = PipelineExecutor.create(meterRegistry, new FilterFactory(Collections.emptyList()), null);
               Format chosenFormat = executor.getFormat(pipeline.getFormats(), null);
               FormatInstance formatInstance = chosenFormat.createInstance(vertx, req, new ListingWriteStream<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), meterRegistry, executor, "source");

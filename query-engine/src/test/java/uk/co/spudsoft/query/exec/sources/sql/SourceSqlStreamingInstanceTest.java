@@ -69,7 +69,7 @@ public class SourceSqlStreamingInstanceTest {
     vertx.getOrCreateContext().runOnContext(v -> {
       Context context = vertx.getOrCreateContext();
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
-      PipelineExecutor pipelineExecutor = new PipelineExecutorImpl(null, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
+      PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
       
       SourceSql definition = SourceSql.builder()
               .endpoint("bob")
@@ -137,7 +137,7 @@ public class SourceSqlStreamingInstanceTest {
     vertx.getOrCreateContext().runOnContext(v -> {
       Context context = vertx.getOrCreateContext();
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
-      PipelineExecutor pipelineExecutor = new PipelineExecutorImpl(null, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
+      PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
       
       SourceSql definition = SourceSql.builder()
               .endpoint("bob")
