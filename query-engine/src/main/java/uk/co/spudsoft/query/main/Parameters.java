@@ -102,6 +102,14 @@ public class Parameters {
    * This is not much use in a path hijack situation, so allow for the provision of an alternative.
    */
   private String rootRedirectUrl;
+  
+  /**
+   * If true, the path /login/forcejwt can be PUT to create a session based on the the JWT in the message body.
+   * This should be secure even in a production environment (because the caller must be still be able to create an acceptable JWT)
+   * , but for the sake of safety it defaults to being disabled.
+   */
+  private boolean enableForceJwt = false;
+
 
   /**
    * The directory to contain cached output.
@@ -1228,6 +1236,34 @@ public class Parameters {
     this.securityHeaders = securityHeaders;
   }
 
+  /**
+   * Get the enableForceJwt parameter.
+   *
+   * If true, the path /login/forcejwt can be PUT to create a session based on the the JWT in the message body.
+   * This should be secure even in a production environment (because the caller must be still be able to create an acceptable JWT)
+   * , but for the sake of safety it defaults to being disabled.
+   * 
+   * @return the enableForceJwt parameter.
+   */
+  public boolean isEnableForceJwt() {
+    return enableForceJwt;
+  }
+
+  /**
+   * Set the enableForceJwt parameter.
+   *
+   * If true, the path /login/forcejwt can be PUT to create a session based on the the JWT in the message body.
+   * This should be secure even in a production environment (because the caller must be still be able to create an acceptable JWT)
+   * , but for the sake of safety it defaults to being disabled.
+   * 
+   * @param enableForceJwt the enableForceJwt parameter.
+   */
+  public void setEnableForceJwt(boolean enableForceJwt) {
+    this.enableForceJwt = enableForceJwt;
+  }
+
+  
+  
   /**
    * Validate the provided parameters.
    *

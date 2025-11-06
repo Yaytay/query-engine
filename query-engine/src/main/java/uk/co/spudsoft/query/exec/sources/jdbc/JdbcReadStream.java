@@ -252,7 +252,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     }
   }
 
-  private static void setFetchSize(SourceJdbc definition, String finalUrl, PreparedStatement statement) throws SQLException {
+  static void setFetchSize(SourceJdbc definition, String finalUrl, PreparedStatement statement) throws SQLException {
     if (definition.getJdbcFetchSize() < 0) {
       if (finalUrl.startsWith("jdbc:mysql:")) {
         statement.setFetchSize(Integer.MIN_VALUE);
@@ -343,7 +343,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     return this;
   }
   
-  private boolean report(long rows) {
+  static boolean report(long rows) {
     if (rows < 10000) {
       return false;
     } else if (rows < 1000000) {

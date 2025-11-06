@@ -102,6 +102,7 @@ import uk.co.spudsoft.jwtvalidatorvertx.JsonWebKeySetOpenIdDiscoveryHandler;
 import uk.co.spudsoft.jwtvalidatorvertx.JwtValidator;
 import uk.co.spudsoft.jwtvalidatorvertx.OpenIdDiscoveryHandler;
 import uk.co.spudsoft.mgmt.ManagementRoute;
+import uk.co.spudsoft.mgmt.ThreadDumpRoute;
 import uk.co.spudsoft.params4j.ConfigurationProperty;
 import uk.co.spudsoft.params4j.FileType;
 import uk.co.spudsoft.params4j.Params4J;
@@ -245,6 +246,13 @@ public class Main extends Application {
     Main main = new Main();
     main.innerMain(args, System.out, System.getenv()).onComplete(ar -> main.mainCompletion(ar));
     Thread shutdownHook = new Thread(() -> {
+      logger.info("Shutdown hook called");
+      if (logger.isDebugEnabled()) {
+        try {
+          logger.debug("Thread state: {}", ThreadDumpRoute.buildStackTraceJson());
+        } catch (Throwable ex) {
+        }
+      }
       main.shutdown();
     });
     Runtime.getRuntime().addShutdownHook(shutdownHook);
@@ -640,11 +648,17 @@ public class Main extends Application {
     router.route("/tableau*").handler(TableauWDCRouter.create(vertx));
     router.getWithRegex("/openapi\\..*").blockingHandler(openApiHandler);
     router.get("/openapi").handler(openApiHandler.getUiHandler());
-    if (!params.getSession().getOauth().isEmpty()) {
-      LoginRouter loginRouter = LoginRouter.create(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, authenticator, params.getSession(), params.getJwt().getRequiredAudiences(), outputAllErrorMessages(), params.getSession().getSessionCookie());
-      router.get("/login").handler(loginRouter);
-      router.get("/login/return").handler(loginRouter);
-      router.get("/logout").handler(loginRouter);
+    if (!params.getSession().getOauth().isEmpty() || params.isEnableForceJwt()) {
+      LoginRouter loginRouter = LoginRouter.create(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, authenticator, params.getSession()
+              , params.getJwt().getRequiredAudiences(), outputAllErrorMessages(), params.isEnableForceJwt(), params.getSession().getSessionCookie());
+      if (params.isEnableForceJwt()) {
+        router.put("/login/forcejwt").handler(loginRouter);
+      }
+      if (!params.getSession().getOauth().isEmpty()) {
+        router.get("/login").handler(loginRouter);
+        router.get("/login/return").handler(loginRouter);
+        router.get("/logout").handler(loginRouter);
+      }
     }
     router.route("/").handler(rc -> {
       rc.response().setStatusCode(307);

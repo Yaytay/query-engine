@@ -295,4 +295,10 @@ The following response headers can be configured:
 
 
 All of these values are optional, the default values are secure, but may be too restrictive in some environments.
+
+| [[enableForceJwt]]enableForceJwt
+| boolean
+| Set the enableForceJwt parameter.If true, the path /login/forcejwt can be PUT to create a session based on the the JWT in the message body.
+This should be secure even in a production environment (because the caller must be still be able to create an acceptable JWT)
+, but for the sake of safety it defaults to being disabled.
 |===

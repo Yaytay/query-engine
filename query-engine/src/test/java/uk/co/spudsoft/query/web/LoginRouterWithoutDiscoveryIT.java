@@ -91,6 +91,7 @@ public class LoginRouterWithoutDiscoveryIT {
       , "--session.oauth.GitHub.credentials.id=bdab017f4732085a51f9"
       , "--session.oauth.GitHub.credentials.secret=" + System.getProperty("queryEngineGithubSecret")
       , "--session.oauth.GitHub.pkce=false"
+      , "--enableForceJwt=true"
     }, stdout, System.getenv());
     assertEquals(0, stdoutStream.size());
     
@@ -215,6 +216,16 @@ public class LoginRouterWithoutDiscoveryIT {
             .then()
             .log().all()
             .statusCode(500)
+            ;
+    
+    // Check bad path gives 404
+    given()
+            .redirects().follow(false)
+            .log().all()
+            .get("/login/nonsense")
+            .then()
+            .log().all()
+            .statusCode(404)
             ;
     
     

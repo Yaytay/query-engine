@@ -103,6 +103,7 @@ public class LoginRouter implements Handler<RoutingContext> {
   private final int nonceLength;
   private final ImmutableMap<String, AuthEndpoint> authEndpoints;
   private final boolean outputAllErrorMessages;
+  private final boolean enableForceJwt;
   private final ImmutableList<String> requiredAuds;
   private final CookieConfig sessionCookie;
   /**
@@ -122,6 +123,8 @@ public class LoginRouter implements Handler<RoutingContext> {
    * a bad actor, set this to true to return full details in error responses.
    * <p>
    * Note that everything is always logged.
+   * @param enableForceJwt If true, the path /login/forcejwt can be PUT to create a session based on the the JWT in the message body.
+   * This should be secure even in a production environment, but for the sake of safety it defaults to being disabled.
    * @param sessionCookie Configuration data for the session cookie.
    * @return a newly created LoginRouter.
    */
@@ -133,9 +136,10 @@ public class LoginRouter implements Handler<RoutingContext> {
            SessionConfig sessionConfig,
            List<String> requiredAuds,
            boolean outputAllErrorMessages,
+           boolean enableForceJwt,
            CookieConfig sessionCookie
   ) {
-    return new LoginRouter(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, requestContextBuilder, sessionConfig, requiredAuds, outputAllErrorMessages, sessionCookie);
+    return new LoginRouter(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, requestContextBuilder, sessionConfig, requiredAuds, outputAllErrorMessages, enableForceJwt, sessionCookie);
   }
 
   private static class RequestDataAndAuthEndpoint {
@@ -184,6 +188,8 @@ public class LoginRouter implements Handler<RoutingContext> {
    * a bad actor, set this to true to return full details in error responses.
    * <p>
    * Note that everything is always logged.
+   * @param enableForceJwt If true, the path /login/forcejwt can be PUT to create a session based on the the JWT in the message body.
+   * This should be secure even in a production environment, but for the sake of safety it defaults to being disabled.
    * @param sessionCookie Configuration data for the session cookie.
    */
   @SuppressFBWarnings("EI_EXPOSE_REP2")
@@ -195,6 +201,7 @@ public class LoginRouter implements Handler<RoutingContext> {
            SessionConfig sessionConfig,
            List<String> requiredAuds,
            boolean outputAllErrorMessages,
+           boolean enableForceJwt,
            CookieConfig sessionCookie
   ) {
     this.vertx = vertx;
@@ -210,6 +217,7 @@ public class LoginRouter implements Handler<RoutingContext> {
     this.authEndpoints = deepCopyAuthEndpoints(sessionConfig.getOauth());
     this.requiredAuds = ImmutableCollectionTools.copy(requiredAuds);
     this.outputAllErrorMessages = outputAllErrorMessages;
+    this.enableForceJwt = enableForceJwt;
     this.sessionCookie = sessionCookie;
   }
 
@@ -319,6 +327,8 @@ public class LoginRouter implements Handler<RoutingContext> {
       handleLoginRequest(event);
     } else if (event.request().path().endsWith("/login/return")) {
       handleLoginResponse(event);
+    } else if (this.enableForceJwt && event.request().path().endsWith("/login/forcejwt") && event.request().method() == HttpMethod.PUT) {
+      handleForceJwt(event);
     } else if (event.request().path().endsWith("/logout")) {
       handleLogout(event);
     } else {
@@ -537,6 +547,47 @@ public class LoginRouter implements Handler<RoutingContext> {
                                 .putHeader("Location", requestDataAndAuthEndpoint.requestData.targetUrl())
                                 .setStatusCode(307)
                                 .end();
+                      });
+            })
+            .onFailure(ex -> {
+              QueryRouter.internalError(ex, event, outputAllErrorMessages);
+            });
+    return false;
+  }
+
+  private boolean handleForceJwt(RoutingContext event) {
+    String[] tokens = new String[3]; // {accessToken, refreshToken, idToken}
+    
+    event.request().body()
+            .compose(body -> {
+              tokens[0] = body.toString(StandardCharsets.UTF_8);
+              if (tokens[0] == null) {
+                tokens[0] = "";
+              }
+              return jwtValidator.validateToken(null,
+                       tokens[0],
+                       requiredAuds,
+                       outputAllErrorMessages
+              );
+            })
+            .compose(jwt -> {
+              String id = createRandomSessionId();
+              long maxAge = jwt.getExpiration() - (System.currentTimeMillis() / 1000);
+              Cookie cookie = createCookie(sessionCookie, maxAge, wasTls(event.request()), domain(event.request()), id);
+
+              return loginDao.storeTokens(id
+                      , jwt.getExpirationLocalDateTime()
+                      , tokens[0]
+                      , "forced"
+                      , tokens[1]
+                      , tokens[2]
+              )
+                      .compose(v -> {
+                        return event.response()
+                                .addCookie(cookie)
+                                .putHeader("Location", "/ui/")
+                                .setStatusCode(307)
+                                .end("Session started");
                       });
             })
             .onFailure(ex -> {
