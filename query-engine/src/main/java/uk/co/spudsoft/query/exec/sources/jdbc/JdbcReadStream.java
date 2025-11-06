@@ -274,7 +274,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     try {
       while (rs.next()) {
         DataRow row = dataRowFromResult(rsmeta, rs);
-        if (rows % 10000 == 0) {
+        if (report(rows)) {
           logger.debug("Received {} rows", rows);
         }
         ++rows;
@@ -343,6 +343,18 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     return this;
   }
   
+  private boolean report(long rows) {
+    if (rows < 10000) {
+      return false;
+    } else if (rows < 1000000) {
+      return rows % 10000 == 0;
+    } else if (rows < 10000000) {
+      return rows % 100000 == 0;
+    } else {
+      return rows % 1000000 == 0;
+    }
+  }
+  
   @SuppressFBWarnings(value = "UL_UNRELEASED_LOCK_EXCEPTION_PATH", justification = "False positive, which is a shame because it's a useful test")
   private void process() {
     Handler<Void> endHandlerCaptured = null;
@@ -397,7 +409,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
             logger.warn("Exception handling item in QueueReadStream: ", ex);
           }
         }
-        if (rows % 10000 == 0) {
+        if (report(rows)) {
           logger.debug("Passed on {} rows", rows);
         }
         ++rows;
