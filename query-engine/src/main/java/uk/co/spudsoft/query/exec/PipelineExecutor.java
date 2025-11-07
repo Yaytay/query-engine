@@ -16,6 +16,8 @@
  */
 package uk.co.spudsoft.query.exec;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.micrometer.core.instrument.MeterRegistry;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -35,6 +37,19 @@ import uk.co.spudsoft.query.defn.Format;
  */
 public interface PipelineExecutor extends SharedMap {
 
+  /**
+   * Factory method for creating PipelineExecutors.
+   * 
+   * @param meterRegistry MeterRegistry for production of metrics.
+   * @param filterFactory The {@link FilterFactory} for creating {@link ProcessorInstance} objects from command line arguments.
+   * @param secrets The preconfigured secrets that can be used by pipelines.
+   * @return newly created PipelineExecutor.
+   */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "MeterRegistry is designed to be modified")
+  static PipelineExecutor create(MeterRegistry meterRegistry, FilterFactory filterFactory, Map<String, ProtectedCredentials> secrets) {
+    return new PipelineExecutorImpl(meterRegistry, filterFactory, secrets);
+  }
+  
   /**
    * Get a secret from the configured protected credentials.
    * <p>

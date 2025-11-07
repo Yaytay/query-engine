@@ -72,7 +72,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
    * @param secrets The preconfigured secrets that can be used by pipelines.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "MeterRegistry is designed to be modified")
-  public PipelineExecutorImpl(MeterRegistry meterRegistry, FilterFactory filterFactory, Map<String, ProtectedCredentials> secrets) {
+  PipelineExecutorImpl(MeterRegistry meterRegistry, FilterFactory filterFactory, Map<String, ProtectedCredentials> secrets) {
     this.meterRegistry = meterRegistry;
     this.filterFactory = filterFactory;
     this.secrets = ImmutableCollectionTools.copy(secrets);

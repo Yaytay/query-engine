@@ -118,7 +118,7 @@ public class DynamicEndpointPipelineJdbcIT {
     CacheConfig cacheConfig = new CacheConfig();
     cacheConfig.setMaxDuration(Duration.ZERO);
     PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*"), null));
-    PipelineExecutorImpl executor = new PipelineExecutorImpl(meterRegistry, new FilterFactory(Collections.emptyList())
+    PipelineExecutor executor = PipelineExecutor.create(meterRegistry, new FilterFactory(Collections.emptyList())
             , ImmutableMap.<String, ProtectedCredentials>builder().put("cred", new ProtectedCredentials(serverProviderMy.getUser(), serverProviderMy.getPassword(), null)).build()
     );
 
@@ -228,7 +228,7 @@ public class DynamicEndpointPipelineJdbcIT {
     CacheConfig cacheConfig = new CacheConfig();
     cacheConfig.setMaxDuration(Duration.ZERO);
     PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*"), null));
-    PipelineExecutorImpl executor = new PipelineExecutorImpl(meterRegistry, new FilterFactory(Collections.emptyList())
+    PipelineExecutor executor = PipelineExecutor.create(meterRegistry, new FilterFactory(Collections.emptyList())
             , ImmutableMap.<String, ProtectedCredentials>builder().put("cred", new ProtectedCredentials(serverProviderMy.getUser(), serverProviderMy.getPassword(), null)).build()
     );
 
@@ -332,7 +332,7 @@ public class DynamicEndpointPipelineJdbcIT {
     CacheConfig cacheConfig = new CacheConfig();
     cacheConfig.setMaxDuration(Duration.ZERO);
     PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*"), null));
-    PipelineExecutorImpl executor = new PipelineExecutorImpl(meterRegistry, new FilterFactory(Collections.emptyList())
+    PipelineExecutor executor = PipelineExecutor.create(meterRegistry, new FilterFactory(Collections.emptyList())
             , ImmutableMap.<String, ProtectedCredentials>builder().put("cred", new ProtectedCredentials(serverProviderMy.getUser(), serverProviderMy.getPassword(), null)).build()
     );
 
@@ -434,7 +434,7 @@ public class DynamicEndpointPipelineJdbcIT {
     CacheConfig cacheConfig = new CacheConfig();
     cacheConfig.setMaxDuration(Duration.ZERO);
     PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*"), null));
-    PipelineExecutorImpl executor = new PipelineExecutorImpl(meterRegistry, new FilterFactory(Collections.emptyList()), null);
+    PipelineExecutor executor = PipelineExecutor.create(meterRegistry, new FilterFactory(Collections.emptyList()), null);
 
     MultiMap args = MultiMap.caseInsensitiveMultiMap();
     args.set("maxId", "14");

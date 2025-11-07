@@ -113,7 +113,6 @@ import uk.co.spudsoft.query.exec.AuditorPersistenceImpl;
 import uk.co.spudsoft.query.exec.FilterFactory;
 import uk.co.spudsoft.query.exec.JdbcHelper;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
-import uk.co.spudsoft.query.exec.PipelineExecutorImpl;
 import uk.co.spudsoft.query.exec.filters.LimitFilter;
 import uk.co.spudsoft.query.exec.filters.MapFilter;
 import uk.co.spudsoft.query.exec.filters.OffsetFilter;
@@ -627,7 +626,7 @@ public class Main extends Application {
     OpenApiHandler openApiHandler = new OpenApiHandler(this, openApiConfig, "/api", params.getOpenApiExplorerUrl());
     ModelConverters.getInstance(true).addConverter(new OpenApiModelConverter());
 
-    PipelineExecutor pipelineExecutor = new PipelineExecutorImpl(meterRegistry, filterFactory, params.getSecrets());
+    PipelineExecutor pipelineExecutor = PipelineExecutor.create(meterRegistry, filterFactory, params.getSecrets());
     vertx.fileSystem().mkdirs(params.getOutputCacheDir());
     router.route(QueryRouter.PATH_ROOT + "/*").handler(new QueryRouter(vertx, meterRegistry, auditor, authenticator, defnLoader, pipelineExecutor, params.getOutputCacheDir(), outputAllErrorMessages()));
 
