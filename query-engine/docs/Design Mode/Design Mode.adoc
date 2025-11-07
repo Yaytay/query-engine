@@ -32,3 +32,65 @@ NOTE: Design Mode will only permit the editing of Velocity templates as plain te
 
 TIP: There are much better text editors than Design Mode for editing Velocity templates.
 As a general rule you should stop using Design Mode when you start using Velocity templates.
+
+== Authentication
+
+When running in Design Mode your pipelines will still be subject to the same rules as when they are in production.
+This can be annoying.
+
+There are a few approaches to providing a suitable token to the system:
+
+ 1. Configure your Design Mode environment to use exactly the same authentication as your production system.
+    You must ensure when you do this that you do not leak any production secrets - which is enough of a reason to avoid this approach.
+
+ 1. Don't use the UI and pass in production JWTs.
+    This will work, but obviously prevents you from using any UI features.
+
+ 1. Force the UI to use a custom (unsafe) JWT that meets the needs of your conditions.
+    Although this is complex, it can provide the most secure test environment as it requires no access to production services.
+    Obviously this will mean that you have an insecure Query Engine instance with access to production /data/ (via your pipelines).
+    This is unavoidable, given that it's what you want to test, but ensure that your Query Engine instance is not accessible over the network.
+
+=== Forcing the UI to use a Custom JWT
+
+Setting the parameter enableForceJwt to true will have two effects:
+
+ 1. Going to the URL /ui/jwt in the browser will present a very simple form that enable you to paste in a JWT.
+    When the SUBMIT button is hit the JWT will be sent to the backend where it will be validated and, if it passes the validation
+    , set as the qe-session cookie.
+    The validation of the token uses the same rules as the rest of Query Engine.
+
+    You can either obtain a genuine token and use that, or configure your Query Engine instance to accept a test token.
+
+ 1. PUTting a JSON object to /testauth/token will generate a JWT that contains that JSON as the main claims object.
+    The only changes made to the claims will be the addition of nbf and exp values (with the exp set to expire in one hour) - any other desired claims are the responsibility of the caller.
+    The issuer for these tokens will be http://localhost:<port>/testauth
+    
+    Note that a production system should never permit an JWT issue that does not use https.
+
+    The testauth endpoint does not have any special relationship with Query Engine, it is just an extra facility for generating test tokens.
+
+    The testauth endpoint will only be configured in Design Mode and only when bother enableForceJwt and httpServerOptions.port are configured.
+ 
+    
+Putting these two together means that you can configure Query Engine with:
+```
+      , "--httpServerOptions.port=8000"
+      , "--jwt.acceptableIssuerRegexes[0]=http://localhost:8000/testauth"
+      , "--jwt.jwksEndpoints[0]=http://localhost:8000/testauth/jwks"
+      , "--jwt.requiredAudiences[0]=query-engine"
+      , "--enableForceJwt"            
+```
+then send a request like:
+```
+# Using Windows cmd
+curl -v -X PUT http://localhost:8000/testauth/token --data-binary "{""aud"":""query-engine"", ""sub"":""me""}"
+# Using bash:
+curl -v -X PUT http://localhost:8000/testauth/token --data-binary "{""aud"":""query-engine"", ""sub"":""me""}'
+```
+to obtain a token than can be entered at /ui/jwt.
+
+Note that tokens created this way will only be valid for the lifetime of the Query Engine process (the signing key for the token will be
+forgotten when the process ends), or for one hour (the token exp is hardcoded to be one hour after now).
+
+When copying tokens from curl output into the forcejwt UI be careful to avoid any spurious newline characters.

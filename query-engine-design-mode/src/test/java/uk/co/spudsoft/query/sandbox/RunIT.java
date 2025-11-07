@@ -85,9 +85,10 @@ public class RunIT {
       , "--persistence.datasource.adminUser.password=" + postgres.getPassword()
       , "--persistence.datasource.schema=public" 
       , "--baseConfigPath=" + CONFS_DIR
-      , "--jwt.acceptableIssuerRegexes[0]=.*"
-      // , "--jwt.jwksEndpoints[0]=" + System.getProperty("queryEngineEntraUrl").replace("v2.0", "discovery/v2.0/keys")
+      , "--jwt.acceptableIssuerRegexes[0]=http://localhost:8000/testauth"
+      , "--jwt.jwksEndpoints[0]=http://localhost:8000/testauth/jwks"
       , "--jwt.requiredAudiences[0]=query-engine"
+      , "--enableForceJwt"            
       // , "--jwt.requiredAudiences[1]=" + System.getProperty("queryEngineEntraId")
       , "--logging.jsonFormat=false"
       , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec=TRACE"

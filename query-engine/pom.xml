@@ -84,7 +84,7 @@
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>jwt-validator-vertx</artifactId>
-      <version>0.1.0</version>
+      <version>0.2.2</version>
     </dependency>
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
@@ -283,7 +283,7 @@
     <dependency>
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-registry-prometheus</artifactId>
-      <version>1.15.5</version>
+      <version>1.16.0</version>
     </dependency>
     <dependency>
       <groupId>io.prometheus</groupId>

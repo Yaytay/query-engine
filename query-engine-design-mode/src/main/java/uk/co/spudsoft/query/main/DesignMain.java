@@ -17,11 +17,17 @@
 
 package uk.co.spudsoft.query.main;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.vertx.ext.web.Router;
+import java.time.Duration;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.jwtvalidatorvertx.AlgorithmAndKeyPair;
 import uk.co.spudsoft.query.web.rest.DesignHandler;
+import uk.co.spudsoft.jwtvalidatorvertx.vertx.VertxJwksHandler;
 
 /**
  * The DesignMain class serves as an entry point for the application in design mode.
@@ -62,4 +68,21 @@ public class DesignMain extends Main {
     logger.info("Running in Design Mode");
     controllers.add(new DesignHandler(getVertx(), getDefnLoader(), getDirCache()));
   }
+
+  @Override
+  protected void addExtraRoutes(Parameters params, Router router) {
+    if (params.isEnableForceJwt() && params.getHttpServerOptions().getPort() > 0) {
+      VertxJwksHandler handler = new VertxJwksHandler(null, null, "localhost", params.getHttpServerOptions().getPort(), "/testauth", true);      
+      Cache<String, AlgorithmAndKeyPair> keyCache = CacheBuilder.newBuilder()
+              .expireAfterWrite(Duration.ofDays(1))
+              .concurrencyLevel(1)
+              .build();
+      handler.setKeyCache(keyCache);
+      router.route("/testauth/*").handler(handler);
+      
+      
+    }
+  }
+  
+  
 }

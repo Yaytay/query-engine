@@ -38,6 +38,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
+import uk.co.spudsoft.query.web.MockOidcServer;
 
 /**
  * Note that this set of tests requires the sample data to be loaded, but relies on the "loadSampleData" flag to make it happen.
@@ -66,8 +67,11 @@ public class MainQueryIT {
   
   @Test
   public void testQuery() throws Exception {
+    
+    int port = MockOidcServer.findUnusedPort();
+    
     GlobalOpenTelemetry.resetForTest();
-    Main main = new Main();
+    Main main = new DesignMain();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
@@ -81,11 +85,13 @@ public class MainQueryIT {
       , "--vertxOptions.eventLoopPoolSize=5"
       , "--vertxOptions.workerPoolSize=5"
       , "--httpServerOptions.tracingPolicy=ALWAYS"
+      , "--httpServerOptions.port=" + port
       , "--pipelineCache.maxDuration=PT10M"
       , "--logging.jsonFormat=true"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.jwksEndpoints[0]=http://localhost/"
       , "--jwt.defaultJwksCacheDuration=PT1M"
+      , "--enableForceJwt=true"
       , "--managementEndpoints[0]=health"
       , "--sampleDataLoads[0].url=" + postgres.getVertxUrl()
       , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()

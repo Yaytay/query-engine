@@ -62,6 +62,7 @@ import io.vertx.core.tracing.TracingOptions;
 import io.vertx.ext.healthchecks.HealthChecks;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
@@ -668,6 +669,8 @@ public class Main extends Application {
         rc.redirect(params.getRootRedirectUrl());
       }
     });
+    
+    addExtraRoutes(params, router);
 
     return httpServer
             .requestHandler(router)
@@ -921,7 +924,7 @@ public class Main extends Application {
                     , jwtConfig.getFilePollPeriodDuration()
             );
 
-    WebClient webClient = WebClient.create(vertx);
+    WebClient webClient = WebClient.create(vertx, new WebClientOptions().setConnectTimeout(60000));
     if (!jwtConfig.getJwksEndpoints().isEmpty()) {
       openIdDiscoveryHandler = JsonWebKeySetOpenIdDiscoveryHandler.create(webClient, iah, jwtConfig.getDefaultJwksCacheDuration());
       jwtValidator = JwtValidator.createStatic(webClient, jwtConfig.getJwksEndpoints(), jwtConfig.getDefaultJwksCacheDuration(), iah);
@@ -936,7 +939,7 @@ public class Main extends Application {
       jwtValidator.setTimeLeeway(jwtConfig.getPermittedTimeSkew());
     }
 
-    Authenticator rcb = new Authenticator(WebClient.create(vertx)
+    Authenticator rcb = new Authenticator(WebClient.create(vertx, new WebClientOptions().setConnectTimeout(60000))
             , jwtValidator
             , openIdDiscoveryHandler
             , loginDao
@@ -1088,4 +1091,16 @@ public class Main extends Application {
    */
   protected void addExtraControllers(Parameters params, List<Object> controllers) {
   }
+  
+  /**
+   * Allow subclasses to provide additional Vertx-web routes
+   * <p>
+   * This is used by Design Mode to provide the test-auth endpoints.
+   *
+   * @param params the Parameters object that may be required to configure the additional controllers.
+   * @param router the top level {@link Router} that may be modified.
+   */
+  protected void addExtraRoutes(Parameters params, Router router) {    
+  }
+
 }

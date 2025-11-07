@@ -33,6 +33,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
@@ -205,7 +206,7 @@ public class LoginRouter implements Handler<RoutingContext> {
            CookieConfig sessionCookie
   ) {
     this.vertx = vertx;
-    this.webClient = WebClient.create(vertx);
+    this.webClient = WebClient.create(vertx, new WebClientOptions().setConnectTimeout(60000));
     this.loginDao = loginDao;
     this.openIdDiscoveryHandler = openIdDiscoveryHandler;
     this.jwtValidator = jwtValidator;
