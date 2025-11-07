@@ -177,6 +177,11 @@ public class QueryRouter implements Handler<RoutingContext> {
                   return Future.failedFuture(new ServiceException(400, "Invalid path"));
                 }
                 HttpServerResponse response = routingContext.response();
+                
+                response.closeHandler(v2 -> {
+                  logger.warn("The connection has been closed.");
+                });
+                
                 WriteStream<Buffer> responseStream = response;
                 response.setChunked(true);
                 path = path.substring(PATH_ROOT.length() + 1);
