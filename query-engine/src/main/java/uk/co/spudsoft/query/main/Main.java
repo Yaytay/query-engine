@@ -56,6 +56,7 @@ import io.vertx.core.VertxBuilder;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.impl.cpu.CpuCoreSensor;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.jackson.DatabindCodec;
 import io.vertx.core.tracing.TracingOptions;
@@ -628,7 +629,15 @@ public class Main extends Application {
 
     PipelineExecutor pipelineExecutor = PipelineExecutor.create(meterRegistry, filterFactory, params.getSecrets());
     vertx.fileSystem().mkdirs(params.getOutputCacheDir());
-    router.route(QueryRouter.PATH_ROOT + "/*").handler(new QueryRouter(vertx, meterRegistry, auditor, authenticator, defnLoader, pipelineExecutor, params.getOutputCacheDir(), outputAllErrorMessages()));
+    
+    int pipelineVerticleInstances = params.getVertxOptions().getEventLoopPoolSize();
+    if (pipelineVerticleInstances < 1) {
+      pipelineVerticleInstances = 2 * CpuCoreSensor.availableProcessors();
+    }
+    
+    QueryRouter queryRouter = new QueryRouter(vertx, meterRegistry, auditor, authenticator, defnLoader, pipelineExecutor, params.getOutputCacheDir(), params.getWriteStreamBufferSize(), outputAllErrorMessages(), pipelineVerticleInstances);
+    
+    router.route(QueryRouter.PATH_ROOT + "/*").handler(queryRouter);
 
     ManagementRoute.createAndDeploy(vertx
             , router, params.getHttpServerOptions()
@@ -671,9 +680,12 @@ public class Main extends Application {
     
     addExtraRoutes(params, router);
 
-    return httpServer
-            .requestHandler(router)
-            .listen()
+    return queryRouter.deploy()
+            .compose(v -> {
+              return httpServer
+                      .requestHandler(router)
+                      .listen();
+            })
             .compose(svr -> {
               this.port = svr.actualPort();
               if (!params.getSampleDataLoads().isEmpty()) {

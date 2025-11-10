@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.web;
 
 import inet.ipaddr.IPAddressString;
+import io.vertx.core.Future;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
@@ -29,6 +30,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -36,6 +38,7 @@ import org.mockito.ArgumentCaptor;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 import uk.co.spudsoft.query.defn.FormatDelimited;
 import uk.co.spudsoft.query.exec.AuditorMemoryImpl;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
@@ -50,11 +53,29 @@ import uk.co.spudsoft.query.main.Authenticator;
 public class QueryRouterTest {
 
   @Test
+  public void testNotDeployed(Vertx vertx) {
+
+    PipelineDefnLoader loader = mock(PipelineDefnLoader.class);
+    Authenticator rcb = new Authenticator(null, null, null, null, null, null, true, null, false, null, Collections.singletonList("aud"), null);
+    QueryRouter router = new QueryRouter(vertx, null, new AuditorMemoryImpl(vertx), rcb, loader, null, System.getProperty("java.io.tmpdir"), 32768, true, 2);
+
+    RoutingContext routingContext = mock(RoutingContext.class);
+    HttpServerRequest request = mock(HttpServerRequest.class);
+    when(routingContext.request()).thenReturn(request);
+    when(request.method()).thenReturn(HttpMethod.HEAD);
+
+    assertThat(assertThrows(IllegalStateException.class, () -> { router.handle(routingContext); }).getMessage(), containsString("QueryRouter#deploy not called"));
+  }
+
+  @Test
   public void testBadMethod(Vertx vertx) {
 
     PipelineDefnLoader loader = mock(PipelineDefnLoader.class);
     Authenticator rcb = new Authenticator(null, null, null, null, null, null, true, null, false, null, Collections.singletonList("aud"), null);
-    QueryRouter router = new QueryRouter(vertx, null, new AuditorMemoryImpl(vertx), rcb, loader, null, System.getProperty("java.io.tmpdir"), true);
+    QueryRouter router = new QueryRouter(vertx, null, new AuditorMemoryImpl(vertx), rcb, loader, null, System.getProperty("java.io.tmpdir"), 32768, true, 2);
+
+    Future<Void> deployFuture = router.deploy();
+    await().until(() -> deployFuture.isComplete());
 
     RoutingContext routingContext = mock(RoutingContext.class);
     HttpServerRequest request = mock(HttpServerRequest.class);
@@ -72,7 +93,10 @@ public class QueryRouterTest {
     PipelineDefnLoader loader = mock(PipelineDefnLoader.class);
     Authenticator rcb = new Authenticator(null, null, null, null, null, null, true, null, false, null, Collections.singletonList("aud"), null);
     PipelineExecutor pipelineExecutor = mock(PipelineExecutor.class);
-    QueryRouter router = new QueryRouter(vertx, null, new AuditorMemoryImpl(vertx), rcb, loader, pipelineExecutor, System.getProperty("java.io.tmpdir"), true);
+    QueryRouter router = new QueryRouter(vertx, null, new AuditorMemoryImpl(vertx), rcb, loader, pipelineExecutor, System.getProperty("java.io.tmpdir"), 32768, true, 2);
+    
+    Future<Void> deployFuture = router.deploy();
+    await().until(() -> deployFuture.isComplete());
 
     RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "", null, null, null, new IPAddressString("127.0.0.0"), null);
     
@@ -89,7 +113,7 @@ public class QueryRouterTest {
     router.handle(routingContext);
 
     verify(response).setStatusCode(400);
-    verify(response).end("Invalid path (from ServiceException@uk.co.spudsoft.query.web.QueryRouter:177)");
+    verify(response).end("Invalid path (from ServiceException@uk.co.spudsoft.query.web.QueryRouter:222)");
   }
 
   @Test

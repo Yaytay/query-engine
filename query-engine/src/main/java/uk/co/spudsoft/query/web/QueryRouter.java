@@ -20,8 +20,10 @@ import com.google.common.base.Strings;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.OpenOptions;
@@ -35,14 +37,17 @@ import io.vertx.ext.web.impl.Utils;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.FormatRequest;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
-import uk.co.spudsoft.query.exec.PipelineInstance;
-import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.main.Authenticator;
 import uk.co.spudsoft.query.main.ExceptionToString;
@@ -50,7 +55,6 @@ import uk.co.spudsoft.query.defn.Format;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.ArgumentInstance;
 import uk.co.spudsoft.query.exec.CachingWriteStream;
-import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.exec.ProgressNotificationHandler;
 import uk.co.spudsoft.query.exec.notifications.LoggingNotificationHandler;
 
@@ -83,7 +87,12 @@ public class QueryRouter implements Handler<RoutingContext> {
   private final PipelineDefnLoader loader;
   private final PipelineExecutor pipelineExecutor;
   private final String outputCacheDir;
+  private final int writeStreamBufferSize;
   private final boolean outputAllErrorMessages;
+  
+  private final PipelineRunningVerticle[] verticles;
+  
+  private AtomicInteger count = new AtomicInteger();
 
   /**
    * Constructor.
@@ -95,7 +104,9 @@ public class QueryRouter implements Handler<RoutingContext> {
    * @param loader Pipeline loader.
    * @param pipelineExecutor Pipeline executor.
    * @param outputCacheDir Directory to store output in where output caching is enabled (see {@link uk.co.spudsoft.query.defn.Pipeline#cacheDuration}).
+   * @param writeStreamBufferSize The number of bytes to buffer before each write to the output, each write involves a context switch so this should not be too small.
    * @param outputAllErrorMessages In a production environment error messages should usually not leak information that may assist a bad actor, set this to true to return full details in error responses.
+   * @param instances The number of {@link PipelineRunningVerticle}s to create, typically this should be the same as VertxOptions.getEventLoopPoolSize
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The PipelineDefnLoader is mutable because it changes the filesystem")
   public QueryRouter(Vertx vertx
@@ -105,7 +116,9 @@ public class QueryRouter implements Handler<RoutingContext> {
           , PipelineDefnLoader loader
           , PipelineExecutor pipelineExecutor
           , String outputCacheDir
+          , int writeStreamBufferSize
           , boolean outputAllErrorMessages
+          , int instances
   ) {
     this.vertx = vertx;
     this.meterRegistry = meterRegistry;
@@ -114,7 +127,34 @@ public class QueryRouter implements Handler<RoutingContext> {
     this.loader = loader;
     this.pipelineExecutor = pipelineExecutor;
     this.outputCacheDir = outputCacheDir;
-    this.outputAllErrorMessages = outputAllErrorMessages;    
+    this.writeStreamBufferSize = writeStreamBufferSize;
+    this.outputAllErrorMessages = outputAllErrorMessages;
+    
+    
+    verticles = new PipelineRunningVerticle[instances];
+    
+    
+  }
+  
+  /**
+   * Deploy the Verticles for the QueryRouter.
+   * @return A Future that will be completed when all deployment attempts are complete.
+   */
+  public Future<Void> deploy() {
+    List<Future<Void>> futures = new ArrayList<>(verticles.length);
+    for (int i = 0; i < verticles.length; ++i) {
+      verticles[i] = new PipelineRunningVerticle(vertx, meterRegistry, auditor, pipelineExecutor);
+      PipelineRunningVerticle  verticle = verticles[i];
+      futures.add(vertx.deployVerticle(verticle).compose(name -> {
+        return Future.succeededFuture();
+      }));
+    }
+    return Future.all(futures)
+            .onSuccess(cf -> {
+              String httpThread = Thread.currentThread().getName();
+              logger.info("Deploy PipelineRunningVerticles, http thread: {}, verticle threads: {}", httpThread, Arrays.stream(verticles).map(v -> v.getThreadName()).collect(Collectors.toList()));
+            })
+            .mapEmpty();
   }
   
   /**
@@ -165,6 +205,11 @@ public class QueryRouter implements Handler<RoutingContext> {
     String pipelineTitle[] = new String[1];
     RequestContext requestContext = RequestContext.retrieveRequestContext(routingContext);
     logger.trace("Retrieved RequestContext@{}", System.identityHashCode(requestContext));
+    
+    if (verticles[0] == null) {
+      throw new IllegalStateException("QueryRouter#deploy not called");
+    }
+    
     if (request.method() == HttpMethod.GET) {
       authenticator.authenticate(routingContext, requestContext)
               .compose(req -> {
@@ -317,7 +362,7 @@ public class QueryRouter implements Handler<RoutingContext> {
 
   private Future<Void> runPipelineToCache(Pipeline pipeline, RequestContext requestContext, FormatRequest formatRequest, HttpServerResponse response, WriteStream<Buffer> responseStream, RoutingContext routingContext) {
     // No cache file found, so run pipeline to generate one
-    String cacheFile = outputCacheDir + requestContext.getRequestId().replace('/', '_');
+    String cacheFile = outputCacheDir + requestContext.getRequestId().replace('/', '_').replace(':', '-');
     return auditor.recordCacheFile(requestContext, cacheFile, LocalDateTime.now(ZoneOffset.UTC).plus(pipeline.getCacheDuration()))
             .transform(ar -> {
               if (ar.succeeded()) {
@@ -343,8 +388,7 @@ public class QueryRouter implements Handler<RoutingContext> {
             });
   }
   
-  private Future<Void> runPipeline(Pipeline pipeline, FormatRequest formatRequest, HttpServerResponse response, WriteStream<Buffer> responseStream, RoutingContext routingContext) {
-    PipelineInstance instance;
+  private Future<Void> runPipeline(Pipeline pipeline, FormatRequest formatRequest, HttpServerResponse response, WriteStream<Buffer> rawResponseStream, RoutingContext routingContext) {
     try {
       RequestContext requestContext = RequestContext.retrieveRequestContext(routingContext);
       
@@ -358,32 +402,42 @@ public class QueryRouter implements Handler<RoutingContext> {
         routingContext.lastModified(Instant.ofEpochMilli(requestContext.getStartTime()));
       }
       
-      FormatInstance formatInstance = chosenFormat.createInstance(vertx, requestContext, responseStream);
-      SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), meterRegistry, pipelineExecutor, ROOT_SOURCE_DEFAULT_NAME);
+      Context vertxContext = vertx.getOrCreateContext();
       
-      Vertx.currentContext().put("pipeline", pipeline);
+      WriteStream<Buffer> responseStream = new BufferingContextAwareWriteStream(rawResponseStream, vertxContext, writeStreamBufferSize);
       
-      Map<String, ArgumentInstance> arguments = pipelineExecutor.prepareArguments(requestContext, pipeline.getArguments(), routingContext.request().params());
-      instance = new PipelineInstance(
-              requestContext
-              , pipeline
-              , arguments
-              , pipeline.getSourceEndpointsMap()
-              , pipelineExecutor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
-              , sourceInstance
-              , pipelineExecutor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), requestContext, pipeline, routingContext.request().params(), null)
-              , formatInstance
-      );
-      logger.debug("Instance: {}", instance);
+      MultiMap queryStringParams = routingContext.request().params();
+      Map<String, ArgumentInstance> arguments = pipelineExecutor.prepareArguments(requestContext, pipeline.getArguments(), queryStringParams);
+      
+      PipelineRunningTask task = new PipelineRunningTask(requestContext, pipeline, chosenFormat, queryStringParams, arguments, responseStream);
+
+      PipelineRunningVerticle verticle = chooseVerticle();
+      return verticle.handleRequest(task);
+      
     } catch (Throwable ex) {
       return Future.failedFuture(ex);
     }
+  }
+
+  private PipelineRunningVerticle chooseVerticle() {
+    String httpThread = Thread.currentThread().getName();
     
-    return pipelineExecutor.initializePipeline(instance).map(v -> instance)
-                  .compose(i -> {
-                    logger.info("Pipeline initiated");
-                    return instance.getFinalPromise().future();
-                  });
+    for (int i = 0; i < verticles.length; ++i) {
+      int next = count.updateAndGet(current ->
+              current == Integer.MAX_VALUE ? 0 : current + 1
+      );
+      PipelineRunningVerticle verticle = verticles[next % verticles.length];
+      if (!httpThread.equals(verticle.getThreadName())) {
+        return verticle;
+      }
+    }
+    logger.warn("Failed to choose any verticle, http thread: {}, verticle threads: {}", httpThread, Arrays.stream(verticles).map(v -> v.getThreadName()).collect(Collectors.toList()));
+    // Fallback to ignoring the thread
+    int next = count.updateAndGet(current ->
+            current == Integer.MAX_VALUE ? 0 : current + 1
+    );
+    PipelineRunningVerticle verticle = verticles[next % verticles.length];
+    return verticle;
   }
 
   static void internalError(Throwable ex, RoutingContext routingContext, boolean outputAllErrorMessages) {

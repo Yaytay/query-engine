@@ -1,0 +1,136 @@
+/*
+ * Copyright (C) 2025 jtalbut
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package uk.co.spudsoft.query.web;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.VerticleBase;
+import io.vertx.core.Vertx;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.exec.Auditor;
+import uk.co.spudsoft.query.exec.FormatInstance;
+import uk.co.spudsoft.query.exec.PipelineExecutor;
+import uk.co.spudsoft.query.exec.PipelineInstance;
+import uk.co.spudsoft.query.exec.SourceInstance;
+
+/**
+ * Vert.x Verticle for running Query Engine Pipelines.
+ * 
+ * @author njt
+ */
+public class PipelineRunningVerticle extends VerticleBase {
+  
+  private static final Logger logger = LoggerFactory.getLogger(PipelineRunningVerticle.class);
+  
+  /**
+   * The base name of any sources that do not have a specified name.
+   */
+  public static final String ROOT_SOURCE_DEFAULT_NAME = "Source";
+  
+  private final Vertx vertx;
+  private final MeterRegistry meterRegistry;
+  private final Auditor auditor;
+  private final PipelineExecutor pipelineExecutor;
+  
+  private String threadName;
+  
+  /**
+   * Constructor.
+   * @param vertx The Vertx instance.
+   * @param meterRegistry The Prometheus MeterRegistry.
+   * @param auditor Tracking object.
+   * @param pipelineExecutor The Pipeline Executor.
+   */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Both auditor and meterRegistry are appropriately safe for the calls made to them")
+  public PipelineRunningVerticle(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineExecutor pipelineExecutor) {
+    this.vertx = vertx;
+    this.meterRegistry = meterRegistry;
+    this.auditor = auditor;
+    this.pipelineExecutor = pipelineExecutor;
+  }
+
+  @Override
+  public void init(Vertx vertx, Context context) {
+    super.init(vertx, context); 
+    this.threadName = Thread.currentThread().getName();
+  }
+
+  /**
+   * Get the name of the thread that this Verticle is bound to.
+   * @return the name of the thread that this Verticle is bound to.
+   */
+  public String getThreadName() {
+    return threadName;
+  }
+
+  /**
+   * Handler a PipelineRunningTask.
+   * 
+   * The task will be runOnContext.
+   * 
+   * @param task details of the pipeline to run.
+   * @return a Future that will be completed when the Pipeline completes.
+   */
+  public Future<Void> handleRequest(PipelineRunningTask task) {
+    Promise<Void> promise = Promise.promise();
+    Context thisContext = Vertx.currentContext();    
+    this.context.runOnContext(v -> { 
+      handleRequestOnContext(task)
+              .onComplete(ar -> {
+                thisContext.runOnContext(v2 -> {
+                  if (ar.succeeded()) {
+                    promise.complete(ar.result());
+                  } else {
+                    promise.fail(ar.cause());
+                  }
+                });
+              });
+    });
+    return promise.future();
+  }
+  
+  private Future<Void> handleRequestOnContext(PipelineRunningTask task) {
+    try {
+      PipelineInstance instance;
+      FormatInstance formatInstance = task.chosenFormat.createInstance(vertx, task.requestContext, task.responseStream);
+      SourceInstance sourceInstance = task.pipeline.getSource().createInstance(vertx, Vertx.currentContext(), meterRegistry, pipelineExecutor, ROOT_SOURCE_DEFAULT_NAME);
+      instance = new PipelineInstance(
+              task.requestContext
+              , task.pipeline
+              , task.arguments
+              , task.pipeline.getSourceEndpointsMap()
+              , pipelineExecutor.createPreProcessors(vertx, Vertx.currentContext(), task.pipeline)
+              , sourceInstance
+              , pipelineExecutor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), task.requestContext, task.pipeline, task.queryStringParams, null)
+              , formatInstance
+      );
+      logger.debug("Instance: {}", instance);
+      return pipelineExecutor.initializePipeline(instance).map(v -> instance)
+              .compose(i -> {
+                logger.info("Pipeline initiated");
+                return instance.getFinalPromise().future();
+              });
+    } catch (Throwable ex) {
+      logger.warn("Failed to run pipeline: ", ex);
+      return Future.failedFuture(ex);
+    }
+  }
+}
