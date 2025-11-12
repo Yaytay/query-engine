@@ -47,6 +47,7 @@ import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import uk.co.spudsoft.dircache.DirCache;
 import uk.co.spudsoft.query.defn.Format;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 
 
 /**
@@ -103,20 +104,20 @@ public class JsonToPipelineIT {
               MultiMap args = MultiMap.caseInsensitiveMultiMap();
               args.add("key", serverProvider.getName());
               args.add("port", Integer.toString(serverProvider.getPort()));
+              PipelineContext pipelineContext = new PipelineContext("test", req);
               Format chosenFormat = executor.getFormat(pipeline.getFormats(), null);
               FormatInstance formatInstance = chosenFormat.createInstance(vertx, req, new ListingWriteStream<>(new ArrayList<>()));
-              SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, req, meterRegistry, executor);
+              SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, pipelineContext, meterRegistry, executor);
               PipelineInstance instance;
               try {
                 instance = new PipelineInstance(
-                        req
+                        pipelineContext
                         , pipeline
-                        , "$"
                         , executor.prepareArguments(req, pipeline.getArguments(), args)
                         , pipeline.getSourceEndpointsMap()
-                        , executor.createPreProcessors(vertx, req, pipeline)
+                        , executor.createPreProcessors(vertx, pipelineContext, pipeline)
                         , sourceInstance
-                        , executor.createProcessors(vertx, req, pipeline, null, "$")
+                        , executor.createProcessors(vertx, pipelineContext, pipeline, null)
                         , formatInstance
                 );
               } catch (Throwable ex) {

@@ -33,6 +33,7 @@ import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 import uk.co.spudsoft.query.defn.Endpoint;
 import uk.co.spudsoft.query.defn.Pipeline;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
@@ -47,9 +48,8 @@ public class PipelineInstance {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(PipelineInstance.class);
   
+  private final PipelineContext pipelineContext;
   private final Pipeline definition;
-  private final String name;
-  private final RequestContext requestContext;
   private final ImmutableMap<String, ArgumentInstance> argumentInstances;
   private final ImmutableMap<String, Object> arguments;
   private final Map<String, Endpoint> sourceEndpoints;
@@ -61,8 +61,7 @@ public class PipelineInstance {
 
   /**
    * Constructor.
-   * @param requestContext  The {@link RequestContext} for the request.
-   * @param name The name of the pipeline
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param definition The definition of the {@link Pipeline}.
    * @param argumentInstances the arguments passed in to the request, matched to argument in the {@link Pipeline} definition.
    * @param sourceEndpoints The set of {@link Endpoint} definitions from the {@link Pipeline} definition.
@@ -73,9 +72,8 @@ public class PipelineInstance {
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Definition must not be modified, RequestContext may be modified by permitted setters")
   public PipelineInstance(
-          final RequestContext requestContext          
+          final PipelineContext pipelineContext          
           , final Pipeline definition
-          , final String name
           , final Map<String, ArgumentInstance> argumentInstances
           , final Map<String, Endpoint> sourceEndpoints
           , final List<PreProcessorInstance> preProcessors
@@ -84,8 +82,7 @@ public class PipelineInstance {
           , final FormatInstance sink
   ) {
     this.definition = definition;
-    this.name = name;
-    this.requestContext = requestContext;
+    this.pipelineContext = pipelineContext;
     this.argumentInstances = ImmutableCollectionTools.copy(argumentInstances);
     this.arguments = buildArgumentMap(argumentInstances);
     this.sourceEndpoints = sourceEndpoints == null ? new HashMap<>() : new HashMap<>(sourceEndpoints);
@@ -101,20 +98,10 @@ public class PipelineInstance {
    * @return the {@link RequestContext}.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "RequestContext may be modified by permitted setters")
-  public RequestContext getRequestContext() {
-    return requestContext;
+  public PipelineContext getPipelineContext() {
+    return pipelineContext;
   }
 
-  /**
-   * Get the name of this pipeline instance.
-   * When combined with a request ID this should produce a globally unique name.
-   * 
-   * @return the name of this pipeline instance.
-   */
-  public String getName() {
-    return name;
-  }
-  
   /**
    * Get the pipeline definition.
    * @return the pipeline definition.
@@ -220,7 +207,7 @@ public class PipelineInstance {
       STGroup stgroup = new STGroup();
       stgroup.setListener(errorListener);
       ST st = new ST(stgroup, template);
-      st.add("request", requestContext);
+      st.add("request", pipelineContext.getRequestContext());
       st.add("args", arguments);
       st.add("pipeline", definition);
       return st.render();

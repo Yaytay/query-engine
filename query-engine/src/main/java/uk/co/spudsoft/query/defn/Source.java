@@ -26,7 +26,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Vertx;
 import uk.co.spudsoft.query.exec.SharedMap;
 import uk.co.spudsoft.query.exec.SourceInstance;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 
 /**
  * The source of data for a pipeline.
@@ -57,13 +57,13 @@ public interface Source {
   /**
    * Create a new {@link SourceInstance} specialized for this Source instance.
    * @param vertx The Vert.x instance.
-   * @param requestContext The request context.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param meterRegistry MeterRegistry for production of metrics.
    * @param sharedMap Pooling map.
    * @return A newly created instance of an implementation of {@link SourceInstance}.
    */
   @JsonIgnore
-  SourceInstance createInstance(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, SharedMap sharedMap);
+  SourceInstance createInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, SharedMap sharedMap);
   
   /**
    * The type of Source being configured.

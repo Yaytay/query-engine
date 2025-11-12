@@ -64,6 +64,7 @@ import uk.co.spudsoft.query.defn.FormatType;
 import uk.co.spudsoft.query.defn.FormatXlsx;
 import uk.co.spudsoft.query.exec.fmts.logger.LoggingWriteStream;
 import uk.co.spudsoft.query.defn.Format;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 
 /**
  *
@@ -87,6 +88,8 @@ public class PipelineExecutorImplTest {
 
   @Test
   public void testCreateProcessors(Vertx vertx) {
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
     Pipeline definition = Pipeline.builder()
             .source(SourceTest.builder().name("test").build())
             .processors(
@@ -97,7 +100,7 @@ public class PipelineExecutorImplTest {
             )
             .build();
     PipelineExecutor instance = PipelineExecutor.create(null, new FilterFactory(Collections.emptyList()), null);
-    List<ProcessorInstance> results = instance.createProcessors(vertx, null, definition, null, null);
+    List<ProcessorInstance> results = instance.createProcessors(vertx, pipelineContext, definition, null);
     assertThat(results, hasSize(2));
     assertEquals(1, ((ProcessorLimitInstance) results.get(0)).getLimit());
     assertEquals(2, ((ProcessorLimitInstance) results.get(1)).getLimit());
@@ -180,8 +183,9 @@ public class PipelineExecutorImplTest {
             , new IPAddressString("127.0.0.1")
             , null
     );
+    PipelineContext pipelineContext = new PipelineContext("test", req);
     
-    List<ProcessorInstance> processors = instance.createProcessors(vertx, req, definition, null, null);
+    List<ProcessorInstance> processors = instance.createProcessors(vertx, pipelineContext, definition, null);
 
     Map<String, ArgumentInstance> arguments = instance.prepareArguments(
             req
@@ -196,11 +200,11 @@ public class PipelineExecutorImplTest {
             );
     
     SourceTest sourceDefn = SourceTest.builder().name("test").rowCount(7).build();
-    SourceInstance source = sourceDefn.createInstance(vertx, req, null, instance);
+    SourceInstance source = sourceDefn.createInstance(vertx, pipelineContext, null, instance);
     FormatDelimited destDefn = FormatDelimited.builder().build();
     FormatInstance dest = destDefn.createInstance(vertx, req, new LoggingWriteStream<>(rows -> {}));
     
-    PipelineInstance pi = new PipelineInstance(req, definition, "$", arguments, null, null, source, processors, dest);
+    PipelineInstance pi = new PipelineInstance(pipelineContext, definition, arguments, null, null, source, processors, dest);
     
     instance.initializePipeline(pi);
     pi.getFinalPromise().future().onComplete(testContext.succeedingThenComplete());    

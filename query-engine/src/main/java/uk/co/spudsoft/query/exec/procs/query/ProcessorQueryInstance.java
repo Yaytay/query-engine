@@ -19,17 +19,19 @@ package uk.co.spudsoft.query.exec.procs.query;
 import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.ast.Node;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.ProcessorQuery;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.procs.AbstractProcessor;
 
 /**
@@ -56,7 +58,6 @@ public class ProcessorQueryInstance extends AbstractProcessor {
    */
   public static final RSQLParser RSQL_PARSER = new RSQLParser();
 
-  private final RequestContext requestContext;
   private final ProcessorQuery definition;
   private FilteringStream<DataRow> stream;
 
@@ -68,14 +69,14 @@ public class ProcessorQueryInstance extends AbstractProcessor {
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
-   * @param requestContext the request context.
+   * @param meterRegistry MeterRegistry for production of metrics.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
-  public ProcessorQueryInstance(Vertx vertx, RequestContext requestContext, ProcessorQuery definition, String name) {
-    super(name);
-    this.requestContext = requestContext;
+  public ProcessorQueryInstance(Vertx vertx, MeterRegistry meterRegistry, PipelineContext pipelineContext, ProcessorQuery definition, String name) {
+    super(vertx, meterRegistry, pipelineContext, name);
     this.definition = definition;
     this.expression = definition.getExpression();
   }

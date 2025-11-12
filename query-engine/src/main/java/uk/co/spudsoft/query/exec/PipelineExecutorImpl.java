@@ -49,6 +49,7 @@ import uk.co.spudsoft.query.main.ProtectedCredentials;
 import uk.co.spudsoft.query.defn.Format;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
 import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 
 /**
  * Concrete implementation of PipelineExecutor interface.
@@ -104,25 +105,25 @@ public class PipelineExecutorImpl implements PipelineExecutor {
   }
 
   @Override
-  public List<ProcessorInstance> createProcessors(Vertx vertx, RequestContext requestContext, SourcePipeline definition, MultiMap params, String parentName) {
+  public List<ProcessorInstance> createProcessors(Vertx vertx, PipelineContext pipelineContext, SourcePipeline definition, MultiMap params) {
     List<ProcessorInstance> result = new ArrayList<>();
 
     for (int index = 0; index < definition.getProcessors().size(); ++index) {
       Processor processor =  definition.getProcessors().get(index);
       
-      String processorName = parentName 
+      String processorName = pipelineContext.getPipe()
               + "."
               + (Strings.isNullOrEmpty(processor.getName()) ? ("processors[" + index + "]") : processor.getName())
               ;
       Condition condition = processor.getCondition();
       if (condition == null) {
         logger.debug("Added {} processor named {} with no condition", processor.getType(), processorName);
-        result.add(processor.createInstance(vertx, requestContext, meterRegistry, processorName));
+        result.add(processor.createInstance(vertx, pipelineContext, meterRegistry, processorName));
       } else {
         ConditionInstance cond = new ConditionInstance(condition.getExpression());
-        if (cond.evaluate(requestContext, null)) {
+        if (cond.evaluate(pipelineContext.getRequestContext(), null)) {
           logger.debug("Added {} processor named {} because condition {} met", processor.getType(), processorName, cond);
-          result.add(processor.createInstance(vertx, requestContext, meterRegistry, processorName));
+          result.add(processor.createInstance(vertx, pipelineContext, meterRegistry, processorName));
         } else {
           logger.debug("Skipped {} processor {} because condition {} not met", processor.getType(), processor.getName(), cond);
         }
@@ -132,8 +133,8 @@ public class PipelineExecutorImpl implements PipelineExecutor {
       int index = 0;
       for (Entry<String, String> entry : params.entries()) {
         ++index;
-        String filterName = parentName + ".filter[" + index + "]";
-        ProcessorInstance processor = filterFactory.createFilter(vertx, requestContext, meterRegistry, entry.getKey(), entry.getValue(), filterName);
+        String filterName = pipelineContext.getPipe() + ".filter[" + index + "]";
+        ProcessorInstance processor = filterFactory.createFilter(vertx, pipelineContext, meterRegistry, entry.getKey(), entry.getValue(), filterName);
         if (processor != null) {
           result.add(processor);
         }
@@ -144,11 +145,11 @@ public class PipelineExecutorImpl implements PipelineExecutor {
   }
 
   @Override
-  public List<PreProcessorInstance> createPreProcessors(Vertx vertx, RequestContext requestContext, Pipeline definition) {
+  public List<PreProcessorInstance> createPreProcessors(Vertx vertx, PipelineContext pipelineContext, Pipeline definition) {
     List<PreProcessorInstance> result = new ArrayList<>();
     int index = 0;
     for (DynamicEndpoint de : definition.getDynamicEndpoints()) {
-      result.add(de.createInstance(vertx, requestContext, meterRegistry, index++));
+      result.add(de.createInstance(vertx, pipelineContext, meterRegistry, index++));
     }
     return result;
   }
@@ -401,7 +402,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
             })
             .compose(sourceStreamWithTypes -> {
               logger.debug("Source initialized");
-              return initializeProcessors(pipeline, pipeline.getName(), pipeline.getProcessors().iterator(), 1, sourceStreamWithTypes);
+              return initializeProcessors(pipeline, pipeline.getPipelineContext().getPipe(), pipeline.getProcessors().iterator(), 1, sourceStreamWithTypes);
             })
             .compose(streamWithTypes -> {
               logger.debug("Processors ({}) initialized", pipeline.getProcessors().size());

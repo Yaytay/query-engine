@@ -31,11 +31,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.ProcessorDynamicField;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.SourceInstance;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
@@ -82,13 +83,13 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
-   * @param requestContext the request context.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param meterRegistry MeterRegistry for production of metrics.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
-  public ProcessorDynamicFieldInstance(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, ProcessorDynamicField definition, String name) {
-    super(logger, vertx, requestContext, meterRegistry, name, definition.getParentIdColumns(), definition.getValuesParentIdColumns(), definition.isInnerJoin());
+  public ProcessorDynamicFieldInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, ProcessorDynamicField definition, String name) {
+    super(logger, vertx, pipelineContext, meterRegistry, name, definition.getParentIdColumns(), definition.getValuesParentIdColumns(), definition.isInnerJoin());
     this.definition = definition;
     if (Strings.isNullOrEmpty(definition.getFieldValueColumnName())) {
       this.fieldValueColumnNames = Collections.emptyList();
@@ -100,17 +101,19 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
   @Override
   Future<ReadStream<DataRow>> initializeChild(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex) {
 
-    SourceInstance sourceInstance = definition.getFieldDefns().getSource().createInstance(vertx, requestContext, meterRegistry, executor);
+    String childName = pipeline.getPipelineContext().getPipe() + "." + getName() + ".fieldDefns";
+    PipelineContext childContext = pipeline.getPipelineContext().child(childName);
+    
+    SourceInstance sourceInstance = definition.getFieldDefns().getSource().createInstance(vertx, childContext, meterRegistry, executor);
     FormatCaptureInstance fieldDefnStreamCapture = new FormatCaptureInstance();
     PipelineInstance childPipeline = new PipelineInstance(
-            pipeline.getRequestContext()
+            childContext
             , pipeline.getDefinition()
-            , pipeline.getName() + ".fieldDefns"
             , pipeline.getArgumentInstances()
             , pipeline.getSourceEndpoints()
             , null
             , sourceInstance
-            , executor.createProcessors(vertx, requestContext, definition.getFieldDefns(), null, this.getName())
+            , executor.createProcessors(vertx, childContext, definition.getFieldDefns(), null)
             , fieldDefnStreamCapture
     );
 

@@ -26,11 +26,13 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.ProcessorMerge;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.Types;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+
 
 /**
  * {@link uk.co.spudsoft.query.exec.ProcessorInstance} that acts similarly to the MySQL <a href="https://dev.mysql.com/doc/refman/8.0/en/aggregate-functions.html#function_group-concat">GROUP_CONCAT</A> aggregate function.
@@ -56,13 +58,13 @@ import uk.co.spudsoft.query.exec.context.RequestContext;
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
-   * @param requestContext the request context.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param meterRegistry MeterRegistry for production of metrics.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
-  public ProcessorMergeInstance(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, ProcessorMerge definition, String name) {
-    super(logger, vertx, requestContext, meterRegistry, name, definition.getParentIdColumns(), definition.getChildIdColumns(), definition.isInnerJoin());
+  public ProcessorMergeInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, ProcessorMerge definition, String name) {
+    super(logger, vertx, pipelineContext, meterRegistry, name, definition.getParentIdColumns(), definition.getChildIdColumns(), definition.isInnerJoin());
     this.definition = definition;
     this.childIdColumns = ImmutableSet.copyOf(definition.getChildIdColumns());
   }

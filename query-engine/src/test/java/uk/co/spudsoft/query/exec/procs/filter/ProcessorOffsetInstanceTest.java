@@ -35,6 +35,7 @@ import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.defn.ProcessorOffset;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
@@ -62,11 +63,9 @@ public class ProcessorOffsetInstanceTest {
     );
     
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
         
-    ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, reqctx
-            , ProcessorOffset.builder().offset(17).build()
-            , "P0-Offset"
-    );
+    ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, null, pipelineContext, ProcessorOffset.builder().offset(17).build(), "P0-Offset");
     assertEquals("P0-Offset", instance.getName());
     assertTrue(instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types)).succeeded());
   }
@@ -84,8 +83,9 @@ public class ProcessorOffsetInstanceTest {
     );
     
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
     
-    ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, reqctx
+    ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, null, pipelineContext
             , ProcessorOffset.builder().name("fred").offset(2).build()
             , "P0-Offset"
     );

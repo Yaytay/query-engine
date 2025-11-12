@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 import uk.co.spudsoft.query.exec.SharedMap;
 import uk.co.spudsoft.query.exec.SourceInstance;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.sources.sql.SourceSqlStreamingInstance;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
@@ -52,8 +52,8 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 public final class SourceSql implements Source {
 
   @Override
-  public SourceInstance createInstance(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, SharedMap sharedMap) {
-    return new SourceSqlStreamingInstance(vertx, requestContext, meterRegistry, sharedMap, this);
+  public SourceInstance createInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, SharedMap sharedMap) {
+    return new SourceSqlStreamingInstance(vertx, pipelineContext, meterRegistry, sharedMap, this);
   }
 
   /**

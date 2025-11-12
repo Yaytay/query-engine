@@ -22,7 +22,7 @@ import com.google.common.base.Strings;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Vertx;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.procs.script.ProcessorExpressionInstance;
 
 /**
@@ -52,8 +52,8 @@ public class ProcessorExpression implements Processor {
   private final String fieldValue;
 
   @Override
-  public ProcessorExpressionInstance createInstance(Vertx vertx, RequestContext requestcontext, MeterRegistry meterRegistry, String name) {
-    return new ProcessorExpressionInstance(vertx, requestcontext, this, name);
+  public ProcessorExpressionInstance createInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, String name) {
+    return new ProcessorExpressionInstance(vertx, meterRegistry, pipelineContext, this, name);
   }
   
   @Override

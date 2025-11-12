@@ -42,6 +42,7 @@ import uk.co.spudsoft.query.defn.ProcessorSort;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
@@ -67,8 +68,9 @@ public class ProcessorSortInstanceTest {
     );
     
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
     
-    ProcessorSortInstance instance = new ProcessorSortInstance(vertx, reqctx
+    ProcessorSortInstance instance = new ProcessorSortInstance(vertx, null, pipelineContext
             , ProcessorSort.builder().fields(Arrays.asList("timestamp")).build()
             , "P0-Sort"
     );
@@ -79,7 +81,7 @@ public class ProcessorSortInstanceTest {
   @Test
   public void testGetId() {
     ProcessorSort defn = ProcessorSort.builder().name("id").build();
-    ProcessorSortInstance instance = new ProcessorSortInstance(null, null, defn, "P0-Sort");
+    ProcessorSortInstance instance = new ProcessorSortInstance(null, null, null, defn, "P0-Sort");
     assertEquals("P0-Sort", instance.getName());
   }
   
@@ -100,8 +102,9 @@ public class ProcessorSortInstanceTest {
     );
 
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
     
-    ProcessorSortInstance instance = new ProcessorSortInstance(vertx, reqctx
+    ProcessorSortInstance instance = new ProcessorSortInstance(vertx, null, pipelineContext
             , ProcessorSort.builder().fields(Arrays.asList("timestamp")).build()
             , "P0-Sort"
     );
@@ -139,8 +142,9 @@ public class ProcessorSortInstanceTest {
     assertEquals(DataType.Null, row.getType("wasnull"));
 
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
     
-    ProcessorSortInstance instance = new ProcessorSortInstance(vertx, reqctx
+    ProcessorSortInstance instance = new ProcessorSortInstance(vertx, null, pipelineContext
             , ProcessorSort.builder().fields(Arrays.asList("timestamp")).build()
             , "P0-Sort"
     );

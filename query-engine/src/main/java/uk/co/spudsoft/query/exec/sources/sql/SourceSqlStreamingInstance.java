@@ -34,15 +34,17 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Endpoint;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.defn.SourceSql;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.SharedMap;
-import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
 import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.sources.AbstractSource;
 import uk.co.spudsoft.query.main.ProtectedCredentials;
 import uk.co.spudsoft.query.web.ServiceException;
 
@@ -53,12 +55,11 @@ import uk.co.spudsoft.query.web.ServiceException;
  *
  * @author jtalbut
  */
-public class SourceSqlStreamingInstance implements SourceInstance {
+public class SourceSqlStreamingInstance extends AbstractSource {
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(SourceSqlStreamingInstance.class);
 
-  private final Vertx vertx;
   private final PoolCreator poolCreator;
   private final SourceSql definition;
   private RowStreamWrapper rowStreamWrapper;
@@ -70,14 +71,14 @@ public class SourceSqlStreamingInstance implements SourceInstance {
   /**
    * Constructor.
    * @param vertx The Vert.x instance.
-   * @param requestContext The request context.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param meterRegistry MeterRegistry for production of metrics.
    * @param sharedMap Pooling map.
    * @param definition The {@link SourceSql} definition.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
-  public SourceSqlStreamingInstance(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, SharedMap sharedMap, SourceSql definition) {
-    this.vertx = vertx;
+  public SourceSqlStreamingInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, SharedMap sharedMap, SourceSql definition) {
+    super(vertx, meterRegistry, pipelineContext);
 
     Object pco = sharedMap.get(PoolCreator.class.toString());
     if (pco instanceof PoolCreator pc) {
@@ -145,7 +146,7 @@ public class SourceSqlStreamingInstance implements SourceInstance {
   @Override
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
 
-    RequestContext requestContext = pipeline.getRequestContext();
+    RequestContext requestContext = pipelineContext.getRequestContext();
 
     String endpointName = definition.getEndpoint();
     if (Strings.isNullOrEmpty(endpointName)) {

@@ -29,12 +29,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.Test;
-import static org.testcontainers.shaded.org.bouncycastle.crypto.params.Blake3Parameters.context;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.exec.ColumnDefn;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.Types;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.procs.subquery.ProcessorDynamicFieldInstance.FieldDefn;
 import static uk.co.spudsoft.query.exec.procs.subquery.ProcessorDynamicFieldInstance.rowToFieldDefn;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
@@ -63,8 +62,8 @@ public class ProcessorDynamicFieldInstanceTest {
      * @param name the name of this processor, used in tracking and logging.
      * @param fields override the collection of fields for testing
      */
-    ProcessorDynamicFieldInstanceTester(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, ProcessorDynamicField definition, String name, List<FieldDefn> fields) {
-      super(vertx, requestContext, meterRegistry, definition, name);
+    ProcessorDynamicFieldInstanceTester(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, ProcessorDynamicField definition, String name, List<FieldDefn> fields) {
+      super(vertx, pipelineContext, meterRegistry, definition, name);
       this.fields = ImmutableCollectionTools.copy(fields);
     }
 

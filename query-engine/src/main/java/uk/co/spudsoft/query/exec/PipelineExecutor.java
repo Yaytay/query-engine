@@ -29,6 +29,7 @@ import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.main.ProtectedCredentials;
 import uk.co.spudsoft.query.defn.Format;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 
 /**
  * Public interface to execute a pipeline.
@@ -61,6 +62,8 @@ public interface PipelineExecutor extends SharedMap {
 
   /**
    * Build a {@link Map} of argument names to {@link ArgumentInstance} objects with correctly typed {@link ArgumentInstance#values values}.
+   * 
+   * Note that arguments are prepared before the Pipeline is created, so it takes a RequestContext and not a PipelineContext.
    *
    * @param requestContext The request context, the calculated {@link Map} is stored in the request context.
    * @param definitions The {@link Argument} definitions from the {@link Pipeline} definition.
@@ -83,22 +86,21 @@ public interface PipelineExecutor extends SharedMap {
    * <p>
    * Note that correct behaviour of {@link uk.co.spudsoft.query.exec.filters.Filter} arguments is predicated upon MultiMap iteration being stable and in the order of the arguments.
    * @param vertx The Vert.x instance.
-   * @param requestContext The context of the request.
+   * @param pipelineContext The context in which the parent {@link SourcePipeline} is being run.
    * @param definition The definition of the {@link SourcePipeline pipeline}.
    * @param params The original parameters, for identifying {@link uk.co.spudsoft.query.exec.filters.Filter} arguments.
-   * @param parentName The name of any parent Processor, used in generation of a default name for the processors.
    * @return all of the {@link ProcessorInstance} objects specified in the {@link Pipeline} definition and {@link uk.co.spudsoft.query.exec.filters.Filter} arguments in the query string.
    */
-  List<ProcessorInstance> createProcessors(Vertx vertx, RequestContext requestContext, SourcePipeline definition, MultiMap params, String parentName);
+  List<ProcessorInstance> createProcessors(Vertx vertx, PipelineContext pipelineContext, SourcePipeline definition, MultiMap params);
 
   /**
    * Create any {@link PreProcessorInstance} objects specified in the {@link Pipeline} definition.
    * @param vertx The Vert.x instance.
-   * @param requestContext The context of the request.
+   * @param pipelineContext The context in which the parent {@link SourcePipeline} is being run.
    * @param definition The definition of the {@link SourcePipeline pipeline}.
    * @return {@link List} of any {@link PreProcessorInstance} objects specified in the {@link Pipeline} definition.
    */
-  List<PreProcessorInstance> createPreProcessors(Vertx vertx, RequestContext requestContext, Pipeline definition);
+  List<PreProcessorInstance> createPreProcessors(Vertx vertx, PipelineContext pipelineContext, Pipeline definition);
 
   /**
    * Initialize the {@link PipelineInstance}.

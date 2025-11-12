@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 
 
 /**
@@ -72,7 +72,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
   }
 
   private final Context context;
-  private final RequestContext requestContext;
+  private final PipelineContext pipelineContext;
   private final ReadStream<T> primaryStream;
   private final ReadStream<U> secondaryStream;
   private final BiFunction<T, List<U>, V> merger;
@@ -97,7 +97,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
   /**
    * Constructor.
    * @param context Vertx {@link io.vertx.core.Context} to run in.
-   * @param requestContext The request context.
+   * @param pipelineContext The request context.
    * @param primaryStream The primary stream, at most one item will be output for each item in this stream.
    * @param secondaryStream The second stream, to be matched against objects in the primary stream.
    * @param merger Function to use to combine a single object from the primary stream with a  collection of objects from the secondary stream into a single output object.
@@ -110,7 +110,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
   public MergeStream(Context context
-          , RequestContext requestContext
+          , PipelineContext pipelineContext
           , ReadStream<T> primaryStream
           , ReadStream<U> secondaryStream
           , BiFunction<T, List<U>, V> merger
@@ -128,7 +128,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
             , secondaryStreamBufferHighThreshold, secondaryStreamBufferLowThreshold
     );
     this.context = context;
-    this.requestContext = requestContext;
+    this.pipelineContext = pipelineContext;
     this.primaryStream = primaryStream;
     this.secondaryStream = secondaryStream;
     this.merger = merger;

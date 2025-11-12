@@ -30,6 +30,7 @@ import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.SourceInstance;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 
 /**
  * Vert.x Verticle for running Query Engine Pipelines.
@@ -111,16 +112,16 @@ public class PipelineRunningVerticle extends VerticleBase {
     try {
       PipelineInstance instance;
       FormatInstance formatInstance = task.chosenFormat.createInstance(vertx, task.requestContext, task.responseStream);
-      SourceInstance sourceInstance = task.pipeline.getSource().createInstance(vertx, task.requestContext, meterRegistry, pipelineExecutor);
+      PipelineContext rootContext = new PipelineContext("$", task.requestContext);
+      SourceInstance sourceInstance = task.pipeline.getSource().createInstance(vertx, rootContext, meterRegistry, pipelineExecutor);
       instance = new PipelineInstance(
-              task.requestContext
+              rootContext
               , task.pipeline
-              , "$"
               , task.arguments
               , task.pipeline.getSourceEndpointsMap()
-              , pipelineExecutor.createPreProcessors(vertx, task.requestContext, task.pipeline)
+              , pipelineExecutor.createPreProcessors(vertx, rootContext, task.pipeline)
               , sourceInstance
-              , pipelineExecutor.createProcessors(vertx, task.requestContext, task.pipeline, task.queryStringParams, "$")
+              , pipelineExecutor.createProcessors(vertx, rootContext, task.pipeline, task.queryStringParams)
               , formatInstance
       );
       logger.atDebug()

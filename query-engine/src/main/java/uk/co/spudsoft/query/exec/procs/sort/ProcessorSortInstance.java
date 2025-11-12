@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.exec.procs.sort;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.file.FileSystem;
@@ -47,7 +48,7 @@ import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.procs.AbstractProcessor;
 
 /**
@@ -70,8 +71,6 @@ public class ProcessorSortInstance extends AbstractProcessor {
   private static String tempDir = System.getProperty("java.io.tmpdir");
   private static int memoryLimit = 1 << 22; // 4MB
 
-  private final Vertx vertx;
-  private final RequestContext requestContext;
   private final ProcessorSort definition;
 
   private SortingStream<DataRow> stream;
@@ -81,15 +80,14 @@ public class ProcessorSortInstance extends AbstractProcessor {
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
-   * @param requestContext the request context.
+   * @param meterRegistry MeterRegistry for production of metrics.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
-  public ProcessorSortInstance(Vertx vertx, RequestContext requestContext, ProcessorSort definition, String name) {
-    super(name);
-    this.vertx = vertx;
-    this.requestContext = requestContext;
+  public ProcessorSortInstance(Vertx vertx, MeterRegistry meterRegistry, PipelineContext pipelineContext, ProcessorSort definition, String name) {
+    super(vertx, meterRegistry, pipelineContext, name);
     this.definition = definition;
   }
 

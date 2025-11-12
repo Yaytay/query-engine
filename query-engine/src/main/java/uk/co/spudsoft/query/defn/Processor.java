@@ -24,7 +24,7 @@ import io.swagger.v3.oas.annotations.media.DiscriminatorMapping;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Vertx;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 
 /**
  *
@@ -79,13 +79,13 @@ public interface Processor {
   /**
    * Create a new instance of the appropriate {@link ProcessorInstance}.
    * @param vertx The Vert.x instance.
-   * @param requestContext The request context.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param meterRegistry MeterRegistry for production of metrics.
    * @param name The name of this processor, either from the definition or generated.
    * @return a newly created {@link ProcessorInstance}.
    */
   @JsonIgnore
-  ProcessorInstance createInstance(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, String name);
+  ProcessorInstance createInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, String name);
   
   /**
    * The type of Processor being configured.

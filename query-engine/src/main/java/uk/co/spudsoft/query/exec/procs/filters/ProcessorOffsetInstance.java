@@ -18,18 +18,20 @@ package uk.co.spudsoft.query.exec.procs.filters;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.tsegismont.streamutils.impl.SkippingStream;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.ProcessorOffset;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
-import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.exec.procs.AbstractProcessor;
 
 /**
  * {@link uk.co.spudsoft.query.exec.ProcessorInstance} to skip initial rows from the output.
@@ -38,29 +40,27 @@ import uk.co.spudsoft.query.exec.Types;
  *
  * @author jtalbut
  */
-public class ProcessorOffsetInstance implements ProcessorInstance {
+public class ProcessorOffsetInstance extends AbstractProcessor {
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ProcessorOffsetInstance.class);
 
-  private final RequestContext requestContext;
   private final ProcessorOffset definition;
   private SkippingStream<DataRow> stream;
   private Types types;
-  private final String name;
 
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
-   * @param requestContext the request context.
+   * @param meterRegistry MeterRegistry for production of metrics.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
-  public ProcessorOffsetInstance(Vertx vertx, RequestContext requestContext, ProcessorOffset definition, String name) {
-    this.requestContext = requestContext;
+  public ProcessorOffsetInstance(Vertx vertx, MeterRegistry meterRegistry, PipelineContext pipelineContext, ProcessorOffset definition, String name) {
+    super(vertx, meterRegistry, pipelineContext, name);
     this.definition = definition;
-    this.name = name;
   }
 
   /**

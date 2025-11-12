@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.exec.sources.test;
 
 import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -27,13 +28,14 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.SourceTest;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.defn.DataType;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
-import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.Types;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.procs.QueueReadStream;
+import uk.co.spudsoft.query.exec.sources.AbstractSource;
 
 /**
  * {@link uk.co.spudsoft.query.exec.SourceInstance} class for generating a simple test stream.
@@ -44,11 +46,10 @@ import uk.co.spudsoft.query.exec.procs.QueueReadStream;
  *
  * @author jtalbut
  */
-public class SourceTestInstance implements SourceInstance {
+public class SourceTestInstance extends AbstractSource {
 
   private static final Logger logger = LoggerFactory.getLogger(SourceTestInstance.class);
 
-  private final RequestContext requestContext;
   private final int rowCount;
   private final int delayMs;
   private final String name;
@@ -60,12 +61,13 @@ public class SourceTestInstance implements SourceInstance {
   /**
    * Constructor.
    * @param vertx The vertx instance.
-   * @param requestContext The request context.
+   * @param meterRegistry MeterRegistry for production of processor-specific metrics.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param definition The configuration of this source.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
-  public SourceTestInstance(Vertx vertx, RequestContext requestContext, SourceTest definition) {
-    this.requestContext = requestContext;
+  public SourceTestInstance(Vertx vertx, MeterRegistry meterRegistry, PipelineContext pipelineContext, SourceTest definition) {
+    super(vertx, meterRegistry, pipelineContext);
     this.rowCount = definition.getRowCount();
     this.delayMs = definition.getDelayMs();
     this.types = new Types();

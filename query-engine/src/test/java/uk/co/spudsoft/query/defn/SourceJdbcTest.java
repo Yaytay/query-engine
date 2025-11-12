@@ -22,11 +22,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import uk.co.spudsoft.query.exec.sources.jdbc.SourceJdbcInstance;
 import io.vertx.core.Vertx;
-import io.vertx.core.Context;
 import java.time.Duration;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import uk.co.spudsoft.query.exec.SharedMap;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 
 /**
@@ -59,6 +59,7 @@ class SourceJdbcTest {
   void testCreateInstanceUsesCorrectArgs() {
     Vertx vertx = mock(Vertx.class);
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipctx = new PipelineContext("test", reqctx);
     SharedMap sharedMap = mock(SharedMap.class);
 
     SourceJdbc src = SourceJdbc.builder()
@@ -67,7 +68,7 @@ class SourceJdbcTest {
             .type(SourceType.JDBC)
             .build();
 
-    SourceJdbcInstance inst = src.createInstance(vertx, reqctx, null, sharedMap);
+    SourceJdbcInstance inst = src.createInstance(vertx, pipctx, null, sharedMap);
     assertNotNull(inst);
   }
 
@@ -75,6 +76,7 @@ class SourceJdbcTest {
   void testCreateInstanceUsesDefaultNameWhenNameIsNull() {
     Vertx vertx = mock(Vertx.class);
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipctx = new PipelineContext("test", reqctx);
     SharedMap sharedMap = mock(SharedMap.class);
 
     SourceJdbc src = SourceJdbc.builder()
@@ -83,7 +85,7 @@ class SourceJdbcTest {
             .type(SourceType.JDBC)
             .build();
 
-    SourceJdbcInstance inst = src.createInstance(vertx, reqctx, null, sharedMap);
+    SourceJdbcInstance inst = src.createInstance(vertx, pipctx, null, sharedMap);
     assertNotNull(inst);
   }
 

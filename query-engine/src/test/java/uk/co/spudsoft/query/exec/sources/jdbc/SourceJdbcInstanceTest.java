@@ -40,6 +40,7 @@ import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineExecutorImpl;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
 import uk.co.spudsoft.query.main.ProtectedCredentials;
@@ -60,6 +61,7 @@ public class SourceJdbcInstanceTest {
     
     vertx.getOrCreateContext().runOnContext(v -> {
       RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
       
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
       PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
@@ -67,7 +69,7 @@ public class SourceJdbcInstanceTest {
       SourceJdbc definition = SourceJdbc.builder()
               .endpoint("bob")
               .build();
-      SourceJdbcInstance instance = new SourceJdbcInstance(vertx, reqctx, null, definition);
+      SourceJdbcInstance instance = new SourceJdbcInstance(vertx, pipelineContext, null, definition);
       
       Pipeline pipeline = Pipeline.builder()
               .sourceEndpoints(
@@ -99,12 +101,11 @@ public class SourceJdbcInstanceTest {
       PipelineInstance pipelineInstance;
       try {
         pipelineInstance= new PipelineInstance(
-                req
+                pipelineContext
                 , pipeline
-                , "$"
                 , pipelineExecutor.prepareArguments(req, pipeline.getArguments(), params)
                 , pipeline.getSourceEndpointsMap()
-                , pipelineExecutor.createPreProcessors(vertx, reqctx, pipeline)
+                , pipelineExecutor.createPreProcessors(vertx, pipelineContext, pipeline)
                 , instance
                 , Collections.emptyList()
                 , new FormatCaptureInstance()
@@ -130,13 +131,14 @@ public class SourceJdbcInstanceTest {
     
     vertx.getOrCreateContext().runOnContext(v -> {
       RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+      PipelineContext pipelineContext = new PipelineContext("test", reqctx);
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
       PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
       
       SourceJdbc definition = SourceJdbc.builder()
               .endpoint("bob")
               .build();
-      SourceJdbcInstance instance = new SourceJdbcInstance(vertx, reqctx, null, definition);
+      SourceJdbcInstance instance = new SourceJdbcInstance(vertx, pipelineContext, null, definition);
       
       Pipeline pipeline = Pipeline.builder()
               .sourceEndpoints(
@@ -171,12 +173,11 @@ public class SourceJdbcInstanceTest {
       PipelineInstance pipelineInstance;
       try {
         pipelineInstance= new PipelineInstance(
-                req
+                pipelineContext
                 , pipeline
-                , "$"
-                , pipelineExecutor.prepareArguments(req, pipeline.getArguments(), params)
+                , pipelineExecutor.prepareArguments(pipelineContext.getRequestContext(), pipeline.getArguments(), params)
                 , pipeline.getSourceEndpointsMap()
-                , pipelineExecutor.createPreProcessors(vertx, reqctx, pipeline)
+                , pipelineExecutor.createPreProcessors(vertx, pipelineContext, pipeline)
                 , instance
                 , Collections.emptyList()
                 , new FormatCaptureInstance()

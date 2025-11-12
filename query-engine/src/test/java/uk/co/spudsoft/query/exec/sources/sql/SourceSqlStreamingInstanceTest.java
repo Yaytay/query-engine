@@ -18,7 +18,6 @@ package uk.co.spudsoft.query.exec.sources.sql;
 
 import com.google.common.collect.ImmutableMap;
 import inet.ipaddr.IPAddressString;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
@@ -28,7 +27,6 @@ import io.vertx.junit5.VertxTestContext;
 import io.vertx.sqlclient.PoolOptions;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
@@ -45,9 +43,9 @@ import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.defn.SourceSql;
 import uk.co.spudsoft.query.exec.FilterFactory;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
-import uk.co.spudsoft.query.exec.PipelineExecutorImpl;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
 import uk.co.spudsoft.query.main.ProtectedCredentials;
@@ -68,13 +66,14 @@ public class SourceSqlStreamingInstanceTest {
     
     vertx.getOrCreateContext().runOnContext(v -> {
       RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+      PipelineContext pipelineContext = new PipelineContext("test", reqctx);
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
       PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
       
       SourceSql definition = SourceSql.builder()
               .endpoint("bob")
               .build();
-      SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, reqctx, null, pipelineExecutor, definition);
+      SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, pipelineContext, null, pipelineExecutor, definition);
       
       Pipeline pipeline = Pipeline.builder()
               .sourceEndpoints(
@@ -106,12 +105,11 @@ public class SourceSqlStreamingInstanceTest {
       PipelineInstance pipelineInstance;
       try {
         pipelineInstance= new PipelineInstance(
-                req
+                pipelineContext
                 , pipeline
-                , "$"
-                , pipelineExecutor.prepareArguments(req, pipeline.getArguments(), params)
+                , pipelineExecutor.prepareArguments(pipelineContext.getRequestContext(), pipeline.getArguments(), params)
                 , pipeline.getSourceEndpointsMap()
-                , pipelineExecutor.createPreProcessors(vertx, reqctx, pipeline)
+                , pipelineExecutor.createPreProcessors(vertx, pipelineContext, pipeline)
                 , instance
                 , Collections.emptyList()
                 , new FormatCaptureInstance()
@@ -137,13 +135,14 @@ public class SourceSqlStreamingInstanceTest {
     
     vertx.getOrCreateContext().runOnContext(v -> {
       RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+      PipelineContext pipelineContext = new PipelineContext("test", reqctx);
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
       PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
       
       SourceSql definition = SourceSql.builder()
               .endpoint("bob")
               .build();
-      SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, reqctx, null, pipelineExecutor, definition);
+      SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, pipelineContext, null, pipelineExecutor, definition);
       
       Pipeline pipeline = Pipeline.builder()
               .sourceEndpoints(
@@ -178,12 +177,11 @@ public class SourceSqlStreamingInstanceTest {
       PipelineInstance pipelineInstance;
       try {
         pipelineInstance= new PipelineInstance(
-                req
+                pipelineContext
                 , pipeline
-                , "$"
                 , pipelineExecutor.prepareArguments(req, pipeline.getArguments(), params)
                 , pipeline.getSourceEndpointsMap()
-                , pipelineExecutor.createPreProcessors(vertx, reqctx, pipeline)
+                , pipelineExecutor.createPreProcessors(vertx, pipelineContext, pipeline)
                 , instance
                 , Collections.emptyList()
                 , new FormatCaptureInstance()

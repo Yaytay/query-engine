@@ -16,6 +16,8 @@
  */
 package uk.co.spudsoft.query.exec.context;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * Context data for the running of a SourcePipeline within a request.
  * @author jtalbut
@@ -32,6 +34,7 @@ public class PipelineContext {
    *          This will either be $ (for the root) or the name of the field of the processor that defines this pipeline.
    * @param requestContext The context of the HTTP request for running the entire {@link uk.co.spudsoft.query.defn.Pipeline}.
    */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The RequestContext may be modified in a few very specific ways during a pipeline run")
   public PipelineContext(String pipe, RequestContext requestContext) {
     this.pipe = pipe;
     this.requestContext = requestContext;
@@ -50,8 +53,23 @@ public class PipelineContext {
    * Get the context of the HTTP request for running the entire {@link uk.co.spudsoft.query.defn.Pipeline}.
    * @return the context of the HTTP request for running the entire {@link uk.co.spudsoft.query.defn.Pipeline}.
    */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "The RequestContext may be modified in a few very specific ways during a pipeline run")
   public RequestContext getRequestContext() {
     return requestContext;
+  }
+  
+  /**
+   * Create a new PipelineContext for a child {@link uk.co.spudsoft.query.defn.SourcePipeline}.
+   * 
+   * There is no connection between the parent and child contexts.
+   * It would be possible to create a tree of PipelineContexts within a given RequestContext
+   * , but I have seen no use for such a thing so far.
+   * 
+   * @param childPipe The name of the {@link uk.co.spudsoft.query.defn.SourcePipeline}.
+   * @return a new PipelineContext for a child {@link uk.co.spudsoft.query.defn.SourcePipeline}.
+   */
+  public PipelineContext child(String childPipe) {
+    return new PipelineContext(childPipe, requestContext);
   }
   
 }

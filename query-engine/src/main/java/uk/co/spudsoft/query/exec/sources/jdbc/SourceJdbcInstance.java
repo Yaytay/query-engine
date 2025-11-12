@@ -26,14 +26,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Endpoint;
 import uk.co.spudsoft.query.defn.SourceJdbc;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.defn.SourceSql;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
-import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
 import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.sources.AbstractSource;
 import uk.co.spudsoft.query.exec.sources.sql.SourceSqlStreamingInstance;
 import uk.co.spudsoft.query.main.ProtectedCredentials;
 import uk.co.spudsoft.query.web.ServiceException;
@@ -45,13 +47,11 @@ import uk.co.spudsoft.query.web.ServiceException;
  *
  * @author jtalbut
  */
-public class SourceJdbcInstance implements SourceInstance {
+public class SourceJdbcInstance extends AbstractSource {
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(SourceSqlStreamingInstance.class);
 
-  private final Vertx vertx;
-  private final RequestContext requestContext;
   private final SourceJdbc definition;
 
   private JdbcReadStream jdbcReadStream;
@@ -59,21 +59,20 @@ public class SourceJdbcInstance implements SourceInstance {
   /**
    * Constructor.
    * @param vertx The Vert.x instance.
-   * @param requestContext The request context.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param meterRegistry MeterRegistry for production of metrics.
    * @param definition The {@link SourceSql} definition.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
-  public SourceJdbcInstance(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, SourceJdbc definition) {
-    this.vertx = vertx;
-    this.requestContext = requestContext;
+  public SourceJdbcInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, SourceJdbc definition) {
+    super(vertx, meterRegistry, pipelineContext);
     this.definition = definition;
   }
 
   @Override
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
 
-    RequestContext requestContext = pipeline.getRequestContext();
+    RequestContext requestContext = pipelineContext.getRequestContext();
 
     String endpointName = definition.getEndpoint();
     if (Strings.isNullOrEmpty(endpointName)) {
@@ -140,7 +139,7 @@ public class SourceJdbcInstance implements SourceInstance {
       logger.error("Exception occured in stream: ", ex);
     });
 
-    jdbcReadStream.start(requestContext.getRequestId() + ":" + pipeline.getName(), finalUrl, credentials, finalQuery, pipeline);
+    jdbcReadStream.start(requestContext.getRequestId() + ":" + pipelineContext.getPipe(), finalUrl, credentials, finalQuery, pipeline);
 
     return result.future();
   }

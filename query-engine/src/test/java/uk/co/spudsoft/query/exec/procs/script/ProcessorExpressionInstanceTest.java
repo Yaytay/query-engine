@@ -32,6 +32,7 @@ import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
@@ -47,7 +48,9 @@ public class ProcessorExpressionInstanceTest {
   @Test
   public void testGetId() {
     ProcessorExpression definition = ProcessorExpression.builder().name("id").build();
-    ProcessorExpressionInstance instance = definition.createInstance(null, null, null, "P0-Expression");
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    ProcessorExpressionInstance instance = definition.createInstance(null, pipelineContext, null, "P0-Expression");
     assertEquals("P0-Expression", instance.getName());
   }
 
@@ -56,8 +59,9 @@ public class ProcessorExpressionInstanceTest {
 
     ProcessorExpression definition = ProcessorExpression.builder().name("id").predicate("iteration < 2").build();
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
 
-    ProcessorExpressionInstance instance = definition.createInstance(vertx, reqctx, null, "P0-Expression");
+    ProcessorExpressionInstance instance = definition.createInstance(vertx, pipelineContext, null, "P0-Expression");
 
     Types types = new Types();
     ListReadStream<DataRow> inputStream = new ListReadStream<>(vertx.getOrCreateContext(), Arrays.asList(
@@ -68,10 +72,11 @@ public class ProcessorExpressionInstanceTest {
     ));
     ReadStreamWithTypes input = new ReadStreamWithTypes(inputStream, types);
 
-    RequestContext context = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    RequestContext reqctx2 = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext2 = new PipelineContext("test", reqctx2);
 
     PipelineInstance pipeline = mock(PipelineInstance.class);
-    when(pipeline.getRequestContext()).thenReturn(context);
+    when(pipeline.getPipelineContext()).thenReturn(pipelineContext2);
 
     instance.initialize(null, pipeline, null, 0, input)
             .compose(output -> {
@@ -102,7 +107,8 @@ public class ProcessorExpressionInstanceTest {
             .build();
 
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new inet.ipaddr.IPAddressString("127.0.0.1"), null);
-    ProcessorExpressionInstance instance = definition.createInstance(vertx, reqctx, null, "P0-Expression");
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    ProcessorExpressionInstance instance = definition.createInstance(vertx, pipelineContext, null, "P0-Expression");
 
     Types types = new Types();
     // input has only "iteration" initially, "result" should be inserted by initialize()
@@ -114,7 +120,7 @@ public class ProcessorExpressionInstanceTest {
     ReadStreamWithTypes input = new ReadStreamWithTypes(inputStream, types);
 
     PipelineInstance pipeline = mock(PipelineInstance.class);
-    when(pipeline.getRequestContext()).thenReturn(reqctx);
+    when(pipeline.getPipelineContext()).thenReturn(pipelineContext);
 
     instance.initialize(null, pipeline, null, 0, input)
             .compose(output -> {
@@ -147,7 +153,8 @@ public class ProcessorExpressionInstanceTest {
             .build();
 
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new inet.ipaddr.IPAddressString("127.0.0.1"), null);
-    ProcessorExpressionInstance instance = definition.createInstance(vertx, reqctx, null, "P0-Expression");
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    ProcessorExpressionInstance instance = definition.createInstance(vertx, pipelineContext, null, "P0-Expression");
 
     Types types = new Types();
     // predefine conflicting type
@@ -159,7 +166,7 @@ public class ProcessorExpressionInstanceTest {
     ReadStreamWithTypes input = new ReadStreamWithTypes(inputStream, types);
 
     PipelineInstance pipeline = mock(PipelineInstance.class);
-    when(pipeline.getRequestContext()).thenReturn(reqctx);
+    when(pipeline.getPipelineContext()).thenReturn(pipelineContext);
 
     instance.initialize(null, pipeline, null, 0, input)
             .onSuccess(rs -> testContext.failNow(new AssertionError("Expected initialize to fail due to type conflict")))

@@ -20,6 +20,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.tsegismont.streamutils.impl.MappingStream;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.streams.ReadStream;
@@ -33,13 +34,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.defn.ProcessorScript;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
-import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.exec.procs.AbstractProcessor;
 import uk.co.spudsoft.query.exec.procs.query.FilteringStream;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
@@ -51,16 +53,14 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
  *
  * @author jtalbut
  */
-public final class ProcessorScriptInstance implements ProcessorInstance {
+public final class ProcessorScriptInstance extends AbstractProcessor {
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ProcessorScriptInstance.class);
 
   private static final ZoneId UTC = ZoneId.of("UTC");
 
-  private final RequestContext requestContext;
   private final ProcessorScript definition;
-  private final String name;
   private ReadStream<DataRow> stream;
 
   private Engine engine;
@@ -77,20 +77,15 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
-   * @param requestContext the request context.
+   * @param meterRegistry MeterRegistry for production of metrics.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
-  public ProcessorScriptInstance(Vertx vertx, RequestContext requestContext, ProcessorScript definition, String name) {
-    this.requestContext = requestContext;
+  public ProcessorScriptInstance(Vertx vertx, MeterRegistry meterRegistry, PipelineContext pipelineContext, ProcessorScript definition, String name) {
+    super(vertx, meterRegistry, pipelineContext, name);
     this.definition = definition;
-    this.name = name;
-  }
-
-  @Override
-  public String getName() {
-    return name;
   }
 
   private boolean runPredicate(DataRow data) {
@@ -121,7 +116,7 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
   <T> T runSource(Engine engine, String name, String language, Source source, DataRow data, BiFunction<Value, DataRow, T> postProcess) {
     try (org.graalvm.polyglot.Context graalContext = org.graalvm.polyglot.Context.newBuilder(language).engine(engine).build()) {
       Value bindings = graalContext.getBindings(language);
-      bindings.putMember("request", requestContext);
+      bindings.putMember("request", pipelineContext.getRequestContext());
       bindings.putMember("pipeline", pipeline);
       bindings.putMember("args", ProxyObject.fromMap(arguments));
       bindings.putMember("row", new ProxyDataRow(data)); // ProxyObject.fromMap(data.getMap()));
@@ -181,7 +176,7 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
   @Override
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStreamWithTypes input) {
     this.pipeline = pipeline.getDefinition();
-    this.arguments = ImmutableCollectionTools.copy(requestContext == null ? null : requestContext.getArguments());
+    this.arguments = ImmutableCollectionTools.copy(pipelineContext.getRequestContext() == null ? null : pipelineContext.getRequestContext().getArguments());
     try {
       engine = Engine.newBuilder()
               .option("engine.WarnInterpreterOnly", "false")

@@ -31,7 +31,7 @@ import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.Types;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
 import uk.co.spudsoft.query.exec.procs.AbstractProcessor;
 
@@ -43,19 +43,6 @@ import uk.co.spudsoft.query.exec.procs.AbstractProcessor;
 public abstract class AbstractJoiningProcessor extends AbstractProcessor {
 
   private final Logger logger;
-  /**
-   * The Vertx instance.
-   */
-  protected final Vertx vertx;
-  /**
-   * Request context.
-   */
-  protected final RequestContext requestContext;
-
-  /**
-   * MeterRegistry for production of metrics.
-   */
-  protected final MeterRegistry meterRegistry;
 
   private final List<String> parentIdColumns;
   private final List<String> childIdColumns;
@@ -72,7 +59,7 @@ public abstract class AbstractJoiningProcessor extends AbstractProcessor {
    * Constructor.
    * @param logger  The logger that should be used (so that log messages identify the child class).
    * @param vertx The vertx instance.
-   * @param requestContext The context of this request.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param meterRegistry MeterRegistry for production of metrics.
    * @param name The name to use in logs for this processor - not nullable.
    * @param parentIdColumns The columns from the parent dataset that identifies a row.
@@ -82,12 +69,9 @@ public abstract class AbstractJoiningProcessor extends AbstractProcessor {
    * It is safe to suppress the "this-escape" lint check as long as none of the streams are flowing until the constructor completes.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "None of the mutable values passed in to this class should be modified")
-  public AbstractJoiningProcessor(Logger logger, Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, String name, List<String> parentIdColumns, List<String> childIdColumns, boolean innerJoin) {
-    super(name);
+  public AbstractJoiningProcessor(Logger logger, Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, String name, List<String> parentIdColumns, List<String> childIdColumns, boolean innerJoin) {
+    super(vertx, meterRegistry, pipelineContext, name);
     this.logger = logger;
-    this.vertx = vertx;
-    this.requestContext = requestContext;
-    this.meterRegistry = meterRegistry;
     this.parentIdColumns = parentIdColumns;
     this.childIdColumns = childIdColumns;
     this.innerJoin = innerJoin;
@@ -105,18 +89,21 @@ public abstract class AbstractJoiningProcessor extends AbstractProcessor {
    * @return A Future that will be completed with a {@link ReadStreamWithTypes} when initialization has completed.
    */
   protected Future<ReadStreamWithTypes> initializeChildStream(PipelineExecutor executor, PipelineInstance pipeline, String fieldName, SourcePipeline sourcePipeline) {
-    SourceInstance sourceInstance = sourcePipeline.getSource().createInstance(vertx, requestContext, meterRegistry, executor);
+
+    String childName = pipeline.getPipelineContext().getPipe() + "." + getName() + "." + fieldName;
+    PipelineContext childContext = pipeline.getPipelineContext().child(childName);
+
+    SourceInstance sourceInstance = sourcePipeline.getSource().createInstance(vertx, childContext, meterRegistry, executor);
     FormatCaptureInstance sinkInstance = new FormatCaptureInstance();
 
     PipelineInstance childPipeline = new PipelineInstance(
-            pipeline.getRequestContext()
+            childContext
             , pipeline.getDefinition()
-            , pipeline.getName()+ "." + getName() + "." + fieldName
             , pipeline.getArgumentInstances()
             , pipeline.getSourceEndpoints()
             , null
             , sourceInstance
-            , executor.createProcessors(vertx, requestContext, sourcePipeline, null, pipeline.getName() + "." + getName())
+            , executor.createProcessors(vertx, childContext, sourcePipeline, null)
             , sinkInstance
     );
     return executor.initializePipeline(childPipeline)
@@ -198,7 +185,7 @@ public abstract class AbstractJoiningProcessor extends AbstractProcessor {
             .compose(childStream -> {
               this.stream = new MergeStream<>(
                       Vertx.currentContext()
-                      , requestContext
+                      , pipelineContext
                       , input.getStream()
                       , childStream
                       , this::processChildren

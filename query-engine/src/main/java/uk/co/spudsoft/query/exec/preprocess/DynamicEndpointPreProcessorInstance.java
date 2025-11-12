@@ -28,12 +28,14 @@ import uk.co.spudsoft.query.defn.Condition;
 import uk.co.spudsoft.query.defn.DynamicEndpoint;
 import uk.co.spudsoft.query.defn.Endpoint;
 import uk.co.spudsoft.query.defn.EndpointType;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.PreProcessorInstance;
 import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
@@ -53,51 +55,45 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
   private static final Logger logger = LoggerFactory.getLogger(DynamicEndpointPreProcessorInstance.class);
 
   private final Vertx vertx;
-  private final RequestContext requestContext;
   private final MeterRegistry meterRegistry;
+  private final PipelineContext pipelineContext;
   private final DynamicEndpoint definition;
   private final String name;
   
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
-   * @param requestContext The request context.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param meterRegistry MeterRegistry for production of metrics.
    * @param definition the definition of this processor.
    * @param index zero based index of this pre-processor within the list of pre-processors in the pipeline.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "MeterRegistry is designed to be modified")
-  public DynamicEndpointPreProcessorInstance(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, DynamicEndpoint definition, int index) {
+  public DynamicEndpointPreProcessorInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, DynamicEndpoint definition, int index) {
     this.vertx = vertx;
-    this.requestContext = requestContext;
     this.meterRegistry = meterRegistry;
+    this.pipelineContext = pipelineContext;
     this.definition = definition;
-    if (Strings.isNullOrEmpty(definition.getName())) {
-      this.name = "dynamicEndpoints[" + index + "]";
-    } else {
-      this.name = definition.getName();
-    }
+    this.name = Strings.isNullOrEmpty(definition.getName()) ? "dynamicEndpoints[" + index + "]" : definition.getName();
   }
 
   @Override
-  public String getName() {
-    return name;
-  }
-  
-  @Override
   public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
     logger.debug("initialize()");
-    SourceInstance sourceInstance = definition.getInput().getSource().createInstance(vertx, requestContext, meterRegistry, executor);
+
+    String childName = pipeline.getPipelineContext().getPipe() + "." + name + ".input";
+    PipelineContext childContext = pipeline.getPipelineContext().child(childName);
+
+    SourceInstance sourceInstance = definition.getInput().getSource().createInstance(vertx, childContext, meterRegistry, executor);
     FormatCaptureInstance format = new FormatCaptureInstance();
     PipelineInstance dePipeline = new PipelineInstance(
-            pipeline.getRequestContext()
+            childContext
             , pipeline.getDefinition()
-            , "dynamicEndpoint"
             , pipeline.getArgumentInstances()
             , pipeline.getSourceEndpoints()
             , null
             , sourceInstance
-            , executor.createProcessors(vertx, requestContext, definition.getInput(), null, name)
+            , executor.createProcessors(vertx, childContext, definition.getInput(), null)
             , format
     );
     return executor.initializePipeline(dePipeline)
@@ -120,6 +116,11 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
               logger.debug("de pipeline completed");
               return Future.succeededFuture();
             });
+  }
+
+  @Override
+  public String getName() {
+    return name;
   }
   
   private void processEndpoint(PipelineInstance pipeline, int idx, DataRow data) {
@@ -165,7 +166,7 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
             .build();
         
     if (!Strings.isNullOrEmpty(condition)) {
-      RequestContext requestContext = pipeline.getRequestContext();
+      RequestContext requestContext = pipelineContext.getRequestContext();
       ConditionInstance cond = new ConditionInstance(condition);
       if (cond.evaluate(requestContext, data)) {
         pipeline.getSourceEndpoints().put(key, endpoint);      

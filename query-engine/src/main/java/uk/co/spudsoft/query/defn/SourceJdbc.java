@@ -31,7 +31,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import uk.co.spudsoft.query.exec.SharedMap;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.sources.jdbc.SourceJdbcInstance;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
@@ -51,8 +51,8 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 public final class SourceJdbc implements Source {
 
   @Override
-  public SourceJdbcInstance createInstance(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, SharedMap sharedMap) {
-    return new SourceJdbcInstance(vertx, requestContext, meterRegistry, this);
+  public SourceJdbcInstance createInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, SharedMap sharedMap) {
+    return new SourceJdbcInstance(vertx, pipelineContext, meterRegistry, this);
   }
 
   /**

@@ -24,7 +24,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Vertx;
 import java.util.List;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.procs.sort.ProcessorSortInstance;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
@@ -52,8 +52,8 @@ public class ProcessorSort implements Processor {
   private final ImmutableList<String> fields;
 
   @Override
-  public ProcessorSortInstance createInstance(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, String name) {
-    return new ProcessorSortInstance(vertx, requestContext, this, name);
+  public ProcessorSortInstance createInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, String name) {
+    return new ProcessorSortInstance(vertx, meterRegistry, pipelineContext, this, name);
   }
 
   @Override

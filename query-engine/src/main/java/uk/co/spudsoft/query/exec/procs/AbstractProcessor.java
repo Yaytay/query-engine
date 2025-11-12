@@ -16,7 +16,11 @@
  */
 package uk.co.spudsoft.query.exec.procs;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.vertx.core.Vertx;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 
 /**
  * Base class for {@link ProcessorInstance} implementations.
@@ -24,7 +28,11 @@ import uk.co.spudsoft.query.exec.ProcessorInstance;
  */
 public abstract class AbstractProcessor implements ProcessorInstance {
 
-  private final String name;
+  protected final Vertx vertx;
+  protected final MeterRegistry meterRegistry;
+  protected final PipelineContext pipelineContext;
+  protected final String name;
+  
 
   /**
    * Constructor.
@@ -35,9 +43,15 @@ public abstract class AbstractProcessor implements ProcessorInstance {
    * In both cases the name should already have any parent processor name prepended to it.
    * In this way, if processors are not explicitly named, the name used should be a full JsonPath to it.
    * 
+   * @param vertx the Vert.x instance.
+   * @param meterRegistry MeterRegistry for production of processor-specific metrics.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param name The name of the processor.
    */
-  protected AbstractProcessor(String name) {
+  protected AbstractProcessor(Vertx vertx, MeterRegistry meterRegistry, PipelineContext pipelineContext, String name) {
+    this.vertx = vertx;
+    this.meterRegistry = meterRegistry;
+    this.pipelineContext = pipelineContext;
     this.name = name;
   }
 
@@ -45,5 +59,5 @@ public abstract class AbstractProcessor implements ProcessorInstance {
   public String getName() {
     return name;
   }
-
+  
 }

@@ -17,7 +17,6 @@
 package uk.co.spudsoft.query.exec.procs.filter;
 
 import inet.ipaddr.IPAddressString;
-import io.vertx.core.Context;
 import uk.co.spudsoft.query.exec.procs.filters.ProcessorLimitInstance;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
@@ -37,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import uk.co.spudsoft.query.defn.ProcessorLimit;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
@@ -63,11 +63,9 @@ public class ProcessorLimitInstanceTest {
     );
     
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
     
-    ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, reqctx
-            , ProcessorLimit.builder().limit(17).build()
-            , "P0-Limit"
-    );
+    ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, null, pipelineContext, ProcessorLimit.builder().limit(17).build(), "P0-Limit");
     assertEquals("P0-Limit", instance.getName());
     assertTrue(instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(Vertx.currentContext(), rowsList), types)).isComplete());
   }
@@ -84,11 +82,9 @@ public class ProcessorLimitInstanceTest {
     );
     
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
     
-    ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, reqctx
-            , ProcessorLimit.builder().name("fred").limit(3).build()
-            , "P0-Limit"
-    );
+    ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, null, pipelineContext, ProcessorLimit.builder().name("fred").limit(3).build(), "P0-Limit");
     assertEquals("P0-Limit", instance.getName());
     instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
             .compose(rswt -> {

@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.exec.procs.script;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import io.github.tsegismont.streamutils.impl.MappingStream;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.streams.ReadStream;
@@ -27,13 +28,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.ProcessorExpression;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.DataRow;
-import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
+import uk.co.spudsoft.query.exec.ReadStreamWithTypes; 
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.procs.AbstractProcessor;
 import uk.co.spudsoft.query.exec.procs.query.FilteringStream;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
@@ -53,7 +55,6 @@ public class ProcessorExpressionInstance extends AbstractProcessor {
   private final ProcessorExpression definition;
   private ReadStream<DataRow> stream;
 
-  private RequestContext requestContext;
   private final ImmutableMap<String, Object> arguments;
 
   private Types types;
@@ -65,22 +66,23 @@ public class ProcessorExpressionInstance extends AbstractProcessor {
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
-   * @param requestContext the request context.
+   * @param meterRegistry MeterRegistry for production of metrics.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
-  public ProcessorExpressionInstance(Vertx vertx, RequestContext requestContext, ProcessorExpression definition, String name) {
-    super(name);
+  public ProcessorExpressionInstance(Vertx vertx, MeterRegistry meterRegistry, PipelineContext pipelineContext, ProcessorExpression definition, String name) {
+    super(vertx, meterRegistry, pipelineContext, name);
     this.definition = definition;
-    this.arguments = ImmutableCollectionTools.copy(requestContext == null ? null : requestContext.getArguments());
+    this.arguments = ImmutableCollectionTools.copy(pipelineContext.getRequestContext() == null ? null : pipelineContext.getRequestContext().getArguments());
   }
 
   private boolean runPredicate(DataRow data) {
-    return predicate.evaluate(requestContext, data);
+    return predicate.evaluate(pipelineContext.getRequestContext(), data);
   }
 
   private DataRow runFieldSet(DataRow data) {
-    Object result = field.evaluateAsObject(requestContext, data);
+    Object result = field.evaluateAsObject(pipelineContext.getRequestContext(), data);
     Comparable<?> typedResult;
     try {
       typedResult = definition.getFieldType().cast(result);
@@ -93,7 +95,6 @@ public class ProcessorExpressionInstance extends AbstractProcessor {
 
   @Override
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStreamWithTypes input) {
-    this.requestContext = pipeline.getRequestContext();
     this.types = input.getTypes();
     this.stream = input.getStream();
 

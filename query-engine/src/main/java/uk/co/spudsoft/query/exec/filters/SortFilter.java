@@ -20,8 +20,8 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Vertx;
 import java.util.List;
 import uk.co.spudsoft.query.defn.ProcessorSort;
-import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 
 /**
  * Filter for converting _sort command line arguments into {@link uk.co.spudsoft.query.exec.procs.sort.ProcessorSortInstance}s.
@@ -53,13 +53,13 @@ public class SortFilter implements Filter {
   }
 
   @Override
-  public ProcessorInstance createProcessor(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, String argument, String name) {
+  public ProcessorInstance createProcessor(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, String argument, String name) {
     List<String> fields = SpaceParser.parse(argument);
     if (fields.isEmpty()) {
       throw new IllegalArgumentException("Invalid argument to _sort filter, should be a space delimited list of fields");
     } else {
       ProcessorSort definition = ProcessorSort.builder().fields(fields).build();
-      return definition.createInstance(vertx, requestContext, meterRegistry, name);
+      return definition.createInstance(vertx, pipelineContext, meterRegistry, name);
     }
   }
 

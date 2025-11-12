@@ -24,7 +24,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Vertx;
 import java.util.List;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.procs.filters.ProcessorMapInstance;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
@@ -45,8 +45,8 @@ public class ProcessorMap implements Processor {
   private final ImmutableList<ProcessorMapLabel> relabels;
 
   @Override
-  public ProcessorMapInstance createInstance(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, String name) {
-    return new ProcessorMapInstance(vertx, requestContext, this, name);
+  public ProcessorMapInstance createInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, String name) {
+    return new ProcessorMapInstance(vertx, meterRegistry, pipelineContext, this, name);
   }
 
   @Override

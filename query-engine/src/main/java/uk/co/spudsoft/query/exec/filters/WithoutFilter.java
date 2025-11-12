@@ -22,8 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import uk.co.spudsoft.query.defn.ProcessorMap;
 import uk.co.spudsoft.query.defn.ProcessorMapLabel;
-import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 
 /**
  * Filter for converting _without command line arguments into {@link uk.co.spudsoft.query.exec.procs.filters.ProcessorMapInstance}s.
@@ -46,7 +46,7 @@ public class WithoutFilter implements Filter {
   }
 
   @Override
-  public ProcessorInstance createProcessor(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, String argument, String name) {
+  public ProcessorInstance createProcessor(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, String argument, String name) {
     List<ProcessorMapLabel> relabels = new ArrayList<>();
 
     String sourceLabel = argument;
@@ -54,7 +54,7 @@ public class WithoutFilter implements Filter {
     relabels.add(ProcessorMapLabel.builder().sourceLabel(sourceLabel).newLabel(newLabel).build());
 
     ProcessorMap definition = ProcessorMap.builder().relabels(relabels).build();
-    return definition.createInstance(vertx, requestContext, meterRegistry, name);
+    return definition.createInstance(vertx, pipelineContext, meterRegistry, name);
   }
 
 }

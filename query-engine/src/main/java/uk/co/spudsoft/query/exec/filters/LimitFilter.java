@@ -21,8 +21,8 @@ import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.ProcessorLimit;
-import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 
 /**
  * Filter for converting _limit command line arguments into {@link uk.co.spudsoft.query.exec.procs.filters.ProcessorLimitInstance}s.
@@ -48,7 +48,7 @@ public class LimitFilter implements Filter {
   }
 
   @Override
-  public ProcessorInstance createProcessor(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, String argument, String name) throws IllegalArgumentException {
+  public ProcessorInstance createProcessor(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, String argument, String name) throws IllegalArgumentException {
     int value;
     try {
       value = Integer.parseInt(argument);
@@ -57,7 +57,7 @@ public class LimitFilter implements Filter {
       throw new IllegalArgumentException("Invalid argument to _limit filter, should be an integer");
     }
     ProcessorLimit definition = ProcessorLimit.builder().name(name).limit(value).build();
-    return definition.createInstance(vertx, requestContext, meterRegistry, name);
+    return definition.createInstance(vertx, pipelineContext, meterRegistry, name);
   }
 
 }

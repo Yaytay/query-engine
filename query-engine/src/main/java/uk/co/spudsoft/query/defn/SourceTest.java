@@ -23,7 +23,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Vertx;
 import uk.co.spudsoft.query.exec.SharedMap;
 import uk.co.spudsoft.query.exec.SourceInstance;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.sources.test.SourceTestInstance;
 
 /**
@@ -115,8 +115,8 @@ public class SourceTest implements Source {
   }
 
   @Override
-  public SourceInstance createInstance(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, SharedMap sharedMap) {
-    return new SourceTestInstance(vertx, requestContext, this);
+  public SourceTestInstance createInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, SharedMap sharedMap) {
+    return new SourceTestInstance(vertx, meterRegistry, pipelineContext, this);
   }
   
   /**

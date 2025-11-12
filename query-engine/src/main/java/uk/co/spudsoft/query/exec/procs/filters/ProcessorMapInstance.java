@@ -20,6 +20,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.tsegismont.streamutils.impl.MappingStream;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import java.util.Map;
@@ -27,13 +28,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.ProcessorMap;
 import uk.co.spudsoft.query.defn.ProcessorMapLabel;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
-import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.exec.procs.AbstractProcessor;
 
 /**
  * {@link uk.co.spudsoft.query.exec.ProcessorInstance} to alter the fields in a stream.
@@ -44,30 +46,29 @@ import uk.co.spudsoft.query.exec.Types;
  *
  * @author jtalbut
  */
-public class ProcessorMapInstance implements ProcessorInstance {
+public class ProcessorMapInstance extends AbstractProcessor {
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ProcessorMapInstance.class);
 
-  private final RequestContext requestContext;
   private final ProcessorMap definition;
   private MappingStream<DataRow, DataRow> stream;
 
   private final Map<String, String> relabels;
 
   private final Types types;
-  private final String name;
 
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
-   * @param requestContext the request context.
+   * @param meterRegistry MeterRegistry for production of metrics.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
-  public ProcessorMapInstance(Vertx vertx, RequestContext requestContext, ProcessorMap definition, String name) {
-    this.requestContext = requestContext;
+  public ProcessorMapInstance(Vertx vertx, MeterRegistry meterRegistry, PipelineContext pipelineContext, ProcessorMap definition, String name) {
+    super(vertx, meterRegistry, pipelineContext, name);
     this.definition = definition;
     ImmutableMap.Builder<String, String> builder = ImmutableMap.<String, String>builder();
     for (ProcessorMapLabel relabel : definition.getRelabels()) {
@@ -75,7 +76,6 @@ public class ProcessorMapInstance implements ProcessorInstance {
     }
     this.relabels = builder.build();
     this.types = new Types();
-    this.name = name;
   }
 
   @Override

@@ -20,7 +20,6 @@ import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.RSQLParserException;
 import cz.jirutka.rsql.parser.ast.Node;
 import inet.ipaddr.IPAddressString;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
@@ -42,6 +41,7 @@ import uk.co.spudsoft.query.defn.ProcessorQuery;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
@@ -67,8 +67,9 @@ public class ProcessorQueryInstanceTest {
     );
     
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
         
-    ProcessorQueryInstance instance = ProcessorQuery.builder().expression("value!=three").build().createInstance(vertx, reqctx, null, "P0-Query");
+    ProcessorQueryInstance instance = ProcessorQuery.builder().expression("value!=three").build().createInstance(vertx, pipelineContext, null, "P0-Query");
     assertEquals("P0-Query", instance.getName());
     
     Future<?> initFuture = instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types));
@@ -200,8 +201,9 @@ public class ProcessorQueryInstanceTest {
     );
     
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
     
-    ProcessorQueryInstance instance = new ProcessorQueryInstance(vertx, reqctx
+    ProcessorQueryInstance instance = new ProcessorQueryInstance(vertx, null, pipelineContext
             , ProcessorQuery.builder().name("fred").expression("value!=three").build()
             , "P0-Query"
     );

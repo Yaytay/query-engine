@@ -31,16 +31,17 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.ProcessorLookup;
 import uk.co.spudsoft.query.defn.ProcessorLookupField;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
-import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
+import uk.co.spudsoft.query.exec.procs.AbstractProcessor;
 
 /**
  * {@link uk.co.spudsoft.query.exec.ProcessorInstance} to create field values from a map loaded during initialization.
@@ -53,15 +54,10 @@ import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
  *
  * @author jtalbut
  */
-public class ProcessorLookupInstance implements ProcessorInstance {
+public class ProcessorLookupInstance extends AbstractProcessor {
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ProcessorLookupInstance.class);
-
-  private final Vertx vertx;
-  private final RequestContext requestContext;
-  private final MeterRegistry meterRegistry;
-  private final String name;
 
   private final ProcessorLookup definition;
   private final Map<Comparable<?>, Comparable<?>> map = new HashMap<>();
@@ -74,17 +70,14 @@ public class ProcessorLookupInstance implements ProcessorInstance {
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
-   * @param requestContext the request context.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param meterRegistry MeterRegistry for production of metrics.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
-  public ProcessorLookupInstance(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, ProcessorLookup definition, String name) {
-    this.vertx = vertx;
-    this.requestContext = requestContext;
-    this.meterRegistry = meterRegistry;
-    this.name = name;
+  public ProcessorLookupInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, ProcessorLookup definition, String name) {
+    super(vertx, meterRegistry, pipelineContext, name);
     this.definition = definition;
   }
 
@@ -97,17 +90,21 @@ public class ProcessorLookupInstance implements ProcessorInstance {
 
   @Override
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStreamWithTypes input) {
-    SourceInstance sourceInstance = definition.getMap().getSource().createInstance(vertx, requestContext, meterRegistry, executor);
+    
+    String childName = pipeline.getPipelineContext().getPipe() + "." + getName() + ".map";
+    PipelineContext childContext = pipeline.getPipelineContext().child(childName);
+    
+    
+    SourceInstance sourceInstance = definition.getMap().getSource().createInstance(vertx, pipelineContext, meterRegistry, executor);
     FormatCaptureInstance fieldDefnStreamCapture = new FormatCaptureInstance();
     PipelineInstance childPipeline = new PipelineInstance(
-            pipeline.getRequestContext()
+            childContext
             , pipeline.getDefinition()
-            , pipeline.getName() + ".map"
             , pipeline.getArgumentInstances()
             , pipeline.getSourceEndpoints()
             , null
             , sourceInstance
-            , executor.createProcessors(vertx, requestContext, definition.getMap(), null, getName())
+            , executor.createProcessors(vertx, childContext, definition.getMap(), null)
             , fieldDefnStreamCapture
     );
 
@@ -118,7 +115,7 @@ public class ProcessorLookupInstance implements ProcessorInstance {
         includedFields.add(field.getKeyField());
       } else {
         ConditionInstance cond = field.getCondition().createInstance();
-        if (cond.evaluate(requestContext, null)) {
+        if (cond.evaluate(pipelineContext.getRequestContext(), null)) {
           includedFields.add(field.getKeyField());
         } else {
           logger.info("Field {} excluded by condition {}", field.getKeyField(), field.getCondition().getExpression());

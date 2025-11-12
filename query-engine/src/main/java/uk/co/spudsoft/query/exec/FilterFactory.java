@@ -25,7 +25,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.filters.Filter;
 
 /**
@@ -61,18 +62,18 @@ public class FilterFactory {
   /**
    * Create the {@link ProcessorInstance} for the identified {@link Filter}.
    * @param vertx the Vert.x instance.
-   * @param requestContext the request context.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param meterRegistry MeterRegistry for production of metrics.
    * @param arg the query string parameter name (the key for the filter).
    * @param value the value of the query string parameter, that must be parsed into the configuration for this {@link ProcessorInstance}.
    * @param name the generated name of the processor to be used in logging and tracking
    * @return a newly created {@link ProcessorInstance} of the appropriate type.
    */
-  public ProcessorInstance createFilter(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, String arg, String value, String name) {
+  public ProcessorInstance createFilter(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, String arg, String value, String name) {
     Filter filter = filters.get(arg);
     if (filter != null) {
       logger.debug("Creating processor from {}={}", arg, value);
-      return filter.createProcessor(vertx, requestContext, meterRegistry, value, name);
+      return filter.createProcessor(vertx, pipelineContext, meterRegistry, value, name);
     } else {
       return null;
     }

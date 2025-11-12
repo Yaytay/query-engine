@@ -50,6 +50,7 @@ import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import uk.co.spudsoft.dircache.DirCache;
 import uk.co.spudsoft.query.defn.Format;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 
 
 /**
@@ -112,20 +113,20 @@ public class EmptyDataIT {
             .compose(pipelineAndFile -> executor.validatePipeline(pipelineAndFile.pipeline()))
             .compose(pipeline -> {
               AsyncFile output = fs.openBlocking("target/temp/EmptyDataIT/output.html", new OpenOptions().setCreate(true));
+              PipelineContext pipelineContext = new PipelineContext("test", req);
               Format chosenFormat = executor.getFormat(pipeline.getFormats(), null);
               FormatInstance formatInstance = chosenFormat.createInstance(vertx, req, output);
-              SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, req, meterRegistry, executor);
+              SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, pipelineContext, meterRegistry, executor);
               PipelineInstance instance;
               try {
                 instance = new PipelineInstance(
-                        req
+                        pipelineContext
                         , pipeline
-                        , "$"
                         , executor.prepareArguments(req, pipeline.getArguments(), args)
                         , pipeline.getSourceEndpointsMap()
-                        , executor.createPreProcessors(vertx, req, pipeline)
+                        , executor.createPreProcessors(vertx, pipelineContext, pipeline)
                         , sourceInstance
-                        , executor.createProcessors(vertx, req, pipeline, null, "$")
+                        , executor.createProcessors(vertx, pipelineContext, pipeline, null)
                         , formatInstance
                 );
               } catch (Throwable ex) {

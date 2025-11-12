@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.exec;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import inet.ipaddr.IPAddressString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,6 +27,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 import uk.co.spudsoft.query.defn.Argument;
 import uk.co.spudsoft.query.defn.DataType;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 
 /**
  *
@@ -39,7 +42,7 @@ public class PipelineInstanceTest {
   @Test
   public void testRenderTemplate() {
     
-    PipelineInstance instance = new PipelineInstance(null, null, null, null, null, null, null, null, null);
+    PipelineInstance instance = new PipelineInstance(null, null, null, null, null, null, null, null);
     assertNull(instance.renderTemplate("test", null));
     assertEquals("", instance.renderTemplate("test", ""));
     
@@ -51,8 +54,10 @@ public class PipelineInstanceTest {
   
   @Test
   public void testRenderTemplateWithArgs() {
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
     PipelineInstance instance1 = new PipelineInstance(
-            null, null, null,
+            pipelineContext, null, 
             ImmutableMap.<String, ArgumentInstance>builder()
                     .put("port"
                             , new ArgumentInstance(
