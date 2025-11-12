@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 njt
+ * Copyright (C) 2025 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,13 +23,25 @@ import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 
 /**
+ * Base class for {@link SourceInstance} implementations.
  *
- * @author njt
+ * @author jtalbut
  */
 public abstract class AbstractSource implements SourceInstance {
 
+  /**
+   * The Vert.x instance.
+   */
   protected final Vertx vertx;
+  
+  /**
+   * MeterRegistry for production of processor-specific metrics.
+   */
   protected final MeterRegistry meterRegistry;
+  
+  /**
+   * The context in which this {@link SourcePipeline} is being run.
+   */
   protected final PipelineContext pipelineContext;
   
 

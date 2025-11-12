@@ -196,8 +196,8 @@ public class DynamicEndpointPipelineJdbcIT {
               assertEquals(1, instance.getPreProcessors().size());
               assertEquals("dynamicEndpoints[0]", instance.getPreProcessors().get(0).getName());
               assertEquals(2, instance.getProcessors().size());
-              assertEquals("$.processors[0]", instance.getProcessors().get(0).getName());
-              assertEquals("$.processors[1]", instance.getProcessors().get(1).getName());
+              assertEquals("test.processors[0]", instance.getProcessors().get(0).getName());
+              assertEquals("test.processors[1]", instance.getProcessors().get(1).getName());
 
               return executor.initializePipeline(instance);
             })

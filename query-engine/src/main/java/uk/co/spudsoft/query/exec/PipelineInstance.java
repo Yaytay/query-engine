@@ -33,6 +33,7 @@ import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 import uk.co.spudsoft.query.defn.Endpoint;
 import uk.co.spudsoft.query.defn.Pipeline;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 

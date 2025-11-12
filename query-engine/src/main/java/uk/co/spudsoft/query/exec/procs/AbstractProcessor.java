@@ -28,9 +28,24 @@ import uk.co.spudsoft.query.exec.context.PipelineContext;
  */
 public abstract class AbstractProcessor implements ProcessorInstance {
 
+  /**
+   * The Vert.x instance.
+   */
   protected final Vertx vertx;
+  
+  /**
+   * MeterRegistry for production of processor-specific metrics.
+   */
   protected final MeterRegistry meterRegistry;
+  
+  /**
+   * The context in which this {@link SourcePipeline} is being run.
+   */
   protected final PipelineContext pipelineContext;
+  
+  /**
+   * The name of the processor.
+   */
   protected final String name;
   
 

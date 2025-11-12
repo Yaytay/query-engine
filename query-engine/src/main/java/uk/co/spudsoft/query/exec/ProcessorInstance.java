@@ -21,7 +21,7 @@ import io.vertx.core.Future;
 /**
  * An Instance of a {@link uk.co.spudsoft.query.defn.Processor}.
  * 
- * Usually created by called {@link uk.co.spudsoft.query.defn.Processor#createInstance(io.vertx.core.Vertx, uk.co.spudsoft.query.exec.context.RequestContext, io.micrometer.core.instrument.MeterRegistry, java.lang.String)  }.
+ * Usually created by called {@link uk.co.spudsoft.query.defn.Processor#createInstance(io.vertx.core.Vertx, uk.co.spudsoft.query.exec.context.PipelineContext, io.micrometer.core.instrument.MeterRegistry, java.lang.String)}.
  * 
  * @author jtalbut
  */

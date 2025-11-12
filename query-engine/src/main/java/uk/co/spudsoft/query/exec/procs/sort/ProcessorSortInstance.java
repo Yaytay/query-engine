@@ -81,7 +81,7 @@ public class ProcessorSortInstance extends AbstractProcessor {
    * Constructor.
    * @param vertx the Vert.x instance.
    * @param meterRegistry MeterRegistry for production of metrics.
-   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
+   * @param pipelineContext The context in which this {@link uk.co.spudsoft.query.defn.SourcePipeline} is being run.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
