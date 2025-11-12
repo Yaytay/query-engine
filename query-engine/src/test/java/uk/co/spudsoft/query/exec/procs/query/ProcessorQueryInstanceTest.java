@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.exec.procs.query;
 import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.RSQLParserException;
 import cz.jirutka.rsql.parser.ast.Node;
+import inet.ipaddr.IPAddressString;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -41,6 +42,7 @@ import uk.co.spudsoft.query.defn.ProcessorQuery;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
@@ -64,12 +66,12 @@ public class ProcessorQueryInstanceTest {
             , DataRow.create(types, "id", 4, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 4), "value", "four")
     );
     
-    Context context = vertx.getOrCreateContext();
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
         
-    ProcessorQueryInstance instance = ProcessorQuery.builder().expression("value!=three").build().createInstance(vertx, () -> {}, context, null, "P0-Query");
+    ProcessorQueryInstance instance = ProcessorQuery.builder().expression("value!=three").build().createInstance(vertx, reqctx, null, "P0-Query");
     assertEquals("P0-Query", instance.getName());
     
-    Future<?> initFuture = instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(context, rowsList), types));
+    Future<?> initFuture = instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types));
     assertTrue(initFuture.succeeded());
   }
   
@@ -197,14 +199,14 @@ public class ProcessorQueryInstanceTest {
             , DataRow.create(types, "id", 4, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 4), "value", "four")
     );
     
-    Context context = vertx.getOrCreateContext();
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     
-    ProcessorQueryInstance instance = new ProcessorQueryInstance(vertx, () -> {}, context
+    ProcessorQueryInstance instance = new ProcessorQueryInstance(vertx, reqctx
             , ProcessorQuery.builder().name("fred").expression("value!=three").build()
             , "P0-Query"
     );
     assertEquals("P0-Query", instance.getName());
-    instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(context, rowsList), types))
+    instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
             .compose(rswt -> {
               return ReadStreamToList.capture(rswt.getStream());
             })

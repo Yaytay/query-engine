@@ -48,6 +48,7 @@ public class PipelineInstance {
   private static final Logger logger = LoggerFactory.getLogger(PipelineInstance.class);
   
   private final Pipeline definition;
+  private final String name;
   private final RequestContext requestContext;
   private final ImmutableMap<String, ArgumentInstance> argumentInstances;
   private final ImmutableMap<String, Object> arguments;
@@ -61,6 +62,7 @@ public class PipelineInstance {
   /**
    * Constructor.
    * @param requestContext  The {@link RequestContext} for the request.
+   * @param name The name of the pipeline
    * @param definition The definition of the {@link Pipeline}.
    * @param argumentInstances the arguments passed in to the request, matched to argument in the {@link Pipeline} definition.
    * @param sourceEndpoints The set of {@link Endpoint} definitions from the {@link Pipeline} definition.
@@ -71,8 +73,9 @@ public class PipelineInstance {
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Definition must not be modified, RequestContext may be modified by permitted setters")
   public PipelineInstance(
-          final RequestContext requestContext
+          final RequestContext requestContext          
           , final Pipeline definition
+          , final String name
           , final Map<String, ArgumentInstance> argumentInstances
           , final Map<String, Endpoint> sourceEndpoints
           , final List<PreProcessorInstance> preProcessors
@@ -81,6 +84,7 @@ public class PipelineInstance {
           , final FormatInstance sink
   ) {
     this.definition = definition;
+    this.name = name;
     this.requestContext = requestContext;
     this.argumentInstances = ImmutableCollectionTools.copy(argumentInstances);
     this.arguments = buildArgumentMap(argumentInstances);
@@ -101,6 +105,16 @@ public class PipelineInstance {
     return requestContext;
   }
 
+  /**
+   * Get the name of this pipeline instance.
+   * When combined with a request ID this should produce a globally unique name.
+   * 
+   * @return the name of this pipeline instance.
+   */
+  public String getName() {
+    return name;
+  }
+  
   /**
    * Get the pipeline definition.
    * @return the pipeline definition.

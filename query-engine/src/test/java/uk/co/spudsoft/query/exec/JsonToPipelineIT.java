@@ -105,17 +105,18 @@ public class JsonToPipelineIT {
               args.add("port", Integer.toString(serverProvider.getPort()));
               Format chosenFormat = executor.getFormat(pipeline.getFormats(), null);
               FormatInstance formatInstance = chosenFormat.createInstance(vertx, req, new ListingWriteStream<>(new ArrayList<>()));
-              SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, Vertx.currentContext(), meterRegistry, executor, "source");
+              SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, req, meterRegistry, executor);
               PipelineInstance instance;
               try {
                 instance = new PipelineInstance(
                         req
                         , pipeline
+                        , "$"
                         , executor.prepareArguments(req, pipeline.getArguments(), args)
                         , pipeline.getSourceEndpointsMap()
-                        , executor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
+                        , executor.createPreProcessors(vertx, req, pipeline)
                         , sourceInstance
-                        , executor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), req, pipeline, null, null)
+                        , executor.createProcessors(vertx, req, pipeline, null, "$")
                         , formatInstance
                 );
               } catch (Throwable ex) {

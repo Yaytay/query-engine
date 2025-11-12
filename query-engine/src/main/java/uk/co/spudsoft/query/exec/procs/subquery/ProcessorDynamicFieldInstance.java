@@ -18,9 +18,7 @@ package uk.co.spudsoft.query.exec.procs.subquery;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
@@ -37,7 +35,7 @@ import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.SourceInstance;
-import uk.co.spudsoft.query.exec.SourceNameTracker;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
@@ -54,7 +52,7 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ProcessorDynamicFieldInstance.class);
-  
+
   private final ProcessorDynamicField definition;
 
   static class FieldDefn {
@@ -72,28 +70,26 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
       this.column = column;
     }
   }
-    
+
   private final List<String> fieldValueColumnNames;
-  
+
   /**
    * List of fields discovered during initialization.
    * This is only protected for the benefit of tests, this class should be considered final for production use.
    */
   protected ImmutableList<FieldDefn> fields; // Protected for the benefit of unit tests only
-  
+
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
-   * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
-   * @param context the Vert.x context.
+   * @param requestContext the request context.
    * @param meterRegistry MeterRegistry for production of metrics.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
-  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
-  public ProcessorDynamicFieldInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, ProcessorDynamicField definition, String name) {
-    super(logger, vertx, sourceNameTracker, context, meterRegistry, name, definition.getParentIdColumns(), definition.getValuesParentIdColumns(), definition.isInnerJoin());
-    this.definition = definition;    
+  public ProcessorDynamicFieldInstance(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, ProcessorDynamicField definition, String name) {
+    super(logger, vertx, requestContext, meterRegistry, name, definition.getParentIdColumns(), definition.getValuesParentIdColumns(), definition.isInnerJoin());
+    this.definition = definition;
     if (Strings.isNullOrEmpty(definition.getFieldValueColumnName())) {
       this.fieldValueColumnNames = Collections.emptyList();
     } else {
@@ -103,20 +99,21 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
 
   @Override
   Future<ReadStream<DataRow>> initializeChild(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex) {
-    
-    SourceInstance sourceInstance = definition.getFieldDefns().getSource().createInstance(vertx, context, meterRegistry, executor, getName() + ".fieldDefns");
+
+    SourceInstance sourceInstance = definition.getFieldDefns().getSource().createInstance(vertx, requestContext, meterRegistry, executor);
     FormatCaptureInstance fieldDefnStreamCapture = new FormatCaptureInstance();
     PipelineInstance childPipeline = new PipelineInstance(
             pipeline.getRequestContext()
             , pipeline.getDefinition()
+            , pipeline.getName() + ".fieldDefns"
             , pipeline.getArgumentInstances()
             , pipeline.getSourceEndpoints()
             , null
             , sourceInstance
-            , executor.createProcessors(vertx, sourceInstance, context, pipeline.getRequestContext(), definition.getFieldDefns(), null, this.getName())
+            , executor.createProcessors(vertx, requestContext, definition.getFieldDefns(), null, this.getName())
             , fieldDefnStreamCapture
     );
-    
+
     return executor.initializePipeline(childPipeline)
             .compose(v -> {
               return ReadStreamToList.map(fieldDefnStreamCapture.getReadStream().getStream()
@@ -151,7 +148,7 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
         logger.debug("Skipping field defn row ({}) because field name column {} is null", row.toString(), definition.getFieldNameColumn());
         return null;
       }
-      String fieldNameString = (fieldNameObject instanceof String s) ? s : fieldNameObject.toString();      
+      String fieldNameString = (fieldNameObject instanceof String s) ? s : fieldNameObject.toString();
       if (Strings.isNullOrEmpty(fieldNameString)) {
         logger.debug("Skipping field defn row ({}) with no name", row.toString());
         return null;
@@ -175,7 +172,7 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
       return new FieldDefn(id, key, fieldNameString, type, column);
     }
   }
-  
+
   @Override
   DataRow processChildren(DataRow parentRow, List<DataRow> childRows) {
     logger.trace("Got child rows: {}", childRows);

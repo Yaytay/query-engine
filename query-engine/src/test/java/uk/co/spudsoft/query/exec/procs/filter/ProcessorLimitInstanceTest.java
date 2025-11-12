@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.procs.filter;
 
+import inet.ipaddr.IPAddressString;
 import io.vertx.core.Context;
 import uk.co.spudsoft.query.exec.procs.filters.ProcessorLimitInstance;
 import io.vertx.core.Vertx;
@@ -36,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import uk.co.spudsoft.query.defn.ProcessorLimit;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
@@ -60,14 +62,14 @@ public class ProcessorLimitInstanceTest {
             , DataRow.create(types, "id", 4, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 4), "value", "four")
     );
     
-    Context context = vertx.getOrCreateContext();
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     
-    ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, () -> {}, context
+    ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, reqctx
             , ProcessorLimit.builder().limit(17).build()
             , "P0-Limit"
     );
     assertEquals("P0-Limit", instance.getName());
-    assertTrue(instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(context, rowsList), types)).isComplete());
+    assertTrue(instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(Vertx.currentContext(), rowsList), types)).isComplete());
   }
   
   @Test
@@ -81,14 +83,14 @@ public class ProcessorLimitInstanceTest {
             , DataRow.create(types, "id", 4, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 4), "value", "four")
     );
     
-    Context context = vertx.getOrCreateContext();
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     
-    ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, () -> {}, context
+    ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, reqctx
             , ProcessorLimit.builder().name("fred").limit(3).build()
             , "P0-Limit"
     );
     assertEquals("P0-Limit", instance.getName());
-    instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(context, rowsList), types))
+    instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
             .compose(rswt -> {
               return ReadStreamToList.capture(rswt.getStream());
             })

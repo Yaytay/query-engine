@@ -17,8 +17,10 @@
 package uk.co.spudsoft.query.exec.sources.test;
 
 import com.google.common.base.Strings;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,9 +30,10 @@ import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
+import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.procs.QueueReadStream;
-import uk.co.spudsoft.query.exec.sources.AbstractSource;
 
 /**
  * {@link uk.co.spudsoft.query.exec.SourceInstance} class for generating a simple test stream.
@@ -41,33 +44,40 @@ import uk.co.spudsoft.query.exec.sources.AbstractSource;
  *
  * @author jtalbut
  */
-public class SourceTestInstance extends AbstractSource {
-  
+public class SourceTestInstance implements SourceInstance {
+
   private static final Logger logger = LoggerFactory.getLogger(SourceTestInstance.class);
 
-  private final Context context;
+  private final RequestContext requestContext;
   private final int rowCount;
   private final int delayMs;
+  private final String name;
   private final Types types;
   private final QueueReadStream<DataRow> stream;
 
+  private final Context context;
+  
   /**
    * Constructor.
-   * @param context The Vert.x context.
+   * @param vertx The vertx instance.
+   * @param requestContext The request context.
    * @param definition The configuration of this source.
-   * @param defaultName The name to use for this source if the definition does not provide one.
    */
-  public SourceTestInstance(Context context, SourceTest definition, String defaultName) {
-    super(Strings.isNullOrEmpty(definition.getName()) ? defaultName : definition.getName());
-    this.context = context;
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
+  public SourceTestInstance(Vertx vertx, RequestContext requestContext, SourceTest definition) {
+    this.requestContext = requestContext;
     this.rowCount = definition.getRowCount();
     this.delayMs = definition.getDelayMs();
     this.types = new Types();
     this.types.putIfAbsent("value", DataType.Integer);
-    if (!Strings.isNullOrEmpty(definition.getName()) && Strings.isNullOrEmpty(defaultName)) {
+    if (!Strings.isNullOrEmpty(definition.getName())) {
       types.putIfAbsent("name", DataType.String);
+      this.name = definition.getName();
+    } else {
+      this.name = null;
     }
-    this.stream = new QueueReadStream<>(context);
+    this.context = vertx.getOrCreateContext();
+    this.stream = new QueueReadStream<>(this.context);
   }
 
   @Override
@@ -102,7 +112,9 @@ public class SourceTestInstance extends AbstractSource {
     logger.debug("Creating row {}", i);
     DataRow data = DataRow.create(types);
     data.put("value", i);
-    data.put("name", getName());
+    if (name != null) {
+      data.put("name", name);
+    }
     stream.add(data);
   }
 

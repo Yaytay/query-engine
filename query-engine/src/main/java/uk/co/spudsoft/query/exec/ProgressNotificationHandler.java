@@ -18,7 +18,6 @@ package uk.co.spudsoft.query.exec;
 
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import io.vertx.core.Context;
-import io.vertx.core.Vertx;
 
 /**
  * Handler for receiving messages during the progress of a pipeline.
@@ -31,16 +30,15 @@ public interface ProgressNotificationHandler {
    * Key for the ProgressNotificationHandler stored in the Vertx {@link Context}.
    */
   String HANDLER_KEY = "NOTIFICATION_HANDLER";
-  
+
   /**
    * Handle an event.
-   * 
+   *
    * @param runID The ID provided by the caller for this run.
    * If the runID is null or blank only the NullNotificationHandler will be called.
    * @param requestContext The request context for the pipeline.
    * @param pipelineTitle The title of the pipeline.
-   * @param sourceName The source that this message relates to - may be null.
-   * @param processorName The processor that this message relates to - may be null.
+   * @param pipelineName The name of the current SourcePipeline - may not be null.
    * @param count Any relevant count for the source/processor.
    * @param completed True if the entire pipeline has completed.
    * @param succeeded True if the entire pipeline was successful.
@@ -50,37 +48,12 @@ public interface ProgressNotificationHandler {
   void event(String runID
           , RequestContext requestContext
           , String pipelineTitle
-          , String sourceName
-          , String processorName
+          , String pipelineName
           , Long count
           , boolean completed
           , Boolean succeeded
           , String message
           , Object... arguments
   );
-  
-  /**
-   * Store the given ProgressNotificationHandler in the Vertx {@link Context}.
-   * @param handler the ProgressNotificationHandler to store in the Vertx {@link Context}.
-   */
-  static void storeNotificationHandler(ProgressNotificationHandler handler) {
-    Context context = Vertx.currentContext();
-    if (context != null) {
-      context.put(HANDLER_KEY, handler);
-    }
-  }
-  
-  /**
-   * Retrieve the ProgressNotificationHandler from the Vertx {@link Context}.
-   * @return the ProgressNotificationHandler from the Vertx {@link Context}.
-   */
-  static ProgressNotificationHandler getNotificationHandler() {
-    Context context = Vertx.currentContext();
-    if (context != null) {
-      return context.get(HANDLER_KEY);
-    } else {
-      return null;
-    }
-  }
-  
+
 }

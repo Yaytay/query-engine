@@ -41,15 +41,12 @@ sourceEndpoints:
     urlTemplate: "jdbc:mysql://localhost:2001/test"
     secret: AllFiltersProtectedCredentials
     idleTimeout: 1000
-    readIdleTimeout: 1000
-    writeIdleTimeout: 1000
 source:
   type: JDBC
-  endpoint: MySQL
-  streamingFetchSize: -2147483648
+  endpointTemplate: <if(true)>My<endif>SQL
   connectionTimeout: PT10S
   replaceDoubleQuotes: true  
-  query: |
+  queryTemplate: |
     select distinct
         d."dataId"
         , d."instant"
@@ -59,11 +56,11 @@ source:
         "Data" d 
         join "Colours" c on c."colourId" = d."colourId"
         /* BIND join "FieldValues" fv1 on fv1."dataId" = d."dataId" and fv1."fieldId" = 1 and fv1."dateValue" >= :minDate */
-        /* BIND join "FieldValues" fv2 on fv2."dataId" = d."dataId" and fv2."fieldId" = 4 and fv2."longValue" <= :maxLong */
+        /* BIND join "FieldValues" fv2 on fv2."dataId" = d."dataId" and fv2."fieldId" = 4 and fv2."longValue" \<= :maxLong */
         /* BIND join "FieldValues" fv3 on fv3."dataId" = d."dataId" and fv3."fieldId" = 7 and fv3."textValue" like :textLike */
         /* BIND join "ManyData" m on d."dataId" = m."dataId" join "RefData" r on r."refId" = m."refId" and r.value = :refValue */
     where 
-        d."dataId" <= :maxId
+        d."dataId" \<= :maxId
     order by 
         d."dataId"
   columnTypeOverrides:
@@ -84,7 +81,6 @@ processors:
     source:
       type: JDBC
       endpoint: MySQL
-      streamingFetchSize: 10
       replaceDoubleQuotes: true  
       query: select "dataId", value from "ManyData" m join "RefData" r on r."refId" = m."refId" where "dataId" < :maxId order by "dataId", sort
       
@@ -102,14 +98,12 @@ processors:
     source:
       type: JDBC
       endpoint: MySQL
-      streamingFetchSize: 10
       replaceDoubleQuotes: true  
       query: select "fieldId" as id, name, type, case when "name" = 'TextField' then null else "valueField" end as "valueField" from "Fields" order by "fieldId"
   fieldValues: 
     source:    
       type: JDBC
       endpoint: MySQL
-      streamingFetchSize: 10
       replaceDoubleQuotes: true  
       query:  select "dataId", "fieldId", "dateValue", "timeValue", "dateTimeValue", "longValue", "doubleValue", "boolValue", "textValue" from "FieldValues" order by "dataId", "fieldId"
       columnTypeOverrides:

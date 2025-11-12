@@ -21,9 +21,9 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.Strings;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import uk.co.spudsoft.query.exec.PreProcessorInstance;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.preprocess.DynamicEndpointPreProcessorInstance;
 
 /**
@@ -116,13 +116,13 @@ public class DynamicEndpoint {
   /**
    * Create a {@link DynamicEndpointPreProcessorInstance} based on this configuration.
    * @param vertx The Vert.x instance.
-   * @param context The Vert.x context.
+   * @param requestContext The request context.
    * @param meterRegistry MeterRegistry for production of metrics.
    * @param index zero based index of this pre-processor within the list of pre-processors in the pipeline.
    * @return a newly created {@link DynamicEndpointPreProcessorInstance} object.
    */
-  public PreProcessorInstance createInstance(Vertx vertx, Context context, MeterRegistry meterRegistry, int index) {
-    return new DynamicEndpointPreProcessorInstance(vertx, context, meterRegistry, this, index);
+  public PreProcessorInstance createInstance(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, int index) {
+    return new DynamicEndpointPreProcessorInstance(vertx, requestContext, meterRegistry, this, index);
   }
   
   /**

@@ -23,18 +23,12 @@ import io.vertx.core.Future;
  * 
  * @author jtalbut
  */
-public interface SourceInstance extends SourceNameTracker {
+public interface SourceInstance {
   
   /**
    * The key name used in the local Vert.x context for tracking the name of the current source being processed.
    */
   String SOURCE_CONTEXT_KEY = "source";
-  
-  /**
-   * Get the name of the source, for use in logs.
-   * @return the name of the source, for use in logs.
-   */
-  String getName();
       
   /**
    * Take whatever steps are necessary to start the streams.

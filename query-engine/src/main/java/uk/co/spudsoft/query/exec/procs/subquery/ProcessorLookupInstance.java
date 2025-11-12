@@ -19,7 +19,6 @@ package uk.co.spudsoft.query.exec.procs.subquery;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.tsegismont.streamutils.impl.MappingStream;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.streams.ReadStream;
@@ -38,8 +37,8 @@ import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.SourceInstance;
-import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 
@@ -58,35 +57,32 @@ public class ProcessorLookupInstance implements ProcessorInstance {
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ProcessorLookupInstance.class);
-  
+
   private final Vertx vertx;
-  private final SourceNameTracker sourceNameTracker;
-  private final Context context;
+  private final RequestContext requestContext;
   private final MeterRegistry meterRegistry;
   private final String name;
 
   private final ProcessorLookup definition;
   private final Map<Comparable<?>, Comparable<?>> map = new HashMap<>();
-  
+
   private DataType outputFieldType;
   private ReadStream<DataRow> stream;
-  
+
   private final Set<String> includedFields = new HashSet<>();
-  
+
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
-   * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
-   * @param context the Vert.x context.
+   * @param requestContext the request context.
    * @param meterRegistry MeterRegistry for production of metrics.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
-  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
-  public ProcessorLookupInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, ProcessorLookup definition, String name) {
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
+  public ProcessorLookupInstance(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, ProcessorLookup definition, String name) {
     this.vertx = vertx;
-    this.sourceNameTracker = sourceNameTracker;
-    this.context = context;
+    this.requestContext = requestContext;
     this.meterRegistry = meterRegistry;
     this.name = name;
     this.definition = definition;
@@ -96,39 +92,40 @@ public class ProcessorLookupInstance implements ProcessorInstance {
   public String getName() {
     return name;
   }
-  
+
   private record KVP(Comparable<?> key, Comparable<?> value) {}
 
   @Override
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStreamWithTypes input) {
-    SourceInstance sourceInstance = definition.getMap().getSource().createInstance(vertx, context, meterRegistry, executor, getName() + ".map");
+    SourceInstance sourceInstance = definition.getMap().getSource().createInstance(vertx, requestContext, meterRegistry, executor);
     FormatCaptureInstance fieldDefnStreamCapture = new FormatCaptureInstance();
     PipelineInstance childPipeline = new PipelineInstance(
             pipeline.getRequestContext()
             , pipeline.getDefinition()
+            , pipeline.getName() + ".map"
             , pipeline.getArgumentInstances()
             , pipeline.getSourceEndpoints()
             , null
             , sourceInstance
-            , executor.createProcessors(vertx, sourceInstance, context, pipeline.getRequestContext(), definition.getMap(), null, getName())
+            , executor.createProcessors(vertx, requestContext, definition.getMap(), null, getName())
             , fieldDefnStreamCapture
     );
-    
+
     long start = System.currentTimeMillis();
-    
+
     for (ProcessorLookupField field : definition.getLookupFields()) {
       if (field.getCondition() == null) {
         includedFields.add(field.getKeyField());
       } else {
         ConditionInstance cond = field.getCondition().createInstance();
-        if (cond.evaluate(context.get("req"), null)) {
-          includedFields.add(field.getKeyField());          
+        if (cond.evaluate(requestContext, null)) {
+          includedFields.add(field.getKeyField());
         } else {
           logger.info("Field {} excluded by condition {}", field.getKeyField(), field.getCondition().getExpression());
         }
       }
     }
-    
+
     return executor.initializePipeline(childPipeline)
             .compose(v -> {
               return ReadStreamToList.map(
@@ -162,7 +159,7 @@ public class ProcessorLookupInstance implements ProcessorInstance {
               return Future.succeededFuture(new ReadStreamWithTypes(stream, input.getTypes()));
             });
   }
-  
+
   private DataRow runProcess(DataRow input) {
     for (ProcessorLookupField field : definition.getLookupFields()) {
       Comparable<?> key = input.get(field.getKeyField());
@@ -175,5 +172,5 @@ public class ProcessorLookupInstance implements ProcessorInstance {
     }
     return input;
   }
-  
+
 }

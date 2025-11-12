@@ -18,7 +18,6 @@ package uk.co.spudsoft.query.exec.procs.subquery;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.streams.ReadStream;
@@ -29,19 +28,19 @@ import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
-import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.SourceInstance;
-import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
+import uk.co.spudsoft.query.exec.procs.AbstractProcessor;
 
 /**
  * Abstract implementation for {@link ProcessorDynamicFieldInstance} and {@link ProcessorGroupConcatInstance}.
- * 
+ *
  * @author jtalbut
  */
-public abstract class AbstractJoiningProcessor implements ProcessorInstance {
+public abstract class AbstractJoiningProcessor extends AbstractProcessor {
 
   private final Logger logger;
   /**
@@ -49,73 +48,56 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
    */
   protected final Vertx vertx;
   /**
-   * Source name tracker used to identify source names in log messages.
+   * Request context.
    */
-  protected final SourceNameTracker sourceNameTracker;
-  /**
-   * Vertx context used by this class.
-   */
-  protected final Context context;
+  protected final RequestContext requestContext;
 
-  /**  
+  /**
    * MeterRegistry for production of metrics.
    */
   protected final MeterRegistry meterRegistry;
-  
-  /**
-   * The name to use in logs for this processor.
-   */
-  private final String name;
-  
+
   private final List<String> parentIdColumns;
   private final List<String> childIdColumns;
   private final boolean innerJoin;
-  
+
   private MergeStream<DataRow, DataRow, DataRow> stream;
-  
+
   /**
    * The Types captured during {@link #initialize(uk.co.spudsoft.query.exec.PipelineExecutor, uk.co.spudsoft.query.exec.PipelineInstance, java.lang.String, int, uk.co.spudsoft.query.exec.ReadStreamWithTypes)}.
    */
   protected Types types;
-  
+
   /**
    * Constructor.
    * @param logger  The logger that should be used (so that log messages identify the child class).
    * @param vertx The vertx instance.
-   * @param sourceNameTracker Source name tracker used to identify source names in log messages
-   * @param context Vertx context used by this class.
+   * @param requestContext The context of this request.
    * @param meterRegistry MeterRegistry for production of metrics.
    * @param name The name to use in logs for this processor - not nullable.
    * @param parentIdColumns The columns from the parent dataset that identifies a row.
    * @param childIdColumns The columns from the child dataset that identifies a row.
    * @param innerJoin If true parent rows without child rows will be excluded.
-   * 
+   *
    * It is safe to suppress the "this-escape" lint check as long as none of the streams are flowing until the constructor completes.
    */
-  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")  
-  @SuppressWarnings("this-escape")
-  public AbstractJoiningProcessor(Logger logger, Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, String name, List<String> parentIdColumns, List<String> childIdColumns, boolean innerJoin) {
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "None of the mutable values passed in to this class should be modified")
+  public AbstractJoiningProcessor(Logger logger, Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, String name, List<String> parentIdColumns, List<String> childIdColumns, boolean innerJoin) {
+    super(name);
     this.logger = logger;
     this.vertx = vertx;
-    this.sourceNameTracker = sourceNameTracker;
-    this.context = context;
+    this.requestContext = requestContext;
     this.meterRegistry = meterRegistry;
-    this.name = name;
     this.parentIdColumns = parentIdColumns;
     this.childIdColumns = childIdColumns;
     this.innerJoin = innerJoin;
-  }
-
-  @Override
-  public String getName() {
-    return name;
   }
 
   /**
    * Initialize a child stream.
    * <p>
    * Helper method for subclasses.
-   * 
+   *
    * @param executor The executor to use for running the child stream.
    * @param pipeline The overall pipeline instance being run.
    * @param fieldName The name of the field in the parent processor, for tracking purposes.
@@ -123,20 +105,21 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
    * @return A Future that will be completed with a {@link ReadStreamWithTypes} when initialization has completed.
    */
   protected Future<ReadStreamWithTypes> initializeChildStream(PipelineExecutor executor, PipelineInstance pipeline, String fieldName, SourcePipeline sourcePipeline) {
-    SourceInstance sourceInstance = sourcePipeline.getSource().createInstance(vertx, context, meterRegistry, executor, this.getName() + "." + fieldName);
+    SourceInstance sourceInstance = sourcePipeline.getSource().createInstance(vertx, requestContext, meterRegistry, executor);
     FormatCaptureInstance sinkInstance = new FormatCaptureInstance();
-    
+
     PipelineInstance childPipeline = new PipelineInstance(
             pipeline.getRequestContext()
             , pipeline.getDefinition()
+            , pipeline.getName()+ "." + getName() + "." + fieldName
             , pipeline.getArgumentInstances()
             , pipeline.getSourceEndpoints()
             , null
             , sourceInstance
-            , executor.createProcessors(vertx, sourceInstance, context, pipeline.getRequestContext(), sourcePipeline, null, name)
+            , executor.createProcessors(vertx, requestContext, sourcePipeline, null, pipeline.getName() + "." + getName())
             , sinkInstance
     );
-    return executor.initializePipeline(childPipeline)            
+    return executor.initializePipeline(childPipeline)
             .map(v -> sinkInstance.getReadStream());
   }
 
@@ -160,7 +143,7 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
     for (int i = 0; i < parentIdColumns.size(); ++i) {
       Comparable parentKeyItem = parentRow.get(parentIdColumns.get(i));
       Comparable childKeyItem = childRow.get(childIdColumns.get(i));
-      
+
       if (childKeyItem != null) {
         if (parentKeyItem.getClass() != childKeyItem.getClass()) {
           // Items are not of compatible types, if possible, extend them to the larger
@@ -183,7 +166,7 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
           }
         }
       }
-      
+
       int compareResult = parentKeyItem.compareTo(childKeyItem);
       if (compareResult != 0) {
         return compareResult;
@@ -195,7 +178,7 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
   /**
    * Abstract method that specializations must implement to initialize the child streams.
    * <p>
-   * Typically this will result in one or more calls to {@link #initializeChildStream(uk.co.spudsoft.query.exec.PipelineExecutor, uk.co.spudsoft.query.exec.PipelineInstance, java.lang.String, int, uk.co.spudsoft.query.defn.SourcePipeline)}.
+   * Typically this will result in one or more calls to {@link #initializeChildStream(PipelineExecutor, PipelineInstance, String, SourcePipeline)}.
    * @param executor The executor to use for running the child stream.
    * @param pipeline The overall pipeline instance being run.
    * @param parentSource The name of the parent source, for tracking purposes.
@@ -203,10 +186,10 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
    * @return A Future that will be completed with a {@link io.vertx.core.streams.ReadStream}&lt;{@link uk.co.spudsoft.query.exec.DataRow}@gt; when initialization has completed.
    */
   abstract Future<ReadStream<DataRow>> initializeChild(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex);
-  
+
   @Override
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStreamWithTypes input) {
-    
+
     if (parentIdColumns.size() != childIdColumns.size()) {
       return Future.failedFuture(new IllegalArgumentException("Incompatible parent ID columns (" + parentIdColumns.size() + ") and child ID columns (" + childIdColumns.size() + ")"));
     }
@@ -214,7 +197,8 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
     return initializeChild(executor, pipeline, parentSource, processorIndex)
             .compose(childStream -> {
               this.stream = new MergeStream<>(
-                      context 
+                      Vertx.currentContext()
+                      , requestContext
                       , input.getStream()
                       , childStream
                       , this::processChildren
@@ -227,8 +211,8 @@ public abstract class AbstractJoiningProcessor implements ProcessorInstance {
               );
               return Future.succeededFuture(new ReadStreamWithTypes(stream, types));
             })
-            ;            
+            ;
   }
-  
+
 }
-  
+

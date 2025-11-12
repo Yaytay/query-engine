@@ -35,16 +35,16 @@ import org.slf4j.LoggerFactory;
  * The file is assumed to have been written using the {@link SerializeWriteStream} class
  * , which writes the size of each entity to the file before writing the serialized bytes.
  * <P>
- * This file does not use explicitly Java serialization, the {@link Deserializer} passed in to the constructor must handle the 
+ * This file does not use explicitly Java serialization, the {@link Deserializer} passed in to the constructor must handle the
  * full conversion from a byte array to a usable object.
- * 
+ *
  * @author jtalbut
  * @param <T> The type of object that will be read from the file.
  */
 public final class SerializeReadStream<T> implements ReadStream<T> {
-  
+
   private static final Logger logger = LoggerFactory.getLogger(SerializeReadStream.class);
-  
+
   /**
    * Functional interface for converting a byte array read from disc into an item of type T.
    * @param <T> The type of the output item.
@@ -58,12 +58,12 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
      */
     T deserialize(byte[] data) throws IOException;
   }
-      
+
+  private final Context context;
   private final AsyncFile file;
   private final Deserializer<T> deserializer;
   private final Object lock = new Object();
-  private final Context context;
-  
+
   // Standard fields required to implement ReadStream
   private Handler<Throwable> exceptionHandler;
   private Handler<T> itemHandler;
@@ -72,23 +72,23 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
 
   // Buffers handled from the AsyncFile
   private final Deque<Buffer> buffers = new ArrayDeque<>();
-  
+
   // Bytes read from current head Buffer
   private int readPos;
-  
+
   // True when the file has been read completely
   private boolean ended;
   private boolean endHandlerCalled;
 
   static int intFromByteArray(byte[] bytes) {
-    return 
+    return
             ((bytes[0] & 0xFF) << 24)
-          | ((bytes[1] & 0xFF) << 16) 
+          | ((bytes[1] & 0xFF) << 16)
           | ((bytes[2] & 0xFF) << 8)
-          |  (bytes[3] & 0xFF) 
+          |  (bytes[3] & 0xFF)
             ;
   }
-  
+
   private void shuffleBuffer() {
     int bufferCount;
     synchronized (lock) {
@@ -107,20 +107,20 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
       file.fetch(4);
     }
   }
-  
+
   /**
    * Constructor.
-   * 
+   *
    * The AsyncFile should have been opened with the "read" OpenOption and a suitable readBufferSize.
    * The readBufferSize should be large to reduce the number of round trips to the file, but small enough to avoid wasting memory.
    * Aim for a single read buffer to account for a few T objects if possible.
-   * 
-   * The deserializer will always be called with a byte array that contains a single T object (as written by the serailizer 
+   *
+   * The deserializer will always be called with a byte array that contains a single T object (as written by the serailizer
    * passed in to a SerializeWriteStream).
-   * 
+   *
    * @param file The AsyncFile that is going to be read.
    * @param deserializer Function to convert a byte buffer to a single T object.
-   * 
+   *
    */
   @SuppressFBWarnings("EI_EXPOSE_REP2")
   public SerializeReadStream(AsyncFile file, Deserializer<T> deserializer) {
@@ -135,28 +135,28 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
       }
       context.runOnContext(v1 -> this.process());
     });
-    
+
     // Initialize processing
     currentRequirement = 4;
     currentByteArray = new byte[4];
     gettingSize = true;
   }
-  
+
   private void handleException(Throwable ex) {
     if (exceptionHandler != null) {
       exceptionHandler.handle(ex);
     }
   }
-  
+
   // Array of bytes currently being filled, never gets smaller
   private byte[] currentByteArray;
   private int currentRequirement;
   private int bytesWrittenToCurrentByteArray;
   private boolean gettingSize;
-  
+
   /**
    * Worker that must be run on context and that does whatever is necessary,
-   * 
+   *
    * Loops until no more work is possible.
    */
   private void process() {
@@ -177,7 +177,7 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
         } else {
           headBuffer = buffers.getFirst();
         }
-        
+
       }
       if (endHandlerCaptured != null) {
         if (!endHandlerCalledCaptured) {
@@ -195,7 +195,7 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
       }
       processOneCycle(headBuffer);
       ++iterations;
-    }    
+    }
   }
 
   private boolean processOneCycle(Buffer headBuffer) {
@@ -227,7 +227,7 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
     }
     return true;
   }
-  
+
   private void passToReader(byte[] bytes) {
     T item = null;
     try {
@@ -235,7 +235,7 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
     } catch (Throwable ex) {
       handleException(ex);
       return ;
-    }        
+    }
     synchronized (lock) {
       if (demand < Long.MAX_VALUE) {
         --demand;
@@ -245,9 +245,9 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
       itemHandler.handle(item);
     } catch (Throwable ex) {
       handleException(ex);
-    }        
+    }
   }
-  
+
   private void handle(Buffer buffer) {
     logger.trace("Handler {} bytes", buffer.length());
     int bufferCount;
@@ -265,7 +265,7 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
       process();
     });
   }
-  
+
   @Override
   public ReadStream<T> exceptionHandler(Handler<Throwable> handler) {
     file.exceptionHandler(handler);
@@ -284,7 +284,7 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
     this.endHandler = endHandler;
     return this;
   }
-  
+
   @Override
   public ReadStream<T> pause() {
     synchronized (lock) {

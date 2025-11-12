@@ -28,8 +28,10 @@ import java.util.HashSet;
 import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
+import uk.co.spudsoft.query.defn.Condition;
 
 /**
  *
@@ -72,5 +74,24 @@ public class JexlEvaluatorTest {
     assertEquals(LocalDate.now(), new JexlEvaluator("now().toLocalDate()").evaluateAsObject(request, null));
     assertEquals(LocalDate.now().withDayOfMonth(1).minusMonths(1), new JexlEvaluator("now().toLocalDate().withDayOfMonth(1).minusMonths(1)").evaluateAsObject(request, null));    
   }
+  
+  @Test
+  public void testStripWhitespace() {
+    assertNull(JexlEvaluator.collapseWhitespace(null));
+    assertEquals("Bob", JexlEvaluator.collapseWhitespace("Bob"));
+    assertEquals("Bob\\Carol", JexlEvaluator.collapseWhitespace("Bob\\Carol"));
+    assertEquals("Bob Carol", JexlEvaluator.collapseWhitespace("Bob\\\n Carol"));
+    assertEquals("Bob Carol", JexlEvaluator.collapseWhitespace("Bob\\\n\t \t \t \t Carol"));
+    assertEquals("Bob Carol", JexlEvaluator.collapseWhitespace("Bob  \\\n\t \t \t \t Carol"));
+  }
+  
+  @Test
+  public void testIsNullOrBlank() {
+    assertTrue(JexlEvaluator.isNullOrBlank(null));
+    assertTrue(JexlEvaluator.isNullOrBlank(Condition.builder().build()));
+    assertTrue(JexlEvaluator.isNullOrBlank(Condition.builder().expression("").build()));
+    assertFalse(JexlEvaluator.isNullOrBlank(Condition.builder().expression("true").build()));
+  }
+  
   
 }

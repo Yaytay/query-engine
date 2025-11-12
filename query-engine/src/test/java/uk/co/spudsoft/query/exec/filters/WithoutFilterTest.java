@@ -38,7 +38,7 @@ public class WithoutFilterTest {
   @Test
   public void testCreateProcessor() {
     WithoutFilter filter = new WithoutFilter();
-    ProcessorInstance instance = filter.createProcessor(null, null, null, null, "Bob", "name");
+    ProcessorInstance instance = filter.createProcessor(null, null, null, "Bob", "name");
     assertNotNull(instance);
     assertThat(instance, instanceOf(ProcessorMapInstance.class));
     ProcessorMapInstance mapInstance = (ProcessorMapInstance) instance;

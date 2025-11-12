@@ -17,13 +17,12 @@
 package uk.co.spudsoft.query.exec.filters;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.ProcessorQuery;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
-import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.procs.query.ProcessorQueryInstance;
 
 /**
@@ -37,8 +36,8 @@ import uk.co.spudsoft.query.exec.procs.query.ProcessorQueryInstance;
  * <LI>String comparisons may begin or end with a '*' character that will be treated as a wildcard.
  * <LI>There is a '=~' operator for performing regular expression matches.
  * </UL>
- * 
- * 
+ *
+ *
  * @author jtalbut
  */
 public class QueryFilter implements Filter {
@@ -50,14 +49,14 @@ public class QueryFilter implements Filter {
    */
   public QueryFilter() {
   }
-  
+
   @Override
   public String getKey() {
     return "_query";
   }
-  
+
   @Override
-  public ProcessorInstance createProcessor(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, String argument, String name) throws IllegalArgumentException {
+  public ProcessorInstance createProcessor(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, String argument, String name) throws IllegalArgumentException {
     try {
       argument = FiqlToRsqlConverter.convertFiqlToRsql(argument);
       ProcessorQueryInstance.RSQL_PARSER.parse(argument);
@@ -66,7 +65,7 @@ public class QueryFilter implements Filter {
       throw new IllegalArgumentException("Invalid argument to _query filter, should be a valid RSQL expression");
     }
     ProcessorQuery definition = ProcessorQuery.builder().expression(argument).build();
-    return definition.createInstance(vertx, sourceNameTracker, context, meterRegistry, name);
+    return definition.createInstance(vertx, requestContext, meterRegistry, name);
   }
-  
+
 }

@@ -20,7 +20,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.tsegismont.streamutils.impl.MappingStream;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.streams.ReadStream;
@@ -39,7 +38,6 @@ import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
-import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.procs.query.FilteringStream;
@@ -48,66 +46,61 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
  * Process rows of the output using GraalVM scripting.
- * 
+ *
  * Any installed language may be used, though by default this is restricted to Javascript.
- * 
+ *
  * @author jtalbut
  */
 public final class ProcessorScriptInstance implements ProcessorInstance {
-  
+
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ProcessorScriptInstance.class);
-  
+
   private static final ZoneId UTC = ZoneId.of("UTC");
-  
-  private final SourceNameTracker sourceNameTracker;
-  private final Context context;
+
+  private final RequestContext requestContext;
   private final ProcessorScript definition;
   private final String name;
   private ReadStream<DataRow> stream;
-  
+
   private Engine engine;
-  
+
   private Source predicateSource;
   private Source processSource;
-  
-  private RequestContext requestContext;
+
   private Pipeline pipeline;
   private ImmutableMap<String, Object> arguments;
-  
+
   private Types types;
-  
-  
+
+
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
-   * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
-   * @param context the Vert.x context.
+   * @param requestContext the request context.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
-  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
-  public ProcessorScriptInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorScript definition, String name) {
-    this.sourceNameTracker = sourceNameTracker;
-    this.context = context;
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
+  public ProcessorScriptInstance(Vertx vertx, RequestContext requestContext, ProcessorScript definition, String name) {
+    this.requestContext = requestContext;
     this.definition = definition;
     this.name = name;
   }
-  
+
   @Override
   public String getName() {
     return name;
   }
 
   private boolean runPredicate(DataRow data) {
-    sourceNameTracker.addNameToContextLocalData();
     return runSource(engine, "predicate", definition.getLanguage(), predicateSource, data, (returnValue, row) -> {
       logger.debug("returnValue ({}): {}", nullableClass(returnValue), returnValue);
       logger.debug("row ({}): {}", nullableClass(row), row);
       return returnValue.asBoolean();
     });
   }
-  
+
   static Class<?> nullableClass(Object o) {
     if (o == null) {
       return null;
@@ -117,14 +110,13 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
   }
 
   private DataRow runProcess(DataRow data) {
-    sourceNameTracker.addNameToContextLocalData();
     return runSource(engine, "process", definition.getLanguage(), processSource, data, (returnValue, row) -> {
       logger.debug("returnValue ({}): {}", nullableClass(returnValue), returnValue);
       logger.debug("row ({}): {}", nullableClass(row), row);
       return row;
      });
   }
-  
+
   // Compare the bindings with PipelineInstance#renderTemplate and ConditionInstance#evaluate
   <T> T runSource(Engine engine, String name, String language, Source source, DataRow data, BiFunction<Value, DataRow, T> postProcess) {
     try (org.graalvm.polyglot.Context graalContext = org.graalvm.polyglot.Context.newBuilder(language).engine(engine).build()) {
@@ -133,7 +125,7 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
       bindings.putMember("pipeline", pipeline);
       bindings.putMember("args", ProxyObject.fromMap(arguments));
       bindings.putMember("row", new ProxyDataRow(data)); // ProxyObject.fromMap(data.getMap()));
-      Value outputValue = graalContext.eval(source);    
+      Value outputValue = graalContext.eval(source);
       T result = postProcess.apply(outputValue, data);
       logger.debug("Running {} {} gave {}", name, source.getCharacters(), result);
       return result;
@@ -142,7 +134,7 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
       return null;
     }
   }
-  
+
   static Comparable<?> mapToNativeObject(Value value) {
     if (value.isNull()) {
       return null;
@@ -181,7 +173,7 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
 //      return value.asNativePointer();
     } else if (value.isException()) {
       value.throwException();
-    } 
+    }
     logger.warn("Unknown value type: {}", value);
     return null;
   }
@@ -189,7 +181,6 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
   @Override
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStreamWithTypes input) {
     this.pipeline = pipeline.getDefinition();
-    this.requestContext = pipeline.getRequestContext();
     this.arguments = ImmutableCollectionTools.copy(requestContext == null ? null : requestContext.getArguments());
     try {
       engine = Engine.newBuilder()
@@ -200,7 +191,7 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
               .option("engine.WarnInterpreterOnly", "false")
               .build();
     }
-    
+
     this.types = input.getTypes();
     this.stream = input.getStream();
     if (!Strings.isNullOrEmpty(definition.getPredicate())) {
@@ -211,7 +202,7 @@ public final class ProcessorScriptInstance implements ProcessorInstance {
       processSource = Source.newBuilder(definition.getLanguage(), definition.getProcess(), Integer.toString(hashCode()) + ":process").cached(true).buildLiteral();
       stream = new MappingStream<>(stream, this::runProcess);
     }
- 
+
     this.stream.endHandler(v -> {
       if (engine != null) {
         engine.close();

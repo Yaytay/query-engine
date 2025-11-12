@@ -97,7 +97,7 @@ public class PipelineExecutorImplTest {
             )
             .build();
     PipelineExecutor instance = PipelineExecutor.create(null, new FilterFactory(Collections.emptyList()), null);
-    List<ProcessorInstance> results = instance.createProcessors(vertx, () -> {}, vertx.getOrCreateContext(), null, definition, null, null);
+    List<ProcessorInstance> results = instance.createProcessors(vertx, null, definition, null, null);
     assertThat(results, hasSize(2));
     assertEquals(1, ((ProcessorLimitInstance) results.get(0)).getLimit());
     assertEquals(2, ((ProcessorLimitInstance) results.get(1)).getLimit());
@@ -181,7 +181,7 @@ public class PipelineExecutorImplTest {
             , null
     );
     
-    List<ProcessorInstance> processors = instance.createProcessors(vertx, () -> {}, vertx.getOrCreateContext(), req, definition, null, null);
+    List<ProcessorInstance> processors = instance.createProcessors(vertx, req, definition, null, null);
 
     Map<String, ArgumentInstance> arguments = instance.prepareArguments(
             req
@@ -196,11 +196,11 @@ public class PipelineExecutorImplTest {
             );
     
     SourceTest sourceDefn = SourceTest.builder().name("test").rowCount(7).build();
-    SourceInstance source = sourceDefn.createInstance(vertx, vertx.getOrCreateContext(), null, instance, "source");
+    SourceInstance source = sourceDefn.createInstance(vertx, req, null, instance);
     FormatDelimited destDefn = FormatDelimited.builder().build();
     FormatInstance dest = destDefn.createInstance(vertx, req, new LoggingWriteStream<>(rows -> {}));
     
-    PipelineInstance pi = new PipelineInstance(req, definition, arguments, null, null, source, processors, dest);
+    PipelineInstance pi = new PipelineInstance(req, definition, "$", arguments, null, null, source, processors, dest);
     
     instance.initializePipeline(pi);
     pi.getFinalPromise().future().onComplete(testContext.succeedingThenComplete());    

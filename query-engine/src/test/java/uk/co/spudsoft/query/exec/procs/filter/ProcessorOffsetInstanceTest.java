@@ -16,7 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.procs.filter;
 
-import io.vertx.core.Context;
+import inet.ipaddr.IPAddressString;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -35,6 +35,7 @@ import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.defn.ProcessorOffset;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
 import uk.co.spudsoft.query.exec.procs.filters.ProcessorOffsetInstance;
@@ -60,14 +61,14 @@ public class ProcessorOffsetInstanceTest {
             , DataRow.create(types, "id", 4, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 4), "value", "four")
     );
     
-    Context context = vertx.getOrCreateContext();
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
         
-    ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, () -> {}, context
+    ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, reqctx
             , ProcessorOffset.builder().offset(17).build()
             , "P0-Offset"
     );
     assertEquals("P0-Offset", instance.getName());
-    assertTrue(instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(context, rowsList), types)).succeeded());
+    assertTrue(instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types)).succeeded());
   }
 
   
@@ -82,14 +83,14 @@ public class ProcessorOffsetInstanceTest {
             , DataRow.create(types, "id", 4, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 4), "value", "four")
     );
     
-    Context context = vertx.getOrCreateContext();
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     
-    ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, () -> {}, context
+    ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, reqctx
             , ProcessorOffset.builder().name("fred").offset(2).build()
             , "P0-Offset"
     );
     assertEquals("P0-Offset", instance.getName());
-    instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(context, rowsList), types))
+    instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
             .compose(rswt -> {
               return ReadStreamToList.capture(rswt.getStream());
             })

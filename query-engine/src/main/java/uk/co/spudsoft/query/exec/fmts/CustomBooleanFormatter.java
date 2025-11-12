@@ -24,7 +24,7 @@ import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
 
 /**
  * Formatter to convert a Boolean Object into any string value.
- * 
+ *
  * The expression must be a valid JEXL expression that evaluates to a two element array of strings.
  * The first element is the true value and the second element is the false value.
  *
@@ -50,9 +50,9 @@ import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
  * </UL>
  * <P>
  * Validation is carried out on the output from the expression, but this validation is not perfect and it is possible to produce an invalid output with a bad format.
- * 
+ *
  * If the expression is null the output will be "true" or "false".
- * 
+ *
  * @author jtalbut
  */
 public final class CustomBooleanFormatter implements CustomFormatter {
@@ -69,7 +69,7 @@ public final class CustomBooleanFormatter implements CustomFormatter {
    */
   public CustomBooleanFormatter(String expression, String openQuote, String closeQuote, boolean lowerCaseOnly) {
     JexlExpression jexl;
-    
+
     if (Strings.isNullOrEmpty(expression)) {
       trueValue = "true";
       falseValue = "false";
@@ -95,7 +95,7 @@ public final class CustomBooleanFormatter implements CustomFormatter {
 
       this.trueValue = (String) array[0];
       this.falseValue = (String) array[1];
-      
+
       if (openQuote == null) {
         openQuote = "\"";
       }
@@ -106,9 +106,9 @@ public final class CustomBooleanFormatter implements CustomFormatter {
       validateValue("false", falseValue, openQuote, closeQuote, lowerCaseOnly);
     }
   }
-  
+
   private static void validateValue(String name, String value, String openQuote, String closeQuote, boolean lowerCaseOnly) {
-    
+
     if (lowerCaseOnly) {
       if ("true".equals(value) || "false".equals(value)) {
         return ;
@@ -118,26 +118,26 @@ public final class CustomBooleanFormatter implements CustomFormatter {
         return ;
       }
     }
-    
+
     try {
       Double.parseDouble(value);
       return ;
-    } catch (Throwable ex) {      
+    } catch (Throwable ex) {
     }
-    
+
     if (value.startsWith(openQuote) && value.endsWith(closeQuote)) {
       return ;
     }
-    
+
     throw new IllegalArgumentException("The " + name + " value is not valid (is not \"true\" or \"false\"; is not a number; does not begin with " + openQuote + " and end with " + closeQuote);
-    
-  } 
-  
+
+  }
+
   /**
    * Format an object as a Boolean value.
    * <P>
    * It is preferable if the value is a Boolean, but it need not be.
-   * 
+   *
    * @param value The value to be formatted as a Boolean.
    * @return A string value that can be output.
    */
@@ -153,6 +153,6 @@ public final class CustomBooleanFormatter implements CustomFormatter {
       return numberValue.doubleValue() == 0.0 ? falseValue : trueValue;
     }
     String stringValue = value.toString();
-    return "true".equalsIgnoreCase(stringValue) ? trueValue : falseValue;    
+    return "true".equalsIgnoreCase(stringValue) ? trueValue : falseValue;
   }
 }

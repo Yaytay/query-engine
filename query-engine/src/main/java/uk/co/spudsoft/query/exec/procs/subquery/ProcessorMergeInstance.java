@@ -17,9 +17,7 @@
 package uk.co.spudsoft.query.exec.procs.subquery;
 
 import com.google.common.collect.ImmutableSet;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.streams.ReadStream;
@@ -31,42 +29,40 @@ import uk.co.spudsoft.query.defn.ProcessorMerge;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.DataRow;
-import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 
 /**
  * {@link uk.co.spudsoft.query.exec.ProcessorInstance} that acts similarly to the MySQL <a href="https://dev.mysql.com/doc/refman/8.0/en/aggregate-functions.html#function_group-concat">GROUP_CONCAT</A> aggregate function.
- * 
+ *
  * A sub query is run and merged with the primary query.
- * The join is always a merge join, so the primary query must be sorted by the {@link uk.co.spudsoft.query.defn.ProcessorMerge#parentIdColumns} and the sub query 
+ * The join is always a merge join, so the primary query must be sorted by the {@link uk.co.spudsoft.query.defn.ProcessorMerge#parentIdColumns} and the sub query
  * must be sorted by the {@link uk.co.spudsoft.query.defn.ProcessorMerge#childIdColumns}.
  * Every field from the child stream is added to the primary stream.
  * If there are multiple child rows matching a single parent row only the first will be processed.
- * 
- * 
+ *
+ *
  * @author jtalbut
  */
  public class ProcessorMergeInstance extends AbstractJoiningProcessor {
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ProcessorMergeInstance.class);
-  
+
   private final ProcessorMerge definition;
   private final Set<String> childIdColumns;
   private Types childTypes;
-  
+
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
-   * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
-   * @param context the Vert.x context.
+   * @param requestContext the request context.
    * @param meterRegistry MeterRegistry for production of metrics.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
-  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
-  public ProcessorMergeInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, ProcessorMerge definition, String name) {
-    super(logger, vertx, sourceNameTracker, context, meterRegistry, name, definition.getParentIdColumns(), definition.getChildIdColumns(), definition.isInnerJoin());
+  public ProcessorMergeInstance(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, ProcessorMerge definition, String name) {
+    super(logger, vertx, requestContext, meterRegistry, name, definition.getParentIdColumns(), definition.getChildIdColumns(), definition.isInnerJoin());
     this.definition = definition;
     this.childIdColumns = ImmutableSet.copyOf(definition.getChildIdColumns());
   }
@@ -96,14 +92,14 @@ import uk.co.spudsoft.query.exec.Types;
   @Override
   protected DataRow processChildren(DataRow parentRow, List<DataRow> childRows) {
     logger.trace("Got child rows: {}", childRows);
-    
+
     /**
      * Three options:
      * 1. childValueColumn && parentValueColumn
      *    One field to bring over and rename.
      * 2. childValueColumn && ! parentValueColumn
      *    One field to bring over without renaming.
-     * 3. ! childValueColumn 
+     * 3. ! childValueColumn
      *    Bring over all child fields that aren't in the ID without renaming
      * Evaluated in reverse order :)
      */
@@ -117,5 +113,5 @@ import uk.co.spudsoft.query.exec.Types;
     }
     return parentRow;
   }
- 
+
 }

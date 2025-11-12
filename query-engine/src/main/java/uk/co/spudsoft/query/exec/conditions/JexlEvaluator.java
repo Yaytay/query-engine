@@ -21,12 +21,17 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 import org.apache.commons.jexl3.JexlBuilder;
 import org.apache.commons.jexl3.JexlContext;
 import org.apache.commons.jexl3.JexlEngine;
 import org.apache.commons.jexl3.JexlExpression;
 import org.apache.commons.jexl3.MapContext;
+import org.apache.commons.jexl3.internal.introspection.Uberspect;
 import org.apache.commons.jexl3.introspection.JexlPermissions;
+import org.apache.commons.jexl3.introspection.JexlUberspect;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Condition;
@@ -34,63 +39,78 @@ import uk.co.spudsoft.query.exec.DataRow;
 
 /**
  * An instance of a {@link uk.co.spudsoft.query.defn.Condition} to be evaluated before doing something else.
- * 
+ *
  * The context of a condition may include the following variables:
- * 
+ *
  * <ul>
  * <li>request<br>
  * Details of the HTTP request, a {@link RequestContext} object.
- * 
+ *
  * <li>args<br>
- * Processed arguments to the pipeline, as a {@link java.util.Map Map} from argument name to either a single object or a {@link java.util.List List} of objects.
- * Each argument will be the converted argument passed in (or the result of evaluating the {@link uk.co.spudsoft.query.defn.Argument#defaultValueExpression defaultValueExpresson}.
- * 
+ * Processed arguments to the pipeline, as a {@link java.util.Map Map} from argument name to either a single object or a
+ * {@link java.util.List List} of objects. Each argument will be the converted argument passed in (or the result of evaluating the
+ * {@link uk.co.spudsoft.query.defn.Argument#defaultValueExpression defaultValueExpresson}.
+ *
  * <li>uri<br>
  * The full URI of the request as a Java {@link java.net.URI URI}.
- * 
+ *
  * <li>params<br>
- * The raw query string arguments to the HTTP request, a {@link io.vertx.core.MultiMap MultiMap} object.
- * Avoid using this variable, prefer the &quot;args&quot; variable.
- * 
+ * The raw query string arguments to the HTTP request, a {@link io.vertx.core.MultiMap MultiMap} object. Avoid using this
+ * variable, prefer the &quot;args&quot; variable.
+ *
  * <li>row<br>
  * If the condition is per-row it will include the {@link uk.co.spudsoft.query.exec.DataRow} object.
- * 
+ *
  * <li>iteration<br>
- * A number that is incremented each time this instance of the expression is evaluated.
- * This can be used as a surrogate for a row number on expressions evaluated whilst processing a stream, otherwise it is not very useful.
- * 
+ * A number that is incremented each time this instance of the expression is evaluated. This can be used as a surrogate for a row
+ * number on expressions evaluated whilst processing a stream, otherwise it is not very useful.
+ *
  * </ul>
- * 
+ *
  * Conditions are <a href="uk.co.spudsoft.query.defn.Condition">JEXL</a> expressions.
- * 
+ *
  * @author jtalbut
  */
 public class JexlEvaluator {
-  
+
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(JexlEvaluator.class);
-  
+
   private static final JexlEngine JEXL = createJexlEngine();
-          
+
+  private static final Pattern WS_PATTERN = Pattern.compile("\\s*\\\\\\n\\s+");
+
   static JexlEngine createJexlEngine() {
     Map<String, Object> namespaces = new HashMap<>();
     namespaces.put(null, new TopLevelJexlFunctions());
-    
-    JexlEngine jexl = new JexlBuilder()
-          .permissions(
-                  JexlPermissions.RESTRICTED
-                          .compose(
-                                  "io.vertx.core.http.impl.headers.*"
-                                  , "uk.co.spudsoft.jwtvalidatorvertx.*"
-                                  , "uk.co.spudsoft.query.exec.conditions.*"
-                                  , "uk.co.spudsoft.query.exec.context.*"
-                                  , "java.time.*"
-                          )
-          )
-          .strict(false)
-          .silent(true)
-          .namespaces(namespaces)
-          .create();
+
+    JexlPermissions permissions = JexlPermissions.RESTRICTED
+            .compose(
+                    "io.vertx.core.http.impl.headers.*",
+                     "uk.co.spudsoft.jwtvalidatorvertx.*",
+                     "uk.co.spudsoft.query.exec.DataRow",
+                     "uk.co.spudsoft.query.exec.conditions.*",
+                     "uk.co.spudsoft.query.exec.context.*",
+                     "java.time.*"
+            );
+
+    JexlBuilder builder = new JexlBuilder();
+
+    Log log = LogFactory.getLog(JexlEvaluator.class);
+
+    JexlUberspect defaultUb = builder.uberspect();
+    if (defaultUb == null) {
+      defaultUb = new Uberspect(log, null, permissions);
+    }
+
+    JexlEngine jexl = builder
+            .permissions(permissions)
+            .logger(log)
+            .strict(false)
+            .silent(true)
+            .namespaces(namespaces)
+            .uberspect(new DataRowUberspect(defaultUb))
+            .create();
     return jexl;
   }
 
@@ -98,38 +118,51 @@ public class JexlEvaluator {
   private final AtomicInteger iteration = new AtomicInteger();
 
   /**
-   * Get the JEXL engine.
-   * This engine must not be modified by callers.
+   * Get the JEXL engine. This engine must not be modified by callers.
+   *
    * @return the JEXL engine.
    */
   @SuppressFBWarnings("MS_EXPOSE_REP")
   public static JexlEngine getJexlEngine() {
     return JEXL;
-  }  
-  
+  }
+
   /**
    * Return true if the condition or its expression is null or blank.
+   *
    * @param condition The condition being assessed.
    * @return true if the condition or its expression is null or blank.
    */
   public static boolean isNullOrBlank(Condition condition) {
     return condition == null
             || condition.getExpression() == null
-            || condition.getExpression().isBlank()
-            ;
+            || condition.getExpression().isBlank();
   }
-  
+
+  /**
+   * Any line ending backslash newline whitespace will have all of that replace by a single space character.
+   * @param input The input string.
+   * @return The input collapsed to a single line.
+   */
+  static String collapseWhitespace(String input) {
+    if (input == null) {
+      return null;
+    }
+    return WS_PATTERN.matcher(input).replaceAll(" ").trim();
+  }
+
   /**
    * Constructor.
+   *
    * @param expression The <a href="https://commons.apache.org/proper/commons-jexl/">JEXL</a> expression.
    */
   public JexlEvaluator(String expression) {
-    this.expression = JEXL.createExpression(expression);
+    this.expression = JEXL.createExpression(collapseWhitespace(expression));
   }
-  
+
   /**
-   * Parse the JEXL expression and throw away the result.
-   * This is for validation.
+   * Parse the JEXL expression and throw away the result. This is for validation.
+   *
    * @param expression The <a href="https://commons.apache.org/proper/commons-jexl/">JEXL</a> expression to validate.
    */
   public static void parse(String expression) {
@@ -138,6 +171,7 @@ public class JexlEvaluator {
 
   /**
    * Get the source text of the expression.
+   *
    * @return the source text of the expression.
    */
   public String getSourceText() {
@@ -146,6 +180,7 @@ public class JexlEvaluator {
 
   /**
    * Evaluate the expression for the given RequestContext and DataRow, which may be null.
+   *
    * @param request The context of the request.
    * @param row The current DataRow, if this expression is to be evaluated in the context of a row.
    * @return true is the expression evaluates to true.
@@ -164,16 +199,16 @@ public class JexlEvaluator {
     } else {
       logger.warn("The result of expression \"{}\" was <{}>, should have been a Boolean", expression, result);
       return false;
-    }    
+    }
   }
-  
 
   /**
    * Evaluate the expression for the given RequestContext and DataRow, which may be null.
+   *
    * @param request The context of the request.
    * @param row The current DataRow, if this expression is to be evaluated in the context of a row.
    * @return the result of the expression, which may be of any type.
-   */  
+   */
   public Object evaluateAsObject(RequestContext request, DataRow row) {
     JexlContext context = new MapContext();
     context.set("request", request);
@@ -188,8 +223,8 @@ public class JexlEvaluator {
       context.set("row", DataRow.EMPTY_ROW);
     }
     context.set("iteration", iteration.getAndIncrement());
-    
+
     return expression.evaluate(context);
   }
-  
+
 }

@@ -33,7 +33,7 @@ public class ProcessorMergeInstanceTest {
   @Test
   public void testGetId() {
     ProcessorMerge defn = ProcessorMerge.builder().name("id").build();
-    ProcessorMergeInstance instance = new ProcessorMergeInstance(null, null, null, null, defn, "P0-Merge");
+    ProcessorMergeInstance instance = new ProcessorMergeInstance(null, null, null, defn, "P0-Merge");
     assertEquals("P0-Merge", instance.getName());
   }
 
@@ -43,7 +43,7 @@ public class ProcessorMergeInstanceTest {
             .parentIdColumns(Arrays.asList("id"))
             .childIdColumns(Arrays.asList("id"))
             .build();
-    ProcessorMergeInstance instance = new ProcessorMergeInstance(null, null, null, null, defn, "P0-Merge");
+    ProcessorMergeInstance instance = new ProcessorMergeInstance(null, null, null, defn, "P0-Merge");
     
     Types parentTypes = new Types();
     DataRow parent = DataRow.create(parentTypes).put("id", "one");

@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.sources.sql;
 
+import inet.ipaddr.IPAddressString;
 import io.reactiverse.contextual.logging.ContextualData;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -38,7 +39,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.SourceInstance;
-import uk.co.spudsoft.query.exec.SourceNameTracker;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.main.sample.AbstractSampleDataLoader;
 import uk.co.spudsoft.query.main.sample.SampleDataLoaderMsSQL;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMsSQL;
@@ -71,13 +72,6 @@ public class StreamingDataMsForkIT {
   PreparedStatement preparedStatement;
   Transaction transaction;
   RowStreamWrapper rowStreamWrapper;
-  
-  SourceNameTracker sourceNameTracker = new SourceNameTracker() {
-    @Override
-    public void addNameToContextLocalData() {
-      ContextualData.put(SourceInstance.SOURCE_CONTEXT_KEY, this.getClass().getSimpleName());
-    }
-  };
   
   @Test
   @Timeout(Integer.MAX_VALUE)
@@ -113,6 +107,8 @@ public class StreamingDataMsForkIT {
     
     long start = System.currentTimeMillis();
 
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    
     // A simple query
     client.getConnection()
             .recover(ex -> {
@@ -131,11 +127,11 @@ public class StreamingDataMsForkIT {
               if (logger.isDebugEnabled()) {
                 logger.debug("Executing SQL stream on {}", connection);
               }
-              MetadataRowStreamImpl rowStream = new MetadataRowStreamImpl(sourceNameTracker, preparedStatement, vertx.getOrCreateContext(), 100, Tuple.tuple());
+              MetadataRowStreamImpl rowStream = new MetadataRowStreamImpl(preparedStatement, reqctx, vertx.getOrCreateContext(), 100, Tuple.tuple());
               rowStream.exceptionHandler(ex -> {
                 logger.error("Exception occured in stream: ", ex);
               });
-              rowStreamWrapper = new RowStreamWrapper(sourceNameTracker, connection, transaction, rowStream, null);
+              rowStreamWrapper = new RowStreamWrapper(connection, transaction, rowStream, null);
               rowStreamWrapper.handler(row -> {
                 logger.debug("Row: {}", row);
               });

@@ -43,69 +43,65 @@ import uk.co.spudsoft.query.defn.SourceJdbc;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
-import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.sources.sql.AbstractSqlPreparer;
 
 /**
  * Processor for converting a JDBC {@link ResultSet} into a Vert.x {@link ReadStream}.
- * 
+ *
  * The logic will attempt to keep between fetchSize/2 and fetchSize rows buffered at all times (until the rows run out).
- * 
+ *
  * @author jtalbut
  */
 public class JdbcReadStream implements ReadStream<DataRow> {
-  
+
   private static final Logger logger = LoggerFactory.getLogger(JdbcReadStream.class);
-  
-  private final SourceNameTracker sourceNameTracker;
+
+  private final RequestContext requestContext;
   private final Context context;
   private final SourceJdbc definition;
   private final int processingBatchSize;
   private final Promise<ReadStreamWithTypes> initPromise;
-  
-  
+
+
   private Types types;
-  
+
   private final Deque<DataRow> items = new ArrayDeque<>();
-  
+
   private final ReentrantLock queueLock = new ReentrantLock();
   private final Condition notFull = queueLock.newCondition();
-  
+
   private Handler<Throwable> exceptionHandler;
   private Handler<DataRow> handler;
   private Handler<Void> endHandler;
-  
+
   private long demand;
   private volatile boolean initialized;
   private volatile boolean emitting;
   private volatile boolean ended;
   private volatile boolean completed;
   private long rowsOutput;
-  
+
   /**
    * Constructor.
-   * @param sourceNameTracker Name tracker to use for logging, must be called at each entry point.
    * @param context The Vert.x context to use for asynchronous method calls.
+   * @param requestContext The request context for tracking and logging.
    * @param definition The source definition.
    * @param initPromise The promise to complete when the query starts returning data.
    */
   @SuppressFBWarnings("EI_EXPOSE_REP2")
-  public JdbcReadStream(SourceNameTracker sourceNameTracker
-          , Context context
-          , SourceJdbc definition
-          , Promise<ReadStreamWithTypes> initPromise
-  ) {
-    this.sourceNameTracker = sourceNameTracker;
+  public JdbcReadStream(Context context, RequestContext requestContext, SourceJdbc definition, Promise<ReadStreamWithTypes> initPromise) {
     this.context = context;
+    this.requestContext = requestContext;
     this.definition = definition;
     this.processingBatchSize = definition.getProcessingBatchSize();
     this.initPromise = initPromise;
   }
-  
+
   /**
    * Start processing the {@link ResultSet} in a new thread.
-   * 
+   *
    * @param name The name to assign to the new thread.
    * @param dataSourceUrl The JDBC URL for the datasource.
    * @param credentials The credentials to use to connect to the data source.
@@ -120,12 +116,12 @@ public class JdbcReadStream implements ReadStream<DataRow> {
           , PipelineInstance pipeline
   ) {
     Thread thread = new Thread(() -> {
-      
+
       runOnThread(dataSourceUrl, credentials, sql, pipeline);
     }, name);
     thread.start();
   }
-  
+
   private void checkProcessing(String message) {
     if (initialized) {
       if (!emitting) {
@@ -137,7 +133,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
       logger.trace("Not initialized yet");
     }
   }
-  
+
   @SuppressFBWarnings("SQL_INJECTION_JDBC")
   private void runOnThread(
           String dataSourceUrl
@@ -150,7 +146,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     PreparedStatement statement = null;
     ResultSet rs = null;
     ResultSetMetaData rsmeta = null;
-    
+
     long start = System.currentTimeMillis();
 
     try {
@@ -265,11 +261,10 @@ public class JdbcReadStream implements ReadStream<DataRow> {
       statement.setFetchSize(definition.getJdbcFetchSize());
     }
   }
-  
+
   @SuppressFBWarnings(value = "UL_UNRELEASED_LOCK_EXCEPTION_PATH", justification = "False positive, which is a shame because it's a useful test")
   private void resultSetWalk(ResultSet rs, ResultSetMetaData rsmeta) {
-    
-    sourceNameTracker.addNameToContextLocalData();
+
     long rows = 0;
     try {
       while (rs.next()) {
@@ -278,7 +273,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
           logger.debug("Received {} rows", rows);
         }
         ++rows;
-                
+
         logger.trace("resultSetWalker: Taking out queue lock for results walker");
         queueLock.lock();
         try {
@@ -301,7 +296,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
       complete();
     }
   }
-  
+
   private DataRow dataRowFromResult(ResultSetMetaData rsmeta, ResultSet rs) throws SQLException {
     DataRow row = DataRow.create(types);
     for (int i = 0; i < rsmeta.getColumnCount(); ++i) {
@@ -313,7 +308,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
         value = rs.getTimestamp(i + 1, cal);
       } else {
-        value = rs.getObject(i + 1);        
+        value = rs.getObject(i + 1);
       }
       try {
         Comparable<?> typedValue = type.cast(value);
@@ -342,7 +337,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     checkProcessing("Completed");
     return this;
   }
-  
+
   static boolean report(long rows) {
     if (rows < 10000) {
       return false;
@@ -354,11 +349,10 @@ public class JdbcReadStream implements ReadStream<DataRow> {
       return rows % 1000000 == 0;
     }
   }
-  
+
   @SuppressFBWarnings(value = "UL_UNRELEASED_LOCK_EXCEPTION_PATH", justification = "False positive, which is a shame because it's a useful test")
   private void process() {
     Handler<Void> endHandlerCaptured = null;
-    sourceNameTracker.addNameToContextLocalData();
     logger.trace("Starting to process {} {} ({}) {} {}", ended, emitting, completed, demand, items.size());
     long rows = 0;
     boolean done = false;
@@ -366,7 +360,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
       Handler<Throwable> exceptionHandlerCaptured;
       Handler<DataRow> handlerCaptured = null;
       DataRow item = null;
-      
+
       logger.trace("Taking out queue lock for stream processor");
       queueLock.lock();
       try {
@@ -376,7 +370,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
           break ;
         } else if (demand < Long.MAX_VALUE) {
           --demand;
-        }        
+        }
         exceptionHandlerCaptured = exceptionHandler;
         if (!items.isEmpty()) {
           item =  items.pop();
@@ -418,14 +412,14 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     if (done && !ended) {
       endHandlerCaptured = endHandler;
       if (endHandlerCaptured != null) {
-        logger.trace("Calling endHandler"); 
-        endHandlerCaptured.handle(null);        
+        logger.trace("Calling endHandler");
+        endHandlerCaptured.handle(null);
       } else {
         logger.trace("No endHandler");
       }
     }
   }
-  
+
   @Override
   public JdbcReadStream exceptionHandler(Handler<Throwable> handler) {
     queueLock.lock();
@@ -458,7 +452,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     }
     return this;
   }
-  
+
   @Override
   public JdbcReadStream pause() {
     logger.trace("pause()");
@@ -473,7 +467,6 @@ public class JdbcReadStream implements ReadStream<DataRow> {
 
   @Override
   public JdbcReadStream resume() {
-    sourceNameTracker.addNameToContextLocalData();
     logger.trace("resume()");
     queueLock.lock();
     try {
@@ -491,7 +484,6 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     if (amount < 0L) {
       throw new IllegalArgumentException("Negative fetch amount");
     }
-    sourceNameTracker.addNameToContextLocalData();
     logger.trace("fetch({})", amount);
     queueLock.lock();
     try {

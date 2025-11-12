@@ -16,7 +16,6 @@
  */
 package uk.co.spudsoft.query.exec.sources.sql;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
@@ -30,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.exec.DataRow;
-import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
 
 
@@ -45,7 +43,6 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(RowStreamWrapper.class);
   
-  private final SourceNameTracker sourceNameTracker;
   private final MetadataRowStreamImpl rowStream;
   private final SqlConnection connection;
   private final Transaction transaction;
@@ -61,15 +58,12 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
   /**
    * Constructor.
    * 
-   * @param sourceNameTracker The object used to identify this source in the Vert.x context for logging purposes.
    * @param connection The connection to the data source.
    * @param transaction The database transaction.
    * @param rowStream The output row stream.
    * @param columnTypeOverrides Manually overridden types for columns.
    */
-  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
-  public RowStreamWrapper(SourceNameTracker sourceNameTracker, SqlConnection connection, Transaction transaction, MetadataRowStreamImpl rowStream, Map<String, DataType> columnTypeOverrides) {
-    this.sourceNameTracker = sourceNameTracker;
+  public RowStreamWrapper(SqlConnection connection, Transaction transaction, MetadataRowStreamImpl rowStream, Map<String, DataType> columnTypeOverrides) {
     this.connection = connection;
     this.transaction = transaction;
     this.rowStream = rowStream;
@@ -89,7 +83,6 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
     });
     rowStream.pause();
     rowStream.exceptionHandler(ex -> {
-      sourceNameTracker.addNameToContextLocalData();
       logger.error("Exception in RowStream after {} rows: ", rowCount, ex);
       readyPromise.tryFail(ex);
       Handler<Throwable> capturedExceptionHandler;
@@ -144,7 +137,6 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
   
   @Override
   public RowStreamWrapper handler(Handler<DataRow> handler) {
-    sourceNameTracker.addNameToContextLocalData();
     logger.trace("handler({})", handler);
     this.handler = handler;
     if (handler == null) {
@@ -174,7 +166,6 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
   
   @Override
   public RowStreamWrapper pause() {
-    sourceNameTracker.addNameToContextLocalData();
     logger.trace("{} paused", this);
     rowStream.pause();
     return this;
@@ -182,7 +173,6 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
 
   @Override
   public RowStreamWrapper resume() {
-    sourceNameTracker.addNameToContextLocalData();
     logger.trace("{} resumed", this);
     rowStream.resume();
     return this;
@@ -197,7 +187,6 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
   @Override
   public RowStreamWrapper endHandler(Handler<Void> endHandler) {
     rowStream.endHandler(ehv -> {
-      sourceNameTracker.addNameToContextLocalData();
       if (rowCount > 0) {
         logger.trace("Finished row stream after handling {} rows", rowCount);
       } else {
@@ -208,7 +197,6 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
                 return transaction.commit();
               })
               .compose(v -> {
-                sourceNameTracker.addNameToContextLocalData();
                 if (connection != null) {
                   logger.info("Closing connection");
                   return connection.close();
@@ -217,7 +205,6 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
                 }
               })
               .onComplete(ar -> {
-                sourceNameTracker.addNameToContextLocalData();
                 logger.info("Closed connection");
                 if (!ar.succeeded()) {
                   logger.warn("Transaction failed: ", ar.cause());

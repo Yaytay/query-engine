@@ -19,7 +19,6 @@ package uk.co.spudsoft.query.exec.sources.jdbc;
 import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -31,10 +30,10 @@ import uk.co.spudsoft.query.defn.SourceSql;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
+import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
 import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
 import uk.co.spudsoft.query.exec.context.RequestContext;
-import uk.co.spudsoft.query.exec.sources.AbstractSource;
 import uk.co.spudsoft.query.exec.sources.sql.SourceSqlStreamingInstance;
 import uk.co.spudsoft.query.main.ProtectedCredentials;
 import uk.co.spudsoft.query.web.ServiceException;
@@ -43,41 +42,39 @@ import uk.co.spudsoft.query.web.ServiceException;
  * {@link uk.co.spudsoft.query.exec.SourceInstance} class for SQL using JDBC.
  * <P>
  * Configuration is via a {@link uk.co.spudsoft.query.defn.SourceJdbc} object, that may reference {@link uk.co.spudsoft.query.main.ProtectedCredentials} configured globally.
- * 
+ *
  * @author jtalbut
  */
-public class SourceJdbcInstance extends AbstractSource {
-  
+public class SourceJdbcInstance implements SourceInstance {
+
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(SourceSqlStreamingInstance.class);
-  
+
   private final Vertx vertx;
-  private final Context context;
+  private final RequestContext requestContext;
   private final SourceJdbc definition;
-  
+
   private JdbcReadStream jdbcReadStream;
-  
+
   /**
    * Constructor.
    * @param vertx The Vert.x instance.
-   * @param context The Vert.x context.
+   * @param requestContext The request context.
    * @param meterRegistry MeterRegistry for production of metrics.
    * @param definition The {@link SourceSql} definition.
-   * @param defaultName The name to use for the SourceInstance if no other name is provided in the definition.
    */
-  public SourceJdbcInstance(Vertx vertx, Context context, MeterRegistry meterRegistry, SourceJdbc definition, String defaultName) {
-    super(Strings.isNullOrEmpty(definition.getName()) ? defaultName : definition.getName());
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
+  public SourceJdbcInstance(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, SourceJdbc definition) {
     this.vertx = vertx;
-    this.context = context;
-    this.definition = definition;    
+    this.requestContext = requestContext;
+    this.definition = definition;
   }
 
   @Override
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
 
     RequestContext requestContext = pipeline.getRequestContext();
-    this.addNameToContextLocalData();
-    
+
     String endpointName = definition.getEndpoint();
     if (Strings.isNullOrEmpty(endpointName)) {
       try {
@@ -86,7 +83,7 @@ public class SourceJdbcInstance extends AbstractSource {
         logger.warn("Failed to render endpoint template ({}): ", definition.getEndpointTemplate(), ex);
         return Future.failedFuture(ex);
       }
-    }    
+    }
     Endpoint endpoint = pipeline.getSourceEndpoints().get(endpointName);
     if (endpoint == null) {
       return Future.failedFuture(new ServiceException(400, "Endpoint \"" + endpointName + "\" not found in " + pipeline.getSourceEndpoints().keySet()));
@@ -110,7 +107,7 @@ public class SourceJdbcInstance extends AbstractSource {
       }
     }
     String finalUrl = url;
-    
+
     String query = definition.getQuery();
     if (!Strings.isNullOrEmpty(definition.getQueryTemplate())) {
       try {
@@ -121,7 +118,7 @@ public class SourceJdbcInstance extends AbstractSource {
       }
     }
     String finalQuery = query;
-    
+
     String credentials[];
     try {
       credentials = processCredentials(endpoint, executor, requestContext);
@@ -129,26 +126,25 @@ public class SourceJdbcInstance extends AbstractSource {
       logger.warn("Failed to process credentials: ", ex);
       return Future.failedFuture(ex);
     }
-    
+
     return runInitialization(finalUrl, credentials, finalQuery, pipeline, requestContext);
   }
 
   @SuppressFBWarnings(value = {"OBL_UNSATISFIED_OBLIGATION", "ODR_OPEN_DATABASE_RESOURCE", "SQL_INJECTION_JDBC"}, justification = "JDBC objects must be closed by JdbcReadStream")
   private Future<ReadStreamWithTypes> runInitialization(String finalUrl, String[] credentials, String finalQuery, PipelineInstance pipeline, RequestContext requestContext) throws RuntimeException {
-    
+
     Promise<ReadStreamWithTypes> result = Promise.promise();
-    
-    jdbcReadStream = new JdbcReadStream(this, this.context, definition, result);
+
+    jdbcReadStream = new JdbcReadStream(Vertx.currentContext(), requestContext, definition, result);
     jdbcReadStream.exceptionHandler(ex -> {
-      addNameToContextLocalData();                
       logger.error("Exception occured in stream: ", ex);
     });
-    
-    jdbcReadStream.start(requestContext.getRequestId() + ":" + getName(), finalUrl, credentials, finalQuery, pipeline);
-    
+
+    jdbcReadStream.start(requestContext.getRequestId() + ":" + pipeline.getName(), finalUrl, credentials, finalQuery, pipeline);
+
     return result.future();
   }
-  
+
   static String coalesce(String one, String two) {
     if (one == null) {
       return two;
@@ -191,5 +187,5 @@ public class SourceJdbcInstance extends AbstractSource {
     }
     return new String[]{username, password};
   }
-  
+
 }

@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.procs.sort;
 
+import inet.ipaddr.IPAddressString;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -41,6 +42,7 @@ import uk.co.spudsoft.query.defn.ProcessorSort;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
 /**
@@ -64,7 +66,9 @@ public class ProcessorSortInstanceTest {
             , DataRow.create(types, "id", 4, "timestamp", LocalDateTime.of(1971, Month.MARCH, 3, 5, 4), "value", "one")
     );
     
-    ProcessorSortInstance instance = new ProcessorSortInstance(vertx, () -> {}, vertx.getOrCreateContext()
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    
+    ProcessorSortInstance instance = new ProcessorSortInstance(vertx, reqctx
             , ProcessorSort.builder().fields(Arrays.asList("timestamp")).build()
             , "P0-Sort"
     );
@@ -75,7 +79,7 @@ public class ProcessorSortInstanceTest {
   @Test
   public void testGetId() {
     ProcessorSort defn = ProcessorSort.builder().name("id").build();
-    ProcessorSortInstance instance = new ProcessorSortInstance(null, null, null, defn, "P0-Sort");
+    ProcessorSortInstance instance = new ProcessorSortInstance(null, null, defn, "P0-Sort");
     assertEquals("P0-Sort", instance.getName());
   }
   
@@ -95,7 +99,9 @@ public class ProcessorSortInstanceTest {
             , "long", Long.MAX_VALUE
     );
 
-    ProcessorSortInstance instance = new ProcessorSortInstance(vertx, () -> {}, vertx.getOrCreateContext()
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    
+    ProcessorSortInstance instance = new ProcessorSortInstance(vertx, reqctx
             , ProcessorSort.builder().fields(Arrays.asList("timestamp")).build()
             , "P0-Sort"
     );
@@ -132,7 +138,9 @@ public class ProcessorSortInstanceTest {
     );
     assertEquals(DataType.Null, row.getType("wasnull"));
 
-    ProcessorSortInstance instance = new ProcessorSortInstance(vertx, () -> {}, vertx.getOrCreateContext()
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    
+    ProcessorSortInstance instance = new ProcessorSortInstance(vertx, reqctx
             , ProcessorSort.builder().fields(Arrays.asList("timestamp")).build()
             , "P0-Sort"
     );

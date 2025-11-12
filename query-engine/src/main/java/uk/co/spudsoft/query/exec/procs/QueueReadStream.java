@@ -31,17 +31,17 @@ import org.slf4j.LoggerFactory;
  * An {@link java.util.ArrayDeque} is created in the constructor and used as a buffer for items as they are added.
  * <P>
  * The {@link java.util.Deque} itself is not exposed, the only permitted modification is the addition of items via the {@link #add(java.lang.Object)} method.
- * 
+ *
  * @param <T> The type of item being streamed.
  * @author jtalbut
  */
 public class QueueReadStream<T> implements ReadStream<T> {
-  
+
   private static final Logger logger = LoggerFactory.getLogger(QueueReadStream.class);
-  
+
   private final Context context;
   private final Deque<T> items;
-  
+
   private final Object lock = new Object();
 
   private Handler<Throwable> exceptionHandler;
@@ -52,17 +52,17 @@ public class QueueReadStream<T> implements ReadStream<T> {
   private boolean emitting;
   private boolean ended;
   private boolean completed;
-  
+
   /**
    * Constructor.
-   * @param context The Vert.x context to use for asynchronous method calls.
+   * @param context The Vert.x {@link Context} to run asynchronous methods.
    */
   @SuppressFBWarnings("EI_EXPOSE_REP2")
   public QueueReadStream(Context context) {
     this.context = context;
     this.items = new ArrayDeque<>();
   }
-  
+
   /**
    * Add an item to the queue of items to be sent (and emit it if appropriate).
    * @param item The item to add.
@@ -98,7 +98,7 @@ public class QueueReadStream<T> implements ReadStream<T> {
     context.runOnContext(v -> process());
     return this;
   }
-  
+
   private void process() {
     while (!ended && emitting) {
       Handler<Throwable> exceptionHandlerCaptured;
@@ -137,13 +137,13 @@ public class QueueReadStream<T> implements ReadStream<T> {
         }
       }
       if (ended && endHandlerCaptured != null) {
-        logger.debug("Calling endHandler"); 
+        logger.debug("Calling endHandler");
         endHandlerCaptured.handle(null);
         return ;
       }
     }
   }
-  
+
   @Override
   public QueueReadStream<T> exceptionHandler(Handler<Throwable> handler) {
     synchronized (lock) {
@@ -167,7 +167,7 @@ public class QueueReadStream<T> implements ReadStream<T> {
     }
     return this;
   }
-  
+
   @Override
   public QueueReadStream<T> pause() {
     synchronized (lock) {

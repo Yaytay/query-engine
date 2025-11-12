@@ -17,6 +17,7 @@ arguments:
     type: String
 source:
   type: TEST
+  name: Source
   rowCount: 2
 processors:
 - type: SCRIPT

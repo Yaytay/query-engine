@@ -19,7 +19,6 @@ package uk.co.spudsoft.query.exec.sources.sql;
 import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.tracing.TracingPolicy;
@@ -40,10 +39,10 @@ import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.SharedMap;
+import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
 import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
 import uk.co.spudsoft.query.exec.context.RequestContext;
-import uk.co.spudsoft.query.exec.sources.AbstractSource;
 import uk.co.spudsoft.query.main.ProtectedCredentials;
 import uk.co.spudsoft.query.web.ServiceException;
 
@@ -51,36 +50,35 @@ import uk.co.spudsoft.query.web.ServiceException;
  * {@link uk.co.spudsoft.query.exec.SourceInstance} class for SQL.
  * <P>
  * Configuration is via a {@link uk.co.spudsoft.query.defn.SourceSql} object, that may reference {@link uk.co.spudsoft.query.main.ProtectedCredentials} configured globally.
- * 
+ *
  * @author jtalbut
  */
-public class SourceSqlStreamingInstance extends AbstractSource {
+public class SourceSqlStreamingInstance implements SourceInstance {
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(SourceSqlStreamingInstance.class);
-  
+
   private final Vertx vertx;
-  private final PoolCreator poolCreator;  
+  private final PoolCreator poolCreator;
   private final SourceSql definition;
   private RowStreamWrapper rowStreamWrapper;
-  
+
   private SqlConnection connection;
   private PreparedStatement preparedStatement;
   private Transaction transaction;
-  
+
   /**
    * Constructor.
    * @param vertx The Vert.x instance.
-   * @param context The Vert.x context.
+   * @param requestContext The request context.
    * @param meterRegistry MeterRegistry for production of metrics.
    * @param sharedMap Pooling map.
    * @param definition The {@link SourceSql} definition.
-   * @param defaultName The name to use for the SourceInstance if no other name is provided in the definition.
    */
-  public SourceSqlStreamingInstance(Vertx vertx, Context context, MeterRegistry meterRegistry, SharedMap sharedMap, SourceSql definition, String defaultName) {
-    super(Strings.isNullOrEmpty(definition.getName()) ? defaultName : definition.getName());
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
+  public SourceSqlStreamingInstance(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, SharedMap sharedMap, SourceSql definition) {
     this.vertx = vertx;
-    
+
     Object pco = sharedMap.get(PoolCreator.class.toString());
     if (pco instanceof PoolCreator pc) {
       this.poolCreator = pc;
@@ -96,7 +94,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
   Future<PreparedStatement> prepareSqlStatement(SqlConnection conn, String sql) {
     return conn.prepare(sql);
   }
-  
+
   static AbstractSqlPreparer getPreparer(String url) {
     if (url.startsWith("sqlserver")) {
       return new MsSqlPreparer();
@@ -108,7 +106,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
       return new MsSqlPreparer();
     }
   }
-  
+
   static boolean isPositive(Duration value) {
     return (value != null && value.isPositive());
   }
@@ -120,13 +118,13 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     } else if (isPositive(endpoint.getConnectionTimeout())) {
       setConnectionTimeout(endpoint.getConnectionTimeout(), po);
     }
-    
+
     if (isPositive(definition.getIdleTimeout())) {
       setIdleTimeout(definition.getIdleTimeout(), po);
     } else if (isPositive(endpoint.getIdleTimeout())) {
       setIdleTimeout(endpoint.getIdleTimeout(), po);
     }
-    
+
     return po;
   }
 
@@ -143,13 +141,12 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     po.setIdleTimeout((int) millis);
     po.setIdleTimeoutUnit(TimeUnit.MILLISECONDS);
   }
-  
+
   @Override
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
 
     RequestContext requestContext = pipeline.getRequestContext();
-    this.addNameToContextLocalData();
-    
+
     String endpointName = definition.getEndpoint();
     if (Strings.isNullOrEmpty(endpointName)) {
       try {
@@ -158,7 +155,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
         logger.warn("Failed to render endpoint template ({}): ", definition.getEndpointTemplate(), ex);
         return Future.failedFuture(ex);
       }
-    }    
+    }
     Endpoint endpoint = pipeline.getSourceEndpoints().get(endpointName);
     if (endpoint == null) {
       return Future.failedFuture(new ServiceException(400, "Endpoint \"" + endpointName + "\" not found in " + pipeline.getSourceEndpoints().keySet()));
@@ -171,7 +168,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
         return Future.failedFuture(new ServiceException(503, "Endpoint \"" + endpointName + "\" not accessible", new IllegalStateException(message)));
       }
     }
-    
+
     String url = endpoint.getUrl();
     if (Strings.isNullOrEmpty(url)) {
       try {
@@ -181,21 +178,19 @@ public class SourceSqlStreamingInstance extends AbstractSource {
         return Future.failedFuture(ex);
       }
     }
-    
+
     SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(url);
     connectOptions.setTracingPolicy(TracingPolicy.IGNORE);
 
     PoolOptions poolOptions = poolOptions(definition, endpoint);
-    
+
     try {
       processCredentials(endpoint, connectOptions, executor, requestContext);
     } catch (ServiceException ex) {
       return Future.failedFuture(ex);
     }
     Pool pool = poolCreator.pool(vertx, connectOptions, poolOptions);
-    Context context = vertx.getOrCreateContext();
-    logger.trace("Outer context: {}", context);
-    
+
     String query = definition.getQuery();
     if (!Strings.isNullOrEmpty(definition.getQueryTemplate())) {
       try {
@@ -205,12 +200,12 @@ public class SourceSqlStreamingInstance extends AbstractSource {
         return Future.failedFuture(ex);
       }
     }
-    
+
     AbstractSqlPreparer preparer = getPreparer(url);
     AbstractSqlPreparer.QueryAndArgs queryAndArgs = preparer.prepareSqlStatement(query, definition.getReplaceDoubleQuotes(), pipeline.getArgumentInstances());
     String sql = queryAndArgs.query();
     Tuple args = Tuple.from(queryAndArgs.args());
-    
+
     long start = System.currentTimeMillis();
     return pool.getConnection()
             .recover(ex -> {
@@ -219,34 +214,28 @@ public class SourceSqlStreamingInstance extends AbstractSource {
             })
             .compose(conn -> {
               connection = conn;
-              addNameToContextLocalData();
               logger.info("Preparing SQL: {}", sql);
               return prepareSqlStatement(conn, sql);
             }).compose(ps -> {
-              addNameToContextLocalData();
               preparedStatement = ps;
               return connection.begin();
             }).compose(tran -> {
-              addNameToContextLocalData();
               transaction = tran;
               if (logger.isDebugEnabled()) {
                 logger.debug("Executing SQL stream on {} with {}", connection, args.deepToString());
               }
               // RowStream<Row> rowStream = preparedStatement.createStream(definition.getStreamingFetchSize(), args);
-              MetadataRowStreamImpl rowStream = new MetadataRowStreamImpl(this, preparedStatement, context, definition.getStreamingFetchSize(), args);
+              MetadataRowStreamImpl rowStream = new MetadataRowStreamImpl(preparedStatement, requestContext, Vertx.currentContext(), definition.getStreamingFetchSize(), args);
               rowStream.exceptionHandler(ex -> {
-                addNameToContextLocalData();                
                 logger.error("Exception occured in stream: ", ex);
               });
-              rowStreamWrapper = new RowStreamWrapper(this, connection, transaction, rowStream, definition.getColumnTypeOverrideMap());
+              rowStreamWrapper = new RowStreamWrapper(connection, transaction, rowStream, definition.getColumnTypeOverrideMap());
               return rowStreamWrapper.ready();
             })
             .recover(ex -> {
-              addNameToContextLocalData();
               return Future.failedFuture(ServiceException.rethrowOrWrap(ex));
             })
             .onFailure(ex -> {
-              addNameToContextLocalData();
               long end = System.currentTimeMillis();
               logger.warn("SQL source failed (after {}s): ", (end - start) / 1000.0, ex);
               if (connection != null) {
@@ -256,7 +245,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
             .map(v -> new ReadStreamWithTypes(rowStreamWrapper, rowStreamWrapper.getTypes()))
             ;
   }
-  
+
   static String coalesce(String one, String two) {
     if (one == null) {
       return two;

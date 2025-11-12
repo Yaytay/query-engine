@@ -100,12 +100,12 @@ public class InfoHandler {
           , @Suspended final AsyncResponse response
   ) {
     try {
-      logger.debug("RequestId: {}", RequestContext.retrieveRequestId());
-      // RoutingContext routingContext = RoutingContextInjector.getContext(httpServerRequest);
       RequestContext requestContext = HandlerAuthHelper.getRequestContext(routingContext, requireSession);
+      logger.debug("RequestId: {}", requestContext.getRequestId());
 
       loader.getAccessible(requestContext)
               .onSuccess(ap -> {
+                logger.debug("RequestId: {}", requestContext.getRequestId());
                 response.resume(Response.ok(ap, MediaType.APPLICATION_JSON).build());
               })
               .onFailure(ex -> {

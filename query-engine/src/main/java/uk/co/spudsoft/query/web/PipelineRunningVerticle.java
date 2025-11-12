@@ -40,11 +40,6 @@ public class PipelineRunningVerticle extends VerticleBase {
   
   private static final Logger logger = LoggerFactory.getLogger(PipelineRunningVerticle.class);
   
-  /**
-   * The base name of any sources that do not have a specified name.
-   */
-  public static final String ROOT_SOURCE_DEFAULT_NAME = "Source";
-  
   private final Vertx vertx;
   private final MeterRegistry meterRegistry;
   private final Auditor auditor;
@@ -108,24 +103,41 @@ public class PipelineRunningVerticle extends VerticleBase {
   }
   
   private Future<Void> handleRequestOnContext(PipelineRunningTask task) {
+    logger.atInfo()
+            .addKeyValue("requestId", task.requestContext.getRequestId())
+            .addKeyValue("runId", task.requestContext.getRunID())
+            .addKeyValue("pipeline", "$")
+            .log("Creating PipelineInstance");
     try {
       PipelineInstance instance;
       FormatInstance formatInstance = task.chosenFormat.createInstance(vertx, task.requestContext, task.responseStream);
-      SourceInstance sourceInstance = task.pipeline.getSource().createInstance(vertx, Vertx.currentContext(), meterRegistry, pipelineExecutor, ROOT_SOURCE_DEFAULT_NAME);
+      SourceInstance sourceInstance = task.pipeline.getSource().createInstance(vertx, task.requestContext, meterRegistry, pipelineExecutor);
       instance = new PipelineInstance(
               task.requestContext
               , task.pipeline
+              , "$"
               , task.arguments
               , task.pipeline.getSourceEndpointsMap()
-              , pipelineExecutor.createPreProcessors(vertx, Vertx.currentContext(), task.pipeline)
+              , pipelineExecutor.createPreProcessors(vertx, task.requestContext, task.pipeline)
               , sourceInstance
-              , pipelineExecutor.createProcessors(vertx, sourceInstance, Vertx.currentContext(), task.requestContext, task.pipeline, task.queryStringParams, null)
+              , pipelineExecutor.createProcessors(vertx, task.requestContext, task.pipeline, task.queryStringParams, "$")
               , formatInstance
       );
-      logger.debug("Instance: {}", instance);
+      logger.atDebug()
+              .addKeyValue("requestId", task.requestContext.getRequestId())
+              .addKeyValue("runId", task.requestContext.getRunID())
+              .addKeyValue("pipeline", "$")
+              .addArgument(instance)
+              .log("PipelineInstance: {}")
+              ;
       return pipelineExecutor.initializePipeline(instance).map(v -> instance)
               .compose(i -> {
-                logger.info("Pipeline initiated");
+                logger.atInfo()
+                        .addKeyValue("requestId", task.requestContext.getRequestId())
+                        .addKeyValue("runId", task.requestContext.getRunID())
+                        .addKeyValue("pipeline", "$")
+                        .log("Pipeline initiated")
+                        ;
                 return instance.getFinalPromise().future();
               });
     } catch (Throwable ex) {

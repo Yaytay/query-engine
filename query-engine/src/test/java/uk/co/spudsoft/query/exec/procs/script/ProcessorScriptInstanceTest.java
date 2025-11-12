@@ -47,7 +47,7 @@ public class ProcessorScriptInstanceTest {
   @Test
   public void testGetId() {
     ProcessorScript definition = ProcessorScript.builder().name("id").build();
-    ProcessorScriptInstance instance = definition.createInstance(null, null, null, null, "P0-Script");
+    ProcessorScriptInstance instance = definition.createInstance(null, null, null, "P0-Script");
     assertEquals("P0-Script", instance.getName());
   }
 

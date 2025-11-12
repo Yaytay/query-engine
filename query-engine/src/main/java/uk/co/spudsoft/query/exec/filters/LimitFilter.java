@@ -17,20 +17,19 @@
 package uk.co.spudsoft.query.exec.filters;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.ProcessorLimit;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
-import uk.co.spudsoft.query.exec.SourceNameTracker;
 
 /**
  * Filter for converting _limit command line arguments into {@link uk.co.spudsoft.query.exec.procs.filters.ProcessorLimitInstance}s.
- * 
+ *
  * The value of the argument should be a positive integer, that will be the maximum number of rows returned.
  * If at all possible limit instructions should be implemented in the query, rather than using this filter.
- * 
+ *
  * @author jtalbut
  */
 public class LimitFilter implements Filter {
@@ -42,14 +41,14 @@ public class LimitFilter implements Filter {
    */
   public LimitFilter() {
   }
-  
+
   @Override
   public String getKey() {
     return "_limit";
   }
 
   @Override
-  public ProcessorInstance createProcessor(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, String argument, String name) throws IllegalArgumentException {
+  public ProcessorInstance createProcessor(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, String argument, String name) throws IllegalArgumentException {
     int value;
     try {
       value = Integer.parseInt(argument);
@@ -58,7 +57,7 @@ public class LimitFilter implements Filter {
       throw new IllegalArgumentException("Invalid argument to _limit filter, should be an integer");
     }
     ProcessorLimit definition = ProcessorLimit.builder().name(name).limit(value).build();
-    return definition.createInstance(vertx, sourceNameTracker, context, meterRegistry, name);
+    return definition.createInstance(vertx, requestContext, meterRegistry, name);
   }
-  
+
 }

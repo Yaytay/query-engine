@@ -24,7 +24,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.reactiverse.contextual.logging.ContextualData;
 import io.vertx.core.MultiMap;
-import io.vertx.core.Vertx;
 import io.vertx.core.http.Cookie;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.impl.headers.HeadersMultiMap;
@@ -299,7 +298,7 @@ public final class RequestContext {
   }
   
   /**
-   * Generate a requestId, store it in MDC and return it.
+   * Generate a requestId.
    * 
    * The request ID is usually generated from the OpenTelemetry trace/span IDs, falling back to a random UUID.
    * 
@@ -307,13 +306,11 @@ public final class RequestContext {
    */
   private static String generateRequestId() {
     String requestId = null;
-    if (Vertx.currentContext() != null) {
-      Span currentSpan = Span.current();
-      if (currentSpan != null) {
-        SpanContext spanContext = currentSpan.getSpanContext();
-        if (spanContext.isValid()) {
-          requestId = spanContext.getTraceId() + ":" + spanContext.getSpanId();
-        }
+    Span currentSpan = Span.current();
+    if (currentSpan != null) {
+      SpanContext spanContext = currentSpan.getSpanContext();
+      if (spanContext.isValid()) {
+        requestId = spanContext.getTraceId() + ":" + spanContext.getSpanId();
       }
     }
     if (requestId == null) {
@@ -322,14 +319,6 @@ public final class RequestContext {
     return requestId;
   }
 
-  /**
-   * Retrieve the requestId from MDC.
-   * 
-   * @return the requestId found in MDC.
-   */
-  public static String retrieveRequestId() {
-    return ContextualData.get(REQUEST_ID);
-  }
   
   /**
    * Store the requestContext into the Vert.x RoutingContext.

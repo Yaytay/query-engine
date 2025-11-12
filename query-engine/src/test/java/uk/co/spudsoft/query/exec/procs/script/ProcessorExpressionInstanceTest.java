@@ -31,7 +31,6 @@ import uk.co.spudsoft.query.defn.ProcessorExpression;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
-import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
@@ -44,35 +43,36 @@ import uk.co.spudsoft.query.exec.procs.ListReadStream;
 @ExtendWith(VertxExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ProcessorExpressionInstanceTest {
-  
+
   @Test
   public void testGetId() {
     ProcessorExpression definition = ProcessorExpression.builder().name("id").build();
-    ProcessorExpressionInstance instance = definition.createInstance(null, null, null, null, "P0-Expression");
+    ProcessorExpressionInstance instance = definition.createInstance(null, null, null, "P0-Expression");
     assertEquals("P0-Expression", instance.getName());
   }
 
   @Test
   public void testPredicate(Vertx vertx, VertxTestContext testContext) {
-    
-    ProcessorExpression definition = ProcessorExpression.builder().name("id").predicate("iteration < 2").build();
 
-    ProcessorExpressionInstance instance = definition.createInstance(vertx, mock(SourceNameTracker.class), vertx.getOrCreateContext(), null, "P0-Expression");
-    
+    ProcessorExpression definition = ProcessorExpression.builder().name("id").predicate("iteration < 2").build();
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+
+    ProcessorExpressionInstance instance = definition.createInstance(vertx, reqctx, null, "P0-Expression");
+
     Types types = new Types();
     ListReadStream<DataRow> inputStream = new ListReadStream<>(vertx.getOrCreateContext(), Arrays.asList(
-            DataRow.create(types).put("iteration", 0)
-            , DataRow.create(types).put("iteration", 1)
-            , DataRow.create(types).put("iteration", 2)
-            , DataRow.create(types).put("iteration", 3)
+            DataRow.create(types).put("rownum", 0),
+             DataRow.create(types).put("rownum", 1),
+             DataRow.create(types).put("rownum", 2),
+             DataRow.create(types).put("rownum", 3)
     ));
     ReadStreamWithTypes input = new ReadStreamWithTypes(inputStream, types);
-    
+
     RequestContext context = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
-    
+
     PipelineInstance pipeline = mock(PipelineInstance.class);
     when(pipeline.getRequestContext()).thenReturn(context);
-    
+
     instance.initialize(null, pipeline, null, 0, input)
             .compose(output -> {
               return ReadStreamToList.capture(output.getStream());
@@ -80,16 +80,98 @@ public class ProcessorExpressionInstanceTest {
             .onSuccess(rows -> {
               testContext.verify(() -> {
                 assertEquals(2, rows.size());
-                assertEquals(0, rows.get(0).get("iteration"));
-                assertEquals(1, rows.get(1).get("iteration"));
+                assertEquals(0, rows.get(0).get("rownum"));
+                assertEquals(1, rows.get(1).get("rownum"));
               });
               testContext.completeNow();
             })
             .onFailure(ar -> {
               testContext.failNow(ar);
-            })
-            ;
-    
+            });
+
   }
-  
+
+  @Test
+  public void testInitializeFieldTypeInsertionAndMapping(Vertx vertx, VertxTestContext testContext) {
+    // definition sets a new field "result" with an expression and declares its type
+    ProcessorExpression definition = ProcessorExpression.builder()
+            .name("id")
+            .field("result")
+            .fieldType(uk.co.spudsoft.query.defn.DataType.Integer)
+            .fieldValue("row['iter'] * 10")
+            .build();
+
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new inet.ipaddr.IPAddressString("127.0.0.1"), null);
+    ProcessorExpressionInstance instance = definition.createInstance(vertx, reqctx, null, "P0-Expression");
+
+    Types types = new Types();
+    // input has only "iteration" initially, "result" should be inserted by initialize()
+    ListReadStream<DataRow> inputStream = new ListReadStream<>(vertx.getOrCreateContext(), Arrays.asList(
+            DataRow.create(types).put("iter", 1),
+            DataRow.create(types).put("iter", 2),
+            DataRow.create(types).put("iter", 3)
+    ));
+    ReadStreamWithTypes input = new ReadStreamWithTypes(inputStream, types);
+
+    PipelineInstance pipeline = mock(PipelineInstance.class);
+    when(pipeline.getRequestContext()).thenReturn(reqctx);
+
+    instance.initialize(null, pipeline, null, 0, input)
+            .compose(output -> {
+              // assert the type for "result" got added before streaming
+              testContext.verify(() -> {
+                assertEquals(uk.co.spudsoft.query.defn.DataType.Integer, output.getTypes().get("result"));
+              });
+              return uk.co.spudsoft.query.exec.fmts.ReadStreamToList.capture(output.getStream());
+            })
+            .onSuccess(rows -> {
+              testContext.verify(() -> {
+                assertEquals(3, rows.size());
+                assertEquals(10, rows.get(0).get("result"));
+                assertEquals(20, rows.get(1).get("result"));
+                assertEquals(30, rows.get(2).get("result"));
+              });
+              testContext.completeNow();
+            })
+            .onFailure(testContext::failNow);
+  }
+
+  @Test
+  public void testInitializeFieldTypeConflictFails(Vertx vertx, VertxTestContext testContext) {
+    // definition attempts to set "value" as Integer while existing type is String
+    ProcessorExpression definition = ProcessorExpression.builder()
+            .name("id")
+            .field("value")
+            .fieldType(uk.co.spudsoft.query.defn.DataType.Integer)
+            .fieldValue("1")
+            .build();
+
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new inet.ipaddr.IPAddressString("127.0.0.1"), null);
+    ProcessorExpressionInstance instance = definition.createInstance(vertx, reqctx, null, "P0-Expression");
+
+    Types types = new Types();
+    // predefine conflicting type
+    types.putIfAbsent("value", uk.co.spudsoft.query.defn.DataType.String);
+
+    ListReadStream<DataRow> inputStream = new ListReadStream<>(vertx.getOrCreateContext(), Arrays.asList(
+            DataRow.create(types).put("value", "x")
+    ));
+    ReadStreamWithTypes input = new ReadStreamWithTypes(inputStream, types);
+
+    PipelineInstance pipeline = mock(PipelineInstance.class);
+    when(pipeline.getRequestContext()).thenReturn(reqctx);
+
+    instance.initialize(null, pipeline, null, 0, input)
+            .onSuccess(rs -> testContext.failNow(new AssertionError("Expected initialize to fail due to type conflict")))
+            .onFailure(err -> {
+              testContext.verify(() -> {
+                // Verify message mentions attempted change
+                String msg = err.getMessage();
+                // Avoid overly strict assertion; just ensure it indicates change of type for "value"
+                org.junit.jupiter.api.Assertions.assertTrue(msg.contains("value"));
+                org.junit.jupiter.api.Assertions.assertTrue(msg.contains("Attempt to change type of field"));
+              });
+              testContext.completeNow();
+            });
+  }
 }

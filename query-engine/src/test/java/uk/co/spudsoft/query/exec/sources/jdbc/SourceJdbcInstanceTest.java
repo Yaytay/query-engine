@@ -59,14 +59,15 @@ public class SourceJdbcInstanceTest {
   public void testInitializeEndpointNotFound(Vertx vertx, VertxTestContext testContext) {
     
     vertx.getOrCreateContext().runOnContext(v -> {
-      Context context = vertx.getOrCreateContext();
+      RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+      
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
       PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
       
       SourceJdbc definition = SourceJdbc.builder()
               .endpoint("bob")
               .build();
-      SourceJdbcInstance instance = new SourceJdbcInstance(vertx, context, null, definition, "test");
+      SourceJdbcInstance instance = new SourceJdbcInstance(vertx, reqctx, null, definition);
       
       Pipeline pipeline = Pipeline.builder()
               .sourceEndpoints(
@@ -100,9 +101,10 @@ public class SourceJdbcInstanceTest {
         pipelineInstance= new PipelineInstance(
                 req
                 , pipeline
+                , "$"
                 , pipelineExecutor.prepareArguments(req, pipeline.getArguments(), params)
                 , pipeline.getSourceEndpointsMap()
-                , pipelineExecutor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
+                , pipelineExecutor.createPreProcessors(vertx, reqctx, pipeline)
                 , instance
                 , Collections.emptyList()
                 , new FormatCaptureInstance()
@@ -127,14 +129,14 @@ public class SourceJdbcInstanceTest {
   public void testInitializeEndpointNotPermitted(Vertx vertx, VertxTestContext testContext) {
     
     vertx.getOrCreateContext().runOnContext(v -> {
-      Context context = vertx.getOrCreateContext();
+      RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
       PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
       
       SourceJdbc definition = SourceJdbc.builder()
               .endpoint("bob")
               .build();
-      SourceJdbcInstance instance = new SourceJdbcInstance(vertx, context, null, definition, "test");
+      SourceJdbcInstance instance = new SourceJdbcInstance(vertx, reqctx, null, definition);
       
       Pipeline pipeline = Pipeline.builder()
               .sourceEndpoints(
@@ -171,9 +173,10 @@ public class SourceJdbcInstanceTest {
         pipelineInstance= new PipelineInstance(
                 req
                 , pipeline
+                , "$"
                 , pipelineExecutor.prepareArguments(req, pipeline.getArguments(), params)
                 , pipeline.getSourceEndpointsMap()
-                , pipelineExecutor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
+                , pipelineExecutor.createPreProcessors(vertx, reqctx, pipeline)
                 , instance
                 , Collections.emptyList()
                 , new FormatCaptureInstance()

@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.procs.subquery;
 
+import inet.ipaddr.IPAddressString;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.streams.ReadStream;
@@ -36,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
@@ -72,7 +74,10 @@ public class MergeStreamTest {
     ReadStream<DataRow> primaryRowsStream = createPrimaryRows(context);
     ReadStream<DataRow> secondaryRowsStream = createSecondaryRows(context);
 
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    
     MergeStream<DataRow, DataRow, DataRow> ms = new MergeStream<>(context
+            , reqctx
             , primaryRowsStream
             , secondaryRowsStream
             , this::merge
@@ -111,7 +116,10 @@ public class MergeStreamTest {
     ReadStream<DataRow> primaryRowsStream = createPrimaryRows(context);
     ReadStream<DataRow> secondaryRowsStream = createSecondaryRows(context);
 
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    
     MergeStream<DataRow, DataRow, DataRow> ms = new MergeStream<>(context
+            , reqctx
             , primaryRowsStream
             , secondaryRowsStream
             , this::merge

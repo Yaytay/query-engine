@@ -23,10 +23,10 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.DiscriminatorMapping;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import uk.co.spudsoft.query.exec.SharedMap;
 import uk.co.spudsoft.query.exec.SourceInstance;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 
 /**
  * The source of data for a pipeline.
@@ -57,14 +57,13 @@ public interface Source {
   /**
    * Create a new {@link SourceInstance} specialized for this Source instance.
    * @param vertx The Vert.x instance.
-   * @param context The Vert.x context.
+   * @param requestContext The request context.
    * @param meterRegistry MeterRegistry for production of metrics.
    * @param sharedMap Pooling map.
-   * @param defaultName The name to use for the SourceInstance if no other name is provided in the definition.
    * @return A newly created instance of an implementation of {@link SourceInstance}.
    */
   @JsonIgnore
-  SourceInstance createInstance(Vertx vertx, Context context, MeterRegistry meterRegistry, SharedMap sharedMap, String defaultName);
+  SourceInstance createInstance(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, SharedMap sharedMap);
   
   /**
    * The type of Source being configured.
@@ -84,12 +83,11 @@ public interface Source {
   void validate() throws IllegalArgumentException;
   
   /**
-   * Get the name of the Source, that will be used in logging.
-   * This is optional, if it is not set a numeric (or delimited numeric) name will be allocated.
+   * Get the name of the Source, this is now deprecated.
    * @return the name of the Source, that will be used in logging.
    */
   @Schema(description = """
-                        <P>Get the name of the Source, that will be used in logging.</P>
+                        <P>Get the name of the Source, this is now deprecated.</P>
                         <P>
                         This is optional, if it is not set a numeric (or delimited numeric) name will be allocated.
                         </P>

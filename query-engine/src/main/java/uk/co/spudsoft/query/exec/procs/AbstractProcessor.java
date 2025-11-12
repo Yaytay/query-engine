@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 jtalbut
+ * Copyright (C) 2025 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,26 +14,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package uk.co.spudsoft.query.exec.sources;
+package uk.co.spudsoft.query.exec.procs;
 
-import io.reactiverse.contextual.logging.ContextualData;
-import uk.co.spudsoft.query.exec.SourceInstance;
-import uk.co.spudsoft.query.exec.SourceNameTracker;
+import uk.co.spudsoft.query.exec.ProcessorInstance;
 
 /**
- * Abstract class to aid the implementation of {@link uk.co.spudsoft.query.exec.SourceInstance} classes.
- * 
+ * Base class for {@link ProcessorInstance} implementations.
  * @author jtalbut
  */
-public abstract class AbstractSource implements SourceInstance, SourceNameTracker {
-  
+public abstract class AbstractProcessor implements ProcessorInstance {
+
   private final String name;
 
   /**
    * Constructor.
-   * @param name the name of the data source, as used in logs and tracking.   
+   * 
+   * The name passed in will be used as-is and should be either the name configured in the definition file or
+   * a constructed name based on the JSON path to the processor in the definition file.
+   * 
+   * In both cases the name should already have any parent processor name prepended to it.
+   * In this way, if processors are not explicitly named, the name used should be a full JsonPath to it.
+   * 
+   * @param name The name of the processor.
    */
-  public AbstractSource(String name) {
+  protected AbstractProcessor(String name) {
     this.name = name;
   }
 
@@ -42,8 +46,4 @@ public abstract class AbstractSource implements SourceInstance, SourceNameTracke
     return name;
   }
 
-  @Override
-  public void addNameToContextLocalData() {
-    ContextualData.put(SourceInstance.SOURCE_CONTEXT_KEY, name);
-  }
 }

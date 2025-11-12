@@ -17,40 +17,38 @@
 package uk.co.spudsoft.query.exec.filters;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
-import uk.co.spudsoft.query.exec.SourceNameTracker;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 
 /**
  * Definition of a Filter.
- * 
+ *
  * Filters are classes for converting from command line arguments to {@link uk.co.spudsoft.query.exec.ProcessorInstance}s.
- * 
- * The createProcessor method will only be called if the command line argument matches the key, with the value of the command line argument 
+ *
+ * The createProcessor method will only be called if the command line argument matches the key, with the value of the command line argument
  * being passed in.
  * Filters are created in the order they appear in the query string.
- * 
+ *
  * @author jtalbut
  */
 public interface Filter {
-  
+
   /**
    * Get the key for this filter, that would be the argument name used in a query string.
    * @return the key for this filter, that would be the argument name used in a query string.
    */
   String getKey();
-  
+
   /**
    * Create the processor given the argument set on the query string.
    * @param vertx the Vert.x instance.
-   * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
-   * @param context the Vert.x context.
+   * @param requestContext the request context.
    * @param meterRegistry MeterRegistry for production of metrics.
    * @param argument the value of the query string parameter, that must be parsed into the configuration for this {@link ProcessorInstance}.
    * @param name the generated name of the processor to be used in logging and tracking.
    * @return a newly created {@link ProcessorInstance} of the appropriate type.
    */
-  ProcessorInstance createProcessor(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, String argument, String name);
-  
+  ProcessorInstance createProcessor(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, String argument, String name);
+
 }

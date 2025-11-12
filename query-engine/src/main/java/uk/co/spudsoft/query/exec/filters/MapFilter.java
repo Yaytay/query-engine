@@ -17,21 +17,20 @@
 package uk.co.spudsoft.query.exec.filters;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import java.util.ArrayList;
 import java.util.List;
 import uk.co.spudsoft.query.defn.ProcessorMap;
 import uk.co.spudsoft.query.defn.ProcessorMapLabel;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
-import uk.co.spudsoft.query.exec.SourceNameTracker;
 
 /**
  * Filter for converting _map command line arguments into {@link uk.co.spudsoft.query.exec.procs.filters.ProcessorMapInstance}s.
- * 
- * The argument should be a space delimited list of relabels, each of which should be SourceLabel:NewLabel.  
+ *
+ * The argument should be a space delimited list of relabels, each of which should be SourceLabel:NewLabel.
  * The new label cannot contain a colon or a space, if the new label is blank the field will be dropped - the source label may not be blank.
- * 
+ *
  * @author jtalbut
  */
 public class MapFilter implements Filter {
@@ -41,14 +40,14 @@ public class MapFilter implements Filter {
    */
   public MapFilter() {
   }
-  
+
   @Override
   public String getKey() {
     return "_map";
   }
 
   @Override
-  public ProcessorInstance createProcessor(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, String argument, String name) {
+  public ProcessorInstance createProcessor(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, String argument, String name) {
     List<String> fields = SpaceParser.parse(argument);
     if (fields.isEmpty()) {
       throw new IllegalArgumentException("Invalid argument to _map filter, should be a space delimited list of relabels, each of which should be SourceLabel:NewLabel.  The new label cannot contain a colon or a space, if the new label is blank the field will be dropped - the source label may not be blank.");
@@ -63,10 +62,10 @@ public class MapFilter implements Filter {
         String newLabel = field.substring(idx + 1);
         relabels.add(ProcessorMapLabel.builder().sourceLabel(sourceLabel).newLabel(newLabel).build());
       }
-      
+
       ProcessorMap definition = ProcessorMap.builder().relabels(relabels).build();
-      return definition.createInstance(vertx, sourceNameTracker, context, meterRegistry, name);
+      return definition.createInstance(vertx, requestContext, meterRegistry, name);
     }
   }
-  
+
 }

@@ -55,8 +55,6 @@ import uk.co.spudsoft.query.defn.Format;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.ArgumentInstance;
 import uk.co.spudsoft.query.exec.CachingWriteStream;
-import uk.co.spudsoft.query.exec.ProgressNotificationHandler;
-import uk.co.spudsoft.query.exec.notifications.LoggingNotificationHandler;
 
 
 /**
@@ -254,10 +252,6 @@ public class QueryRouter implements Handler<RoutingContext> {
                   auditor.recordResponse(requestContext, response);
                 });
 
-                if (!Strings.isNullOrEmpty(requestContext.getRunID())) {
-                  ProgressNotificationHandler progressNotificationHandler = new LoggingNotificationHandler();
-                  ProgressNotificationHandler.storeNotificationHandler(progressNotificationHandler);
-                }
                 return loader.loadPipeline(query, requestContext, (file, ex) -> auditor.recordFileDetails(requestContext, file, null))
                         .compose(pipelineAndFile -> {
                           pipelineTitle[0] = pipelineAndFile.pipeline().getTitle();
@@ -283,7 +277,7 @@ public class QueryRouter implements Handler<RoutingContext> {
                           if (pipeline.supportsCaching()) {
                             return runCachedPipeline(pipeline, formatRequest, response, responseStream, routingContext);
                           } else {
-                            return runPipeline(pipeline, formatRequest, response, responseStream, routingContext);
+                            return runPipeline(pipeline, requestContext, formatRequest, response, responseStream, routingContext);
                           }
                         });
               })
@@ -369,7 +363,7 @@ public class QueryRouter implements Handler<RoutingContext> {
                 return CachingWriteStream.cacheStream(vertx, responseStream, cacheFile)
                         .transform(ar2 -> {
                           if (ar2.succeeded()) {
-                            return runPipeline(pipeline, formatRequest, response, ar2.result(), routingContext);
+                            return runPipeline(pipeline, requestContext, formatRequest, response, ar2.result(), routingContext);
                           } else {
                             logger.error("Failed to open cache file ({}) for {}: {}", cacheFile, requestContext.getRequestId(), ar2.cause());
                             return auditor.deleteCacheFile(requestContext.getRequestId())
@@ -377,21 +371,19 @@ public class QueryRouter implements Handler<RoutingContext> {
                                       if (ar3.failed()) {
                                         logger.error("Failed to delete cache for {}: {}", cacheFile, requestContext.getRequestId(), ar3.cause());
                                       }
-                                      return runPipeline(pipeline, formatRequest, response, responseStream, routingContext);
+                                      return runPipeline(pipeline, requestContext, formatRequest, response, responseStream, routingContext);
                                     });
                           }
                         });
               } else {
                 logger.error("Failed to record cache file ({}) for {} in database: {}", cacheFile, requestContext.getRequestId(), ar.cause());
-                return runPipeline(pipeline, formatRequest, response, responseStream, routingContext);
+                return runPipeline(pipeline, requestContext, formatRequest, response, responseStream, routingContext);
               }
             });
   }
   
-  private Future<Void> runPipeline(Pipeline pipeline, FormatRequest formatRequest, HttpServerResponse response, WriteStream<Buffer> rawResponseStream, RoutingContext routingContext) {
+  private Future<Void> runPipeline(Pipeline pipeline, RequestContext requestContext, FormatRequest formatRequest, HttpServerResponse response, WriteStream<Buffer> rawResponseStream, RoutingContext routingContext) {
     try {
-      RequestContext requestContext = RequestContext.retrieveRequestContext(routingContext);
-      
       Format chosenFormat = pipelineExecutor.getFormat(pipeline.getFormats(), formatRequest);
       response.headers().set("Content-Type", chosenFormat.getMediaType().toString());
       String filename = buildDesiredFilename(chosenFormat);

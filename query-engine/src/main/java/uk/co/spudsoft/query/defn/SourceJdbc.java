@@ -26,13 +26,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import uk.co.spudsoft.query.exec.SharedMap;
-import uk.co.spudsoft.query.exec.SourceInstance;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.sources.jdbc.SourceJdbcInstance;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
@@ -52,8 +51,8 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 public final class SourceJdbc implements Source {
 
   @Override
-  public SourceInstance createInstance(Vertx vertx, Context context, MeterRegistry meterRegistry, SharedMap sharedMap, String defaultName) {
-    return new SourceJdbcInstance(vertx, context, meterRegistry, this, defaultName);
+  public SourceJdbcInstance createInstance(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, SharedMap sharedMap) {
+    return new SourceJdbcInstance(vertx, requestContext, meterRegistry, this);
   }
 
   /**

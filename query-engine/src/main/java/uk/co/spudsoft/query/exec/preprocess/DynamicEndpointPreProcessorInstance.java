@@ -19,7 +19,6 @@ package uk.co.spudsoft.query.exec.preprocess;
 import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import java.util.Arrays;
@@ -54,7 +53,7 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
   private static final Logger logger = LoggerFactory.getLogger(DynamicEndpointPreProcessorInstance.class);
 
   private final Vertx vertx;
-  private final Context context;
+  private final RequestContext requestContext;
   private final MeterRegistry meterRegistry;
   private final DynamicEndpoint definition;
   private final String name;
@@ -62,19 +61,19 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
-   * @param context the Vert.x context.
+   * @param requestContext The request context.
    * @param meterRegistry MeterRegistry for production of metrics.
    * @param definition the definition of this processor.
    * @param index zero based index of this pre-processor within the list of pre-processors in the pipeline.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "MeterRegistry is designed to be modified")
-  public DynamicEndpointPreProcessorInstance(Vertx vertx, Context context, MeterRegistry meterRegistry, DynamicEndpoint definition, int index) {
+  public DynamicEndpointPreProcessorInstance(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, DynamicEndpoint definition, int index) {
     this.vertx = vertx;
-    this.context = context;
+    this.requestContext = requestContext;
     this.meterRegistry = meterRegistry;
     this.definition = definition;
     if (Strings.isNullOrEmpty(definition.getName())) {
-      this.name = "PP" + index + "-" + definition.getClass().getSimpleName();
+      this.name = "dynamicEndpoints[" + index + "]";
     } else {
       this.name = definition.getName();
     }
@@ -88,16 +87,17 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
   @Override
   public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
     logger.debug("initialize()");
-    SourceInstance sourceInstance = definition.getInput().getSource().createInstance(vertx, context, meterRegistry, executor, "Dynamic Endpoint Source");
+    SourceInstance sourceInstance = definition.getInput().getSource().createInstance(vertx, requestContext, meterRegistry, executor);
     FormatCaptureInstance format = new FormatCaptureInstance();
     PipelineInstance dePipeline = new PipelineInstance(
             pipeline.getRequestContext()
             , pipeline.getDefinition()
+            , "dynamicEndpoint"
             , pipeline.getArgumentInstances()
             , pipeline.getSourceEndpoints()
             , null
             , sourceInstance
-            , executor.createProcessors(vertx, sourceInstance, context, pipeline.getRequestContext(), definition.getInput(), null, name)
+            , executor.createProcessors(vertx, requestContext, definition.getInput(), null, name)
             , format
     );
     return executor.initializePipeline(dePipeline)

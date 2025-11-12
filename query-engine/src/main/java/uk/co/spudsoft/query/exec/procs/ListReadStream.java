@@ -82,7 +82,7 @@ public class ListReadStream<T> implements ReadStream<T> {
           item = iter.next();
           handlerCaptured = handler;
           shouldContinue = true;
-        } 
+        }
         if (!iter.hasNext()) {
           ended = true;
           endHandlerCaptured = endHandler;
@@ -111,9 +111,9 @@ public class ListReadStream<T> implements ReadStream<T> {
 
   /**
    * Call the handler with the item, and call the exception handler if that fails.
-   * 
+   *
    * This is protected to allow for test classes to inject exceptions.
-   * 
+   *
    * @param item The item to pass to the handler.
    * @param handler The handler.
    * @param exceptionHandler The handler to call with any exception if handler.handle fails.

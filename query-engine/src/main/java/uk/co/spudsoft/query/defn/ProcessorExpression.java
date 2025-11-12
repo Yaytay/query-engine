@@ -21,9 +21,8 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.Strings;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.vertx.core.Context;
 import io.vertx.core.Vertx;
-import uk.co.spudsoft.query.exec.SourceNameTracker;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.procs.script.ProcessorExpressionInstance;
 
 /**
@@ -53,8 +52,8 @@ public class ProcessorExpression implements Processor {
   private final String fieldValue;
 
   @Override
-  public ProcessorExpressionInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, String name) {
-    return new ProcessorExpressionInstance(vertx, sourceNameTracker, context, this, name);
+  public ProcessorExpressionInstance createInstance(Vertx vertx, RequestContext requestcontext, MeterRegistry meterRegistry, String name) {
+    return new ProcessorExpressionInstance(vertx, requestcontext, this, name);
   }
   
   @Override

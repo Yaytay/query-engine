@@ -30,7 +30,6 @@ sourceEndpoints:
 source:
   type: SQL
   endpointTemplate: "<args.key>"
-  streamingFetchSize: 7
   replaceDoubleQuotes: true
   query: select * from "Colours" where name = 'invisible'
 formats:

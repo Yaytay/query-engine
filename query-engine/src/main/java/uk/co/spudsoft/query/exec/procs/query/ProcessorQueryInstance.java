@@ -19,7 +19,6 @@ package uk.co.spudsoft.query.exec.procs.query;
 import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.ast.Node;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import org.slf4j.Logger;
@@ -27,11 +26,11 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.ProcessorQuery;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
-import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
-import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.procs.AbstractProcessor;
 
 /**
  * {@link uk.co.spudsoft.query.exec.ProcessorInstance} to filter rows with an <a href="https://github.com/jirutka/rsql-parser">RSQL</a> (FIQL) expression.
@@ -43,51 +42,42 @@ import uk.co.spudsoft.query.exec.Types;
  * The query processor is only useful when the stream already contains more rows than are required - thus, whilst the processor itself is not
  * particularly inefficient it is best not used if at all possible.
  * This generally means that the only valid use for the query processor is via that {@link uk.co.spudsoft.query.exec.filters.QueryFilter}, and even then
- * a templated SQL statement is likely to be a better alternative.
- * 
+ * a template SQL statement is likely to be a better alternative.
+ *
  * @author jtalbut
  */
-public class ProcessorQueryInstance implements ProcessorInstance {
-  
+public class ProcessorQueryInstance extends AbstractProcessor {
+
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ProcessorQueryInstance.class);
-  
+
   /**
    * The single instance of {@link RSQLParser} that is required.
    */
   public static final RSQLParser RSQL_PARSER = new RSQLParser();
-  
-  private final String name;
-  private final SourceNameTracker sourceNameTracker;
-  private final Context context;
+
+  private final RequestContext requestContext;
   private final ProcessorQuery definition;
   private FilteringStream<DataRow> stream;
-  
+
   private final String expression;
   private Types types;
-  
+
   private Node rootNode;
-  
+
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
-   * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
-   * @param context the Vert.x context.
+   * @param requestContext the request context.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
-  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
-  public ProcessorQueryInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorQuery definition, String name) {
-    this.sourceNameTracker = sourceNameTracker;
-    this.context = context;
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
+  public ProcessorQueryInstance(Vertx vertx, RequestContext requestContext, ProcessorQuery definition, String name) {
+    super(name);
+    this.requestContext = requestContext;
     this.definition = definition;
-    this.name = name;
     this.expression = definition.getExpression();
-  }
-
-  @Override
-  public String getName() {
-    return name;
   }
 
   /**

@@ -59,8 +59,6 @@ sourceEndpoints:
     username: user
     password: T0p-Secret
     idleTimeout: -1000
-    readIdleTimeout: -1000
-    writeIdleTimeout: -1000
 source:
   type: SQL
   endpoint: MySQL

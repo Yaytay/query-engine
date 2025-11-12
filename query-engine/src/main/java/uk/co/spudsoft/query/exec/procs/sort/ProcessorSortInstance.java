@@ -17,7 +17,6 @@
 package uk.co.spudsoft.query.exec.procs.sort;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.file.FileSystem;
@@ -46,10 +45,10 @@ import uk.co.spudsoft.query.exec.ColumnDefn;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
-import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
-import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.procs.AbstractProcessor;
 
 /**
  * {@link uk.co.spudsoft.query.exec.ProcessorInstance} to sort the stream of {@link uk.co.spudsoft.query.exec.DataRow} objects.
@@ -63,44 +62,35 @@ import uk.co.spudsoft.query.exec.Types;
  * @author jtalbut
  */
 @SuppressFBWarnings("URF_UNREAD_FIELD")
-public class ProcessorSortInstance implements ProcessorInstance {
-  
+public class ProcessorSortInstance extends AbstractProcessor {
+
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ProcessorSortInstance.class);
-  
+
   private static String tempDir = System.getProperty("java.io.tmpdir");
   private static int memoryLimit = 1 << 22; // 4MB
-  
+
   private final Vertx vertx;
-  private final SourceNameTracker sourceNameTracker;
-  private final Context context;
+  private final RequestContext requestContext;
   private final ProcessorSort definition;
-  private final String name;
-  
+
   private SortingStream<DataRow> stream;
-  
+
   private Types types;
-  
+
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
-   * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
-   * @param context the Vert.x context.
+   * @param requestContext the request context.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
-  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
-  public ProcessorSortInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorSort definition, String name) {
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
+  public ProcessorSortInstance(Vertx vertx, RequestContext requestContext, ProcessorSort definition, String name) {
+    super(name);
     this.vertx = vertx;
-    this.sourceNameTracker = sourceNameTracker;
-    this.context = context;
-    this.definition = definition;    
-    this.name = name;
-  }  
-
-  @Override
-  public String getName() {
-    return name;
+    this.requestContext = requestContext;
+    this.definition = definition;
   }
 
   /**
@@ -182,12 +172,12 @@ public class ProcessorSortInstance implements ProcessorInstance {
       return result;
     }
   }
-  
+
   /**
    * This serializer, and its associated deserializer, are only aimed at serving the needs of the SortingStream and are not suitable for general purpose serialization.
    * Specifically, they require the Types to be known by the deserializer in advance.
    * @param bytes
-   * @return 
+   * @return
    */
   @SuppressFBWarnings(value = {"OBJECT_DESERIALIZATION"}, justification = "Source of bytes is trusted")
   DataRow dataRowDeserializer(byte[] bytes) throws IOException  {
@@ -247,33 +237,33 @@ public class ProcessorSortInstance implements ProcessorInstance {
     }
     return result;
   }
-  
+
   private String sanitiseSourceName(String name) {
     return name.replaceAll("[\\p{Cntrl}`!\\\"|$%^&*(){}\\[\\];:'@#~,./\\\\<>]*", "_");
   }
-  
+
   @Override
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStreamWithTypes input) {
-    
+
     FileSystem fileSystem = vertx.fileSystem();
     String dir = tempDir;
     this.types = input.getTypes();
-    
+
     return fileSystem.mkdirs(dir)
             .compose(v -> {
-              this.stream = new SortingStream<>(context
+              this.stream = new SortingStream<>(Vertx.currentContext()
                     , fileSystem
                     , new DataRowComparator(definition.getFields())
                     , this::dataRowSerializer
                     , this::dataRowDeserializer
                     , dir
-                    , "ProcessSort_" + sanitiseSourceName(sourceNameTracker.toString()) + "_"
+                    , sanitiseSourceName(getName())
                     , memoryLimit
                     , DataRow::bytesSize
                     , input.getStream()
-              );              
+              );
               return Future.succeededFuture(new ReadStreamWithTypes(stream, types));
             });
   }
-  
+
 }

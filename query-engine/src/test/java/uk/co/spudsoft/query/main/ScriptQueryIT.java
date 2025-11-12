@@ -32,7 +32,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -40,9 +39,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
 import uk.co.spudsoft.jwtvalidatorvertx.AlgorithmAndKeyPair;
-import uk.co.spudsoft.jwtvalidatorvertx.TokenBuilder;
 import uk.co.spudsoft.jwtvalidatorvertx.jdk.JdkJwksHandler;
-import uk.co.spudsoft.jwtvalidatorvertx.jdk.JdkTokenBuilder;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
 
 /**

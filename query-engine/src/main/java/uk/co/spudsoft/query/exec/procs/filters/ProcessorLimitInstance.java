@@ -18,19 +18,18 @@ package uk.co.spudsoft.query.exec.procs.filters;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.tsegismont.streamutils.impl.LimitingStream;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.ProcessorLimit;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
-import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
-import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.procs.AbstractProcessor;
 
 /**
  * {@link uk.co.spudsoft.query.exec.ProcessorInstance} to limit the number of rows to a configured number.
@@ -39,33 +38,29 @@ import uk.co.spudsoft.query.exec.Types;
  *
  * @author jtalbut
  */
-public class ProcessorLimitInstance implements ProcessorInstance {
-  
+public class ProcessorLimitInstance extends AbstractProcessor {
+
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ProcessorLimitInstance.class);
-  
-  private final String name;
-  private final SourceNameTracker sourceNameTracker;
-  private final Context context;
+
+  private final RequestContext requestContext;
   private final ProcessorLimit definition;
   private LimitingStream<DataRow> stream;
   private Types types;
-  
+
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
-   * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
-   * @param context the Vert.x context.
+   * @param requestContext the request context.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
-  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
-  public ProcessorLimitInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorLimit definition, String name) {
-    this.sourceNameTracker = sourceNameTracker;
-    this.context = context;
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
+  public ProcessorLimitInstance(Vertx vertx, RequestContext requestContext, ProcessorLimit definition, String name) {
+    super(name);
+    this.requestContext = requestContext;
     this.definition = definition;
-    this.name = name;
-  }  
+  }
 
   /**
    * Purely for test purposes.
@@ -75,11 +70,6 @@ public class ProcessorLimitInstance implements ProcessorInstance {
     return definition.getLimit();
   }
 
-  @Override
-  public String getName() {
-    return name;
-  }
-  
   @Override
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStreamWithTypes input) {
     this.stream = new LimitingStream<>(input.getStream(), definition.getLimit());

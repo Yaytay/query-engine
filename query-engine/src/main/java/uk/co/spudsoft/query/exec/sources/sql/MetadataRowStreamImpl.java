@@ -36,19 +36,19 @@ import java.util.Iterator;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.exec.SourceNameTracker;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 
 /**
  * Capture the metadata returned by a SQL statement even when there are no rows returned.
- * 
+ *
  * @author jtalbut
  */
 public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncResult<RowSet<Row>>>, ReadStream<Row> {
-  
+
   private static final Logger logger = LoggerFactory.getLogger(MetadataRowStreamImpl.class);
 
-  private final SourceNameTracker sourceNameTracker;
   private final PreparedStatement ps;
+  private final RequestContext requestContext;
   private final Context context;
   private final int fetch;
   private final Tuple params;
@@ -62,21 +62,21 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
   private Cursor cursor;
   private boolean readInProgress;
   private Iterator<Row> result;
-  
+
   private long rowSetCount = 0;
-  
+
   /**
    * Constructor.
-   * @param sourceNameTracker The object used to identify this source in the Vert.x context for logging purposes.
    * @param ps The {@link PreparedStatement} to be executed.
+   * @param requestContext The request context, for logging and tracking.
    * @param context The Vert.x context to use for asynchronous operations.
    * @param fetch The number of rows to fetch.
    * @param params Parameters to pass to the {@link PreparedStatement}.
    */
   @SuppressFBWarnings("EI_EXPOSE_REP2")
-  public MetadataRowStreamImpl(SourceNameTracker sourceNameTracker, PreparedStatement ps, Context context, int fetch, Tuple params) {
-    this.sourceNameTracker = sourceNameTracker;
+  public MetadataRowStreamImpl(PreparedStatement ps, RequestContext requestContext, Context context, int fetch, Tuple params) {
     this.ps = ps;
+    this.requestContext = requestContext;
     this.context = context;
     this.fetch = fetch;
     this.params = params;
@@ -105,10 +105,9 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
     }
     return this;
   }
-  
+
   @Override
   public RowStream<Row> handler(Handler<Row> handler) {
-    sourceNameTracker.addNameToContextLocalData();
     Cursor c;
     synchronized (this) {
       if (handler != null) {
@@ -174,8 +173,6 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
 
   @Override
   public void handle(AsyncResult<RowSet<Row>> ar) {
-    sourceNameTracker.addNameToContextLocalData();
-    
     if (ar.failed()) {
       logger.warn("Failed to get RowSet {}: ", ++rowSetCount, ar.cause());
       Handler<Throwable> handler;
@@ -216,7 +213,6 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
 
   @Override
   public Future<Void> close() {
-    sourceNameTracker.addNameToContextLocalData();
     logger.trace("close()");
     Cursor c;
     synchronized (this) {
@@ -236,7 +232,6 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
 
   @SuppressWarnings({"unchecked", "rawtypes"})
   private void checkPending() {
-    sourceNameTracker.addNameToContextLocalData();
     logger.trace("checkPending");
     synchronized (this) {
       if (emitting) {

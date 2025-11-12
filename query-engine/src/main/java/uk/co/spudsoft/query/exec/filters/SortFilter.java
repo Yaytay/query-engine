@@ -17,12 +17,11 @@
 package uk.co.spudsoft.query.exec.filters;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import java.util.List;
 import uk.co.spudsoft.query.defn.ProcessorSort;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
-import uk.co.spudsoft.query.exec.SourceNameTracker;
 
 /**
  * Filter for converting _sort command line arguments into {@link uk.co.spudsoft.query.exec.procs.sort.ProcessorSortInstance}s.
@@ -35,7 +34,7 @@ import uk.co.spudsoft.query.exec.SourceNameTracker;
  * , once that limit has been exceeded rows will be streamed to disc, making the process slow still.
  * <p>
  * Only sort with a Processor/Filter when there is no other option.
- * 
+ *
  * @author jtalbut
  *
  * @author jtalbut
@@ -54,14 +53,14 @@ public class SortFilter implements Filter {
   }
 
   @Override
-  public ProcessorInstance createProcessor(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, String argument, String name) {
+  public ProcessorInstance createProcessor(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, String argument, String name) {
     List<String> fields = SpaceParser.parse(argument);
     if (fields.isEmpty()) {
       throw new IllegalArgumentException("Invalid argument to _sort filter, should be a space delimited list of fields");
     } else {
       ProcessorSort definition = ProcessorSort.builder().fields(fields).build();
-      return definition.createInstance(vertx, sourceNameTracker, context, meterRegistry, name);
+      return definition.createInstance(vertx, requestContext, meterRegistry, name);
     }
   }
-  
+
 }

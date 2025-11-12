@@ -20,7 +20,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.tsegismont.streamutils.impl.MappingStream;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import java.util.Map;
@@ -28,12 +27,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.ProcessorMap;
 import uk.co.spudsoft.query.defn.ProcessorMapLabel;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
-import uk.co.spudsoft.query.exec.SourceNameTracker;
 import uk.co.spudsoft.query.exec.Types;
 
 /**
@@ -42,36 +41,33 @@ import uk.co.spudsoft.query.exec.Types;
  * Configuration is via a {@link uk.co.spudsoft.query.defn.ProcessorMap} that has a list of {@link uk.co.spudsoft.query.defn.ProcessorMapLabel} instances.
  * <P>
  * Each {@link uk.co.spudsoft.query.defn.ProcessorMapLabel} can either rename a field or remove it from the stream (if {@link uk.co.spudsoft.query.defn.ProcessorMapLabel#newLabel} is not set).
- * 
+ *
  * @author jtalbut
  */
 public class ProcessorMapInstance implements ProcessorInstance {
-  
+
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ProcessorMapInstance.class);
-  
-  private final SourceNameTracker sourceNameTracker;
-  private final Context context;
+
+  private final RequestContext requestContext;
   private final ProcessorMap definition;
   private MappingStream<DataRow, DataRow> stream;
-  
+
   private final Map<String, String> relabels;
-  
+
   private final Types types;
   private final String name;
-  
+
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
-   * @param sourceNameTracker the name tracker used to record the name of this source at all entry points for logger purposes.
-   * @param context the Vert.x context.
+   * @param requestContext the request context.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
-  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Be aware that the point of sourceNameTracker is to modify the context")
-  public ProcessorMapInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, ProcessorMap definition, String name) {
-    this.sourceNameTracker = sourceNameTracker;
-    this.context = context;
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
+  public ProcessorMapInstance(Vertx vertx, RequestContext requestContext, ProcessorMap definition, String name) {
+    this.requestContext = requestContext;
     this.definition = definition;
     ImmutableMap.Builder<String, String> builder = ImmutableMap.<String, String>builder();
     for (ProcessorMapLabel relabel : definition.getRelabels()) {

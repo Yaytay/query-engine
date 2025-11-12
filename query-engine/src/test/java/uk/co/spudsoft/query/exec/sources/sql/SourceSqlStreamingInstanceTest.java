@@ -67,14 +67,14 @@ public class SourceSqlStreamingInstanceTest {
   public void testInitializeEndpointNotFound(Vertx vertx, VertxTestContext testContext) {
     
     vertx.getOrCreateContext().runOnContext(v -> {
-      Context context = vertx.getOrCreateContext();
+      RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
       PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
       
       SourceSql definition = SourceSql.builder()
               .endpoint("bob")
               .build();
-      SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, context, null, pipelineExecutor, definition, "test");
+      SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, reqctx, null, pipelineExecutor, definition);
       
       Pipeline pipeline = Pipeline.builder()
               .sourceEndpoints(
@@ -108,9 +108,10 @@ public class SourceSqlStreamingInstanceTest {
         pipelineInstance= new PipelineInstance(
                 req
                 , pipeline
+                , "$"
                 , pipelineExecutor.prepareArguments(req, pipeline.getArguments(), params)
                 , pipeline.getSourceEndpointsMap()
-                , pipelineExecutor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
+                , pipelineExecutor.createPreProcessors(vertx, reqctx, pipeline)
                 , instance
                 , Collections.emptyList()
                 , new FormatCaptureInstance()
@@ -135,14 +136,14 @@ public class SourceSqlStreamingInstanceTest {
   public void testInitializeEndpointNotPermitted(Vertx vertx, VertxTestContext testContext) {
     
     vertx.getOrCreateContext().runOnContext(v -> {
-      Context context = vertx.getOrCreateContext();
+      RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
       PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
       
       SourceSql definition = SourceSql.builder()
               .endpoint("bob")
               .build();
-      SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, context, null, pipelineExecutor, definition, "test");
+      SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, reqctx, null, pipelineExecutor, definition);
       
       Pipeline pipeline = Pipeline.builder()
               .sourceEndpoints(
@@ -179,9 +180,10 @@ public class SourceSqlStreamingInstanceTest {
         pipelineInstance= new PipelineInstance(
                 req
                 , pipeline
+                , "$"
                 , pipelineExecutor.prepareArguments(req, pipeline.getArguments(), params)
                 , pipeline.getSourceEndpointsMap()
-                , pipelineExecutor.createPreProcessors(vertx, Vertx.currentContext(), pipeline)
+                , pipelineExecutor.createPreProcessors(vertx, reqctx, pipeline)
                 , instance
                 , Collections.emptyList()
                 , new FormatCaptureInstance()

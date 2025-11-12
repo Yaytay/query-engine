@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.net.MediaType;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
@@ -56,7 +55,7 @@ import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
  * @author jtalbut
  */
 public class PipelineExecutorImpl implements PipelineExecutor {
-  
+
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(PipelineExecutorImpl.class);
 
@@ -76,7 +75,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     this.meterRegistry = meterRegistry;
     this.filterFactory = filterFactory;
     this.secrets = ImmutableCollectionTools.copy(secrets);
-    this.sharedMap = new HashMap<>();    
+    this.sharedMap = new HashMap<>();
   }
 
   @Override
@@ -93,7 +92,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
   public void put(String name, Object value) {
     sharedMap.put(name, value);
   }
-  
+
   @Override
   public Future<Pipeline> validatePipeline(Pipeline definition) {
     try {
@@ -103,75 +102,57 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     }
     return Future.succeededFuture(definition);
   }
-    
-  private String processorName(String definitionName, String parentName, String type, int index, Object definition) {
-    if (Strings.isNullOrEmpty(definitionName)) {
-      String implName;
-      if (definition instanceof String str) {
-        implName = str;
-      } else {
-        implName = definition.getClass().getSimpleName();
-      }
-      if (implName.startsWith("_")) {
-        implName = implName.substring(1);
-      } else if (implName.startsWith("Processor")) {
-        implName = implName.substring(9);
-      }
-      if (Strings.isNullOrEmpty(parentName)) {
-        return type + index + "-" + implName;
-      } else {
-        return parentName + "." + type + index + "-" + implName;
-      }
-    } else {
-      return definitionName;
-    }
-  }
-  
+
   @Override
-  public List<ProcessorInstance> createProcessors(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, RequestContext requestContext, SourcePipeline definition, MultiMap params, String parentName) {
+  public List<ProcessorInstance> createProcessors(Vertx vertx, RequestContext requestContext, SourcePipeline definition, MultiMap params, String parentName) {
     List<ProcessorInstance> result = new ArrayList<>();
-    
-    int index = 0;
-    for (Processor processor : definition.getProcessors()) {
+
+    for (int index = 0; index < definition.getProcessors().size(); ++index) {
+      Processor processor =  definition.getProcessors().get(index);
+      
+      String processorName = parentName 
+              + "."
+              + (Strings.isNullOrEmpty(processor.getName()) ? ("processors[" + index + "]") : processor.getName())
+              ;
       Condition condition = processor.getCondition();
       if (condition == null) {
-        String name = processorName(processor.getName(), parentName, "P", index++, processor);
-        logger.debug("Added {} processor named {} with no condition", processor.getType(), name);
-        result.add(processor.createInstance(vertx, sourceNameTracker, context, meterRegistry, name));
+        logger.debug("Added {} processor named {} with no condition", processor.getType(), processorName);
+        result.add(processor.createInstance(vertx, requestContext, meterRegistry, processorName));
       } else {
         ConditionInstance cond = new ConditionInstance(condition.getExpression());
         if (cond.evaluate(requestContext, null)) {
-          String name = processorName(processor.getName(), parentName, "P", index++, processor);
-          logger.debug("Added {} processor named {} because condition {} met", processor.getType(), name, cond);
-          result.add(processor.createInstance(vertx, sourceNameTracker, context, meterRegistry, name));
+          logger.debug("Added {} processor named {} because condition {} met", processor.getType(), processorName, cond);
+          result.add(processor.createInstance(vertx, requestContext, meterRegistry, processorName));
         } else {
           logger.debug("Skipped {} processor {} because condition {} not met", processor.getType(), processor.getName(), cond);
         }
       }
     }
     if (params != null) {
-      index = 0;
+      int index = 0;
       for (Entry<String, String> entry : params.entries()) {
-        ProcessorInstance processor = filterFactory.createFilter(vertx, sourceNameTracker, context, meterRegistry, entry.getKey(), entry.getValue(), processorName(null, parentName, "F", index++, entry.getKey()));
-        if (processor != null) {          
+        ++index;
+        String filterName = parentName + ".filter[" + index + "]";
+        ProcessorInstance processor = filterFactory.createFilter(vertx, requestContext, meterRegistry, entry.getKey(), entry.getValue(), filterName);
+        if (processor != null) {
           result.add(processor);
         }
       }
     }
-    
+
     return result;
   }
 
   @Override
-  public List<PreProcessorInstance> createPreProcessors(Vertx vertx, Context context, Pipeline definition) {
+  public List<PreProcessorInstance> createPreProcessors(Vertx vertx, RequestContext requestContext, Pipeline definition) {
     List<PreProcessorInstance> result = new ArrayList<>();
     int index = 0;
     for (DynamicEndpoint de : definition.getDynamicEndpoints()) {
-      result.add(de.createInstance(vertx, context, meterRegistry, index++));
+      result.add(de.createInstance(vertx, requestContext, meterRegistry, index++));
     }
     return result;
   }
-  
+
   static boolean possibleValuesContains(Argument argument, String value) {
     for (ArgumentValue argValue : argument.getPossibleValues()) {
       if (argValue.getValue().equals(value)) {
@@ -180,7 +161,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     }
     return false;
   }
-  
+
   static void addCastItem(String name, ImmutableList.Builder<Comparable<?>> builder, DataType type, Object item) throws IllegalArgumentException {
     try {
       builder.add(type.cast(item));
@@ -189,7 +170,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
       throw new IllegalArgumentException("The argument \"" + name + "\" was passed a value which cannot be converted to " + type.name() + ".");
     }
   }
-  
+
   static ImmutableList<Comparable<?>> evaluateDefaultValues(Argument arg, RequestContext requestContext, Pattern permittedValuesPattern) throws Throwable {
     JexlEvaluator evaluator = new JexlEvaluator(arg.getDefaultValueExpression());
     Object raw = evaluator.evaluateAsObject(requestContext, null);
@@ -263,14 +244,14 @@ public class PipelineExecutorImpl implements PipelineExecutor {
         throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" generated a default value which is not permitted, please contact the designer.");
       } else {
         logger.warn("Argument {} was passed the value \"{}\", which does not match \"{}\"", arg.getName(), value, arg.getPermittedValuesRegex());
-        throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" was passed a value which is not permitted.");        
+        throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" was passed a value which is not permitted.");
       }
     }
   }
 
   @Override
   public Map<String, ArgumentInstance> prepareArguments(RequestContext requestContext, List<Argument> definitions, MultiMap valuesMap) throws Throwable {
-        
+
     Map<String, ArgumentInstance> result = new HashMap<>();
     Map<String, Object> arguments = new HashMap<>();
     if (valuesMap == null) {
@@ -289,23 +270,23 @@ public class PipelineExecutorImpl implements PipelineExecutor {
           throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" does not have a valid permittedValuesRegex." + ex.getMessage());
         }
       }
-      
-      List<String> argStringValues = valuesMap.getAll(arg.getName());      
+
+      List<String> argStringValues = valuesMap.getAll(arg.getName());
       ImmutableList<Comparable<?>> values = null;
-      
+
       if (arg.isEmptyIsAbsent()) {
         argStringValues = argStringValues.stream()
                 .filter(a -> !Strings.isNullOrEmpty(a))
                 .collect(Collectors.toList());
         if (argStringValues.isEmpty() && !arg.isOptional()) {
           continue ;
-        }        
+        }
       }
-      
+
       if (arg.isHidden() && argStringValues != null && !argStringValues.isEmpty()) {
         throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" is not permitted.");
       }
-      
+
       if (arg.getCondition() != null && !Strings.isNullOrEmpty(arg.getCondition().getExpression())) {
         ConditionInstance conditionInstance = arg.getCondition().createInstance();
         if (!conditionInstance.evaluate(requestContext, null)) {
@@ -317,7 +298,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
           }
         }
       }
-      
+
       if (values == null && argStringValues != null && !argStringValues.isEmpty()) {
         values = castAndValidatePassedValues(arg, requestContext, permittedValuesPattern, argStringValues);
       } else if (!arg.isOptional() && !arg.isHidden()) {
@@ -327,17 +308,17 @@ public class PipelineExecutorImpl implements PipelineExecutor {
       } else {
         values = ImmutableList.of();
       }
-      
+
       if (values.size() > 1 && !arg.isMultiValued()) {
         throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" has been provided " + values.size() + " times but is not multivalued.");
       }
-      
+
       if (values.size() == 1) {
         arguments.put(arg.getName(), values.get(0));
       } else {
         arguments.put(arg.getName(), values);
       }
-      
+
       // Parsing of values occurs as part of construction on ArgumentInstance
       ArgumentInstance instance = new ArgumentInstance(arg, values);
       if (arg.isValidate()) {
@@ -348,8 +329,8 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     requestContext.setArguments(arguments);
     logger.debug("Prepared arguments: {}", arguments);
     return result;
-  }  
-  
+  }
+
   @Override
   public void progressNotification(
           RequestContext requestContext
@@ -362,12 +343,8 @@ public class PipelineExecutorImpl implements PipelineExecutor {
           , String message
           , Object... arguments
   ) {
-    ProgressNotificationHandler handler = ProgressNotificationHandler.getNotificationHandler();
-    if (requestContext != null && handler != null) {
-      handler.event(requestContext.getRunID(), requestContext, pipelineTitle, sourceName, processorName, count, completed, succeeded, message, arguments);
-    }
   }
-    
+
   private void progressNotificationInternal(PipelineInstance pipeline
           , SourceInstance source
           , ProcessorInstance processor
@@ -377,18 +354,8 @@ public class PipelineExecutorImpl implements PipelineExecutor {
           , String message
           , Object... arguments
   ) {
-    ProgressNotificationHandler handler = ProgressNotificationHandler.getNotificationHandler();
-    if (pipeline != null) {
-      RequestContext requestContext = pipeline.getRequestContext();
-      if (handler != null) {
-        String pipelineTitle = pipeline.getDefinition().getTitle();
-        String sourceName = source == null ? null : source.getName();
-        String processorName = processor == null ? null : processor.getName();
-        handler.event(requestContext.getRunID(), requestContext, pipelineTitle, sourceName, processorName, count, completed, succeeded, message, arguments);
-      }
-    }
   }
-  
+
   private Future<ReadStreamWithTypes> initializeProcessors(PipelineInstance pipeline, String parentSource, Iterator<ProcessorInstance> iter, int index, ReadStreamWithTypes input) {
     logger.debug("initializeProcessors({}, {}, {}, {}, {})", pipeline, parentSource, iter, index, input);
     if (!iter.hasNext()) {
@@ -405,7 +372,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
               });
     }
   }
-  
+
   private Future<Void> runPreProcessors(PipelineInstance pipeline, Iterator<PreProcessorInstance> iter) {
     if (iter.hasNext()) {
       PreProcessorInstance pp = iter.next();
@@ -415,7 +382,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
       return Future.succeededFuture();
     }
   }
-  
+
   private Future<Void> runPreProcessors(PipelineInstance pipeline) {
     if (pipeline.getPreProcessors().isEmpty()) {
       return Future.succeededFuture();
@@ -425,16 +392,16 @@ public class PipelineExecutorImpl implements PipelineExecutor {
       return runPreProcessors(pipeline, iter);
     }
   }
-  
+
   @Override
-  public Future<Void> initializePipeline(PipelineInstance pipeline) {    
+  public Future<Void> initializePipeline(PipelineInstance pipeline) {
     return runPreProcessors(pipeline)
             .compose(v -> {
               return pipeline.getSource().initialize(this, pipeline);
             })
             .compose(sourceStreamWithTypes -> {
-              logger.debug("Source {} initialized", pipeline.getSource().getName());
-              return initializeProcessors(pipeline, pipeline.getSource().getName(), pipeline.getProcessors().iterator(), 1, sourceStreamWithTypes);
+              logger.debug("Source initialized");
+              return initializeProcessors(pipeline, pipeline.getName(), pipeline.getProcessors().iterator(), 1, sourceStreamWithTypes);
             })
             .compose(streamWithTypes -> {
               logger.debug("Processors ({}) initialized", pipeline.getProcessors().size());
@@ -444,8 +411,8 @@ public class PipelineExecutorImpl implements PipelineExecutor {
             .andThen(ar -> pipeline.getFinalPromise().handle(ar))
             ;
   }
-  
-  @Override 
+
+  @Override
   public Format getFormat(List<Format> formats, FormatRequest requested) {
     if (requested == null) {
       return formats.get(0);

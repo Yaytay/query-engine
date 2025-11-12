@@ -18,12 +18,12 @@ package uk.co.spudsoft.query.defn;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import com.google.common.base.Strings;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import uk.co.spudsoft.query.exec.SharedMap;
+import uk.co.spudsoft.query.exec.SourceInstance;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.sources.test.SourceTestInstance;
 
 /**
@@ -55,25 +55,21 @@ import uk.co.spudsoft.query.exec.sources.test.SourceTestInstance;
 public class SourceTest implements Source {
 
   private final SourceType type;
-  private final int rowCount;
   private final String name;
+  private final int rowCount;
   private final int delayMs;
 
   @Override
   public void validate() {
     validateType(SourceType.TEST, type);
-    String label = name;
-    if (!Strings.isNullOrEmpty(name)) {
-      label = label + " ";
-    }
     if (rowCount < 0) {
-      throw new IllegalArgumentException(type + "Source " + label + "has negative value for rowCount");
+      throw new IllegalArgumentException(type + "Source has negative value for rowCount");
     }
     if (rowCount == 0) {
-      throw new IllegalArgumentException(type + "Source " + label + "has zero value for rowCount");
+      throw new IllegalArgumentException(type + "Source has zero value for rowCount");
     }
     if (delayMs < 0) {
-      throw new IllegalArgumentException(type + "Source " + label + "has negative value for delayMs");
+      throw new IllegalArgumentException(type + "Source has negative value for delayMs");
     }
   }
   
@@ -117,10 +113,10 @@ public class SourceTest implements Source {
   public int getDelayMs() {
     return delayMs;
   }
-  
+
   @Override
-  public SourceTestInstance createInstance(Vertx vertx, Context context, MeterRegistry meterRegistry, SharedMap sharedMap, String defaultName) {
-    return new SourceTestInstance(context, this, defaultName);
+  public SourceInstance createInstance(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, SharedMap sharedMap) {
+    return new SourceTestInstance(vertx, requestContext, this);
   }
   
   /**

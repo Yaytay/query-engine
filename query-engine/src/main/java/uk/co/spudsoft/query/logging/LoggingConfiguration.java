@@ -28,7 +28,6 @@ import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
 import ch.qos.logback.core.joran.spi.JoranException;
 import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.reactiverse.contextual.logging.logback.LogbackConverter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -188,10 +187,9 @@ public class LoggingConfiguration {
         ruleRegistry = new HashMap<>();
         loggerContext.putObject(CoreConstants.PATTERN_RULE_REGISTRY, ruleRegistry);
     }
-    ruleRegistry.put("vcl", LogbackConverter.class.getName());
 
     PatternLayout layout = new PatternLayout();
-    layout.setPattern("%date{yyyy-MM-dd HH:mm:ss.SSS, UTC} [%thread] %-5level %logger{36} %vcl{requestId:-#} %vcl{runId:-#} - %msg%n");
+    layout.setPattern("%date{yyyy-MM-dd HH:mm:ss.SSS, UTC} [%thread] %-5level %logger{36} %kvp - %msg%n");
 
     LayoutWrappingEncoder<ILoggingEvent> encoder = new LayoutWrappingEncoder<>();
     encoder.setContext(loggerContext);

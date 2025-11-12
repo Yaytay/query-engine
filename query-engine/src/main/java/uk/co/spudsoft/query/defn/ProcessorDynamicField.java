@@ -23,10 +23,9 @@ import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import java.util.List;
-import uk.co.spudsoft.query.exec.SourceNameTracker;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.procs.subquery.ProcessorDynamicFieldInstance;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
@@ -139,8 +138,8 @@ public class ProcessorDynamicField implements Processor {
   private final SourcePipeline fieldValues;
   
   @Override
-  public ProcessorDynamicFieldInstance createInstance(Vertx vertx, SourceNameTracker sourceNameTracker, Context context, MeterRegistry meterRegistry, String name) {
-    return new ProcessorDynamicFieldInstance(vertx, sourceNameTracker, context, meterRegistry, this, name);
+  public ProcessorDynamicFieldInstance createInstance(Vertx vertx, RequestContext requestContext, MeterRegistry meterRegistry, String name) {
+    return new ProcessorDynamicFieldInstance(vertx, requestContext, meterRegistry, this, name);
   }
 
   @Override

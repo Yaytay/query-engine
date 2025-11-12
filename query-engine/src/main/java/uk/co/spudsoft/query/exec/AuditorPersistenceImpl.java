@@ -102,7 +102,7 @@ public class AuditorPersistenceImpl implements Auditor {
   private static final Base64.Decoder DECODER = java.util.Base64.getDecoder();
 
   private static final EnumMap<AuditHistorySortOrder, String> SORT_COLUMN_NAMES = prepareSortColumnNames();
-  
+
   private static EnumMap<AuditHistorySortOrder, String> prepareSortColumnNames() {
     EnumMap<AuditHistorySortOrder, String> result = new EnumMap<>(AuditHistorySortOrder.class);
     for (AuditHistorySortOrder value : AuditHistorySortOrder.values()) {
@@ -143,7 +143,7 @@ public class AuditorPersistenceImpl implements Auditor {
     this.retryIncrementMs = audit.getRetryIncrement() == null ? 0 : audit.getRetryIncrement().toMillis();
     this.jdbcHelper = jdbcHelper;
   }
-  
+
   /**
    *
    * @throws IOException if the resource accessor fails.
@@ -171,7 +171,7 @@ public class AuditorPersistenceImpl implements Auditor {
       try (Connection jdbcConnection = DriverManager.getConnection(url, username, password)) {
         DatabaseMetaData dmd = jdbcConnection.getMetaData();
         quote = dmd.getIdentifierQuoteString();
-        
+
         SqlTemplate.initializeAll(dataSourceConfig, quote);
 
         String databaseProduct = dmd.getDatabaseProductName();
@@ -450,7 +450,7 @@ public class AuditorPersistenceImpl implements Auditor {
             #id# = ?
           """
     );
-    
+
     private final String template;
     private String sql;
 
@@ -460,13 +460,13 @@ public class AuditorPersistenceImpl implements Auditor {
 
     public String sql() {
         return sql;
-    }  
+    }
 
     public static void initializeAll(DataSourceConfig dataSourceConfig, String quote) {
-        String schemaPrefix = Strings.isNullOrEmpty(dataSourceConfig.getSchema()) 
-            ? "" 
+        String schemaPrefix = Strings.isNullOrEmpty(dataSourceConfig.getSchema())
+            ? ""
             : dataSourceConfig.getSchema() + ".";
-            
+
         for (SqlTemplate template : SqlTemplate.values()) {
             String processed = template.template.replaceAll("#SCHEMA#\\.", schemaPrefix);
             template.sql = processed.replaceAll("#", quote);
@@ -520,25 +520,25 @@ public class AuditorPersistenceImpl implements Auditor {
    * @param context The request context.
    * @return
    */
-  static String buildCacheKey(RequestContext context) {
+  static String buildCacheKey(RequestContext requestContext) {
 
     Hasher sha = Hashing.sha256().newHasher();
-    hashNullableString(sha, context.getUrl());
-    hashNullableString(sha, context.getHeaders().get("Accept"));
-    hashNullableString(sha, context.getHeaders().get("Accept-Encoding"));
-    hashNullableString(sha, Objects.toString(context.getAudience()));
-    hashNullableString(sha, context.getIssuer());
-    hashNullableString(sha, context.getSubject());
-    hashNullableString(sha, Objects.toString(context.getGroups()));
-    hashNullableString(sha, Objects.toString(context.getRoles()));
+    hashNullableString(sha, requestContext.getUrl());
+    hashNullableString(sha, requestContext.getHeaders().get("Accept"));
+    hashNullableString(sha, requestContext.getHeaders().get("Accept-Encoding"));
+    hashNullableString(sha, Objects.toString(requestContext.getAudience()));
+    hashNullableString(sha, requestContext.getIssuer());
+    hashNullableString(sha, requestContext.getSubject());
+    hashNullableString(sha, Objects.toString(requestContext.getGroups()));
+    hashNullableString(sha, Objects.toString(requestContext.getRoles()));
     return sha.hash().toString();
 
   }
 
   @Override
-  public Future<CacheDetails> getCacheFile(RequestContext context, Pipeline pipeline) {
+  public Future<CacheDetails> getCacheFile(RequestContext requestContext, Pipeline pipeline) {
 
-    String cacheKey = buildCacheKey(context);
+    String cacheKey = buildCacheKey(requestContext);
 
     return jdbcHelper.runSqlSelect(SqlTemplate.GET_CACHE_FILE.sql(), ps -> {
         ps.setString(1, cacheKey);
@@ -553,22 +553,22 @@ public class AuditorPersistenceImpl implements Auditor {
   }
 
   @Override
-  public Future<Void> recordCacheFile(RequestContext context, String fileName, LocalDateTime expiry) {
+  public Future<Void> recordCacheFile(RequestContext requestContext, String fileName, LocalDateTime expiry) {
     return jdbcHelper.runSqlUpdate("recordCacheFile", SqlTemplate.RECORD_CACHE_FILE.sql(), ps -> {
                     int param = 1;
-                    ps.setString(param++, buildCacheKey(context));
+                    ps.setString(param++, buildCacheKey(requestContext));
                     ps.setString(param++, fileName);
                     JdbcHelper.setLocalDateTimeUTC(ps, param++, expiry);
-                    ps.setString(param++, context.getRequestId());
+                    ps.setString(param++, requestContext.getRequestId());
     }).mapEmpty();
   }
 
   @Override
-  public Future<Void> recordCacheFileUsed(RequestContext context, String fileName) {
+  public Future<Void> recordCacheFileUsed(RequestContext requestContext, String fileName) {
     return jdbcHelper.runSqlUpdate("recordCacheFileUsed", SqlTemplate.RECORD_CACHE_FILE_USED.sql(), ps -> {
                     int param = 1;
                     ps.setString(param++, fileName);
-                    ps.setString(param++, context.getRequestId());
+                    ps.setString(param++, requestContext.getRequestId());
     }).mapEmpty();
   }
 
@@ -587,111 +587,111 @@ public class AuditorPersistenceImpl implements Auditor {
   }
 
   @Override
-  public Future<Void> recordRequest(RequestContext context) {
+  public Future<Void> recordRequest(RequestContext requestContext) {
 
-    JsonObject headers = multiMapToJson(context.getHeaders());
-    JsonObject arguments = multiMapToJson(context.getParams());
+    JsonObject headers = multiMapToJson(requestContext.getHeaders());
+    JsonObject arguments = multiMapToJson(requestContext.getParams());
 
     logger.info("Request: {} {} {} {} {} {}",
-             context.getUrl(),
-             context.getClientIp(),
-             context.getHost(),
-             context.getPath(),
+             requestContext.getUrl(),
+             requestContext.getClientIp(),
+             requestContext.getHost(),
+             requestContext.getPath(),
              arguments,
              headers
     );
 
-    JsonArray audience = Auditor.listToJson(context.getAudience());
-    JsonArray groups = Auditor.listToJson(context.getGroups());
-    JsonArray roles = Auditor.listToJson(context.getRoles());
-    String openIdDetails = context.getJwt() == null ? null : context.getJwt().getPayloadAsString();
-    
+    JsonArray audience = Auditor.listToJson(requestContext.getAudience());
+    JsonArray groups = Auditor.listToJson(requestContext.getGroups());
+    JsonArray roles = Auditor.listToJson(requestContext.getRoles());
+    String openIdDetails = requestContext.getJwt() == null ? null : requestContext.getJwt().getPayloadAsString();
+
     return jdbcHelper.runSqlUpdate("recordRequest", SqlTemplate.RECORD_REQUEST.sql(), ps -> {
                     int param = 1;
-                    ps.setString(param++, JdbcHelper.limitLength(context.getRequestId(), 100));
-                    ps.setString(param++, JdbcHelper.limitLength(context.getRunID(), 100));
+                    ps.setString(param++, JdbcHelper.limitLength(requestContext.getRequestId(), 100));
+                    ps.setString(param++, JdbcHelper.limitLength(requestContext.getRunID(), 100));
                     JdbcHelper.setLocalDateTimeUTC(ps, param++, LocalDateTime.now(ZoneOffset.UTC));
                     ps.setString(param++, JdbcHelper.limitLength(PROCESS_ID, 1000));
-                    ps.setString(param++, JdbcHelper.limitLength(context.getUrl(), 1000));
-                    ps.setString(param++, JdbcHelper.limitLength(context.getClientIp().toNormalizedString(), 40));
-                    ps.setString(param++, JdbcHelper.limitLength(context.getHost(), 250));
-                    ps.setString(param++, JdbcHelper.limitLength(context.getPath(), 250));
+                    ps.setString(param++, JdbcHelper.limitLength(requestContext.getUrl(), 1000));
+                    ps.setString(param++, JdbcHelper.limitLength(requestContext.getClientIp().toNormalizedString(), 40));
+                    ps.setString(param++, JdbcHelper.limitLength(requestContext.getHost(), 250));
+                    ps.setString(param++, JdbcHelper.limitLength(requestContext.getPath(), 250));
                     ps.setString(param++, JdbcHelper.toString(arguments));
                     ps.setString(param++, JdbcHelper.toString(headers));
-                    
+
                     ps.setString(param++, openIdDetails);
                     ps.setString(param++, JdbcHelper.toString(audience));
-                    ps.setString(param++, JdbcHelper.limitLength(context.getIssuer(), 1000));
-                    ps.setString(param++, JdbcHelper.limitLength(context.getSubject(), 1000));
-                    ps.setString(param++, JdbcHelper.limitLength(context.getUsername(), 1000));
-                    ps.setString(param++, JdbcHelper.limitLength(context.getName(), 1000));
+                    ps.setString(param++, JdbcHelper.limitLength(requestContext.getIssuer(), 1000));
+                    ps.setString(param++, JdbcHelper.limitLength(requestContext.getSubject(), 1000));
+                    ps.setString(param++, JdbcHelper.limitLength(requestContext.getUsername(), 1000));
+                    ps.setString(param++, JdbcHelper.limitLength(requestContext.getName(), 1000));
                     ps.setString(param++, JdbcHelper.toString(groups));
                     ps.setString(param++, JdbcHelper.toString(roles));
-                    
+
     }).mapEmpty();
   }
 
   @Override
-  public Future<Void> recordFileDetails(RequestContext context, DirCacheTree.File file, Pipeline pipeline) {
+  public Future<Void> recordFileDetails(RequestContext requestContext, DirCacheTree.File file, Pipeline pipeline) {
     logger.info("File: {} {} {}", file.getPath(), file.getSize(), file.getModified());
     return jdbcHelper.runSqlUpdate("recordFile", SqlTemplate.RECORD_FILE.sql(), ps -> {
              ps.setString(1, JdbcHelper.limitLength(JdbcHelper.toString(file.getPath()), 1000));
              ps.setLong(2, file.getSize());
              JdbcHelper.setLocalDateTimeUTC(ps, 3, file.getModified());
              ps.setString(4, pipeline == null ? null : pipeline.getSha256());
-             ps.setString(5, JdbcHelper.limitLength(context.getRequestId(), 100));
+             ps.setString(5, JdbcHelper.limitLength(requestContext.getRequestId(), 100));
     }).mapEmpty();
   }
 
   @Override
-  public void recordException(RequestContext context, Throwable ex) {
+  public void recordException(RequestContext requestContext, Throwable ex) {
     logger.info("Exception: {} {}", ex.getClass().getCanonicalName(), ex.getMessage());
     jdbcHelper.runSqlUpdate("recordException", SqlTemplate.RECORD_EXCEPTION.sql(), ps -> {
              JdbcHelper.setLocalDateTimeUTC(ps, 1, LocalDateTime.now(ZoneOffset.UTC));
              ps.setString(2, JdbcHelper.limitLength(ex.getClass().getCanonicalName(), 1000));
              ps.setString(3, JdbcHelper.limitLength(ex.getMessage(), 1000));
              ps.setString(4, ExceptionToString.convert(ex, "; "));
-             ps.setString(5, context.getRequestId());
+             ps.setString(5, requestContext.getRequestId());
     });
   }
 
   @Override
-  public void recordResponse(RequestContext context, HttpServerResponse response) {
+  public void recordResponse(RequestContext requestContext, HttpServerResponse response) {
     JsonObject headers = multiMapToJson(response.headers());
     logger.info("Request complete: {} {} bytes in {}s {}"
             , response.getStatusCode()
             , response.bytesWritten()
-            , (System.currentTimeMillis() - context.getStartTime()) / 1000.0
+            , (System.currentTimeMillis() - requestContext.getStartTime()) / 1000.0
             , headers
     );
     jdbcHelper.runSqlUpdate("recordResponse", SqlTemplate.RECORD_RESPONSE.sql(), ps -> {
              JdbcHelper.setLocalDateTimeUTC(ps, 1, LocalDateTime.now(ZoneOffset.UTC));
-             if (context.getHeadersSentTime() > 0) {
-               ps.setLong(2, context.getHeadersSentTime() - context.getStartTime());
+             if (requestContext.getHeadersSentTime() > 0) {
+               ps.setLong(2, requestContext.getHeadersSentTime() - requestContext.getStartTime());
              } else {
                ps.setNull(2, Types.BIGINT);
              }
-             ps.setLong(3, System.currentTimeMillis() - context.getStartTime());
+             ps.setLong(3, System.currentTimeMillis() - requestContext.getStartTime());
              ps.setInt(4, response.getStatusCode());
-             ps.setLong(5, context.getRowsWritten());
+             ps.setLong(5, requestContext.getRowsWritten());
              ps.setLong(6, response.bytesWritten());
              ps.setString(7, JdbcHelper.toString(headers));
-             ps.setString(8, JdbcHelper.limitLength(context.getRequestId(), 100));
+             ps.setString(8, JdbcHelper.limitLength(requestContext.getRequestId(), 100));
     });
   }
 
   @Override
-  public Future<Pipeline> runRateLimitRules(RequestContext context, Pipeline pipeline) {
+  public Future<Pipeline> runRateLimitRules(RequestContext requestContext, Pipeline pipeline) {
      List<RateLimitRule> rules = pipeline.getRateLimitRules();
 
     logger.debug("Performing rate limit check with {} rules", rules.size());
     Instant now = LocalDateTime.now(ZoneOffset.UTC).toInstant(ZoneOffset.UTC);
     if (CollectionUtils.isEmpty(rules)) {
       return jdbcHelper.runSqlUpdate("markRateLimitRulesProcessed", SqlTemplate.MARK_RATE_LIMIT_RULES_PROCESSED.sql(), ps -> {
-        Timestamp ts = Timestamp.from(now);        
+        Timestamp ts = Timestamp.from(now);
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
         ps.setTimestamp(1, ts, cal);
-        ps.setString(2, context.getRequestId());
+        ps.setString(2, requestContext.getRequestId());
       }).map(v -> pipeline);
     }
 
@@ -714,27 +714,27 @@ public class AuditorPersistenceImpl implements Auditor {
         switch (scope) {
           case clientip:
             sql.append("and ").append(quote).append("clientIp").append(quote).append(" = ? ");
-            args.add(JdbcHelper.limitLength(context.getClientIp().toNormalizedString(), 40));
+            args.add(JdbcHelper.limitLength(requestContext.getClientIp().toNormalizedString(), 40));
             break;
           case host:
             sql.append("and ").append(quote).append("host").append(quote).append(" = ? ");
-            args.add(context.getHost());
+            args.add(requestContext.getHost());
             break;
           case path:
             sql.append("and ").append(quote).append("path").append(quote).append(" = ? ");
-            args.add(context.getPath());
+            args.add(requestContext.getPath());
             break;
           case issuer:
             sql.append("and ").append(quote).append("issuer").append(quote).append(" = ? ");
-            args.add(context.getIssuer());
+            args.add(requestContext.getIssuer());
             break;
           case subject:
             sql.append("and ").append(quote).append("subject").append(quote).append(" = ? ");
-            args.add(context.getSubject());
+            args.add(requestContext.getSubject());
             break;
           case username:
             sql.append("and ").append(quote).append("username").append(quote).append(" = ? ");
-            args.add(context.getUsername());
+            args.add(requestContext.getUsername());
             break;
           default:
             throw new IllegalStateException("Unknown RateLimitScope type: " + scope);
@@ -744,9 +744,9 @@ public class AuditorPersistenceImpl implements Auditor {
 
     String sqlString = sql.toString();
     logger.info("Running rate limit rules {} with {}", sqlString, args);
-    
+
     return jdbcHelper.runInTransaction("rateLimitRules", JdbcHelper.IsolationLevel.TRANSACTION_SERIALIZABLE, conn -> {
-      runRateLimitRulesSqlInTransaction(conn, sqlString, args, rules, context.getRequestId(), now);
+      runRateLimitRulesSqlInTransaction(conn, sqlString, args, rules, requestContext.getRequestId(), now);
       return null;
     }).map(v -> pipeline);
   }
@@ -760,7 +760,7 @@ public class AuditorPersistenceImpl implements Auditor {
                 ps.setObject(i + 1, args.get(i));
               }
             }, rs -> {
-              boolean[] done = new boolean[rules.size()];              
+              boolean[] done = new boolean[rules.size()];
               while (rs.next()) {
                 if (logger.isTraceEnabled()) {
                   logger.trace("RateLimitRow: id: {}, outstanding: {}, runs: {}, bytes: {}, time: {}",
@@ -800,15 +800,15 @@ public class AuditorPersistenceImpl implements Auditor {
               }
               return null;
             });
-    int rowsAffected = jdbcHelper.runSqlUpdateOnConnectionSynchronously(conn, SqlTemplate.MARK_RATE_LIMIT_RULES_PROCESSED.sql(), ps -> { 
-      Timestamp ts = Timestamp.from(now);        
+    int rowsAffected = jdbcHelper.runSqlUpdateOnConnectionSynchronously(conn, SqlTemplate.MARK_RATE_LIMIT_RULES_PROCESSED.sql(), ps -> {
+      Timestamp ts = Timestamp.from(now);
       Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
       ps.setTimestamp(1, ts, cal);
       ps.setString(2, requestId);
     });
     logger.debug("Marking rate limit rules processed affected {} rows", rowsAffected);
  }
-  
+
   static void evaluateRateLimitRule(RateLimitRule rule, Instant now, int index, int outstanding, int runs, long bytes, LocalDateTime timestamp) throws ServiceException {
     if (outstanding > rule.getConcurrencyLimit()) {
       String logmsg = outstanding > 1
@@ -872,7 +872,7 @@ public class AuditorPersistenceImpl implements Auditor {
             array.add(value);
           }
           jo.put(key, array);
-        }        
+        }
       }
     }
     return jo;
@@ -1022,15 +1022,15 @@ public class AuditorPersistenceImpl implements Auditor {
   @Override
   public Future<Void> waitForOutstandingRequests(long timeoutMs) {
     Promise<Void> promise = Promise.promise();
-    
+
     LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
     Timestamp relevanceThreshold = Timestamp.from(now.minusDays(1).toInstant(ZoneOffset.UTC));
     waitForOutstandingRequests(promise, relevanceThreshold, System.currentTimeMillis() + timeoutMs);
     return promise.future();
   }
-  
+
   private void waitForOutstandingRequests(Promise<Void> promise, Timestamp relevanceThreshold, long terminalTime) {
-    
+
     jdbcHelper.runSqlSelect(SqlTemplate.COUNT_OUTSTANDING_REQUESTS.sql(), ps -> {
       Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
       ps.setTimestamp(1, relevanceThreshold, cal);

@@ -50,8 +50,7 @@ public class QueueReadStreamTest {
   @Test
   public void testStream(Vertx vertx, VertxTestContext testContext) {
     
-    Context context = vertx.getOrCreateContext();
-    QueueReadStream<Integer> qrs = new QueueReadStream<>(context);
+    QueueReadStream<Integer> qrs = new QueueReadStream<>(vertx.getOrCreateContext());
     AtomicInteger value = new AtomicInteger();
     ReadStreamToList.capture(qrs)
             .andThen(ar -> {
@@ -81,8 +80,7 @@ public class QueueReadStreamTest {
   @Test
   public void testManual(Vertx vertx) throws InterruptedException {
     
-    Context context = vertx.getOrCreateContext();
-    QueueReadStream<Integer> qrs = new QueueReadStream<>(context);
+    QueueReadStream<Integer> qrs = new QueueReadStream<>(vertx.getOrCreateContext());
     for (int i = 0; i < 30; ++i) {
       qrs.add(i);
     }

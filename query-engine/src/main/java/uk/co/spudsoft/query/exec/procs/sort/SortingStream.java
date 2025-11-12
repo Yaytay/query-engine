@@ -39,6 +39,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+
 /**
  * A ReadStream that sorts its input using external merge sort. Uses bounded memory by spilling sorted chunks to temporary files
  * when memory limit is reached.
@@ -87,22 +88,22 @@ public final class SortingStream<T> implements ReadStream<T> {
 
   /**
    * Interface for calculating the size of an item.
-   * 
+   *
    * The generated result is compared with the memoryLimit passed in to the SortingStream constructor, it does not necessarily need
    * to attempt to calculate bytes.
-   * 
+   *
    * @param <T> The class of item that this MemoryEvaluator can assess.
    */
   public interface MemoryEvaluator<T> {
     /**
      * Calculate the size of an item.
-     * 
+     *
      * This is intended to return a best-efforts calculation of the number of bytes used by the item in memory,
      * however Java Strings provide no way to know how much space they consume, so the results are approximate at best.
-     * 
+     *
      * The return value is only used by SortingStream to determine whether the current set of items in memory should be
      * written to a (sorted) temporary file.
-     * 
+     *
      * @param item The item to consider.
      * @return The size of the item.
      */
@@ -119,7 +120,7 @@ public final class SortingStream<T> implements ReadStream<T> {
 
   /**
    * Constructor.
-   * 
+   *
    * @param context The vertx {@link Context} to use for asynchronous operations.
    * @param fileSystem The vertx {@link FileSystem} to use for temporary file operations.
    * @param comparator The comparator to use to sort objects of type T.
