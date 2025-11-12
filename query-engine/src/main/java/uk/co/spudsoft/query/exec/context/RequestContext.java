@@ -93,7 +93,7 @@ public final class RequestContext {
 
   private long rowsWritten;
 
-  private ImmutableMap<String, String> environment;
+  private final ImmutableMap<String, String> environment;
   
   /**
    * Constructor.
