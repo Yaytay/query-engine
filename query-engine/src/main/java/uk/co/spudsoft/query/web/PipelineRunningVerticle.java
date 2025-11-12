@@ -35,7 +35,7 @@ import uk.co.spudsoft.query.exec.context.PipelineContext;
 /**
  * Vert.x Verticle for running Query Engine Pipelines.
  * 
- * @author njt
+ * @author jtalbut
  */
 public class PipelineRunningVerticle extends VerticleBase {
   

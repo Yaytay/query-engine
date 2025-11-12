@@ -24,7 +24,7 @@ import uk.co.spudsoft.query.defn.Pipeline;
 /**
  * A collection of tests of specific pipelines that have caused issues.
  * 
- * @author njt
+ * @author jtalbut
  */
 public class ParseIssuesTest {
   

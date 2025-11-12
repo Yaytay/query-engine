@@ -30,7 +30,7 @@ import io.vertx.ext.web.RoutingContext;
  * Simple Handler&lt;RoutingContext&gt; for presenting a HealthChecks object
  * via Vertx web.
  * 
- * @author njt
+ * @author jtalbut
  */
 public class HealthCheckHandler implements Handler<RoutingContext> {
 

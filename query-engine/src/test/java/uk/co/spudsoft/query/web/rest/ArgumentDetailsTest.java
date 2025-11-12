@@ -25,7 +25,7 @@ import uk.co.spudsoft.query.defn.ArgumentValue;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class ArgumentDetailsTest {
   

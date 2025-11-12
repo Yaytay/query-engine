@@ -40,7 +40,7 @@ import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
 public class QueueReadStreamTest {

@@ -35,7 +35,7 @@ import uk.co.spudsoft.query.json.ObjectMapperConfiguration;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class FormatJsonInstanceTest {
 

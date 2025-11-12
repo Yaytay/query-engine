@@ -25,7 +25,7 @@ import uk.co.spudsoft.query.exec.context.RequestContext;
 
 /**
  * Wrapper for an slf4j Logger that add KVP values specific to Query Engine.
- * @author njt
+ * @author jtalbut
  */
 public class Log {
   

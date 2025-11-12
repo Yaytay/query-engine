@@ -22,7 +22,7 @@ import io.vertx.core.Context;
 /**
  * Handler for receiving messages during the progress of a pipeline.
  * The Handler can do whatever if wants with the messages.
- * @author njt
+ * @author jtalbut
  */
 public interface ProgressNotificationHandler {
 

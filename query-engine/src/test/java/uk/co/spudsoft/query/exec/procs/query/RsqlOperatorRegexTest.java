@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class RsqlOperatorRegexTest {
   

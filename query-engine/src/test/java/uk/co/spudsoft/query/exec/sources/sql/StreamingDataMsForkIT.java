@@ -47,7 +47,7 @@ import uk.co.spudsoft.query.web.ServiceException;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

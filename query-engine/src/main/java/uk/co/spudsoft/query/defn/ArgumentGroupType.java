@@ -19,7 +19,7 @@ package uk.co.spudsoft.query.defn;
 /**
  * The type of ArgumentGroup.
  * These values are specific to Form.io rendering of arguments.
- * @author njt
+ * @author jtalbut
  */
 public enum ArgumentGroupType {
   

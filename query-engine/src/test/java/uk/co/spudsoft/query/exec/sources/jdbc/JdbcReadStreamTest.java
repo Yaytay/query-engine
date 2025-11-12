@@ -29,7 +29,7 @@ import uk.co.spudsoft.query.defn.SourceJdbc;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class JdbcReadStreamTest {
   

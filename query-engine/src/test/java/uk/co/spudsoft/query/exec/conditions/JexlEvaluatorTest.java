@@ -36,7 +36,7 @@ import uk.co.spudsoft.query.defn.Condition;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class JexlEvaluatorTest {
 

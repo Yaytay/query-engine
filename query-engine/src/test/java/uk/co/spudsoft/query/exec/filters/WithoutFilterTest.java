@@ -25,7 +25,7 @@ import uk.co.spudsoft.query.exec.procs.filters.ProcessorMapInstance;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class WithoutFilterTest {
   

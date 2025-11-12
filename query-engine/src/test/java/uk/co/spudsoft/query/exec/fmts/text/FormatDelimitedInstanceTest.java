@@ -52,7 +52,7 @@ import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
 public class FormatDelimitedInstanceTest {

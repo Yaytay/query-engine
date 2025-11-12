@@ -27,7 +27,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
 public class AbstractSampleDataLoaderTest {

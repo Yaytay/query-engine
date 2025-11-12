@@ -26,7 +26,7 @@ import org.stringtemplate.v4.misc.STMessage;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class StringTemplateListenerTest {
   

@@ -24,7 +24,7 @@ import uk.co.spudsoft.query.defn.FormatDelimited;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class FormatDetailsTest {
   

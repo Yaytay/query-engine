@@ -34,7 +34,7 @@ import uk.co.spudsoft.query.exec.Types;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 public class AbstractJoiningProcessorTest {
   

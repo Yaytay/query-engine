@@ -25,7 +25,7 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 /**
  * Listener class to collate StringTemplate errors.
  * 
- * @author njt
+ * @author jtalbut
  */
 public class StringTemplateListener implements STErrorListener {
   

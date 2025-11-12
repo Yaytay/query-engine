@@ -40,7 +40,7 @@ import uk.co.spudsoft.mgmt.ContentTypes;
 /**
  * Management endpoint router for exposing the DirCache details.
  * As with all management endpoints, this should not be exposed to end users.
- * @author njt
+ * @author jtalbut
  */
 public class DirCacheManagementRoute implements Handler<RoutingContext> {
 

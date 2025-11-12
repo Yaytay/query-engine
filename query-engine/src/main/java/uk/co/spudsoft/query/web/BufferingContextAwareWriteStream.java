@@ -31,7 +31,7 @@ import io.vertx.core.streams.WriteStream;
  * Every request that can write to the delegate WriteStream is run using runOnContext, and if there is a return value 
  * it is returned by another runOnContext.
  * 
- * @author njt
+ * @author jtalbut
  */
 public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
   private final WriteStream<Buffer> delegate;

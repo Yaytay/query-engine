@@ -30,7 +30,7 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
 /**
  *
- * @author njt
+ * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
 public class AbstractSampleDataLoaderForkIT {

@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Simple router for setting default security headers on HTTP response if they are not already set.
  * 
- * @author njt
+ * @author jtalbut
  */
 public class SecurityHeadersRouter implements Handler<RoutingContext> {
   

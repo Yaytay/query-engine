@@ -50,7 +50,7 @@ import uk.co.spudsoft.query.web.MockOidcServer.LogoutRequest;
  * * BackLogout vs FrontLogout vs NoLogout
  * Not all permutations are valid, FrontLogout and NoLogout will only be tested with Config and not all permutations are required.
  * 
- * @author njt
+ * @author jtalbut
  */
 public abstract class AbstractLoginLogoutTester {
 
