@@ -22,6 +22,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Argument;
 import uk.co.spudsoft.query.defn.DataType;
+import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 
 /**
  * The realisation of an Argument passed in to a pipeline.
@@ -61,19 +63,20 @@ public final class ArgumentInstance {
   
   /**
    * Validate each currently known value for minimum and maximum.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @throws IllegalArgumentException if any value exceeds the known minima/maxima.
    */
   @SuppressWarnings({"rawtypes", "unchecked"})
-  public void validateMinMax() throws IllegalArgumentException {
+  public void validateMinMax(PipelineContext pipelineContext) throws IllegalArgumentException {
     Comparable min;
     Comparable max;
     try {
-      min = Strings.isNullOrEmpty(definition.getMinimumValue()) ? null : definition.getType().cast(definition.getMinimumValue());
+      min = Strings.isNullOrEmpty(definition.getMinimumValue()) ? null : definition.getType().cast(pipelineContext, definition.getMinimumValue());
     } catch (Exception ex) {
       throw new IllegalArgumentException("Argument " + definition.getName() + " has a minimum value of \"" + definition.getMinimumValue() + "\", but that cannot be parsed as a " + definition.getType() + ".", ex);
     }
     try {
-      max = Strings.isNullOrEmpty(definition.getMaximumValue()) ? null : definition.getType().cast(definition.getMaximumValue());
+      max = Strings.isNullOrEmpty(definition.getMaximumValue()) ? null : definition.getType().cast(pipelineContext, definition.getMaximumValue());
     } catch (Exception ex) {
       throw new IllegalArgumentException("Argument " + definition.getName() + " has a maximum value of \"" + definition.getMaximumValue() + "\", but that cannot be parsed as a " + definition.getType() + ".", ex);
     }

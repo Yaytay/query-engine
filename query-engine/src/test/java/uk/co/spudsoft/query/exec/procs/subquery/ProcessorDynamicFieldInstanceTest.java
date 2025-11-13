@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.procs.subquery;
 
+import inet.ipaddr.IPAddressString;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Vertx;
 import java.time.LocalDateTime;
@@ -34,6 +35,7 @@ import uk.co.spudsoft.query.exec.ColumnDefn;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.procs.subquery.ProcessorDynamicFieldInstance.FieldDefn;
 import static uk.co.spudsoft.query.exec.procs.subquery.ProcessorDynamicFieldInstance.rowToFieldDefn;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
@@ -260,11 +262,23 @@ public class ProcessorDynamicFieldInstanceTest {
 
   @Test
   public void testCast() {
-    assertEquals(LocalDateTime.of(2022, Month.OCTOBER, 07, 0, 0, 0), ProcessorDynamicFieldInstance.castValue("2022-10-07 00:00:00", new FieldDefn("id", "key", "field", DataType.DateTime, "column")));
-    assertEquals(Boolean.TRUE, ProcessorDynamicFieldInstance.castValue(1, new FieldDefn("id", "key", "field", DataType.Boolean, "column")));
-    assertEquals(Boolean.FALSE, ProcessorDynamicFieldInstance.castValue(0, new FieldDefn("id", "key", "field", DataType.Boolean, "column")));
-    assertEquals(Boolean.TRUE, ProcessorDynamicFieldInstance.castValue("1", new FieldDefn("id", "key", "field", DataType.Boolean, "column")));
-    assertEquals(Boolean.FALSE, ProcessorDynamicFieldInstance.castValue("0", new FieldDefn("id", "key", "field", DataType.Boolean, "column")));
+    RequestContext requestContext = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", requestContext);
+    
+    ProcessorDynamicField defn = ProcessorDynamicField.builder()
+            .build();
+    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstanceTester(null, pipelineContext, null, defn, "P0-DynamicField",
+             Arrays.asList(
+                    new FieldDefn(0, "field", "Field", DataType.String, "stringValue"),
+                     new FieldDefn(1, "field", "field", DataType.String, "stringValue")
+            )
+    );
+    
+    assertEquals(LocalDateTime.of(2022, Month.OCTOBER, 07, 0, 0, 0), instance.castValue("2022-10-07 00:00:00", new FieldDefn("id", "key", "field", DataType.DateTime, "column")));
+    assertEquals(Boolean.TRUE, instance.castValue(1, new FieldDefn("id", "key", "field", DataType.Boolean, "column")));
+    assertEquals(Boolean.FALSE, instance.castValue(0, new FieldDefn("id", "key", "field", DataType.Boolean, "column")));
+    assertEquals(Boolean.TRUE, instance.castValue("1", new FieldDefn("id", "key", "field", DataType.Boolean, "column")));
+    assertEquals(Boolean.FALSE, instance.castValue("0", new FieldDefn("id", "key", "field", DataType.Boolean, "column")));
   }
 
   @Test

@@ -163,18 +163,18 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     return false;
   }
 
-  static void addCastItem(String name, ImmutableList.Builder<Comparable<?>> builder, DataType type, Object item) throws IllegalArgumentException {
+  static void addCastItem(PipelineContext pipelineContext, String name, ImmutableList.Builder<Comparable<?>> builder, DataType type, Object item) throws IllegalArgumentException {
     try {
-      builder.add(type.cast(item));
+      builder.add(type.cast(pipelineContext, item));
     } catch (Throwable ex) {
       logger.warn("Unable to cast '{}' ({}) as {}: ", item, item.getClass(), type, ex);
       throw new IllegalArgumentException("The argument \"" + name + "\" was passed a value which cannot be converted to " + type.name() + ".");
     }
   }
 
-  static ImmutableList<Comparable<?>> evaluateDefaultValues(Argument arg, RequestContext requestContext, Pattern permittedValuesPattern) throws Throwable {
+  static ImmutableList<Comparable<?>> evaluateDefaultValues(PipelineContext pipelineContext, Argument arg, Pattern permittedValuesPattern) throws Throwable {
     JexlEvaluator evaluator = new JexlEvaluator(arg.getDefaultValueExpression());
-    Object raw = evaluator.evaluateAsObject(requestContext, null);
+    Object raw = evaluator.evaluateAsObject(pipelineContext.getRequestContext(), null);
     if (raw == null) {
       return ImmutableList.of();
     }
@@ -183,51 +183,51 @@ public class PipelineExecutorImpl implements PipelineExecutor {
       for (Object item : rawArray) {
         if (arg.isValidate()) {
           if (item instanceof String stringItem) {
-            validateArgumentValue(arg, permittedValuesPattern, stringItem, true);
+            validateArgumentValue(pipelineContext, arg, permittedValuesPattern, stringItem, true);
           }
         }
         if (item != null) {
-          addCastItem(arg.getName(), builder, arg.getType(), item);
+          addCastItem(pipelineContext, arg.getName(), builder, arg.getType(), item);
         }
       }
     } else if (raw instanceof List<?> rawList) {
       for (Object item : rawList) {
         if (arg.isValidate()) {
           if (item instanceof String stringItem) {
-            validateArgumentValue(arg, permittedValuesPattern, stringItem, true);
+            validateArgumentValue(pipelineContext, arg, permittedValuesPattern, stringItem, true);
           }
         }
         if (item != null) {
-          addCastItem(arg.getName(), builder, arg.getType(), item);
+          addCastItem(pipelineContext, arg.getName(), builder, arg.getType(), item);
         }
       }
     } else {
       if (arg.isValidate()) {
         if (raw instanceof String stringItem) {
-          validateArgumentValue(arg, permittedValuesPattern, stringItem, true);
+          validateArgumentValue(pipelineContext, arg, permittedValuesPattern, stringItem, true);
         }
       }
-      addCastItem(arg.getName(), builder, arg.getType(), raw);
+      addCastItem(pipelineContext, arg.getName(), builder, arg.getType(), raw);
     }
     return builder.build();
   }
 
-  static ImmutableList<Comparable<?>> castAndValidatePassedValues(Argument arg, RequestContext requestContext, Pattern permittedValuesPattern, List<String> values) throws Throwable {
+  static ImmutableList<Comparable<?>> castAndValidatePassedValues(PipelineContext pipelineContext, Argument arg, Pattern permittedValuesPattern, List<String> values) throws Throwable {
     ImmutableList.Builder<Comparable<?>> builder = ImmutableList.<Comparable<?>>builder();
     for (Object item : values) {
       if (arg.isValidate()) {
         if (item instanceof String stringItem) {
-          validateArgumentValue(arg, permittedValuesPattern, stringItem, false);
+          validateArgumentValue(pipelineContext, arg, permittedValuesPattern, stringItem, false);
         }
       }
       if (item != null) {
-        addCastItem(arg.getName(), builder, arg.getType(), item);
+        addCastItem(pipelineContext, arg.getName(), builder, arg.getType(), item);
       }
     }
     return builder.build();
   }
 
-  static void validateArgumentValue(Argument arg, Pattern permittedValuesPattern, String value, boolean defaultValue) throws IllegalArgumentException {
+  static void validateArgumentValue(PipelineContext pipelineContext, Argument arg, Pattern permittedValuesPattern, String value, boolean defaultValue) throws IllegalArgumentException {
     if (arg.getPossibleValues() != null && !arg.getPossibleValues().isEmpty()) {
       if (!possibleValuesContains(arg, value)) {
         if (defaultValue) {
@@ -253,6 +253,8 @@ public class PipelineExecutorImpl implements PipelineExecutor {
   @Override
   public Map<String, ArgumentInstance> prepareArguments(RequestContext requestContext, List<Argument> definitions, MultiMap valuesMap) throws Throwable {
 
+    PipelineContext pipelineContext = new PipelineContext(null, requestContext);
+    
     Map<String, ArgumentInstance> result = new HashMap<>();
     Map<String, Object> arguments = new HashMap<>();
     if (valuesMap == null) {
@@ -295,17 +297,17 @@ public class PipelineExecutorImpl implements PipelineExecutor {
           if (Strings.isNullOrEmpty(arg.getDefaultValueExpression())) {
             continue ;
           } else {
-            values = evaluateDefaultValues(arg, requestContext, permittedValuesPattern);
+            values = evaluateDefaultValues(pipelineContext, arg, permittedValuesPattern);
           }
         }
       }
 
       if (values == null && argStringValues != null && !argStringValues.isEmpty()) {
-        values = castAndValidatePassedValues(arg, requestContext, permittedValuesPattern, argStringValues);
+        values = castAndValidatePassedValues(pipelineContext, arg, permittedValuesPattern, argStringValues);
       } else if (!arg.isOptional() && !arg.isHidden()) {
         throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" is mandatory and was not provided.");
       } else if (!Strings.isNullOrEmpty(arg.getDefaultValueExpression())) {
-        values = evaluateDefaultValues(arg, requestContext, permittedValuesPattern);
+        values = evaluateDefaultValues(pipelineContext, arg, permittedValuesPattern);
       } else {
         values = ImmutableList.of();
       }
@@ -323,7 +325,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
       // Parsing of values occurs as part of construction on ArgumentInstance
       ArgumentInstance instance = new ArgumentInstance(arg, values);
       if (arg.isValidate()) {
-        instance.validateMinMax();
+        instance.validateMinMax(pipelineContext);
       }
       result.put(arg.getName(), instance);
     }

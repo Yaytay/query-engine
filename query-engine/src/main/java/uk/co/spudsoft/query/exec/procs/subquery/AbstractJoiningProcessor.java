@@ -139,14 +139,14 @@ public abstract class AbstractJoiningProcessor extends AbstractProcessor {
           DataType target = parentType.commonType(childType);
           if (target != parentType) {
             try {
-              parentKeyItem = target.cast(parentKeyItem);
+              parentKeyItem = target.cast(pipelineContext, parentKeyItem);
             } catch (Exception ex) {
               logger.warn("parentKeyItem {}/{}:{} cannot be converted to {}", parentIdColumns.get(i), parentType, parentKeyItem, target);
             }
           }
           if (target != childType) {
             try {
-              childKeyItem = target.cast(childKeyItem);
+              childKeyItem = target.cast(pipelineContext, childKeyItem);
             } catch (Exception ex) {
               logger.warn("childKeyItem {}/{}:{} cannot be converted to {}", childIdColumns.get(i), childType, childKeyItem, target);
             }

@@ -27,6 +27,8 @@ import java.time.ZoneOffset;
 import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * The basic data types that values can have in Query Engine.
@@ -145,11 +147,12 @@ public enum DataType {
    * If the value is already in the appropriate type it will be returned as is
    * ; if it's a compatible type if will be converted; if it's a string it will be parsed; otherwise it will be converted to a string and then parsed.
    *
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param value the value to be cast.
    * @return the passed in value in this data type.
    * @throws Exception if the value cannot be converted to this type.
    */
-  public Comparable<?> cast(Object value) throws Exception {
+  public Comparable<?> cast(PipelineContext pipelineContext, Object value) throws Exception {
     if (value == null) {
       return null;
     }
@@ -170,7 +173,7 @@ public enum DataType {
           return bv ? 1 : 0;
         }
         default -> {
-          logger.info("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
+          Log.decorate(logger.atInfo(), pipelineContext).log("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
           return java.lang.Integer.valueOf(value.toString());
         }
       }
@@ -186,7 +189,7 @@ public enum DataType {
           return java.lang.Long.valueOf(tv);
         }
         default -> {
-          logger.info("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
+          Log.decorate(logger.atInfo(), pipelineContext).log("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
           return java.lang.Long.valueOf(value.toString());
         }
       }
@@ -202,7 +205,7 @@ public enum DataType {
           return java.lang.Float.valueOf(tv);
         }
         default -> {
-          logger.info("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
+          Log.decorate(logger.atInfo(), pipelineContext).log("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
           return java.lang.Float.valueOf(value.toString());
         }
       }
@@ -218,7 +221,7 @@ public enum DataType {
           return java.lang.Double.valueOf(tv);
         }
         default -> {
-          logger.info("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
+          Log.decorate(logger.atInfo(), pipelineContext).log("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
           return java.lang.Double.valueOf(value.toString());
         }
       }
@@ -248,7 +251,7 @@ public enum DataType {
           }
         }
         default -> {
-          logger.info("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
+          Log.decorate(logger.atInfo(), pipelineContext).log("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
           return java.lang.Boolean.valueOf(value.toString());
         }
       }
@@ -273,7 +276,7 @@ public enum DataType {
           return LocalDate.parse(tv.substring(0, 10));
         }
         default -> {
-          logger.info("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
+          Log.decorate(logger.atInfo(), pipelineContext).log("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
           return LocalDate.parse(value.toString());
         }
       }
@@ -300,7 +303,7 @@ public enum DataType {
           }
         }
         default -> {
-          logger.info("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
+          Log.decorate(logger.atInfo(), pipelineContext).log("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
           return LocalDateTime.parse(value.toString());
         }
       }
@@ -333,7 +336,7 @@ public enum DataType {
           return LocalTime.parse(tv);
         }
         default -> {
-          logger.info("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
+          Log.decorate(logger.atInfo(), pipelineContext).log("Converting {} ({}) to string to parse as {}", value, value.getClass(), this);
           return LocalTime.parse(value.toString());
         }
       }
@@ -466,10 +469,11 @@ public enum DataType {
   
   /**
    * Get the appropriate DataType for any JDBCType.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param jdbcType The JDBCType being sought.
    * @return the appropriate DataType for the JDBCType.
    */
-  public static DataType fromJdbcType(JDBCType jdbcType) {
+  public static DataType fromJdbcType(PipelineContext pipelineContext, JDBCType jdbcType) {
     switch (jdbcType) {
       case BOOLEAN:
         return Boolean;
@@ -520,7 +524,7 @@ public enum DataType {
       case ROWID:
       case SQLXML:
       default:
-        logger.warn("Cannot process fields of type {} will attempt to output as string", jdbcType);
+        Log.decorate(logger.atWarn(), pipelineContext).log("Cannot process fields of type {} will attempt to output as string", jdbcType);
         return String;
     }
   }

@@ -329,10 +329,13 @@ public class PipelineExecutorImplTest {
 
   @Test
   public void testAddCastItem() throws Throwable {
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipctx = new PipelineContext("test", reqctx);
+
     ImmutableList.Builder<Comparable<?>> builder = ImmutableList.<Comparable<?>>builder();
-    PipelineExecutorImpl.addCastItem("test", builder, DataType.Time, "12:34");
+    PipelineExecutorImpl.addCastItem(pipctx, "test", builder, DataType.Time, "12:34");
     assertEquals("The argument \"test\" was passed a value which cannot be converted to Long.", assertThrows(IllegalArgumentException.class, () -> {
-      PipelineExecutorImpl.addCastItem("test", builder, DataType.Long, "12:34");
+      PipelineExecutorImpl.addCastItem(pipctx, "test", builder, DataType.Long, "12:34");
     }).getMessage());
     
     assertEquals(Arrays.asList(LocalTime.of(12, 34)), builder.build());
@@ -341,6 +344,7 @@ public class PipelineExecutorImplTest {
   @Test
   public void testEvaluateDefaultValues() throws Throwable {
     RequestContext requestContext = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", requestContext);
     
     Argument arg = Argument.builder()
             .type(DataType.Date)
@@ -348,7 +352,7 @@ public class PipelineExecutorImplTest {
             .defaultValueExpression("['1971-05-06', '1968-07-30', ...]")
             .build();
     
-    ImmutableList<Comparable<?>> values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null);
+    ImmutableList<Comparable<?>> values = PipelineExecutorImpl.evaluateDefaultValues(pipelineContext, arg, null);
     assertNotNull(values);
     assertEquals(Arrays.asList(LocalDate.of(1971, 5, 6), LocalDate.of(1968, 7, 30)), values);
 
@@ -358,7 +362,7 @@ public class PipelineExecutorImplTest {
             .defaultValueExpression("['1923-05-06', '2042-07-30']")
             .build();
     
-    values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null);
+    values = PipelineExecutorImpl.evaluateDefaultValues(pipelineContext, arg, null);
     assertNotNull(values);
     assertEquals(Arrays.asList(LocalDate.of(1923, 5, 6), LocalDate.of(2042, 7, 30)), values);
 
@@ -368,7 +372,7 @@ public class PipelineExecutorImplTest {
             .defaultValueExpression("[23, 45, null, ...]")
             .build();
     
-    values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null);
+    values = PipelineExecutorImpl.evaluateDefaultValues(pipelineContext, arg, null);
     assertNotNull(values);
     assertEquals(Arrays.asList(23, 45), values);
 
@@ -378,7 +382,7 @@ public class PipelineExecutorImplTest {
             .defaultValueExpression("[23, 45, null]")
             .build();
     
-    values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null);
+    values = PipelineExecutorImpl.evaluateDefaultValues(pipelineContext, arg, null);
     assertNotNull(values);
     assertEquals(Arrays.asList(23, 45), values);
 
@@ -389,7 +393,7 @@ public class PipelineExecutorImplTest {
             .defaultValueExpression("['1971-05-06', '1968-07-30', ...]")
             .build();
     
-    values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null);
+    values = PipelineExecutorImpl.evaluateDefaultValues(pipelineContext, arg, null);
     assertNotNull(values);
     assertEquals(Arrays.asList(LocalDate.of(1971, 5, 6), LocalDate.of(1968, 7, 30)), values);
 
@@ -401,7 +405,7 @@ public class PipelineExecutorImplTest {
             .defaultValueExpression("['1971-05-06', '1968-07-30', ...]")
             .build();
     
-    values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null);
+    values = PipelineExecutorImpl.evaluateDefaultValues(pipelineContext, arg, null);
     assertNotNull(values);
     assertEquals(Arrays.asList(LocalDate.of(1971, 5, 6), LocalDate.of(1968, 7, 30)), values);
 
@@ -423,13 +427,16 @@ public class PipelineExecutorImplTest {
     Jwt jwt = new Jwt(new JsonObject(), new JsonObject().put("groups", Arrays.asList("Bob", "/Department_First department")), null, null);
     requestContext.setJwt(jwt);
             
-    values = PipelineExecutorImpl.evaluateDefaultValues(arg, requestContext, null);
+    values = PipelineExecutorImpl.evaluateDefaultValues(pipelineContext, arg, null);
     assertNotNull(values);
     assertEquals(ImmutableList.of("First department"), values);
   }
 
   @Test
   public void testValidateArgumentValue() {
+    RequestContext requestContext = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", requestContext);
+
     Argument arg;
     
     // No constraints and casting is handled later:
@@ -437,7 +444,7 @@ public class PipelineExecutorImplTest {
             .type(DataType.Integer)
             .multiValued(true)
             .build();
-    PipelineExecutorImpl.validateArgumentValue(arg, null, "fred", true);
+    PipelineExecutorImpl.validateArgumentValue(pipelineContext, arg, null, "fred", true);
     
     // Still no constraints because possible values is empty and casting is handled later:
     arg = Argument.builder()
@@ -445,7 +452,7 @@ public class PipelineExecutorImplTest {
             .possibleValues(Collections.emptyList())
             .multiValued(true)
             .build();
-    PipelineExecutorImpl.validateArgumentValue(arg, null, "fred", true);
+    PipelineExecutorImpl.validateArgumentValue(pipelineContext, arg, null, "fred", true);
     
     // Now fail because value is not in possible values
     Argument argPermitsBob = Argument.builder()
@@ -454,15 +461,15 @@ public class PipelineExecutorImplTest {
             .possibleValues(Arrays.asList(ArgumentValue.builder().value("bob").build()))
             .multiValued(true)
             .build();
-    PipelineExecutorImpl.validateArgumentValue(argPermitsBob, null, "bob", true);
+    PipelineExecutorImpl.validateArgumentValue(pipelineContext, argPermitsBob, null, "bob", true);
     assertEquals("The argument \"testarg\" generated a default value which is not permitted, please contact the designer."
             , assertThrows(IllegalArgumentException.class, () -> {
-              PipelineExecutorImpl.validateArgumentValue(argPermitsBob, null, "fred", true);
+              PipelineExecutorImpl.validateArgumentValue(pipelineContext, argPermitsBob, null, "fred", true);
             }).getMessage()
             );
     assertEquals("The argument \"testarg\" was passed a value which is not permitted."
             , assertThrows(IllegalArgumentException.class, () -> {
-              PipelineExecutorImpl.validateArgumentValue(argPermitsBob, null, "fred", false);
+              PipelineExecutorImpl.validateArgumentValue(pipelineContext, argPermitsBob, null, "fred", false);
             }).getMessage()
             );
     
@@ -474,15 +481,15 @@ public class PipelineExecutorImplTest {
             .multiValued(true)
             .build();
     Pattern pattern = Pattern.compile(argPermitsRegex.getPermittedValuesRegex());
-    PipelineExecutorImpl.validateArgumentValue(argPermitsRegex, pattern, "7", true);
+    PipelineExecutorImpl.validateArgumentValue(pipelineContext, argPermitsRegex, pattern, "7", true);
     assertEquals("The argument \"testarg\" generated a default value which is not permitted, please contact the designer."
             , assertThrows(IllegalArgumentException.class, () -> {
-              PipelineExecutorImpl.validateArgumentValue(argPermitsRegex, pattern, "fred", true);
+              PipelineExecutorImpl.validateArgumentValue(pipelineContext, argPermitsRegex, pattern, "fred", true);
             }).getMessage()
             );
     assertEquals("The argument \"testarg\" was passed a value which is not permitted."
             , assertThrows(IllegalArgumentException.class, () -> {
-              PipelineExecutorImpl.validateArgumentValue(argPermitsRegex, pattern, "fred", false);
+              PipelineExecutorImpl.validateArgumentValue(pipelineContext, argPermitsRegex, pattern, "fred", false);
             }).getMessage()
             );
     

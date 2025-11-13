@@ -107,14 +107,14 @@ public class Argument {
     }
     if (!Strings.isNullOrEmpty(minimumValue)) {
       try {
-        type.cast(minimumValue);
+        type.cast(null, minimumValue);
       } catch (Exception ex) {
         throw new IllegalArgumentException("The argument \"" + name + "\" has a minimum value of \"" + minimumValue + "\" but that cannot be parsed as " + type + ".", ex);
       }
     }
     if (!Strings.isNullOrEmpty(maximumValue)) {
       try {
-        type.cast(maximumValue);
+        type.cast(null, maximumValue);
       } catch (Exception ex) {
         throw new IllegalArgumentException("The argument \"" + name + "\" has a maximum value of \"" + maximumValue + "\" but that cannot be parsed as " + type + ".", ex);
       }

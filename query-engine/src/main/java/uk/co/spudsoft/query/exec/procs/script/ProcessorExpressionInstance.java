@@ -85,7 +85,7 @@ public class ProcessorExpressionInstance extends AbstractProcessor {
     Object result = field.evaluateAsObject(pipelineContext.getRequestContext(), data);
     Comparable<?> typedResult;
     try {
-      typedResult = definition.getFieldType().cast(result);
+      typedResult = definition.getFieldType().cast(pipelineContext, result);
       data.put(definition.getField(), definition.getFieldType(), typedResult);
     } catch (Throwable ex) {
       logger.warn("Expression evaluation resulted in {} ({}): ", result, result.getClass(), ex);

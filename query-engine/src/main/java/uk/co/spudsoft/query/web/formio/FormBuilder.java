@@ -45,6 +45,7 @@ import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.FilterFactory;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
 import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader.PipelineAndFile;
 import uk.co.spudsoft.query.web.formio.DateTime.DatePicker;
@@ -64,6 +65,7 @@ public class FormBuilder {
     
   private final JsonFactory factory;
   private final RequestContext requestContext;
+  private final PipelineContext pipelineContext;
   private final int columns;
   private final FilterFactory filterFactory;
   
@@ -77,6 +79,7 @@ public class FormBuilder {
   public FormBuilder(RequestContext requestContext, int columns, FilterFactory filterFactory) {
     this.factory = new JsonFactory();
     this.requestContext = requestContext;
+    this.pipelineContext = new PipelineContext(null, requestContext);
     this.columns = columns;
     this.filterFactory = filterFactory;
   }
@@ -468,7 +471,7 @@ public class FormBuilder {
         Object result = evaluator.evaluateAsObject(requestContext, null);
         if (result != null) {
           try {
-            Boolean defaultBoolean = (Boolean) DataType.Boolean.cast(result);
+            Boolean defaultBoolean = (Boolean) DataType.Boolean.cast(pipelineContext, result);
             if (defaultBoolean != null) {
               checkbox.with("defaultValue", defaultBoolean);
             }

@@ -220,9 +220,9 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
     return parentRow;
   }
 
-  static Comparable<?> castValue(Comparable<?> value, FieldDefn fieldDefn) {
+  Comparable<?> castValue(Comparable<?> value, FieldDefn fieldDefn) {
     try {
-      value = fieldDefn.type.cast(value);
+      value = fieldDefn.type.cast(pipelineContext, value);
     } catch (Throwable ex) {
       logger.warn("Failed to cast field {} with value {} ({}) to {}", fieldDefn.key, value, value.getClass(), fieldDefn.type);
     }

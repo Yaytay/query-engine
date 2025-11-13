@@ -81,7 +81,7 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
         if (columnTypeOverrides != null && columnTypeOverrides.containsKey(cd.name())) {
           types.putIfAbsent(cd.name(), columnTypeOverrides.get(cd.name()));
         } else {
-          types.putIfAbsent(cd.name(), DataType.fromJdbcType(cd.jdbcType()));
+          types.putIfAbsent(cd.name(), DataType.fromJdbcType(pipelineContext, cd.jdbcType()));
         }
       }
       log.debug().log("Got types: {}", types);
@@ -102,7 +102,7 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
     rowStream.handler(row -> {
       try {
         ++rowCount;
-        DataRow dataRow = sqlRowToDataRow(row);
+        DataRow dataRow = sqlRowToDataRow(pipelineContext, row);
         if (rowCount % 1000 == 0) {
           log.trace().log("{} Received {} rows", this, rowCount);
         }
@@ -153,7 +153,7 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
     return this;
   }
   
-  private DataRow sqlRowToDataRow(Row row) {
+  private DataRow sqlRowToDataRow(PipelineContext pipelineContext, Row row) {
     DataRow result = DataRow.create(types);
     int size = row.size();
     for (int col = 0; col < size; col++) {
@@ -161,7 +161,7 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
       Object value = row.getValue(col);
       DataType type = types.get(name);
       try {
-        Comparable<?> typedValue = type.cast(value);
+        Comparable<?> typedValue = type.cast(pipelineContext, value);
         result.put(name, typedValue);
       } catch (Exception ex) {
         log.warn().log("Unable to convert {} to {}: ", value, type, ex);

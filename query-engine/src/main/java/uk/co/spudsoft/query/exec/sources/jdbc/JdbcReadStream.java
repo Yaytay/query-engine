@@ -203,7 +203,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
           String name = rsmeta.getColumnLabel(i + 1);
           int jdbcType = rsmeta.getColumnType(i + 1);
 
-          DataType type = DataType.fromJdbcType(JDBCType.valueOf(jdbcType));
+          DataType type = DataType.fromJdbcType(pipelineContext, JDBCType.valueOf(jdbcType));
 
           if (definition.getColumnTypeOverrideMap() != null) {
             Map<String, DataType> ctomap = definition.getColumnTypeOverrideMap();
@@ -315,7 +315,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
         value = rs.getObject(i + 1);
       }
       try {
-        Comparable<?> typedValue = type.cast(value);
+        Comparable<?> typedValue = type.cast(pipelineContext, value);
         row.put(name, typedValue);
       } catch (Throwable ex) {
         log.warn().log("Failed to cast {} ({}) value ({}): ", name, i, value, ex);

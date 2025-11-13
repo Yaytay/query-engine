@@ -61,6 +61,7 @@ import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.json.ObjectMapperConfiguration;
+import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.web.ServiceException;
 
 /**
@@ -211,7 +212,7 @@ public final class PipelineDefnLoader {
   }
   
   private void purgeCaches() {
-    logger.trace("Purging caches of expired files");
+    logger.debug("Purging caches of expired files");
     Set<DirCacheTree.File> files = new HashSet<>();
     addFilesToSet(dirCache.getRoot(), files);
     pipelineCache.purge(files);
@@ -225,17 +226,19 @@ public final class PipelineDefnLoader {
    * A valid path must match the {@link #GOOD_PATH} regular expression and must not contain a double slash.
    * Paths are always normalized using NFC before any processing is carried out.
    * 
+   * @param requestContext the context of the request.
    * @param path the path to validate.
    * @return the normalized, valid, path.
    * @throws ServiceException if the requested path is not valid.
    */
-  public static String validatePath(String path) throws ServiceException {
+  public static String validatePath(RequestContext requestContext, String path) throws ServiceException {
     if (path == null) {
       throw new ServiceException(400, "The requested path is not valid", new IllegalArgumentException("Null path"));
     }    
     String normPath = Normalizer.normalize(path, Normalizer.Form.NFC);
     if (!GOOD_PATH.matcher(normPath).matches()) {
-      logger.warn("{} does not match {}", GOOD_PATH, normPath);
+      Log.decorate(logger.atWarn(), requestContext)
+              .log("{} does not match {}", GOOD_PATH, normPath);
       throw new ServiceException(400, "The requested path is not valid", new IllegalArgumentException("Path does not match GOOD_PATH regex"));
     }
     if (normPath.contains("//")) {
@@ -244,41 +247,41 @@ public final class PipelineDefnLoader {
     return normPath;
   }
   
-  private Future<Void> checkPermissions(DirCacheTree.File permsFile, RequestContext req) {    
+  private Future<Void> checkPermissions(DirCacheTree.File permsFile, RequestContext requestContext) {    
     return permissionsCache.get(permsFile, buffer -> new ConditionInstance(buffer.toString()))
             .compose(condition -> {
               try {
-                if (condition.evaluate(req, null)) {
+                if (condition.evaluate(requestContext, null)) {
                   return Future.succeededFuture();
                 } else {
                   String expression = condition.getSourceText().trim();
                   if (expression.contains("\n")) {
-                    logger.warn("Access prevented by the expression from {} with {}", permsFile.getPath(), req);
+                    Log.decorate(logger.atWarn(), requestContext).log("Access prevented by the expression from {} with {}", permsFile.getPath(), requestContext);
                   } else {
-                    logger.warn("Access prevented by the expression from {} ({}) with {}", permsFile.getPath(), expression, req);
+                    Log.decorate(logger.atWarn(), requestContext).log("Access prevented by the expression from {} ({}) with {}", permsFile.getPath(), expression, requestContext);
                   }
                   return Future.failedFuture(new ServiceException(403, "Forbidden"));
                 }
               } catch (Throwable ex) {
-                logger.error("Failed to evalue {}: ", permsFile, ex);
+                Log.decorate(logger.atError(), requestContext).log("Failed to evalue {}: ", permsFile, ex);
                 return Future.failedFuture(ex);
               }
             });
   }
   
-  private Future<DirCacheTree.Directory> navigateDirs(RequestContext req, DirCacheTree.Directory dir, String[] parts, int offset) {
+  private Future<DirCacheTree.Directory> navigateDirs(RequestContext requestContext, DirCacheTree.Directory dir, String[] parts, int offset) {
 
     DirCacheTree.Node permsNode = dir.get(PERMISSIONS_FILENAME);
     
-    logger.debug("Navigating {} for {}[{}]", dir, parts, offset + 1);
+    Log.decorate(logger.atDebug(), requestContext).log("Navigating {} for {}[{}]", dir, parts, offset + 1);
 
     DirCacheTree.Directory childDir = offset < parts.length - 2 ? dir.getDir(parts[offset + 1]) : null;
     if (permsNode != null) {
-      logger.debug("Permissions file found at {}", permsNode.getPath());
-      return checkPermissions((DirCacheTree.File) permsNode, req)
-              .compose(v -> childDir == null ? Future.succeededFuture(dir) : navigateDirs(req, childDir, parts, offset + 1));
+      Log.decorate(logger.atDebug(), requestContext).log("Permissions file found at {}", permsNode.getPath());
+      return checkPermissions((DirCacheTree.File) permsNode, requestContext)
+              .compose(v -> childDir == null ? Future.succeededFuture(dir) : navigateDirs(requestContext, childDir, parts, offset + 1));
     } else {
-      return childDir == null ? Future.succeededFuture(dir) : navigateDirs(req, childDir, parts, offset + 1);
+      return childDir == null ? Future.succeededFuture(dir) : navigateDirs(requestContext, childDir, parts, offset + 1);
     }
   }
   
@@ -316,24 +319,24 @@ public final class PipelineDefnLoader {
     }
   }
   
-  private Future<PipelineNodesTree.PipelineFile> loadPipeline(DirCacheTree.File file, RequestContext req) {
+  private Future<PipelineNodesTree.PipelineFile> loadPipeline(DirCacheTree.File file, RequestContext requestContext) {
     if (PERMISSIONS_FILENAME.equals(file.getName())) {
       return Future.succeededFuture();
     } else {
-      logger.debug("Loading {}", file);
-      return readPipelineFromFile(file, req)
+      Log.decorate(logger.atDebug(), requestContext).log("Loading {}", file);
+      return readPipelineFromFile(file, requestContext)
               .onSuccess(paf -> {
                 if (logger.isDebugEnabled()) {
-                  logger.debug("Loaded {} as {}", file, Json.encode(paf.pipeline));
+                  Log.decorate(logger.atDebug(), requestContext).log("Loaded {} as {}", file, Json.encode(paf.pipeline));
                 }
                 try {
                   paf.pipeline.validate();
                 } catch (Throwable ex) {
-                  logger.warn("File {} invalid: {}", file, ex.getMessage());
+                  Log.decorate(logger.atWarn(), requestContext).log("File {} invalid: {}", file, ex.getMessage());
                 }
               })
               .recover(ex -> {
-                logger.warn("Failed to parse file {}: ", file, ex);
+                Log.decorate(logger.atWarn(), requestContext).log("Failed to parse file {}: ", file, ex);
                 return Future.failedFuture(ex);
               })
               .map(pipelineAndFile -> new PipelineNodesTree.PipelineFile(
@@ -347,36 +350,36 @@ public final class PipelineDefnLoader {
   
   /**
    * Get a tree of pipelines that are accessible to the current request context.
-   * @param req The request context to use in assessing accessibility.
+   * @param requestContext The request context to use in assessing accessibility.
    * @return a Future that will be completed with a tree of pipelines that are accessible to the current request context.
    */
-  public Future<PipelineNodesTree.PipelineDir> getAccessible(RequestContext req) {
+  public Future<PipelineNodesTree.PipelineDir> getAccessible(RequestContext requestContext) {
     
     return AsyncDirTreeMapper.<PipelineNodesTree.PipelineNode, PipelineNodesTree.PipelineDir, PipelineNodesTree.PipelineFile>map(
             dirCache.getRoot()
-            , dir -> dirValidator(req, dir)
+            , dir -> dirValidator(requestContext, dir)
             , (dir, list) -> mapDir(dir, list)
             , file -> {
               if (file.getSize() == 0) {
-                logger.info("File {} is empty, skipping it", file);
+                Log.decorate(logger.atInfo(), requestContext).log("File {} is empty, skipping it", file);
                 return Future.succeededFuture();                
               }
-              return loadPipeline(file, req)
+              return loadPipeline(file, requestContext)
                       .recover(ex -> {
-                        logger.warn("Failed to load pipeline {}:", file, ex);
+                        Log.decorate(logger.atWarn(), requestContext).log("Failed to load pipeline {}:", file, ex);
                         return Future.succeededFuture();
                       });
             }
     );
   }
   
-  private Future<DirCacheTree.File> findSource(RequestContext req, String path) {
+  private Future<DirCacheTree.File> findSource(RequestContext requestContext, String path) {
     
     String parts[] = path.split("/");
 
     DirCacheTree.Directory root = dirCache.getRoot();
     
-    return navigateDirs(req, root, parts, -1)
+    return navigateDirs(requestContext, root, parts, -1)
             .compose(dir -> {
               String leafName = parts[parts.length - 1];
               for (DirCacheTree.Node child : dir.getChildren()) {
@@ -390,7 +393,7 @@ public final class PipelineDefnLoader {
                   }
                 }
               }
-              logger.warn("Failed to find {}", path);
+              Log.decorate(logger.atWarn(), requestContext).log("Failed to find {}", path);
               return Future.failedFuture(new ServiceException(404, "Not found"));
             });
   }
@@ -478,7 +481,7 @@ public final class PipelineDefnLoader {
   
   private final AtomicLong velocityTemplateId = new AtomicLong();
   
-  private Future<Pipeline> readTemplate(DirCacheTree.File file, ObjectMapper mapper, RequestContext context) {
+  private Future<Pipeline> readTemplate(DirCacheTree.File file, ObjectMapper mapper, RequestContext requestContext) {
     String templateId = Long.toString(velocityTemplateId.incrementAndGet());
     return templateCache.get(file, buffer -> {
       StringResourceRepository repo = (StringResourceRepository) velocity.getApplicationAttribute(StringResourceLoader.REPOSITORY_NAME_DEFAULT);      
@@ -488,10 +491,10 @@ public final class PipelineDefnLoader {
       return template;
     }).compose(template -> {
       StringWriter sw = new StringWriter();
-      template.merge(buildVelocityContext(context), sw);
+      template.merge(buildVelocityContext(requestContext), sw);
       try {
         String config = sw.toString();
-        logger.trace("Template evaluated as: {} using {}", config, context);
+        Log.decorate(logger.atTrace(), requestContext).log("Template evaluated as: {} using {}", config, requestContext);
         Pipeline pipeline = mapper.readValue(config, Pipeline.class);
         pipeline.setSha256(Hashing.sha256().hashString(config, StandardCharsets.UTF_8).toString());
         return Future.succeededFuture(pipeline);
@@ -514,36 +517,36 @@ public final class PipelineDefnLoader {
    * <p>
    * The pipeline must be accessible to the current request context, and will be read from cache if it's already been loaded.
    * 
-   * @param srcPath The path to the pipeline definition.
-   * @param context The request context.
+   * @param srcPath The path to the pipeline requestContext.
+   * @param requestContext The request context.
    * @param parseErrorHandler Handler for any exceptions that occur during the loading of the file.
    * @return A Future that will be completed with a {@link PipelineAndFile} when then pipeline has been read.
    */
-  public Future<PipelineAndFile> loadPipeline(String srcPath, RequestContext context, BiConsumer<DirCacheTree.File, Throwable> parseErrorHandler) {
+  public Future<PipelineAndFile> loadPipeline(String srcPath, RequestContext requestContext, BiConsumer<DirCacheTree.File, Throwable> parseErrorHandler) {
     try {
-      String path = validatePath(srcPath);
-      return findSource(context, path)
+      String path = validatePath(requestContext, srcPath);
+      return findSource(requestContext, path)
               .compose(file -> {
                 try {
-                  return readPipelineFromFile(file, context)
+                  return readPipelineFromFile(file, requestContext)
                           .onSuccess(paf -> {
                             if (logger.isDebugEnabled()) {
                               try {
-                                logger.debug("Loaded {} as {}", srcPath, JSON_OBJECT_MAPPER.writeValueAsString(paf.pipeline));
+                                Log.decorate(logger.atDebug(), requestContext).log("Loaded {} as {}", srcPath, JSON_OBJECT_MAPPER.writeValueAsString(paf.pipeline));
                               } catch (Throwable ex) {
-                                logger.debug("Loaded {} but failed to convert it to JSON: ", srcPath, ex);
+                                Log.decorate(logger.atDebug(), requestContext).log("Loaded {} but failed to convert it to JSON: ", srcPath, ex);
                               }
                             }
                           })
                           .recover(ex -> {
-                            logger.warn("Failed to parse file {}: ", srcPath, ex);
+                            Log.decorate(logger.atWarn(), requestContext).log("Failed to parse file {}: ", srcPath, ex);
                             if (parseErrorHandler != null) {
                               parseErrorHandler.accept(file, ex);
                             }
                             return Future.failedFuture(ex);
                           });
                 } catch (Throwable ex) {
-                  logger.warn("Failed to parse file {}: ", srcPath, ex);
+                  Log.decorate(logger.atWarn(), requestContext).log("Failed to parse file {}: ", srcPath, ex);
                   if (parseErrorHandler != null) {
                     parseErrorHandler.accept(file, ex);
                   }
@@ -556,16 +559,16 @@ public final class PipelineDefnLoader {
   }
 
 
-  private Future<PipelineAndFile> readPipelineFromFile(DirCacheTree.File file, RequestContext context) {
-    logger.trace("Reading pipeline {}", file);
+  private Future<PipelineAndFile> readPipelineFromFile(DirCacheTree.File file, RequestContext requestContext) {
+    Log.decorate(logger.atTrace(), requestContext).log("Reading pipeline {}", file);
     if (file.getName().endsWith(".json")) {
       return readPipeline(file, JSON_OBJECT_MAPPER).map(pipeline -> new PipelineAndFile(file, pipeline));
     } else if (file.getName().endsWith(".yaml") || file.getName().endsWith(".yml")) {
       return readPipeline(file, YAML_OBJECT_MAPPER).map(pipeline -> new PipelineAndFile(file, pipeline));
     } else if (file.getName().endsWith(".json.vm")) {
-      return readTemplate(file, JSON_OBJECT_MAPPER, context).map(pipeline -> new PipelineAndFile(file, pipeline));
+      return readTemplate(file, JSON_OBJECT_MAPPER, requestContext).map(pipeline -> new PipelineAndFile(file, pipeline));
     } else if (file.getName().endsWith(".yaml.vm") || file.getName().endsWith(".yml.vm")) {
-      return readTemplate(file, YAML_OBJECT_MAPPER, context).map(pipeline -> new PipelineAndFile(file, pipeline));
+      return readTemplate(file, YAML_OBJECT_MAPPER, requestContext).map(pipeline -> new PipelineAndFile(file, pipeline));
     }
     return Future.failedFuture("Failed to find valid pipeline " + file.getPath());
   }

@@ -46,6 +46,7 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 import uk.co.spudsoft.query.web.OriginalUrl;
 
 
+
 /**
  * Contextual information about the request used to provide this data to {@link uk.co.spudsoft.query.defn.Condition}s and script processors.
  *
@@ -65,6 +66,8 @@ public final class RequestContext {
   private final long startTime;
 
   private final String requestId;
+  
+  private final Span span;
 
   private final String url;
 
@@ -104,7 +107,8 @@ public final class RequestContext {
   public RequestContext(Map<String, String> environment, HttpServerRequest request) {
     this.environment = ImmutableCollectionTools.copy(environment);
     this.startTime = System.currentTimeMillis();
-    this.requestId = generateRequestId();
+    this.span = Span.current();
+    this.requestId = extractSpanId(span);
     this.url = OriginalUrl.get(request);
     this.uri = parseURI(this.url);
     this.clientIp = extractRemoteIp(request);
@@ -134,7 +138,8 @@ public final class RequestContext {
   public RequestContext(Map<String, String> environment, String requestId, String url, String host, String path, MultiMap params, MultiMap headers, Set<Cookie> cookies, IPAddressString clientIp, Jwt jwt) {
     this.environment = ImmutableCollectionTools.copy(environment);
     this.startTime = System.currentTimeMillis();
-    this.requestId = requestId;
+    this.span = Span.current();
+    this.requestId = extractSpanId(span);
     this.url = url;
     this.uri = parseURI(url);
     this.host = host;
@@ -147,6 +152,16 @@ public final class RequestContext {
     this.jwt = jwt;
     this.runId = params == null ? null : params.get("_runid");
     logger.trace("Created {} RequestContext@{} from values", requestId, System.identityHashCode(this));
+  }
+  
+  private static String extractSpanId(Span span) {
+    if (span != null) {
+      SpanContext spanContext = span.getSpanContext();
+      if (spanContext.isValid()) {
+        return spanContext.getTraceId() + ":" + spanContext.getSpanId();
+      }
+    }
+    return UUID.randomUUID().toString();
   }
   
   private static URI parseURI(String url) {
@@ -254,6 +269,17 @@ public final class RequestContext {
   }
 
   /**
+   * Get the {@link Span} associated with the request at the time of the request.
+   * 
+   * This does not provide any mechanism for hierarchies of spans within Query Engine, which is not currently a problem.
+   * 
+   * @return the {@link Span} associated with the request at the time of the request.
+   */
+  public Span getSpan() {
+    return span;
+  }
+
+  /**
    * Get the JWT found in (or created for) the request context.
    * @return the JWT found in (or created for) the request context.
    */
@@ -293,29 +319,6 @@ public final class RequestContext {
   public String getRunID() {
     return runId;
   }
-  
-  /**
-   * Generate a requestId.
-   * 
-   * The request ID is usually generated from the OpenTelemetry trace/span IDs, falling back to a random UUID.
-   * 
-   * @return the request ID.
-   */
-  private static String generateRequestId() {
-    String requestId = null;
-    Span currentSpan = Span.current();
-    if (currentSpan != null) {
-      SpanContext spanContext = currentSpan.getSpanContext();
-      if (spanContext.isValid()) {
-        requestId = spanContext.getTraceId() + ":" + spanContext.getSpanId();
-      }
-    }
-    if (requestId == null) {
-      requestId = UUID.randomUUID().toString();
-    }
-    return requestId;
-  }
-
   
   /**
    * Store the requestContext into the Vert.x RoutingContext.

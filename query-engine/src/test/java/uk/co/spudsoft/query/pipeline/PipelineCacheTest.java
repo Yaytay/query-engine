@@ -16,11 +16,13 @@
  */
 package uk.co.spudsoft.query.pipeline;
 
+import inet.ipaddr.IPAddressString;
 import org.junit.jupiter.api.Test;
 import uk.co.spudsoft.query.web.ServiceException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 
 
 /**
@@ -30,8 +32,10 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class PipelineCacheTest {
   
   private void assertPathBad(String badPath) {
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    
     try {
-      PipelineDefnLoader.validatePath(badPath);
+      PipelineDefnLoader.validatePath(reqctx, badPath);
       fail("Expected " + badPath + " to throw");
     } catch (ServiceException ex) {
     }
@@ -46,9 +50,10 @@ public class PipelineCacheTest {
   
   @Test
   public void testBadPath() throws ServiceException {
-    assertEquals("a/b/c", PipelineDefnLoader.validatePath("a/b/c"));
-    assertEquals("a/_/c", PipelineDefnLoader.validatePath("a/_/c"));
-    assertEquals("a/b/c", PipelineDefnLoader.validatePath("a/b/c"));
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    assertEquals("a/b/c", PipelineDefnLoader.validatePath(reqctx, "a/b/c"));
+    assertEquals("a/_/c", PipelineDefnLoader.validatePath(reqctx, "a/_/c"));
+    assertEquals("a/b/c", PipelineDefnLoader.validatePath(reqctx, "a/b/c"));
     assertPathBad("a//c");
     assertPathBad(null);
     assertPathBad("/a");
