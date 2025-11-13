@@ -48,7 +48,7 @@ public class InfoHandlerTest {
     InfoHandler.reportError(reqctx, logger, log, response, ex, true);
     verify(response).resume(responseCaptor.capture());
     assertEquals(456, responseCaptor.getValue().getStatus());
-    assertEquals("It went wrong (from ServiceException@uk.co.spudsoft.query.web.rest.InfoHandlerTest:44)", responseCaptor.getValue().getEntity());
+    assertEquals("It went wrong (from ServiceException@uk.co.spudsoft.query.web.rest.InfoHandlerTest:46)", responseCaptor.getValue().getEntity());
   }
   
   @Test

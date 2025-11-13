@@ -108,9 +108,8 @@ public class InfoHandler {
 
       loader.getAccessible(requestContext)
               .onSuccess(ap -> {
-                JsonObject json = JsonObject.mapFrom(ap);
-                Log.decorate(logger.atDebug(), unauthedRequestContext).log("Available: {}", json);
-                response.resume(Response.ok(json, MediaType.APPLICATION_JSON).build());
+                Log.decorate(logger.atDebug(), unauthedRequestContext).log("Available: {}", ap);
+                response.resume(Response.ok(ap, MediaType.APPLICATION_JSON).build());
               })
               .onFailure(ex -> {
                 reportError(unauthedRequestContext, logger, "Failed to generate list of available pipelines: ", response, ex, outputAllErrorMessages);
