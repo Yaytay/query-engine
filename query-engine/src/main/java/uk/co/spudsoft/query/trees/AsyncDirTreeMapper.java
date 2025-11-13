@@ -23,8 +23,12 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.dircache.AbstractTree;
 import uk.co.spudsoft.dircache.DirCacheTree;
+import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * Helper class for converting one {@link uk.co.spudsoft.dircache.AbstractTree} into another.
@@ -33,6 +37,8 @@ import uk.co.spudsoft.dircache.DirCacheTree;
  */
 public class AsyncDirTreeMapper {
 
+  private static final Logger logger = LoggerFactory.getLogger(AsyncDirTreeMapper.class);
+  
   private AsyncDirTreeMapper() {
   }
 
@@ -45,6 +51,7 @@ public class AsyncDirTreeMapper {
    * @param <N> The subtype of AbstractTree.AbstractNode used for generic nodes in the mapped tree.
    * @param <D> The subtype of AbstractTree.AbstractNode used for internal nodes (directories) in the mapped tree.
    * @param <F> The subtype of AbstractTree.AbstractNode used for leaf nodes (files) in the mapped tree.
+   * @param requestContext The context of the request.
    * @param dir The directory whose contents are to be mapped.
    * @param dirValidator Method that should return a Future&lt;Boolean> that must be completed with a TRUE value for the directory
    * to be processed.
@@ -54,13 +61,15 @@ public class AsyncDirTreeMapper {
    */
   @SuppressWarnings({"rawtypes"})
   public static <N, D extends N, F extends N> Future<D> map(
-          DirCacheTree.Directory dir,
+          RequestContext requestContext,
+           DirCacheTree.Directory dir,
            Function<DirCacheTree.Directory, Future<Boolean>> dirValidator,
            BiFunction<DirCacheTree.Directory, List<N>, Future<D>> dirMapper,
            Function<DirCacheTree.File, Future<F>> fileMapper
   ) {
 
     List<Future<? extends N>> futures = dir.getChildren().stream().map(n -> {
+      Log.decorate(logger.atTrace(), requestContext).log("Dir entry: {}", n);
       if (n instanceof DirCacheTree.File) {
         DirCacheTree.File f = (DirCacheTree.File) n;
         return fileMapper.apply(f);
@@ -69,7 +78,7 @@ public class AsyncDirTreeMapper {
         return dirValidator.apply(d)
                 .compose(permitted -> {
                   if (permitted) {
-                    return map(d, dirValidator, dirMapper, fileMapper);
+                    return map(requestContext, d, dirValidator, dirMapper, fileMapper);
                   } else {
                     return Future.succeededFuture();
                   }

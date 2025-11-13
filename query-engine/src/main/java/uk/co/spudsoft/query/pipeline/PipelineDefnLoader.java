@@ -356,7 +356,8 @@ public final class PipelineDefnLoader {
   public Future<PipelineNodesTree.PipelineDir> getAccessible(RequestContext requestContext) {
     
     return AsyncDirTreeMapper.<PipelineNodesTree.PipelineNode, PipelineNodesTree.PipelineDir, PipelineNodesTree.PipelineFile>map(
-            dirCache.getRoot()
+            requestContext
+            , dirCache.getRoot()
             , dir -> dirValidator(requestContext, dir)
             , (dir, list) -> mapDir(dir, list)
             , file -> {
