@@ -229,19 +229,34 @@ Note that the default value for the outputCacheDir is probably a bad choice for 
 | int
 | Set the WriteStream buffer size.The amount of data to cache before writing to the output stream.
 
-
 Pipeline are run in parallel in Verticles, but the actual write to the network has to occur from the HttpServer Context.
-
 
 If the context hop from the Verticle to the HttpServer context happens too often it will be a drain on CPU cycles
 , but making it too large will cause the response to stutter.
-
 
 Recommended Buffer Sizes 
 
 
 !===
-<tr><th></th> <th></th> <th></th> </tr> <tr><td></td> <td></td> <td></td> </tr> <tr><td></td> <td></td> <td></td> </tr> <tr><td></td> <td></td> <td></td> </tr> <tr><td></td> <td></td> <td></td> </tr> 
+! Buffer Size ! When to Use It ! Notes 
+
+! 8KB
+! Low-latency, chatty streams
+! Matches TCP segment size on many systems
+
+! 16KB
+! Balanced throughput and responsiveness
+! Good default for HTTP/1.1
+
+! 32KB
+! High-throughput, large payloads
+! Reduces write calls, but increases latency
+
+! 64KB
+! Bulk transfer (e.g. file streaming)
+! Only if memory pressure is low 
+
+
 !===
 
 

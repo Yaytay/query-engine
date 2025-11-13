@@ -1080,30 +1080,44 @@ public class Parameters {
    * Get the WriteStream buffer size.
    * 
    * The amount of data to cache before writing to the output stream.
-   * <p>
+   * 
    * Pipeline are run in parallel in Verticles, but the actual write to the network has to occur from the HttpServer Context.
-   * <p>
+   * 
    * If the context hop from the Verticle to the HttpServer context happens too often it will be a drain on CPU cycles
    * , but making it too large will cause the response to stutter.
-   * <p>
+   * 
    * Recommended Buffer Sizes 
-   * <table border="1">
+   * <table class="striped">
    *   <caption>Table of recommended buffer sizes</caption>
-   *   <tr>
-   *     <th>Buffer Size</th><th>When to Use It</th><th>Notes</th>
-   *   </tr>
-   *   <tr>
-   *     <td>8KB</td><td>Low-latency, chatty streams Balanced throughput and responsiveness</td><td>Matches TCP segment size on many systems</td>
-   *   </tr>
-   *   <tr>
-   *     <td>16KB</td><td>Balanced throughput and responsiveness</td><td>Good default for HTTP/1.1</td>
-   *   </tr>
-   *   <tr>
-   *     <td>32KB</td><td>High-throughput, large payloads</td><td>Reduces write calls, but increases latency</td>
-   *   </tr>
-   *   <tr>
-   *     <td>64KB</td><td>Bulk transfer (e.g. file streaming)</td><td>Only if memory pressure is low </td>
-   *   </tr>
+   *   <thead>
+   *    <tr>
+   *      <th scope="col">Buffer Size</th>
+   *      <th scope="col">When to Use It</th>
+   *      <th scope="col">Notes</th>
+   *    </tr>
+   *   </thead>
+   *   <tbody>
+   *     <tr>
+   *       <td>8KB</td>
+   *       <td>Low-latency, chatty streams</td>
+   *       <td>Matches TCP segment size on many systems</td>
+   *     </tr>
+   *     <tr>
+   *       <td>16KB</td>
+   *       <td>Balanced throughput and responsiveness</td>
+   *       <td>Good default for HTTP/1.1</td>
+   *     </tr>
+   *     <tr>
+   *       <td>32KB</td>
+   *       <td>High-throughput, large payloads</td>
+   *       <td>Reduces write calls, but increases latency</td>
+   *     </tr>
+   *     <tr>
+   *       <td>64KB</td>
+   *       <td>Bulk transfer (e.g. file streaming)</td>
+   *       <td>Only if memory pressure is low </td>
+   *     </tr>
+   *   </tbody>
    * </table>
    * 
    * @return the WriteStream buffer size.
@@ -1116,30 +1130,44 @@ public class Parameters {
    * Set the WriteStream buffer size.
    * 
    * The amount of data to cache before writing to the output stream.
-   * <p>
+   * 
    * Pipeline are run in parallel in Verticles, but the actual write to the network has to occur from the HttpServer Context.
-   * <p>
+   * 
    * If the context hop from the Verticle to the HttpServer context happens too often it will be a drain on CPU cycles
    * , but making it too large will cause the response to stutter.
-   * <p>
+   * 
    * Recommended Buffer Sizes 
-   * <table border="1">
+   * <table class="striped">
    *   <caption>Table of recommended buffer sizes</caption>
-   *   <tr>
-   *     <th>Buffer Size</th><th>When to Use It</th><th>Notes</th>
-   *   </tr>
-   *   <tr>
-   *     <td>8KB</td><td>Low-latency, chatty streams Balanced throughput and responsiveness</td><td>Matches TCP segment size on many systems</td>
-   *   </tr>
-   *   <tr>
-   *     <td>16KB</td><td>Balanced throughput and responsiveness</td><td>Good default for HTTP/1.1</td>
-   *   </tr>
-   *   <tr>
-   *     <td>32KB</td><td>High-throughput, large payloads</td><td>Reduces write calls, but increases latency</td>
-   *   </tr>
-   *   <tr>
-   *     <td>64KB</td><td>Bulk transfer (e.g. file streaming)</td><td>Only if memory pressure is low </td>
-   *   </tr>
+   *   <thead>
+   *    <tr>
+   *      <th scope="col">Buffer Size</th>
+   *      <th scope="col">When to Use It</th>
+   *      <th scope="col">Notes</th>
+   *    </tr>
+   *   </thead>
+   *   <tbody>
+   *     <tr>
+   *       <td>8KB</td>
+   *       <td>Low-latency, chatty streams</td>
+   *       <td>Matches TCP segment size on many systems</td>
+   *     </tr>
+   *     <tr>
+   *       <td>16KB</td>
+   *       <td>Balanced throughput and responsiveness</td>
+   *       <td>Good default for HTTP/1.1</td>
+   *     </tr>
+   *     <tr>
+   *       <td>32KB</td>
+   *       <td>High-throughput, large payloads</td>
+   *       <td>Reduces write calls, but increases latency</td>
+   *     </tr>
+   *     <tr>
+   *       <td>64KB</td>
+   *       <td>Bulk transfer (e.g. file streaming)</td>
+   *       <td>Only if memory pressure is low </td>
+   *     </tr>
+   *   </tbody>
    * </table>
    * 
    * @param writeStreamBufferSize the WriteStream buffer size.

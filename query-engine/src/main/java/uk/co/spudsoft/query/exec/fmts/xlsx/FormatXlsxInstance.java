@@ -101,7 +101,7 @@ public class FormatXlsxInstance implements FormatInstance {
             , streamWrapper
             , v -> Future.succeededFuture()
             , row -> {
-              log.info().log("Got row {}", row);
+              log.trace().log("Got row {}", row);
               if (!started.get()) {
                 started.set(true);
                 TableDefinition tableDefinition = tableDefinition(pipelineContext.getRequestContext());
