@@ -92,7 +92,7 @@ public class ProcessorOffsetInstanceTest {
     assertEquals("P0-Offset", instance.getName());
     instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
             .compose(rswt -> {
-              return ReadStreamToList.capture(rswt.getStream());
+              return ReadStreamToList.capture(pipelineContext, rswt.getStream());
             })
             .onFailure(ex -> {
               testContext.failNow(ex);

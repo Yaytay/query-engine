@@ -107,10 +107,12 @@ public class Log {
   @CheckReturnValue
   public static LoggingEventBuilder decorate(LoggingEventBuilder event, PipelineContext pipelineContext) {
     if (event != NOPLoggingEventBuilder.singleton()) {
-      event = decorate(event, pipelineContext.getRequestContext());
-      String pipe = pipelineContext.getPipe();
-      if (pipe != null) {
-        event = event.addKeyValue("pipeline", "$");
+      if (pipelineContext != null) {
+        event = decorate(event, pipelineContext.getRequestContext());
+        String pipe = pipelineContext.getPipe();
+        if (pipe != null) {
+          event = event.addKeyValue("pipeline", pipe);
+        }
       }
     }
     return event;

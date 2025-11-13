@@ -46,6 +46,7 @@ import java.util.List;
 
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 
 /**
@@ -84,7 +85,8 @@ public class FormatRssInstanceTest {
     }
     RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.0"), null);
     WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setCreate(true).setSync(true));
-    FormatRssInstance instance = defn.createInstance(vertx, requestContext, writeStream);
+    PipelineContext pipelineContext = new PipelineContext("test", requestContext);
+    FormatRssInstance instance = defn.createInstance(vertx, pipelineContext, writeStream);
 
     Types types = buildTypes();
     List<DataRow> rowsList = new ArrayList<>();

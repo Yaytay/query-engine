@@ -35,7 +35,7 @@ import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
@@ -148,8 +148,8 @@ public class FormatXml extends AbstractTextFormat implements Format {
 
 
   @Override
-  public FormatXmlInstance createInstance(Vertx vertx, RequestContext requestContext, WriteStream<Buffer> writeStream) {
-    return new FormatXmlInstance(this, requestContext, writeStream);
+  public FormatXmlInstance createInstance(Vertx vertx, PipelineContext pipelineContext, WriteStream<Buffer> writeStream) {
+    return new FormatXmlInstance(this, pipelineContext, writeStream);
   }
 
   @Override

@@ -51,6 +51,7 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 
 /**
  *
@@ -98,8 +99,9 @@ public class FormatAtomInstanceTest {
       , new IPAddressString("127.0.0.1")
       , null
     );
-
-    FormatAtomInstance instance = defn.createInstance(vertx, req, writeStream);
+    PipelineContext pipelineContext = new PipelineContext("test", req);
+    
+    FormatAtomInstance instance = defn.createInstance(vertx, pipelineContext, writeStream);
 
     Types types = buildTypes();
     List<DataRow> rowsList = new ArrayList<>();

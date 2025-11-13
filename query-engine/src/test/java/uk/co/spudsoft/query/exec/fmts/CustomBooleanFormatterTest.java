@@ -16,16 +16,23 @@
  */
 package uk.co.spudsoft.query.exec.fmts;
 
+import inet.ipaddr.IPAddressString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 
 /**
  *
  * @author jtalbut
  */
 public class CustomBooleanFormatterTest {
+  
+  private static final Logger logger = LoggerFactory.getLogger(CustomBooleanFormatterTest.class);
   
   @Test
   public void testFormatValidExpressionBad() {
@@ -69,31 +76,35 @@ public class CustomBooleanFormatterTest {
   public void testFormatValid() {
     CustomBooleanFormatter formatter = new CustomBooleanFormatter("['\"1\"', '\"0\"']", "\"", "\"", true);
     
-    assertNull(formatter.format(null));
+    RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.0"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", requestContext);
     
-    assertEquals("\"1\"", formatter.format(Boolean.TRUE));
-    assertEquals("\"0\"", formatter.format(Boolean.FALSE));
+    
+    assertNull(formatter.format(pipelineContext, null));
+    
+    assertEquals("\"1\"", formatter.format(pipelineContext, Boolean.TRUE));
+    assertEquals("\"0\"", formatter.format(pipelineContext, Boolean.FALSE));
 
     formatter = new CustomBooleanFormatter("['true', 'false']", "<", ">", true);
 
-    assertEquals("true", formatter.format(1));
-    assertEquals("false", formatter.format(0));
+    assertEquals("true", formatter.format(pipelineContext, 1));
+    assertEquals("false", formatter.format(pipelineContext, 0));
 
-    assertEquals("true", formatter.format("true"));
-    assertEquals("false", formatter.format("not true"));
+    assertEquals("true", formatter.format(pipelineContext, "true"));
+    assertEquals("false", formatter.format(pipelineContext, "not true"));
 
     formatter = new CustomBooleanFormatter("['true', 'fALSe']", "<", ">", false);
 
-    assertEquals("true", formatter.format(1));
-    assertEquals("fALSe", formatter.format(0));
+    assertEquals("true", formatter.format(pipelineContext, 1));
+    assertEquals("fALSe", formatter.format(pipelineContext, 0));
 
     formatter = new CustomBooleanFormatter("['1', '0']", "<", ">", true);
 
-    assertEquals("1", formatter.format(1));
-    assertEquals("0", formatter.format(0));
+    assertEquals("1", formatter.format(pipelineContext, 1));
+    assertEquals("0", formatter.format(pipelineContext, 0));
 
-    assertEquals("1", formatter.format("true"));
-    assertEquals("0", formatter.format("not true"));
+    assertEquals("1", formatter.format(pipelineContext, "true"));
+    assertEquals("0", formatter.format(pipelineContext, "not true"));
   }
   
   

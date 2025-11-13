@@ -107,7 +107,7 @@ public class TemplatedYamlToPipelineIT {
             .compose(pipeline -> {
               PipelineContext pipelineContext = new PipelineContext("test", req);
               Format chosenFormat = executor.getFormat(pipeline.getFormats(), null);
-              FormatInstance formatInstance = chosenFormat.createInstance(vertx, req, new ListingWriteStream<>(new ArrayList<>()));
+              FormatInstance formatInstance = chosenFormat.createInstance(vertx, pipelineContext, new ListingWriteStream<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, pipelineContext, meterRegistry, executor);
               PipelineInstance instance;
               try {

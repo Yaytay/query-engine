@@ -30,7 +30,6 @@ import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
-import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormattingWriteStream;
 import uk.co.spudsoft.query.exec.fmts.xlsx.OutputWriteStreamWrapper;
 
@@ -55,7 +54,10 @@ import static uk.co.spudsoft.query.defn.DataType.Time;
 
 import static uk.co.spudsoft.query.defn.FormatXml.NAME_CHAR_REGEX;
 import static uk.co.spudsoft.query.defn.FormatXml.NAME_START_REGEX;
+import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.fmts.ValueFormatters;
+import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.main.Coalesce;
 
 /**
@@ -69,9 +71,12 @@ public final class FormatXmlInstance implements FormatInstance {
   @SuppressWarnings("ConstantName")
   private static final XMLOutputFactory xmlOutputFactory = WstxOutputFactory.newFactory();
 
+
   private final FormatXml defn;
+  private final PipelineContext pipelineContext;
+  private final Log log;
   private final OutputWriteStreamWrapper streamWrapper;
-  private final FormattingWriteStream formattingStream;
+  private final FormattingWriteStream formattingStream;  
 
   private final ValueFormatters valueFormatters;
 
@@ -87,16 +92,19 @@ public final class FormatXmlInstance implements FormatInstance {
   /**
    * Constructor.
    * @param definition The formatting definition for the output.
-   * @param requestContext The context of the request being output - if nothing else this must be updated with the row count on completion.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.  The contained requestContext must have the rowCount updated at the end.
    * @param outputStream The WriteStream that the data is to be sent to.
    */
-  public FormatXmlInstance(FormatXml definition, RequestContext requestContext, WriteStream<Buffer> outputStream) {
+  public FormatXmlInstance(FormatXml definition, PipelineContext pipelineContext, WriteStream<Buffer> outputStream) {
     this.defn = definition;
+    this.pipelineContext = pipelineContext;
+    this.log = new Log(logger, pipelineContext);
     outputStream.setWriteQueueMaxSize(1000);
     this.streamWrapper = new OutputWriteStreamWrapper(outputStream);
     this.valueFormatters = defn.toValueFormatters("", "", false);
     this.formattingStream = createFormattingWriteStream(
-            requestContext,
+            pipelineContext,
+            this.log,
             outputStream,
             streamWrapper,
             started,
@@ -134,6 +142,8 @@ public final class FormatXmlInstance implements FormatInstance {
    * Creates a FormattingWriteStream with the standard XML formatting pattern.
    * This factory method can be reused by other XML-based format instances.
    *
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.  The contained requestContext must have the rowCount updated at the end.
+   * @param log The logger to use.
    * @param outputStream The WriteStream that the data is to be sent to.
    * @param streamWrapper The OutputWriteStreamWrapper for the output stream.
    * @param started AtomicBoolean to track if formatting has started.
@@ -143,7 +153,8 @@ public final class FormatXmlInstance implements FormatInstance {
    * @return A configured FormattingWriteStream.
    */
   static FormattingWriteStream createFormattingWriteStream(
-          RequestContext requestContext,
+          PipelineContext pipelineContext,
+          Log log,
           WriteStream<Buffer> outputStream,
           OutputWriteStreamWrapper streamWrapper,
           AtomicBoolean started,
@@ -151,15 +162,16 @@ public final class FormatXmlInstance implements FormatInstance {
           ProcessRowFunction processRowFunction,
           CloseFunction closeFunction) {
 
-    return new FormattingWriteStream(streamWrapper
+    return new FormattingWriteStream(pipelineContext
+            , streamWrapper
       , v -> Future.succeededFuture()
       , row -> {
-      logger.trace("Got row {}", row);
+      log.trace().log("Got row {}", row);
       if (!started.get()) {
         try {
           startFunction.start();
         } catch (Throwable ex) {
-          logger.warn("Failed to start XML writer: ", ex);
+          log.warn().log("Failed to start writer: ", ex);
           return Future.failedFuture(ex);
         }
       }
@@ -167,19 +179,19 @@ public final class FormatXmlInstance implements FormatInstance {
         try {
           processRowFunction.processRow(row);
         } catch (Throwable ex) {
-          logger.warn("Failed to output row: ", ex);
+          log.warn().log("Failed to output row: ", ex);
           return Future.failedFuture(ex);
         }
       }
       return Future.succeededFuture();
     }
       , rows -> {
-        requestContext.setRowsWritten(rows);
+        pipelineContext.getRequestContext().setRowsWritten(rows);
         if (!started.get()) {
           try {
             startFunction.start();
           } catch (Throwable ex) {
-            logger.warn("Failed to start XML writer: ", ex);
+            log.warn().log("Failed to start writer: ", ex);
             return Future.failedFuture(ex);
           }
         }
@@ -193,17 +205,17 @@ public final class FormatXmlInstance implements FormatInstance {
     );
   }
 
-  static String formatValue(ValueFormatters valueFormatters, String elementName, DataType type, Comparable<?> value) {
+  static String formatValue(Log log, PipelineContext pipelineContext, ValueFormatters valueFormatters, String elementName, DataType type, Comparable<?> value) {
     if (value == null) {
       return null;
     } else {
       switch (type) {
         case Boolean:
-          return valueFormatters.getBooleanFormatter(elementName).format(value);
+          return valueFormatters.getBooleanFormatter(elementName).format(pipelineContext, value);
 
         case Double:
         case Float:
-          return valueFormatters.getDecimalFormatter(elementName).format(value);
+          return valueFormatters.getDecimalFormatter(elementName).format(pipelineContext, value);
 
         case Integer:
         case Long:
@@ -224,10 +236,10 @@ public final class FormatXmlInstance implements FormatInstance {
           }
 
         case Date:
-          return valueFormatters.getDateFormatter(elementName).format(value);
+          return valueFormatters.getDateFormatter(elementName).format(pipelineContext, value);
 
         case DateTime:
-          Object formatted = valueFormatters.getDateTimeFormatter(elementName).format(value);
+          Object formatted = valueFormatters.getDateTimeFormatter(elementName).format(pipelineContext, value);
           if (formatted instanceof String stringFormatted) {
             return stringFormatted;
           } else if (formatted != null) {
@@ -237,10 +249,10 @@ public final class FormatXmlInstance implements FormatInstance {
           }
 
         case Time:
-          return valueFormatters.getTimeFormatter(elementName).format(value);
+          return valueFormatters.getTimeFormatter(elementName).format(pipelineContext, value);
 
         default:
-          logger.warn("Field {} if of unknown type {} with value {} ({})", elementName, type, value, value.getClass());
+          log.warn().log("Field {} if of unknown type {} with value {} ({})", elementName, type, value, value.getClass());
           throw new IllegalStateException("Field of unknown type " + type);
       }
     }
@@ -268,7 +280,7 @@ public final class FormatXmlInstance implements FormatInstance {
       }
     }
     writer.writeStartElement(getName(defn.getDocName(), "data"));
-    logger.trace("Document started");
+    log.trace().log("Document started");
   }
 
   private void close() throws Exception {
@@ -354,7 +366,7 @@ public final class FormatXmlInstance implements FormatInstance {
         if (defn.isFieldsAsAttributes()) {
           writer.writeAttribute(
                   getName(columnDefn.name(), "field" +  fieldNumber)
-                  , formatValue(valueFormatters, columnDefn.name(), columnDefn.type(), v)
+                  , formatValue(log, pipelineContext, valueFormatters, columnDefn.name(), columnDefn.type(), v)
           );
         } else {
           if (defn.isIndent()) {
@@ -363,13 +375,13 @@ public final class FormatXmlInstance implements FormatInstance {
           if (columnDefn.type() == DataType.String && !defn.getCharacterReferences().isEmpty()) {
             // If there are character references to replace we need to handle strings differently
             // We only do character reference replacements in strings.
-            String stringValue = formatValue(valueFormatters, columnDefn.name(), columnDefn.type(), v);
+            String stringValue = formatValue(log, pipelineContext, valueFormatters, columnDefn.name(), columnDefn.type(), v);
             writer.writeStartElement(getName(columnDefn.name(), "field" + fieldNumber));
             writeCharactersWithReplacementCharacterRefs(stringValue);
             writer.writeEndElement();
           } else {
             writer.writeStartElement(getName(columnDefn.name(), "field" + fieldNumber));
-            writer.writeCharacters(formatValue(valueFormatters, columnDefn.name(), columnDefn.type(), v));
+            writer.writeCharacters(formatValue(log, pipelineContext, valueFormatters, columnDefn.name(), columnDefn.type(), v));
             writer.writeEndElement();
           }
         }

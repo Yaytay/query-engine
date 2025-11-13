@@ -53,7 +53,10 @@ public class TestHelpers {
         logger.info("Dirty audit rows: {}", rows);
       }
       return rows;
-    }  
+    } catch (Throwable ex) {
+      logger.warn("Failed to get audit rows: {}", ex);
+      return new JsonArray();
+    }
   }
   
 }

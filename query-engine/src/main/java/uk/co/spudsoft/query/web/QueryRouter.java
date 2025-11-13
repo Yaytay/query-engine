@@ -55,6 +55,7 @@ import uk.co.spudsoft.query.defn.Format;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.ArgumentInstance;
 import uk.co.spudsoft.query.exec.CachingWriteStream;
+import uk.co.spudsoft.query.logging.Log;
 
 
 /**
@@ -150,7 +151,7 @@ public class QueryRouter implements Handler<RoutingContext> {
     return Future.all(futures)
             .onSuccess(cf -> {
               String httpThread = Thread.currentThread().getName();
-              logger.info("Deploy PipelineRunningVerticles, http thread: {}, verticle threads: {}", httpThread, Arrays.stream(verticles).map(v -> v.getThreadName()).collect(Collectors.toList()));
+              logger.atInfo().log("Deploy PipelineRunningVerticles, http thread: {}, verticle threads: {}", httpThread, Arrays.stream(verticles).map(v -> v.getThreadName()).collect(Collectors.toList()));
             })
             .mapEmpty();
   }
@@ -202,7 +203,7 @@ public class QueryRouter implements Handler<RoutingContext> {
     HttpServerRequest request = routingContext.request();
     String pipelineTitle[] = new String[1];
     RequestContext requestContext = RequestContext.retrieveRequestContext(routingContext);
-    logger.trace("Retrieved RequestContext@{}", System.identityHashCode(requestContext));
+    Log.decorate(logger.atTrace(), requestContext).log("Retrieved RequestContext@{}", System.identityHashCode(requestContext));
     
     if (verticles[0] == null) {
       throw new IllegalStateException("QueryRouter#deploy not called");
@@ -216,13 +217,13 @@ public class QueryRouter implements Handler<RoutingContext> {
               .compose(v -> {
                 String path = request.path();
                 if (path.length() < 1 + PATH_ROOT.length()) {
-                  logger.warn("Invalid request, path too short: ", request.path());
+                  Log.decorate(logger.atWarn(), requestContext).log("Invalid request, path too short: ", request.path());
                   return Future.failedFuture(new ServiceException(400, "Invalid path"));
                 }
                 HttpServerResponse response = routingContext.response();
                 
                 response.closeHandler(v2 -> {
-                  logger.warn("The connection has been closed.");
+                  Log.decorate(logger.atWarn(), requestContext).log("The connection has been closed.");
                 });
                 
                 WriteStream<Buffer> responseStream = response;
@@ -267,7 +268,7 @@ public class QueryRouter implements Handler<RoutingContext> {
                         })
                         .compose(pipeline -> {
                           responseStream.exceptionHandler(ex -> {
-                            logger.warn("Exception in response stream: ", ex);
+                            Log.decorate(logger.atWarn(), requestContext).log("Exception in response stream: ", ex);
                           });
                           // Four options:
                           // 1. No caching involved
@@ -289,7 +290,7 @@ public class QueryRouter implements Handler<RoutingContext> {
                   internalError(ar.cause(), routingContext, outputAllErrorMessages);
                   pipelineExecutor.progressNotification(requestContext, pipelineTitle[0], null, null, null, true, false, "Pipeline failed: ", ar.cause());
                 }
-                logger.info("Request completed");
+                Log.decorate(logger.atInfo(), requestContext).log("Request completed");
               });
     } else {
       routingContext.next();
@@ -314,11 +315,11 @@ public class QueryRouter implements Handler<RoutingContext> {
     return auditor.getCacheFile(requestContext, pipeline)
             .compose(cacheDetails -> {
               if (cacheDetails == null) {
-                logger.debug("Caching pipeline {} with {} no previous run found.", requestContext.getPath(), pipeline.getCacheDuration());
+                Log.decorate(logger.atDebug(), requestContext).log("Caching pipeline {} with {} no previous run found.", requestContext.getPath(), pipeline.getCacheDuration());
                 return runPipelineToCache(pipeline, requestContext, formatRequest, response, responseStream, routingContext);
               } else {
                 // Return from cache
-                logger.debug("Caching pipeline {} found file {} from run {}.", requestContext.getPath(), cacheDetails.cacheFile(), cacheDetails.auditId());
+                Log.decorate(logger.atDebug(), requestContext).log("Caching pipeline {} found file {} from run {}.", requestContext.getPath(), cacheDetails.cacheFile(), cacheDetails.auditId());
                 
                 if (notModifiedSince(routingContext, cacheDetails.expiry())) {
                   response.setStatusCode(304);
@@ -338,12 +339,12 @@ public class QueryRouter implements Handler<RoutingContext> {
                               routingContext.lastModified(cacheDetails.expiry().toInstant(ZoneOffset.UTC));
                               return ar.result().pipeTo(responseStream);
                             } else {
-                              logger.warn("Failed to open cache file {}: ", cacheDetails, ar.cause());
+                              Log.decorate(logger.atWarn(), requestContext).log("Failed to open cache file {}: ", cacheDetails, ar.cause());
                               // Failed to open cache file, so regenerate
                               return auditor.deleteCacheFile(requestContext, cacheDetails.auditId())
                                       .transform(ar2 -> {
                                         if (ar2.failed()) {
-                                          logger.error("Failed to delete cache for {}: {}", cacheDetails.auditId(), ar2.cause());
+                                          Log.decorate(logger.atError(), requestContext).log("Failed to delete cache for {}: {}", cacheDetails.auditId(), ar2.cause());
                                         }
                                         return runPipelineToCache(pipeline, requestContext, formatRequest, response, responseStream, routingContext);
                                       });
@@ -365,18 +366,18 @@ public class QueryRouter implements Handler<RoutingContext> {
                           if (ar2.succeeded()) {
                             return runPipeline(pipeline, requestContext, formatRequest, response, ar2.result(), routingContext);
                           } else {
-                            logger.error("Failed to open cache file ({}) for {}: {}", cacheFile, requestContext.getRequestId(), ar2.cause());
+                            Log.decorate(logger.atError(), requestContext).log("Failed to open cache file ({}) for {}: {}", cacheFile, requestContext.getRequestId(), ar2.cause());
                             return auditor.deleteCacheFile(requestContext, requestContext.getRequestId())
                                     .transform(ar3 -> {
                                       if (ar3.failed()) {
-                                        logger.error("Failed to delete cache for {}: {}", cacheFile, requestContext.getRequestId(), ar3.cause());
+                                        Log.decorate(logger.atError(), requestContext).log("Failed to delete cache for {}: {}", cacheFile, requestContext.getRequestId(), ar3.cause());
                                       }
                                       return runPipeline(pipeline, requestContext, formatRequest, response, responseStream, routingContext);
                                     });
                           }
                         });
               } else {
-                logger.error("Failed to record cache file ({}) for {} in database: {}", cacheFile, requestContext.getRequestId(), ar.cause());
+                Log.decorate(logger.atError(), requestContext).log("Failed to record cache file ({}) for {} in database: {}", cacheFile, requestContext.getRequestId(), ar.cause());
                 return runPipeline(pipeline, requestContext, formatRequest, response, responseStream, routingContext);
               }
             });
@@ -403,7 +404,7 @@ public class QueryRouter implements Handler<RoutingContext> {
       
       PipelineRunningTask task = new PipelineRunningTask(requestContext, pipeline, chosenFormat, queryStringParams, arguments, responseStream);
 
-      PipelineRunningVerticle verticle = chooseVerticle();
+      PipelineRunningVerticle verticle = chooseVerticle(requestContext);
       return verticle.handleRequest(task);
       
     } catch (Throwable ex) {
@@ -411,7 +412,7 @@ public class QueryRouter implements Handler<RoutingContext> {
     }
   }
 
-  private PipelineRunningVerticle chooseVerticle() {
+  private PipelineRunningVerticle chooseVerticle(RequestContext requestContext) {
     String httpThread = Thread.currentThread().getName();
     
     for (int i = 0; i < verticles.length; ++i) {
@@ -423,7 +424,7 @@ public class QueryRouter implements Handler<RoutingContext> {
         return verticle;
       }
     }
-    logger.warn("Failed to choose any verticle, http thread: {}, verticle threads: {}", httpThread, Arrays.stream(verticles).map(v -> v.getThreadName()).collect(Collectors.toList()));
+    Log.decorate(logger.atWarn(), requestContext).log("Failed to choose any verticle, http thread: {}, verticle threads: {}", httpThread, Arrays.stream(verticles).map(v -> v.getThreadName()).collect(Collectors.toList()));
     // Fallback to ignoring the thread
     int next = count.updateAndGet(current ->
             current == Integer.MAX_VALUE ? 0 : current + 1
@@ -433,7 +434,8 @@ public class QueryRouter implements Handler<RoutingContext> {
   }
 
   static void internalError(Throwable ex, RoutingContext routingContext, boolean outputAllErrorMessages) {
-    logger.warn("Request failed: ", ex);
+    RequestContext requestContext = RequestContext.retrieveRequestContext(routingContext);
+    Log.decorate(logger.atWarn(), requestContext).log("Request failed: ", ex);
     
     int statusCode = 500;
     String message = "Failed";

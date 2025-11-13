@@ -27,15 +27,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.FormatDelimited;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
-import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormattingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.fmts.ValueFormatters;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * Output {@link uk.co.spudsoft.query.exec.FormatInstance} that generates text output.
@@ -52,6 +54,9 @@ public final class FormatDelimitedInstance implements FormatInstance {
   private static final Logger logger = LoggerFactory.getLogger(FormatDelimitedInstance.class);
   
   private final FormatDelimited defn;
+  private final PipelineContext pipelineContext;
+  private final Log log;
+  
   private final WriteStream<Buffer> outputStream;
   private final FormattingWriteStream formattingStream;
   private final AtomicBoolean started = new AtomicBoolean();
@@ -65,18 +70,21 @@ public final class FormatDelimitedInstance implements FormatInstance {
   /**
    * Constructor.
    * @param defn The definition of the format to be output
-   * @param requestContext The context of the request being output - if nothing else this must be updated with the row count on completion.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.  The contained requestContext must have the rowCount updated at the end.
    * @param outputStream The WriteStream that the data is to be sent to.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "FormatJsonInstance is a wrapper around WriteStream<Buffer>, it will make mutating calls to it")
-  public FormatDelimitedInstance(FormatDelimited defn, RequestContext requestContext, WriteStream<Buffer> outputStream) {
+  public FormatDelimitedInstance(FormatDelimited defn, PipelineContext pipelineContext, WriteStream<Buffer> outputStream) {
     this.defn = defn;
+    this.pipelineContext = pipelineContext;
+    this.log = new Log(logger, pipelineContext);
     this.outputStream = outputStream;
     this.finalPromise = Promise.<Void>promise();
     
     this.valueFormatters = defn.toValueFormatters(defn.getOpenQuote(), defn.getCloseQuote(), false);
     
-    this.formattingStream = new FormattingWriteStream(outputStream
+    this.formattingStream = new FormattingWriteStream(pipelineContext
+            , outputStream
             , v -> Future.succeededFuture()
             , row -> {
               if (started.compareAndSet(false, true)) {
@@ -89,7 +97,7 @@ public final class FormatDelimitedInstance implements FormatInstance {
               if (!started.get()) {
                 outputHeader();
               }
-              requestContext.setRowsWritten(rowCount);
+              pipelineContext.getRequestContext().setRowsWritten(rowCount);
               return outputStream.end()
                       .andThen(ar -> {
                         finalPromise.handle(ar);
@@ -139,7 +147,7 @@ public final class FormatDelimitedInstance implements FormatInstance {
   }
 
   private Future<Void> outputRow(DataRow row) {
-    logger.trace("Outputting row: {}", row);
+    log.trace().log("Outputting row: {}", row);
     if (row.isEmpty()) {
       return Future.succeededFuture();
     }
@@ -162,11 +170,11 @@ public final class FormatDelimitedInstance implements FormatInstance {
             String stringValue;
             switch (cd.type()) {
               case Boolean:
-                outputRow.append(valueFormatters.getBooleanFormatter(cd.name()).format(v));              
+                outputRow.append(valueFormatters.getBooleanFormatter(cd.name()).format(pipelineContext, v));              
                 break;
               case Double:
               case Float:
-                outputRow.append(valueFormatters.getDecimalFormatter(cd.name()).format(v));
+                outputRow.append(valueFormatters.getDecimalFormatter(cd.name()).format(pipelineContext, v));
                 break;
               case Integer:
               case Long:
@@ -177,7 +185,7 @@ public final class FormatDelimitedInstance implements FormatInstance {
                 }
                 break;
               case Date:
-                stringValue = valueFormatters.getDateFormatter(cd.name()).format(v);
+                stringValue = valueFormatters.getDateFormatter(cd.name()).format(pipelineContext, v);
                 if (defn.isQuoteTemporal()) {
                   outputEncodedQuotedString(outputRow, stringValue);
                 } else {
@@ -185,7 +193,7 @@ public final class FormatDelimitedInstance implements FormatInstance {
                 }
                 break;
               case DateTime:
-                Object objectValue = valueFormatters.getDateTimeFormatter(cd.name()).format(v);
+                Object objectValue = valueFormatters.getDateTimeFormatter(cd.name()).format(pipelineContext, v);
                 if (objectValue instanceof String s) {
                   stringValue = s;
                 } else {
@@ -198,7 +206,7 @@ public final class FormatDelimitedInstance implements FormatInstance {
                 }
                 break;              
               case Time:
-                stringValue = valueFormatters.getTimeFormatter(cd.name()).format(v);
+                stringValue = valueFormatters.getTimeFormatter(cd.name()).format(pipelineContext, v);
                 if (defn.isQuoteTemporal()) {
                   outputEncodedQuotedString(outputRow, stringValue);
                 } else {
@@ -213,7 +221,7 @@ public final class FormatDelimitedInstance implements FormatInstance {
           }
         }
       } catch (Throwable ex) {
-        logger.warn("Failed to output field {} with value {}: ", cd.name(), v, ex);
+        log.warn().log("Failed to output field {} with value {}: ", cd.name(), v, ex);
       }
     });
     outputRow.append(defn.getNewline());

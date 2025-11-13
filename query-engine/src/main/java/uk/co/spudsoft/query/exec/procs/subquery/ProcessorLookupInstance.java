@@ -91,7 +91,7 @@ public class ProcessorLookupInstance extends AbstractProcessor {
   @Override
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStreamWithTypes input) {
     
-    String childName = pipeline.getPipelineContext().getPipe() + "." + getName() + ".map";
+    String childName = getName() + ".map";
     PipelineContext childContext = pipeline.getPipelineContext().child(childName);
     
     
@@ -125,8 +125,8 @@ public class ProcessorLookupInstance extends AbstractProcessor {
 
     return executor.initializePipeline(childPipeline)
             .compose(v -> {
-              return ReadStreamToList.map(
-                      fieldDefnStreamCapture.getReadStream().getStream()
+              return ReadStreamToList.map(pipelineContext
+                      , fieldDefnStreamCapture.getReadStream().getStream()
                       , row -> {
                         if (row.isEmpty()) {
                           return null;

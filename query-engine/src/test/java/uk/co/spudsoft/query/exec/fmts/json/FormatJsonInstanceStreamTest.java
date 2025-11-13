@@ -40,6 +40,7 @@ import uk.co.spudsoft.query.exec.ListingWriteStream;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
@@ -385,9 +386,10 @@ public class FormatJsonInstanceStreamTest {
 
     // Create request context
     RequestContext requestContext = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", requestContext);
 
     // Create format instance
-    FormatJsonInstance instance = new FormatJsonInstance(writeStream, requestContext, definition);
+    FormatJsonInstance instance = new FormatJsonInstance(writeStream, pipelineContext, definition);
 
     // Create types and sample data rows
     Types types = new Types();

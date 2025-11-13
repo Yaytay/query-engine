@@ -24,6 +24,7 @@ import uk.co.spudsoft.query.defn.ProcessorQuery;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.procs.query.ProcessorQueryInstance;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * Filter for converting _query command line arguments into {@link uk.co.spudsoft.query.exec.procs.query.ProcessorQueryInstance}s.
@@ -61,7 +62,7 @@ public class QueryFilter implements Filter {
       argument = FiqlToRsqlConverter.convertFiqlToRsql(argument);
       ProcessorQueryInstance.RSQL_PARSER.parse(argument);
     } catch (Throwable ex) {
-      logger.warn("Failed to parse argument to _query filter (\"{}\"): ", argument, ex);
+      Log.decorate(logger.atWarn(), pipelineContext).log("Failed to parse argument to _query filter (\"{}\"): ", argument, ex);
       throw new IllegalArgumentException("Invalid argument to _query filter, should be a valid RSQL expression");
     }
     ProcessorQuery definition = ProcessorQuery.builder().expression(argument).build();

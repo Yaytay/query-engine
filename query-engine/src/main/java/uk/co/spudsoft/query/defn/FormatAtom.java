@@ -25,11 +25,11 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 
-import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.xml.FormatAtomInstance;
 
 import static uk.co.spudsoft.query.defn.FormatXml.NAME_CHAR_REGEX;
 import static uk.co.spudsoft.query.defn.FormatXml.NAME_START_REGEX;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 
 /**
  * Output the data stream in Atom.
@@ -75,8 +75,8 @@ public class FormatAtom extends AbstractTextFormat implements Format {
   }
 
   @Override
-  public FormatAtomInstance createInstance(Vertx vertx, RequestContext requestContext, WriteStream<Buffer> writeStream) {
-    return new FormatAtomInstance(this, requestContext, writeStream);
+  public FormatAtomInstance createInstance(Vertx vertx, PipelineContext pipelineContext, WriteStream<Buffer> writeStream) {
+    return new FormatAtomInstance(this, pipelineContext, writeStream);
   }
 
   @Override

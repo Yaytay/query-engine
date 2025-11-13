@@ -90,7 +90,7 @@ public abstract class AbstractJoiningProcessor extends AbstractProcessor {
    */
   protected Future<ReadStreamWithTypes> initializeChildStream(PipelineExecutor executor, PipelineInstance pipeline, String fieldName, SourcePipeline sourcePipeline) {
 
-    String childName = pipeline.getPipelineContext().getPipe() + "." + getName() + "." + fieldName;
+    String childName = getName() + "." + fieldName;
     PipelineContext childContext = pipeline.getPipelineContext().child(childName);
 
     SourceInstance sourceInstance = sourcePipeline.getSource().createInstance(vertx, childContext, meterRegistry, executor);

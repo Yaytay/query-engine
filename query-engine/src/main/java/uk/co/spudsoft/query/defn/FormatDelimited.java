@@ -23,7 +23,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.fmts.text.FormatDelimitedInstance;
 
 /**
@@ -57,8 +57,8 @@ public class FormatDelimited extends AbstractTextFormat implements Format {
   private final String newline;
 
   @Override
-  public FormatDelimitedInstance createInstance(Vertx vertx, RequestContext requestContext, WriteStream<Buffer> writeStream) {
-    return new FormatDelimitedInstance(this, requestContext, writeStream);
+  public FormatDelimitedInstance createInstance(Vertx vertx, PipelineContext pipelineContext, WriteStream<Buffer> writeStream) {
+    return new FormatDelimitedInstance(this, pipelineContext, writeStream);
   }
 
   @Override

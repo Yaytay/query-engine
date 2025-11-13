@@ -56,9 +56,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.FormatXmlCharacterReference;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.ValueFormatters;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  *
@@ -66,6 +70,8 @@ import uk.co.spudsoft.query.exec.fmts.ValueFormatters;
  */
 @ExtendWith(VertxExtension.class)
 public class FormatXmlInstanceTest {
+  
+  private static final Logger logger = LoggerFactory.getLogger(FormatXmlInstanceTest.class);
 
   private Types buildTypes() {
     Types types = new Types();
@@ -105,10 +111,11 @@ public class FormatXmlInstanceTest {
       }
       deleteWithoutError(fs, outfile);
       RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.0"), null);
+      PipelineContext pipelineContext = new PipelineContext("test", requestContext);
       
       fs.open(outfile, new OpenOptions().setCreate(true).setSync(true))
               .compose(writeStream -> {
-                FormatXmlInstance instance = defn.createInstance(vertx, requestContext, writeStream);
+                FormatXmlInstance instance = defn.createInstance(vertx, pipelineContext, writeStream);
 
                 Types types = buildTypes();
                 List<DataRow> rowsList = new ArrayList<>();
@@ -158,9 +165,10 @@ public class FormatXmlInstanceTest {
     }
     deleteWithoutError(fs, outfile);
     RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.0"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", requestContext);
     WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setCreate(true).setSync(true));
 
-    FormatXmlInstance instance = defn.createInstance(vertx, requestContext, writeStream);
+    FormatXmlInstance instance = defn.createInstance(vertx, pipelineContext, writeStream);
 
     Types types = buildTypes();
     List<DataRow> rowsList = new ArrayList<>();
@@ -226,9 +234,10 @@ public class FormatXmlInstanceTest {
     }
     deleteWithoutError(fs, outfile);
     RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.0"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", requestContext);
     WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setSync(true));
 
-    FormatXmlInstance instance = defn.createInstance(vertx, requestContext, writeStream);
+    FormatXmlInstance instance = defn.createInstance(vertx, pipelineContext, writeStream);
 
     Types types = buildTypes();
     List<DataRow> rowsList = new ArrayList<>();
@@ -295,9 +304,10 @@ public class FormatXmlInstanceTest {
     }
     deleteWithoutError(fs, outfile);
     RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.0"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", requestContext);
     WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setCreate(true).setSync(true));
 
-    FormatXmlInstance instance = defn.createInstance(vertx, requestContext, writeStream);
+    FormatXmlInstance instance = defn.createInstance(vertx, pipelineContext, writeStream);
 
     Types types = buildTypes();
     List<DataRow> rowsList = new ArrayList<>();
@@ -371,96 +381,124 @@ public class FormatXmlInstanceTest {
 
   @Test
   public void testFormatValue_Boolean() {
-    String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Boolean, true);
+    RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.0"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", requestContext);
+    Log log = new Log(logger, pipelineContext);    
+    
+    String result = FormatXmlInstance.formatValue(log, pipelineContext, valueFormatters, "testColumn", DataType.Boolean, true);
     assertEquals("\"y\"", result);
 
-    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Boolean, false);
+    result = FormatXmlInstance.formatValue(log, pipelineContext, valueFormatters, "testColumn", DataType.Boolean, false);
     assertEquals("\"n\"", result);
 
-    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Boolean, "true");
+    result = FormatXmlInstance.formatValue(log, pipelineContext, valueFormatters, "testColumn", DataType.Boolean, "true");
     assertEquals("\"y\"", result);
 
-    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Boolean, "false");
+    result = FormatXmlInstance.formatValue(log, pipelineContext, valueFormatters, "testColumn", DataType.Boolean, "false");
     assertEquals("\"n\"", result);
 
-    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Boolean, 1);
+    result = FormatXmlInstance.formatValue(log, pipelineContext, valueFormatters, "testColumn", DataType.Boolean, 1);
     assertEquals("\"y\"", result);
 
-    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Boolean, 0);
+    result = FormatXmlInstance.formatValue(log, pipelineContext, valueFormatters, "testColumn", DataType.Boolean, 0);
     assertEquals("\"n\"", result);
   }
 
   @Test
   public void testFormatValue_Numeric() {
+    RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.0"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", requestContext);
+    Log log = new Log(logger, pipelineContext);    
+    
     // Test Double
-    String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Double, 123.456);
+    String result = FormatXmlInstance.formatValue(log, pipelineContext, valueFormatters, "testColumn", DataType.Double, 123.456);
     assertEquals("123.456", result);
 
     // Test Float
-    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Float, 456.789f);
+    result = FormatXmlInstance.formatValue(log, pipelineContext, valueFormatters, "testColumn", DataType.Float, 456.789f);
     assertEquals("456.789", result);
 
     // Test Integer
-    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Integer, 12345);
+    result = FormatXmlInstance.formatValue(log, pipelineContext, valueFormatters, "testColumn", DataType.Integer, 12345);
     assertEquals("12345", result);
 
     // Test Long
-    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Long, 123456789L);
+    result = FormatXmlInstance.formatValue(log, pipelineContext, valueFormatters, "testColumn", DataType.Long, 123456789L);
     assertEquals("123456789", result);
 
     // Test BigDecimal as Integer
-    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Integer, new BigDecimal("999"));
+    result = FormatXmlInstance.formatValue(log, pipelineContext, valueFormatters, "testColumn", DataType.Integer, new BigDecimal("999"));
     assertEquals("999", result);
   }
 
   @Test
   public void testFormatValue_String() {
-    String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.String, "Hello World");
+    RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.0"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", requestContext);
+    Log log = new Log(logger, pipelineContext);    
+    
+    String result = FormatXmlInstance.formatValue(log, pipelineContext, valueFormatters, "testColumn", DataType.String, "Hello World");
     assertEquals("Hello World", result);
 
     // Test non-string value converted to string
-    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.String, 12345);
+    result = FormatXmlInstance.formatValue(log, pipelineContext, valueFormatters, "testColumn", DataType.String, 12345);
     assertEquals("12345", result);
   }
 
   @Test
   public void testFormatValue_Null() {
-    String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Null, null);
+    RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.0"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", requestContext);
+    Log log = new Log(logger, pipelineContext);    
+    
+    String result = FormatXmlInstance.formatValue(log, pipelineContext, valueFormatters, "testColumn", DataType.Null, null);
     assertNull(result);
   }
 
   @Test
   public void testFormatValue_Temporal() {
+    RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.0"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", requestContext);
+    Log log = new Log(logger, pipelineContext);    
+    
     // Test Date
     LocalDate date = LocalDate.of(2023, 12, 25);
-    String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Date, date);
+    String result = FormatXmlInstance.formatValue(log, pipelineContext, valueFormatters, "testColumn", DataType.Date, date);
     assertEquals("25/12/2023", result);
 
     // Test DateTime
     LocalDateTime dateTime = LocalDateTime.of(2023, 12, 25, 10, 30, 45);
-    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.DateTime, dateTime);
+    result = FormatXmlInstance.formatValue(log, pipelineContext, valueFormatters, "testColumn", DataType.DateTime, dateTime);
     assertEquals("45:30:10 25/12/2023", result);
 
     // Test Time
     LocalTime time = LocalTime.of(10, 30, 45);
-    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Time, time);
+    result = FormatXmlInstance.formatValue(log, pipelineContext, valueFormatters, "testColumn", DataType.Time, time);
     assertEquals("45:30:10", result);
   }
 
   @Test
   public void testFormatValue_IntegerWithNonNumberValue() {
+    RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.0"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", requestContext);
+    Log log = new Log(logger, pipelineContext);    
+    
     // Test when Integer type receives a non-Number value
-    String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Integer, "12345");
+    String result = FormatXmlInstance.formatValue(log, pipelineContext, valueFormatters, "testColumn", DataType.Integer, "12345");
     assertEquals("12345", result);
 
-    result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Integer, "Four");
+    result = FormatXmlInstance.formatValue(log, pipelineContext, valueFormatters, "testColumn", DataType.Integer, "Four");
     assertEquals("Four", result);
   }
 
   @Test
   public void testFormatValue_LongWithNonNumberValue() {
+    RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.0"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", requestContext);
+    Log log = new Log(logger, pipelineContext);    
+    
     // Test when Long type receives a non-Number value
-    String result = FormatXmlInstance.formatValue(valueFormatters, "testColumn", DataType.Long, "123456789");
+    String result = FormatXmlInstance.formatValue(log, pipelineContext, valueFormatters, "testColumn", DataType.Long, "123456789");
     assertEquals("123456789", result);
   }
 }

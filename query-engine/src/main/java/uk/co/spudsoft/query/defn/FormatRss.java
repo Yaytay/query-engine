@@ -28,7 +28,7 @@ import uk.co.spudsoft.query.exec.fmts.xml.FormatRssInstance;
 
 import static uk.co.spudsoft.query.defn.FormatXml.NAME_CHAR_REGEX;
 import static uk.co.spudsoft.query.defn.FormatXml.NAME_START_REGEX;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 
 /**
  * Output the data stream in RSS.
@@ -72,8 +72,8 @@ public class FormatRss extends AbstractTextFormat implements Format {
   }
 
   @Override
-  public FormatRssInstance createInstance(Vertx vertx, RequestContext requestContext, WriteStream<Buffer> writeStream) {
-    return new FormatRssInstance(this, requestContext, writeStream);
+  public FormatRssInstance createInstance(Vertx vertx, PipelineContext pipelineContext, WriteStream<Buffer> writeStream) {
+    return new FormatRssInstance(this, pipelineContext, writeStream);
   }
 
   @Override

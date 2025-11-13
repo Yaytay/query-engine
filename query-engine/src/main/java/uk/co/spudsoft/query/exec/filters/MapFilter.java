@@ -20,10 +20,13 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Vertx;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.ProcessorMap;
 import uk.co.spudsoft.query.defn.ProcessorMapLabel;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * Filter for converting _map command line arguments into {@link uk.co.spudsoft.query.exec.procs.filters.ProcessorMapInstance}s.
@@ -35,6 +38,8 @@ import uk.co.spudsoft.query.exec.context.PipelineContext;
  */
 public class MapFilter implements Filter {
 
+  private static final Logger logger = LoggerFactory.getLogger(MapFilter.class);
+  
   /**
    * Constructor.
    */
@@ -50,12 +55,15 @@ public class MapFilter implements Filter {
   public ProcessorInstance createProcessor(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, String argument, String name) {
     List<String> fields = SpaceParser.parse(argument);
     if (fields.isEmpty()) {
+      Log.decorate(logger.atWarn(), pipelineContext).log("Invalid argument to _map filter, no fields found");
       throw new IllegalArgumentException("Invalid argument to _map filter, should be a space delimited list of relabels, each of which should be SourceLabel:NewLabel.  The new label cannot contain a colon or a space, if the new label is blank the field will be dropped - the source label may not be blank.");
     } else {
       List<ProcessorMapLabel> relabels = new ArrayList<>();
-      for (String field : fields) {
+      for (int i = 0; i < fields.size(); ++i) {
+        String field = fields.get(i);
         int idx = field.lastIndexOf(":");
         if (idx < 0) {
+          Log.decorate(logger.atWarn(), pipelineContext).log("Invalid argument to _map filter, no colon found in field {}: {}", i, field);
           throw new IllegalArgumentException("Invalid argument to _map filter, should be a space delimited list of relabels, each of which should be SourceLabel:NewLabel.  The new label cannot contain a colon or a space, if the new label is blank the field will be dropped - the source label may not be blank.");
         }
         String sourceLabel = field.substring(0, idx);

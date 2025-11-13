@@ -110,7 +110,7 @@ public class YamlToPipelineIT {
             .compose(pipeline -> {
               PipelineContext pipelineContext = new PipelineContext("test", req);
               Format chosenFormat = executor.getFormat(pipeline.getFormats(), null);
-              FormatInstance formatInstance = chosenFormat.createInstance(vertx, req, new ListingWriteStream<>(new ArrayList<>()));
+              FormatInstance formatInstance = chosenFormat.createInstance(vertx, pipelineContext, new ListingWriteStream<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, pipelineContext, meterRegistry, executor);
               PipelineInstance instance;
               try {
@@ -195,7 +195,7 @@ public class YamlToPipelineIT {
               PipelineExecutor executor = PipelineExecutor.create(meterRegistry, new FilterFactory(Collections.emptyList()), null);
               PipelineContext pipelineContext = new PipelineContext("test", req);
               Format chosenFormat = executor.getFormat(pipeline.getFormats(), null);
-              FormatInstance formatInstance = chosenFormat.createInstance(vertx, req, new ListingWriteStream<>(new ArrayList<>()));
+              FormatInstance formatInstance = chosenFormat.createInstance(vertx, pipelineContext, new ListingWriteStream<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, pipelineContext, meterRegistry, executor);
               PipelineInstance instance;
               try {

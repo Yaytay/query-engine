@@ -23,6 +23,9 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * A helper class to work with DateTimeFormatters allowing them to be accessed by name as well as by pattern.
@@ -34,7 +37,7 @@ import org.slf4j.LoggerFactory;
 public class CustomDateTimeFormatter {
 
   private static final Logger logger = LoggerFactory.getLogger(CustomDateTimeFormatter.class);
-
+  
   private final DateTimeFormatter formatter;  
   private final boolean convertToUtcZone;
   private final boolean dateTimeAsEpochSeconds;
@@ -222,10 +225,11 @@ public class CustomDateTimeFormatter {
   /**
    * Format the date/time value according to the configured formatter.
    *
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param value the date/time value to be formatted.
    * @return The formatted value, which will be either a String or a Long.
    */
-  public Object format(Object value) {
+  public Object format(PipelineContext pipelineContext, Object value) {
     if (value == null) {
       return null;
     } else {
@@ -263,7 +267,7 @@ public class CustomDateTimeFormatter {
           return formatter.format(ldt);
         }
       } else {
-        logger.warn("Value {} of type {} passed to CustomDateTimeFormatter", value, value.getClass());
+        Log.decorate(logger.atWarn(), pipelineContext).log("Value {} of type {} passed to CustomDateTimeFormatter", value, value.getClass());
         return value.toString();
       }
     }

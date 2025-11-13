@@ -43,9 +43,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.ColumnDefn;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.fmts.ValueFormatters;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * Handles the formatting of data into Rss format as part of a data processing pipeline. This class implements the FormatInstance
@@ -74,6 +76,9 @@ public final class FormatRssInstance implements FormatInstance {
     .build();
 
   private final FormatRss defn;
+  private final PipelineContext pipelineContext;
+  private final Log log;
+  
   private final OutputWriteStreamWrapper streamWrapper;
   private final FormattingWriteStream formattingStream;
 
@@ -95,16 +100,19 @@ public final class FormatRssInstance implements FormatInstance {
    * Constructor.
    *
    * @param definition The formatting definition for the output.
-   * @param requestContext The context of the request being output - if nothing else this must be updated with the row count on completion.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.  The contained requestContext must have the rowCount updated at the end.
    * @param outputStream The WriteStream that the data is to be sent to.
    */
-  public FormatRssInstance(FormatRss definition, RequestContext requestContext, WriteStream<Buffer> outputStream) {
+  public FormatRssInstance(FormatRss definition, PipelineContext pipelineContext, WriteStream<Buffer> outputStream) {
     this.defn = definition;
+    this.pipelineContext = pipelineContext;
+    this.log = new Log(logger, pipelineContext);
     this.streamWrapper = new OutputWriteStreamWrapper(outputStream);
     this.valueFormatters = defn.toValueFormatters("", "", false);
     this.customNamespace = Strings.isNullOrEmpty(definition.getCustomNamespace()) ? DEFAULT_CUSTOM_NAMESPACE : definition.getCustomNamespace();
     this.formattingStream = FormatXmlInstance.createFormattingWriteStream(
-            requestContext,
+            pipelineContext,
+            log,
             outputStream,
             streamWrapper,
             started,
@@ -167,7 +175,7 @@ public final class FormatRssInstance implements FormatInstance {
         writer.writeStartElement(customNamespace, fieldName);
       }
       if (v != null) {
-        writer.writeCharacters(FormatXmlInstance.formatValue(valueFormatters, columnDefn.name(), columnDefn.type(), v));
+        writer.writeCharacters(FormatXmlInstance.formatValue(log, pipelineContext, valueFormatters, columnDefn.name(), columnDefn.type(), v));
       }
       writer.writeEndElement();
     }

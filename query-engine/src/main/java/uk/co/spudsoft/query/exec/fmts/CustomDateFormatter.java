@@ -21,6 +21,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * A helper class to work with DateTimeFormatters for LocalDate values, allowing them to work without a pattern.
@@ -49,11 +52,12 @@ public class CustomDateFormatter implements CustomFormatter {
   /**
    * Format the date value according to the configured formatter.
    * 
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param value the date value to be formatted.
    * @return The formatted value.
    */
   @Override
-  public String format(Object value) {
+  public String format(PipelineContext pipelineContext, Object value) {
     if (value == null) {
       return null;
     } else {
@@ -62,7 +66,7 @@ public class CustomDateFormatter implements CustomFormatter {
       } else if (value instanceof LocalDate ldt) {
         return formatter.format(ldt);
       } else {
-        logger.warn("Value {} of type {} passed to CustomDateFormatter", value, value.getClass());
+        Log.decorate(logger.atWarn(), pipelineContext).log("Value {} of type {} passed to CustomDateFormatter", value, value.getClass());
         return value.toString();
       }
     }

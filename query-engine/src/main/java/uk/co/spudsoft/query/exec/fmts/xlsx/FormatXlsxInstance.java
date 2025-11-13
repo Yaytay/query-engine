@@ -40,6 +40,7 @@ import uk.co.spudsoft.query.defn.FormatXlsx;
 import uk.co.spudsoft.query.defn.FormatXlsxColours;
 import uk.co.spudsoft.query.defn.FormatXlsxColumn;
 import uk.co.spudsoft.query.defn.FormatXlsxFont;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
@@ -53,6 +54,8 @@ import uk.co.spudsoft.xlsx.XlsxWriter;
 import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.main.Coalesce;
 
 /**
@@ -73,29 +76,35 @@ public class FormatXlsxInstance implements FormatInstance {
   private final OutputWriteStreamWrapper streamWrapper;
   private final FormattingWriteStream formattingStream;
   
+  private final PipelineContext pipelineContext;
+  private final Log log;
+  
   private final AtomicBoolean started = new AtomicBoolean();
   private XlsxWriter writer;
   
-  private Types types;
+  private Types types;  
   
   /**
    * Constructor.
    * @param definition The formatting definition for the output.
-   * @param requestContext The context of the request being output - if nothing else this must be updated with the row count on completion.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.  The contained requestContext must have the rowCount updated at the end.
    * @param outputStream The WriteStream that the data is to be sent to.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "FormatXlsxInstance is a wrapper around WriteStream<Buffer>, it will make mutating calls to it")
-  public FormatXlsxInstance(FormatXlsx definition, RequestContext requestContext, WriteStream<Buffer> outputStream) {
+  public FormatXlsxInstance(FormatXlsx definition, PipelineContext pipelineContext, WriteStream<Buffer> outputStream) {
     this.definition = definition;    
     outputStream.setWriteQueueMaxSize(1000);
     this.streamWrapper = new OutputWriteStreamWrapper(outputStream);
-    this.formattingStream = new FormattingWriteStream(streamWrapper
+    this.pipelineContext = pipelineContext;
+    this.log = new Log(logger, pipelineContext);
+    this.formattingStream = new FormattingWriteStream(pipelineContext
+            , streamWrapper
             , v -> Future.succeededFuture()
             , row -> {
-              logger.info("Got row {}", row);
+              log.info().log("Got row {}", row);
               if (!started.get()) {
                 started.set(true);
-                TableDefinition tableDefinition = tableDefinition(requestContext);
+                TableDefinition tableDefinition = tableDefinition(pipelineContext.getRequestContext());
                 writer = new XlsxWriter(tableDefinition);
                 try {
                   writer.startFile(streamWrapper);
@@ -113,10 +122,10 @@ public class FormatXlsxInstance implements FormatInstance {
               return Future.succeededFuture();
             }
             , rows -> {
-              requestContext.setRowsWritten(rows);
+              pipelineContext.getRequestContext().setRowsWritten(rows);
               if (!started.get()) {
                 started.set(true);
-                TableDefinition tableDefintion = tableDefinition(requestContext);
+                TableDefinition tableDefintion = tableDefinition(pipelineContext.getRequestContext());
                 writer = new XlsxWriter(tableDefintion);
                 try {
                   writer.startFile(streamWrapper);

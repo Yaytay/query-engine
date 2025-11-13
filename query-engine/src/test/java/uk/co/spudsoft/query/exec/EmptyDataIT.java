@@ -115,7 +115,7 @@ public class EmptyDataIT {
               AsyncFile output = fs.openBlocking("target/temp/EmptyDataIT/output.html", new OpenOptions().setCreate(true));
               PipelineContext pipelineContext = new PipelineContext("test", req);
               Format chosenFormat = executor.getFormat(pipeline.getFormats(), null);
-              FormatInstance formatInstance = chosenFormat.createInstance(vertx, req, output);
+              FormatInstance formatInstance = chosenFormat.createInstance(vertx, pipelineContext, output);
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, pipelineContext, meterRegistry, executor);
               PipelineInstance instance;
               try {

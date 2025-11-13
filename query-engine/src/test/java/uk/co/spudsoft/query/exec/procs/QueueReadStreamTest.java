@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.procs;
 
+import inet.ipaddr.IPAddressString;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
@@ -36,6 +37,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 
 /**
@@ -49,10 +52,13 @@ public class QueueReadStreamTest {
   
   @Test
   public void testStream(Vertx vertx, VertxTestContext testContext) {
+
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
     
     QueueReadStream<Integer> qrs = new QueueReadStream<>(vertx.getOrCreateContext());
     AtomicInteger value = new AtomicInteger();
-    ReadStreamToList.capture(qrs)
+    ReadStreamToList.capture(pipelineContext, qrs)
             .andThen(ar -> {
               logger.debug("Got {}", ar);
               if (ar.failed()) {

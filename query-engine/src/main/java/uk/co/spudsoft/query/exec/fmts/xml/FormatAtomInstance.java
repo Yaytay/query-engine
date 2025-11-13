@@ -51,8 +51,10 @@ import static uk.co.spudsoft.query.defn.DataType.Float;
 import static uk.co.spudsoft.query.defn.DataType.Integer;
 import static uk.co.spudsoft.query.defn.DataType.Null;
 import static uk.co.spudsoft.query.defn.DataType.Time;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.fmts.ValueFormatters;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * Handles the formatting of data into Atom format as part of a data processing pipeline. This class implements the FormatInstance
@@ -70,6 +72,9 @@ public final class FormatAtomInstance implements FormatInstance {
   private static final String DATASERVICES_NAMESPACE = "http://schemas.microsoft.com/ado/2007/08/dataservices";
 
   private final FormatAtom defn;
+  private final PipelineContext pipelineContext;
+  private final Log log;
+  
   private final OutputWriteStreamWrapper streamWrapper;
   private final FormattingWriteStream formattingStream;
   private final String requestUrl;
@@ -91,17 +96,20 @@ public final class FormatAtomInstance implements FormatInstance {
    * Constructor.
    *
    * @param definition The formatting definition for the output.
-   * @param requestContext The context of the request being output - if nothing else this must be updated with the row count on completion.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.  The contained requestContext must have the rowCount updated at the end.
    * @param outputStream The WriteStream that the data is to be sent to.
    */
-  public FormatAtomInstance(FormatAtom definition, RequestContext requestContext, WriteStream<Buffer> outputStream) {
+  public FormatAtomInstance(FormatAtom definition, PipelineContext pipelineContext, WriteStream<Buffer> outputStream) {
     this.defn = definition;
-    this.requestUrl = requestContext.getUrl();
+    this.pipelineContext = pipelineContext;
+    this.log = new Log(logger, pipelineContext);
+    this.requestUrl = pipelineContext.getRequestContext().getUrl();
     this.baseUrl = endsWith(requestUrl, "/");
     this.streamWrapper = new OutputWriteStreamWrapper(outputStream);
     this.valueFormatters = defn.toValueFormatters("", "", false);
     this.formattingStream = FormatXmlInstance.createFormattingWriteStream(
-            requestContext,
+            pipelineContext,
+            log,
             outputStream,
             streamWrapper,
             started,
@@ -163,7 +171,7 @@ public final class FormatAtomInstance implements FormatInstance {
   void writeElement(String elementName, DataType type, Comparable<?> value) throws XMLStreamException {
     writer.writeStartElement(getName(elementName, "field"));
 
-    String formatted = FormatXmlInstance.formatValue(valueFormatters, elementName, type, value);
+    String formatted = FormatXmlInstance.formatValue(log, pipelineContext, valueFormatters, elementName, type, value);
     if (formatted != null) {
       writer.writeCharacters(formatted);
     }
@@ -207,14 +215,14 @@ public final class FormatAtomInstance implements FormatInstance {
         if (v == null) {
           writer.writeAttribute("m", METADATA_NAMESPACE, "null", "true");
         } else {
-          writer.writeCharacters(FormatXmlInstance.formatValue(valueFormatters, k.name(), k.type(), v));
+          writer.writeCharacters(FormatXmlInstance.formatValue(log, pipelineContext, valueFormatters, k.name(), k.type(), v));
         }
         writer.writeEndElement();
       } catch (XMLStreamException ex) {
         if (v == null)  {
-          logger.warn("Failed to output null value: ", ex);
+          log.warn().log("Failed to output null value: ", ex);
         } else {
-          logger.warn("Failed to output {} value \"{}\": ", v, v.getClass(), ex);
+          log.warn().log("Failed to output {} value \"{}\": ", v, v.getClass(), ex);
 
         }
         throw new RuntimeException(ex);

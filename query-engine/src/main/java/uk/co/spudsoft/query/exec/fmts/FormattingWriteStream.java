@@ -23,8 +23,11 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.procs.AsyncHandler;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * {@link io.vertx.core.streams.WriteStream}@lt;{@link uk.co.spudsoft.query.exec.DataRow}@gt; that formats the inbound DataRow values and writes them to a {@link io.vertx.core.streams.WriteStream}@lt;{@link io.vertx.core.buffer.Buffer}@gt;.
@@ -42,6 +45,9 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
   private final AsyncHandler<Void> initialize;
   private final AsyncHandler<DataRow> process;
   private final AsyncHandler<Long> terminate;
+  
+  private final Log log;
+  
   private long rowCount = 0;
   
   private final Object lastProcessFutureLock = new Object();
@@ -49,6 +55,7 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
 
   /**
    * Constructor.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.  The container requestContext must have the rowCount updated at the end.
    * @param outputStream The {@link WriteStream} that the formatted output is to be written to.
    * @param initialize {@link AsyncHandler} to call when the output must be initialized (output headers, etc.).
    * @param process {@link AsyncHandler} to call for each DataRow written.
@@ -56,7 +63,8 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "FormattingWriteStream is a helper wrapper around WriteStream<Buffer>, it will make mutating calls to it")
   public FormattingWriteStream(
-          WriteStream<Buffer> outputStream
+          PipelineContext pipelineContext
+          , WriteStream<Buffer> outputStream
           , AsyncHandler<Void> initialize
           , AsyncHandler<DataRow> process
           , AsyncHandler<Long> terminate
@@ -66,6 +74,7 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
     this.process = process;
     this.terminate = terminate;
     this.lastProcessFuture = Future.succeededFuture();
+    this.log = new Log(logger, pipelineContext);
   }
 
   @Override
@@ -97,7 +106,7 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
     try {
       return terminate.handle(rowCount);
     } catch (Throwable ex) {
-      logger.error("Termination callback failed: ", ex);
+      log.error().log("Termination callback failed: ", ex);
       return Future.failedFuture(ex);
     }
   }

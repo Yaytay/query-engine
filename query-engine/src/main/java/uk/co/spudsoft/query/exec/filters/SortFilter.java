@@ -19,9 +19,12 @@ package uk.co.spudsoft.query.exec.filters;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Vertx;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.ProcessorSort;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * Filter for converting _sort command line arguments into {@link uk.co.spudsoft.query.exec.procs.sort.ProcessorSortInstance}s.
@@ -41,6 +44,8 @@ import uk.co.spudsoft.query.exec.context.PipelineContext;
  */
 public class SortFilter implements Filter {
 
+  private static final Logger logger = LoggerFactory.getLogger(SortFilter.class);
+  
   /**
    * Constructor.
    */
@@ -56,6 +61,7 @@ public class SortFilter implements Filter {
   public ProcessorInstance createProcessor(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, String argument, String name) {
     List<String> fields = SpaceParser.parse(argument);
     if (fields.isEmpty()) {
+      Log.decorate(logger.atWarn(), pipelineContext).log("Invalid argument to _sort filter: no fields found");
       throw new IllegalArgumentException("Invalid argument to _sort filter, should be a space delimited list of fields");
     } else {
       ProcessorSort definition = ProcessorSort.builder().fields(fields).build();

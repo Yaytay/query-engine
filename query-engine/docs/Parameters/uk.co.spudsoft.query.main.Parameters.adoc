@@ -238,24 +238,12 @@ If the context hop from the Verticle to the HttpServer context happens too often
 
 
 Recommended Buffer Sizes 
-<table border="1">1
-  <caption>Table of recommended buffer sizes</caption> 
-  <tr>
-    <th>Buffer Size</th> <th>When to Use It</th> <th>Notes</th> 
-  </tr> 
-  <tr>
-    <td>8KB</td> <td>Low-latency, chatty streams Balanced throughput and responsiveness</td> <td>Matches TCP segment size on many systems</td> 
-  </tr> 
-  <tr>
-    <td>16KB</td> <td>Balanced throughput and responsiveness</td> <td>Good default for HTTP/1.1</td> 
-  </tr> 
-  <tr>
-    <td>32KB</td> <td>High-throughput, large payloads</td> <td>Reduces write calls, but increases latency</td> 
-  </tr> 
-  <tr>
-    <td>64KB</td> <td>Bulk transfer (e.g. file streaming)</td> <td>Only if memory pressure is low </td> 
-  </tr> 
-</table> 
+
+
+!===
+<tr><th></th> <th></th> <th></th> </tr> <tr><td></td> <td></td> <td></td> </tr> <tr><td></td> <td></td> <td></td> </tr> <tr><td></td> <td></td> <td></td> </tr> <tr><td></td> <td></td> <td></td> </tr> 
+!===
+
 
 | [[basicAuth]]basicAuth
 | xref:uk.co.spudsoft.query.main.BasicAuthConfig.adoc[BasicAuthConfig]

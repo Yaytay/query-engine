@@ -80,7 +80,7 @@ public class ProcessorExpressionInstanceTest {
 
     instance.initialize(null, pipeline, null, 0, input)
             .compose(output -> {
-              return ReadStreamToList.capture(output.getStream());
+              return ReadStreamToList.capture(pipelineContext, output.getStream());
             })
             .onSuccess(rows -> {
               testContext.verify(() -> {
@@ -128,7 +128,7 @@ public class ProcessorExpressionInstanceTest {
               testContext.verify(() -> {
                 assertEquals(uk.co.spudsoft.query.defn.DataType.Integer, output.getTypes().get("result"));
               });
-              return uk.co.spudsoft.query.exec.fmts.ReadStreamToList.capture(output.getStream());
+              return uk.co.spudsoft.query.exec.fmts.ReadStreamToList.capture(pipelineContext, output.getStream());
             })
             .onSuccess(rows -> {
               testContext.verify(() -> {

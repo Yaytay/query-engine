@@ -34,16 +34,18 @@ import uk.co.spudsoft.query.defn.DataType;
 import static uk.co.spudsoft.query.defn.DataType.Double;
 import uk.co.spudsoft.query.defn.FormatJson;
 import uk.co.spudsoft.query.defn.Pipeline;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
-import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormattingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.fmts.CustomDecimalFormatter;
 import uk.co.spudsoft.query.exec.fmts.ValueFormatters;
+import uk.co.spudsoft.query.logging.Log;
 
 
 /**
@@ -61,6 +63,8 @@ public final class FormatJsonInstance implements FormatInstance {
   private final WriteStream<Buffer> outputStream;
   private final FormatJson defn;
   private final FormattingWriteStream formattingStream;
+  private final PipelineContext pipelineContext;
+  private final Log log;
   
   private static final Buffer EMPTY_OBJECT = Buffer.buffer("{}");
   private static final Buffer OPEN_ARRAY = Buffer.buffer("[");
@@ -82,19 +86,23 @@ public final class FormatJsonInstance implements FormatInstance {
   /**
    * Constructor.
    * @param outputStream The WriteStream that the data is to be sent to.
-   * @param requestContext The context of the request being output - if nothing else this must be updated with the row count on completion.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.  The contained requestContext must have the rowCount updated at the end.
    * @param defn The definition of the output.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "FormatJsonInstance is a wrapper around WriteStream<Buffer>, it will make mutating calls to it")
-  public FormatJsonInstance(WriteStream<Buffer> outputStream, RequestContext requestContext, FormatJson defn) {
+  public FormatJsonInstance(WriteStream<Buffer> outputStream, PipelineContext pipelineContext, FormatJson defn) {
     this.outputStream = outputStream;
     this.defn = defn;
     
     this.valueFormatters = defn.toValueFormatters("\"", "\"", true);
     
     this.baseIndent = Strings.isNullOrEmpty(defn.getDataName()) ? 1 : 2;
+    
+    this.pipelineContext = pipelineContext;
+    this.log = new Log(logger, pipelineContext);
 
-    this.formattingStream = new FormattingWriteStream(outputStream
+    this.formattingStream = new FormattingWriteStream(pipelineContext
+            , outputStream
             , v -> {
               return Future.succeededFuture();
             }
@@ -123,7 +131,7 @@ public final class FormatJsonInstance implements FormatInstance {
               }
             }
             , rows -> {
-              requestContext.setRowsWritten(rows);
+              pipelineContext.getRequestContext().setRowsWritten(rows);
               try {
                 return end();
               } catch (Throwable ex) {
@@ -155,7 +163,7 @@ public final class FormatJsonInstance implements FormatInstance {
             switch (cd.type()) {
               case Boolean:
                 gen.writeFieldName(cd.name());
-                gen.writeRawValue(valueFormatters.getBooleanFormatter(cd.name()).format(value));
+                gen.writeRawValue(valueFormatters.getBooleanFormatter(cd.name()).format(pipelineContext, value));
                 break ;
                 
               case Double:
@@ -163,9 +171,9 @@ public final class FormatJsonInstance implements FormatInstance {
                   gen.writeFieldName(cd.name());
                   CustomDecimalFormatter formatter = valueFormatters.getDecimalFormatter(cd.name());
                   if (formatter.mustBeEncodedAsString()) {
-                    gen.writeString(formatter.format(value));
+                    gen.writeString(formatter.format(pipelineContext, value));
                   } else {
-                    gen.writeRawValue(formatter.format(value));
+                    gen.writeRawValue(formatter.format(pipelineContext, value));
                   }
                 break ;
                 
@@ -189,11 +197,11 @@ public final class FormatJsonInstance implements FormatInstance {
                 break ;
                 
               case Date:
-                gen.writeStringField(cd.name(), valueFormatters.getDateFormatter(cd.name()).format(value));
+                gen.writeStringField(cd.name(), valueFormatters.getDateFormatter(cd.name()).format(pipelineContext, value));
                 break ;
                 
               case DateTime:
-                Object formatted = valueFormatters.getDateTimeFormatter(cd.name()).format(value);
+                Object formatted = valueFormatters.getDateTimeFormatter(cd.name()).format(pipelineContext, value);
                 if (formatted instanceof String stringFormatted) {
                   gen.writeStringField(cd.name(), stringFormatted);
                 } else if (formatted instanceof Long longFormatted) {
@@ -202,16 +210,16 @@ public final class FormatJsonInstance implements FormatInstance {
                 break ;
                 
               case Time:
-                gen.writeStringField(cd.name(), valueFormatters.getTimeFormatter(cd.name()).format(value));
+                gen.writeStringField(cd.name(), valueFormatters.getTimeFormatter(cd.name()).format(pipelineContext, value));
                 break ;
                 
               default:
-                logger.warn("Field {} if of unknown type {} with value {} ({})", cd.name(), cd.type(), value, value.getClass());
+                log.warn().log("Field {} if of unknown type {} with value {} ({})", cd.name(), cd.type(), value, value.getClass());
                 throw new IllegalStateException("Field of unknown type " + cd.type());
             }
           }
         } catch (Throwable ex) {
-          logger.warn("Failed to write JSON field {} with value {} ({})", cd.name(), value, value == null ? null : value.getClass(), ex);
+          log.warn().log("Failed to write JSON field {} with value {} ({})", cd.name(), value, value == null ? null : value.getClass(), ex);
         }
         
       });
@@ -237,7 +245,7 @@ public final class FormatJsonInstance implements FormatInstance {
           start = "{\"" + defn.getDataName() + "\":" + OPEN_ARRAY;
         }
       } else {
-        logger.debug("Data types: {}", types);
+        log.debug().log("Data types: {}", types);
         
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -270,7 +278,7 @@ public final class FormatJsonInstance implements FormatInstance {
             try {
               gen.writeStringField(cd.name(), typeName);
             } catch (Throwable ex) {
-              logger.warn("Failed to write JSON meta {} with value {}", cd.name(), typeName, ex);
+              log.warn().log("Failed to write JSON meta {} with value {}", cd.name(), typeName, ex);
             }
             
           });

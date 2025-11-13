@@ -202,7 +202,7 @@ public class PipelineExecutorImplTest {
     SourceTest sourceDefn = SourceTest.builder().name("test").rowCount(7).build();
     SourceInstance source = sourceDefn.createInstance(vertx, pipelineContext, null, instance);
     FormatDelimited destDefn = FormatDelimited.builder().build();
-    FormatInstance dest = destDefn.createInstance(vertx, req, new LoggingWriteStream<>(rows -> {}));
+    FormatInstance dest = destDefn.createInstance(vertx, pipelineContext, new LoggingWriteStream<>(rows -> {}));
     
     PipelineInstance pi = new PipelineInstance(pipelineContext, definition, arguments, null, null, source, processors, dest);
     

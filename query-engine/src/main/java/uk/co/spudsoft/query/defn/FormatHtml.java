@@ -23,7 +23,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.fmts.html.FormatHtmlInstance;
 
 /**
@@ -65,8 +65,8 @@ public class FormatHtml extends AbstractTextFormat implements Format {
   private static final String DEFAULT_MEDIA_TYPE = "text/html;charset=UTF-8";
   
   @Override
-  public FormatHtmlInstance createInstance(Vertx vertx, RequestContext requestContext, WriteStream<Buffer> writeStream) {
-    return new FormatHtmlInstance(this, requestContext, writeStream);
+  public FormatHtmlInstance createInstance(Vertx vertx, PipelineContext pipelineContext, WriteStream<Buffer> writeStream) {
+    return new FormatHtmlInstance(this, pipelineContext, writeStream);
   }
 
   @Override

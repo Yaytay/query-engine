@@ -20,6 +20,9 @@ import com.google.common.base.Strings;
 import java.text.DecimalFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * A helper class to work with DecimalFormat.
@@ -103,11 +106,12 @@ public class CustomDecimalFormatter implements CustomFormatter {
   /**
    * Format the date/time value according to the configured formatter.
    *
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param value the date/time value to be formatted.
    * @return The formatted value.
    */
   @Override
-  public String format(Object value) {
+  public String format(PipelineContext pipelineContext, Object value) {
     if (value == null) {
       return null;
     } else {
@@ -118,7 +122,7 @@ public class CustomDecimalFormatter implements CustomFormatter {
           return formatter.format(n);
         }
       } else {
-        logger.warn("Value {} of type {} passed to CustomDecimalFormatter", value, value.getClass());
+        Log.decorate(logger.atWarn(), pipelineContext).log("Value {} of type {} passed to CustomDecimalFormatter", value, value.getClass());
         return value.toString();
       }
     }

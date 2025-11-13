@@ -278,7 +278,6 @@ public class AuditorMemoryImpl implements Auditor {
             .addArgument(ex.getClass().getCanonicalName())
             .addArgument(ex.getMessage())
             .setCause(ex)
-            .addKeyValue(PROCESS_ID, SIZE)
             .log();
     AuditRow row = find(requestContext);
     if (row != null) {

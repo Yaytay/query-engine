@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.ProcessorOffset;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * Filter for converting _offset command line arguments into {@link uk.co.spudsoft.query.exec.procs.filters.ProcessorOffsetInstance}s.
@@ -53,7 +54,7 @@ public class OffsetFilter implements Filter {
     try {
       value = Integer.parseInt(argument);
     } catch (Throwable ex) {
-      logger.warn("Failed to convert argument to _offset filter (\"{}\") to integer: ", argument, ex);
+      Log.decorate(logger.atWarn(), pipelineContext).log("Failed to convert argument to _offset filter (\"{}\") to integer: ", argument, ex);
       throw new IllegalArgumentException("Invalid argument to _offset filter, should be an integer");
     }
     ProcessorOffset definition = ProcessorOffset.builder().offset(value).build();

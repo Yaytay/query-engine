@@ -91,7 +91,7 @@ public class MergeStreamTest {
             , 4
     );
     
-    ReadStreamToList.capture(ms)
+    ReadStreamToList.capture(pipelineContext, ms)
             .onFailure(testContext::failNow)
             .onSuccess(rows -> {
               logger.debug("Inner join rows: {}", rows);
@@ -134,7 +134,7 @@ public class MergeStreamTest {
             , 4
     );
     
-    ReadStreamToList.captureByBatch(ms, 2, 2)
+    ReadStreamToList.captureByBatch(pipelineContext, ms, 2, 2)
             .onFailure(testContext::failNow)
             .onSuccess(rows -> {
               logger.debug("Left join rows: {}", rows);

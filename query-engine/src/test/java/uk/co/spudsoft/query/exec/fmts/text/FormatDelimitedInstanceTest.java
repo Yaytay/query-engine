@@ -43,11 +43,11 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.FormatDelimited;
-import uk.co.spudsoft.query.exec.ColumnDefn;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
 /**
@@ -111,9 +111,10 @@ public class FormatDelimitedInstanceTest {
       fs.mkdirBlocking("target/temp");
     }
     RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.0"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", requestContext);
     WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setCreate(true).setSync(true));
 
-    FormatDelimitedInstance instance = defn.createInstance(vertx, requestContext, writeStream);
+    FormatDelimitedInstance instance = defn.createInstance(vertx, pipelineContext, writeStream);
 
     Types types = buildTypes();
     List<DataRow> rowsList = new ArrayList<>();

@@ -102,7 +102,7 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
             })
             .compose(v -> {
               logger.debug("de pipeline initialized, getting future");
-              return ReadStreamToList.capture(format.getReadStream().getStream());
+              return ReadStreamToList.capture(pipelineContext, format.getReadStream().getStream());
             })
             .compose(rows -> {
               logger.debug("de pipeline completed, processing {} rows", rows.size());

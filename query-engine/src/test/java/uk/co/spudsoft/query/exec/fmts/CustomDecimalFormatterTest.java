@@ -16,11 +16,14 @@
  */
 package uk.co.spudsoft.query.exec.fmts;
 
+import inet.ipaddr.IPAddressString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 
 /**
  *
@@ -31,93 +34,96 @@ public class CustomDecimalFormatterTest {
   @Test
   public void testFormat() {
     
+    RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.0"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", requestContext);    
+    
     CustomDecimalFormatter cdf;
     
     cdf = new CustomDecimalFormatter(null);
     assertFalse(cdf.mustBeEncodedAsString());
-    assertNull(cdf.format(null));
-    assertEquals("1.23", cdf.format(1.23));
-    assertEquals("12.3", cdf.format(12.3));
-    assertEquals("123", cdf.format(123));
+    assertNull(cdf.format(pipelineContext, null));
+    assertEquals("1.23", cdf.format(pipelineContext, 1.23));
+    assertEquals("12.3", cdf.format(pipelineContext, 12.3));
+    assertEquals("123", cdf.format(pipelineContext, 123));
     
     cdf = new CustomDecimalFormatter("0.###");
     assertFalse(cdf.mustBeEncodedAsString());
-    assertNull(cdf.format(null));
-    assertEquals("1.23", cdf.format(1.23));
-    assertEquals("12.3", cdf.format(12.3));
-    assertEquals("123", cdf.format(123));
+    assertNull(cdf.format(pipelineContext, null));
+    assertEquals("1.23", cdf.format(pipelineContext, 1.23));
+    assertEquals("12.3", cdf.format(pipelineContext, 12.3));
+    assertEquals("123", cdf.format(pipelineContext, 123));
     
     cdf = new CustomDecimalFormatter("0.000");
     assertFalse(cdf.mustBeEncodedAsString());
-    assertNull(cdf.format(null));
-    assertEquals("1.230", cdf.format(1.23));
-    assertEquals("12.300", cdf.format(12.3));
-    assertEquals("123.000", cdf.format(123));
+    assertNull(cdf.format(pipelineContext, null));
+    assertEquals("1.230", cdf.format(pipelineContext, 1.23));
+    assertEquals("12.300", cdf.format(pipelineContext, 12.3));
+    assertEquals("123.000", cdf.format(pipelineContext, 123));
     
     cdf = new CustomDecimalFormatter("£0.000");
     assertTrue(cdf.mustBeEncodedAsString());
-    assertNull(cdf.format(null));
-    assertEquals("£1.230", cdf.format(1.23));
-    assertEquals("£12.300", cdf.format(12.3));
-    assertEquals("£123.000", cdf.format(123));
+    assertNull(cdf.format(pipelineContext, null));
+    assertEquals("£1.230", cdf.format(pipelineContext, 1.23));
+    assertEquals("£12.300", cdf.format(pipelineContext, 12.3));
+    assertEquals("£123.000", cdf.format(pipelineContext, 123));
     
     cdf = new CustomDecimalFormatter("0.###%");
-    assertNull(cdf.format(null));
+    assertNull(cdf.format(pipelineContext, null));
     assertTrue(cdf.mustBeEncodedAsString());
-    assertEquals("12.3%", cdf.format(.123));
-    assertEquals("123%", cdf.format(1.23));
-    assertEquals("1.23%", cdf.format(.0123));
+    assertEquals("12.3%", cdf.format(pipelineContext, .123));
+    assertEquals("123%", cdf.format(pipelineContext, 1.23));
+    assertEquals("1.23%", cdf.format(pipelineContext, .0123));
     
     cdf = new CustomDecimalFormatter("0.###E0");
-    assertNull(cdf.format(null));
+    assertNull(cdf.format(pipelineContext, null));
     assertFalse(cdf.mustBeEncodedAsString());
-    assertEquals("1.23E-1", cdf.format(.123));
-    assertEquals("1.23E0", cdf.format(1.23));
-    assertEquals("1.23E-2", cdf.format(.0123));
+    assertEquals("1.23E-1", cdf.format(pipelineContext, .123));
+    assertEquals("1.23E0", cdf.format(pipelineContext, 1.23));
+    assertEquals("1.23E-2", cdf.format(pipelineContext, .0123));
     
     cdf = new CustomDecimalFormatter("FEET: 0.###");
-    assertNull(cdf.format(null));
+    assertNull(cdf.format(pipelineContext, null));
     assertTrue(cdf.mustBeEncodedAsString());
-    assertEquals("FEET: 0.123", cdf.format(.123));
-    assertEquals("FEET: 1.23", cdf.format(1.23));
-    assertEquals("FEET: 0.012", cdf.format(.0123));
+    assertEquals("FEET: 0.123", cdf.format(pipelineContext, .123));
+    assertEquals("FEET: 1.23", cdf.format(pipelineContext, 1.23));
+    assertEquals("FEET: 0.012", cdf.format(pipelineContext, .0123));
     
     cdf = new CustomDecimalFormatter("--: 0.###");
-    assertNull(cdf.format(null));
+    assertNull(cdf.format(pipelineContext, null));
     assertTrue(cdf.mustBeEncodedAsString());
-    assertEquals("--: 0.123", cdf.format(.123));
-    assertEquals("--: 1.23", cdf.format(1.23));
-    assertEquals("--: 0.012", cdf.format(.0123));
+    assertEquals("--: 0.123", cdf.format(pipelineContext, .123));
+    assertEquals("--: 1.23", cdf.format(pipelineContext, 1.23));
+    assertEquals("--: 0.012", cdf.format(pipelineContext, .0123));
     
     cdf = new CustomDecimalFormatter("#.###;-0.000");
-    assertNull(cdf.format(null));
+    assertNull(cdf.format(pipelineContext, null));
     assertFalse(cdf.mustBeEncodedAsString());
-    assertEquals("0.123", cdf.format(.123));
-    assertEquals("1.23", cdf.format(1.23));
-    assertEquals("0.012", cdf.format(.0123));
-    assertEquals("-0.123", cdf.format(-.123));
-    assertEquals("-1.23", cdf.format(-1.23));
-    assertEquals("-0.012", cdf.format(-.0123));
+    assertEquals("0.123", cdf.format(pipelineContext, .123));
+    assertEquals("1.23", cdf.format(pipelineContext, 1.23));
+    assertEquals("0.012", cdf.format(pipelineContext, .0123));
+    assertEquals("-0.123", cdf.format(pipelineContext, -.123));
+    assertEquals("-1.23", cdf.format(pipelineContext, -1.23));
+    assertEquals("-0.012", cdf.format(pipelineContext, -.0123));
     
     cdf = new CustomDecimalFormatter("#,###.###;-#,##0.000");
-    assertNull(cdf.format(null));
+    assertNull(cdf.format(pipelineContext, null));
     assertTrue(cdf.mustBeEncodedAsString());
-    assertEquals("4,000.123", cdf.format(4000.123));
-    assertEquals("4,001.23", cdf.format(4001.23));
-    assertEquals("4,000.012", cdf.format(4000.0123));
-    assertEquals("-4,000.123", cdf.format(-4000.123));
-    assertEquals("-4,001.23", cdf.format(-4001.23));
-    assertEquals("-4,000.012", cdf.format(-4000.0123));
+    assertEquals("4,000.123", cdf.format(pipelineContext, 4000.123));
+    assertEquals("4,001.23", cdf.format(pipelineContext, 4001.23));
+    assertEquals("4,000.012", cdf.format(pipelineContext, 4000.0123));
+    assertEquals("-4,000.123", cdf.format(pipelineContext, -4000.123));
+    assertEquals("-4,001.23", cdf.format(pipelineContext, -4001.23));
+    assertEquals("-4,000.012", cdf.format(pipelineContext, -4000.0123));
     
     cdf = new CustomDecimalFormatter("#,###.###;-#,##0.000");
-    assertNull(cdf.format(null));
+    assertNull(cdf.format(pipelineContext, null));
     assertTrue(cdf.mustBeEncodedAsString());
-    assertEquals("4,000.123", cdf.format(4000.123));
-    assertEquals("4,001.23", cdf.format(4001.23));
-    assertEquals("4,000.012", cdf.format(4000.0123));
-    assertEquals("-4,000.123", cdf.format(-4000.123));
-    assertEquals("-4,001.23", cdf.format(-4001.23));
-    assertEquals("-4,000.012", cdf.format(-4000.0123));
+    assertEquals("4,000.123", cdf.format(pipelineContext, 4000.123));
+    assertEquals("4,001.23", cdf.format(pipelineContext, 4001.23));
+    assertEquals("4,000.012", cdf.format(pipelineContext, 4000.0123));
+    assertEquals("-4,000.123", cdf.format(pipelineContext, -4000.123));
+    assertEquals("-4,001.23", cdf.format(pipelineContext, -4001.23));
+    assertEquals("-4,000.012", cdf.format(pipelineContext, -4000.0123));
   }
   
 }

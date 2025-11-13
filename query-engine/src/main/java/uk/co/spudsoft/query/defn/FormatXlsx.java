@@ -31,7 +31,7 @@ import io.vertx.core.streams.WriteStream;
 import java.util.List;
 import uk.co.spudsoft.query.exec.fmts.xlsx.FormatXlsxInstance;
 import uk.co.spudsoft.query.exec.FormatInstance;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
@@ -73,8 +73,8 @@ public class FormatXlsx implements Format {
   private final ImmutableMap<String, FormatXlsxColumn> columnsMap;
   
   @Override
-  public FormatInstance createInstance(Vertx vertx, RequestContext requestContext, WriteStream<Buffer> writeStream) {
-    return new FormatXlsxInstance(this, requestContext, writeStream);
+  public FormatInstance createInstance(Vertx vertx, PipelineContext pipelineContext, WriteStream<Buffer> writeStream) {
+    return new FormatXlsxInstance(this, pipelineContext, writeStream);
   }
 
   @Override

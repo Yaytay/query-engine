@@ -27,7 +27,7 @@ import io.vertx.core.streams.WriteStream;
 import java.time.format.DateTimeFormatter;
 import uk.co.spudsoft.query.exec.fmts.json.FormatJsonInstance;
 import uk.co.spudsoft.query.exec.FormatInstance;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 
 /**
  * Output the data stream in JSON.
@@ -49,8 +49,8 @@ public class FormatJson extends AbstractTextFormat implements Format {
   private final int prettiness;
 
   @Override
-  public FormatInstance createInstance(Vertx vertx, RequestContext requestContext, WriteStream<Buffer> writeStream) {
-    return new FormatJsonInstance(writeStream, requestContext, this);
+  public FormatInstance createInstance(Vertx vertx, PipelineContext pipelineContext, WriteStream<Buffer> writeStream) {
+    return new FormatJsonInstance(writeStream, pipelineContext, this);
   }
 
   @Override

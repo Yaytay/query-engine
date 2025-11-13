@@ -27,18 +27,17 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.FormatXlsx;
 import uk.co.spudsoft.query.defn.FormatXlsxColours;
-import uk.co.spudsoft.query.exec.ColumnDefn;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
 /**
@@ -78,11 +77,12 @@ public class FormatXlsxInstanceTest {
     }
 
     RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.0"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", requestContext);
     
     fs.open("target/temp/FormatXlsxInstanceTest.xlsx", new OpenOptions().setCreate(true))
       .compose(writeStream -> {
 
-        FormatXlsxInstance instance = (FormatXlsxInstance) defn.createInstance(vertx, requestContext, writeStream);
+        FormatXlsxInstance instance = (FormatXlsxInstance) defn.createInstance(vertx, pipelineContext, writeStream);
 
         Types types = buildTypes();
         List<DataRow> rowsList = new ArrayList<>();

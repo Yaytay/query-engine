@@ -20,7 +20,9 @@ import com.google.common.base.Strings;
 import org.apache.commons.jexl3.JexlContext;
 import org.apache.commons.jexl3.JexlExpression;
 import org.apache.commons.jexl3.MapContext;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 
 /**
  * Formatter to convert a Boolean Object into any string value.
@@ -138,11 +140,12 @@ public final class CustomBooleanFormatter implements CustomFormatter {
    * <P>
    * It is preferable if the value is a Boolean, but it need not be.
    *
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param value The value to be formatted as a Boolean.
    * @return A string value that can be output.
    */
   @Override
-  public String format(Object value) {
+  public String format(PipelineContext pipelineContext, Object value) {
     if (value == null) {
       return null;
     }

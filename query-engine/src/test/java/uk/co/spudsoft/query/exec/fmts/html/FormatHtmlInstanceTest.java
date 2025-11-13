@@ -46,6 +46,7 @@ import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
 /**
@@ -103,8 +104,9 @@ public class FormatHtmlInstanceTest {
     WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setCreate(true).setSync(true));
 
     RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.0"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", requestContext);
     
-    FormatHtmlInstance instance = defn.createInstance(vertx, requestContext, writeStream);
+    FormatHtmlInstance instance = defn.createInstance(vertx, pipelineContext, writeStream);
 
     Types types = buildTypes();
     List<DataRow> rowsList = new ArrayList<>();
@@ -157,8 +159,9 @@ public class FormatHtmlInstanceTest {
     WriteStream<Buffer> writeStream = fs.openBlocking(outfile, new OpenOptions().setCreate(true).setSync(true));
 
     RequestContext requestContext = new RequestContext(null, "requestId", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.0"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", requestContext);
     
-    FormatHtmlInstance instance = defn.createInstance(vertx, requestContext, writeStream);
+    FormatHtmlInstance instance = defn.createInstance(vertx, pipelineContext, writeStream);
 
     Types types = buildTypes();
     List<DataRow> rowsList = new ArrayList<>();

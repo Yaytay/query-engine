@@ -31,6 +31,7 @@ import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * Vert.x Verticle for running Query Engine Pipelines.
@@ -104,15 +105,12 @@ public class PipelineRunningVerticle extends VerticleBase {
   }
   
   private Future<Void> handleRequestOnContext(PipelineRunningTask task) {
-    logger.atInfo()
-            .addKeyValue("requestId", task.requestContext.getRequestId())
-            .addKeyValue("runId", task.requestContext.getRunID())
-            .addKeyValue("pipeline", "$")
+    Log.decorate(logger.atInfo(), task.requestContext)
             .log("Creating PipelineInstance");
     try {
       PipelineInstance instance;
-      FormatInstance formatInstance = task.chosenFormat.createInstance(vertx, task.requestContext, task.responseStream);
       PipelineContext rootContext = new PipelineContext("$", task.requestContext);
+      FormatInstance formatInstance = task.chosenFormat.createInstance(vertx, rootContext, task.responseStream);
       SourceInstance sourceInstance = task.pipeline.getSource().createInstance(vertx, rootContext, meterRegistry, pipelineExecutor);
       instance = new PipelineInstance(
               rootContext
@@ -124,25 +122,19 @@ public class PipelineRunningVerticle extends VerticleBase {
               , pipelineExecutor.createProcessors(vertx, rootContext, task.pipeline, task.queryStringParams)
               , formatInstance
       );
-      logger.atDebug()
-              .addKeyValue("requestId", task.requestContext.getRequestId())
-              .addKeyValue("runId", task.requestContext.getRunID())
-              .addKeyValue("pipeline", "$")
+      Log.decorate(logger.atDebug(), rootContext)
               .addArgument(instance)
               .log("PipelineInstance: {}")
               ;
       return pipelineExecutor.initializePipeline(instance).map(v -> instance)
               .compose(i -> {
-                logger.atInfo()
-                        .addKeyValue("requestId", task.requestContext.getRequestId())
-                        .addKeyValue("runId", task.requestContext.getRunID())
-                        .addKeyValue("pipeline", "$")
+                Log.decorate(logger.atInfo(), rootContext)
                         .log("Pipeline initiated")
                         ;
                 return instance.getFinalPromise().future();
               });
     } catch (Throwable ex) {
-      logger.warn("Failed to run pipeline: ", ex);
+      Log.decorate(logger.atWarn(), task.requestContext).log("Failed to run pipeline: ", ex);
       return Future.failedFuture(ex);
     }
   }

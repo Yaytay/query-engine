@@ -16,6 +16,9 @@
  */
 package uk.co.spudsoft.query.exec.fmts;
 
+import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+
 /**
  * Interface to encourage common API for custom formatters.
  * 
@@ -26,9 +29,10 @@ public interface CustomFormatter {
   /**
    * Format an object according to the configuration of this CustomFormatter.
 
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param value The value to be formatted.
    * @return A string value that can be output.
    */
-  String format(Object value);
+  String format(PipelineContext pipelineContext, Object value);
   
 }

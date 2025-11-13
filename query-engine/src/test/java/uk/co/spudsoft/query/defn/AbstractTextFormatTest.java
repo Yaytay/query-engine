@@ -36,6 +36,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import uk.co.spudsoft.query.exec.FormatInstance;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 
 /**
@@ -79,7 +80,7 @@ public class AbstractTextFormatTest {
     }
 
     @Override
-    public FormatInstance createInstance(Vertx vertx, RequestContext requestContext, WriteStream<Buffer> writeStream) {
+    public FormatInstance createInstance(Vertx vertx, PipelineContext pipelineContext, WriteStream<Buffer> writeStream) {
       throw new UnsupportedOperationException("Not supported yet.");
     }
     
@@ -264,7 +265,7 @@ public class AbstractTextFormatTest {
         validate(FormatType.Delimited, "\"", "\"");
       }
       @Override
-      public FormatInstance createInstance(Vertx vertx, RequestContext requestContext, WriteStream<Buffer> writeStream) {
+      public FormatInstance createInstance(Vertx vertx, PipelineContext pipelineContext, WriteStream<Buffer> writeStream) {
         throw new UnsupportedOperationException("Not supported yet.");
       }
     };
@@ -279,7 +280,7 @@ public class AbstractTextFormatTest {
         validate(FormatType.Delimited, "\"", "\"");
       }
       @Override
-      public FormatInstance createInstance(Vertx vertx, RequestContext requestContext, WriteStream<Buffer> writeStream) {
+      public FormatInstance createInstance(Vertx vertx, PipelineContext pipelineContext, WriteStream<Buffer> writeStream) {
         throw new UnsupportedOperationException("Not supported yet.");
       }
     };
@@ -305,7 +306,7 @@ public class AbstractTextFormatTest {
         validate(FormatType.Delimited, null, null);
       }
       @Override
-      public FormatInstance createInstance(Vertx vertx, RequestContext requestContext, WriteStream<Buffer> writeStream) {
+      public FormatInstance createInstance(Vertx vertx, PipelineContext pipelineContext, WriteStream<Buffer> writeStream) {
         throw new UnsupportedOperationException("Not supported yet.");
       }
     };

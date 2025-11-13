@@ -32,15 +32,17 @@ import static uk.co.spudsoft.query.defn.DataType.Integer;
 import static uk.co.spudsoft.query.defn.DataType.Null;
 import static uk.co.spudsoft.query.defn.DataType.Time;
 import uk.co.spudsoft.query.defn.FormatHtml;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.DataRow;
-import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormattingWriteStream;
 import uk.co.spudsoft.query.exec.FormatInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.fmts.ValueFormatters;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * Output {@link uk.co.spudsoft.query.exec.FormatInstance} that generates HTML output.
@@ -62,6 +64,7 @@ public class FormatHtmlInstance implements FormatInstance {
 
   private static final org.slf4j.Logger logger = LoggerFactory.getLogger(FormatHtmlInstance.class);
 
+  private final Log log;
   private final WriteStream<Buffer> outputStream;
   private final FormattingWriteStream formattingStream;
 
@@ -82,17 +85,19 @@ public class FormatHtmlInstance implements FormatInstance {
    * Constructor.
    *
    * @param defn The definition of the format to be output.
-   * @param requestContext The context of the request.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.  The contained requestContext must have the rowCount updated at the end.
    * @param outputStream The WriteStream that the data is to be sent to.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "FormatHtmlInstance is a wrapper around WriteStream<Buffer>, it will make mutating calls to it")
-  public FormatHtmlInstance(FormatHtml defn, RequestContext requestContext, WriteStream<Buffer> outputStream) {
+  public FormatHtmlInstance(FormatHtml defn, PipelineContext pipelineContext, WriteStream<Buffer> outputStream) {
+    this.log = new Log(logger, pipelineContext);
     this.outputStream = outputStream;
     this.finalPromise = Promise.<Void>promise();
 
     this.valueFormatters = defn.toValueFormatters("", "", false);
 
-    this.formattingStream = new FormattingWriteStream(outputStream,
+    this.formattingStream = new FormattingWriteStream(pipelineContext,
+            outputStream,
             v -> outputStream.write(OPEN),
             row -> {
               if (!started.get()) {
@@ -100,16 +105,16 @@ public class FormatHtmlInstance implements FormatInstance {
                 
                 String headerAndFirstRow = headerFromRow()
                         .append(ENDHEAD)
-                        .append(rowFromRow(row))
+                        .append(rowFromRow(pipelineContext, row))
                         .toString();
                 Buffer buffer = Buffer.buffer(headerAndFirstRow);
                 return outputStream.write(buffer);
               } else {
-                return outputStream.write(Buffer.buffer(rowFromRow(row)));
+                return outputStream.write(Buffer.buffer(rowFromRow(pipelineContext, row)));
               }
             },
             rows -> {
-              requestContext.setRowsWritten(rows);
+              pipelineContext.getRequestContext().setRowsWritten(rows);
               Buffer buffer;
               if (!started.get()) {
                 started.set(true);
@@ -152,7 +157,7 @@ public class FormatHtmlInstance implements FormatInstance {
     return header;
   }
 
-  private String rowFromRow(DataRow row) {
+  private String rowFromRow(PipelineContext pipelineContext, DataRow row) {
     if (row.isEmpty()) {
       return "";
     }
@@ -169,12 +174,12 @@ public class FormatHtmlInstance implements FormatInstance {
       if (value != null) {
         switch (cd.type()) {
           case Boolean:
-            tr.append(valueFormatters.getBooleanFormatter(cd.name()).format(value));
+            tr.append(valueFormatters.getBooleanFormatter(cd.name()).format(pipelineContext, value));
             break;
 
           case Double:
           case Float:
-            tr.append(valueFormatters.getDecimalFormatter(cd.name()).format(value));
+            tr.append(valueFormatters.getDecimalFormatter(cd.name()).format(pipelineContext, value));
             break;
 
           case Integer:
@@ -196,19 +201,19 @@ public class FormatHtmlInstance implements FormatInstance {
             break;
 
           case Date:
-            tr.append(valueFormatters.getDateFormatter(cd.name()).format(value));
+            tr.append(valueFormatters.getDateFormatter(cd.name()).format(pipelineContext, value));
             break;
 
           case DateTime:
-            tr.append(valueFormatters.getDateTimeFormatter(cd.name()).format(value));
+            tr.append(valueFormatters.getDateTimeFormatter(cd.name()).format(pipelineContext, value));
             break;
 
           case Time:
-            tr.append(valueFormatters.getTimeFormatter(cd.name()).format(value));
+            tr.append(valueFormatters.getTimeFormatter(cd.name()).format(pipelineContext, value));
             break;
 
           default:
-            logger.warn("Field {} if of unknown type {} with value {} ({})", cd.name(), cd.type(), value, value.getClass());
+            log.warn().log("Field {} if of unknown type {} with value {} ({})", cd.name(), cd.type(), value, value.getClass());
             throw new IllegalStateException("Field of unknown type " + cd.type());
         }
       }
