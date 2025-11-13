@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * Implementation of {@link LoginDao} that stores data in memory.
@@ -103,6 +105,7 @@ public class LoginDaoMemoryImpl implements LoginDao {
    * <p>
    * This method also purges any requests that have expired more than the purgeDelay before now.
    * 
+   * @param requestContext the context of the request.
    * @param state The OAuth state value passed to the OAuth provider.
    * This value is used as the key for accessing requests in future.
    * @param provider The OAuth provider.
@@ -113,7 +116,7 @@ public class LoginDaoMemoryImpl implements LoginDao {
    * @return A Future that will be completed when the request has been recorded.
    */
   @Override
-  public Future<Void> store(String state, String provider, String codeVerifier, String nonce, String redirectUri, String targetUrl) {
+  public Future<Void> store(RequestContext requestContext, String state, String provider, String codeVerifier, String nonce, String redirectUri, String targetUrl) {
 
     synchronized (data) {
       data.put(state, new Data(new RequestData(provider, codeVerifier, nonce, redirectUri, targetUrl)));
@@ -123,27 +126,27 @@ public class LoginDaoMemoryImpl implements LoginDao {
       LocalDateTime limit = LocalDateTime.now(ZoneOffset.UTC).minus(purgeDelay);
       data.entrySet().removeIf(e -> e.getValue().timestamp.isBefore(limit));
       if (data.size() < previousCount) {
-        logger.debug("Size of login request store reduced from {} to {}", previousCount, data.size());
+        Log.decorate(logger.atDebug(), requestContext).log("Size of login request store reduced from {} to {}", previousCount, data.size());
       }
       if (logger.isDebugEnabled()) {
-        logger.debug("All auth states: {}", Json.encode(data));
+        Log.decorate(logger.atDebug(), requestContext).log("All auth states: {}", Json.encode(data));
       }
     }
     return Future.succeededFuture();
   }
 
   @Override
-  public Future<Void> markUsed(String state) {
+  public Future<Void> markUsed(RequestContext requestContext, String state) {
     synchronized (data) {
       Data input = data.get(state);
       if (input == null) {
-        logger.debug("State {} not found in {}", state, Json.encode(data.keySet()));
+        Log.decorate(logger.atDebug(), requestContext).log("State {} not found in {}", state, Json.encode(data.keySet()));
         return Future.failedFuture(new IllegalArgumentException("State does not exist"));
       }
       LocalDateTime limit = LocalDateTime.now(ZoneOffset.UTC).minus(purgeDelay);
       if (input.getTimestamp().isBefore(limit)) {
         data.remove(state);
-        logger.debug("State {} expired at {}", state, input.getTimestamp());
+        Log.decorate(logger.atDebug(), requestContext).log("State {} expired at {}", state, input.getTimestamp());
         return Future.failedFuture(new IllegalArgumentException("State does not exist"));
       }
       input.setCompleted(LocalDateTime.now(ZoneOffset.UTC));
@@ -152,15 +155,15 @@ public class LoginDaoMemoryImpl implements LoginDao {
   }
   
   @Override
-  public Future<RequestData> getRequestData(String state) {
+  public Future<RequestData> getRequestData(RequestContext requestContext, String state) {
     synchronized (data) {
       Data input = data.get(state);
       if (input == null) {
-        logger.debug("State {} not found in {}", state, Json.encode(data.keySet()));
+        Log.decorate(logger.atDebug(), requestContext).log("State {} not found in {}", state, Json.encode(data.keySet()));
         return Future.failedFuture(new IllegalArgumentException("State does not exist"));
       }
       if (input.completed != null) {
-        logger.debug("State {} already marked completed at {}", state, input.completed);
+        Log.decorate(logger.atDebug(), requestContext).log("State {} already marked completed at {}", state, input.completed);
         return Future.failedFuture(new IllegalArgumentException("State does not exist"));
       }
       return Future.succeededFuture(input.getRequestData());
@@ -168,7 +171,7 @@ public class LoginDaoMemoryImpl implements LoginDao {
   }
 
   @Override
-  public Future<Void> storeTokens(String id, LocalDateTime expiry, String token, String provider, String refreshToken, String idToken) {
+  public Future<Void> storeTokens(RequestContext requestContext, String id, LocalDateTime expiry, String token, String provider, String refreshToken, String idToken) {
     synchronized (tokens) {
       tokens.put(id, new Token(expiry, token, provider, refreshToken, idToken));
     }
@@ -176,7 +179,7 @@ public class LoginDaoMemoryImpl implements LoginDao {
   }
 
   @Override
-  public Future<String> getToken(String id) {
+  public Future<String> getToken(RequestContext requestContext, String id) {
     synchronized (tokens) {
       Token token = tokens.get(id);
       if (token == null) {
@@ -193,7 +196,7 @@ public class LoginDaoMemoryImpl implements LoginDao {
   }
 
   @Override
-  public Future<ProviderAndTokens> getProviderAndTokens(String sessionId) {
+  public Future<ProviderAndTokens> getProviderAndTokens(RequestContext requestContext, String sessionId) {
     LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
     ProviderAndTokens result = null;
     synchronized (tokens) {
@@ -215,7 +218,7 @@ public class LoginDaoMemoryImpl implements LoginDao {
   }
   
   @Override
-  public Future<Void> removeToken(String sessionId) {
+  public Future<Void> removeToken(RequestContext requestContext, String sessionId) {
     synchronized (tokens) {
       tokens.remove(sessionId);
       return Future.succeededFuture(null);

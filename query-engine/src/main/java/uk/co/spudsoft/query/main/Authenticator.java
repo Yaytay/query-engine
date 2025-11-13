@@ -245,7 +245,7 @@ public class Authenticator {
 
       request.pause();
       
-      return loginDao.getToken(sessionCookie.getValue())
+      return loginDao.getToken(requestContext, sessionCookie.getValue())
               .compose(token -> {
                 if (token == null) {
                   log.info().log("No valid token for cookie {}", sessionCookie.getValue());

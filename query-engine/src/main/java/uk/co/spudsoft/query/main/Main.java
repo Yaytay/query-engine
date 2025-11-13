@@ -652,7 +652,7 @@ public class Main extends Application {
     });
     AuthenticationRouter rch = new AuthenticationRouter(vertx, authenticator, outputAllErrorMessages());
     router.route("/api/*").handler(rch);
-    router.route("/api/*").handler(new JaxRsHandler(vertx, meterRegistry, "/api", controllers, providers));
+    router.route("/api/*").handler(new JaxRsHandler(vertx, meterRegistry, "/api", controllers, providers, true, false));
     router.route("/ui/*").handler(UiRouter.create(vertx, meterRegistry, "/ui", "/www", "/www/index.html"));
     router.route("/tableau*").handler(TableauWDCRouter.create(vertx));
     router.getWithRegex("/openapi\\..*").blockingHandler(openApiHandler);

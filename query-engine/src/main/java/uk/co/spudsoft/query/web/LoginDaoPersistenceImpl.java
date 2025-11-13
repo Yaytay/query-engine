@@ -41,6 +41,8 @@ import liquibase.exception.LiquibaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.JdbcHelper;
+import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.main.DataSourceConfig;
 import uk.co.spudsoft.query.main.Persistence;
 
@@ -333,8 +335,8 @@ public class LoginDaoPersistenceImpl implements LoginDao {
   }
 
   @Override
-  public Future<Void> store(String state, String provider, String codeVerifier, String nonce, String redirectUri, String targetUrl) {
-    logger.debug("store: {} {} {} {} {} {} {} {} {} {}",
+  public Future<Void> store(RequestContext requestContext, String state, String provider, String codeVerifier, String nonce, String redirectUri, String targetUrl) {
+    Log.decorate(logger.atDebug(), requestContext).log("store: {} {} {} {} {} {} {} {} {} {}",
              state,
              provider,
              codeVerifier,
@@ -356,7 +358,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
   }
 
   @Override
-  public Future<Void> markUsed(String state) {
+  public Future<Void> markUsed(RequestContext requestContext, String state) {
     return jdbcHelper.runSqlUpdate("markUsed", SqlTemplate.MARK_USED.sql(), ps -> {
                     int param = 1;
                     JdbcHelper.setLocalDateTimeUTC(ps, param++, LocalDateTime.now(ZoneOffset.UTC));
@@ -373,7 +375,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
   }
 
   @Override
-  public Future<RequestData> getRequestData(String state) {
+  public Future<RequestData> getRequestData(RequestContext requestContext, String state) {
     return jdbcHelper.runSqlSelect(SqlTemplate.GET_DATA.sql(), ps -> {
         ps.setString(1, state);
       }, rs -> {
@@ -392,8 +394,8 @@ public class LoginDaoPersistenceImpl implements LoginDao {
   }
 
   @Override
-  public Future<Void> storeTokens(String id, LocalDateTime expiry, String token, String provider, String refreshToken, String idToken) {
-    cacheToken(id, new TimestampedToken(expiry, token));
+  public Future<Void> storeTokens(RequestContext requestContext, String id, LocalDateTime expiry, String token, String provider, String refreshToken, String idToken) {
+    cacheToken(requestContext, id, new TimestampedToken(expiry, token));
     return jdbcHelper.runSqlUpdate("storeToken", SqlTemplate.STORE_TOKENS.sql(), ps -> {
                     int param = 1;
                     ps.setString(param++, id);
@@ -406,12 +408,12 @@ public class LoginDaoPersistenceImpl implements LoginDao {
   }
 
   @Override
-  public Future<String> getToken(String id) {
+  public Future<String> getToken(RequestContext requestContext, String id) {
     LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
     synchronized (tokenCache) {
       TimestampedToken token = tokenCache.get(id);
       if (token != null) {
-        logger.debug("Now: {}, Expiry: {}", now, token.expiry);
+        Log.decorate(logger.atDebug(), requestContext).log("Now: {}, Expiry: {}", now, token.expiry);
         if (token.expiry.isBefore(now)) {
           tokenCache.remove(id);
           tokenCache.entrySet().removeIf(entry -> entry.getValue().expiry.isBefore(now));
@@ -425,8 +427,8 @@ public class LoginDaoPersistenceImpl implements LoginDao {
         ps.setString(1, id);
       }, rs -> {
         while (rs.next()) {
-          logger.debug("rs.getTimestamp(1): {}", rs.getTimestamp(1));
-          logger.debug("rs.getTimestamp(1).toLocalDateTime(): {}", rs.getTimestamp(1).toLocalDateTime());
+          Log.decorate(logger.atDebug(), requestContext).log("rs.getTimestamp(1): {}", rs.getTimestamp(1));
+          Log.decorate(logger.atDebug(), requestContext).log("rs.getTimestamp(1).toLocalDateTime(): {}", rs.getTimestamp(1).toLocalDateTime());
           LocalDateTime expiry = rs.getTimestamp(1).toLocalDateTime();
           return new TimestampedToken(expiry, rs.getString(2));
         }
@@ -434,13 +436,13 @@ public class LoginDaoPersistenceImpl implements LoginDao {
       })
       .compose(tt -> {
         if (tt != null) {
-          logger.debug("Now: {}, Expiry: {}", now, tt.expiry);
+          Log.decorate(logger.atDebug(), requestContext).log("Now: {}, Expiry: {}", now, tt.expiry);
           if (now.isAfter(tt.expiry)) {
             jdbcHelper.runSqlUpdate("deleteToken", SqlTemplate.DELETE_TOKEN.sql(), ps -> ps.setString(1, id));
             jdbcHelper.runSqlUpdate("expireTokens", SqlTemplate.EXPIRE_TOKENS.sql(), ps -> JdbcHelper.setLocalDateTimeUTC(ps, 1, now));
             return Future.succeededFuture(null);
           } else {
-            cacheToken(id, tt);
+            cacheToken(requestContext, id, tt);
             return Future.succeededFuture(tt.token);
           }
         }
@@ -450,7 +452,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
 
 
   @Override
-  public Future<ProviderAndTokens> getProviderAndTokens(String sessionId) {
+  public Future<ProviderAndTokens> getProviderAndTokens(RequestContext requestContext, String sessionId) {
     return jdbcHelper.runSqlSelect(SqlTemplate.GET_PROVIDER_AND_TOKENS.sql(), ps -> {
         ps.setString(1, sessionId);
       }, rs -> {
@@ -471,7 +473,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
    * @param id Token ID.
    * @param tt Token, with timestamp.
    */
-  void cacheToken(String id, TimestampedToken tt) {
+  void cacheToken(RequestContext requestContext, String id, TimestampedToken tt) {
     Entry<String, TimestampedToken> oldest = null;
     int cacheSize;
     synchronized (tokenCache) {
@@ -490,12 +492,12 @@ public class LoginDaoPersistenceImpl implements LoginDao {
       tokenCache.put(id, tt);
     }
     if (oldest != null) {
-      logger.debug("Token cache contains {} entries, removed entry for {} to accomodate {}", cacheSize, oldest.getKey(), id);
+      Log.decorate(logger.atDebug(), requestContext).log("Token cache contains {} entries, removed entry for {} to accomodate {}", cacheSize, oldest.getKey(), id);
     }
   }
 
   @Override
-  public Future<Void> removeToken(String sessionId) {
+  public Future<Void> removeToken(RequestContext requestContext, String sessionId) {
     synchronized (tokenCache) {
       tokenCache.remove(sessionId);
     }

@@ -44,7 +44,7 @@ public class InfoHandlerTest {
     ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
     AsyncResponse response = mock(AsyncResponse.class);
     Throwable ex = new ServiceException(456, "It went wrong");
-    InfoHandler.reportError(logger, log, response, ex, true);
+    InfoHandler.reportError(null, logger, log, response, ex, true);
     verify(response).resume(responseCaptor.capture());
     assertEquals(456, responseCaptor.getValue().getStatus());
     assertEquals("It went wrong (from ServiceException@uk.co.spudsoft.query.web.rest.InfoHandlerTest:46)", responseCaptor.getValue().getEntity());
@@ -57,7 +57,7 @@ public class InfoHandlerTest {
     ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
     AsyncResponse response = mock(AsyncResponse.class);
     Throwable ex = new IllegalArgumentException("It went wrong");
-    InfoHandler.reportError(logger, log, response, ex, false);
+    InfoHandler.reportError(null, logger, log, response, ex, false);
     verify(response).resume(responseCaptor.capture());
     assertEquals(400, responseCaptor.getValue().getStatus());
     assertEquals("It went wrong", responseCaptor.getValue().getEntity());
@@ -70,7 +70,7 @@ public class InfoHandlerTest {
     ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
     AsyncResponse response = mock(AsyncResponse.class);
     Throwable ex = new NullPointerException("It went wrong");
-    InfoHandler.reportError(logger, log, response, ex, false);
+    InfoHandler.reportError(null, logger, log, response, ex, false);
     verify(response).resume(responseCaptor.capture());
     assertEquals(500, responseCaptor.getValue().getStatus());
     assertEquals("Unknown error", responseCaptor.getValue().getEntity());
@@ -83,7 +83,7 @@ public class InfoHandlerTest {
     ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
     AsyncResponse response = mock(AsyncResponse.class);
     Throwable ex = new FileSystemException("It went wrong", new NoSuchFileException("Not found"));
-    InfoHandler.reportError(logger, log, response, ex, false);
+    InfoHandler.reportError(null, logger, log, response, ex, false);
     verify(response).resume(responseCaptor.capture());
     assertEquals(404, responseCaptor.getValue().getStatus());
     assertEquals("Not found", responseCaptor.getValue().getEntity());
@@ -96,7 +96,7 @@ public class InfoHandlerTest {
     ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
     AsyncResponse response = mock(AsyncResponse.class);
     Throwable ex = new FileSystemException("It went wrong", new IllegalArgumentException("Bad argument"));
-    InfoHandler.reportError(logger, log, response, ex, false);
+    InfoHandler.reportError(null, logger, log, response, ex, false);
     verify(response).resume(responseCaptor.capture());
     assertEquals(500, responseCaptor.getValue().getStatus());
     assertEquals("Unknown error", responseCaptor.getValue().getEntity());

@@ -22,6 +22,7 @@ import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.main.Authenticator;
 
 /**
@@ -58,7 +59,7 @@ public class AuthenticationRouter implements Handler<RoutingContext> {
             .authenticate(event, RequestContext.retrieveRequestContext(event))
             .onSuccess(requestContext -> {
               Vertx.currentContext().put(KEY, requestContext);
-              logger.debug("Context found for request to {}", event.request().absoluteURI());
+              Log.decorate(logger.atDebug(), requestContext).log("Context found for request to {}", event.request().absoluteURI());
               event.next();
             })
             .onFailure(ex -> {

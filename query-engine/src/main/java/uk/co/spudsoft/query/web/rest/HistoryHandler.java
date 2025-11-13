@@ -134,6 +134,7 @@ public class HistoryHandler {
             @QueryParam("desc") 
             Boolean sortDescending
   ) {
+    RequestContext unauthedRequestContext = RequestContext.retrieveRequestContext(routingContext);
     try {
       RequestContext requestContext = HandlerAuthHelper.getRequestContext(routingContext, true);
       
@@ -151,11 +152,11 @@ public class HistoryHandler {
                 response.resume(Response.ok(history, MediaType.APPLICATION_JSON).build());
               })
               .onFailure(ex -> {
-                reportError(logger, "Failed to get history data: ", response, ex, outputAllErrorMessages);
+                reportError(unauthedRequestContext, logger, "Failed to get history data: ", response, ex, outputAllErrorMessages);
               });
       
     } catch (Throwable ex) {
-      reportError(logger, "Failed to get history data: ", response, ex, outputAllErrorMessages);
+      reportError(unauthedRequestContext, logger, "Failed to get history data: ", response, ex, outputAllErrorMessages);
     }    
   }
   

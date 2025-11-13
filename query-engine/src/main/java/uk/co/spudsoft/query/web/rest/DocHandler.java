@@ -54,6 +54,7 @@ import java.util.Set;
 import java.util.Stack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.web.MimeTypes;
 import static uk.co.spudsoft.query.web.rest.InfoHandler.reportError;
 
@@ -290,6 +291,7 @@ public class DocHandler {
           @Context RoutingContext routingContext
           , @Suspended final AsyncResponse response
   ) {
+    RequestContext unauthedRequestContext = RequestContext.retrieveRequestContext(routingContext);
     try {
       HandlerAuthHelper.getRequestContext(routingContext, requireSession);
 
@@ -300,7 +302,7 @@ public class DocHandler {
         response.resume(Response.ok(docsRoot, MediaType.APPLICATION_JSON).build());
       }
     } catch (Throwable ex) {
-      reportError(logger, "Failed to generate list of available documentation: ", response, ex, outputAllErrorMessages);
+      reportError(unauthedRequestContext, logger, "Failed to generate list of available documentation: ", response, ex, outputAllErrorMessages);
     }
 
   }
@@ -308,6 +310,7 @@ public class DocHandler {
   /**
    * Get a single file from the documentation.
    *
+   * @param routingContext The Vert.x routing context.
    * @param response JAX-RS Asynchronous response, connected to the Vertx request by the RESTeasy JAX-RS implementation.
    * @param path Path to the requested file.
    */
@@ -321,12 +324,14 @@ public class DocHandler {
   )
   @SuppressFBWarnings(value = "PATH_TRAVERSAL_IN", justification = "User has specified the path to use for alternative documentation")
   public void getDoc(
+          @Context RoutingContext routingContext,
           @Suspended final AsyncResponse response,
           @Schema(
                   description = "The path to the document, as returned by a call to get /api/docs"
           )
           @PathParam("path") String path
   ) {
+    RequestContext unauthedRequestContext = RequestContext.retrieveRequestContext(routingContext);
 
     try {
       if (knownDocs.contains(path)) {
@@ -346,7 +351,7 @@ public class DocHandler {
         throw new FileNotFoundException(path);
       }
     } catch (Throwable ex) {
-      reportError(logger, "Failed to get requested documentation: ", response, ex, outputAllErrorMessages);
+      reportError(unauthedRequestContext, logger, "Failed to get requested documentation: ", response, ex, outputAllErrorMessages);
     }
 
   }

@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.web.rest;
 
+import inet.ipaddr.IPAddressString;
 import jakarta.ws.rs.container.AsyncResponse;
 import jakarta.ws.rs.core.Response;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,6 +26,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.web.ServiceException;
 
 /**
@@ -42,7 +44,8 @@ public class InfoHandlerTest {
     ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
     AsyncResponse response = mock(AsyncResponse.class);
     Throwable ex = new ServiceException(456, "It went wrong");
-    InfoHandler.reportError(logger, log, response, ex, true);
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    InfoHandler.reportError(reqctx, logger, log, response, ex, true);
     verify(response).resume(responseCaptor.capture());
     assertEquals(456, responseCaptor.getValue().getStatus());
     assertEquals("It went wrong (from ServiceException@uk.co.spudsoft.query.web.rest.InfoHandlerTest:44)", responseCaptor.getValue().getEntity());
@@ -55,7 +58,8 @@ public class InfoHandlerTest {
     ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
     AsyncResponse response = mock(AsyncResponse.class);
     Throwable ex = new IllegalArgumentException("It went wrong");
-    InfoHandler.reportError(logger, log, response, ex, false);
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    InfoHandler.reportError(reqctx, logger, log, response, ex, false);
     verify(response).resume(responseCaptor.capture());
     assertEquals(400, responseCaptor.getValue().getStatus());
     assertEquals("It went wrong", responseCaptor.getValue().getEntity());
@@ -68,7 +72,8 @@ public class InfoHandlerTest {
     ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
     AsyncResponse response = mock(AsyncResponse.class);
     Throwable ex = new NullPointerException("It went wrong");
-    InfoHandler.reportError(logger, log, response, ex, false);
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    InfoHandler.reportError(reqctx, logger, log, response, ex, false);
     verify(response).resume(responseCaptor.capture());
     assertEquals(500, responseCaptor.getValue().getStatus());
     assertEquals("Unknown error", responseCaptor.getValue().getEntity());

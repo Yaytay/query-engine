@@ -161,6 +161,7 @@ public class FormIoHandler {
     }
     int colCount = columns == null ? 1 : columns;
     
+    RequestContext unauthedRequestContext = RequestContext.retrieveRequestContext(routingContext);
     try {
       RequestContext requestContext = HandlerAuthHelper.getRequestContext(routingContext, requireSession);
 
@@ -176,10 +177,10 @@ public class FormIoHandler {
                 response.resume(Response.ok(fd, MediaType.APPLICATION_JSON).build());
               })
               .onFailure(ex -> {
-                reportError(logger, "Failed to generate list of available pipelines: ", response, ex, outputAllErrorMessages);
+                reportError(unauthedRequestContext, logger, "Failed to generate list of available pipelines: ", response, ex, outputAllErrorMessages);
               });
     } catch (Throwable ex) {
-      reportError(logger, "Failed to get FormIO data: ", response, ex, outputAllErrorMessages);
+      reportError(unauthedRequestContext, logger, "Failed to get FormIO data: ", response, ex, outputAllErrorMessages);
     }    
 
   }

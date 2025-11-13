@@ -83,6 +83,7 @@ public class SessionHandler {
           @Context RoutingContext routingContext
           , @Suspended final AsyncResponse response
   ) {
+    RequestContext unauthedRequestContext = RequestContext.retrieveRequestContext(routingContext);
     try {
       RequestContext requestContext = HandlerAuthHelper.getRequestContext(routingContext, requireSession);
       Jwt jwt = requestContext.getJwt();
@@ -96,7 +97,7 @@ public class SessionHandler {
 
       response.resume(profile);
     } catch (Throwable ex) {
-      reportError(logger, "Failed to get profile: ", response, ex, outputAllErrorMessages);
+      reportError(unauthedRequestContext, logger, "Failed to get profile: ", response, ex, outputAllErrorMessages);
     }    
   }
   

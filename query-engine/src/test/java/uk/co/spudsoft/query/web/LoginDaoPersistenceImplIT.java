@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.web;
 
+import inet.ipaddr.IPAddressString;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
@@ -33,6 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import uk.co.spudsoft.query.exec.AuditorPersistenceImpl;
 import uk.co.spudsoft.query.exec.JdbcHelper;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.main.Credentials;
 import uk.co.spudsoft.query.main.DataSourceConfig;
 import uk.co.spudsoft.query.main.Persistence;
@@ -77,9 +79,11 @@ public class LoginDaoPersistenceImplIT {
     String id1 = UUID.randomUUID().toString();
     String id2 = UUID.randomUUID().toString();
     
-    instance.storeTokens(id1, now.minusSeconds(1), "token1", "test", "refresh", "id")
-            .compose(v -> instance.storeTokens(id2, now.plusSeconds(1), "token2", "test", "refresh", "id"))
-            .compose(v -> instance.getToken(id1))
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    
+    instance.storeTokens(reqctx, id1, now.minusSeconds(1), "token1", "test", "refresh", "id")
+            .compose(v -> instance.storeTokens(reqctx, id2, now.plusSeconds(1), "token2", "test", "refresh", "id"))
+            .compose(v -> instance.getToken(reqctx, id1))
             .onFailure(ex -> testContext.failNow("Failed to get token"))
             .onSuccess(s -> {
               testContext.verify(() -> {
@@ -113,9 +117,11 @@ public class LoginDaoPersistenceImplIT {
     
     String baseId = "testTokenCacheOverflowPostgres@" + ManagementFactory.getRuntimeMXBean().getName() + ": ";
     
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    
     List<Future<Void>> futures = new ArrayList<>();
     for (int i = 0; i < 1500; ++i) {
-      futures.add(instance.storeTokens(baseId + i, now.plusMinutes(1), "token", "test", null, null));
+      futures.add(instance.storeTokens(reqctx, baseId + i, now.plusMinutes(1), "token", "test", null, null));
     }
     
     Future.all(futures)
@@ -153,9 +159,11 @@ public class LoginDaoPersistenceImplIT {
     String id1 = UUID.randomUUID().toString();
     String id2 = UUID.randomUUID().toString();
     
-    instance.storeTokens(id1, now.minusSeconds(1), "token1", "test", null, null)
-            .compose(v -> instance.storeTokens(id2, now.plusSeconds(1), "token2", "test", null, null))
-            .compose(v -> instance.getToken(id1))
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    
+    instance.storeTokens(reqctx, id1, now.minusSeconds(1), "token1", "test", null, null)
+            .compose(v -> instance.storeTokens(reqctx, id2, now.plusSeconds(1), "token2", "test", null, null))
+            .compose(v -> instance.getToken(reqctx, id1))
             .onFailure(ex -> testContext.failNow("Failed to get token"))
             .onSuccess(s -> {
               testContext.verify(() -> {
@@ -189,9 +197,11 @@ public class LoginDaoPersistenceImplIT {
     
     String baseId = "testTokenCacheOverflowMySQL@" + ManagementFactory.getRuntimeMXBean().getName() + ": ";
     
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    
     List<Future<Void>> futures = new ArrayList<>();
     for (int i = 0; i < 1500; ++i) {
-      futures.add(instance.storeTokens(baseId + i, now.plusMinutes(1), "token", "test", null, null));
+      futures.add(instance.storeTokens(reqctx, baseId + i, now.plusMinutes(1), "token", "test", null, null));
     }
     
     Future.all(futures)
@@ -228,10 +238,12 @@ public class LoginDaoPersistenceImplIT {
     
     String id1 = UUID.randomUUID().toString();
     String id2 = UUID.randomUUID().toString();
+   
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     
-    instance.storeTokens(id1, now.minusSeconds(1), "token1", "test", null, null)
-            .compose(v -> instance.storeTokens(id2, now.plusSeconds(1), "token2", "test", null, null))
-            .compose(v -> instance.getToken(id1))
+    instance.storeTokens(reqctx, id1, now.minusSeconds(1), "token1", "test", null, null)
+            .compose(v -> instance.storeTokens(reqctx, id2, now.plusSeconds(1), "token2", "test", null, null))
+            .compose(v -> instance.getToken(reqctx, id1))
             .onFailure(ex -> testContext.failNow("Failed to get token"))
             .onSuccess(s -> {
               testContext.verify(() -> {
@@ -265,9 +277,11 @@ public class LoginDaoPersistenceImplIT {
     
     String baseId = "testTokenCacheOverflowMsSQL@" + ManagementFactory.getRuntimeMXBean().getName() + ": ";
     
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    
     List<Future<Void>> futures = new ArrayList<>();
     for (int i = 0; i < 1500; ++i) {
-      futures.add(instance.storeTokens(baseId + i, now.plusMinutes(1), "token", "test", null, null));
+      futures.add(instance.storeTokens(reqctx, baseId + i, now.plusMinutes(1), "token", "test", null, null));
     }
     
     Future.all(futures)

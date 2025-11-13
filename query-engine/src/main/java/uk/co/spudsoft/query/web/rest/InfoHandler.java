@@ -26,6 +26,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.vertx.core.Future;
 import io.vertx.core.file.FileSystemException;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -41,6 +42,7 @@ import java.nio.file.NoSuchFileException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.main.ExceptionToString;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 import uk.co.spudsoft.query.web.ServiceException;
@@ -99,20 +101,22 @@ public class InfoHandler {
           @Context RoutingContext routingContext
           , @Suspended final AsyncResponse response
   ) {
+    RequestContext unauthedRequestContext = RequestContext.retrieveRequestContext(routingContext);
     try {
       RequestContext requestContext = HandlerAuthHelper.getRequestContext(routingContext, requireSession);
-      logger.debug("RequestId: {}", requestContext.getRequestId());
+      Log.decorate(logger.atDebug(), unauthedRequestContext).log("RequestId: {}", requestContext.getRequestId());
 
       loader.getAccessible(requestContext)
               .onSuccess(ap -> {
-                logger.debug("RequestId: {}", requestContext.getRequestId());
-                response.resume(Response.ok(ap, MediaType.APPLICATION_JSON).build());
+                JsonObject json = JsonObject.mapFrom(ap);
+                Log.decorate(logger.atDebug(), unauthedRequestContext).log("Available: {}", json);
+                response.resume(Response.ok(json, MediaType.APPLICATION_JSON).build());
               })
               .onFailure(ex -> {
-                reportError(logger, "Failed to generate list of available pipelines: ", response, ex, outputAllErrorMessages);
+                reportError(unauthedRequestContext, logger, "Failed to generate list of available pipelines: ", response, ex, outputAllErrorMessages);
               });
     } catch (Throwable ex) {
-      reportError(logger, "Failed to getAvailable pipelines: ", response, ex, outputAllErrorMessages);
+      reportError(unauthedRequestContext, logger, "Failed to getAvailable pipelines: ", response, ex, outputAllErrorMessages);
     }    
   }
   
@@ -148,6 +152,7 @@ public class InfoHandler {
             String path
           , @Suspended final AsyncResponse response
   ) {
+    RequestContext unauthedRequestContext = RequestContext.retrieveRequestContext(routingContext);
     try {
       RequestContext requestContext = HandlerAuthHelper.getRequestContext(routingContext, requireSession);
 
@@ -174,10 +179,10 @@ public class InfoHandler {
                 response.resume(Response.ok(fd, MediaType.APPLICATION_JSON).build());
               })
               .onFailure(ex -> {
-                reportError(logger, "Failed to generate list of available pipelines: ", response, ex, outputAllErrorMessages);
+                reportError(unauthedRequestContext, logger, "Failed to generate list of available pipelines: ", response, ex, outputAllErrorMessages);
               });
     } catch (Throwable ex) {
-      reportError(logger, "Failed to get FormIO data: ", response, ex, outputAllErrorMessages);
+      reportError(unauthedRequestContext, logger, "Failed to get FormIO data: ", response, ex, outputAllErrorMessages);
     }    
 
   }
@@ -186,13 +191,14 @@ public class InfoHandler {
    * Report an error to the JAX-RS {@link jakarta.ws.rs.container.AsyncResponse}.
    * 
    * @param logger The logger to use for logging the error, so that this method may be used by any of the JAX-RS handlers.
+   * @param requestContext The context in which this request is being made.
    * @param log The message to write to the log.
    * @param response JAX-RS Asynchronous response, connected to the Vertx request by the RESTeasy JAX-RS implementation.
    * @param ex The exception to report.
    * @param outputAllErrorMessages In a production environment error messages should usually not leak information that may assist a bad actor, set this to true to return full details in error responses.
    */
-  static void reportError(Logger logger, String log, AsyncResponse response, Throwable ex, boolean outputAllErrorMessages) {
-    logger.error(log, ex);
+  static void reportError(RequestContext requestContext, Logger logger, String log, AsyncResponse response, Throwable ex, boolean outputAllErrorMessages) {
+    Log.decorate(logger.atError(), requestContext).log(log, ex);
     
     int statusCode = 500;
     String message = "Unknown error";

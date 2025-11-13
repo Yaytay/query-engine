@@ -32,6 +32,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.FileSystem;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.Json;
+import io.vertx.ext.web.RoutingContext;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -61,6 +62,7 @@ import uk.co.spudsoft.dircache.DirCache;
 import uk.co.spudsoft.dircache.DirCacheTree;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.FormatRequest;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 import uk.co.spudsoft.query.web.ServiceException;
 import static uk.co.spudsoft.query.web.rest.InfoHandler.reportError;
@@ -276,6 +278,7 @@ public class DesignHandler {
    * Checks if the design mode is enabled and returns a boolean value as a JSON response.
    *
    * @param response The suspended AsyncResponse that will be used to asynchronously return the result.
+   * @param routingContext The Vert.x {@link RoutingContext}.
    * @param request The HTTP request received from the client, used for context or metadata if needed.
    */
   @GET
@@ -292,13 +295,16 @@ public class DesignHandler {
   )
   public void getEnabled(
           @Suspended final AsyncResponse response
+          , @Context RoutingContext routingContext
           , @Context HttpServerRequest request
   ) {
+    RequestContext unauthedRequestContext = RequestContext.retrieveRequestContext(routingContext);
+    
     try {
       String json = Json.encode(Boolean.TRUE);
       response.resume(Response.ok(json, MEDIA_TYPE_JSON).build());
     } catch (Throwable ex) {
-      reportError(logger, "Failed to return true: ", response, ex, true);
+      reportError(unauthedRequestContext, logger, "Failed to return true: ", response, ex, true);
     }
   }
 
@@ -306,6 +312,7 @@ public class DesignHandler {
    * Retrieves a list of all files and directories known and sends the result as a JSON response.
    *
    * @param response The asynchronous response used to return the result of the operation.
+   * @param routingContext The Vert.x {@link RoutingContext}.
    * @param request The HTTP server request providing context or metadata for the operation.
    */
   @GET
@@ -322,14 +329,16 @@ public class DesignHandler {
   )
   public void getAll(
           @Suspended final AsyncResponse response
+          , @Context RoutingContext routingContext
           , @Context HttpServerRequest request
   ) {
+    RequestContext unauthedRequestContext = RequestContext.retrieveRequestContext(routingContext);
     try {
       DesignNodesTree.DesignDir relativeDir = new DesignNodesTree.DesignDir(root, dirCache.getRoot(), "");
       String json = Json.encode(relativeDir);
       response.resume(Response.ok(json, MEDIA_TYPE_JSON).build());
     } catch (Throwable ex) {
-      reportError(logger, "Failed to generate list of pipelines: ", response, ex, true);
+      reportError(unauthedRequestContext, logger, "Failed to generate list of pipelines: ", response, ex, true);
     }
   }
 
@@ -371,6 +380,7 @@ public class DesignHandler {
    * with a failure status is sent back to the client.
    *
    * @param response the asynchronous response object, which is used to send the response back to the client
+   * @param routingContext The Vert.x {@link RoutingContext}.
    * @param request the HTTP server request containing context about the incoming request
    * @param path the relative path of the file to retrieve, resolved to an absolute path in the method
    * @param accept the `accept` header from the HTTP request, indicating the desired response content type
@@ -388,10 +398,12 @@ public class DesignHandler {
   )
   public void getFile(
           @Suspended final AsyncResponse response
+          , @Context RoutingContext routingContext
           , @Context HttpServerRequest request
           , @PathParam("path") String path
           , @HeaderParam("accept") String accept
   ) {
+    RequestContext unauthedRequestContext = RequestContext.retrieveRequestContext(routingContext);
     try {
       path = normalizePath("Get", "file", path);
       String fullPath = resolveToAbsolutePath(path);
@@ -423,11 +435,11 @@ public class DesignHandler {
                 response.resume(Response.ok(buffer.getBytes(), type).build());
               })
               .onFailure(ex -> {
-                reportError(logger, "Failed to get file: ", response, ex, true);
+                reportError(unauthedRequestContext, logger, "Failed to get file: ", response, ex, true);
               });
 
     } catch (Throwable ex) {
-      reportError(logger, "Failed to get file: ", response, ex, true);
+      reportError(unauthedRequestContext, logger, "Failed to get file: ", response, ex, true);
     }
   }
 
@@ -435,11 +447,12 @@ public class DesignHandler {
    * Handles a file change event by refreshing the directory cache and sending an appropriate HTTP response.
    * This method triggers asynchronous operations to manage the directory changes and respond to the client.
    *
+   * @param requestContext  The request context.
    * @param ar The result of the asynchronous operation indicating success or failure.
    * @param response The asynchronous response object used to send the HTTP response back to the client.
    * @param action The description of the action performed, used for logging and error messages.
    */
-  private void handleFileChange(AsyncResult<Void> ar, AsyncResponse response, String action) {
+  private void handleFileChange(RequestContext requestContext, AsyncResult<Void> ar, AsyncResponse response, String action) {
     if (ar.succeeded()) {
       vertx.<Void>executeBlocking(() -> {
                   dirCache.refresh();
@@ -451,10 +464,10 @@ public class DesignHandler {
                 response.resume(Response.ok(json, MEDIA_TYPE_JSON).build());
               })
               .onFailure(ex -> {
-                reportError(logger, "Failed to " + action + ": ", response, ex, true);
+                reportError(requestContext, logger, "Failed to " + action + ": ", response, ex, true);
               });
     } else {
-      reportError(logger, "Failed to " + action + ": ", response, ar.cause(), true);
+      reportError(requestContext, logger, "Failed to " + action + ": ", response, ar.cause(), true);
     }
   }
 
@@ -484,6 +497,7 @@ public class DesignHandler {
    * issues, validation failures, or other processing exceptions.
    *
    * @param response Asynchronous response to send the validation result back to the client.
+   * @param routingContext The Vert.x {@link RoutingContext}.
    * @param request The HTTP request object to determine context including content type.
    * @param body The binary body of the request containing the pipeline definition.
    */
@@ -501,9 +515,11 @@ public class DesignHandler {
   )
   public void validate(
           @Suspended final AsyncResponse response
+          , @Context RoutingContext routingContext
           , @Context HttpServerRequest request
           , byte[] body
   ) {
+    RequestContext unauthedRequestContext = RequestContext.retrieveRequestContext(routingContext);
     try {
       logger.debug("validate ({} bytes)", body.length);
       MediaType contentType = getContentType(request);
@@ -514,14 +530,14 @@ public class DesignHandler {
           forValidation = PipelineDefnLoader.YAML_OBJECT_MAPPER.readValue(body, Pipeline.class);
         } catch (Throwable ex) {
           logger.warn("The YAML body cannot be parsed as a Pipeline: {}", ex);
-          reportError(logger, "The YAML body cannot be parsed as a Pipeline: " + ex.getMessage(), response, new ServiceException(400, "The YAML body cannot be parsed as a Pipeline: " + ex.getMessage()), true);
+          reportError(unauthedRequestContext, logger, "The YAML body cannot be parsed as a Pipeline: " + ex.getMessage(), response, new ServiceException(400, "The YAML body cannot be parsed as a Pipeline: " + ex.getMessage()), true);
         }
       } else if (MEDIA_TYPE_JSON_TYPE.isCompatible(contentType)) {
         try {
           forValidation = PipelineDefnLoader.JSON_OBJECT_MAPPER.readValue(body, Pipeline.class);
         } catch (Throwable ex) {
           logger.warn("The JSON body cannot be parsed as a Pipeline: {}", ex);
-          reportError(logger, "The JSON body cannot be parsed as a Pipeline: " + ex.getMessage(), response, new ServiceException(400, "The JSON body cannot be parsed as a Pipeline: " + ex.getMessage()), true);
+          reportError(unauthedRequestContext, logger, "The JSON body cannot be parsed as a Pipeline: " + ex.getMessage(), response, new ServiceException(400, "The JSON body cannot be parsed as a Pipeline: " + ex.getMessage()), true);
         }
       }
       if (forValidation != null) {
@@ -529,7 +545,7 @@ public class DesignHandler {
           forValidation.validate();
         } catch (Throwable ex) {
           logger.warn("The Pipeline is not valid: {}", ex);
-          reportError(logger, "The Pipeline is not valid: " + ex.getMessage(), response, new ServiceException(400, "The Pipeline is not valid: " + ex.getMessage()), true);
+          reportError(unauthedRequestContext, logger, "The Pipeline is not valid: " + ex.getMessage(), response, new ServiceException(400, "The Pipeline is not valid: " + ex.getMessage()), true);
         }
       }
       logger.debug("The pipeline is valid");
@@ -537,7 +553,7 @@ public class DesignHandler {
 
     } catch (Throwable ex) {
       logger.warn("Failed to validate file: ", ex);
-      reportError(logger, "Failed to validate file: ", response, ex, true);
+      reportError(unauthedRequestContext, logger, "Failed to validate file: ", response, ex, true);
     }
   }
 
@@ -548,6 +564,7 @@ public class DesignHandler {
    * and validation when necessary.
    *
    * @param response The asynchronous response used to manage the request lifecycle.
+   * @param routingContext The Vert.x {@link RoutingContext}.
    * @param request The HTTP server request containing details such as headers and content type.
    * @param path The path where the file or folder is to be created, relative to the base directory. This must
    *             not start with a '/' and should conform to valid file or folder naming conventions.
@@ -568,15 +585,17 @@ public class DesignHandler {
   )
   public void putFile(
           @Suspended final AsyncResponse response
+          , @Context RoutingContext routingContext
           , @Context HttpServerRequest request
           , @PathParam("path") String path
           , byte[] body
   ) {
+    RequestContext unauthedRequestContext = RequestContext.retrieveRequestContext(routingContext);
     try {
       MediaType contentType = getContentType(request);
 
       if (path.startsWith("/")) {
-        reportError(logger, "The path (" + path + ") must not start with a '/'", response, new ServiceException(400, "Illegal path name"), true);
+        reportError(unauthedRequestContext, logger, "The path (" + path + ") must not start with a '/'", response, new ServiceException(400, "Illegal path name"), true);
         return ;
       }
 
@@ -587,7 +606,7 @@ public class DesignHandler {
         String fullPath = resolveToAbsolutePath(path);
 
         if (!GOOD_FOLDER_PATH.matcher(fullPath).matches()) {
-          reportError(logger, "Folder path (" + fullPath + ") does not match " + GOOD_FOLDER_PATH, response, new ServiceException(400, "Illegal folder name"), true);
+          reportError(unauthedRequestContext, logger, "Folder path (" + fullPath + ") does not match " + GOOD_FOLDER_PATH, response, new ServiceException(400, "Illegal folder name"), true);
           return ;
         }
 
@@ -599,7 +618,7 @@ public class DesignHandler {
         String fullPath = resolveToAbsolutePath(path);
 
         if (!GOOD_FILE_PATH.matcher(fullPath).matches()) {
-          reportError(logger, "File path (" + fullPath + ") does not match " + GOOD_FILE_PATH, response, new ServiceException(400, "Illegal file name"), true);
+          reportError(unauthedRequestContext, logger, "File path (" + fullPath + ") does not match " + GOOD_FILE_PATH, response, new ServiceException(400, "Illegal file name"), true);
           return ;
         }
 
@@ -610,7 +629,7 @@ public class DesignHandler {
         }
         MediaType typeForExtn = EXTN_TO_TYPE.get(extn);
         if (typeForExtn == null) {
-          reportError(logger, "Unrecognised extension (" + extn + ") on file", response, new ServiceException(400, "Illegal file name; unrecognised extension"), true);
+          reportError(unauthedRequestContext, logger, "Unrecognised extension (" + extn + ") on file", response, new ServiceException(400, "Illegal file name; unrecognised extension"), true);
           return ;
         }
 
@@ -622,7 +641,7 @@ public class DesignHandler {
             body = Arrays.copyOfRange(body, YAML_DOC_DELIMITER.length, body.length);
           }
         } else if (!typeForExtn.isCompatible(contentType)) {
-          reportError(logger, "Incorrect extension (" + extn + ") for file of type " + contentType, response, new ServiceException(400, "Illegal file name; extension does not match content-type"), true);
+          reportError(unauthedRequestContext, logger, "Incorrect extension (" + extn + ") for file of type " + contentType, response, new ServiceException(400, "Illegal file name; extension does not match content-type"), true);
           return ;
         }
 
@@ -657,10 +676,10 @@ public class DesignHandler {
         });
       }
       creationFuture
-            .andThen(ar -> handleFileChange(ar, response,  action));
+            .andThen(ar -> handleFileChange(unauthedRequestContext, ar, response,  action));
 
     } catch (Throwable ex) {
-      reportError(logger, "Failed to put file: ", response, ex, true);
+      reportError(unauthedRequestContext, logger, "Failed to put file: ", response, ex, true);
     }
   }
 
@@ -672,6 +691,7 @@ public class DesignHandler {
    * a non-empty directory.
    *
    * @param response an {@link AsyncResponse} used to send the response asynchronously
+   * @param routingContext The Vert.x {@link RoutingContext}.
    * @param request an {@link HttpServerRequest} representing the HTTP request context
    * @param path a {@link String} representing the relative or absolute path of the file or folder to delete
    */
@@ -689,9 +709,11 @@ public class DesignHandler {
   )
   public void deleteFile(
           @Suspended final AsyncResponse response
+          , @Context RoutingContext routingContext
           , @Context HttpServerRequest request
           , @PathParam("path") String path
   ) {
+    RequestContext unauthedRequestContext = RequestContext.retrieveRequestContext(routingContext);
     try {
       path = normalizePath("Delete", "file", path);
       String fullPath = resolveToAbsolutePath(path);
@@ -699,18 +721,18 @@ public class DesignHandler {
       DirCacheTree.Node target = nodeFromPath(dirCache.getRoot(), path.split("/"), 0);
 
       if (target == null) {
-        reportError(logger, "File not found: ", response, new FileNotFoundException("File not found"), true);
+        reportError(unauthedRequestContext, logger, "File not found: ", response, new FileNotFoundException("File not found"), true);
         return ;
       } else if (target instanceof DirCacheTree.Directory dir) {
         if (!dir.getChildren().isEmpty()) {
-          reportError(logger, "Directory not empty: ", response, new IllegalArgumentException("Directory not empty"), true);
+          reportError(unauthedRequestContext, logger, "Directory not empty: ", response, new IllegalArgumentException("Directory not empty"), true);
         }
       }
       fs.delete(fullPath)
-              .andThen(ar -> handleFileChange(ar, response, "delete file"));
+              .andThen(ar -> handleFileChange(unauthedRequestContext, ar, response, "delete file"));
 
     } catch (Throwable ex) {
-      reportError(logger, "Failed to delete file: ", response, ex, true);
+      reportError(unauthedRequestContext, logger, "Failed to delete file: ", response, ex, true);
     }
   }
 
@@ -718,6 +740,7 @@ public class DesignHandler {
    * Renames a file or folder at the specified path.
    *
    * @param response The AsyncResponse object used to send the response back to the client.
+   * @param routingContext The Vert.x {@link RoutingContext}.
    * @param request The HttpServerRequest object containing information about the HTTP request.
    * @param path The relative path of the file or folder to be renamed.
    * @param newName The new name for the file or folder.
@@ -736,10 +759,12 @@ public class DesignHandler {
   )
   public void renameFile(
           @Suspended final AsyncResponse response
+          , @Context RoutingContext routingContext
           , @Context HttpServerRequest request
           , @PathParam("path") String path
           , @QueryParam("name") String newName
   ) {
+    RequestContext unauthedRequestContext = RequestContext.retrieveRequestContext(routingContext);
     try {
       path = normalizePath("Rename", "file", path);
       String fullPath = resolveToAbsolutePath(path);
@@ -750,22 +775,22 @@ public class DesignHandler {
 
       DirCacheTree.Node source = nodeFromPath(dirCache.getRoot(), path.split("/"), 0);
       if (source == null) {
-        reportError(logger, "File not found", response, new ServiceException(404, "File not found"), true);
+        reportError(unauthedRequestContext, logger, "File not found", response, new ServiceException(404, "File not found"), true);
         return ;
       }
 
       Future<?> renameFuture;
       if (source instanceof DirCacheTree.Directory) {
         if (!GOOD_FOLDER.matcher(newName).matches()) {
-          reportError(logger, "Folder name does not match " + GOOD_FOLDER, response, new ServiceException(400, "Illegal folder name"), true);
+          reportError(unauthedRequestContext, logger, "Folder name does not match " + GOOD_FOLDER, response, new ServiceException(400, "Illegal folder name"), true);
           return ;
         }
 
-        renameFuture = renameFolder(newFullPath, response, fullPath);
+        renameFuture = renameFolder(unauthedRequestContext, newFullPath, response, fullPath);
 
       } else if (source instanceof DirCacheTree.File) {
         if (!GOOD_FILE.matcher(newName).matches()) {
-          reportError(logger, "Filename does not match " + GOOD_FILE, response, new ServiceException(400, "Illegal file name"), true);
+          reportError(unauthedRequestContext, logger, "Filename does not match " + GOOD_FILE, response, new ServiceException(400, "Illegal file name"), true);
           return ;
         }
         int dotPos = path.indexOf(".");
@@ -775,15 +800,15 @@ public class DesignHandler {
           int newDotPos = newName.indexOf(".");
           String newExtension = newName.substring(newDotPos);
           if (!newExtension.equals(originalExtension)) {
-            reportError(logger, "New filename extension (" + newExtension + ") does not match original extension (" + originalExtension + ")", response, new ServiceException(400, "Illegal file name (extension has been changed)"), true);
+            reportError(unauthedRequestContext, logger, "New filename extension (" + newExtension + ") does not match original extension (" + originalExtension + ")", response, new ServiceException(400, "Illegal file name (extension has been changed)"), true);
             return ;
           }
         }
 
-        renameFuture = renameFile(newFullPath, response, fullPath);
+        renameFuture = renameFile(unauthedRequestContext, newFullPath, response, fullPath);
 
       } else {
-        reportError(logger, "Attempt to rename unknown file type (" + source.getClass().getName() + ")", response, new ServiceException(500, "Unrecognized file type"), true);
+        reportError(unauthedRequestContext, logger, "Attempt to rename unknown file type (" + source.getClass().getName() + ")", response, new ServiceException(500, "Unrecognized file type"), true);
         return ;
       }
 
@@ -794,11 +819,11 @@ public class DesignHandler {
                 response.resume(Response.ok(json, MEDIA_TYPE_JSON).build());
               })
               .onFailure(ex -> {
-                reportError(logger, "Failed to rename: ", response, ex, true);
+                reportError(unauthedRequestContext, logger, "Failed to rename: ", response, ex, true);
               });
 
     } catch (Throwable ex) {
-      reportError(logger, "Failed to get file: ", response, ex, true);
+      reportError(unauthedRequestContext, logger, "Failed to get file: ", response, ex, true);
     }
   }
 
@@ -806,16 +831,17 @@ public class DesignHandler {
    * Renames a file from the specified source path to a new destination path.
    * If the destination file already exists, an error is reported.
    *
+   * @param requestContext The request context.
    * @param newFullPath The full path of the destination where the file is to be renamed.
    * @param response The asynchronous response object used to report success or failure.
    * @param fullPath The full path of the source file to be renamed.
    * @return A Future representing the completion of the file renaming operation.
    */
-  private Future<Void> renameFile(String newFullPath, final AsyncResponse response, String fullPath) {
+  private Future<Void> renameFile(RequestContext requestContext, String newFullPath, final AsyncResponse response, String fullPath) {
     return fs.exists(newFullPath)
             .compose(exists -> {
               if (exists) {
-                reportError(logger, "Destination file (" + newFullPath + ") already exists", response, new ServiceException(400, "Destination file already exists"), true);
+                reportError(requestContext, logger, "Destination file (" + newFullPath + ") already exists", response, new ServiceException(400, "Destination file already exists"), true);
                 return Future.succeededFuture();
               } else {
                 return fs.move(fullPath, newFullPath)
@@ -833,17 +859,18 @@ public class DesignHandler {
    * Renames an existing folder by moving it to a new specified path. If the destination folder already exists,
    * an error is reported without performing the rename operation.
    *
+   * @param requestContext The request context.
    * @param newFullPath The new full path where the folder should be moved.
    * @param response The asynchronous response handler to communicate success or failure of the operation.
    * @param fullPath The current full path of the folder to be renamed.
    * @return A Future object representing the asynchronous result. The Future completes when the operation is successful
    *         or fails with an appropriate exception.
    */
-  private Future<Void> renameFolder(String newFullPath, final AsyncResponse response, String fullPath) {
+  private Future<Void> renameFolder(RequestContext requestContext, String newFullPath, final AsyncResponse response, String fullPath) {
     return fs.exists(newFullPath)
             .compose(exists -> {
               if (exists) {
-                reportError(logger, "Destination folder (" + newFullPath + ") already exists", response, new ServiceException(400, "Destination folder already exists"), true);
+                reportError(requestContext, logger, "Destination folder (" + newFullPath + ") already exists", response, new ServiceException(400, "Destination folder already exists"), true);
                 return Future.succeededFuture();
               } else {
                 return vertx.<Void>executeBlocking(() -> {
@@ -867,6 +894,7 @@ public class DesignHandler {
    * error response is returned.
    *
    * @param response the asynchronous response to resume the HTTP request.
+   * @param routingContext The Vert.x {@link RoutingContext}.
    * @param request the HTTP server request providing context for the operation.
    * @param path the path to the pipeline resource. The path is resolved to an absolute file path for retrieval of the pipeline source.
    */
@@ -884,9 +912,11 @@ public class DesignHandler {
   )
   public void getPipeline(
           @Suspended final AsyncResponse response
+          , @Context RoutingContext routingContext
           , @Context HttpServerRequest request
           , @PathParam("path") String path
   ) {
+    RequestContext unauthedRequestContext = RequestContext.retrieveRequestContext(routingContext);
 
     try {
       path = normalizePath("Get", "pipeline", path);
@@ -898,7 +928,7 @@ public class DesignHandler {
                   response.resume(Response.ok(pipeline, MEDIA_TYPE_JSON).build());
                 })
                 .onFailure(ex -> {
-                  reportError(logger, "Failed to read json pipeline: ", response, ex, true);
+                  reportError(unauthedRequestContext, logger, "Failed to read json pipeline: ", response, ex, true);
                 })
                 ;
       } else if (fullPath.endsWith(".yaml")) {
@@ -907,14 +937,14 @@ public class DesignHandler {
                   response.resume(Response.ok(pipeline, MEDIA_TYPE_JSON).build());
                 })
                 .onFailure(ex -> {
-                  reportError(logger, "Failed to read yaml pipeline: ", response, ex, true);
+                  reportError(unauthedRequestContext, logger, "Failed to read yaml pipeline: ", response, ex, true);
                 })
                 ;
       } else {
         throw new ServiceException(400, "Only plain json or yaml pipelines may be requested");
       }
     } catch (Throwable ex) {
-      reportError(logger, "Failed to get pipeline: ", response, ex, true);
+      reportError(unauthedRequestContext, logger, "Failed to get pipeline: ", response, ex, true);
     }
   }
 

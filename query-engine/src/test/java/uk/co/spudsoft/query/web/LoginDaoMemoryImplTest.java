@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.web;
 
+import inet.ipaddr.IPAddressString;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.jackson.DatabindCodec;
@@ -29,6 +30,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.json.ObjectMapperConfiguration;
 
 
@@ -59,9 +61,11 @@ public class LoginDaoMemoryImplTest {
     
     LoginDao dao = new LoginDaoMemoryImpl(Duration.of(100, ChronoUnit.MINUTES));
 
-    dao.store("state", "provider", "codeVerifier", "nonce", "redirectUri", "targetUrl")
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    
+    dao.store(reqctx, "state", "provider", "codeVerifier", "nonce", "redirectUri", "targetUrl")
             .compose(v -> {
-              return dao.getRequestData("state");
+              return dao.getRequestData(reqctx, "state");
             })
             .compose(rd -> {
               testContext.verify(() -> {
@@ -70,7 +74,7 @@ public class LoginDaoMemoryImplTest {
                 assertEquals("redirectUri", rd.redirectUri());
                 assertEquals("targetUrl", rd.targetUrl());
               });
-              return dao.markUsed("state");
+              return dao.markUsed(reqctx, "state");
             })
             .onSuccess(v -> {
               testContext.completeNow();
@@ -85,9 +89,11 @@ public class LoginDaoMemoryImplTest {
     
     LoginDao dao = new LoginDaoMemoryImpl(Duration.of(100, ChronoUnit.MILLIS));
 
-    dao.store("state", "provider", "codeVerifier", "nonce", "redirectUri", "targetUrl")
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    
+    dao.store(reqctx, "state", "provider", "codeVerifier", "nonce", "redirectUri", "targetUrl")
             .compose(v -> {
-              return dao.getRequestData("state");
+              return dao.getRequestData(reqctx, "state");
             })
             .compose(rd -> {
               testContext.verify(() -> {
@@ -103,10 +109,10 @@ public class LoginDaoMemoryImplTest {
               return delay.future();
             })
             .compose(v -> {
-              return dao.store("state2", "provider", "codeVerifier", "nonce", "redirectUri", "targetUrl");
+              return dao.store(reqctx, "state2", "provider", "codeVerifier", "nonce", "redirectUri", "targetUrl");
             })
             .compose(v -> {
-              return dao.markUsed("state");
+              return dao.markUsed(reqctx, "state");
             })
             .onSuccess(v -> {
               testContext.failNow("Expected exception");
@@ -121,9 +127,11 @@ public class LoginDaoMemoryImplTest {
     
     LoginDao dao = new LoginDaoMemoryImpl(Duration.of(100, ChronoUnit.MILLIS));
 
-    dao.store("state", "provider", "codeVerifier", "nonce", "redirectUri", "targetUrl")
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    
+    dao.store(reqctx, "state", "provider", "codeVerifier", "nonce", "redirectUri", "targetUrl")
             .compose(v -> {
-              return dao.getRequestData("state");
+              return dao.getRequestData(reqctx, "state");
             })
             .compose(rd -> {
               testContext.verify(() -> {
@@ -139,7 +147,7 @@ public class LoginDaoMemoryImplTest {
               return delay.future();
             })
             .compose(v -> {
-              return dao.markUsed("state");
+              return dao.markUsed(reqctx, "state");
             })
             .onSuccess(v -> {
               testContext.failNow("Expected exception");
@@ -154,9 +162,11 @@ public class LoginDaoMemoryImplTest {
     
     LoginDao dao = new LoginDaoMemoryImpl(Duration.of(1, ChronoUnit.MINUTES));
 
-    dao.store("state", "provider", "codeVerifier", "nonce", "redirectUri", "targetUrl")
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    
+    dao.store(reqctx, "state", "provider", "codeVerifier", "nonce", "redirectUri", "targetUrl")
             .compose(v -> {
-              return dao.getRequestData("bob");
+              return dao.getRequestData(reqctx, "bob");
             })
             .onSuccess(rd -> {
               testContext.failNow("Should have failed");
