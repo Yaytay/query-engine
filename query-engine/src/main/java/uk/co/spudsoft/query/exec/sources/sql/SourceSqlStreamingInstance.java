@@ -45,6 +45,7 @@ import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.sources.AbstractSource;
+import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.main.ProtectedCredentials;
 import uk.co.spudsoft.query.web.ServiceException;
 
@@ -68,6 +69,8 @@ public class SourceSqlStreamingInstance extends AbstractSource {
   private PreparedStatement preparedStatement;
   private Transaction transaction;
 
+  private final Log log;
+  
   /**
    * Constructor.
    * @param vertx The Vert.x instance.
@@ -89,6 +92,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     }
 
     this.definition = definition;
+    this.log = new Log(logger, pipelineContext);
   }
 
   @SuppressFBWarnings(value = "SQL_INJECTION_VERTX", justification = "The query from the configuration is definitely a SQL injection vector, but it is not built from end-user input")
@@ -96,15 +100,15 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     return conn.prepare(sql);
   }
 
-  static AbstractSqlPreparer getPreparer(String url) {
+  AbstractSqlPreparer getPreparer(String url) {
     if (url.startsWith("sqlserver")) {
-      return new MsSqlPreparer();
+      return new MsSqlPreparer(pipelineContext);
     } else if (url.startsWith("postgresql")) {
-      return new PostgreSqlPreparer();
+      return new PostgreSqlPreparer(pipelineContext);
     } else if (url.startsWith("mysql")) {
-      return new MySqlPreparer();
+      return new MySqlPreparer(pipelineContext);
     } else {
-      return new MsSqlPreparer();
+      return new MsSqlPreparer(pipelineContext);
     }
   }
 
@@ -153,7 +157,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
       try {
         endpointName = pipeline.renderTemplate(definition.getName() + ":endpoint", definition.getEndpointTemplate());
       } catch (Throwable ex) {
-        logger.warn("Failed to render endpoint template ({}): ", definition.getEndpointTemplate(), ex);
+        log.warn().log("Failed to render endpoint template ({}): ", definition.getEndpointTemplate(), ex);
         return Future.failedFuture(ex);
       }
     }
@@ -165,7 +169,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
       ConditionInstance cond = endpoint.getCondition().createInstance();
       if (!cond.evaluate(requestContext, null)) {
         String message = String.format("Endpoint %s (%s) rejected by condition (%s)", endpointName, endpoint.getUrl(), endpoint.getCondition());
-        logger.warn("Endpoint {} ({}) rejected by condition ({})", endpointName, endpoint.getUrl(), endpoint.getCondition());
+        log.warn().log("Endpoint {} ({}) rejected by condition ({})", endpointName, endpoint.getUrl(), endpoint.getCondition());
         return Future.failedFuture(new ServiceException(503, "Endpoint \"" + endpointName + "\" not accessible", new IllegalStateException(message)));
       }
     }
@@ -175,7 +179,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
       try {
         url = pipeline.renderTemplate(definition.getName() + ":url", endpoint.getUrlTemplate());
       } catch (Throwable ex) {
-        logger.warn("Failed to render url template ({}): ", definition.getEndpointTemplate(), ex);
+        log.warn().log("Failed to render url template ({}): ", definition.getEndpointTemplate(), ex);
         return Future.failedFuture(ex);
       }
     }
@@ -197,7 +201,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
       try {
         query = pipeline.renderTemplate(definition.getName() + ":query", definition.getQueryTemplate());
       } catch (Throwable ex) {
-        logger.warn("Failed to render query template ({}): ", definition.getEndpointTemplate(), ex);
+        log.warn().log("Failed to render query template ({}): ", definition.getEndpointTemplate(), ex);
         return Future.failedFuture(ex);
       }
     }
@@ -210,12 +214,12 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     long start = System.currentTimeMillis();
     return pool.getConnection()
             .recover(ex -> {
-              logger.warn("Failed to connect to data source: ", ex);
+              log.warn().log("Failed to connect to data source: ", ex);
               return Future.failedFuture(new ServiceException(500, "Failed to connect to data source", ex));
             })
             .compose(conn -> {
               connection = conn;
-              logger.info("Preparing SQL: {}", sql);
+              log.info().log("Preparing SQL: {}", sql);
               return prepareSqlStatement(conn, sql);
             }).compose(ps -> {
               preparedStatement = ps;
@@ -223,14 +227,14 @@ public class SourceSqlStreamingInstance extends AbstractSource {
             }).compose(tran -> {
               transaction = tran;
               if (logger.isDebugEnabled()) {
-                logger.debug("Executing SQL stream on {} with {}", connection, args.deepToString());
+                log.debug().log("Executing SQL stream on {} with {}", connection, args.deepToString());
               }
               // RowStream<Row> rowStream = preparedStatement.createStream(definition.getStreamingFetchSize(), args);
               MetadataRowStreamImpl rowStream = new MetadataRowStreamImpl(preparedStatement, requestContext, Vertx.currentContext(), definition.getStreamingFetchSize(), args);
               rowStream.exceptionHandler(ex -> {
-                logger.error("Exception occured in stream: ", ex);
+                log.error().log("Exception occured in stream: ", ex);
               });
-              rowStreamWrapper = new RowStreamWrapper(connection, transaction, rowStream, definition.getColumnTypeOverrideMap());
+              rowStreamWrapper = new RowStreamWrapper(pipelineContext, connection, transaction, rowStream, definition.getColumnTypeOverrideMap());
               return rowStreamWrapper.ready();
             })
             .recover(ex -> {
@@ -238,7 +242,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
             })
             .onFailure(ex -> {
               long end = System.currentTimeMillis();
-              logger.warn("SQL source failed (after {}s): ", (end - start) / 1000.0, ex);
+              log.warn().log("SQL source failed (after {}s): ", (end - start) / 1000.0, ex);
               if (connection != null) {
                 connection.close();
               }
@@ -267,14 +271,14 @@ public class SourceSqlStreamingInstance extends AbstractSource {
       ProtectedCredentials credentials = executor.getSecret(endpoint.getSecret());
       if (credentials == null) {
         String message = String.format("Endpoint %s (%s) requires secret %s which does not exist", definition.getEndpoint(), coalesce(endpoint.getUrl(), endpoint.getUrlTemplate()), endpoint.getSecret());
-        logger.warn(message);
+        log.warn().log(message);
         throw new ServiceException(503, "Endpoint \"" + definition.getEndpoint() + "\" not accessible", new IllegalStateException(message));
       }
       if (!JexlEvaluator.isNullOrBlank(credentials.getCondition())) {
         ConditionInstance cond = credentials.getCondition().createInstance();
         if (!cond.evaluate(requestContext, null)) {
           String message = String.format("Endpoint %s (%s) prevented from accessing secret %s by condition (%s)", definition.getEndpoint(), coalesce(endpoint.getUrl(), endpoint.getUrlTemplate()), endpoint.getSecret(), endpoint.getCondition());
-          logger.warn(message);
+          log.warn().log(message);
           throw new ServiceException(503, "Endpoint \"" + definition.getEndpoint() + "\" not accessible", new IllegalStateException(message));
         }
       }

@@ -146,7 +146,7 @@ public class HistoryHandler {
         sortDescending = Boolean.TRUE;
       }
 
-      auditor.getHistory(requestContext.getIssuer(), requestContext.getSubject(), skipRows, maxRows, sortOrder, sortDescending)
+      auditor.getHistory(requestContext, requestContext.getIssuer(), requestContext.getSubject(), skipRows, maxRows, sortOrder, sortDescending)
               .onSuccess(history -> {
                 response.resume(Response.ok(history, MediaType.APPLICATION_JSON).build());
               })

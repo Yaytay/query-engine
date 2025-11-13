@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec.sources.sql;
 
+import inet.ipaddr.IPAddressString;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.sqlclient.Row;
@@ -36,6 +37,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 
 /**
  *
@@ -48,36 +51,45 @@ public class RowStreamWrapperTest {
   
   @Test
   public void testPause() {
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    
     @SuppressWarnings("unchecked")
     MetadataRowStreamImpl target = mock(MetadataRowStreamImpl.class);
-    RowStreamWrapper instance = new RowStreamWrapper(null, null, target, null);
+    RowStreamWrapper instance = new RowStreamWrapper(pipelineContext, null, null, target, null);
     instance.pause();
     verify(target, times(2)).pause();
   }
 
   @Test
   public void testResume() {
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
     @SuppressWarnings("unchecked")
     MetadataRowStreamImpl target = mock(MetadataRowStreamImpl.class);
-    RowStreamWrapper instance = new RowStreamWrapper(null, null, target, null);
+    RowStreamWrapper instance = new RowStreamWrapper(pipelineContext, null, null, target, null);
     instance.resume();
     verify(target).resume();
   }
 
   @Test
   public void testFetch() {
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
     @SuppressWarnings("unchecked")
     MetadataRowStreamImpl target = mock(MetadataRowStreamImpl.class);
-    RowStreamWrapper instance = new RowStreamWrapper(null, null, target, null);
+    RowStreamWrapper instance = new RowStreamWrapper(pipelineContext, null, null, target, null);
     instance.fetch(12);
     verify(target).fetch(12);
   }
 
   @Test
   public void testHandlerWithoutExceptionHandler() {
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
     @SuppressWarnings("unchecked")
     MetadataRowStreamImpl target = mock(MetadataRowStreamImpl.class);
-    RowStreamWrapper instance = new RowStreamWrapper(null, null, target, null);
+    RowStreamWrapper instance = new RowStreamWrapper(pipelineContext, null, null, target, null);
     @SuppressWarnings("unchecked")
     ArgumentCaptor<Handler<Row>> handlerCaptor = ArgumentCaptor.forClass(Handler.class);
     instance.handler((DataRow jo) -> {
@@ -90,9 +102,11 @@ public class RowStreamWrapperTest {
 
   @Test
   public void testHandlerWithExceptionHandler() {
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
     @SuppressWarnings("unchecked")
     MetadataRowStreamImpl target = mock(MetadataRowStreamImpl.class);
-    RowStreamWrapper instance = new RowStreamWrapper(null, null, target, null);
+    RowStreamWrapper instance = new RowStreamWrapper(pipelineContext, null, null, target, null);
     @SuppressWarnings("unchecked")
     ArgumentCaptor<Handler<Row>> handlerCaptor = ArgumentCaptor.forClass(Handler.class);
     AtomicBoolean called = new AtomicBoolean();
@@ -111,12 +125,14 @@ public class RowStreamWrapperTest {
 
   @Test
   public void testHandlerWithEndHandler() {
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
     @SuppressWarnings("unchecked")
     MetadataRowStreamImpl target = mock(MetadataRowStreamImpl.class);    
     Transaction transaction = mock(Transaction.class);
     SqlConnection connection = mock(SqlConnection.class);
     when (connection.close()).thenReturn(Future.succeededFuture());
-    RowStreamWrapper instance = new RowStreamWrapper(connection, transaction, target, null);
+    RowStreamWrapper instance = new RowStreamWrapper(pipelineContext, connection, transaction, target, null);
     @SuppressWarnings("unchecked")
     ArgumentCaptor<Handler<Void>> handlerCaptor = ArgumentCaptor.forClass(Handler.class);
     when(target.close()).thenReturn(Future.succeededFuture());
@@ -130,12 +146,14 @@ public class RowStreamWrapperTest {
 
   @Test
   public void testHandlerWithEndHandlerAndBadTransaction() {
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
     @SuppressWarnings("unchecked")
     MetadataRowStreamImpl target = mock(MetadataRowStreamImpl.class);    
     Transaction transaction = mock(Transaction.class);
     SqlConnection connection = mock(SqlConnection.class);
     when (connection.close()).thenReturn(Future.succeededFuture());
-    RowStreamWrapper instance = new RowStreamWrapper(connection, transaction, target, null);
+    RowStreamWrapper instance = new RowStreamWrapper(pipelineContext, connection, transaction, target, null);
     @SuppressWarnings("unchecked")
     ArgumentCaptor<Handler<Void>> handlerCaptor = ArgumentCaptor.forClass(Handler.class);
     when(target.close()).thenReturn(Future.succeededFuture());
@@ -152,14 +170,18 @@ public class RowStreamWrapperTest {
   
   @Test
   public void testClose() {
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
     MetadataRowStreamImpl rowStream = mock(MetadataRowStreamImpl.class);
-    RowStreamWrapper wrapper = new RowStreamWrapper(null, null, rowStream, null);
+    RowStreamWrapper wrapper = new RowStreamWrapper(pipelineContext, null, null, rowStream, null);
     wrapper.close();
     verify(rowStream, times(1)).close();
   }
 
   @Test
   void testRowStreamExceptionHandlerIsCalled() {
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
     // Arrange
     MetadataRowStreamImpl rowStream = mock(MetadataRowStreamImpl.class);
 
@@ -171,7 +193,7 @@ public class RowStreamWrapperTest {
     when(rowStream.handler(any())).thenReturn(rowStream);
     when(rowStream.pause()).thenReturn(rowStream);
 
-    RowStreamWrapper wrapper = new RowStreamWrapper(null, null, rowStream, null);
+    RowStreamWrapper wrapper = new RowStreamWrapper(pipelineContext, null, null, rowStream, null);
 
     // Register an exception handler with the wrapper
     AtomicBoolean customExceptionHandlerCalled = new AtomicBoolean(false);

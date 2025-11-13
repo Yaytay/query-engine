@@ -203,11 +203,27 @@ public class SourceSqlStreamingInstanceTest {
   }
   
   @Test
-  public void testGetPreparer() {
-    assertThat(SourceSqlStreamingInstance.getPreparer("sqlserver:nonsense"), instanceOf(MsSqlPreparer.class));
-    assertThat(SourceSqlStreamingInstance.getPreparer("postgresql:nonsense"), instanceOf(PostgreSqlPreparer.class));
-    assertThat(SourceSqlStreamingInstance.getPreparer("mysql:nonsense"), instanceOf(MySqlPreparer.class));
-    assertThat(SourceSqlStreamingInstance.getPreparer("wibble"), instanceOf(MsSqlPreparer.class));
+  public void testGetPreparer(Vertx vertx, VertxTestContext testContext) {
+    vertx.getOrCreateContext().runOnContext(v -> {
+      RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+      PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+      FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
+      PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
+      
+      SourceSql definition = SourceSql.builder()
+              .endpoint("bob")
+              .build();
+      
+      SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, pipelineContext, null, pipelineExecutor, definition);
+      
+      testContext.verify(() -> {
+        assertThat(instance.getPreparer("sqlserver:nonsense"), instanceOf(MsSqlPreparer.class));
+        assertThat(instance.getPreparer("postgresql:nonsense"), instanceOf(PostgreSqlPreparer.class));
+        assertThat(instance.getPreparer("mysql:nonsense"), instanceOf(MySqlPreparer.class));
+        assertThat(instance.getPreparer("wibble"), instanceOf(MsSqlPreparer.class));
+      });
+      testContext.completeNow();
+    });
   }
   
   @Test

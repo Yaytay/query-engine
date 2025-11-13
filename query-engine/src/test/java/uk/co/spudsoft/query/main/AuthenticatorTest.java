@@ -16,29 +16,29 @@
  */
 package uk.co.spudsoft.query.main;
 
-import uk.co.spudsoft.query.exec.context.RequestContext;
-import inet.ipaddr.IPAddressString;
 import io.vertx.core.net.impl.HostAndPortImpl;
-import io.vertx.core.net.impl.SocketAddressImpl;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.impl.RoutingContextImpl;
 import org.junit.jupiter.api.Test;
 
 
 import java.util.HashMap;
 import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  *
  * @author jtalbut
  */
 public class AuthenticatorTest {
+  
+  private static final Logger logger = LoggerFactory.getLogger(AuthenticatorTest.class);
 
   @Test
   public void testEnsureNonBlankStartsWith() {
@@ -81,8 +81,10 @@ public class AuthenticatorTest {
     when(basicAuthConfig.getIdpMap()).thenReturn(null);
     when(basicAuthConfig.getDefaultIdp()).thenReturn(new Endpoint("https://default-idp.example.com", null));
 
+    Log log = new Log(logger, new PipelineContext(null, null));
+    
     // Call the method with any domain (should use default IdP)
-    Endpoint result = Authenticator.findAuthEndpoint(basicAuthConfig, "example.com", "http://example.com", false);
+    Endpoint result = Authenticator.findAuthEndpoint(log, basicAuthConfig, "example.com", "http://example.com", false);
 
     // Verify result
     assertEquals("https://default-idp.example.com", result.getUrl());
@@ -97,8 +99,10 @@ public class AuthenticatorTest {
     when(basicAuthConfig.getIdpMap()).thenReturn(new HashMap<>());
     when(basicAuthConfig.getDefaultIdp()).thenReturn(new Endpoint("https://default-idp.example.com", null));
 
+    Log log = new Log(logger, new PipelineContext(null, null));
+    
     // Call the method with any domain (should use default IdP)
-    Endpoint result = Authenticator.findAuthEndpoint(basicAuthConfig, "example.com", "http://example.com", false);
+    Endpoint result = Authenticator.findAuthEndpoint(log, basicAuthConfig, "example.com", "http://example.com", false);
 
     // Verify result
     assertEquals("https://default-idp.example.com", result.getUrl());
@@ -113,9 +117,11 @@ public class AuthenticatorTest {
     when(basicAuthConfig.getIdpMap()).thenReturn(null);
     when(basicAuthConfig.getDefaultIdp()).thenReturn(null);
 
+    Log log = new Log(logger, new PipelineContext(null, null));
+    
     // Call the method - should throw IllegalStateException
     IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-      Authenticator.findAuthEndpoint(basicAuthConfig, "example.com", "http://example.com", false);
+      Authenticator.findAuthEndpoint(log, basicAuthConfig, "example.com", "http://example.com", false);
     });
 
     // Verify exception message
@@ -131,12 +137,14 @@ public class AuthenticatorTest {
     Map<String, Endpoint> idpMap = new HashMap<>();
     idpMap.put("example.com", new Endpoint("https://example-idp.com", null));
 
+    Log log = new Log(logger, new PipelineContext(null, null));
+    
     // Configure mock to return IdpMap and default IdP
     when(basicAuthConfig.getIdpMap()).thenReturn(idpMap);
     when(basicAuthConfig.getDefaultIdp()).thenReturn(new Endpoint("https://default-idp.example.com", null));
 
     // Call the method with empty domain (should use default IdP)
-    Endpoint result = Authenticator.findAuthEndpoint(basicAuthConfig, "", "http://example.com", false);
+    Endpoint result = Authenticator.findAuthEndpoint(log, basicAuthConfig, "", "http://example.com", false);
 
     // Verify result
     assertEquals("https://default-idp.example.com", result.getUrl());
@@ -155,8 +163,10 @@ public class AuthenticatorTest {
     when(basicAuthConfig.getIdpMap()).thenReturn(idpMap);
     when(basicAuthConfig.getDefaultIdp()).thenReturn(new Endpoint("https://default-idp.example.com", null));
 
+    Log log = new Log(logger, new PipelineContext(null, null));
+    
     // Call the method with null domain (should use default IdP)
-    Endpoint result = Authenticator.findAuthEndpoint(basicAuthConfig, null, "http://example.com", false);
+    Endpoint result = Authenticator.findAuthEndpoint(log, basicAuthConfig, null, "http://example.com", false);
 
     // Verify result
     assertEquals("https://default-idp.example.com", result.getUrl());
@@ -175,9 +185,11 @@ public class AuthenticatorTest {
     when(basicAuthConfig.getIdpMap()).thenReturn(idpMap);
     when(basicAuthConfig.getDefaultIdp()).thenReturn(null);
 
+    Log log = new Log(logger, new PipelineContext(null, null));
+    
     // Call the method with empty domain - should throw IllegalStateException
     IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-      Authenticator.findAuthEndpoint(basicAuthConfig, "", "http://example.com", false);
+      Authenticator.findAuthEndpoint(log, basicAuthConfig, "", "http://example.com", false);
     });
 
     // Verify exception message
@@ -197,8 +209,10 @@ public class AuthenticatorTest {
     // Configure mock to return IdpMap
     when(basicAuthConfig.getIdpMap()).thenReturn(idpMap);
 
+    Log log = new Log(logger, new PipelineContext(null, null));
+    
     // Call the method with a domain that exists in the map
-    Endpoint result = Authenticator.findAuthEndpoint(basicAuthConfig, "example.com", "http://example.com", false);
+    Endpoint result = Authenticator.findAuthEndpoint(log, basicAuthConfig, "example.com", "http://example.com", false);
 
     // Verify result
     assertEquals("https://example-idp.com", result.getUrl());
@@ -217,8 +231,10 @@ public class AuthenticatorTest {
     when(basicAuthConfig.getIdpMap()).thenReturn(idpMap);
     when(basicAuthConfig.getDefaultIdp()).thenReturn(new Endpoint("https://default-idp.example.com", null));
 
+    Log log = new Log(logger, new PipelineContext(null, null));
+    
     // Call the method with domain not in the map (should use default IdP)
-    Endpoint result = Authenticator.findAuthEndpoint(basicAuthConfig, "unmapped.com", "http://example.com", false);
+    Endpoint result = Authenticator.findAuthEndpoint(log, basicAuthConfig, "unmapped.com", "http://example.com", false);
 
     // Verify result
     assertEquals("https://default-idp.example.com", result.getUrl());
@@ -237,9 +253,11 @@ public class AuthenticatorTest {
     when(basicAuthConfig.getIdpMap()).thenReturn(idpMap);
     when(basicAuthConfig.getDefaultIdp()).thenReturn(null);
 
+    Log log = new Log(logger, new PipelineContext(null, null));
+    
     // Call the method with domain not in the map - should throw IllegalStateException
     IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-      Authenticator.findAuthEndpoint(basicAuthConfig, "unmapped.com", "http://example.com", false);
+      Authenticator.findAuthEndpoint(log, basicAuthConfig, "unmapped.com", "http://example.com", false);
     });
 
     // Verify exception message
@@ -259,8 +277,10 @@ public class AuthenticatorTest {
     when(basicAuthConfig.getIdpMap()).thenReturn(idpMap);
     when(basicAuthConfig.getDefaultIdp()).thenReturn(new Endpoint("https://default-idp.example.com", null));
 
+    Log log = new Log(logger, new PipelineContext(null, null));
+    
     // Call the method with domain mapped to empty string (should use default IdP)
-    Endpoint result = Authenticator.findAuthEndpoint(basicAuthConfig, "example.com", "http://example.com", false);
+    Endpoint result = Authenticator.findAuthEndpoint(log, basicAuthConfig, "example.com", "http://example.com", false);
 
     // Verify result
     assertEquals("https://default-idp.example.com", result.getUrl());
@@ -274,8 +294,10 @@ public class AuthenticatorTest {
     // Configure mock to return IdpMap and default IdP
     when(basicAuthConfig.getAuthorizationPath()).thenReturn("/auth/token");
 
+    Log log = new Log(logger, new PipelineContext(null, null));
+    
     // Call the method with domain mapped to empty string (should use default IdP)
-    Endpoint result = Authenticator.findAuthEndpoint(basicAuthConfig, "example.com", "https://example.com/", false);
+    Endpoint result = Authenticator.findAuthEndpoint(log, basicAuthConfig, "example.com", "https://example.com/", false);
 
     // Verify result
     assertEquals("https://example.com/auth/token", result.getUrl());
@@ -289,8 +311,10 @@ public class AuthenticatorTest {
     // Configure mock to return IdpMap and default IdP
     when(basicAuthConfig.getAuthorizationPath()).thenReturn("auth/token");
 
+    Log log = new Log(logger, new PipelineContext(null, null));
+
     // Call the method with domain mapped to empty string (should use default IdP)
-    Endpoint result = Authenticator.findAuthEndpoint(basicAuthConfig, "example.com", "https://example.com/", false);
+    Endpoint result = Authenticator.findAuthEndpoint(log, basicAuthConfig, "example.com", "https://example.com/", false);
 
     // Verify result
     assertEquals("https://example.com/auth/token", result.getUrl());
@@ -304,8 +328,10 @@ public class AuthenticatorTest {
     // Configure mock to return IdpMap and default IdP
     when(basicAuthConfig.getAuthorizationPath()).thenReturn("auth/token");
 
+    Log log = new Log(logger, new PipelineContext(null, null));
+    
     // Call the method with domain mapped to empty string (should use default IdP)
-    Endpoint result = Authenticator.findAuthEndpoint(basicAuthConfig, "example.com", "https://example.com", false);
+    Endpoint result = Authenticator.findAuthEndpoint(log, basicAuthConfig, "example.com", "https://example.com", false);
 
     // Verify result
     assertEquals("https://example.com/auth/token", result.getUrl());
@@ -320,8 +346,10 @@ public class AuthenticatorTest {
     // Configure mock to return IdpMap and default IdP
     when(basicAuthConfig.getAuthorizationPath()).thenReturn("/auth/token");
 
+    Log log = new Log(logger, new PipelineContext(null, null));
+
     // Call the method with domain mapped to empty string (should use default IdP)
-    Endpoint result = Authenticator.findAuthEndpoint(basicAuthConfig, "example.com", "https://example.com", false);
+    Endpoint result = Authenticator.findAuthEndpoint(log, basicAuthConfig, "example.com", "https://example.com", false);
 
     // Verify result
     assertEquals("https://example.com/auth/token", result.getUrl());
@@ -330,8 +358,9 @@ public class AuthenticatorTest {
   @Test
   void testFindAuthEndpoint_NullConfig() {
     // Call the method with null config - should throw NullPointerException
+    Log log = new Log(logger, new PipelineContext(null, null));
     assertThrows(NullPointerException.class, () -> {
-      Authenticator.findAuthEndpoint(null, "example.com", "http://example.com", false);
+      Authenticator.findAuthEndpoint(log, null, "example.com", "http://example.com", false);
     });
   }
 }

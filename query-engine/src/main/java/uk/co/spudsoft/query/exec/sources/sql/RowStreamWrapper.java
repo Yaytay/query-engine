@@ -28,8 +28,11 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.DataType;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.Types;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.logging.Log;
 
 
 /**
@@ -47,6 +50,7 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
   private final SqlConnection connection;
   private final Transaction transaction;
   private final Types types;
+  private final Log log;
 
   private Handler<Throwable> exceptionHandler;
   private Handler<DataRow> handler;
@@ -58,32 +62,34 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
   /**
    * Constructor.
    * 
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param connection The connection to the data source.
    * @param transaction The database transaction.
    * @param rowStream The output row stream.
    * @param columnTypeOverrides Manually overridden types for columns.
    */
-  public RowStreamWrapper(SqlConnection connection, Transaction transaction, MetadataRowStreamImpl rowStream, Map<String, DataType> columnTypeOverrides) {
+  public RowStreamWrapper(PipelineContext pipelineContext, SqlConnection connection, Transaction transaction, MetadataRowStreamImpl rowStream, Map<String, DataType> columnTypeOverrides) {
     this.connection = connection;
     this.transaction = transaction;
     this.rowStream = rowStream;
     this.types = new Types();
+    this.log = new Log(logger, pipelineContext);
     
     rowStream.coloumnDescriptorHandler(columnDescriptors -> {
       for (ColumnDescriptor cd : columnDescriptors) {
-        logger.trace("Field {} is of JDBC type {} (aka {})", cd.name(), cd.jdbcType(), cd.typeName());
+        log.trace().log("Field {} is of JDBC type {} (aka {})", cd.name(), cd.jdbcType(), cd.typeName());
         if (columnTypeOverrides != null && columnTypeOverrides.containsKey(cd.name())) {
           types.putIfAbsent(cd.name(), columnTypeOverrides.get(cd.name()));
         } else {
           types.putIfAbsent(cd.name(), DataType.fromJdbcType(cd.jdbcType()));
         }
       }
-      logger.debug("Got types: {}", types);
+      log.debug().log("Got types: {}", types);
       readyPromise.complete();
     });
     rowStream.pause();
     rowStream.exceptionHandler(ex -> {
-      logger.error("Exception in RowStream after {} rows: ", rowCount, ex);
+      log.error().log("Exception in RowStream after {} rows: ", rowCount, ex);
       readyPromise.tryFail(ex);
       Handler<Throwable> capturedExceptionHandler;
       synchronized (this) {
@@ -98,11 +104,11 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
         ++rowCount;
         DataRow dataRow = sqlRowToDataRow(row);
         if (rowCount % 1000 == 0) {
-          logger.trace("{} Received {} rows", this, rowCount);
+          log.trace().log("{} Received {} rows", this, rowCount);
         }
         handler.handle(dataRow);
       } catch (Throwable ex) {
-        logger.warn("Exception processing row (with types {}): ", types, ex);
+        log.warn().log("Exception processing row (with types {}): ", types, ex);
         if (exceptionHandler != null) {
           exceptionHandler.handle(ex);
         }
@@ -137,7 +143,7 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
   
   @Override
   public RowStreamWrapper handler(Handler<DataRow> handler) {
-    logger.trace("handler({})", handler);
+    log.trace().log("handler({})", handler);
     this.handler = handler;
     if (handler == null) {
       // When rowStream.handler is called with a non-null handler it will always handle the currently in-memory rows
@@ -158,7 +164,7 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
         Comparable<?> typedValue = type.cast(value);
         result.put(name, typedValue);
       } catch (Exception ex) {
-        logger.warn("Unable to convert {} to {}: ", value, type, ex);
+        log.warn().log("Unable to convert {} to {}: ", value, type, ex);
       }
     }
     return result;
@@ -166,14 +172,14 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
   
   @Override
   public RowStreamWrapper pause() {
-    logger.trace("{} paused", this);
+    log.trace().log("{} paused", this);
     rowStream.pause();
     return this;
   }
 
   @Override
   public RowStreamWrapper resume() {
-    logger.trace("{} resumed", this);
+    log.trace().log("{} resumed", this);
     rowStream.resume();
     return this;
   }
@@ -188,9 +194,9 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
   public RowStreamWrapper endHandler(Handler<Void> endHandler) {
     rowStream.endHandler(ehv -> {
       if (rowCount > 0) {
-        logger.trace("Finished row stream after handling {} rows", rowCount);
+        log.trace().log("Finished row stream after handling {} rows", rowCount);
       } else {
-        logger.trace("Finished row stream without handling any rows");
+        log.trace().log("Finished row stream without handling any rows");
       }
       rowStream.close()
               .compose(v -> {
@@ -198,16 +204,16 @@ public final class RowStreamWrapper implements ReadStream<DataRow> {
               })
               .compose(v -> {
                 if (connection != null) {
-                  logger.info("Closing connection");
+                  log.info().log("Closing connection");
                   return connection.close();
                 } else {
                   return Future.succeededFuture();
                 }
               })
               .onComplete(ar -> {
-                logger.info("Closed connection");
+                log.info().log("Closed connection");
                 if (!ar.succeeded()) {
-                  logger.warn("Transaction failed: ", ar.cause());
+                  log.warn().log("Transaction failed: ", ar.cause());
                 }
                 endHandler.handle(null);                
               });

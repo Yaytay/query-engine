@@ -40,12 +40,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.SourceJdbc;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.sources.sql.AbstractSqlPreparer;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * Processor for converting a JDBC {@link ResultSet} into a Vert.x {@link ReadStream}.
@@ -58,13 +60,14 @@ public class JdbcReadStream implements ReadStream<DataRow> {
 
   private static final Logger logger = LoggerFactory.getLogger(JdbcReadStream.class);
 
-  private final RequestContext requestContext;
   private final Context context;
   private final SourceJdbc definition;
   private final int processingBatchSize;
   private final Promise<ReadStreamWithTypes> initPromise;
 
-
+  private final PipelineContext pipelineContext;
+  private final Log log;
+  
   private Types types;
 
   private final Deque<DataRow> items = new ArrayDeque<>();
@@ -86,17 +89,18 @@ public class JdbcReadStream implements ReadStream<DataRow> {
   /**
    * Constructor.
    * @param context The Vert.x context to use for asynchronous method calls.
-   * @param requestContext The request context for tracking and logging.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param definition The source definition.
    * @param initPromise The promise to complete when the query starts returning data.
    */
   @SuppressFBWarnings("EI_EXPOSE_REP2")
-  public JdbcReadStream(Context context, RequestContext requestContext, SourceJdbc definition, Promise<ReadStreamWithTypes> initPromise) {
+  public JdbcReadStream(Context context, PipelineContext pipelineContext, SourceJdbc definition, Promise<ReadStreamWithTypes> initPromise) {
     this.context = context;
-    this.requestContext = requestContext;
+    this.pipelineContext = pipelineContext;
     this.definition = definition;
     this.processingBatchSize = definition.getProcessingBatchSize();
     this.initPromise = initPromise;
+    this.log = new Log(logger, pipelineContext);
   }
 
   /**
@@ -125,12 +129,12 @@ public class JdbcReadStream implements ReadStream<DataRow> {
   private void checkProcessing(String message) {
     if (initialized) {
       if (!emitting) {
-        logger.trace(message);
+        log.trace().log(message);
         emitting = true;
         context.runOnContext(v -> process());
       }
     } else {
-      logger.trace("Not initialized yet");
+      log.trace().log("Not initialized yet");
     }
   }
 
@@ -151,10 +155,10 @@ public class JdbcReadStream implements ReadStream<DataRow> {
 
     try {
       try {
-        logger.debug("{}: Connecting to {}", (System.currentTimeMillis() - start) / 1000.0, dataSourceUrl);
+        log.debug().log("{}: Connecting to {}", (System.currentTimeMillis() - start) / 1000.0, dataSourceUrl);
         connection = DriverManager.getConnection(dataSourceUrl, credentials[0], credentials[1]);
       } catch (Throwable ex) {
-        logger.warn("{}: Failed to connect to {} for {}: ", (System.currentTimeMillis() - start) / 1000.0, dataSourceUrl, credentials[0], ex);
+        log.warn().log("{}: Failed to connect to {} for {}: ", (System.currentTimeMillis() - start) / 1000.0, dataSourceUrl, credentials[0], ex);
         context.runOnContext(v -> {
           initPromise.fail(new RuntimeException("Failed to establish connection to JDBC URL (" + dataSourceUrl + "): ", ex));
         });
@@ -163,12 +167,12 @@ public class JdbcReadStream implements ReadStream<DataRow> {
 
       String preparedSql = null;
       try {
-        AbstractSqlPreparer preparer = new JdbcSqlPreparer(connection);
+        AbstractSqlPreparer preparer = new JdbcSqlPreparer(pipelineContext, connection);
         AbstractSqlPreparer.QueryAndArgs queryAndArgs = preparer.prepareSqlStatement(sql, definition.getReplaceDoubleQuotes(), pipeline.getArgumentInstances());
         preparedSql = queryAndArgs.query();
 
         try {
-          logger.debug("{}: Preparing statement {}", (System.currentTimeMillis() - start) / 1000.0, preparedSql);
+          log.debug().log("{}: Preparing statement {}", (System.currentTimeMillis() - start) / 1000.0, preparedSql);
           statement = connection.prepareStatement(preparedSql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
           setFetchSize(definition, dataSourceUrl, statement);
           statement.setFetchDirection(ResultSet.FETCH_FORWARD);
@@ -182,7 +186,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
           }
         }
       } catch (Throwable ex) {
-        logger.warn("{}: Failed to prepare statement \"{}\": ", (System.currentTimeMillis() - start) / 1000.0, preparedSql, ex);
+        log.warn().log("{}: Failed to prepare statement \"{}\": ", (System.currentTimeMillis() - start) / 1000.0, preparedSql, ex);
         context.runOnContext(v -> {
           initPromise.fail(new RuntimeException("Failed to prepare statement: ", ex));
         });
@@ -190,10 +194,10 @@ public class JdbcReadStream implements ReadStream<DataRow> {
       }
 
       try {
-        logger.debug("{}: Executing query", (System.currentTimeMillis() - start) / 1000.0);
+        log.debug().log("{}: Executing query", (System.currentTimeMillis() - start) / 1000.0);
         rs = statement.executeQuery();
         types = new Types();
-        logger.debug("{}: Getting metadata", (System.currentTimeMillis() - start) / 1000.0);
+        log.debug().log("{}: Getting metadata", (System.currentTimeMillis() - start) / 1000.0);
         rsmeta = rs.getMetaData();
         for (int i = 0; i < rsmeta.getColumnCount(); ++i) {
           String name = rsmeta.getColumnLabel(i + 1);
@@ -210,7 +214,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
           types.putIfAbsent(name, type);
         }
       } catch (Throwable ex) {
-        logger.warn("{}: Failed to execute statement: ", (System.currentTimeMillis() - start) / 1000.0, ex);
+        log.warn().log("{}: Failed to execute statement: ", (System.currentTimeMillis() - start) / 1000.0, ex);
         context.runOnContext(v -> {
           initPromise.fail(new RuntimeException("Failed to execute statement: ", ex));
         });
@@ -221,28 +225,28 @@ public class JdbcReadStream implements ReadStream<DataRow> {
         initPromise.complete(new ReadStreamWithTypes(this, types));
       });
 
-      logger.debug("{}: Processing results", (System.currentTimeMillis() - start) / 1000.0);
+      log.debug().log("{}: Processing results", (System.currentTimeMillis() - start) / 1000.0);
       resultSetWalk(rs, rsmeta);
     } finally {
       if (statement != null) {
         try {
           statement.close();
         } catch (Throwable ex) {
-          logger.warn("Exception closing PreparedStatement: ", ex);
+          log.warn().log("Exception closing PreparedStatement: ", ex);
         }
       }
       if (rs != null) {
         try {
           rs.close();
         } catch (Throwable ex) {
-          logger.warn("Exception closing ResultSet: ", ex);
+          log.warn().log("Exception closing ResultSet: ", ex);
         }
       }
       if (connection != null) {
         try {
           connection.close();
         } catch (Throwable ex) {
-          logger.warn("Exception closing Connection: ", ex);
+          log.warn().log("Exception closing Connection: ", ex);
         }
       }
     }
@@ -270,29 +274,29 @@ public class JdbcReadStream implements ReadStream<DataRow> {
       while (rs.next()) {
         DataRow row = dataRowFromResult(rsmeta, rs);
         if (report(rows)) {
-          logger.debug("Received {} rows", rows);
+          log.debug().log("Received {} rows", rows);
         }
         ++rows;
 
-        logger.trace("resultSetWalker: Taking out queue lock for results walker");
+        log.trace().log("resultSetWalker: Taking out queue lock for results walker");
         queueLock.lock();
         try {
           items.add(row);
           while (items.size() > processingBatchSize) {
-            logger.trace("resultSetWalker: Waiting until notFull ({} > {})", items.size(), processingBatchSize);
+            log.trace().log("resultSetWalker: Waiting until notFull ({} > {})", items.size(), processingBatchSize);
             notFull.await();
-            logger.trace("resultSetWalker: notFull ({} > {})", items.size(), processingBatchSize);
+            log.trace().log("resultSetWalker: notFull ({} > {})", items.size(), processingBatchSize);
           }
           checkProcessing("resultSetWalker: starting process");
         } finally {
-          logger.trace("resultSetWalker: Releasing queue lock from results walker");
+          log.trace().log("resultSetWalker: Releasing queue lock from results walker");
           queueLock.unlock();
         }
       }
     } catch (Throwable ex) {
-      logger.error("resultSetWalker: Failed to process resultset: ", ex);
+      log.error().log("resultSetWalker: Failed to process resultset: ", ex);
     } finally {
-      logger.trace("resultSetWalker: Finished iterating rows");
+      log.trace().log("resultSetWalker: Finished iterating rows");
       complete();
     }
   }
@@ -314,7 +318,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
         Comparable<?> typedValue = type.cast(value);
         row.put(name, typedValue);
       } catch (Throwable ex) {
-        logger.warn("Failed to cast {} ({}) value ({}): ", name, i, value, ex);
+        log.warn().log("Failed to cast {} ({}) value ({}): ", name, i, value, ex);
       }
     }
     return row;
@@ -332,7 +336,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
       queueLock.unlock();
     }
     if (initialized) {
-      logger.trace("Completed with buffer of {}", items.size());
+      log.trace().log("Completed with buffer of {}", items.size());
     }
     checkProcessing("Completed");
     return this;
@@ -353,7 +357,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
   @SuppressFBWarnings(value = "UL_UNRELEASED_LOCK_EXCEPTION_PATH", justification = "False positive, which is a shame because it's a useful test")
   private void process() {
     Handler<Void> endHandlerCaptured = null;
-    logger.trace("Starting to process {} {} ({}) {} {}", ended, emitting, completed, demand, items.size());
+    log.trace().log("Starting to process {} {} ({}) {} {}", ended, emitting, completed, demand, items.size());
     long rows = 0;
     boolean done = false;
     while (!ended && emitting) {
@@ -361,11 +365,11 @@ public class JdbcReadStream implements ReadStream<DataRow> {
       Handler<DataRow> handlerCaptured = null;
       DataRow item = null;
 
-      logger.trace("Taking out queue lock for stream processor");
+      log.trace().log("Taking out queue lock for stream processor");
       queueLock.lock();
       try {
         if (demand <= 0) {
-          logger.trace("Stop emitting, demand ({}) < 0", demand);
+          log.trace().log("Stop emitting, demand ({}) < 0", demand);
           emitting = false;
           break ;
         } else if (demand < Long.MAX_VALUE) {
@@ -377,34 +381,34 @@ public class JdbcReadStream implements ReadStream<DataRow> {
           rows = ++rowsOutput;
           handlerCaptured = handler;
           if (items.size() < processingBatchSize / 2) {
-            logger.trace("Signalling notFull");
+            log.trace().log("Signalling notFull");
             notFull.signal();
           } else {
-            logger.trace("Not signalling - buffer too full {} > {}", items.size(), processingBatchSize / 2);
+            log.trace().log("Not signalling - buffer too full {} > {}", items.size(), processingBatchSize / 2);
           }
         } else {
-          logger.trace("Stop emitting, no items");
+          log.trace().log("Stop emitting, no items");
           emitting = false;
           done = completed;
           notFull.signal();
         }
       } finally {
-        logger.trace("Releasing queue lock from stream processor");
+        log.trace().log("Releasing queue lock from stream processor");
         queueLock.unlock();
       }
       if (item != null && handlerCaptured != null) {
         try {
-          logger.trace("Handling {}", item);
+          log.trace().log("Handling {}", item);
           handlerCaptured.handle(item);
         } catch (Throwable ex) {
           if (exceptionHandlerCaptured != null) {
             exceptionHandlerCaptured.handle(ex);
           } else {
-            logger.warn("Exception handling item in QueueReadStream: ", ex);
+            log.warn().log("Exception handling item in QueueReadStream: ", ex);
           }
         }
         if (report(rows)) {
-          logger.debug("Passed on {} rows", rows);
+          log.debug().log("Passed on {} rows", rows);
         }
         ++rows;
       }
@@ -412,10 +416,10 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     if (done && !ended) {
       endHandlerCaptured = endHandler;
       if (endHandlerCaptured != null) {
-        logger.trace("Calling endHandler");
+        log.trace().log("Calling endHandler");
         endHandlerCaptured.handle(null);
       } else {
-        logger.trace("No endHandler");
+        log.trace().log("No endHandler");
       }
     }
   }
@@ -455,7 +459,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
 
   @Override
   public JdbcReadStream pause() {
-    logger.trace("pause()");
+    log.trace().log("pause()");
     queueLock.lock();
     try {
       demand = 0;
@@ -467,7 +471,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
 
   @Override
   public JdbcReadStream resume() {
-    logger.trace("resume()");
+    log.trace().log("resume()");
     queueLock.lock();
     try {
       initialized = true;
@@ -484,7 +488,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     if (amount < 0L) {
       throw new IllegalArgumentException("Negative fetch amount");
     }
-    logger.trace("fetch({})", amount);
+    log.trace().log("fetch({})", amount);
     queueLock.lock();
     try {
       initialized = true;

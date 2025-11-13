@@ -17,7 +17,6 @@
 package uk.co.spudsoft.query.exec.sources.sql;
 
 import inet.ipaddr.IPAddressString;
-import io.reactiverse.contextual.logging.ContextualData;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.Timeout;
@@ -38,7 +37,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.exec.SourceInstance;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.main.sample.AbstractSampleDataLoader;
 import uk.co.spudsoft.query.main.sample.SampleDataLoaderMsSQL;
@@ -108,6 +107,7 @@ public class StreamingDataMsForkIT {
     long start = System.currentTimeMillis();
 
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
     
     // A simple query
     client.getConnection()
@@ -131,7 +131,7 @@ public class StreamingDataMsForkIT {
               rowStream.exceptionHandler(ex -> {
                 logger.error("Exception occured in stream: ", ex);
               });
-              rowStreamWrapper = new RowStreamWrapper(connection, transaction, rowStream, null);
+              rowStreamWrapper = new RowStreamWrapper(pipelineContext, connection, transaction, rowStream, null);
               rowStreamWrapper.handler(row -> {
                 logger.debug("Row: {}", row);
               });

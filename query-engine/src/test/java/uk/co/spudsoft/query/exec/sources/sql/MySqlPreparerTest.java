@@ -2,11 +2,14 @@ package uk.co.spudsoft.query.exec.sources.sql;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import inet.ipaddr.IPAddressString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 import uk.co.spudsoft.query.defn.Argument;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.exec.ArgumentInstance;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 
 /**
  *
@@ -16,7 +19,10 @@ public class MySqlPreparerTest {
     
   @Test
   public void testSingleProvidedSingleValuedParameter() {
-    AbstractSqlPreparer instance = new MySqlPreparer();
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    
+    AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of("id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L)));
     AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id", Boolean.FALSE, argSrc);
@@ -26,7 +32,10 @@ public class MySqlPreparerTest {
   
   @Test
   public void testTwoProvidedSingleValuedParameters() {
-    AbstractSqlPreparer instance = new MySqlPreparer();
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    
+    AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
             "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))
@@ -41,7 +50,10 @@ public class MySqlPreparerTest {
   
   @Test
   public void testTwoProvidedParametersOneMultiValued() {
-    AbstractSqlPreparer instance = new MySqlPreparer();
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    
+    AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
             "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))
@@ -57,7 +69,10 @@ public class MySqlPreparerTest {
    
   @Test
   public void testOneProvidedParameterOneNotProvided() {
-    AbstractSqlPreparer instance = new MySqlPreparer();
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    
+    AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
             "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))
@@ -71,7 +86,10 @@ public class MySqlPreparerTest {
 
   @Test
   public void testTwoProvidedSingleValuedParametersOneReferencedTwice() {
-    AbstractSqlPreparer instance = new MySqlPreparer();
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    
+    AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
             "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))
@@ -87,7 +105,10 @@ public class MySqlPreparerTest {
 
   @Test
   public void testOneSingleValuedOneMultiValuedParameterReferencedTwice() {
-    AbstractSqlPreparer instance = new MySqlPreparer();
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    
+    AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
             "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))
@@ -105,7 +126,10 @@ public class MySqlPreparerTest {
 
   @Test
   public void testUnprovidedParameterReferencedTwice() {
-    AbstractSqlPreparer instance = new MySqlPreparer();
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    
+    AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
             "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))
@@ -120,7 +144,10 @@ public class MySqlPreparerTest {
 
   @Test
   public void testBindTwoSingleValuedParameters() {
-    AbstractSqlPreparer instance = new MySqlPreparer();
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    
+    AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
             "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))
@@ -135,7 +162,10 @@ public class MySqlPreparerTest {
   
   @Test
   public void testBindOneSingleValuedParameterOneMissingParameter() {
-    AbstractSqlPreparer instance = new MySqlPreparer();
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    
+    AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
             "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))
@@ -148,7 +178,10 @@ public class MySqlPreparerTest {
   
   @Test
   public void testBindOneSingleValuedOneMultiValuedParameter() {
-    AbstractSqlPreparer instance = new MySqlPreparer();
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    
+    AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
             "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))
@@ -164,7 +197,10 @@ public class MySqlPreparerTest {
   
   @Test
   public void testBindOneSingleValuedOneMultiValuedParameterReferencedTwice() {
-    AbstractSqlPreparer instance = new MySqlPreparer();
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    
+    AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
             "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))
@@ -182,7 +218,10 @@ public class MySqlPreparerTest {
   
   @Test
   public void testBindOneSingleValuedOneMultiValuedParameterReferencedTwiceInBinds() {
-    AbstractSqlPreparer instance = new MySqlPreparer();
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    
+    AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
             "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))
@@ -200,7 +239,10 @@ public class MySqlPreparerTest {
     
   @Test
   public void testRepalceDoubleQuote() {
-    AbstractSqlPreparer instance = new MySqlPreparer();
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    
+    AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
             "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))

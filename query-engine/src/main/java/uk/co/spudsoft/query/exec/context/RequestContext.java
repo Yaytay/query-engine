@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableSet;
 import inet.ipaddr.IPAddressString;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
-import io.reactiverse.contextual.logging.ContextualData;
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.Cookie;
 import io.vertx.core.http.HttpServerRequest;
@@ -115,8 +114,6 @@ public final class RequestContext {
     this.headers = request.headers();
     this.cookies = ImmutableSet.copyOf(request.cookies());
     this.runId = this.params == null ? null : this.params.get("_runid");
-
-    ContextualData.put(REQUEST_ID, this.requestId);
 
     logger.debug("Created {} RequestContext@{} from HttpServerRequest", requestId, System.identityHashCode(this));
   }

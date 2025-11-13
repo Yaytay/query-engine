@@ -23,7 +23,9 @@ import io.vertx.ext.web.RoutingContext;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
@@ -53,20 +55,25 @@ public class LoggingRouter implements Handler<RoutingContext> {
     HttpServerRequest request = routingContext.request();
     RequestContext requestContext = new RequestContext(requestContextEnvironment, request);
     requestContext.storeInRoutingContext(routingContext);
+    PipelineContext pipelineContext = new PipelineContext(null, requestContext);
 
-    logger.info("Request: {} {}", routingContext.request().method(), routingContext.request().uri());
+    Log.decorate(logger.atInfo(), pipelineContext)
+            .log("Request: {} {}", routingContext.request().method(), routingContext.request().uri());
 
     routingContext.addHeadersEndHandler(v -> {
       long end = System.currentTimeMillis();
-      logger.info("Headers end: {} {}s", routingContext.response().getStatusCode(), (end - start) / 1000.0);
+      Log.decorate(logger.atInfo(), pipelineContext)
+            .log("Headers end: {} {}s", routingContext.response().getStatusCode(), (end - start) / 1000.0);
     });
     routingContext.addBodyEndHandler(v -> {
       long end = System.currentTimeMillis();
-      logger.info("Body end: {} {} {}s", routingContext.response().getStatusCode(), routingContext.response().bytesWritten(), (end - start) / 1000.0);
+      Log.decorate(logger.atInfo(), pipelineContext)
+            .log("Body end: {} {} {}s", routingContext.response().getStatusCode(), routingContext.response().bytesWritten(), (end - start) / 1000.0);
     });
     routingContext.addEndHandler(v -> {
       long end = System.currentTimeMillis();
-      logger.info("Complete: {} {} {}s", routingContext.response().getStatusCode(), routingContext.response().bytesWritten(), (end - start) / 1000.0);
+      Log.decorate(logger.atInfo(), pipelineContext)
+            .log("Complete: {} {} {}s", routingContext.response().getStatusCode(), routingContext.response().bytesWritten(), (end - start) / 1000.0);
     });
     routingContext.next();
   }

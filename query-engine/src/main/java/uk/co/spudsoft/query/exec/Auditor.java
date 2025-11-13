@@ -69,21 +69,21 @@ public interface Auditor {
    * Record the basic information from a request.
    * <p>
    * This must be the first method to call as it is the one that creates the row with the given {@link RequestContext#requestId}.
-   * @param requestContext The context for the request to be recorded.
+   * @param requestContext The context in which this request is being made.
    * @return a Future that will be completed when the request has been recorded.
    */
   Future<Void> recordRequest(RequestContext requestContext);
 
   /**
    * Record an exception in the data store against the current {@link RequestContext#requestId}.
-   * @param requestContext The {@link RequestContext} from which to derive the {@link RequestContext#requestId}.
+   * @param requestContext The context in which this request is being made.
    * @param ex The exception to report.
    */
   void recordException(RequestContext requestContext, Throwable ex);
 
   /**
    * Record details of the file found against a previously recorded {@link RequestContext#requestId}.
-   * @param requestContext The {@link RequestContext} from which to derive the {@link RequestContext#requestId}.
+   * @param requestContext The context in which this request is being made.
    * @param file The physical file containing the pipeline definition.
    * @param pipeline The pipeline definition.
    * @return a Future that will be completed when the file has been recorded.
@@ -100,7 +100,7 @@ public interface Auditor {
 
   /**
    * Get the most recent cache file (if any) matching the current request.
-   * @param requestContext Details of the current request to be matched against a previous run.
+   * @param requestContext The context in which this request is being made.
    * @param pipeline The pipeline being sought.
    * @return A Future that will be completed with either a {@link CacheDetails} instance or null.
    */
@@ -108,7 +108,7 @@ public interface Auditor {
 
   /**
    * Record a cached file against the current {@link RequestContext#requestId}.
-   * @param requestContext The {@link RequestContext} from which to derive the {@link RequestContext#requestId}.
+   * @param requestContext The context in which this request is being made.
    * @param fileName The name of the file containing the cached output.
    * @param expiry The expiry date/time of the output file.
    * @return A Future that will be completed when the file has been recorded in the data store.
@@ -117,7 +117,7 @@ public interface Auditor {
 
   /**
    * Record that the current {@link RequestContext#requestId} used the specified cache file.
-   * @param requestContext The {@link RequestContext} from which to derive the {@link RequestContext#requestId}.
+   * @param requestContext The context in which this request is being made.
    * @param fileName The cache file (created on a previous run) returned by this request.
    * @return A Future that will be completed when the file has been recorded in the data store.
    */
@@ -125,14 +125,15 @@ public interface Auditor {
 
   /**
    * Delete (or mark unusable) a cache file from a previous run.
+   * @param requestContext The context in which this request is being made (not related to that being deleted).
    * @param auditId The {@link CacheDetails#auditId} for the request the created the cache file.
    * @return A Future that will be completed when the file has been deleted (or marked unusable) in the data store.
    */
-  Future<Void> deleteCacheFile(String auditId);
+  Future<Void> deleteCacheFile(RequestContext requestContext, String auditId);
 
   /**
    * Calculated whether or not the current request is permitted according to the rate limit rules specified in the definition.
-   * @param requestContext The {@link RequestContext} to match against previous runs.
+   * @param requestContext The context in which this request is being made.
    * @param pipeline The pipeline definition containing {@link Pipeline#rateLimitRules}.
    * @return A Future that will be completed with the passed in pipeline if the rules permit this request, or failed with a {@link uk.co.spudsoft.query.web.ServiceException} if they do not.
    */
@@ -140,13 +141,14 @@ public interface Auditor {
 
   /**
    * Record details of the HTTP response against the current {@link RequestContext#requestId}.
-   * @param requestContext The {@link RequestContext} from which to derive the {@link RequestContext#requestId}.
+   * @param requestContext The context in which this request is being made.
    * @param response The response details to be recorded.
    */
   void recordResponse(RequestContext requestContext, HttpServerResponse response);
 
   /**
    * Get the details of any recorded requests matching the passed in values.
+   * @param requestContext The context in which this request is being made (not related to that being searched).
    * @param issuer The issuer to match.
    * @param subject The subject to match.
    * @param skipRows The number of rows to skip (for paging).
@@ -155,7 +157,7 @@ public interface Auditor {
    * @param sortDescending If true the sort will be in descending order.
    * @return A Future that will be completed with the audit history.
    */
-  Future<AuditHistory> getHistory(String issuer, String subject, int skipRows, int maxRows, AuditHistorySortOrder sortOrder, boolean sortDescending);
+  Future<AuditHistory> getHistory(RequestContext requestContext, String issuer, String subject, int skipRows, int maxRows, AuditHistorySortOrder sortOrder, boolean sortDescending);
 
   /**
    * Return a username with any '@&lt;domain&gt;' stripped off.

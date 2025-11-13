@@ -16,6 +16,9 @@
  */
 package uk.co.spudsoft.query.exec.sources.sql;
 
+import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+
 /**
  * SQL preparer for MS SQL Server.
  * 
@@ -25,8 +28,10 @@ public class MsSqlPreparer extends AbstractSqlPreparer {
 
   /**
    * Constructor.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    */
-  public MsSqlPreparer() {
+  public MsSqlPreparer(PipelineContext pipelineContext) {
+    super(pipelineContext);
   }
   
   @Override

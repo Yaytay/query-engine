@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec;
 
+import inet.ipaddr.IPAddressString;
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.impl.headers.HeadersMultiMap;
@@ -29,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 
 /**
  *
@@ -56,14 +58,16 @@ public class AuditorTest {
   
   @Test
   public void testMultimapToJson() {
-    assertNull(AuditorPersistenceImpl.multiMapToJson(null));
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+
+    assertNull(AuditorPersistenceImpl.multiMapToJson(reqctx, null));
     MultiMap map= HeadersMultiMap.httpHeaders()
             .add("one", "first")
             .add("two", "second")
             .add("two", "third")
             .add(HttpHeaders.AUTHORIZATION.toString(), "Bearer a.b.c")
             ;
-    JsonObject jo = AuditorPersistenceImpl.multiMapToJson(map);
+    JsonObject jo = AuditorPersistenceImpl.multiMapToJson(reqctx, map);
     assertEquals(3, jo.size());
     assertEquals("first", jo.getValue("one"));
     assertEquals(new JsonArray().add("second").add("third"), jo.getValue("two"));
@@ -72,13 +76,14 @@ public class AuditorTest {
   
   @Test
   public void testProtectAuth() {
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     Base64.Encoder encoder = Base64.getUrlEncoder();
     
-    assertEquals("bob", AuditorPersistenceImpl.protectAuthHeader("bob"));
-    assertEquals("Basic YQ==", AuditorPersistenceImpl.protectAuthHeader("Basic " + new String(encoder.encode("a:b".getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8)));
-    assertEquals("Basic YQ==", AuditorPersistenceImpl.protectAuthHeader("Basic " + new String(encoder.encode("a".getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8)));
-    assertEquals("Basic ", AuditorPersistenceImpl.protectAuthHeader("Basic "));
-    assertEquals("Bearer a.b", AuditorPersistenceImpl.protectAuthHeader("Bearer a.b.c"));
+    assertEquals("bob", AuditorPersistenceImpl.protectAuthHeader(reqctx, "bob"));
+    assertEquals("Basic YTo=", AuditorPersistenceImpl.protectAuthHeader(reqctx, "Basic " + new String(encoder.encode("a:b".getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8)));
+    assertEquals("Basic YQ==", AuditorPersistenceImpl.protectAuthHeader(reqctx, "Basic " + new String(encoder.encode("a".getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8)));
+    assertEquals("Basic ", AuditorPersistenceImpl.protectAuthHeader(reqctx, "Basic "));
+    assertEquals("Bearer a.b", AuditorPersistenceImpl.protectAuthHeader(reqctx, "Bearer a.b.c"));
   }
   
 }

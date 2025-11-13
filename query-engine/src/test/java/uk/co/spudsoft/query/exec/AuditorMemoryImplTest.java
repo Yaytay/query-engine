@@ -56,9 +56,9 @@ public class AuditorMemoryImplTest {
     // This won't do anything, but equally won't barf
     assertTrue(auditor.recordCacheFile(context2, "fileName2", now).succeeded());
     
-    assertTrue(auditor.deleteCacheFile(context.getRequestId()).succeeded());
+    assertTrue(auditor.deleteCacheFile(context, context.getRequestId()).succeeded());
     // This won't do anything, but equally won't barf
-    assertTrue(auditor.deleteCacheFile(context2.getRequestId()).succeeded());    
+    assertTrue(auditor.deleteCacheFile(context2, context2.getRequestId()).succeeded());    
   }
   
   private static AuditorMemoryImpl.AuditRow makeAuditRow(String id, LocalDateTime timestamp, String processId, String url, String clientIp, String host, String path, String arguments, String headers, String openIdDetails, String issuer, String subject, String username, String name, String groups) {
@@ -388,6 +388,19 @@ public class AuditorMemoryImplTest {
     assertThat(comparator.compare(row2, row3), greaterThan(0));
     assertThat(comparator.compare(row3, row1), lessThan(0));
     assertThat(comparator.compare(row3, row2), lessThan(0));
+  }
+  
+  @Test
+  public void testNullRequestId(Vertx vertx) {
+    
+    Auditor auditor = new AuditorMemoryImpl(vertx);
+
+    assertTrue(auditor.getCacheFile(null, null).succeeded());
+    assertTrue(auditor.recordCacheFile(null, null, null).failed());
+    assertTrue(auditor.recordCacheFileUsed(null, null).failed());
+    assertTrue(auditor.recordRequest(null).failed());
+    assertFalse(AuditorMemoryImpl.rowMatches(null, null, null));
+    
   }
   
 }

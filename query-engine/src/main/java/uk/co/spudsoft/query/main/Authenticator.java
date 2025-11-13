@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
-import io.reactiverse.contextual.logging.ContextualData;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
@@ -48,7 +47,9 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
 import uk.co.spudsoft.jwtvalidatorvertx.JwtValidator;
 import uk.co.spudsoft.jwtvalidatorvertx.OpenIdDiscoveryHandler;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.web.LoginDao;
 import uk.co.spudsoft.query.web.ServiceException;
 
@@ -231,12 +232,12 @@ public class Authenticator {
 
     HttpServerRequest request = routingContext.request();    
 
+    PipelineContext pipelineContext = new PipelineContext(null, requestContext);
+    Log log = new Log(logger, pipelineContext);
+        
     String runId = request.params() == null ? null : request.params().get("_runid");
-    if (runId != null) {
-      ContextualData.put("runId", runId);
-    }
     if (!Strings.isNullOrEmpty(runId)) {
-      logger.info("RunID: {}", runId);
+      log.info().log("RunID: {}", runId);
     }
     
     Cookie sessionCookie = getSessionCookie(request);
@@ -247,7 +248,7 @@ public class Authenticator {
       return loginDao.getToken(sessionCookie.getValue())
               .compose(token -> {
                 if (token == null) {
-                  logger.info("No valid token for cookie {}", sessionCookie.getValue());
+                  log.info().log("No valid token for cookie {}", sessionCookie.getValue());
                   return Future.failedFuture(new IllegalArgumentException("No valid token for cookie \"" + sessionCookie.getValue() + "\""));
                 } else {
                   return validateToken(request, token);
@@ -259,31 +260,31 @@ public class Authenticator {
                 return Future.succeededFuture(requestContext);
               }, ex -> {
                 request.resume();
-                logger.info("Failed to validate token from cookie {}: {}", sessionCookie.getValue(), ex.getMessage());
-                return buildRequestContextWithoutCookie(routingContext, requestContext);
+                log.info().log("Failed to validate token from cookie {}: {}", sessionCookie.getValue(), ex.getMessage());
+                return buildRequestContextWithoutCookie(log, routingContext, requestContext);
               });
     } else {
-      return buildRequestContextWithoutCookie(routingContext, requestContext);
+      return buildRequestContextWithoutCookie(log, routingContext, requestContext);
     }
   }
 
-  private String getCachedToken(String credentials) {
+  private String getCachedToken(Log log, String credentials) {
     int colonPos = credentials.indexOf(":");
     String username = colonPos > 0 ? credentials.substring(0, colonPos) : credentials;            
     synchronized (credentialsCache) {
       TimestampedToken timestampedToken = credentialsCache.get(credentials);
       if (timestampedToken == null) {
-        logger.debug("No token for {} in cache", username);
+        log.debug().log("No token for {} in cache", username);
         return null;
       } else {
         LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         if (timestampedToken.expiry.isAfter(now)) {
-          logger.debug("Found token for {} in cache", username);
+          log.debug().log("Found token for {} in cache", username);
           return timestampedToken.token;
         } else {
           // Remove all expired tokens now
           credentialsCache.entrySet().removeIf(entry -> entry.getValue().expiry.isBefore(now));
-          logger.debug("Found token for {} in cache but it expired at {}, there are now {} entries in the cache"
+          log.debug().log("Found token for {} in cache but it expired at {}, there are now {} entries in the cache"
                   , username, timestampedToken.token, credentialsCache.size());
           return null;
         }
@@ -291,7 +292,7 @@ public class Authenticator {
     }
   }
   
-  private void cacheToken(String credentials, LocalDateTime expiration, String token) {
+  private void cacheToken(Log log, String credentials, LocalDateTime expiration, String token) {
     if (expiration != null) {
       LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
       // Only cache tokens that are going to last for at least another minute
@@ -315,7 +316,7 @@ public class Authenticator {
     return validator.validateToken(issuer(request), token, audList, false);
   }
 
-  private Future<RequestContext> buildRequestContextWithoutCookie(RoutingContext routingContext, RequestContext requestContext) {
+  private Future<RequestContext> buildRequestContextWithoutCookie(Log log, RoutingContext routingContext, RequestContext requestContext) {
     
     HttpServerRequest request = routingContext.request();
     
@@ -325,7 +326,7 @@ public class Authenticator {
 
     if (!Strings.isNullOrEmpty(openIdIntrospectionHeader)) {
 
-      return buildFromBase64Json(requestContext, openIdIntrospectionHeader);
+      return buildFromBase64Json(log, requestContext, openIdIntrospectionHeader);
 
     } else if (Strings.isNullOrEmpty(authHeader)) {
 
@@ -336,7 +337,7 @@ public class Authenticator {
       request.pause();
 
       if (basicAuthConfig == null || (basicAuthConfig.getGrantType() == null)) {
-        logger.warn("Request includes basic authentication credentials but system is not configured to handle them.");
+        log.warn().log("Request includes basic authentication credentials but system is not configured to handle them.");
         return Future.failedFuture(new ServiceException(401, "Forbidden"));
       }
 
@@ -345,7 +346,7 @@ public class Authenticator {
       try {
         decodedCredentials = new String(Base64.getDecoder().decode(encodedCredentials), StandardCharsets.UTF_8);
       } catch (Throwable ex) {
-        logger.warn("Failed to decode credentials using base64, will try again with base64url: ", ex);
+        log.warn().log("Failed to decode credentials using base64, will try again with base64url: ", ex);
         decodedCredentials = new String(Base64.getUrlDecoder().decode(encodedCredentials), StandardCharsets.UTF_8);
       }
       
@@ -355,7 +356,7 @@ public class Authenticator {
 
       Future<String> tokenFuture = null;
 
-      String cachedToken = getCachedToken(decodedCredentials);
+      String cachedToken = getCachedToken(log, decodedCredentials);
       if (cachedToken != null) {
         tokenFuture = Future.succeededFuture(cachedToken);
       } else {
@@ -370,14 +371,14 @@ public class Authenticator {
           if (basicAuthConfig.getDefaultIdp() == null && Strings.isNullOrEmpty(basicAuthConfig.getAuthorizationPath())) {
             tokenFuture = discoverer.performOpenIdDiscovery(baseRequestUrl(request))
                     .compose(dd -> {
-                      logger.debug("Discovery data: {}", dd);
+                      log.debug().log("Discovery data: {}", dd);
                       if (basicAuthConfig.getGrantType() == BasicAuthGrantType.clientCredentials) {
-                        return performClientCredentialsGrant(dd.getTokenEndpoint(), username, password);
+                        return performClientCredentialsGrant(log, dd.getTokenEndpoint(), username, password);
                       } else {
                         Endpoint endpoint = new Endpoint();
                         endpoint.setUrl(dd.getAuthorizationEndpoint());
                         endpoint.setCredentials(basicAuthConfig.getDiscoveryEndpointCredentials());
-                        return performResourceOwnerPasswordCredentials(endpoint, username, password);
+                        return performResourceOwnerPasswordCredentials(log, endpoint, username, password);
                       }
                     });
           }
@@ -385,14 +386,14 @@ public class Authenticator {
         if (tokenFuture == null) {
           Endpoint authEndpoint;
           try {
-            authEndpoint = findAuthEndpoint(basicAuthConfig, domain, baseRequestUrl(request), basicAuthConfig.getGrantType() == BasicAuthGrantType.resourceOwnerPasswordCredentials);
+            authEndpoint = findAuthEndpoint(log, basicAuthConfig, domain, baseRequestUrl(request), basicAuthConfig.getGrantType() == BasicAuthGrantType.resourceOwnerPasswordCredentials);
           } catch (Throwable ex) {
             return Future.failedFuture(ex);
           }
           if (basicAuthConfig.getGrantType() == BasicAuthGrantType.clientCredentials) {
-            tokenFuture = performClientCredentialsGrant(authEndpoint.getUrl(), usernameWithoutDomain, password);
+            tokenFuture = performClientCredentialsGrant(log, authEndpoint.getUrl(), usernameWithoutDomain, password);
           } else {
-            tokenFuture = performResourceOwnerPasswordCredentials(authEndpoint, usernameWithoutDomain, password);
+            tokenFuture = performResourceOwnerPasswordCredentials(log, authEndpoint, usernameWithoutDomain, password);
           }
         }
       }
@@ -400,14 +401,14 @@ public class Authenticator {
       return tokenFuture
               .compose(token -> {
                 if (token == null) {
-                  logger.info("Login for {} failed", username);
+                  log.info().log("Login for {} failed", username);
                   return Future.failedFuture(new ServiceException(401, "Invalid credentials"));
                 } else {
-                  logger.debug("Login for {} got token: {}", username, token);
+                  log.debug().log("Login for {} got token: {}", username, token);
                   return validateToken(request, token)
                           .onComplete(ar -> {
                             if (ar.succeeded()) {
-                              cacheToken(encodedCredentials, ar.result().getExpirationLocalDateTime(), token);
+                              cacheToken(log, encodedCredentials, ar.result().getExpirationLocalDateTime(), token);
                               requestContext.setJwt(ar.result());
                             }
                             request.resume();
@@ -422,7 +423,7 @@ public class Authenticator {
     } else if (authHeader.startsWith(BEARER)) {
 
       if (!enableBearerAuth) {
-        logger.warn("Request includes bearer authentication but system is not configured to handle them.");
+        log.warn().log("Request includes bearer authentication but system is not configured to handle them.");
         return Future.failedFuture(new ServiceException(401, "Forbiedden"));
       }
 
@@ -434,7 +435,7 @@ public class Authenticator {
                 request.resume();
               })
               .compose(jwt -> {
-                logger.trace("Storing JWT in RequestContext@{}", System.identityHashCode(requestContext));
+                log.trace().log("Storing JWT in RequestContext@{}", System.identityHashCode(requestContext));
                 requestContext.setJwt(jwt);
                 request.resume();
                 return Future.succeededFuture(requestContext);
@@ -442,13 +443,13 @@ public class Authenticator {
 
     } else {
 
-      logger.warn("Unable to process auth header: {}", authHeader);
+      log.warn().log("Unable to process auth header: {}", authHeader);
       return Future.succeededFuture(requestContext);
 
     }
   }
 
-  static Future<RequestContext> buildFromBase64Json(RequestContext requestContext, String base64Json) {
+  static Future<RequestContext> buildFromBase64Json(Log log, RequestContext requestContext, String base64Json) {
     try {
       String json = base64Json;
       try {
@@ -460,7 +461,7 @@ public class Authenticator {
       requestContext.setJwt(jwt);
       return Future.succeededFuture(requestContext);
     } catch (Throwable ex) {
-      logger.warn("Failed to create RequestContext: ", ex);
+      log.warn().log("Failed to create RequestContext: ", ex);
       return Future.failedFuture(ex);
     }
   }
@@ -476,7 +477,7 @@ public class Authenticator {
    * @return The authentication endpoint URL as a String.
    * @throws IllegalStateException If no valid IdP configuration can be determined.
    */
-  static Endpoint findAuthEndpoint(BasicAuthConfig basicAuthConfig, String domain, String baseUrl, boolean requireCredentials) throws IllegalStateException {
+  static Endpoint findAuthEndpoint(Log log, BasicAuthConfig basicAuthConfig, String domain, String baseUrl, boolean requireCredentials) throws IllegalStateException {
     Endpoint authEndpoint;
     if (!Strings.isNullOrEmpty(basicAuthConfig.getAuthorizationPath())) {
       StringBuilder authUrlBuilder = new StringBuilder();
@@ -520,15 +521,15 @@ public class Authenticator {
     }
     if (requireCredentials) {
       if ((authEndpoint.getCredentials() == null) || (Strings.isNullOrEmpty(authEndpoint.getCredentials().getUsername()))) {
-        logger.debug("No credentials found for {}", authEndpoint.getUrl());
+        log.debug().log("No credentials found for {}", authEndpoint.getUrl());
         throw new IllegalStateException("No credentials configured for IdP");
       }
     }
     return authEndpoint;
   }
 
-  private Future<String> performClientCredentialsGrant(String tokenEndpoint, String clientId, String clientSecret) {
-    logger.debug("Performing client_credentials request to {}", tokenEndpoint);
+  private Future<String> performClientCredentialsGrant(Log log, String tokenEndpoint, String clientId, String clientSecret) {
+    log.debug().log("Performing client_credentials request to {}", tokenEndpoint);
     MultiMap form = HeadersMultiMap.httpHeaders();
     form.add("grant_type", "client_credentials");
     form.add("client_id", clientId);
@@ -538,21 +539,21 @@ public class Authenticator {
             .compose(response -> {
               Buffer body = response.body();
               try {
-                logger.trace("CCG request to {} returned: {} {}", tokenEndpoint, response.statusCode(), body);
+                log.trace().log("CCG request to {} returned: {} {}", tokenEndpoint, response.statusCode(), body);
                 JsonObject bodyJson = body.toJsonObject();
                 String token = bodyJson.getString("access_token");
-                logger.debug("Client {}@{} got token {}", clientId, tokenEndpoint, token);
+                log.debug().log("Client {}@{} got token {}", clientId, tokenEndpoint, token);
                 return Future.succeededFuture(token);
               } catch (Throwable ex) {
-                logger.warn("CCG request to {} returned: {} {}", tokenEndpoint, response.statusCode(), body);
-                logger.warn("Failed to process client credentials grant for {}@{}: ", clientId, tokenEndpoint, ex);
+                log.warn().log("CCG request to {} returned: {} {}", tokenEndpoint, response.statusCode(), body);
+                log.warn().log("Failed to process client credentials grant for {}@{}: ", clientId, tokenEndpoint, ex);
                 return Future.failedFuture(ex);
               }
             });
   }
 
-  private Future<String> performResourceOwnerPasswordCredentials(Endpoint authEndpoint, String username, String password) {
-    logger.debug("Performing password request to {}", authEndpoint);
+  private Future<String> performResourceOwnerPasswordCredentials(Log log, Endpoint authEndpoint, String username, String password) {
+    log.debug().log("Performing password request to {}", authEndpoint);
     MultiMap form = HeadersMultiMap.httpHeaders();
     form.add("grant_type", "password");
     form.add("username", username);
@@ -566,14 +567,14 @@ public class Authenticator {
             .compose(response -> {
               Buffer body = response.body();
               try {
-                logger.trace("ROPC request to {} returned: {} {}", authEndpoint, response.statusCode(), body);
+                log.trace().log("ROPC request to {} returned: {} {}", authEndpoint, response.statusCode(), body);
                 JsonObject bodyJson = body.toJsonObject();
                 String token = bodyJson.getString("access_token");
-                logger.debug("User {}@{} got token {}", username, authEndpoint, token);
+                log.debug().log("User {}@{} got token {}", username, authEndpoint, token);
                 return Future.succeededFuture(token);
               } catch (Throwable ex) {
-                logger.warn("ROPC request to {} returned: {} {}", authEndpoint, response.statusCode(), body);
-                logger.warn("Failed to process client credentials grant for {}@{}: ", username, authEndpoint, ex);
+                log.warn().log("ROPC request to {} returned: {} {}", authEndpoint, response.statusCode(), body);
+                log.warn().log("Failed to process client credentials grant for {}@{}: ", username, authEndpoint, ex);
                 return Future.failedFuture(ex);
               }
             });

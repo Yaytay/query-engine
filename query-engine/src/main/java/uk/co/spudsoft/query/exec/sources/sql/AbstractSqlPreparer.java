@@ -29,7 +29,10 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Argument;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.ArgumentInstance;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * Abstract class to prepare SQL statements before being passed to Vert.x.
@@ -44,10 +47,14 @@ public abstract class AbstractSqlPreparer {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(AbstractSqlPreparer.class);
 
+  private final Log log;
+  
   /**
    * Constructor.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    */
-  public AbstractSqlPreparer() {
+  public AbstractSqlPreparer(PipelineContext pipelineContext) {
+    this.log = new Log(logger, pipelineContext);
   }
 
   /**
@@ -156,7 +163,7 @@ public abstract class AbstractSqlPreparer {
     matcher.appendTail(builder);
 
     String sql = builder.toString();
-    logger.debug("Running SQL {} with args {}", sql, args);
+    log.debug().log("Running SQL {} with args {}", sql, args);
     return new QueryAndArgs(sql, Collections.unmodifiableList(args));
   }
 
@@ -172,7 +179,7 @@ public abstract class AbstractSqlPreparer {
    */
   protected void appendSingleValuedParameter(ArgumentInstance argInstance, List<Object> args, Map<String, Integer> baseNumberedArgs, int inParameterIdx, StringBuilder inClause) {
     Integer outParameterIdx = baseNumberedArgs == null || argInstance == null ? null : baseNumberedArgs.get(argInstance.getName());
-    logger.trace("appendSingleValuedParameter({}, {} ({}))", argInstance == null ? null : argInstance.getName(), outParameterIdx, baseNumberedArgs);
+    log.trace().log("appendSingleValuedParameter({}, {} ({}))", argInstance == null ? null : argInstance.getName(), outParameterIdx, baseNumberedArgs);
     if (outParameterIdx == null && baseNumberedArgs != null && argInstance != null) {
       baseNumberedArgs.put(argInstance.getName(), 1 + args.size());
     }
@@ -242,7 +249,7 @@ public abstract class AbstractSqlPreparer {
   protected void processParameter(ImmutableMap<String, ArgumentInstance> argSrc, Matcher matcher, Map<String, Integer> baseNumberedArgs, String varName, List<Object> args, StringBuilder builder) {
     ArgumentInstance argInstance = argSrc.get(varName);
     if (argInstance == null || argInstance.getValues().isEmpty()) {
-      logger.warn("Argument \"{}\" not provided", varName);
+      log.warn().log("Argument \"{}\" not provided", varName);
     }
     StringBuilder inClause = new StringBuilder();
     if (argInstance != null && argInstance.getDefinition().isMultiValued()) {

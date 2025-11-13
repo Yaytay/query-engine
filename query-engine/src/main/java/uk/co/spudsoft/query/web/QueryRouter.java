@@ -340,7 +340,7 @@ public class QueryRouter implements Handler<RoutingContext> {
                             } else {
                               logger.warn("Failed to open cache file {}: ", cacheDetails, ar.cause());
                               // Failed to open cache file, so regenerate
-                              return auditor.deleteCacheFile(cacheDetails.auditId())
+                              return auditor.deleteCacheFile(requestContext, cacheDetails.auditId())
                                       .transform(ar2 -> {
                                         if (ar2.failed()) {
                                           logger.error("Failed to delete cache for {}: {}", cacheDetails.auditId(), ar2.cause());
@@ -366,7 +366,7 @@ public class QueryRouter implements Handler<RoutingContext> {
                             return runPipeline(pipeline, requestContext, formatRequest, response, ar2.result(), routingContext);
                           } else {
                             logger.error("Failed to open cache file ({}) for {}: {}", cacheFile, requestContext.getRequestId(), ar2.cause());
-                            return auditor.deleteCacheFile(requestContext.getRequestId())
+                            return auditor.deleteCacheFile(requestContext, requestContext.getRequestId())
                                     .transform(ar3 -> {
                                       if (ar3.failed()) {
                                         logger.error("Failed to delete cache for {}: {}", cacheFile, requestContext.getRequestId(), ar3.cause());

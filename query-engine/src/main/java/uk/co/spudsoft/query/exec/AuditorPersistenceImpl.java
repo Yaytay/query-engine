@@ -76,6 +76,8 @@ import uk.co.spudsoft.dircache.DirCacheTree;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.defn.RateLimitRule;
 import uk.co.spudsoft.query.defn.RateLimitScopeType;
+import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.main.Persistence;
 import uk.co.spudsoft.query.main.DataSourceConfig;
 import uk.co.spudsoft.query.main.ExceptionToString;
@@ -495,7 +497,19 @@ public class AuditorPersistenceImpl implements Auditor {
       hasher.putString(value, StandardCharsets.UTF_8);
     }
   }
-
+  
+  /**
+   * Extract the requestId from a PipelineContext.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
+   * @return the requestId from a PipelineContext, or null.
+   */
+  static String requestId(RequestContext requestContext) {
+    if (requestContext != null) {
+      return requestContext.getRequestId();
+    }
+    return null;
+  }
+  
   /**
    * The cache key is built of:
    * <UL>
@@ -522,17 +536,20 @@ public class AuditorPersistenceImpl implements Auditor {
    */
   static String buildCacheKey(RequestContext requestContext) {
 
-    Hasher sha = Hashing.sha256().newHasher();
-    hashNullableString(sha, requestContext.getUrl());
-    hashNullableString(sha, requestContext.getHeaders().get("Accept"));
-    hashNullableString(sha, requestContext.getHeaders().get("Accept-Encoding"));
-    hashNullableString(sha, Objects.toString(requestContext.getAudience()));
-    hashNullableString(sha, requestContext.getIssuer());
-    hashNullableString(sha, requestContext.getSubject());
-    hashNullableString(sha, Objects.toString(requestContext.getGroups()));
-    hashNullableString(sha, Objects.toString(requestContext.getRoles()));
-    return sha.hash().toString();
-
+    if (requestContext != null) {
+      Hasher sha = Hashing.sha256().newHasher();
+      hashNullableString(sha, requestContext.getUrl());
+      hashNullableString(sha, requestContext.getHeaders().get("Accept"));
+      hashNullableString(sha, requestContext.getHeaders().get("Accept-Encoding"));
+      hashNullableString(sha, Objects.toString(requestContext.getAudience()));
+      hashNullableString(sha, requestContext.getIssuer());
+      hashNullableString(sha, requestContext.getSubject());
+      hashNullableString(sha, Objects.toString(requestContext.getGroups()));
+      hashNullableString(sha, Objects.toString(requestContext.getRoles()));
+      return sha.hash().toString();
+    } else {
+      return null;
+    }
   }
 
   @Override
@@ -554,33 +571,44 @@ public class AuditorPersistenceImpl implements Auditor {
 
   @Override
   public Future<Void> recordCacheFile(RequestContext requestContext, String fileName, LocalDateTime expiry) {
-    return jdbcHelper.runSqlUpdate("recordCacheFile", SqlTemplate.RECORD_CACHE_FILE.sql(), ps -> {
-                    int param = 1;
-                    ps.setString(param++, buildCacheKey(requestContext));
-                    ps.setString(param++, fileName);
-                    JdbcHelper.setLocalDateTimeUTC(ps, param++, expiry);
-                    ps.setString(param++, requestContext.getRequestId());
-    }).mapEmpty();
+    
+    String requestId = requestId(requestContext);
+    if (requestId != null) {
+      return jdbcHelper.runSqlUpdate("recordCacheFile", SqlTemplate.RECORD_CACHE_FILE.sql(), ps -> {
+                      int param = 1;
+                      ps.setString(param++, buildCacheKey(requestContext));
+                      ps.setString(param++, fileName);
+                      JdbcHelper.setLocalDateTimeUTC(ps, param++, expiry);
+                      ps.setString(param++, requestId);
+      }).mapEmpty();
+    } else {
+      return Future.failedFuture("RequestContext not set");
+    }
   }
 
   @Override
   public Future<Void> recordCacheFileUsed(RequestContext requestContext, String fileName) {
-    return jdbcHelper.runSqlUpdate("recordCacheFileUsed", SqlTemplate.RECORD_CACHE_FILE_USED.sql(), ps -> {
-                    int param = 1;
-                    ps.setString(param++, fileName);
-                    ps.setString(param++, requestContext.getRequestId());
-    }).mapEmpty();
+    String requestId = requestId(requestContext);
+    if (requestId != null) {
+      return jdbcHelper.runSqlUpdate("recordCacheFileUsed", SqlTemplate.RECORD_CACHE_FILE_USED.sql(), ps -> {
+                      int param = 1;
+                      ps.setString(param++, fileName);
+                      ps.setString(param++, requestId);
+      }).mapEmpty();
+    } else {
+      return Future.failedFuture("RequestContext not set");
+    }
   }
 
   @Override
-  public Future<Void> deleteCacheFile(String auditId) {
+  public Future<Void> deleteCacheFile(RequestContext requestContext, String auditId) {
     return jdbcHelper.runSqlUpdate("deleteCacheFile", SqlTemplate.DELETE_CACHE_FILE.sql(), ps -> {
                     int param = 1;
                     ps.setString(param++, auditId);
                     JdbcHelper.setLocalDateTimeUTC(ps, param++, LocalDateTime.now(ZoneOffset.UTC));
     })
             .recover(ex -> {
-              logger.error("Failed to mark cache file deleted for {}: ", auditId, ex);
+              Log.decorate(logger.atError(), requestContext).log("Failed to mark cache file deleted for {}: ", auditId, ex);
               return Future.succeededFuture();
             })
             .mapEmpty();
@@ -588,11 +616,14 @@ public class AuditorPersistenceImpl implements Auditor {
 
   @Override
   public Future<Void> recordRequest(RequestContext requestContext) {
+    if (requestContext == null) {
+      return Future.failedFuture("RequestContext not set");
+    }
 
-    JsonObject headers = multiMapToJson(requestContext.getHeaders());
-    JsonObject arguments = multiMapToJson(requestContext.getParams());
+    JsonObject headers = multiMapToJson(requestContext, requestContext.getHeaders());
+    JsonObject arguments = multiMapToJson(requestContext, requestContext.getParams());
 
-    logger.info("Request: {} {} {} {} {} {}",
+    Log.decorate(logger.atInfo(), requestContext).log("Request: {} {} {} {} {} {}",
              requestContext.getUrl(),
              requestContext.getClientIp(),
              requestContext.getHost(),
@@ -633,32 +664,43 @@ public class AuditorPersistenceImpl implements Auditor {
 
   @Override
   public Future<Void> recordFileDetails(RequestContext requestContext, DirCacheTree.File file, Pipeline pipeline) {
-    logger.info("File: {} {} {}", file.getPath(), file.getSize(), file.getModified());
-    return jdbcHelper.runSqlUpdate("recordFile", SqlTemplate.RECORD_FILE.sql(), ps -> {
-             ps.setString(1, JdbcHelper.limitLength(JdbcHelper.toString(file.getPath()), 1000));
-             ps.setLong(2, file.getSize());
-             JdbcHelper.setLocalDateTimeUTC(ps, 3, file.getModified());
-             ps.setString(4, pipeline == null ? null : pipeline.getSha256());
-             ps.setString(5, JdbcHelper.limitLength(requestContext.getRequestId(), 100));
-    }).mapEmpty();
+    Log.decorate(logger.atInfo(), requestContext).log("File: {} {} {}", file.getPath(), file.getSize(), file.getModified());
+    String requestId = requestId(requestContext);
+    if (requestId != null) {
+      return jdbcHelper.runSqlUpdate("recordFile", SqlTemplate.RECORD_FILE.sql(), ps -> {
+               ps.setString(1, JdbcHelper.limitLength(JdbcHelper.toString(file.getPath()), 1000));
+               ps.setLong(2, file.getSize());
+               JdbcHelper.setLocalDateTimeUTC(ps, 3, file.getModified());
+               ps.setString(4, pipeline == null ? null : pipeline.getSha256());
+               ps.setString(5, JdbcHelper.limitLength(requestId, 100));
+      }).mapEmpty();
+    } else {
+      return Future.failedFuture("RequestContext not set");
+    }
   }
 
   @Override
   public void recordException(RequestContext requestContext, Throwable ex) {
-    logger.info("Exception: {} {}", ex.getClass().getCanonicalName(), ex.getMessage());
-    jdbcHelper.runSqlUpdate("recordException", SqlTemplate.RECORD_EXCEPTION.sql(), ps -> {
-             JdbcHelper.setLocalDateTimeUTC(ps, 1, LocalDateTime.now(ZoneOffset.UTC));
-             ps.setString(2, JdbcHelper.limitLength(ex.getClass().getCanonicalName(), 1000));
-             ps.setString(3, JdbcHelper.limitLength(ex.getMessage(), 1000));
-             ps.setString(4, ExceptionToString.convert(ex, "; "));
-             ps.setString(5, requestContext.getRequestId());
-    });
+    Log.decorate(logger.atInfo(), requestContext).log("Exception: {} {}", ex.getClass().getCanonicalName(), ex.getMessage());
+    String requestId = requestId(requestContext);
+    if (requestId != null) {
+      jdbcHelper.runSqlUpdate("recordException", SqlTemplate.RECORD_EXCEPTION.sql(), ps -> {
+               JdbcHelper.setLocalDateTimeUTC(ps, 1, LocalDateTime.now(ZoneOffset.UTC));
+               ps.setString(2, JdbcHelper.limitLength(ex.getClass().getCanonicalName(), 1000));
+               ps.setString(3, JdbcHelper.limitLength(ex.getMessage(), 1000));
+               ps.setString(4, ExceptionToString.convert(ex, "; "));
+               ps.setString(5, requestId);
+      });
+    }
   }
 
   @Override
   public void recordResponse(RequestContext requestContext, HttpServerResponse response) {
-    JsonObject headers = multiMapToJson(response.headers());
-    logger.info("Request complete: {} {} bytes in {}s {}"
+    if (requestContext == null) {
+      return ;
+    }
+    JsonObject headers = multiMapToJson(requestContext, response.headers());
+    Log.decorate(logger.atInfo(), requestContext).log("Request complete: {} {} bytes in {}s {}"
             , response.getStatusCode()
             , response.bytesWritten()
             , (System.currentTimeMillis() - requestContext.getStartTime()) / 1000.0
@@ -682,9 +724,14 @@ public class AuditorPersistenceImpl implements Auditor {
 
   @Override
   public Future<Pipeline> runRateLimitRules(RequestContext requestContext, Pipeline pipeline) {
-     List<RateLimitRule> rules = pipeline.getRateLimitRules();
+    
+    if (requestContext == null) {
+      return Future.failedFuture("RequestContext not set");
+    }
+    
+    List<RateLimitRule> rules = pipeline.getRateLimitRules();
 
-    logger.debug("Performing rate limit check with {} rules", rules.size());
+    Log.decorate(logger.atDebug(), requestContext).log("Performing rate limit check with {} rules", rules.size());
     Instant now = LocalDateTime.now(ZoneOffset.UTC).toInstant(ZoneOffset.UTC);
     if (CollectionUtils.isEmpty(rules)) {
       return jdbcHelper.runSqlUpdate("markRateLimitRulesProcessed", SqlTemplate.MARK_RATE_LIMIT_RULES_PROCESSED.sql(), ps -> {
@@ -743,16 +790,16 @@ public class AuditorPersistenceImpl implements Auditor {
     }
 
     String sqlString = sql.toString();
-    logger.info("Running rate limit rules {} with {}", sqlString, args);
+    Log.decorate(logger.atInfo(), requestContext).log("Running rate limit rules {} with {}", sqlString, args);
 
     return jdbcHelper.runInTransaction("rateLimitRules", JdbcHelper.IsolationLevel.TRANSACTION_SERIALIZABLE, conn -> {
-      runRateLimitRulesSqlInTransaction(conn, sqlString, args, rules, requestContext.getRequestId(), now);
+      runRateLimitRulesSqlInTransaction(requestContext, conn, sqlString, args, rules, requestContext.getRequestId(), now);
       return null;
     }).map(v -> pipeline);
   }
 
   @SuppressFBWarnings(value = "SQL_INJECTION_JDBC", justification = "SQL is generated from known strings")
-  private void runRateLimitRulesSqlInTransaction(Connection conn, String sql, List<Object> args, List<RateLimitRule> rules, String requestId, Instant now) throws Throwable {
+  private void runRateLimitRulesSqlInTransaction(RequestContext requestContext, Connection conn, String sql, List<Object> args, List<RateLimitRule> rules, String requestId, Instant now) throws Throwable {
     jdbcHelper.runSqlSelectOnConnectionSynchronously(conn,
             sql,
             ps -> {
@@ -763,7 +810,7 @@ public class AuditorPersistenceImpl implements Auditor {
               boolean[] done = new boolean[rules.size()];
               while (rs.next()) {
                 if (logger.isTraceEnabled()) {
-                  logger.trace("RateLimitRow: id: {}, outstanding: {}, runs: {}, bytes: {}, time: {}",
+                  Log.decorate(logger.atTrace(), requestContext).log("RateLimitRow: id: {}, outstanding: {}, runs: {}, bytes: {}, time: {}",
                           rs.getInt(1),
                           rs.getInt(2),
                           rs.getInt(3),
@@ -773,17 +820,17 @@ public class AuditorPersistenceImpl implements Auditor {
                 }
                 int index = rs.getInt(1);
                 if (index >= rules.size()) {
-                  logger.error("Error in rate limit processing: index {} out of bounds", index);
+                  Log.decorate(logger.atError(), requestContext).log("Error in rate limit processing: index {} out of bounds", index);
                   throw new ServiceException(500, "Internal error");
                 }
                 if (done[index]) {
-                  logger.error("Error in rate limit processing: index {} found more than once", index);
+                  Log.decorate(logger.atError(), requestContext).log("Error in rate limit processing: index {} found more than once", index);
                   throw new ServiceException(500, "Internal error");
                 } else {
                   done[index] = true;
                 }
                 RateLimitRule rule = rules.get(index);
-                evaluateRateLimitRule(rule,
+                evaluateRateLimitRule(requestContext, rule,
                         now,
                         index,
                         rs.getInt(2),
@@ -794,7 +841,7 @@ public class AuditorPersistenceImpl implements Auditor {
               }
               for (int i = 0; i < done.length; ++i) {
                 if (!done[i]) {
-                  logger.error("Error in rate limit processing: index {} not processed", i);
+                  Log.decorate(logger.atError(), requestContext).log("Error in rate limit processing: index {} not processed", i);
                   throw new ServiceException(500, "Internal error");
                 }
               }
@@ -806,16 +853,16 @@ public class AuditorPersistenceImpl implements Auditor {
       ps.setTimestamp(1, ts, cal);
       ps.setString(2, requestId);
     });
-    logger.debug("Marking rate limit rules processed affected {} rows", rowsAffected);
+    Log.decorate(logger.atDebug(), requestContext).log("Marking rate limit rules processed affected {} rows", rowsAffected);
  }
 
-  static void evaluateRateLimitRule(RateLimitRule rule, Instant now, int index, int outstanding, int runs, long bytes, LocalDateTime timestamp) throws ServiceException {
+  static void evaluateRateLimitRule(RequestContext requestContext, RateLimitRule rule, Instant now, int index, int outstanding, int runs, long bytes, LocalDateTime timestamp) throws ServiceException {
     if (outstanding > rule.getConcurrencyLimit()) {
       String logmsg = outstanding > 1
               ? "RateLimitRule {} failed: Concurrency limit failed. At {} there were {} outstanding runs since {}. Rule: {}"
               : "RateLimitRule {} failed: Concurrency limit failed. At {} there was {} outstanding run since {}. Rule: {}"
               ;
-      logger.error(logmsg, index, timestamp, outstanding, now.minus(rule.getTimeLimit()), rule);
+      Log.decorate(logger.atError(), requestContext).log(logmsg, index, timestamp, outstanding, now.minus(rule.getTimeLimit()), rule);
       throw new ServiceException(429, "Query already running, please try again later");
     }
     Long runLimit = rule.getParsedRunLimit();
@@ -825,7 +872,7 @@ public class AuditorPersistenceImpl implements Auditor {
                 ? "RateLimitRule {} failed: Run limit failed. At {} there had been {} runs since {}. Rule: {}"
                 : "RateLimitRule {} failed: Run limit failed. At {} there had been {} run since {}. Rule: {}"
                 ;
-        logger.error(logmsg, index, timestamp, outstanding, now.minus(rule.getTimeLimit()), rule);
+        Log.decorate(logger.atError(), requestContext).log(logmsg, index, timestamp, outstanding, now.minus(rule.getTimeLimit()), rule);
         throw new ServiceException(429, "Run too many times, please try again later");
       }
     }
@@ -836,7 +883,7 @@ public class AuditorPersistenceImpl implements Auditor {
                 ? "RateLimitRule {} failed: Byte limit failed. At {} there had been {} bytes sent since {}. Rule: {}"
                 : "RateLimitRule {} failed: Byte limit failed. At {} there had been {} byte sent since {}. Rule: {}"
                 ;
-        logger.error(logmsg, index, timestamp, outstanding, now.minus(rule.getTimeLimit()), rule);
+        Log.decorate(logger.atError(), requestContext).log(logmsg, index, timestamp, outstanding, now.minus(rule.getTimeLimit()), rule);
         throw new ServiceException(429, "Rate limit exceeded, please try again later");
       }
     }
@@ -850,10 +897,11 @@ public class AuditorPersistenceImpl implements Auditor {
    * Convert a Vert.x MultiMap to JSON.
    * <p>
    * Individual values are written directly, multiple values are written as a JsonArray.
+   * @param requestContext For logging context.
    * @param map The input MultiMap.
    * @return A JsonObject.
    */
-  public static JsonObject multiMapToJson(MultiMap map) {
+  public static JsonObject multiMapToJson(RequestContext requestContext, MultiMap map) {
     if (map == null) {
       return null;
     }
@@ -862,7 +910,7 @@ public class AuditorPersistenceImpl implements Auditor {
       List<String> values = map.getAll(key);
       if (values != null && !values.isEmpty()) {
         if (AUTH.equalsIgnoreCase(key)) {
-          values = values.stream().map(v -> protectAuthHeader(v)).collect(Collectors.toList());
+          values = values.stream().map(v -> protectAuthHeader(requestContext, v)).collect(Collectors.toList());
         }
         if (values.size() == 1) {
           jo.put(key, values.get(0));
@@ -878,7 +926,7 @@ public class AuditorPersistenceImpl implements Auditor {
     return jo;
   }
 
-  static String protectAuthHeader(String value) {
+  static String protectAuthHeader(RequestContext requestContext, String value) {
     if  (value == null) {
       return null;
     }
@@ -888,10 +936,10 @@ public class AuditorPersistenceImpl implements Auditor {
         String creds = new String(DECODER.decode(base64Part), StandardCharsets.UTF_8);
         int colonPos = creds.indexOf(":");
         if (colonPos > 0) {
-          value = BASIC + new String(ENCODER.encode(creds.substring(0, colonPos).getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
+          value = BASIC + new String(ENCODER.encode(creds.substring(0, colonPos + 1).getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
         }
       } catch (Throwable ex) {
-        logger.warn("Failed to protect credentials in Authorization header: ", ex);
+        Log.decorate(logger.atWarn(), requestContext).log("Failed to protect credentials in Authorization header: ", ex);
       }
     } else if (value.startsWith(BEARER)) {
       try {
@@ -900,7 +948,7 @@ public class AuditorPersistenceImpl implements Auditor {
           value = value.substring(0, dotPos);
         }
       } catch (Throwable ex) {
-        logger.warn("Failed to protect token in Authorization header: ", ex);
+        Log.decorate(logger.atWarn(), requestContext).log("Failed to protect token in Authorization header: ", ex);
       }
     }
     return value;
@@ -909,10 +957,10 @@ public class AuditorPersistenceImpl implements Auditor {
 
 
   @Override
-  public Future<AuditHistory> getHistory(String issuerArg, String subjectArg, int skipRows, int maxRows, AuditHistorySortOrder sortOrder, boolean sortDescending) {
-    logger.info("Get history for : {} {} ({}, {}, {} {})", issuerArg, subjectArg, skipRows, maxRows, sortOrder, sortDescending);
+  public Future<AuditHistory> getHistory(RequestContext requestContext, String issuerArg, String subjectArg, int skipRows, int maxRows, AuditHistorySortOrder sortOrder, boolean sortDescending) {
+    Log.decorate(logger.atInfo(), requestContext).log("Get history for : {} {} ({}, {}, {} {})", issuerArg, subjectArg, skipRows, maxRows, sortOrder, sortDescending);
 
-    Future<List<AuditHistoryRow>> rowsFuture = getRows(issuerArg, subjectArg, skipRows, maxRows, sortOrder, sortDescending);
+    Future<List<AuditHistoryRow>> rowsFuture = getRows(requestContext, issuerArg, subjectArg, skipRows, maxRows, sortOrder, sortDescending);
     Future<Long> countFuture = countRows(issuerArg, subjectArg);
 
     return Future.all(rowsFuture, countFuture)
@@ -940,7 +988,7 @@ public class AuditorPersistenceImpl implements Auditor {
 
 
 
-  private Future<List<AuditHistoryRow>> getRows(String issuerArg, String subjectArg
+  private Future<List<AuditHistoryRow>> getRows(RequestContext requestContext, String issuerArg, String subjectArg
           , int skipRows, int maxRows
           , AuditHistorySortOrder sortOrder, boolean sortDescending
   ) {
@@ -952,7 +1000,7 @@ public class AuditorPersistenceImpl implements Auditor {
     switch (offsetLimitType) {
       case limitOffset -> sql = sql + " limit " + maxRows + " offset " + skipRows + " ";
       case offsetFetch -> sql = sql + " offset " + skipRows + " rows fetch next " + maxRows + " rows only ";
-      default -> logger.error("No configuration for offset limit type of {}", offsetLimitType);
+      default -> Log.decorate(logger.atError(), requestContext).log("No configuration for offset limit type of {}", offsetLimitType);
     }
 
     return jdbcHelper.runSqlSelect(sql, ps -> {
@@ -965,7 +1013,7 @@ public class AuditorPersistenceImpl implements Auditor {
         LocalDateTime timestamp = LocalDateTime.ofInstant(rs.getTimestamp(1).toInstant(), ZoneOffset.UTC);
         String id = rs.getString(2);
         String path = rs.getString(3);
-        ObjectNode arguments = getArguments(rs, 4, id);
+        ObjectNode arguments = getArguments(requestContext, rs, 4, id);
         String host = rs.getString(5);
         String issuer = rs.getString(6);
         String subject = rs.getString(7);
@@ -1003,7 +1051,7 @@ public class AuditorPersistenceImpl implements Auditor {
   }
 
   @SuppressFBWarnings("CRLF_INJECTION_LOGS")
-  ObjectNode getArguments(ResultSet rs, int idx, String id) throws SQLException {
+  ObjectNode getArguments(RequestContext requestContext, ResultSet rs, int idx, String id) throws SQLException {
     ObjectNode arguments = null;
     String value = rs.getString(idx);
     if (rs.wasNull()) {
@@ -1014,7 +1062,7 @@ public class AuditorPersistenceImpl implements Auditor {
         arguments = mapper.readValue(value, ObjectNode.class);
       }
     } catch (Throwable ex) {
-      logger.warn("Arguments from database ({}) for id {} failed to parse: ", value.replaceAll("[\r\n]", ""), id, ex);
+      Log.decorate(logger.atWarn(), requestContext).log("Arguments from database ({}) for id {} failed to parse: ", value.replaceAll("[\r\n]", ""), id, ex);
     }
     return arguments;
   }

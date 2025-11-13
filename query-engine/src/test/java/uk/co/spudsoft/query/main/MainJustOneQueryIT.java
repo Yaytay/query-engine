@@ -78,7 +78,7 @@ public class MainJustOneQueryIT {
       , "--vertxOptions.eventLoopPoolSize=5"
       , "--vertxOptions.workerPoolSize=5"
       , "--pipelineCache.maxDuration=PT10M"
-      , "--logging.jsonFormat=true"
+      , "--logging.jsonFormat=false"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.jwksEndpoints[0]=http://localhost/"
       , "--jwt.defaultJwksCacheDuration=PT1M"

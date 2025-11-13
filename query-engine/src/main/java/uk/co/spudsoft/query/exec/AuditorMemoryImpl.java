@@ -58,6 +58,8 @@ import static uk.co.spudsoft.query.exec.AuditHistorySortOrder.id;
 import static uk.co.spudsoft.query.exec.AuditHistorySortOrder.responseStreamStart;
 import static uk.co.spudsoft.query.exec.AuditHistorySortOrder.timestamp;
 import static uk.co.spudsoft.query.exec.AuditorPersistenceImpl.multiMapToJson;
+import static uk.co.spudsoft.query.exec.AuditorPersistenceImpl.requestId;
+import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.main.ExceptionToString;
 
 /**
@@ -177,7 +179,8 @@ public class AuditorMemoryImpl implements Auditor {
     }
   }
 
-  private AuditRow find(String id) {
+  private AuditRow find(RequestContext requestContext) {
+    String id = requestId(requestContext);
     if (Strings.isNullOrEmpty(id)) {
       return null;
     }
@@ -187,7 +190,7 @@ public class AuditorMemoryImpl implements Auditor {
           return row;
         }
       }
-      logger.info("Did not find details of run {} in history of {} runs: {}", id, auditRows.size(), auditRows);
+      Log.decorate(logger.atInfo(), requestContext).log("Did not find details of run {} in history of {} runs: {}", id, auditRows.size(), auditRows);
     }
     return null;
   }
@@ -197,17 +200,19 @@ public class AuditorMemoryImpl implements Auditor {
   public Future<CacheDetails> getCacheFile(RequestContext requestContext, Pipeline pipeline) {
 
     String cacheKey = AuditorPersistenceImpl.buildCacheKey(requestContext);
-    LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
-    synchronized (auditRows) {
-      for (AuditRow row : auditRows) {
-        if (cacheKey.equals(row.cacheKey)
-                && row.cacheExpiry != null
-                && row.cacheExpiry.isAfter(now)
-                && row.cacheDeleted == null
-                && row.fileHash != null
-                && row.fileHash.equals(pipeline.getSha256())
-                ) {
-          return Future.succeededFuture(new CacheDetails(row.id, row.cacheFile, row.cacheExpiry));
+    if (cacheKey != null) {
+      LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+      synchronized (auditRows) {
+        for (AuditRow row : auditRows) {
+          if (cacheKey.equals(row.cacheKey)
+                  && row.cacheExpiry != null
+                  && row.cacheExpiry.isAfter(now)
+                  && row.cacheDeleted == null
+                  && row.fileHash != null
+                  && row.fileHash.equals(pipeline.getSha256())
+                  ) {
+            return Future.succeededFuture(new CacheDetails(row.id, row.cacheFile, row.cacheExpiry));
+          }
         }
       }
     }
@@ -216,34 +221,44 @@ public class AuditorMemoryImpl implements Auditor {
 
   @Override
   public Future<Void> recordCacheFile(RequestContext requestContext, String fileName, LocalDateTime expiry) {
-    synchronized (auditRows) {
-      for (AuditRow row : auditRows) {
-        if (requestContext.getRequestId().equals(row.id)) {
-          row.cacheKey = AuditorPersistenceImpl.buildCacheKey(requestContext);
-          row.cacheFile = fileName;
-          row.cacheExpiry = expiry;
-          break ;
+    String requestId = requestId(requestContext);
+    if (requestId != null) {
+      synchronized (auditRows) {
+        for (AuditRow row : auditRows) {
+          if (requestId.equals(row.id)) {
+            row.cacheKey = AuditorPersistenceImpl.buildCacheKey(requestContext);
+            row.cacheFile = fileName;
+            row.cacheExpiry = expiry;
+            break;
+          }
         }
+        return Future.succeededFuture();
       }
-      return Future.succeededFuture();
+    } else {
+      return Future.failedFuture("RequestContext not set");
     }
   }
 
   @Override
   public Future<Void> recordCacheFileUsed(RequestContext requestContext, String fileName) {
-    synchronized (auditRows) {
-      for (AuditRow row : auditRows) {
-        if (requestContext.getRequestId().equals(row.id)) {
-          row.cacheFile = fileName;
-          break ;
+    String requestId = requestId(requestContext);
+    if (requestId != null) {
+      synchronized (auditRows) {
+        for (AuditRow row : auditRows) {
+          if (requestId.equals(row.id)) {
+            row.cacheFile = fileName;
+            break ;
+          }
         }
+        return Future.succeededFuture();
       }
-      return Future.succeededFuture();
+    } else {
+      return Future.failedFuture("RequestContext not set");
     }
   }
 
   @Override
-  public Future<Void> deleteCacheFile(String auditId) {
+  public Future<Void> deleteCacheFile(RequestContext requestContext, String auditId) {
 
     synchronized (auditRows) {
       for (AuditRow row : auditRows) {
@@ -258,13 +273,14 @@ public class AuditorMemoryImpl implements Auditor {
 
   @Override
   public void recordException(RequestContext requestContext, Throwable ex) {
-    logger.atInfo().setMessage("Exception: {} {}")
+    Log.decorate(logger.atInfo(), requestContext)
+            .setMessage("Exception: {} {}")
             .addArgument(ex.getClass().getCanonicalName())
             .addArgument(ex.getMessage())
             .setCause(ex)
             .addKeyValue(PROCESS_ID, SIZE)
             .log();
-    AuditRow row = find(requestContext.getRequestId());
+    AuditRow row = find(requestContext);
     if (row != null) {
       row.exceptionTime = LocalDateTime.now(ZoneOffset.UTC);
       row.exceptionClass = JdbcHelper.limitLength(ex.getClass().getCanonicalName(), 1000);
@@ -275,8 +291,9 @@ public class AuditorMemoryImpl implements Auditor {
 
   @Override
   public Future<Void> recordFileDetails(RequestContext requestContext, DirCacheTree.File file, Pipeline pipeline) {
-    logger.info("File: {} {} {}", file.getPath(), file.getSize(), file.getModified());
-    AuditRow row = find(requestContext.getRequestId());
+    Log.decorate(logger.atInfo(), requestContext)
+            .log("File: {} {} {}", file.getPath(), file.getSize(), file.getModified());
+    AuditRow row = find(requestContext);
     if (row != null) {
       row.filePath = JdbcHelper.limitLength(JdbcHelper.toString(file.getPath()), 1000);
       row.fileSize = file.getSize();
@@ -292,10 +309,14 @@ public class AuditorMemoryImpl implements Auditor {
 
   @Override
   public Future<Void> recordRequest(RequestContext requestContext) {
-    JsonObject headers = multiMapToJson(requestContext.getHeaders());
-    JsonObject arguments = multiMapToJson(requestContext.getParams());
+    if (requestContext == null) {
+      return Future.failedFuture("RequestContext not set");
+    }
+             
+    JsonObject headers = multiMapToJson(requestContext, requestContext.getHeaders());
+    JsonObject arguments = multiMapToJson(requestContext, requestContext.getParams());
 
-    logger.info("Request: {} {} {} {} {} {} {} {} {} {} {}",
+    Log.decorate(logger.atInfo(), requestContext).log("Request: {} {} {} {} {} {} {} {} {} {} {}",
              requestContext.getUrl(),
              requestContext.getClientIp(),
              requestContext.getHost(),
@@ -343,6 +364,10 @@ public class AuditorMemoryImpl implements Auditor {
   }
 
   static boolean rowMatches(RequestContext requestContext, RateLimitRule rule, AuditRow row) {
+    if (requestContext == null) {
+      return false;
+    }
+             
     for (RateLimitScopeType scope : rule.getScope()) {
       switch (scope) {
         case clientip:
@@ -408,10 +433,14 @@ public class AuditorMemoryImpl implements Auditor {
 
   @Override
   public Future<Pipeline> runRateLimitRules(RequestContext requestContext, Pipeline pipeline) {
+    if (requestContext == null) {
+      return Future.failedFuture("RequestContext not set");
+    }
+
     try {
       List<RateLimitRule> rules = pipeline.getRateLimitRules();
 
-      logger.debug("Performing rate limit check with {} rules", rules.size());
+      Log.decorate(logger.atDebug(), requestContext).log("Performing rate limit check with {} rules", rules.size());
       if (CollectionUtils.isEmpty(rules)) {
         return Future.succeededFuture(pipeline);
       }
@@ -427,7 +456,7 @@ public class AuditorMemoryImpl implements Auditor {
         LocalDateTime startPoint = now.minus(rule.getTimeLimit());
         RateLimitCounts counts = getCounts(requestContext, rule, startPoint);
 
-        AuditorPersistenceImpl.evaluateRateLimitRule(rule, nowInstant, i
+        AuditorPersistenceImpl.evaluateRateLimitRule(requestContext, rule, nowInstant, i
                 , counts.outstanding, counts.total, counts.bytes, now);
       }
     } catch (Throwable ex) {
@@ -438,14 +467,19 @@ public class AuditorMemoryImpl implements Auditor {
 
   @Override
   public void recordResponse(RequestContext requestContext, HttpServerResponse response) {
-    JsonObject headers = multiMapToJson(response.headers());
-    logger.info("Request complete: {} {} bytes in {}s {}"
+    if (requestContext == null) {
+      return ;
+    }
+
+    JsonObject headers = multiMapToJson(requestContext, response.headers());
+    Log.decorate(logger.atInfo(), requestContext)
+            .log("Request complete: {} {} bytes in {}s {}"
             , response.getStatusCode()
             , response.bytesWritten()
             , (System.currentTimeMillis() - requestContext.getStartTime()) / 1000.0
             , headers
     );
-    AuditRow row = find(requestContext.getRequestId());
+    AuditRow row = find(requestContext);
     if (row != null) {
       row.responseTime = LocalDateTime.now(ZoneOffset.UTC);
       if (requestContext.getHeadersSentTime() > 0) {
@@ -515,12 +549,12 @@ public class AuditorMemoryImpl implements Auditor {
   }
 
   @Override
-  public Future<AuditHistory> getHistory(String issuer, String subject, int skipRows, int maxRows, AuditHistorySortOrder sortOrder, boolean sortDescending) {
+  public Future<AuditHistory> getHistory(RequestContext requestContext, String issuer, String subject, int skipRows, int maxRows, AuditHistorySortOrder sortOrder, boolean sortDescending) {
 
     long count[] = {0};
     List<AuditHistoryRow> output = this.auditRows.stream()
             .filter(ar -> Objects.equals(issuer, ar.issuer) && Objects.equals(subject, ar.subject))
-            .map(row -> mapAuditHistoryRow(row))
+            .map(row -> mapAuditHistoryRow(requestContext, row))
             .sorted(createComparator(sortOrder, sortDescending))
             .filter(ar -> {
               count[0]++;
@@ -538,14 +572,15 @@ public class AuditorMemoryImpl implements Auditor {
     );
   }
 
-  private AuditHistoryRow mapAuditHistoryRow(AuditRow row) {
+  private AuditHistoryRow mapAuditHistoryRow(RequestContext requestContext, AuditRow row) {
     ObjectNode arguments = null;
     try {
       if (!Strings.isNullOrEmpty(row.arguments)) {
         arguments = mapper.readValue(row.arguments, ObjectNode.class);
       }
     } catch (Throwable ex) {
-      logger.warn("Arguments from database ({}) for id {} failed to parse: ", row.arguments.replaceAll("[\r\n]", ""), row.id, ex);
+      Log.decorate(logger.atWarn(), requestContext)
+              .log("Arguments from database ({}) for id {} failed to parse: ", row.arguments.replaceAll("[\r\n]", ""), row.id, ex);
     }
 
     return new AuditHistoryRow(

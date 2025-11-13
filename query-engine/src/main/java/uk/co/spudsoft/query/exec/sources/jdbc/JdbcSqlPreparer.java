@@ -21,7 +21,10 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.sources.sql.AbstractSqlPreparer;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * SQL preparer for MySQL.
@@ -36,15 +39,19 @@ public class JdbcSqlPreparer extends AbstractSqlPreparer {
   private static final Logger logger = LoggerFactory.getLogger(JdbcSqlPreparer.class);
   
   private final Connection conn;
+  private final Log log;
   private String quoteCharacter;
   
   
   /**
    * Constructor.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param conn A live connection to a DataSource, required to determine the quote character.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "")
-  public JdbcSqlPreparer(Connection conn) {
+  public JdbcSqlPreparer(PipelineContext pipelineContext, Connection conn) {
+    super(pipelineContext);
+    this.log = new Log(logger, pipelineContext);
     this.conn = conn;
   }
   
@@ -65,7 +72,7 @@ public class JdbcSqlPreparer extends AbstractSqlPreparer {
         DatabaseMetaData metadata = conn.getMetaData();
         quoteCharacter = metadata.getIdentifierQuoteString();
       } catch (Throwable ex) {
-        logger.warn("Failed to capture identifier quote string: ", ex);
+        log.warn().log("Failed to capture identifier quote string: ", ex);
       }
     }
     return quoteCharacter;

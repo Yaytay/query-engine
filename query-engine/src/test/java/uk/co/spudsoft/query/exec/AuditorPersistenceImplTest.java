@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.exec;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import inet.ipaddr.IPAddressString;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -50,6 +51,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import uk.co.spudsoft.query.defn.RateLimitRule;
 import uk.co.spudsoft.query.defn.RateLimitScopeType;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.main.DataSourceConfig;
 import uk.co.spudsoft.query.main.Persistence;
 import uk.co.spudsoft.query.web.ServiceException;
@@ -151,6 +153,7 @@ public class AuditorPersistenceImplTest {
   @Test
   public void testEvaluateRateLimitRule() throws Exception {
     // Test setup
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     Instant baseTime = Instant.parse("2023-06-15T10:00:00Z");
     LocalDateTime baseTimestamp = LocalDateTime.ofInstant(baseTime, ZoneOffset.UTC);
     Duration timeLimit = Duration.ofMinutes(10);
@@ -159,24 +162,24 @@ public class AuditorPersistenceImplTest {
     // Test 1: Concurrency limit not exceeded (single outstanding run)
     RateLimitRule rule1 = createRule(timeLimit, 5, null, null);
     assertDoesNotThrow(() -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule1, baseTime, 0, 1, 0, 0, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule1, baseTime, 0, 1, 0, 0, baseTimestamp);
     });
 
     // Test 2: Concurrency limit exactly at threshold
     assertDoesNotThrow(() -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule1, baseTime, 0, 5, 0, 0, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule1, baseTime, 0, 5, 0, 0, baseTimestamp);
     });
 
     // Test 3: Concurrency limit exceeded by 1
     ServiceException ex1 = assertThrows(ServiceException.class, () -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule1, baseTime, 0, 6, 0, 0, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule1, baseTime, 0, 6, 0, 0, baseTimestamp);
     });
     assertEquals(429, ex1.getStatusCode());
     assertEquals("Query already running, please try again later", ex1.getMessage());
 
     // Test 4: Concurrency limit significantly exceeded
     ServiceException ex2 = assertThrows(ServiceException.class, () -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule1, baseTime, 1, 100, 0, 0, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule1, baseTime, 1, 100, 0, 0, baseTimestamp);
     });
     assertEquals(429, ex2.getStatusCode());
     assertEquals("Query already running, please try again later", ex2.getMessage());
@@ -184,36 +187,36 @@ public class AuditorPersistenceImplTest {
     // Test 5: Zero concurrency limit (always fails if any outstanding)
     RateLimitRule rule2 = createRule(timeLimit, 0, null, null);
     ServiceException ex3 = assertThrows(ServiceException.class, () -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule2, baseTime, 2, 1, 0, 0, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule2, baseTime, 2, 1, 0, 0, baseTimestamp);
     });
     assertEquals(429, ex3.getStatusCode());
 
     // Test 6: Zero concurrency limit with no outstanding runs (should pass)
     assertDoesNotThrow(() -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule2, baseTime, 2, 0, 0, 0, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule2, baseTime, 2, 0, 0, 0, baseTimestamp);
     });
 
     // ====== RUN LIMIT TESTS ======
     // Test 7: No run limit specified (null)
     RateLimitRule rule3 = createRule(timeLimit, 10, null, null);
     assertDoesNotThrow(() -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule3, baseTime, 0, 1, 1000000, 0, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule3, baseTime, 0, 1, 1000000, 0, baseTimestamp);
     });
 
     // Test 8: Run limit not exceeded
     RateLimitRule rule4 = createRule(timeLimit, 10, "100", null);
     assertDoesNotThrow(() -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule4, baseTime, 0, 1, 50, 0, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule4, baseTime, 0, 1, 50, 0, baseTimestamp);
     });
 
     // Test 9: Run limit exactly at threshold
     assertDoesNotThrow(() -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule4, baseTime, 0, 1, 100, 0, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule4, baseTime, 0, 1, 100, 0, baseTimestamp);
     });
 
     // Test 10: Run limit exceeded by 1
     ServiceException ex4 = assertThrows(ServiceException.class, () -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule4, baseTime, 3, 1, 101, 0, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule4, baseTime, 3, 1, 101, 0, baseTimestamp);
     });
     assertEquals(429, ex4.getStatusCode());
     assertEquals("Run too many times, please try again later", ex4.getMessage());
@@ -221,33 +224,33 @@ public class AuditorPersistenceImplTest {
     // Test 11: Run limit with K multiplier
     RateLimitRule rule5 = createRule(timeLimit, 10, "5K", null);
     assertDoesNotThrow(() -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule5, baseTime, 0, 1, 4999, 0, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule5, baseTime, 0, 1, 4999, 0, baseTimestamp);
     });
 
     ServiceException ex5 = assertThrows(ServiceException.class, () -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule5, baseTime, 0, 1, 5001, 0, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule5, baseTime, 0, 1, 5001, 0, baseTimestamp);
     });
     assertEquals(429, ex5.getStatusCode());
 
     // Test 12: Run limit with M multiplier
     RateLimitRule rule6 = createRule(timeLimit, 10, "2M", null);
     assertDoesNotThrow(() -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule6, baseTime, 0, 1, 1999999, 0, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule6, baseTime, 0, 1, 1999999, 0, baseTimestamp);
     });
 
     ServiceException ex6 = assertThrows(ServiceException.class, () -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule6, baseTime, 0, 1, 2000001, 0, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule6, baseTime, 0, 1, 2000001, 0, baseTimestamp);
     });
     assertEquals(429, ex6.getStatusCode());
 
     // Test 13: Run limit with G multiplier
     RateLimitRule rule7 = createRule(timeLimit, 10, "1G", null);
     assertDoesNotThrow(() -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule7, baseTime, 0, 1, 999999999, 0, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule7, baseTime, 0, 1, 999999999, 0, baseTimestamp);
     });
 
     ServiceException ex7 = assertThrows(ServiceException.class, () -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule7, baseTime, 0, 1, 1000000001, 0, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule7, baseTime, 0, 1, 1000000001, 0, baseTimestamp);
     });
     assertEquals(429, ex7.getStatusCode());
 
@@ -255,23 +258,23 @@ public class AuditorPersistenceImplTest {
     // Test 14: No byte limit specified (null)
     RateLimitRule rule8 = createRule(timeLimit, 10, null, null);
     assertDoesNotThrow(() -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule8, baseTime, 0, 1, 100, 1000000000L, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule8, baseTime, 0, 1, 100, 1000000000L, baseTimestamp);
     });
 
     // Test 15: Byte limit not exceeded
     RateLimitRule rule9 = createRule(timeLimit, 10, null, "1000");
     assertDoesNotThrow(() -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule9, baseTime, 0, 1, 10, 500, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule9, baseTime, 0, 1, 10, 500, baseTimestamp);
     });
 
     // Test 16: Byte limit exactly at threshold
     assertDoesNotThrow(() -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule9, baseTime, 0, 1, 10, 1000, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule9, baseTime, 0, 1, 10, 1000, baseTimestamp);
     });
 
     // Test 17: Byte limit exceeded by 1
     ServiceException ex8 = assertThrows(ServiceException.class, () -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule9, baseTime, 4, 1, 10, 1001, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule9, baseTime, 4, 1, 10, 1001, baseTimestamp);
     });
     assertEquals(429, ex8.getStatusCode());
     assertEquals("Rate limit exceeded, please try again later", ex8.getMessage());
@@ -279,33 +282,33 @@ public class AuditorPersistenceImplTest {
     // Test 18: Byte limit with K multiplier
     RateLimitRule rule10 = createRule(timeLimit, 10, null, "50K");
     assertDoesNotThrow(() -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule10, baseTime, 0, 1, 10, 49999, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule10, baseTime, 0, 1, 10, 49999, baseTimestamp);
     });
 
     ServiceException ex9 = assertThrows(ServiceException.class, () -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule10, baseTime, 0, 1, 10, 50001, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule10, baseTime, 0, 1, 10, 50001, baseTimestamp);
     });
     assertEquals(429, ex9.getStatusCode());
 
     // Test 19: Byte limit with M multiplier
     RateLimitRule rule11 = createRule(timeLimit, 10, null, "5M");
     assertDoesNotThrow(() -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule11, baseTime, 0, 1, 10, 4999999, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule11, baseTime, 0, 1, 10, 4999999, baseTimestamp);
     });
 
     ServiceException ex10 = assertThrows(ServiceException.class, () -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule11, baseTime, 0, 1, 10, 5000001, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule11, baseTime, 0, 1, 10, 5000001, baseTimestamp);
     });
     assertEquals(429, ex10.getStatusCode());
 
     // Test 20: Byte limit with G multiplier
     RateLimitRule rule12 = createRule(timeLimit, 10, null, "1G");
     assertDoesNotThrow(() -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule12, baseTime, 0, 1, 10, 999999999L, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule12, baseTime, 0, 1, 10, 999999999L, baseTimestamp);
     });
 
     ServiceException ex11 = assertThrows(ServiceException.class, () -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule12, baseTime, 0, 1, 10, 1000000001L, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule12, baseTime, 0, 1, 10, 1000000001L, baseTimestamp);
     });
     assertEquals(429, ex11.getStatusCode());
 
@@ -313,26 +316,26 @@ public class AuditorPersistenceImplTest {
     // Test 21: All limits specified, all pass
     RateLimitRule rule13 = createRule(timeLimit, 5, "100", "1M");
     assertDoesNotThrow(() -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule13, baseTime, 0, 3, 50, 500000, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule13, baseTime, 0, 3, 50, 500000, baseTimestamp);
     });
 
     // Test 22: All limits specified, concurrency fails first
     ServiceException ex12 = assertThrows(ServiceException.class, () -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule13, baseTime, 0, 10, 50, 500000, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule13, baseTime, 0, 10, 50, 500000, baseTimestamp);
     });
     assertEquals(429, ex12.getStatusCode());
     assertTrue(ex12.getMessage().contains("Query already running"));
 
     // Test 23: All limits specified, run limit fails (concurrency passes)
     ServiceException ex13 = assertThrows(ServiceException.class, () -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule13, baseTime, 0, 3, 150, 500000, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule13, baseTime, 0, 3, 150, 500000, baseTimestamp);
     });
     assertEquals(429, ex13.getStatusCode());
     assertTrue(ex13.getMessage().contains("Run too many times"));
 
     // Test 24: All limits specified, byte limit fails (others pass)
     ServiceException ex14 = assertThrows(ServiceException.class, () -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule13, baseTime, 0, 3, 50, 1500000, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule13, baseTime, 0, 3, 50, 1500000, baseTimestamp);
     });
     assertEquals(429, ex14.getStatusCode());
     assertTrue(ex14.getMessage().contains("Rate limit exceeded"));
@@ -341,79 +344,81 @@ public class AuditorPersistenceImplTest {
     // Test 25: Zero values for runs and bytes (should always pass)
     RateLimitRule rule14 = createRule(timeLimit, 0, "1", "1");
     assertDoesNotThrow(() -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule14, baseTime, 0, 0, 0, 0, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule14, baseTime, 0, 0, 0, 0, baseTimestamp);
     });
 
     // Test 26: Maximum long values
     RateLimitRule rule15 = createRule(timeLimit, Integer.MAX_VALUE, String.valueOf(Long.MAX_VALUE), String.valueOf(Long.MAX_VALUE));
     assertDoesNotThrow(() -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule15, baseTime, 0, 1000, 1000000, 1000000000L, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule15, baseTime, 0, 1000, 1000000, 1000000000L, baseTimestamp);
     });
 
     // Test 27: Different index values (for logging)
     ServiceException ex15 = assertThrows(ServiceException.class, () -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule13, baseTime, 99, 10, 50, 500000, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule13, baseTime, 99, 10, 50, 500000, baseTimestamp);
     });
     assertEquals(429, ex15.getStatusCode());
 
     // Test 28: Empty string limits (should be treated as null)
     RateLimitRule rule16 = createRule(timeLimit, 10, "", "");
     assertDoesNotThrow(() -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(rule16, baseTime, 0, 1, 1000000, 1000000000L, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, rule16, baseTime, 0, 1, 1000000, 1000000000L, baseTimestamp);
     });
 
     // ====== BOUNDARY TESTS FOR SINGULAR/PLURAL LOGGING ======
     // Test 29: Single outstanding run (singular logging)
     ServiceException ex16 = assertThrows(ServiceException.class, () -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(createRule(timeLimit, 0, null, null), baseTime, 0, 1, 0, 0, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, createRule(timeLimit, 0, null, null), baseTime, 0, 1, 0, 0, baseTimestamp);
     });
     assertEquals(429, ex16.getStatusCode());
 
     // Test 30: Single run limit exceeded (singular logging)
     ServiceException ex17 = assertThrows(ServiceException.class, () -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(createRule(timeLimit, 10, "0", null), baseTime, 0, 1, 1, 0, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, createRule(timeLimit, 10, "0", null), baseTime, 0, 1, 1, 0, baseTimestamp);
     });
     assertEquals(429, ex17.getStatusCode());
 
     // Test 31: Single byte exceeded (singular logging)
     ServiceException ex18 = assertThrows(ServiceException.class, () -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(createRule(timeLimit, 10, null, "0"), baseTime, 0, 1, 0, 1, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, createRule(timeLimit, 10, null, "0"), baseTime, 0, 1, 0, 1, baseTimestamp);
     });
     assertEquals(429, ex18.getStatusCode());
 
     // Test 32: Multiple outstanding runs (plural logging)
     ServiceException ex19 = assertThrows(ServiceException.class, () -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(createRule(timeLimit, 1, null, null), baseTime, 0, 2, 0, 0, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, createRule(timeLimit, 1, null, null), baseTime, 0, 2, 0, 0, baseTimestamp);
     });
     assertEquals(429, ex19.getStatusCode());
 
     // Test 33: Multiple runs exceeded (plural logging)
     ServiceException ex20 = assertThrows(ServiceException.class, () -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(createRule(timeLimit, 10, "1", null), baseTime, 0, 1, 2, 0, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, createRule(timeLimit, 10, "1", null), baseTime, 0, 1, 2, 0, baseTimestamp);
     });
     assertEquals(429, ex20.getStatusCode());
 
     // Test 34: Multiple bytes exceeded (plural logging)
     ServiceException ex21 = assertThrows(ServiceException.class, () -> {
-      AuditorPersistenceImpl.evaluateRateLimitRule(createRule(timeLimit, 10, null, "1"), baseTime, 0, 1, 0, 2, baseTimestamp);
+      AuditorPersistenceImpl.evaluateRateLimitRule(reqctx, createRule(timeLimit, 10, null, "1"), baseTime, 0, 1, 0, 2, baseTimestamp);
     });
     assertEquals(429, ex21.getStatusCode());
   }
 
   @Test
   public void testMultiMapToJson() {
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+
     // Test 1: Null input
-    assertNull(AuditorPersistenceImpl.multiMapToJson(null));
+    assertNull(AuditorPersistenceImpl.multiMapToJson(reqctx, null));
 
     // Test 2: Empty MultiMap
     MultiMap emptyMap = HeadersMultiMap.httpHeaders();
-    JsonObject emptyResult = AuditorPersistenceImpl.multiMapToJson(emptyMap);
+    JsonObject emptyResult = AuditorPersistenceImpl.multiMapToJson(reqctx, emptyMap);
     assertNotNull(emptyResult);
     assertEquals(0, emptyResult.size());
 
     // Test 3: Single key-value pair
     MultiMap singleMap = HeadersMultiMap.httpHeaders().add("key1", "value1");
-    JsonObject singleResult = AuditorPersistenceImpl.multiMapToJson(singleMap);
+    JsonObject singleResult = AuditorPersistenceImpl.multiMapToJson(reqctx, singleMap);
     assertEquals(1, singleResult.size());
     assertEquals("value1", singleResult.getString("key1"));
 
@@ -422,7 +427,7 @@ public class AuditorPersistenceImplTest {
             .add("key1", "value1")
             .add("key2", "value2")
             .add("key3", "value3");
-    JsonObject multipleKeysResult = AuditorPersistenceImpl.multiMapToJson(multipleKeysMap);
+    JsonObject multipleKeysResult = AuditorPersistenceImpl.multiMapToJson(reqctx, multipleKeysMap);
     assertEquals(3, multipleKeysResult.size());
     assertEquals("value1", multipleKeysResult.getString("key1"));
     assertEquals("value2", multipleKeysResult.getString("key2"));
@@ -432,7 +437,7 @@ public class AuditorPersistenceImplTest {
     MultiMap duplicateKeysMap = HeadersMultiMap.httpHeaders()
             .add("duplicate", "first")
             .add("duplicate", "second");
-    JsonObject duplicateKeysResult = AuditorPersistenceImpl.multiMapToJson(duplicateKeysMap);
+    JsonObject duplicateKeysResult = AuditorPersistenceImpl.multiMapToJson(reqctx, duplicateKeysMap);
     assertEquals(1, duplicateKeysResult.size());
     JsonArray expectedArray = new JsonArray().add("first").add("second");
     assertEquals(expectedArray, duplicateKeysResult.getJsonArray("duplicate"));
@@ -443,7 +448,7 @@ public class AuditorPersistenceImplTest {
             .add("multi", "second")
             .add("multi", "third")
             .add("multi", "fourth");
-    JsonObject multipleValuesResult = AuditorPersistenceImpl.multiMapToJson(multipleValuesMap);
+    JsonObject multipleValuesResult = AuditorPersistenceImpl.multiMapToJson(reqctx, multipleValuesMap);
     assertEquals(1, multipleValuesResult.size());
     JsonArray expectedMultiArray = new JsonArray().add("first").add("second").add("third").add("fourth");
     assertEquals(expectedMultiArray, multipleValuesResult.getJsonArray("multi"));
@@ -451,7 +456,7 @@ public class AuditorPersistenceImplTest {
     // Test 7: Authorization header with Bearer token (should be protected)
     MultiMap authBearerMap = HeadersMultiMap.httpHeaders()
             .add(HttpHeaders.AUTHORIZATION.toString(), "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c");
-    JsonObject authBearerResult = AuditorPersistenceImpl.multiMapToJson(authBearerMap);
+    JsonObject authBearerResult = AuditorPersistenceImpl.multiMapToJson(reqctx, authBearerMap);
     assertEquals(1, authBearerResult.size());
     String protectedBearer = authBearerResult.getString(HttpHeaders.AUTHORIZATION.toString());
     assertTrue(protectedBearer.startsWith("Bearer "));
@@ -461,7 +466,7 @@ public class AuditorPersistenceImplTest {
     // Test 8: Authorization header with Basic auth (should be protected)
     MultiMap authBasicMap = HeadersMultiMap.httpHeaders()
             .add(HttpHeaders.AUTHORIZATION.toString(), "Basic dXNlcm5hbWU6cGFzc3dvcmQ=");
-    JsonObject authBasicResult = AuditorPersistenceImpl.multiMapToJson(authBasicMap);
+    JsonObject authBasicResult = AuditorPersistenceImpl.multiMapToJson(reqctx, authBasicMap);
     assertEquals(1, authBasicResult.size());
     String protectedBasic = authBasicResult.getString(HttpHeaders.AUTHORIZATION.toString());
     assertTrue(protectedBasic.startsWith("Basic "));
@@ -471,7 +476,7 @@ public class AuditorPersistenceImplTest {
     MultiMap authCaseMap = MultiMap.caseInsensitiveMultiMap()
             .add("authorization", "Bearer token.here.secret")
             .add("AUTHORIZATION", "Basic secret");
-    JsonObject authCaseResult = AuditorPersistenceImpl.multiMapToJson(authCaseMap);
+    JsonObject authCaseResult = AuditorPersistenceImpl.multiMapToJson(reqctx, authCaseMap);
     assertEquals(1, authCaseResult.size());
     JsonArray authArray = authCaseResult.getJsonArray("authorization");
     assertNotNull(authArray);
@@ -488,7 +493,7 @@ public class AuditorPersistenceImplTest {
             .add("Content-Type", "application/json")
             .add("Accept", "application/json")
             .add("Accept", "text/html");
-    JsonObject mixedResult = AuditorPersistenceImpl.multiMapToJson(mixedMap);
+    JsonObject mixedResult = AuditorPersistenceImpl.multiMapToJson(reqctx, mixedMap);
     assertEquals(5, mixedResult.size());
 
     // Verify single value
@@ -518,7 +523,7 @@ public class AuditorPersistenceImplTest {
             .add("empty", "")
             .add("null-like", "null")
             .add("empty", "not-empty");
-    JsonObject emptyValueResult = AuditorPersistenceImpl.multiMapToJson(emptyValueMap);
+    JsonObject emptyValueResult = AuditorPersistenceImpl.multiMapToJson(reqctx, emptyValueMap);
     assertEquals(2, emptyValueResult.size());
     JsonArray emptyArray = emptyValueResult.getJsonArray("empty");
     assertEquals(2, emptyArray.size());
@@ -531,7 +536,7 @@ public class AuditorPersistenceImplTest {
             .add("key-with-dashes", "value with spaces")
             .add("key_with_underscores", "value@with#special$chars")
             .add("UPPERCASE_KEY", "MixedCaseValue");
-    JsonObject specialCharsResult = AuditorPersistenceImpl.multiMapToJson(specialCharsMap);
+    JsonObject specialCharsResult = AuditorPersistenceImpl.multiMapToJson(reqctx, specialCharsMap);
     assertEquals(3, specialCharsResult.size());
     assertEquals("value with spaces", specialCharsResult.getString("key-with-dashes"));
     assertEquals("value@with#special$chars", specialCharsResult.getString("key_with_underscores"));
@@ -540,128 +545,129 @@ public class AuditorPersistenceImplTest {
 
   @Test
   public void testProtectAuthHeader() {
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     Base64.Encoder encoder = Base64.getEncoder();
 
     // ====== NULL AND EMPTY TESTS ======
     // Test 1: Null input
-    assertNull(AuditorPersistenceImpl.protectAuthHeader(null));
+    assertNull(AuditorPersistenceImpl.protectAuthHeader(reqctx, null));
 
     // Test 2: Empty string
-    assertEquals("", AuditorPersistenceImpl.protectAuthHeader(""));
+    assertEquals("", AuditorPersistenceImpl.protectAuthHeader(reqctx, ""));
 
     // Test 3: Whitespace only
-    assertEquals("   ", AuditorPersistenceImpl.protectAuthHeader("   "));
+    assertEquals("   ", AuditorPersistenceImpl.protectAuthHeader(reqctx, "   "));
 
     // ====== NON-AUTH HEADER TESTS ======
     // Test 4: Random string (no Basic or Bearer prefix)
-    assertEquals("random-value", AuditorPersistenceImpl.protectAuthHeader("random-value"));
+    assertEquals("random-value", AuditorPersistenceImpl.protectAuthHeader(reqctx, "random-value"));
 
     // Test 5: String that contains but doesn't start with Basic
-    assertEquals("Not Basic auth", AuditorPersistenceImpl.protectAuthHeader("Not Basic auth"));
+    assertEquals("Not Basic auth", AuditorPersistenceImpl.protectAuthHeader(reqctx, "Not Basic auth"));
 
     // Test 6: String that contains but doesn't start with Bearer
-    assertEquals("Not Bearer token", AuditorPersistenceImpl.protectAuthHeader("Not Bearer token"));
+    assertEquals("Not Bearer token", AuditorPersistenceImpl.protectAuthHeader(reqctx, "Not Bearer token"));
 
     // Test 7: Case sensitivity - lowercase basic
-    assertEquals("basic dXNlcjpwYXNz", AuditorPersistenceImpl.protectAuthHeader("basic dXNlcjpwYXNz"));
+    assertEquals("basic dXNlcjpwYXNz", AuditorPersistenceImpl.protectAuthHeader(reqctx, "basic dXNlcjpwYXNz"));
 
     // Test 8: Case sensitivity - lowercase bearer
-    assertEquals("bearer token.here.secret", AuditorPersistenceImpl.protectAuthHeader("bearer token.here.secret"));
+    assertEquals("bearer token.here.secret", AuditorPersistenceImpl.protectAuthHeader(reqctx, "bearer token.here.secret"));
 
     // ====== BASIC AUTH TESTS ======
     // Test 9: Valid Basic auth with username:password
     String userPassBase64 = encoder.encodeToString("username:password".getBytes(StandardCharsets.UTF_8));
     String basicAuth = "Basic " + userPassBase64;
-    String protectedBasic = AuditorPersistenceImpl.protectAuthHeader(basicAuth);
-    String expectedUserBase64 = encoder.encodeToString("username".getBytes(StandardCharsets.UTF_8));
+    String protectedBasic = AuditorPersistenceImpl.protectAuthHeader(reqctx, basicAuth);
+    String expectedUserBase64 = encoder.encodeToString("username:".getBytes(StandardCharsets.UTF_8));
     assertEquals("Basic " + expectedUserBase64, protectedBasic);
 
     // Test 10: Basic auth with just username (no colon)
     String userOnlyBase64 = encoder.encodeToString("username".getBytes(StandardCharsets.UTF_8));
     String basicAuthNoColon = "Basic " + userOnlyBase64;
-    String protectedBasicNoColon = AuditorPersistenceImpl.protectAuthHeader(basicAuthNoColon);
+    String protectedBasicNoColon = AuditorPersistenceImpl.protectAuthHeader(reqctx, basicAuthNoColon);
     assertEquals(basicAuthNoColon, protectedBasicNoColon); // Should remain unchanged
 
     // Test 11: Basic auth with empty username
     String emptyUserBase64 = encoder.encodeToString(":password".getBytes(StandardCharsets.UTF_8));
     String basicAuthEmptyUser = "Basic " + emptyUserBase64;
-    String protectedBasicEmptyUser = AuditorPersistenceImpl.protectAuthHeader(basicAuthEmptyUser);
+    String protectedBasicEmptyUser = AuditorPersistenceImpl.protectAuthHeader(reqctx, basicAuthEmptyUser);
     assertEquals(basicAuthEmptyUser, protectedBasicEmptyUser); // Should remain unchanged (colonPos <= 0)
 
     // Test 12: Basic auth with colon at start
     String colonAtStartBase64 = encoder.encodeToString(":password".getBytes(StandardCharsets.UTF_8));
     String basicAuthColonStart = "Basic " + colonAtStartBase64;
-    assertEquals(basicAuthColonStart, AuditorPersistenceImpl.protectAuthHeader(basicAuthColonStart));
+    assertEquals(basicAuthColonStart, AuditorPersistenceImpl.protectAuthHeader(reqctx, basicAuthColonStart));
 
     // Test 13: Basic auth with multiple colons (should take first)
     String multiColonBase64 = encoder.encodeToString("user:pass:word".getBytes(StandardCharsets.UTF_8));
     String basicAuthMultiColon = "Basic " + multiColonBase64;
-    String protectedMultiColon = AuditorPersistenceImpl.protectAuthHeader(basicAuthMultiColon);
-    String expectedMultiColonUser = encoder.encodeToString("user".getBytes(StandardCharsets.UTF_8));
+    String protectedMultiColon = AuditorPersistenceImpl.protectAuthHeader(reqctx, basicAuthMultiColon);
+    String expectedMultiColonUser = encoder.encodeToString("user:".getBytes(StandardCharsets.UTF_8));
     assertEquals("Basic " + expectedMultiColonUser, protectedMultiColon);
 
     // Test 14: Basic auth with special characters in username
     String specialUserBase64 = encoder.encodeToString("user@domain.com:password".getBytes(StandardCharsets.UTF_8));
     String basicAuthSpecial = "Basic " + specialUserBase64;
-    String protectedSpecial = AuditorPersistenceImpl.protectAuthHeader(basicAuthSpecial);
-    String expectedSpecialUser = encoder.encodeToString("user@domain.com".getBytes(StandardCharsets.UTF_8));
+    String protectedSpecial = AuditorPersistenceImpl.protectAuthHeader(reqctx, basicAuthSpecial);
+    String expectedSpecialUser = encoder.encodeToString("user@domain.com:".getBytes(StandardCharsets.UTF_8));
     assertEquals("Basic " + expectedSpecialUser, protectedSpecial);
 
     // Test 15: Basic with no space after "Basic"
-    assertEquals("Basic", AuditorPersistenceImpl.protectAuthHeader("Basic"));
+    assertEquals("Basic", AuditorPersistenceImpl.protectAuthHeader(reqctx, "Basic"));
 
     // Test 16: Basic with only space after "Basic"
-    assertEquals("Basic ", AuditorPersistenceImpl.protectAuthHeader("Basic "));
+    assertEquals("Basic ", AuditorPersistenceImpl.protectAuthHeader(reqctx, "Basic "));
 
     // Test 17: Basic with invalid base64
     String invalidBase64 = "Basic invalid-base64!@#";
-    assertEquals(invalidBase64, AuditorPersistenceImpl.protectAuthHeader(invalidBase64)); // Should remain unchanged due to exception handling
+    assertEquals(invalidBase64, AuditorPersistenceImpl.protectAuthHeader(reqctx, invalidBase64)); // Should remain unchanged due to exception handling
 
     // ====== BEARER TOKEN TESTS ======
     // Test 18: Valid JWT token (3 parts)
     String jwtToken = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
-    String protectedJwt = AuditorPersistenceImpl.protectAuthHeader(jwtToken);
+    String protectedJwt = AuditorPersistenceImpl.protectAuthHeader(reqctx, jwtToken);
     assertEquals("Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ", protectedJwt);
 
     // Test 19: Bearer token with 2 parts (header.payload, no signature)
     String twoPartToken = "Bearer header.payload";
-    String protectedTwoPart = AuditorPersistenceImpl.protectAuthHeader(twoPartToken);
+    String protectedTwoPart = AuditorPersistenceImpl.protectAuthHeader(reqctx, twoPartToken);
     assertEquals("Bearer header", protectedTwoPart);
 
     // Test 20: Bearer token with multiple dots (should take last dot)
     String multiDotToken = "Bearer part1.part2.part3.part4.signature";
-    String protectedMultiDot = AuditorPersistenceImpl.protectAuthHeader(multiDotToken);
+    String protectedMultiDot = AuditorPersistenceImpl.protectAuthHeader(reqctx, multiDotToken);
     assertEquals("Bearer part1.part2.part3.part4", protectedMultiDot);
 
     // Test 21: Bearer token with no dots
     String noDotToken = "Bearer simpletoken";
-    String protectedNoDot = AuditorPersistenceImpl.protectAuthHeader(noDotToken);
+    String protectedNoDot = AuditorPersistenceImpl.protectAuthHeader(reqctx, noDotToken);
     assertEquals(noDotToken, protectedNoDot); // Should remain unchanged (no dots found)
 
     // Test 22: Bearer with no space after "Bearer"
-    assertEquals("Bearer", AuditorPersistenceImpl.protectAuthHeader("Bearer"));
+    assertEquals("Bearer", AuditorPersistenceImpl.protectAuthHeader(reqctx, "Bearer"));
 
     // Test 23: Bearer with only space after "Bearer"
-    assertEquals("Bearer ", AuditorPersistenceImpl.protectAuthHeader("Bearer "));
+    assertEquals("Bearer ", AuditorPersistenceImpl.protectAuthHeader(reqctx, "Bearer "));
 
     // Test 24: Bearer token ending with dot
     String tokenEndingDot = "Bearer token.";
-    String protectedEndingDot = AuditorPersistenceImpl.protectAuthHeader(tokenEndingDot);
+    String protectedEndingDot = AuditorPersistenceImpl.protectAuthHeader(reqctx, tokenEndingDot);
     assertEquals("Bearer token", protectedEndingDot);
 
     // Test 25: Bearer token starting with dot
     String tokenStartingDot = "Bearer .token";
-    String protectedStartingDot = AuditorPersistenceImpl.protectAuthHeader(tokenStartingDot);
+    String protectedStartingDot = AuditorPersistenceImpl.protectAuthHeader(reqctx, tokenStartingDot);
     assertEquals("Bearer ", protectedStartingDot);
 
     // ====== EDGE CASES ======
     // Test 26: Basic followed by Bearer (should process as Basic)
     String basicBearer = "Basic Bearer.token.here";
-    assertEquals(basicBearer, AuditorPersistenceImpl.protectAuthHeader(basicBearer)); // Invalid base64, should remain unchanged
+    assertEquals(basicBearer, AuditorPersistenceImpl.protectAuthHeader(reqctx, basicBearer)); // Invalid base64, should remain unchanged
 
     // Test 27: Bearer followed by Basic (should process as Bearer)
     String bearerBasic = "Bearer Basic.auth.here";
-    String protectedBearerBasic = AuditorPersistenceImpl.protectAuthHeader(bearerBasic);
+    String protectedBearerBasic = AuditorPersistenceImpl.protectAuthHeader(reqctx, bearerBasic);
     assertEquals("Bearer Basic.auth", protectedBearerBasic);
 
     // Test 28: Very long strings
@@ -670,22 +676,22 @@ public class AuditorPersistenceImplTest {
       longToken.append("a");
     }
     longToken.append(".signature");
-    String protectedLong = AuditorPersistenceImpl.protectAuthHeader(longToken.toString());
+    String protectedLong = AuditorPersistenceImpl.protectAuthHeader(reqctx, longToken.toString());
     assertFalse(protectedLong.contains(".signature"));
     assertTrue(protectedLong.startsWith("Bearer "));
 
     // Test 29: Unicode characters in Basic auth
     String unicodeBase64 = encoder.encodeToString("用户:密码".getBytes(StandardCharsets.UTF_8));
     String basicUnicode = "Basic " + unicodeBase64;
-    String protectedUnicode = AuditorPersistenceImpl.protectAuthHeader(basicUnicode);
-    String expectedUnicodeUser = encoder.encodeToString("用户".getBytes(StandardCharsets.UTF_8));
+    String protectedUnicode = AuditorPersistenceImpl.protectAuthHeader(reqctx, basicUnicode);
+    String expectedUnicodeUser = encoder.encodeToString("用户:".getBytes(StandardCharsets.UTF_8));
     assertEquals("Basic " + expectedUnicodeUser, protectedUnicode);
 
     // Test 30: Exact prefix matches
-    assertEquals("Basic", AuditorPersistenceImpl.protectAuthHeader("Basic"));
-    assertEquals("Bearer", AuditorPersistenceImpl.protectAuthHeader("Bearer"));
-    assertEquals("BasicAuth", AuditorPersistenceImpl.protectAuthHeader("BasicAuth")); // Not exact match
-    assertEquals("BearerToken", AuditorPersistenceImpl.protectAuthHeader("BearerToken")); // Not exact match
+    assertEquals("Basic", AuditorPersistenceImpl.protectAuthHeader(reqctx, "Basic"));
+    assertEquals("Bearer", AuditorPersistenceImpl.protectAuthHeader(reqctx, "Bearer"));
+    assertEquals("BasicAuth", AuditorPersistenceImpl.protectAuthHeader(reqctx, "BasicAuth")); // Not exact match
+    assertEquals("BearerToken", AuditorPersistenceImpl.protectAuthHeader(reqctx, "BearerToken")); // Not exact match
   }
 
   @Test
@@ -882,6 +888,8 @@ public class AuditorPersistenceImplTest {
 
   @Test
   public void testGetArguments(Vertx vertx) throws SQLException {
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+
     // ====== VALID JSON TESTS ======
 
     // Test 1: Valid simple JSON object
@@ -894,7 +902,7 @@ public class AuditorPersistenceImplTest {
     AuditorPersistenceImpl instance = new AuditorPersistenceImpl(vertx, null, audit, null);
     
     
-    ObjectNode result1 = instance.getArguments(rs1, 1, "test-id-1");
+    ObjectNode result1 = instance.getArguments(reqctx, rs1, 1, "test-id-1");
     assertNotNull(result1);
     assertEquals("value1", result1.get("key1").asText());
     assertEquals(123, result1.get("key2").asInt());
@@ -904,7 +912,7 @@ public class AuditorPersistenceImplTest {
     when(rs2.getString(1)).thenReturn("{}");
     when(rs2.wasNull()).thenReturn(false);
 
-    ObjectNode result2 = instance.getArguments(rs2, 1, "test-id-2");
+    ObjectNode result2 = instance.getArguments(reqctx, rs2, 1, "test-id-2");
     assertNotNull(result2);
     assertEquals(0, result2.size());
 
@@ -914,7 +922,7 @@ public class AuditorPersistenceImplTest {
     when(rs3.getString(1)).thenReturn(complexJson);
     when(rs3.wasNull()).thenReturn(false);
 
-    ObjectNode result3 = instance.getArguments(rs3, 1, "test-id-3");
+    ObjectNode result3 = instance.getArguments(reqctx, rs3, 1, "test-id-3");
     assertNotNull(result3);
     assertEquals("John", result3.get("user").get("name").asText());
     assertEquals(30, result3.get("user").get("age").asInt());
@@ -927,7 +935,7 @@ public class AuditorPersistenceImplTest {
     when(rs4.getString(1)).thenReturn(jsonWithNulls);
     when(rs4.wasNull()).thenReturn(false);
 
-    ObjectNode result4 = instance.getArguments(rs4, 1, "test-id-4");
+    ObjectNode result4 = instance.getArguments(reqctx, rs4, 1, "test-id-4");
     assertNotNull(result4);
     assertTrue(result4.get("key1").isNull());
     assertEquals("value2", result4.get("key2").asText());
@@ -938,7 +946,7 @@ public class AuditorPersistenceImplTest {
     when(rs5.getString(1)).thenReturn(null);
     when(rs5.wasNull()).thenReturn(true);
 
-    ObjectNode result5 = instance.getArguments(rs5, 1, "test-id-5");
+    ObjectNode result5 = instance.getArguments(reqctx, rs5, 1, "test-id-5");
     assertNull(result5);
 
     // Test 6: Empty string
@@ -946,7 +954,7 @@ public class AuditorPersistenceImplTest {
     when(rs6.getString(1)).thenReturn("");
     when(rs6.wasNull()).thenReturn(false);
 
-    ObjectNode result6 = instance.getArguments(rs6, 1, "test-id-6");
+    ObjectNode result6 = instance.getArguments(reqctx, rs6, 1, "test-id-6");
     assertNull(result6);
 
     // Test 7: Whitespace only string
@@ -954,7 +962,7 @@ public class AuditorPersistenceImplTest {
     when(rs7.getString(1)).thenReturn("   \t\n  ");
     when(rs7.wasNull()).thenReturn(false);
 
-    ObjectNode result7 = instance.getArguments(rs7, 1, "test-id-7");
+    ObjectNode result7 = instance.getArguments(reqctx, rs7, 1, "test-id-7");
     assertNull(result7);
 
     // ====== INVALID JSON TESTS ======
@@ -963,7 +971,7 @@ public class AuditorPersistenceImplTest {
     when(rs8.getString(1)).thenReturn("{invalid json}");
     when(rs8.wasNull()).thenReturn(false);
 
-    ObjectNode result8 = instance.getArguments(rs8, 1, "test-id-8");
+    ObjectNode result8 = instance.getArguments(reqctx, rs8, 1, "test-id-8");
     assertNull(result8); // Should return null on parse failure
 
     // Test 9: JSON array instead of object
@@ -971,7 +979,7 @@ public class AuditorPersistenceImplTest {
     when(rs9.getString(1)).thenReturn("[\"item1\",\"item2\"]");
     when(rs9.wasNull()).thenReturn(false);
 
-    ObjectNode result9 = instance.getArguments(rs9, 1, "test-id-9");
+    ObjectNode result9 = instance.getArguments(reqctx, rs9, 1, "test-id-9");
     assertNull(result9); // Should return null as it's not an object
 
     // Test 10: JSON primitive value
@@ -979,7 +987,7 @@ public class AuditorPersistenceImplTest {
     when(rs10.getString(1)).thenReturn("\"just a string\"");
     when(rs10.wasNull()).thenReturn(false);
 
-    ObjectNode result10 = instance.getArguments(rs10, 1, "test-id-10");
+    ObjectNode result10 = instance.getArguments(reqctx, rs10, 1, "test-id-10");
     assertNull(result10); // Should return null as it's not an object
 
     // Test 11: Malformed JSON - missing quotes
@@ -987,7 +995,7 @@ public class AuditorPersistenceImplTest {
     when(rs11.getString(1)).thenReturn("{key: value}");
     when(rs11.wasNull()).thenReturn(false);
 
-    ObjectNode result11 = instance.getArguments(rs11, 1, "test-id-11");
+    ObjectNode result11 = instance.getArguments(reqctx, rs11, 1, "test-id-11");
     assertNull(result11);
 
     // Test 12: Malformed JSON - trailing comma
@@ -995,7 +1003,7 @@ public class AuditorPersistenceImplTest {
     when(rs12.getString(1)).thenReturn("{\"key1\":\"value1\",}");
     when(rs12.wasNull()).thenReturn(false);
 
-    ObjectNode result12 = instance.getArguments(rs12, 1, "test-id-12");
+    ObjectNode result12 = instance.getArguments(reqctx, rs12, 1, "test-id-12");
     assertNull(result12);
 
     // ====== SPECIAL CHARACTERS TESTS ======
@@ -1005,7 +1013,7 @@ public class AuditorPersistenceImplTest {
     when(rs13.getString(1)).thenReturn(specialCharsJson);
     when(rs13.wasNull()).thenReturn(false);
 
-    ObjectNode result13 = instance.getArguments(rs13, 1, "test-id-13");
+    ObjectNode result13 = instance.getArguments(reqctx, rs13, 1, "test-id-13");
     assertNotNull(result13);
     assertEquals("こんにちは", result13.get("unicode").asText());
     assertEquals("line1\nline2\ttab", result13.get("escape").asText());
@@ -1017,7 +1025,7 @@ public class AuditorPersistenceImplTest {
     when(rs14.getString(1)).thenThrow(new SQLException("Column not found"));
 
     assertThrows(SQLException.class, () -> {
-      instance.getArguments(rs14, 1, "test-id-14");
+      instance.getArguments(reqctx, rs14, 1, "test-id-14");
     });
 
     // Test 15: SQLException from wasNull
@@ -1026,7 +1034,7 @@ public class AuditorPersistenceImplTest {
     when(rs15.wasNull()).thenThrow(new SQLException("Connection lost"));
 
     assertThrows(SQLException.class, () -> {
-      instance.getArguments(rs15, 1, "test-id-15");
+      instance.getArguments(reqctx, rs15, 1, "test-id-15");
     });
 
     // ====== EDGE CASES ======
@@ -1043,7 +1051,7 @@ public class AuditorPersistenceImplTest {
     when(rs16.getString(1)).thenReturn(largeJson.toString());
     when(rs16.wasNull()).thenReturn(false);
 
-    ObjectNode result16 = instance.getArguments(rs16, 1, "test-id-16");
+    ObjectNode result16 = instance.getArguments(reqctx, rs16, 1, "test-id-16");
     assertNotNull(result16);
     assertEquals(1000, result16.size());
     assertEquals("value0", result16.get("key0").asText());
@@ -1054,7 +1062,7 @@ public class AuditorPersistenceImplTest {
     when(rs17.getString(5)).thenReturn("{\"test\":\"column5\"}");
     when(rs17.wasNull()).thenReturn(false);
 
-    ObjectNode result17 = instance.getArguments(rs17, 5, "test-id-17");
+    ObjectNode result17 = instance.getArguments(reqctx, rs17, 5, "test-id-17");
     assertNotNull(result17);
     assertEquals("column5", result17.get("test").asText());
 
@@ -1063,7 +1071,7 @@ public class AuditorPersistenceImplTest {
     when(rs18.getString(1)).thenReturn("{invalid");
     when(rs18.wasNull()).thenReturn(false);
 
-    ObjectNode result18 = instance.getArguments(rs18, 1, "special-id-123");
+    ObjectNode result18 = instance.getArguments(reqctx, rs18, 1, "special-id-123");
     assertNull(result18); // Should handle invalid JSON gracefully regardless of ID
   }
 }

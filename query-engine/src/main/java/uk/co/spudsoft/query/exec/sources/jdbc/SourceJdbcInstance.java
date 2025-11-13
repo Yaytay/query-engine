@@ -37,6 +37,7 @@ import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.sources.AbstractSource;
 import uk.co.spudsoft.query.exec.sources.sql.SourceSqlStreamingInstance;
+import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.main.ProtectedCredentials;
 import uk.co.spudsoft.query.web.ServiceException;
 
@@ -56,6 +57,9 @@ public class SourceJdbcInstance extends AbstractSource {
 
   private JdbcReadStream jdbcReadStream;
 
+  private final Log log;
+  
+  
   /**
    * Constructor.
    * @param vertx The Vert.x instance.
@@ -67,6 +71,7 @@ public class SourceJdbcInstance extends AbstractSource {
   public SourceJdbcInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, SourceJdbc definition) {
     super(vertx, meterRegistry, pipelineContext);
     this.definition = definition;
+    this.log = new Log(logger, pipelineContext);
   }
 
   @Override
@@ -79,7 +84,7 @@ public class SourceJdbcInstance extends AbstractSource {
       try {
         endpointName = pipeline.renderTemplate(definition.getName() + ":endpoint", definition.getEndpointTemplate());
       } catch (Throwable ex) {
-        logger.warn("Failed to render endpoint template ({}): ", definition.getEndpointTemplate(), ex);
+        log.warn().log("Failed to render endpoint template ({}): ", definition.getEndpointTemplate(), ex);
         return Future.failedFuture(ex);
       }
     }
@@ -91,7 +96,7 @@ public class SourceJdbcInstance extends AbstractSource {
       ConditionInstance cond = endpoint.getCondition().createInstance();
       if (!cond.evaluate(requestContext, null)) {
         String message = String.format("Endpoint %s (%s) rejected by condition (%s)", endpointName, endpoint.getUrl(), endpoint.getCondition());
-        logger.warn("Endpoint {} ({}) rejected by condition ({})", endpointName, endpoint.getUrl(), endpoint.getCondition());
+        log.warn().log("Endpoint {} ({}) rejected by condition ({})", endpointName, endpoint.getUrl(), endpoint.getCondition());
         return Future.failedFuture(new ServiceException(503, "Endpoint \"" + endpointName + "\" not accessible", new IllegalStateException(message)));
       }
     }
@@ -101,7 +106,7 @@ public class SourceJdbcInstance extends AbstractSource {
       try {
         url = pipeline.renderTemplate(definition.getName() + ":url", endpoint.getUrlTemplate());
       } catch (Throwable ex) {
-        logger.warn("Failed to render url template ({}): ", definition.getEndpointTemplate(), ex);
+        log.warn().log("Failed to render url template ({}): ", definition.getEndpointTemplate(), ex);
         return Future.failedFuture(ex);
       }
     }
@@ -112,7 +117,7 @@ public class SourceJdbcInstance extends AbstractSource {
       try {
         query = pipeline.renderTemplate(definition.getName() + ":query", definition.getQueryTemplate());
       } catch (Throwable ex) {
-        logger.warn("Failed to render query template ({}): ", definition.getEndpointTemplate(), ex);
+        log.warn().log("Failed to render query template ({}): ", definition.getEndpointTemplate(), ex);
         return Future.failedFuture(ex);
       }
     }
@@ -122,24 +127,24 @@ public class SourceJdbcInstance extends AbstractSource {
     try {
       credentials = processCredentials(endpoint, executor, requestContext);
     } catch (Throwable ex) {
-      logger.warn("Failed to process credentials: ", ex);
+      log.warn().log("Failed to process credentials: ", ex);
       return Future.failedFuture(ex);
     }
 
-    return runInitialization(finalUrl, credentials, finalQuery, pipeline, requestContext);
+    return runInitialization(finalUrl, credentials, finalQuery, pipeline);
   }
 
   @SuppressFBWarnings(value = {"OBL_UNSATISFIED_OBLIGATION", "ODR_OPEN_DATABASE_RESOURCE", "SQL_INJECTION_JDBC"}, justification = "JDBC objects must be closed by JdbcReadStream")
-  private Future<ReadStreamWithTypes> runInitialization(String finalUrl, String[] credentials, String finalQuery, PipelineInstance pipeline, RequestContext requestContext) throws RuntimeException {
+  private Future<ReadStreamWithTypes> runInitialization(String finalUrl, String[] credentials, String finalQuery, PipelineInstance pipeline) throws RuntimeException {
 
     Promise<ReadStreamWithTypes> result = Promise.promise();
 
-    jdbcReadStream = new JdbcReadStream(Vertx.currentContext(), requestContext, definition, result);
+    jdbcReadStream = new JdbcReadStream(Vertx.currentContext(), pipelineContext, definition, result);
     jdbcReadStream.exceptionHandler(ex -> {
-      logger.error("Exception occured in stream: ", ex);
+      log.error().log("Exception occured in stream: ", ex);
     });
 
-    jdbcReadStream.start(requestContext.getRequestId() + ":" + pipelineContext.getPipe(), finalUrl, credentials, finalQuery, pipeline);
+    jdbcReadStream.start(pipelineContext.getRequestContext().getRequestId() + " " + pipelineContext.getPipe(), finalUrl, credentials, finalQuery, pipeline);
 
     return result.future();
   }
@@ -166,14 +171,14 @@ public class SourceJdbcInstance extends AbstractSource {
       ProtectedCredentials credentials = executor.getSecret(endpoint.getSecret());
       if (credentials == null) {
         String message = String.format("Endpoint %s (%s) requires secret %s which does not exist", definition.getEndpoint(), coalesce(endpoint.getUrl(), endpoint.getUrlTemplate()), endpoint.getSecret());
-        logger.warn(message);
+        log.warn().log(message);
         throw new ServiceException(503, "Endpoint \"" + definition.getEndpoint() + "\" not accessible", new IllegalStateException(message));
       }
       if (!JexlEvaluator.isNullOrBlank(credentials.getCondition())) {
         ConditionInstance cond = credentials.getCondition().createInstance();
         if (!cond.evaluate(requestContext, null)) {
           String message = String.format("Endpoint %s (%s) prevented from accessing secret %s by condition (%s)", definition.getEndpoint(), coalesce(endpoint.getUrl(), endpoint.getUrlTemplate()), endpoint.getSecret(), endpoint.getCondition());
-          logger.warn(message);
+          log.warn().log(message);
           throw new ServiceException(503, "Endpoint \"" + definition.getEndpoint() + "\" not accessible", new IllegalStateException(message));
         }
       }
