@@ -26,7 +26,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.vertx.core.Future;
 import io.vertx.core.file.FileSystemException;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
