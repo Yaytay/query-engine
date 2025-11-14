@@ -38,6 +38,7 @@ import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.procs.AbstractProcessor;
 import uk.co.spudsoft.query.exec.procs.query.FilteringStream;
+import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
@@ -88,7 +89,7 @@ public class ProcessorExpressionInstance extends AbstractProcessor {
       typedResult = definition.getFieldType().cast(pipelineContext, result);
       data.put(definition.getField(), definition.getFieldType(), typedResult);
     } catch (Throwable ex) {
-      logger.warn("Expression evaluation resulted in {} ({}): ", result, result.getClass(), ex);
+      Log.decorate(logger.atWarn(), pipelineContext).log("Expression evaluation resulted in {} ({}): ", result, result.getClass(), ex);
     }
     return data;
   }

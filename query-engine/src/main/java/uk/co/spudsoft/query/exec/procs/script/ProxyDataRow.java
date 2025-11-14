@@ -19,7 +19,9 @@ package uk.co.spudsoft.query.exec.procs.script;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.proxy.ProxyObject;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 
 /**
  * A <a href="https://www.graalvm.org/">GraalVM</a>  {@link org.graalvm.polyglot.proxy.ProxyObject} to represent a 
@@ -32,13 +34,16 @@ import uk.co.spudsoft.query.exec.DataRow;
 public class ProxyDataRow implements ProxyObject {
   
   private final DataRow dataRow;
+  private final PipelineContext pipelineContext;
 
   /**
    * Constructor.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param dataRow The {@link DataRow} being wrapped.
    */
   @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "DataRow should only be modified on context")
-  public ProxyDataRow(DataRow dataRow) {
+  public ProxyDataRow(PipelineContext pipelineContext, DataRow dataRow) {
+    this.pipelineContext = pipelineContext;
     this.dataRow = dataRow;
   }
   
@@ -59,7 +64,7 @@ public class ProxyDataRow implements ProxyObject {
 
   @Override
   public void putMember(String key, Value value) {
-    dataRow.put(key, ProcessorScriptInstance.mapToNativeObject(value));
+    dataRow.put(key, ProcessorScriptInstance.mapToNativeObject(pipelineContext, value));
   }
   
 }

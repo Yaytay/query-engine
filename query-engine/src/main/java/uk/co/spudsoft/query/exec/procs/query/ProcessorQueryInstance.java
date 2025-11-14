@@ -83,12 +83,13 @@ public class ProcessorQueryInstance extends AbstractProcessor {
 
   /**
    * Process the RSQL/FIQL for a DataRow and return the result.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param rootNode the root of the RSQL abstract tree.
    * @param row the {@link DataRow} being evaluated.
    * @return the value calculated by the RSQL evaluation.
    */
-  static boolean evaluate(Node rootNode, DataRow row) {
-    return rootNode.accept(new RsqlEvaluator(), row);
+  static boolean evaluate(PipelineContext pipelineContext, Node rootNode, DataRow row) {
+    return rootNode.accept(new RsqlEvaluator(pipelineContext), row);
   }
 
   @Override
@@ -99,7 +100,7 @@ public class ProcessorQueryInstance extends AbstractProcessor {
       return Future.failedFuture(ex);
     }
     this.stream = new FilteringStream<>(pipelineContext, input.getStream(), (data) -> {
-      return evaluate(rootNode, data);
+      return evaluate(pipelineContext, rootNode, data);
     });
     this.types = input.getTypes();
     return Future.succeededFuture(new ReadStreamWithTypes(stream, types));

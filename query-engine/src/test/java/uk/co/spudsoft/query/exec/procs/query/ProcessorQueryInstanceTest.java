@@ -97,7 +97,7 @@ public class ProcessorQueryInstanceTest {
   
   @Test
   public void testEvaluate() {
-    RsqlEvaluator eval = new RsqlEvaluator();
+    RsqlEvaluator eval = new RsqlEvaluator(null);
     assertTrue(parse("x==4").accept(eval, row(e("x", 4))));
     assertFalse(parse("x==4").accept(eval, row(e("x", 5))));
     assertFalse(parse("x==4").accept(eval, row(e("x", null))));

@@ -50,6 +50,7 @@ import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.procs.AbstractProcessor;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * {@link uk.co.spudsoft.query.exec.ProcessorInstance} to sort the stream of {@link uk.co.spudsoft.query.exec.DataRow} objects.
@@ -165,7 +166,7 @@ public class ProcessorSortInstance extends AbstractProcessor {
       }
       byte[] result = baos.toByteArray();
       if (result.length > sizeGuess) {
-        logger.warn("Guessed at {} bytes, but was actually {} bytes", sizeGuess, result.length);
+        Log.decorate(logger.atWarn(), pipelineContext).log("Guessed at {} bytes, but was actually {} bytes", sizeGuess, result.length);
       }
       return result;
     }
@@ -230,7 +231,7 @@ public class ProcessorSortInstance extends AbstractProcessor {
         }
       }
     } catch (ClassNotFoundException ex) {
-      logger.error("ObjectInputStream threw ClassNotFoundException, which shouldn't happen: ", ex);
+      Log.decorate(logger.atError(), pipelineContext).log("ObjectInputStream threw ClassNotFoundException, which shouldn't happen: ", ex);
       throw new IOException("Unable to deserialize stream", ex);
     }
     return result;
@@ -251,7 +252,7 @@ public class ProcessorSortInstance extends AbstractProcessor {
             .compose(v -> {
               this.stream = new SortingStream<>(Vertx.currentContext()
                     , fileSystem
-                    , new DataRowComparator(definition.getFields())
+                    , new DataRowComparator(pipelineContext, definition.getFields())
                     , this::dataRowSerializer
                     , this::dataRowDeserializer
                     , dir

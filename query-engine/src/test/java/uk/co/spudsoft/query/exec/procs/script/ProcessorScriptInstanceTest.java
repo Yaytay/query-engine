@@ -59,11 +59,11 @@ public class ProcessorScriptInstanceTest {
 
   @Test
   public void testMapToNativeObject() {
-    assertNull(ProcessorScriptInstance.mapToNativeObject(Value.asValue(null)));
-    assertEquals(Long.valueOf("7"), ProcessorScriptInstance.mapToNativeObject(Value.asValue(7)));
-    assertEquals(Double.valueOf("7.2"), ProcessorScriptInstance.mapToNativeObject(Value.asValue(7.2)));
-    assertEquals(Boolean.FALSE, ProcessorScriptInstance.mapToNativeObject(Value.asValue(false)));
-    assertEquals("Hello", ProcessorScriptInstance.mapToNativeObject(Value.asValue("Hello")));
+    assertNull(ProcessorScriptInstance.mapToNativeObject(null, Value.asValue(null)));
+    assertEquals(Long.valueOf("7"), ProcessorScriptInstance.mapToNativeObject(null, Value.asValue(7)));
+    assertEquals(Double.valueOf("7.2"), ProcessorScriptInstance.mapToNativeObject(null, Value.asValue(7.2)));
+    assertEquals(Boolean.FALSE, ProcessorScriptInstance.mapToNativeObject(null, Value.asValue(false)));
+    assertEquals("Hello", ProcessorScriptInstance.mapToNativeObject(null, Value.asValue("Hello")));
 
     try (org.graalvm.polyglot.Context context = org.graalvm.polyglot.Context.newBuilder("js").option("engine.WarnInterpreterOnly", "false").build()) {
       Value bindings = context.getBindings("js");
@@ -76,18 +76,18 @@ public class ProcessorScriptInstanceTest {
       bindings.putMember("duration", ProxyDuration.from(Duration.ofHours(7)));
       bindings.putMember("ex", new IllegalArgumentException("bad"));
 
-      assertEquals(LocalDate.of(1971, 05, 06), ProcessorScriptInstance.mapToNativeObject(bindings.getMember("date")));
-      assertEquals(LocalTime.of(01, 23, 45), ProcessorScriptInstance.mapToNativeObject(bindings.getMember("time")));
-      assertEquals(Instant.ofEpochSecond(42340980), ProcessorScriptInstance.mapToNativeObject(bindings.getMember("instant")));
-      assertEquals(Duration.ofHours(7), ProcessorScriptInstance.mapToNativeObject(bindings.getMember("duration")));
+      assertEquals(LocalDate.of(1971, 05, 06), ProcessorScriptInstance.mapToNativeObject(null, bindings.getMember("date")));
+      assertEquals(LocalTime.of(01, 23, 45), ProcessorScriptInstance.mapToNativeObject(null, bindings.getMember("time")));
+      assertEquals(Instant.ofEpochSecond(42340980), ProcessorScriptInstance.mapToNativeObject(null, bindings.getMember("instant")));
+      assertEquals(Duration.ofHours(7), ProcessorScriptInstance.mapToNativeObject(null, bindings.getMember("duration")));
       
       assertThrows(PolyglotException.class, () -> {
-        ProcessorScriptInstance.mapToNativeObject(bindings.getMember("ex"));
+        ProcessorScriptInstance.mapToNativeObject(null, bindings.getMember("ex"));
       });
     }
 
     try {
-      ProcessorScriptInstance.mapToNativeObject(Value.asValue(new IllegalStateException("Bad value")));
+      ProcessorScriptInstance.mapToNativeObject(null, Value.asValue(new IllegalStateException("Bad value")));
       fail("Expected IllegalStateException");
     } catch (Throwable ex) {
     }

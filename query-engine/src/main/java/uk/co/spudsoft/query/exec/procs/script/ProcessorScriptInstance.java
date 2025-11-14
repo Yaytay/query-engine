@@ -43,6 +43,7 @@ import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.procs.AbstractProcessor;
 import uk.co.spudsoft.query.exec.procs.query.FilteringStream;
+import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 
@@ -90,8 +91,8 @@ public final class ProcessorScriptInstance extends AbstractProcessor {
 
   private boolean runPredicate(DataRow data) {
     return runSource(engine, "predicate", definition.getLanguage(), predicateSource, data, (returnValue, row) -> {
-      logger.debug("returnValue ({}): {}", nullableClass(returnValue), returnValue);
-      logger.debug("row ({}): {}", nullableClass(row), row);
+      Log.decorate(logger.atDebug(), pipelineContext).log("returnValue ({}): {}", nullableClass(returnValue), returnValue);
+      Log.decorate(logger.atDebug(), pipelineContext).log("row ({}): {}", nullableClass(row), row);
       return returnValue.asBoolean();
     });
   }
@@ -106,8 +107,8 @@ public final class ProcessorScriptInstance extends AbstractProcessor {
 
   private DataRow runProcess(DataRow data) {
     return runSource(engine, "process", definition.getLanguage(), processSource, data, (returnValue, row) -> {
-      logger.debug("returnValue ({}): {}", nullableClass(returnValue), returnValue);
-      logger.debug("row ({}): {}", nullableClass(row), row);
+      Log.decorate(logger.atDebug(), pipelineContext).log("returnValue ({}): {}", nullableClass(returnValue), returnValue);
+      Log.decorate(logger.atDebug(), pipelineContext).log("row ({}): {}", nullableClass(row), row);
       return row;
      });
   }
@@ -119,18 +120,18 @@ public final class ProcessorScriptInstance extends AbstractProcessor {
       bindings.putMember("request", pipelineContext.getRequestContext());
       bindings.putMember("pipeline", pipeline);
       bindings.putMember("args", ProxyObject.fromMap(arguments));
-      bindings.putMember("row", new ProxyDataRow(data)); // ProxyObject.fromMap(data.getMap()));
+      bindings.putMember("row", new ProxyDataRow(pipelineContext, data)); // ProxyObject.fromMap(data.getMap()));
       Value outputValue = graalContext.eval(source);
       T result = postProcess.apply(outputValue, data);
-      logger.debug("Running {} {} gave {}", name, source.getCharacters(), result);
+      Log.decorate(logger.atDebug(), pipelineContext).log("Running {} {} gave {}", name, source.getCharacters(), result);
       return result;
     } catch (Throwable ex) {
-      logger.warn("Failed to evaluate {}: ", name, ex);
+      Log.decorate(logger.atWarn(), pipelineContext).log("Failed to evaluate {}: ", name, ex);
       return null;
     }
   }
 
-  static Comparable<?> mapToNativeObject(Value value) {
+  static Comparable<?> mapToNativeObject(PipelineContext pipelineContext, Value value) {
     if (value.isNull()) {
       return null;
     } else if (value.isNumber()) {
@@ -169,7 +170,7 @@ public final class ProcessorScriptInstance extends AbstractProcessor {
     } else if (value.isException()) {
       value.throwException();
     }
-    logger.warn("Unknown value type: {}", value);
+    Log.decorate(logger.atWarn(), pipelineContext).log("Unknown value type: {}", value);
     return null;
   }
 

@@ -30,7 +30,10 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.DataType;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * Implementation class for visiting nodes in an RSQL expressions and evaluating the result.
@@ -41,10 +44,14 @@ public class RsqlEvaluator implements RSQLVisitor<Boolean, DataRow> {
 
   private static final Logger logger = LoggerFactory.getLogger(RsqlEvaluator.class);
 
+  private final PipelineContext pipelineContext;
+  
   /**
    * Constructor.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    */
-  public RsqlEvaluator() {
+  public RsqlEvaluator(PipelineContext pipelineContext) {
+    this.pipelineContext = pipelineContext;
   }
 
   /**
@@ -222,7 +229,7 @@ public class RsqlEvaluator implements RSQLVisitor<Boolean, DataRow> {
     String selector = node.getSelector();
     DataType type = row.getType(selector);
     if (type == null) {
-      logger.warn("The field {} is not present in the row: {}", selector, row.getMap().keySet());
+      Log.decorate(logger.atWarn(), pipelineContext).log("The field {} is not present in the row: {}", selector, row.getMap().keySet());
       throw new IllegalArgumentException("The field specified in the RSQL expression does not exist");
     } else {
       Object rowValue = row.get(selector);
@@ -233,7 +240,7 @@ public class RsqlEvaluator implements RSQLVisitor<Boolean, DataRow> {
 
       RsqlOperator rsqlOperator = OPERATOR_MAP.get(operator.getSymbol());
       if (rsqlOperator == null) {
-        logger.warn("The operator specified in the RSQL expression ({}) is not handled", operator.getSymbol());
+        Log.decorate(logger.atWarn(), pipelineContext).log("The operator specified in the RSQL expression ({}) is not handled", operator.getSymbol());
         throw new IllegalArgumentException("The operator specified in the RSQL expression is not handled");
       }
       
@@ -243,7 +250,7 @@ public class RsqlEvaluator implements RSQLVisitor<Boolean, DataRow> {
       } else {
         rsqlComparator = COMPARATOR_MAP.get(type);
         if (rsqlComparator == null) {
-          logger.warn("The data type {} is not handled", type);
+          Log.decorate(logger.atWarn(), pipelineContext).log("The data type {} is not handled", type);
           throw new IllegalStateException("The data type accessed in the RSQL expression is not handled");
         }
       }

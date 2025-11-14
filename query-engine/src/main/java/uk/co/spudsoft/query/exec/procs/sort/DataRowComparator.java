@@ -34,7 +34,10 @@ import static uk.co.spudsoft.query.defn.DataType.Integer;
 import static uk.co.spudsoft.query.defn.DataType.Long;
 import static uk.co.spudsoft.query.defn.DataType.String;
 import static uk.co.spudsoft.query.defn.DataType.Time;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
@@ -48,13 +51,17 @@ public class DataRowComparator implements Comparator<DataRow> {
   
   private static final Logger logger = LoggerFactory.getLogger(DataRowComparator.class);
 
+  private final PipelineContext pipelineContext;
+
   private final ImmutableList<String> fields;
   
   /**
    * Constructor.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param fields The list of fields to use in the comparison. 
    */
-  public DataRowComparator(List<String> fields) {
+  public DataRowComparator(PipelineContext pipelineContext, List<String> fields) {
+    this.pipelineContext = pipelineContext;
     this.fields = ImmutableCollectionTools.copy(fields);
   }
 
@@ -66,7 +73,7 @@ public class DataRowComparator implements Comparator<DataRow> {
         descending = -1;
         field = field.substring(1);
       }
-      int result = compareField(o1, o2, field) * descending;
+      int result = compareField(pipelineContext, o1, o2, field) * descending;
       if (result != 0) {
         return result;
       }
@@ -74,14 +81,14 @@ public class DataRowComparator implements Comparator<DataRow> {
     return 0;    
   }
   
-  private static int compareField(DataRow o1, DataRow o2, String field) {
+  private static int compareField(PipelineContext pipelineContext, DataRow o1, DataRow o2, String field) {
     if (o1 == null) {
       return (o2 == null) ? 0 : -1;
     }
     
     DataType type = o1.getType(field);
     if (type == null) {
-      logger.warn("Field {} not found in fields {}", field, o1.types().keySet());
+      Log.decorate(logger.atWarn(), pipelineContext).log("Field {} not found in fields {}", field, o1.types().keySet());
       throw new IllegalArgumentException("Unrecognised field in sort");
     }
     
