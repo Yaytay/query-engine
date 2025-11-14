@@ -194,7 +194,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     } catch (ServiceException ex) {
       return Future.failedFuture(ex);
     }
-    Pool pool = poolCreator.pool(vertx, connectOptions, poolOptions);
+    Pool pool = poolCreator.pool(vertx, pipelineContext, connectOptions, poolOptions);
 
     String query = definition.getQuery();
     if (!Strings.isNullOrEmpty(definition.getQueryTemplate())) {
@@ -230,7 +230,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
                 log.debug().log("Executing SQL stream on {} with {}", connection, args.deepToString());
               }
               // RowStream<Row> rowStream = preparedStatement.createStream(definition.getStreamingFetchSize(), args);
-              MetadataRowStreamImpl rowStream = new MetadataRowStreamImpl(preparedStatement, requestContext, Vertx.currentContext(), definition.getStreamingFetchSize(), args);
+              MetadataRowStreamImpl rowStream = new MetadataRowStreamImpl(preparedStatement, pipelineContext, Vertx.currentContext(), definition.getStreamingFetchSize(), args);
               rowStream.exceptionHandler(ex -> {
                 log.error().log("Exception occured in stream: ", ex);
               });

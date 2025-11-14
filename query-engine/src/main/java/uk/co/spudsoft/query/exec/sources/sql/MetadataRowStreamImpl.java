@@ -36,7 +36,9 @@ import java.util.Iterator;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * Capture the metadata returned by a SQL statement even when there are no rows returned.
@@ -48,10 +50,11 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
   private static final Logger logger = LoggerFactory.getLogger(MetadataRowStreamImpl.class);
 
   private final PreparedStatement ps;
-  private final RequestContext requestContext;
+  private final PipelineContext pipelineContext;
   private final Context context;
   private final int fetch;
   private final Tuple params;
+  private final Log log;
 
   private Handler<Void> endHandler;
   private Handler<Row> rowHandler;
@@ -68,18 +71,19 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
   /**
    * Constructor.
    * @param ps The {@link PreparedStatement} to be executed.
-   * @param requestContext The request context, for logging and tracking.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param context The Vert.x context to use for asynchronous operations.
    * @param fetch The number of rows to fetch.
    * @param params Parameters to pass to the {@link PreparedStatement}.
    */
   @SuppressFBWarnings("EI_EXPOSE_REP2")
-  public MetadataRowStreamImpl(PreparedStatement ps, RequestContext requestContext, Context context, int fetch, Tuple params) {
+  public MetadataRowStreamImpl(PreparedStatement ps, PipelineContext pipelineContext, Context context, int fetch, Tuple params) {
     this.ps = ps;
-    this.requestContext = requestContext;
+    this.pipelineContext = pipelineContext;
     this.context = context;
     this.fetch = fetch;
     this.params = params;
+    this.log =  new Log(logger, pipelineContext);
     this.demand = Long.MAX_VALUE;
   }
 
@@ -114,7 +118,7 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
         if (cursor == null) {
           rowHandler = handler;
           c = cursor = ps.cursor(params);
-          logger.trace("Cursor created");
+          log.trace().log("Cursor created");
           if (readInProgress) {
             return this;
           }
@@ -125,7 +129,7 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
       } else {
         rowHandler = null;
         if (cursor != null) {
-          logger.trace("no handler, so closing cursor");
+          log.trace().log("no handler, so closing cursor");
           cursor.close();
           readInProgress = false;
           cursor = null;
@@ -149,7 +153,7 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
     if (amount < 0L) {
       throw new IllegalArgumentException("Invalid fetch amount " + amount);
     }
-    logger.trace("Fetch called with {}", amount);
+    log.trace().log("Fetch called with {}", amount);
     synchronized (this) {
       demand += amount;
       if (demand < 0L) {
@@ -174,7 +178,7 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
   @Override
   public void handle(AsyncResult<RowSet<Row>> ar) {
     if (ar.failed()) {
-      logger.warn("Failed to get RowSet {}: ", ++rowSetCount, ar.cause());
+      log.warn().log("Failed to get RowSet {}: ", ++rowSetCount, ar.cause());
       Handler<Throwable> handler;
       synchronized (this) {
         readInProgress = false;
@@ -188,9 +192,9 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
     } else {
       RowSet<Row> rowSet = ar.result();
       if (rowSetCount % 100 == 0) {
-        logger.debug("Got RowSet {}", ++rowSetCount);
+        log.debug().log("Got RowSet {}", ++rowSetCount);
       } else {
-        logger.trace("Got RowSet {}", ++rowSetCount);
+        log.trace().log("Got RowSet {}", ++rowSetCount);
       }
       Handler<List<ColumnDescriptor>> colDescHandler;
       synchronized (this) {
@@ -213,7 +217,7 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
 
   @Override
   public Future<Void> close() {
-    logger.trace("close()");
+    log.trace().log("close()");
     Cursor c;
     synchronized (this) {
       c = cursor;
@@ -232,10 +236,10 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
 
   @SuppressWarnings({"unchecked", "rawtypes"})
   private void checkPending() {
-    logger.trace("checkPending");
+    log.trace().log("checkPending");
     synchronized (this) {
       if (emitting) {
-        logger.trace("already emitting");
+        log.trace().log("already emitting");
         return;
       }
       emitting = true;
@@ -244,7 +248,7 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
       synchronized (this) {
         if (demand == 0L) {
           emitting = false;
-          logger.trace("0 demand");
+          log.trace().log("0 demand");
           break;
         }
         Handler handler;
@@ -256,26 +260,26 @@ public class MetadataRowStreamImpl implements RowStreamInternal, Handler<AsyncRe
             demand--;
           }
           if (!result.hasNext()) {
-            logger.trace("result does not have next");
+            log.trace().log("result does not have next");
             result = null;
           }
         } else {
-          logger.trace("no result");
+          log.trace().log("no result");
           emitting = false;
           if (readInProgress) {
-            // logger.trace("readInProgress");
+            // log.trace().log("readInProgress");
             break;
           } else {
             if (cursor == null) {
-              logger.trace("cursor not set");
+              log.trace().log("cursor not set");
               break;
             } else if (cursor.hasMore()) {
-              logger.trace("cursor has more, reading another {} rows", fetch);
+              log.trace().log("cursor has more, reading another {} rows", fetch);
               readInProgress = true;
               cursor.read(fetch).andThen(this);
               break;
             } else {
-              logger.trace("cursor does not have more, closing");
+              log.trace().log("cursor does not have more, closing");
               cursor.close();
               cursor = null;
               handler = endHandler;

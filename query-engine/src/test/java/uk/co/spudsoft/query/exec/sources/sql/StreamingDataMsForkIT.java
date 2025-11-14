@@ -127,7 +127,7 @@ public class StreamingDataMsForkIT {
               if (logger.isDebugEnabled()) {
                 logger.debug("Executing SQL stream on {}", connection);
               }
-              MetadataRowStreamImpl rowStream = new MetadataRowStreamImpl(preparedStatement, reqctx, vertx.getOrCreateContext(), 100, Tuple.tuple());
+              MetadataRowStreamImpl rowStream = new MetadataRowStreamImpl(preparedStatement, pipelineContext, vertx.getOrCreateContext(), 100, Tuple.tuple());
               rowStream.exceptionHandler(ex -> {
                 logger.error("Exception occured in stream: ", ex);
               });

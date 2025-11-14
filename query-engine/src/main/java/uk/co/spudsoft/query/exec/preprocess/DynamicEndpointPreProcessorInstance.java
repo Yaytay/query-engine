@@ -39,6 +39,7 @@ import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
+import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.web.ServiceException;
 
 /**
@@ -79,7 +80,7 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
 
   @Override
   public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
-    logger.debug("initialize()");
+    Log.decorate(logger.atDebug(), pipelineContext).log("initialize()");
 
     String childName = pipeline.getPipelineContext().getPipe() + "." + name + ".input";
     PipelineContext childContext = pipeline.getPipelineContext().child(childName);
@@ -98,14 +99,14 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
     );
     return executor.initializePipeline(childContext, dePipeline)
             .onFailure(ex -> {
-              logger.error("Dynamic pipeline initialization failed: ", ex);
+              Log.decorate(logger.atError(), pipelineContext).log("Dynamic pipeline initialization failed: ", ex);
             })
             .compose(v -> {
-              logger.debug("de pipeline initialized, getting future");
+              Log.decorate(logger.atDebug(), pipelineContext).log("de pipeline initialized, getting future");
               return ReadStreamToList.capture(pipelineContext, format.getReadStream().getStream());
             })
             .compose(rows -> {
-              logger.debug("de pipeline completed, processing {} rows", rows.size());
+              Log.decorate(logger.atDebug(), pipelineContext).log("de pipeline completed, processing {} rows", rows.size());
               try {
                 for (int i = 0; i < rows.size(); ++i) {
                   processEndpoint(pipeline, i, rows.get(i));
@@ -113,7 +114,7 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
               } catch (IllegalArgumentException ex) {
                 return Future.failedFuture(new ServiceException(500, "Unable to process DynamicEndpoint: " + ex.getMessage()));
               }
-              logger.debug("de pipeline completed");
+              Log.decorate(logger.atDebug(), pipelineContext).log("de pipeline completed");
               return Future.succeededFuture();
             });
   }
@@ -133,7 +134,7 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
     if (Strings.isNullOrEmpty(key)) {
       key = definition.getKey();
     }
-    logger.debug("Processing dynamic endpoint {}: {} ({})", idx, key, type);
+    Log.decorate(logger.atDebug(), pipelineContext).log("Processing dynamic endpoint {}: {} ({})", idx, key, type);
     if (Strings.isNullOrEmpty(key)) {
       if (data.containsKey(definition.getKeyField())) {
         throw new IllegalArgumentException("No field with the name " + definition.getKeyField() + " was found in the resultset for the dynamic endpoint");
@@ -171,7 +172,7 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
       if (cond.evaluate(requestContext, null, data)) {
         pipeline.getSourceEndpoints().put(key, endpoint);      
       } else {
-        logger.debug("Endpoint {} ({}) rejected by condition ({})", key, url, condition);
+        Log.decorate(logger.atDebug(), pipelineContext).log("Endpoint {} ({}) rejected by condition ({})", key, url, condition);
       }
     } else {
       pipeline.getSourceEndpoints().put(key, endpoint);      

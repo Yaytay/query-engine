@@ -31,6 +31,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * Cache of {@link io.vertx.sqlclient.Pool} instances that survives between calls.
@@ -53,7 +56,7 @@ public class PoolCreator {
           .maximumSize(100)
           .recordStats()
           .removalListener(notification -> {
-            logger.debug("Removing pool entry from cache");
+            logger.atDebug().log("Removing pool entry from cache");
             ((Pool) notification.getValue()).close();
           })
           .build();
@@ -74,11 +77,12 @@ public class PoolCreator {
   /**
    * Create a {@link Pool} from the given configuration.
    * @param vertx the Vert.x instance.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param database the configuration of the connection.
    * @param options the configuration of the {@link Pool}.
    * @return a newly created {@link Pool} instance.
    */
-  public Pool pool(Vertx vertx, SqlConnectOptions database, PoolOptions options) {
+  public Pool pool(Vertx vertx, PipelineContext pipelineContext, SqlConnectOptions database, PoolOptions options) {
     JsonObject databaseJson = database.toJson();
     //options.setIdleTimeout(1);
     //options.setIdleTimeoutUnit(TimeUnit.MINUTES);
@@ -91,15 +95,15 @@ public class PoolCreator {
             .put("pool", poolJson)
             ;
     try {
-      logger.debug("Getting pool for {}", json);
+      Log.decorate(logger.atDebug(), pipelineContext).log("Getting pool for {}", json);
       Pool pool = poolCache.get(json, () -> {
-        logger.debug("Creating new database pool for {}", json);
+        Log.decorate(logger.atDebug(), pipelineContext).log("Creating new database pool for {}", json);
         return Pool.pool(vertx, database, options);
       });
-      logger.debug("Got pool for {}", json);
+      Log.decorate(logger.atDebug(), pipelineContext).log("Got pool for {}", json);
       return pool;
     } catch (ExecutionException ex) {
-      logger.error("Failed to get pool ({}) from cache: ", json, ex);
+      Log.decorate(logger.atError(), pipelineContext).log("Failed to get pool ({}) from cache: ", json, ex);
       return Pool.pool(vertx, database, options);
     }
   }
