@@ -64,7 +64,7 @@ public class ProcessorExpressionInstanceTest {
     ProcessorExpressionInstance instance = definition.createInstance(vertx, pipelineContext, null, "P0-Expression");
 
     Types types = new Types();
-    ListReadStream<DataRow> inputStream = new ListReadStream<>(vertx.getOrCreateContext(), Arrays.asList(
+    ListReadStream<DataRow> inputStream = new ListReadStream<>(pipelineContext, vertx.getOrCreateContext(), Arrays.asList(
             DataRow.create(types).put("rownum", 0),
              DataRow.create(types).put("rownum", 1),
              DataRow.create(types).put("rownum", 2),
@@ -112,7 +112,7 @@ public class ProcessorExpressionInstanceTest {
 
     Types types = new Types();
     // input has only "iteration" initially, "result" should be inserted by initialize()
-    ListReadStream<DataRow> inputStream = new ListReadStream<>(vertx.getOrCreateContext(), Arrays.asList(
+    ListReadStream<DataRow> inputStream = new ListReadStream<>(pipelineContext, vertx.getOrCreateContext(), Arrays.asList(
             DataRow.create(types).put("iter", 1),
             DataRow.create(types).put("iter", 2),
             DataRow.create(types).put("iter", 3)
@@ -160,7 +160,7 @@ public class ProcessorExpressionInstanceTest {
     // predefine conflicting type
     types.putIfAbsent("value", uk.co.spudsoft.query.defn.DataType.String);
 
-    ListReadStream<DataRow> inputStream = new ListReadStream<>(vertx.getOrCreateContext(), Arrays.asList(
+    ListReadStream<DataRow> inputStream = new ListReadStream<>(pipelineContext, vertx.getOrCreateContext(), Arrays.asList(
             DataRow.create(types).put("value", "x")
     ));
     ReadStreamWithTypes input = new ReadStreamWithTypes(inputStream, types);

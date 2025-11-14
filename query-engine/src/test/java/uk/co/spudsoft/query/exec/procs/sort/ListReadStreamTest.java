@@ -51,7 +51,7 @@ public class ListReadStreamTest {
   public void testSimpleRun(Vertx vertx, VertxTestContext testContext) {
     List<Integer> items = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9);
     List<Integer> captured = new ArrayList<>();
-    ListReadStream<Integer> lrs = new ListReadStream<>(vertx.getOrCreateContext(), items);
+    ListReadStream<Integer> lrs = new ListReadStream<>(null, vertx.getOrCreateContext(), items);
     lrs.endHandler(v -> {
       testContext.verify(() -> {
         assertEquals(items, captured);
@@ -79,7 +79,7 @@ public class ListReadStreamTest {
   public void testException(Vertx vertx, VertxTestContext testContext) {
     List<Integer> items = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9);
     List<Integer> captured = new ArrayList<>();
-    ListReadStream<Integer> lrs = new ListReadStream<>(vertx.getOrCreateContext(), items);
+    ListReadStream<Integer> lrs = new ListReadStream<>(null, vertx.getOrCreateContext(), items);
     AtomicBoolean exceptionHandlerCalled = new AtomicBoolean(false);
     lrs.endHandler(v -> {
       testContext.verify(() -> {

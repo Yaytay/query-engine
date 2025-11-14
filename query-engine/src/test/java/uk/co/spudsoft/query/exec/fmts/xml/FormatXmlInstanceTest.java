@@ -122,7 +122,7 @@ public class FormatXmlInstanceTest {
                 for (int i = 0; i < 10000; ++i) {
                   rowsList.add(createDataRow(types, i));
                 }
-                return instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
+                return instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(pipelineContext, vertx.getOrCreateContext(), rowsList), types))
                         .compose(v2 -> instance.getFinalFuture());
               })
               .onComplete(ar -> {
@@ -176,7 +176,7 @@ public class FormatXmlInstanceTest {
       rowsList.add(createDataRow(types, i));
     }
 
-    instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
+    instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(pipelineContext, vertx.getOrCreateContext(), rowsList), types))
             .compose(v -> {
               return instance.getFinalFuture();
             })
@@ -245,7 +245,7 @@ public class FormatXmlInstanceTest {
       rowsList.add(createDataRow(types, i));
     }
 
-    instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
+    instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(pipelineContext, vertx.getOrCreateContext(), rowsList), types))
             .compose(v -> {
               return instance.getFinalFuture();
             })
@@ -315,7 +315,7 @@ public class FormatXmlInstanceTest {
       rowsList.add(createDataRow(types, i));
     }
 
-    instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
+    instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(pipelineContext, vertx.getOrCreateContext(), rowsList), types))
             .compose(v -> {
               return instance.getFinalFuture();
             })

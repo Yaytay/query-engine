@@ -90,7 +90,7 @@ public class FormatXlsxInstanceTest {
           rowsList.add(createDataRow(types, i));
         }
 
-        return instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types));
+        return instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(pipelineContext, vertx.getOrCreateContext(), rowsList), types));
       })
       .onComplete(testContext.succeedingThenComplete());
             

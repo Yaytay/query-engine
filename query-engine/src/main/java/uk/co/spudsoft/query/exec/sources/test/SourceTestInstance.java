@@ -79,7 +79,7 @@ public class SourceTestInstance extends AbstractSource {
       this.name = null;
     }
     this.context = vertx.getOrCreateContext();
-    this.stream = new QueueReadStream<>(this.context);
+    this.stream = new QueueReadStream<>(pipelineContext, this.context);
   }
 
   @Override

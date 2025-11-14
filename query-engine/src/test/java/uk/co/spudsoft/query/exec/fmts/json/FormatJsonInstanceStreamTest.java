@@ -399,7 +399,7 @@ public class FormatJsonInstanceStreamTest {
     );
 
     // Create read stream
-    ReadStream<DataRow> readStream = new ListReadStream<>(vertx.getOrCreateContext(), rows);
+    ReadStream<DataRow> readStream = new ListReadStream<>(pipelineContext, vertx.getOrCreateContext(), rows);
     ReadStreamWithTypes streamWithTypes = new ReadStreamWithTypes(readStream, types);
 
     Pipeline pipeline = Pipeline.builder()

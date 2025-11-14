@@ -168,7 +168,7 @@ public class MergeStreamTest {
             , DataRow.create(tp, "id", 5, "value", "five")
             , DataRow.create(tp, "id", 6, "value", "six")
     );
-    ReadStream<DataRow> primaryRowsStream = new ListReadStream<>(context, pRowsList);
+    ReadStream<DataRow> primaryRowsStream = new ListReadStream<>(null, context, pRowsList);
     return primaryRowsStream;
   }
 
@@ -192,7 +192,7 @@ public class MergeStreamTest {
             , DataRow.create(ts, "id", 6, "number", 5)
             , DataRow.create(ts, "id", 6, "number", 6)
     );
-    return new ListReadStream<>(context, sRowsList);
+    return new ListReadStream<>(null, context, sRowsList);
   }
 
 }

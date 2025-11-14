@@ -109,7 +109,7 @@ public class FormatAtomInstanceTest {
       rowsList.add(createDataRow(types, i));
     }
 
-    instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
+    instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(pipelineContext, vertx.getOrCreateContext(), rowsList), types))
       .compose(v -> {
         return instance.getFinalFuture();
       })

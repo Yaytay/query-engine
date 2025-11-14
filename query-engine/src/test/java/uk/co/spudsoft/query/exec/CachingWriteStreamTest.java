@@ -61,7 +61,7 @@ public class CachingWriteStreamTest {
       list.add(Buffer.buffer(Integer.toString(i) + "\n"));
     }
     assertEquals(1000, list.size());
-    ListReadStream<Buffer> input = new ListReadStream<>(vertx.getOrCreateContext(), list);
+    ListReadStream<Buffer> input = new ListReadStream<>(null, vertx.getOrCreateContext(), list);
     
     String outputFile = "target/temp/CachingWriteStreamTest.txt";
     
@@ -165,7 +165,7 @@ public class CachingWriteStreamTest {
       list.add(Buffer.buffer(Integer.toString(i) + "\n"));
     }
     assertEquals(1000, list.size());
-    ListReadStream<Buffer> input = new ListReadStream<>(vertx.getOrCreateContext(), list);
+    ListReadStream<Buffer> input = new ListReadStream<>(null, vertx.getOrCreateContext(), list);
     
     String outputFile = "target/temp/CachingWriteStreamTest.testCacheStreamWithOutputError.txt";
     
@@ -210,7 +210,7 @@ public class CachingWriteStreamTest {
       list.add(Buffer.buffer(Integer.toString(i) + "\n"));
     }
     assertEquals(1000, list.size());
-    ListReadStream<Buffer> input = new ListReadStream<>(vertx.getOrCreateContext(), list);
+    ListReadStream<Buffer> input = new ListReadStream<>(null, vertx.getOrCreateContext(), list);
     
     String outputFile = "target/temp/CachingWriteStreamTest.testCacheStreamWithCacheError.txt";
     

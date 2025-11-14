@@ -114,7 +114,7 @@ public class FormatHtmlInstanceTest {
       rowsList.add(createDataRow(types, i));
     }
 
-    instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
+    instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(null, vertx.getOrCreateContext(), rowsList), types))
       .compose(v -> {
         return instance.getFinalFuture();
       })
@@ -169,7 +169,7 @@ public class FormatHtmlInstanceTest {
       rowsList.add(createDataRow(types, i));
     }
 
-    instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
+    instance.initialize(null, null, new ReadStreamWithTypes(new ListReadStream<>(null, vertx.getOrCreateContext(), rowsList), types))
       .compose(v -> {
         return instance.getFinalFuture();
       })

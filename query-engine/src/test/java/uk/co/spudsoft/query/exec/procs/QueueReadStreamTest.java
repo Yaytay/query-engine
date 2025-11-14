@@ -56,7 +56,7 @@ public class QueueReadStreamTest {
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
     
-    QueueReadStream<Integer> qrs = new QueueReadStream<>(vertx.getOrCreateContext());
+    QueueReadStream<Integer> qrs = new QueueReadStream<>(pipelineContext, vertx.getOrCreateContext());
     AtomicInteger value = new AtomicInteger();
     ReadStreamToList.capture(pipelineContext, qrs)
             .andThen(ar -> {
@@ -86,7 +86,7 @@ public class QueueReadStreamTest {
   @Test
   public void testManual(Vertx vertx) throws InterruptedException {
     
-    QueueReadStream<Integer> qrs = new QueueReadStream<>(vertx.getOrCreateContext());
+    QueueReadStream<Integer> qrs = new QueueReadStream<>(null, vertx.getOrCreateContext());
     for (int i = 0; i < 30; ++i) {
       qrs.add(i);
     }

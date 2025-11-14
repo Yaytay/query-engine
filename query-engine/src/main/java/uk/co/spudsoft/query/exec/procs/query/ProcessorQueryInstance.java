@@ -98,7 +98,7 @@ public class ProcessorQueryInstance extends AbstractProcessor {
     } catch (Throwable ex) {
       return Future.failedFuture(ex);
     }
-    this.stream = new FilteringStream<>(input.getStream(), (data) -> {
+    this.stream = new FilteringStream<>(pipelineContext, input.getStream(), (data) -> {
       return evaluate(rootNode, data);
     });
     this.types = input.getTypes();

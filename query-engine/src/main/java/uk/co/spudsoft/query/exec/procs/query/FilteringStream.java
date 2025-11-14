@@ -22,6 +22,9 @@ import java.util.Objects;
 import java.util.function.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * {@link io.vertx.core.streams.ReadStream} that wraps another ReadStream and evaluates a predicate on each item handled to and only passes it on if the predicate returns true.
@@ -33,7 +36,8 @@ import org.slf4j.LoggerFactory;
 public class FilteringStream<T> implements ReadStream<T> {
 
   private static final Logger logger = LoggerFactory.getLogger(FilteringStream.class);
-  
+
+  private PipelineContext pipelineContext;
   private final ReadStream<T> source;
   private final Predicate<T> predicate;
 
@@ -44,10 +48,11 @@ public class FilteringStream<T> implements ReadStream<T> {
 
   /**
    * Constructor.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param source the {@link ReadStream} being filtered.
    * @param predicate the {@link Predicate} to run on each row.
    */
-  public FilteringStream(ReadStream<T> source, Predicate<T> predicate) {
+  public FilteringStream(PipelineContext pipelineContext, ReadStream<T> source, Predicate<T> predicate) {
     Objects.requireNonNull(source, "Source cannot be null");
     Objects.requireNonNull(predicate, "Predicate cannot be null");
     this.source = source;
@@ -81,7 +86,7 @@ public class FilteringStream<T> implements ReadStream<T> {
             emit = !stopped && predicate.test(item);
           }
         } catch (Throwable ex) {
-          logger.warn("Failed to evaluate predicate: ", ex);
+          Log.decorate(logger.atWarn(), pipelineContext).log("Failed to evaluate predicate: ", ex);
           emit = false;
         }
         if (emit) {

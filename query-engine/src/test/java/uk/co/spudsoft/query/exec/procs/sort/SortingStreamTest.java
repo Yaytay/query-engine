@@ -67,7 +67,7 @@ public class SortingStreamTest {
     expected.sort(Comparator.naturalOrder());
 
     List<Integer> captured = new ArrayList<>();
-    ListReadStream<Integer> lrs = new ListReadStream<>(vertx.getOrCreateContext(), input);
+    ListReadStream<Integer> lrs = new ListReadStream<>(null, vertx.getOrCreateContext(), input);
 
     SortingStream<Integer> ss = new SortingStream<>(
             vertx.getOrCreateContext(),
@@ -113,7 +113,7 @@ public class SortingStreamTest {
     List<Integer> expected = new ArrayList<>(input);
     expected.sort(Comparator.naturalOrder());
 
-    ListReadStream<Integer> lrs = new ListReadStream<>(vertx.getOrCreateContext(), input);
+    ListReadStream<Integer> lrs = new ListReadStream<>(null, vertx.getOrCreateContext(), input);
 
     SortingStream<Integer> ss = new SortingStream<>(
             vertx.getOrCreateContext(),
@@ -145,7 +145,7 @@ public class SortingStreamTest {
   private final class ThrowingReadStream extends ListReadStream<Integer> {
 
     public ThrowingReadStream(Context context, List<Integer> items) {
-      super(context, items);
+      super(null, context, items);
     }
 
     @Override
@@ -315,7 +315,7 @@ public class SortingStreamTest {
     List<Integer> input = Arrays.asList(5, 2, 8, 1, 9, 3);
     List<Integer> expected = Arrays.asList(1, 2, 3, 5, 8, 9);
 
-    ListReadStream<Integer> lrs = new ListReadStream<>(vertx.getOrCreateContext(), input);
+    ListReadStream<Integer> lrs = new ListReadStream<>(null, vertx.getOrCreateContext(), input);
 
     SortingStream<Integer> ss = new SortingStream<>(
             vertx.getOrCreateContext(),
@@ -362,7 +362,7 @@ public class SortingStreamTest {
     // Test SortingStream with empty input
     List<Integer> input = new ArrayList<>();
 
-    ListReadStream<Integer> lrs = new ListReadStream<>(vertx.getOrCreateContext(), input);
+    ListReadStream<Integer> lrs = new ListReadStream<>(null, vertx.getOrCreateContext(), input);
 
     SortingStream<Integer> ss = new SortingStream<>(
             vertx.getOrCreateContext(),
@@ -409,7 +409,7 @@ public class SortingStreamTest {
     // Test SortingStream with empty input
     List<Integer> input = new ArrayList<>();
 
-    ListReadStream<Integer> lrs = new ListReadStream<>(vertx.getOrCreateContext(), input);
+    ListReadStream<Integer> lrs = new ListReadStream<>(null, vertx.getOrCreateContext(), input);
 
     SortingStream<Integer> ss = new SortingStream<>(
             vertx.getOrCreateContext(),
@@ -456,7 +456,7 @@ public class SortingStreamTest {
     // Test SortingStream with single item
     List<Integer> input = Arrays.asList(42);
 
-    ListReadStream<Integer> lrs = new ListReadStream<>(vertx.getOrCreateContext(), input);
+    ListReadStream<Integer> lrs = new ListReadStream<>(null, vertx.getOrCreateContext(), input);
     
     String tmpDir = "target/temp/" + testInfo.getTestClass().get().getSimpleName() + "_" + testInfo.getTestMethod().get().getName();
     vertx.fileSystem()
@@ -509,7 +509,7 @@ public class SortingStreamTest {
     List<Integer> input = Arrays.asList(100, 50, 200, 25, 150, 75, 300, 125);
     List<Integer> expected = Arrays.asList(25, 50, 75, 100, 125, 150, 200, 300);
 
-    ListReadStream<Integer> lrs = new ListReadStream<>(vertx.getOrCreateContext(), input);
+    ListReadStream<Integer> lrs = new ListReadStream<>(null, vertx.getOrCreateContext(), input);
 
     SortingStream<Integer> ss = new SortingStream<>(
             vertx.getOrCreateContext(),
@@ -552,7 +552,7 @@ public class SortingStreamTest {
     List<Integer> input = Arrays.asList(3, 1, 4, 1, 5, 9, 2, 6);
     List<Integer> expected = Arrays.asList(1, 1, 2, 3, 4, 5, 6, 9);
 
-    ListReadStream<Integer> lrs = new ListReadStream<>(vertx.getOrCreateContext(), input);
+    ListReadStream<Integer> lrs = new ListReadStream<>(null, vertx.getOrCreateContext(), input);
 
     SortingStream<Integer> ss = new SortingStream<>(
             vertx.getOrCreateContext(),

@@ -24,6 +24,8 @@ import java.util.Iterator;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * Helper class to make a {@link java.util.List} available as a {@link io.vertx.core.streams.ReadStream}.
@@ -38,6 +40,7 @@ public class ListReadStream<T> implements ReadStream<T> {
 
   private static final Logger logger = LoggerFactory.getLogger(ListReadStream.class);
 
+  private final PipelineContext pipelineContext;
   private final Context context;
   private final Iterator<T> iter;
 
@@ -53,11 +56,13 @@ public class ListReadStream<T> implements ReadStream<T> {
 
   /**
    * Constructor.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param context the Vert.x {@link Context} for asynchronous operations.
    * @param items the items to send on the {@link ReadStream}.
    */
   @SuppressFBWarnings("EI_EXPOSE_REP2")
-  public ListReadStream(Context context, List<T> items) {
+  public ListReadStream(PipelineContext pipelineContext, Context context, List<T> items) {
+    this.pipelineContext = pipelineContext;
     this.context = context;
     this.iter = items.iterator();
   }
@@ -93,7 +98,7 @@ public class ListReadStream<T> implements ReadStream<T> {
       callHandler(item, handlerCaptured, exceptionHandlerCaptured);
 
       if (ended && endHandlerCaptured != null) {
-        logger.debug("Ending");
+        Log.decorate(logger.atDebug(), pipelineContext).log("Ending");
         endHandlerCaptured.handle(null);
         return;
       }
@@ -121,13 +126,13 @@ public class ListReadStream<T> implements ReadStream<T> {
   protected void callHandler(T item, Handler<T> handler, Handler<Throwable> exceptionHandler) {
     if (item != null && handler != null) {
       try {
-        logger.trace("Handling {}", item);
+        Log.decorate(logger.atTrace(), pipelineContext).log("Handling {}", item);
         handler.handle(item);
       } catch (Throwable ex) {
         if (exceptionHandler != null) {
           exceptionHandler.handle(ex);
         } else {
-          logger.warn("Exception handling item in ListReadStream: ", ex);
+          Log.decorate(logger.atWarn(), pipelineContext).log("Exception handling item in ListReadStream: ", ex);
         }
       }
     }

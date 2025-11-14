@@ -74,7 +74,7 @@ public class ProcessorSortInstanceTest {
             , ProcessorSort.builder().fields(Arrays.asList("timestamp")).build()
             , "P0-Sort"
     );
-    instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
+    instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(pipelineContext, vertx.getOrCreateContext(), rowsList), types))
             .andThen(testContext.succeedingThenComplete());
   }
 

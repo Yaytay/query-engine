@@ -113,7 +113,7 @@ public class ProcessorExpressionInstance extends AbstractProcessor {
     this.stream = input.getStream();
     if (!Strings.isNullOrEmpty(definition.getPredicate())) {
       predicate = new JexlEvaluator(definition.getPredicate());
-      stream = new FilteringStream<>(stream, this::runPredicate);
+      stream = new FilteringStream<>(pipelineContext, stream, this::runPredicate);
     }
     if (!Strings.isNullOrEmpty(definition.getField())) {
       field = new JexlEvaluator(definition.getFieldValue());

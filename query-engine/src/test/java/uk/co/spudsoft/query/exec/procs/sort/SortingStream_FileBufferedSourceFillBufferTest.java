@@ -108,7 +108,7 @@ public class SortingStream_FileBufferedSourceFillBufferTest {
                     SortingStream<Integer> sortingStream = new SortingStream<>(
                         context, fileSystem, Integer::compareTo, serializer, deserializer,
                         tempDirPath, "test", 1000, item -> 4,
-                        new ListReadStream<>(context, Collections.emptyList())
+                        new ListReadStream<>(null, context, Collections.emptyList())
                     );
                     
                     // Use reflection to access private inner class
@@ -506,7 +506,7 @@ public class SortingStream_FileBufferedSourceFillBufferTest {
                     SortingStream<Integer> sortingStream = new SortingStream<>(
                         context, fileSystem, Integer::compareTo, serializer, failingDeserializer,
                         tempDirPath, "test", 1000, item -> 4,
-                        new ListReadStream<>(context, Collections.emptyList())
+                        new ListReadStream<>(null, context, Collections.emptyList())
                     );
                     
                     Class<?> fileBufferedSourceClass = null;

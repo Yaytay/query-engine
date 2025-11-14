@@ -212,7 +212,7 @@ public class SortingStream_WriteAllItemsTest {
             "test",
             1000,
             item -> 8, // Assume each Integer takes 8 bytes
-            new ListReadStream<>(vertx.getOrCreateContext(), Arrays.asList(1, 2, 3))
+            new ListReadStream<>(null, vertx.getOrCreateContext(), Arrays.asList(1, 2, 3))
     );
   }
 

@@ -72,7 +72,7 @@ public class ProcessorQueryInstanceTest {
     ProcessorQueryInstance instance = ProcessorQuery.builder().expression("value!=three").build().createInstance(vertx, pipelineContext, null, "P0-Query");
     assertEquals("P0-Query", instance.getName());
     
-    Future<?> initFuture = instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types));
+    Future<?> initFuture = instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(pipelineContext, vertx.getOrCreateContext(), rowsList), types));
     assertTrue(initFuture.succeeded());
   }
   
@@ -208,7 +208,7 @@ public class ProcessorQueryInstanceTest {
             , "P0-Query"
     );
     assertEquals("P0-Query", instance.getName());
-    instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(vertx.getOrCreateContext(), rowsList), types))
+    instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(pipelineContext, vertx.getOrCreateContext(), rowsList), types))
             .compose(rswt -> {
               return ReadStreamToList.capture(pipelineContext, rswt.getStream());
             })

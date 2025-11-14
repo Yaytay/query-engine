@@ -24,6 +24,9 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * Helper class to make a number of items available as a {@link io.vertx.core.streams.ReadStream}.
@@ -40,6 +43,7 @@ public class QueueReadStream<T> implements ReadStream<T> {
   private static final Logger logger = LoggerFactory.getLogger(QueueReadStream.class);
 
   private final Context context;
+  private final PipelineContext pipelineContext;
   private final Deque<T> items;
 
   private final Object lock = new Object();
@@ -55,10 +59,12 @@ public class QueueReadStream<T> implements ReadStream<T> {
 
   /**
    * Constructor.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param context The Vert.x {@link Context} to run asynchronous methods.
    */
   @SuppressFBWarnings("EI_EXPOSE_REP2")
-  public QueueReadStream(Context context) {
+  public QueueReadStream(PipelineContext pipelineContext, Context context) {
+    this.pipelineContext = pipelineContext;
     this.context = context;
     this.items = new ArrayDeque<>();
   }
@@ -126,18 +132,18 @@ public class QueueReadStream<T> implements ReadStream<T> {
       }
       if (item != null && handlerCaptured != null) {
         try {
-          logger.debug("Handling {}", item);
+          Log.decorate(logger.atDebug(), pipelineContext).log("Handling {}", item);
           handlerCaptured.handle(item);
         } catch (Throwable ex) {
           if (exceptionHandlerCaptured != null) {
             exceptionHandlerCaptured.handle(ex);
           } else {
-            logger.warn("Exception handling item in QueueReadStream: ", ex);
+            Log.decorate(logger.atWarn(), pipelineContext).log("Exception handling item in QueueReadStream: ", ex);
           }
         }
       }
       if (ended && endHandlerCaptured != null) {
-        logger.debug("Calling endHandler");
+        Log.decorate(logger.atDebug(), pipelineContext).log("Calling endHandler");
         endHandlerCaptured.handle(null);
         return ;
       }
