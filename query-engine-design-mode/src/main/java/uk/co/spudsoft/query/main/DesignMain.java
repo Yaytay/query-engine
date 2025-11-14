@@ -79,8 +79,6 @@ public class DesignMain extends Main {
               .build();
       handler.setKeyCache(keyCache);
       router.route("/testauth/*").handler(handler);
-      
-      
     }
   }
   

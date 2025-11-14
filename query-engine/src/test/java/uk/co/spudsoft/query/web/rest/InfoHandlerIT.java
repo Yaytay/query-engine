@@ -32,6 +32,8 @@ import static io.restassured.RestAssured.given;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.lang.invoke.MethodHandles;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
@@ -129,6 +131,65 @@ public class InfoHandlerIT {
     assertThat(body, not(containsString("37-17")));
     assertThat(body, not(containsString("\"20\"")));
     assertThat(body, not(containsString("target")));
+    
+    main.shutdown();
+  }
+    
+  private static final String EMPTY_CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase() + "_empty";
+    
+  @Test
+  public void testEmptyConfigs() throws Exception {
+    logger.debug("Running testEmptyConfigs");
+    Files.createDirectories(Path.of(EMPTY_CONFS_DIR));
+    if (!Files.exists(Path.of(EMPTY_CONFS_DIR, ".empty"))) {
+      Files.createFile(Path.of(EMPTY_CONFS_DIR, ".empty"));
+    }
+    
+    Main main = new Main();
+    ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
+    PrintStream stdout = new PrintStream(stdoutStream);
+    main.testMain(new String[]{
+      "--persistence.datasource.url=" + postgres.getJdbcUrl()
+      , "--persistence.datasource.adminUser.username=" + postgres.getUser()
+      , "--persistence.datasource.adminUser.password=" + postgres.getPassword()
+      , "--persistence.datasource.schema=public" 
+      , "--baseConfigPath=" + EMPTY_CONFS_DIR
+      , "--jwt.acceptableIssuerRegexes[0]=.*"
+      , "--jwt.defaultJwksCacheDuration=PT1M"
+      , "--jwt.jwksEndpoints[0]=http://localhost/jwks"
+      , "--logging.jsonFormat=true"
+      , "--enableBearerAuth=false"
+      , "--sampleDataLoads[0].url=" + postgres.getVertxUrl()
+      , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()
+      , "--sampleDataLoads[0].adminUser.password=" + postgres.getPassword()
+      , "--managementEndpoints[0]=up"
+      , "--managementEndpoints[2]=prometheus"
+      , "--managementEndpoints[3]=threads"
+      , "--managementEndpointPort=" + mgmtPort
+      , "--managementEndpointUrl=http://localhost:" + mgmtPort + "/manage"
+      , "--tracing.protocol=otlphttp"
+      , "--tracing.sampler=alwaysOn"
+      , "--tracing.url=http://nonexistent/otlphttp"
+    }
+            , stdout
+            , ImmutableMap.<String, String>builder()
+                    .put("LOGGING_AS_JSON", "tRue")
+                    .put("LOGGING_LEVEL_UK_co_sPuDsoft_query_logging", "trace")
+                    .build());
+    assertEquals(0, stdoutStream.size());
+    
+    RestAssured.port = main.getPort();
+    
+    String body = given()
+            .log().all()
+            .get("/api/info/available")
+            .then()
+            .statusCode(200)
+            .log().all()
+            .extract().body().asString()
+            ;
+
+    assertEquals("", body);
     
     main.shutdown();
   }
