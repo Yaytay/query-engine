@@ -94,7 +94,7 @@ public class SourceJdbcInstance extends AbstractSource {
     }
     if (!JexlEvaluator.isNullOrBlank(endpoint.getCondition())) {
       ConditionInstance cond = endpoint.getCondition().createInstance();
-      if (!cond.evaluate(requestContext, null)) {
+      if (!cond.evaluate(pipelineContext, null)) {
         String message = String.format("Endpoint %s (%s) rejected by condition (%s)", endpointName, endpoint.getUrl(), endpoint.getCondition());
         log.warn().log("Endpoint {} ({}) rejected by condition ({})", endpointName, endpoint.getUrl(), endpoint.getCondition());
         return Future.failedFuture(new ServiceException(503, "Endpoint \"" + endpointName + "\" not accessible", new IllegalStateException(message)));
@@ -176,7 +176,7 @@ public class SourceJdbcInstance extends AbstractSource {
       }
       if (!JexlEvaluator.isNullOrBlank(credentials.getCondition())) {
         ConditionInstance cond = credentials.getCondition().createInstance();
-        if (!cond.evaluate(requestContext, null)) {
+        if (!cond.evaluate(pipelineContext, null)) {
           String message = String.format("Endpoint %s (%s) prevented from accessing secret %s by condition (%s)", definition.getEndpoint(), coalesce(endpoint.getUrl(), endpoint.getUrlTemplate()), endpoint.getSecret(), endpoint.getCondition());
           log.warn().log(message);
           throw new ServiceException(503, "Endpoint \"" + definition.getEndpoint() + "\" not accessible", new IllegalStateException(message));

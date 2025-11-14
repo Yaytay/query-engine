@@ -89,34 +89,34 @@ public class ConditionInstanceTest {
             , new Jwt(null, new JsonObject(new String(Base64.getDecoder().decode(OPENID))), null, null)
     );
 
-    assertFalse(new ConditionInstance("request").evaluate(ctx, DataRow.EMPTY_ROW));
-    assertTrue(new ConditionInstance("request.jwt.hasGroup('group1')").evaluate(ctx, DataRow.EMPTY_ROW));
-    assertFalse(new ConditionInstance("request.jwt.hasGroup(\"group7\")").evaluate(ctx, DataRow.EMPTY_ROW));
-    assertTrue(new ConditionInstance("request.jwt.getClaimAsList(\"aud\").contains('security-admin-console')").evaluate(ctx, DataRow.EMPTY_ROW));
-    assertTrue(new ConditionInstance("request.jwt.audience.contains('security-admin-console')").evaluate(ctx, DataRow.EMPTY_ROW));
-    assertTrue(new ConditionInstance("request.jwt.getClaim(\"scope\") =~ '.*[^q]?qe2[^2]?.*'").evaluate(ctx, DataRow.EMPTY_ROW));
-    assertTrue(new ConditionInstance("request.jwt.claim[\"scope\"] =~ '.*[^q]?qe2[^2]?.*'").evaluate(ctx, DataRow.EMPTY_ROW));
-    assertFalse(new ConditionInstance("request.jwt.getClaim(\"scope\") =~ '.*[^q]?qe3[^3]?.*'").evaluate(ctx, DataRow.EMPTY_ROW));
-    assertTrue(new ConditionInstance("request.jwt.scope.contains(\"qe2\")").evaluate(ctx, DataRow.EMPTY_ROW));
-    assertFalse(new ConditionInstance("request.jwt.scope.contains(\"qe1\")").evaluate(ctx, DataRow.EMPTY_ROW));
+    assertFalse(new ConditionInstance("request").evaluate(ctx, null, DataRow.EMPTY_ROW));
+    assertTrue(new ConditionInstance("request.jwt.hasGroup('group1')").evaluate(ctx, null, DataRow.EMPTY_ROW));
+    assertFalse(new ConditionInstance("request.jwt.hasGroup(\"group7\")").evaluate(ctx, null, DataRow.EMPTY_ROW));
+    assertTrue(new ConditionInstance("request.jwt.getClaimAsList(\"aud\").contains('security-admin-console')").evaluate(ctx, null, DataRow.EMPTY_ROW));
+    assertTrue(new ConditionInstance("request.jwt.audience.contains('security-admin-console')").evaluate(ctx, null, DataRow.EMPTY_ROW));
+    assertTrue(new ConditionInstance("request.jwt.getClaim(\"scope\") =~ '.*[^q]?qe2[^2]?.*'").evaluate(ctx, null, DataRow.EMPTY_ROW));
+    assertTrue(new ConditionInstance("request.jwt.claim[\"scope\"] =~ '.*[^q]?qe2[^2]?.*'").evaluate(ctx, null, DataRow.EMPTY_ROW));
+    assertFalse(new ConditionInstance("request.jwt.getClaim(\"scope\") =~ '.*[^q]?qe3[^3]?.*'").evaluate(ctx, null, DataRow.EMPTY_ROW));
+    assertTrue(new ConditionInstance("request.jwt.scope.contains(\"qe2\")").evaluate(ctx, null, DataRow.EMPTY_ROW));
+    assertFalse(new ConditionInstance("request.jwt.scope.contains(\"qe1\")").evaluate(ctx, null, DataRow.EMPTY_ROW));
 
-    assertTrue(new ConditionInstance("params.get('param3')").evaluate(ctx, null));
-    assertTrue(new ConditionInstance("params['param3']").evaluate(ctx, null));
-    assertFalse(new ConditionInstance("params['param4']").evaluate(ctx, null));
+    assertTrue(new ConditionInstance("params.get('param3')").evaluate(ctx, null, null));
+    assertTrue(new ConditionInstance("params['param3']").evaluate(ctx, null, null));
+    assertFalse(new ConditionInstance("params['param4']").evaluate(ctx, null, null));
 
-    assertTrue(new ConditionInstance("'good' == request.env['ev1']").evaluate(ctx, null));
-    assertTrue(new ConditionInstance("'good' == request.env.ev1").evaluate(ctx, null));
-    assertFalse(new ConditionInstance("'good' == request.env['ev2']").evaluate(ctx, null));
-    assertFalse(new ConditionInstance("'good' == request.env['ev3']").evaluate(ctx, null));
-    assertFalse(new ConditionInstance("'good' == request.env.ev3").evaluate(ctx, null));
+    assertTrue(new ConditionInstance("'good' == request.env['ev1']").evaluate(ctx, null, null));
+    assertTrue(new ConditionInstance("'good' == request.env.ev1").evaluate(ctx, null, null));
+    assertFalse(new ConditionInstance("'good' == request.env['ev2']").evaluate(ctx, null, null));
+    assertFalse(new ConditionInstance("'good' == request.env['ev3']").evaluate(ctx, null, null));
+    assertFalse(new ConditionInstance("'good' == request.env.ev3").evaluate(ctx, null, null));
     
     ctx.setJwt(
             new Jwt(null, new JsonObject(new String(Base64.getDecoder().decode(OPENID2))), null, null)
     );
 
-    assertTrue(new ConditionInstance("firstMatchingStringWithPrefix(request.getAudience(), 'client-root-', true) =~ ['bob-sandbox.fred.net', 'bob.fred.net']").evaluate(ctx, null));
-    assertTrue(new ConditionInstance("firstMatchingStringWithPrefix(request.audience, 'client-root-', true) =~ ['bob-sandbox.fred.net', 'bob.fred.net']").evaluate(ctx, null));
-    assertTrue(new ConditionInstance("firstMatchingStringWithPrefix(request.aud, 'client-root-', true) =~ ['bob-sandbox.fred.net', 'bob.fred.net']").evaluate(ctx, null));
+    assertTrue(new ConditionInstance("firstMatchingStringWithPrefix(request.getAudience(), 'client-root-', true) =~ ['bob-sandbox.fred.net', 'bob.fred.net']").evaluate(ctx, null, null));
+    assertTrue(new ConditionInstance("firstMatchingStringWithPrefix(request.audience, 'client-root-', true) =~ ['bob-sandbox.fred.net', 'bob.fred.net']").evaluate(ctx, null, null));
+    assertTrue(new ConditionInstance("firstMatchingStringWithPrefix(request.aud, 'client-root-', true) =~ ['bob-sandbox.fred.net', 'bob.fred.net']").evaluate(ctx, null, null));
     
     lg.setLevel(origLvl);
   }

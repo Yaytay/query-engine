@@ -115,7 +115,7 @@ public class ProcessorLookupInstance extends AbstractProcessor {
         includedFields.add(field.getKeyField());
       } else {
         ConditionInstance cond = field.getCondition().createInstance();
-        if (cond.evaluate(pipelineContext.getRequestContext(), null)) {
+        if (cond.evaluate(pipelineContext, null)) {
           includedFields.add(field.getKeyField());
         } else {
           logger.info("Field {} excluded by condition {}", field.getKeyField(), field.getCondition().getExpression());

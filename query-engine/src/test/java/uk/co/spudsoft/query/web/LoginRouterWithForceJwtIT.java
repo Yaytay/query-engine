@@ -151,10 +151,9 @@ public class LoginRouterWithForceJwtIT {
             .body(token)
             .put("/login/forcejwt")
             .then()
-            .statusCode(307)
+            .statusCode(200)
             .log().all()
             .cookie("qe-session", allOf(notNullValue(), hasLength(greaterThan(99))))
-            .header("Location", equalTo("/ui/"))
             .extract().body().asString()
             ;
     assertEquals("Session started", body);

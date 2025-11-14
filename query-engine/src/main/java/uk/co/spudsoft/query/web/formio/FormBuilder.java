@@ -162,7 +162,7 @@ public class FormBuilder {
         add = true;
       } else {
         ConditionInstance conditionInstance = arg.getCondition().createInstance();
-        if (conditionInstance.evaluate(requestContext, null)) {
+        if (conditionInstance.evaluate(requestContext, null, null)) {
           add = true;
         }
       }

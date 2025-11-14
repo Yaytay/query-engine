@@ -595,8 +595,7 @@ public class LoginRouter implements Handler<RoutingContext> {
                       .compose(v -> {
                         return event.response()
                                 .addCookie(cookie)
-                                .putHeader("Location", "/ui/")
-                                .setStatusCode(307)
+                                .setStatusCode(200)
                                 .end("Session started");
                       });
             })

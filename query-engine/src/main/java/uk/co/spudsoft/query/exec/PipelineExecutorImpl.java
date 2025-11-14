@@ -121,7 +121,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
         result.add(processor.createInstance(vertx, pipelineContext, meterRegistry, processorName));
       } else {
         ConditionInstance cond = new ConditionInstance(condition.getExpression());
-        if (cond.evaluate(pipelineContext.getRequestContext(), null)) {
+        if (cond.evaluate(pipelineContext, null)) {
           logger.debug("Added {} processor named {} because condition {} met", processor.getType(), processorName, cond);
           result.add(processor.createInstance(vertx, pipelineContext, meterRegistry, processorName));
         } else {
@@ -292,7 +292,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
 
       if (arg.getCondition() != null && !Strings.isNullOrEmpty(arg.getCondition().getExpression())) {
         ConditionInstance conditionInstance = arg.getCondition().createInstance();
-        if (!conditionInstance.evaluate(requestContext, null)) {
+        if (!conditionInstance.evaluate(requestContext, null, null)) {
           // Condition not met, either use default or skip this argument
           if (Strings.isNullOrEmpty(arg.getDefaultValueExpression())) {
             continue ;

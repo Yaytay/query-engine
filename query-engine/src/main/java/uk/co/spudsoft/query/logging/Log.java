@@ -108,11 +108,25 @@ public class Log {
   public static LoggingEventBuilder decorate(LoggingEventBuilder event, PipelineContext pipelineContext) {
     if (event != NOPLoggingEventBuilder.singleton()) {
       if (pipelineContext != null) {
-        event = decorate(event, pipelineContext.getRequestContext());
-        String pipe = pipelineContext.getPipe();
-        if (pipe != null) {
-          event = event.addKeyValue("pipeline", pipe);
-        }
+        event = decorate(event, pipelineContext.getRequestContext(), pipelineContext.getPipe());
+      }
+    }
+    return event;
+  }
+  
+  /**
+   * Add KVP data to a LoggingEvent.
+   * @param event The LoggingEvent to be decorated.
+   * @param requestContext The source of the KVP data.
+   * @param pipe The name of the pipe to add if provided.
+   * @return the decorated LoggingEvent.
+   */
+  @CheckReturnValue
+  public static LoggingEventBuilder decorate(LoggingEventBuilder event, RequestContext requestContext, String pipe) {
+    if (event != NOPLoggingEventBuilder.singleton()) {
+      event = decorate(event, requestContext);
+      if (pipe != null) {
+        event = event.addKeyValue("pipeline", pipe);
       }
     }
     return event;

@@ -168,7 +168,7 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
     if (!Strings.isNullOrEmpty(condition)) {
       RequestContext requestContext = pipelineContext.getRequestContext();
       ConditionInstance cond = new ConditionInstance(condition);
-      if (cond.evaluate(requestContext, data)) {
+      if (cond.evaluate(requestContext, null, data)) {
         pipeline.getSourceEndpoints().put(key, endpoint);      
       } else {
         logger.debug("Endpoint {} ({}) rejected by condition ({})", key, url, condition);

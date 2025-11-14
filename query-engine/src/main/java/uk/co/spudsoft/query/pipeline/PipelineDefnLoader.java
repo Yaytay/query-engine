@@ -251,7 +251,7 @@ public final class PipelineDefnLoader {
     return permissionsCache.get(permsFile, buffer -> new ConditionInstance(buffer.toString()))
             .compose(condition -> {
               try {
-                if (condition.evaluate(requestContext, null)) {
+                if (condition.evaluate(requestContext, null, null)) {
                   return Future.succeededFuture();
                 } else {
                   String expression = condition.getSourceText().trim();

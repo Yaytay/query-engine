@@ -20,6 +20,8 @@ import uk.co.spudsoft.query.exec.context.RequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * An instance of a {@link uk.co.spudsoft.query.defn.Condition} to be evaluated before doing something else.
@@ -64,20 +66,35 @@ public class ConditionInstance {
   /**
    * Evaluate the expression for the given RequestContext and DataRow, which may be null.
    * @param request The context of the request.
+   * @param pipe The name of the pipe being executed.
    * @param row The current DataRow, if this expression is to be evaluated in the context of a row.
    * @return true is the expression evaluates to true.
    */
   // Compare the bindings with PipelineInstance#renderTemplate and ProcessorScriptInstance#runSource
-  public boolean evaluate(RequestContext request, DataRow row) {    
+  public boolean evaluate(RequestContext request, String pipe, DataRow row) {    
     boolean result = evaluator.evaluate(request, row);
     String sourceText = evaluator.getSourceText();
     if (logger.isDebugEnabled()) {
       if (sourceText != null) {
         sourceText = sourceText.replaceAll("\\p{Cntrl}", "#");
       }
-      logger.info("Condition {} ({}) returned {}", evaluator, sourceText, result);
+      Log.decorate(logger.atInfo(), request).log("Condition {} ({}) returned {}", evaluator, sourceText, result);
     }
     return result;
+  }
+
+  /**
+   * Evaluate the expression for the given RequestContext and DataRow, which may be null.
+   * @param pipelineContext The context of the request.
+   * @param row The current DataRow, if this expression is to be evaluated in the context of a row.
+   * @return true is the expression evaluates to true.
+   */
+  // Compare the bindings with PipelineInstance#renderTemplate and ProcessorScriptInstance#runSource
+  public boolean evaluate(PipelineContext pipelineContext, DataRow row) {
+    if (pipelineContext == null) {
+      return evaluate(null, null, row);
+    }
+    return evaluate(pipelineContext.getRequestContext(), pipelineContext.getPipe(), row);
   }
   
 }
