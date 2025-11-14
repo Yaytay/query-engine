@@ -123,7 +123,7 @@ public class ProcessorLookupInstance extends AbstractProcessor {
       }
     }
 
-    return executor.initializePipeline(childPipeline)
+    return executor.initializePipeline(childContext, childPipeline)
             .compose(v -> {
               return ReadStreamToList.map(pipelineContext
                       , fieldDefnStreamCapture.getReadStream().getStream()

@@ -34,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.matches;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -113,7 +114,7 @@ public class QueryRouterTest {
     router.handle(routingContext);
 
     verify(response).setStatusCode(400);
-    verify(response).end("Invalid path (from ServiceException@uk.co.spudsoft.query.web.QueryRouter:221)");
+    verify(response).end(matches("Invalid path \\(from ServiceException@uk\\.co\\.spudsoft\\.query\\.web\\.QueryRouter:\\d+\\)"));
   }
 
   @Test

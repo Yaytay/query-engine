@@ -50,6 +50,7 @@ import uk.co.spudsoft.query.defn.Format;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
 import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * Concrete implementation of PipelineExecutor interface.
@@ -117,15 +118,15 @@ public class PipelineExecutorImpl implements PipelineExecutor {
               ;
       Condition condition = processor.getCondition();
       if (condition == null) {
-        logger.debug("Added {} processor named {} with no condition", processor.getType(), processorName);
+        Log.decorate(logger.atDebug(), pipelineContext).log("Added {} processor named {} with no condition", processor.getType(), processorName);
         result.add(processor.createInstance(vertx, pipelineContext, meterRegistry, processorName));
       } else {
         ConditionInstance cond = new ConditionInstance(condition.getExpression());
         if (cond.evaluate(pipelineContext, null)) {
-          logger.debug("Added {} processor named {} because condition {} met", processor.getType(), processorName, cond);
+          Log.decorate(logger.atDebug(), pipelineContext).log("Added {} processor named {} because condition {} met", processor.getType(), processorName, cond);
           result.add(processor.createInstance(vertx, pipelineContext, meterRegistry, processorName));
         } else {
-          logger.debug("Skipped {} processor {} because condition {} not met", processor.getType(), processor.getName(), cond);
+          Log.decorate(logger.atDebug(), pipelineContext).log("Skipped {} processor {} because condition {} not met", processor.getType(), processor.getName(), cond);
         }
       }
     }
@@ -167,7 +168,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     try {
       builder.add(type.cast(pipelineContext, item));
     } catch (Throwable ex) {
-      logger.warn("Unable to cast '{}' ({}) as {}: ", item, item.getClass(), type, ex);
+      Log.decorate(logger.atWarn(), pipelineContext).log("Unable to cast '{}' ({}) as {}: ", item, item.getClass(), type, ex);
       throw new IllegalArgumentException("The argument \"" + name + "\" was passed a value which cannot be converted to " + type.name() + ".");
     }
   }
@@ -231,20 +232,20 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     if (arg.getPossibleValues() != null && !arg.getPossibleValues().isEmpty()) {
       if (!possibleValuesContains(arg, value)) {
         if (defaultValue) {
-          logger.warn("Argument {} generated the default value \"{}\", which is not in the list of possible values ({})", arg.getName(), value, arg.getPossibleValues());
+          Log.decorate(logger.atWarn(), pipelineContext).log("Argument {} generated the default value \"{}\", which is not in the list of possible values ({})", arg.getName(), value, arg.getPossibleValues());
           throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" generated a default value which is not permitted, please contact the designer.");
         } else {
-          logger.warn("Argument {} was passed the value \"{}\", which is not in the list of possible values ({})", arg.getName(), value, arg.getPossibleValues());
+          Log.decorate(logger.atWarn(), pipelineContext).log("Argument {} was passed the value \"{}\", which is not in the list of possible values ({})", arg.getName(), value, arg.getPossibleValues());
           throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" was passed a value which is not permitted.");
         }
       }
     }
     if (permittedValuesPattern != null && !permittedValuesPattern.matcher(value).matches()) {
       if (defaultValue) {
-        logger.warn("Argument {} generated the default value \"{}\", which does not match \"{}\"", arg.getName(), value, arg.getPermittedValuesRegex());
+        Log.decorate(logger.atWarn(), pipelineContext).log("Argument {} generated the default value \"{}\", which does not match \"{}\"", arg.getName(), value, arg.getPermittedValuesRegex());
         throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" generated a default value which is not permitted, please contact the designer.");
       } else {
-        logger.warn("Argument {} was passed the value \"{}\", which does not match \"{}\"", arg.getName(), value, arg.getPermittedValuesRegex());
+        Log.decorate(logger.atWarn(), pipelineContext).log("Argument {} was passed the value \"{}\", which does not match \"{}\"", arg.getName(), value, arg.getPermittedValuesRegex());
         throw new IllegalArgumentException("The argument \"" + arg.getName() + "\" was passed a value which is not permitted.");
       }
     }
@@ -330,7 +331,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
       result.put(arg.getName(), instance);
     }
     requestContext.setArguments(arguments);
-    logger.debug("Prepared arguments: {}", arguments);
+    Log.decorate(logger.atDebug(), pipelineContext).log("Prepared arguments: {}", arguments);
     return result;
   }
 
@@ -359,11 +360,11 @@ public class PipelineExecutorImpl implements PipelineExecutor {
   ) {
   }
 
-  private Future<ReadStreamWithTypes> initializeProcessors(PipelineInstance pipeline, String parentSource, Iterator<ProcessorInstance> iter, int index, ReadStreamWithTypes input) {
-    logger.debug("initializeProcessors({}, {}, {}, {}, {})", pipeline, parentSource, iter, index, input);
+  private Future<ReadStreamWithTypes> initializeProcessors(PipelineContext pipelineContext, PipelineInstance pipeline, String parentSource, Iterator<ProcessorInstance> iter, int index, ReadStreamWithTypes input) {
+    Log.decorate(logger.atDebug(), pipelineContext).log("initializeProcessors({}, {}, {}, {}, {})", pipeline, parentSource, iter, index, input);
     if (!iter.hasNext()) {
       progressNotificationInternal(pipeline, null, null, (long) index, false, null, "All processors initialized", null, null);
-      logger.debug("Types after all processors initialized: {}", input.getTypes());
+      Log.decorate(logger.atDebug(), pipelineContext).log("Types after all processors initialized: {}", input.getTypes());
       return Future.succeededFuture(input);
     } else {
       ProcessorInstance processor = iter.next();
@@ -371,7 +372,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
       return processor.initialize(this, pipeline, parentSource, index, input)
               .compose(streamWithTypes -> {
                 progressNotificationInternal(pipeline, null, processor, (long) index, false, null, "Initialized {}", processor.getName());
-                return initializeProcessors(pipeline, parentSource, iter, index + 1, streamWithTypes);
+                return initializeProcessors(pipelineContext, pipeline, parentSource, iter, index + 1, streamWithTypes);
               });
     }
   }
@@ -386,28 +387,28 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     }
   }
 
-  private Future<Void> runPreProcessors(PipelineInstance pipeline) {
+  private Future<Void> runPreProcessors(PipelineContext pipelineContext, PipelineInstance pipeline) {
     if (pipeline.getPreProcessors().isEmpty()) {
       return Future.succeededFuture();
     } else {
-      logger.debug("Pipeline has at least one preprocessor");
+      Log.decorate(logger.atDebug(), pipelineContext).log("Pipeline has at least one preprocessor");
       Iterator<PreProcessorInstance> iter = pipeline.getPreProcessors().iterator();
       return runPreProcessors(pipeline, iter);
     }
   }
 
   @Override
-  public Future<Void> initializePipeline(PipelineInstance pipeline) {
-    return runPreProcessors(pipeline)
+  public Future<Void> initializePipeline(PipelineContext pipelineContext, PipelineInstance pipeline) {
+    return runPreProcessors(pipelineContext, pipeline)
             .compose(v -> {
               return pipeline.getSource().initialize(this, pipeline);
             })
             .compose(sourceStreamWithTypes -> {
-              logger.debug("Source initialized");
-              return initializeProcessors(pipeline, pipeline.getPipelineContext().getPipe(), pipeline.getProcessors().iterator(), 1, sourceStreamWithTypes);
+              Log.decorate(logger.atDebug(), pipelineContext).log("Source initialized");
+              return initializeProcessors(pipelineContext, pipeline, pipeline.getPipelineContext().getPipe(), pipeline.getProcessors().iterator(), 1, sourceStreamWithTypes);
             })
             .compose(streamWithTypes -> {
-              logger.debug("Processors ({}) initialized", pipeline.getProcessors().size());
+              Log.decorate(logger.atDebug(), pipelineContext).log("Processors ({}) initialized", pipeline.getProcessors().size());
 
               return pipeline.getSink().initialize(this, pipeline, streamWithTypes);
             })
@@ -416,7 +417,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
   }
 
   @Override
-  public Format getFormat(List<Format> formats, FormatRequest requested) {
+  public Format getFormat(PipelineContext pipelineContext, List<Format> formats, FormatRequest requested) {
     if (requested == null) {
       return formats.get(0);
     }
@@ -426,7 +427,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
           return format;
         }
       }
-      logger.info("The format {} was requested, but the supported format are: {}"
+      Log.decorate(logger.atInfo(), pipelineContext).log("The format {} was requested, but the supported format are: {}"
               , requested.getName()
               , formats.stream().map(d -> d.getName()).filter(f -> f != null).collect(Collectors.toList()));
       throw new IllegalArgumentException("The requested format is not supported for this request");
@@ -437,7 +438,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
           return format;
         }
       }
-      logger.info("The extension {} was requested, but the supported extensions are: {}"
+      Log.decorate(logger.atInfo(), pipelineContext).log("The extension {} was requested, but the supported extensions are: {}"
               , requested.getExtension()
               , formats.stream().map(d -> d.getExtension()).filter(f -> f != null).collect(Collectors.toList()));
       throw new IllegalArgumentException("The requested extension is not supported for this request");
@@ -447,7 +448,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
       if (format != null) {
         return format;
       }
-      logger.info("The media types {} were requested, but the supported media types are: {}"
+      Log.decorate(logger.atInfo(), pipelineContext).log("The media types {} were requested, but the supported media types are: {}"
               , requested.getAccept()
               , formats.stream().map(d -> d.getMediaType()).filter(f -> f != null).collect(Collectors.toList()));
       throw new IllegalArgumentException("The requested media type is not supported for this request");

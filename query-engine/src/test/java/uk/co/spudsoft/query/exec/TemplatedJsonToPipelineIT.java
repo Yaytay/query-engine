@@ -106,7 +106,7 @@ public class TemplatedJsonToPipelineIT {
             .compose(pipelineAndFile -> executor.validatePipeline(pipelineAndFile.pipeline()))
             .compose(pipeline -> {
               PipelineContext pipelineContext = new PipelineContext("test", req);
-              Format chosenFormat = executor.getFormat(pipeline.getFormats(), null);
+              Format chosenFormat = executor.getFormat(pipelineContext, pipeline.getFormats(), null);
               FormatInstance formatInstance = chosenFormat.createInstance(vertx, pipelineContext, new ListingWriteStream<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, pipelineContext, meterRegistry, executor);
               PipelineInstance instance;
@@ -127,7 +127,7 @@ public class TemplatedJsonToPipelineIT {
       
               assertNotNull(instance);
 
-              return executor.initializePipeline(instance);
+              return executor.initializePipeline(pipelineContext, instance);
             })
             .onComplete(ar -> {
               logger.debug("Pipeline complete");

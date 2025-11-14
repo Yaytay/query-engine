@@ -55,6 +55,7 @@ import uk.co.spudsoft.query.defn.Format;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.ArgumentInstance;
 import uk.co.spudsoft.query.exec.CachingWriteStream;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.logging.Log;
 
 
@@ -326,8 +327,8 @@ public class QueryRouter implements Handler<RoutingContext> {
                   // bodyEndHandler not called, so must explicitly audit reponse
                   auditor.recordResponse(requestContext, response);
                   return response.end();
-                } else {
-                  Format chosenFormat = pipelineExecutor.getFormat(pipeline.getFormats(), formatRequest);
+                } else {                  
+                  Format chosenFormat = pipelineExecutor.getFormat(new PipelineContext(null, requestContext), pipeline.getFormats(), formatRequest);
                   String filename = buildDesiredFilename(chosenFormat);
                   if (filename != null) {
                     response.headers().set("Content-Disposition", "attachment; filename=\"" + filename + "\"");
@@ -385,7 +386,7 @@ public class QueryRouter implements Handler<RoutingContext> {
   
   private Future<Void> runPipeline(Pipeline pipeline, RequestContext requestContext, FormatRequest formatRequest, HttpServerResponse response, WriteStream<Buffer> rawResponseStream, RoutingContext routingContext) {
     try {
-      Format chosenFormat = pipelineExecutor.getFormat(pipeline.getFormats(), formatRequest);
+      Format chosenFormat = pipelineExecutor.getFormat(new PipelineContext(null, requestContext), pipeline.getFormats(), formatRequest);
       response.headers().set("Content-Type", chosenFormat.getMediaType().toString());
       String filename = buildDesiredFilename(chosenFormat);
       if (filename != null) {

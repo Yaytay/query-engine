@@ -106,7 +106,7 @@ public abstract class AbstractJoiningProcessor extends AbstractProcessor {
             , executor.createProcessors(vertx, childContext, sourcePipeline, null)
             , sinkInstance
     );
-    return executor.initializePipeline(childPipeline)
+    return executor.initializePipeline(childContext, childPipeline)
             .map(v -> sinkInstance.getReadStream());
   }
 

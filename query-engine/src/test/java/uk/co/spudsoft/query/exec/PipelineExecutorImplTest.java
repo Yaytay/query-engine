@@ -206,7 +206,7 @@ public class PipelineExecutorImplTest {
     
     PipelineInstance pi = new PipelineInstance(pipelineContext, definition, arguments, null, null, source, processors, dest);
     
-    instance.initializePipeline(pi);
+    instance.initializePipeline(pipelineContext, pi);
     pi.getFinalPromise().future().onComplete(testContext.succeedingThenComplete());    
   }
   
@@ -290,19 +290,33 @@ public class PipelineExecutorImplTest {
     );
     
     PipelineExecutor instance = PipelineExecutor.create(null, new FilterFactory(Collections.emptyList()), null);
+
+    RequestContext req = new RequestContext(
+            null
+            , null
+            , null
+            , "localhost"
+            , null
+            , null
+            , HeadersMultiMap.httpHeaders().add("Host", "localhost:123")
+            , null
+            , new IPAddressString("127.0.0.1")
+            , null
+    );
+    PipelineContext pipelineContext = new PipelineContext("test", req);
     
-    assertEquals(FormatType.JSON, instance.getFormat(formats, drBlank).getType());
-    assertEquals(FormatType.XLSX, instance.getFormat(formats, drFormat).getType());
-    assertThrows(IllegalArgumentException.class, () -> instance.getFormat(formats, drBadFormat).getType());
-    assertEquals(FormatType.XLSX, instance.getFormat(formats, drExtension).getType());
-    assertThrows(IllegalArgumentException.class, () -> instance.getFormat(formats, drBadExtension).getType());
-    assertEquals(FormatType.JSON, instance.getFormat(formats, drAcceptJsonOverXlsx).getType());
-    assertEquals(FormatType.XLSX, instance.getFormat(formats, drAcceptXlsxOverJson).getType());
-    assertEquals(FormatType.XLSX, instance.getFormat(formats, drAcceptXlsxOverWild).getType());
+    assertEquals(FormatType.JSON, instance.getFormat(pipelineContext, formats, drBlank).getType());
+    assertEquals(FormatType.XLSX, instance.getFormat(pipelineContext, formats, drFormat).getType());
+    assertThrows(IllegalArgumentException.class, () -> instance.getFormat(pipelineContext, formats, drBadFormat).getType());
+    assertEquals(FormatType.XLSX, instance.getFormat(pipelineContext, formats, drExtension).getType());
+    assertThrows(IllegalArgumentException.class, () -> instance.getFormat(pipelineContext, formats, drBadExtension).getType());
+    assertEquals(FormatType.JSON, instance.getFormat(pipelineContext, formats, drAcceptJsonOverXlsx).getType());
+    assertEquals(FormatType.XLSX, instance.getFormat(pipelineContext, formats, drAcceptXlsxOverJson).getType());
+    assertEquals(FormatType.XLSX, instance.getFormat(pipelineContext, formats, drAcceptXlsxOverWild).getType());
     // For equally valid type matches prefer the first listed in the pipeline
-    assertEquals(FormatType.JSON, instance.getFormat(formats, drAcceptWild).getType());
+    assertEquals(FormatType.JSON, instance.getFormat(pipelineContext, formats, drAcceptWild).getType());
     // A Q that cannot be parsed as a double will be considered to be 0.0
-    assertEquals(FormatType.XLSX, instance.getFormat(formats, drAcceptXlsxOverJsonWithBadQ).getType());
+    assertEquals(FormatType.XLSX, instance.getFormat(pipelineContext, formats, drAcceptXlsxOverJsonWithBadQ).getType());
   }
 
   @Test

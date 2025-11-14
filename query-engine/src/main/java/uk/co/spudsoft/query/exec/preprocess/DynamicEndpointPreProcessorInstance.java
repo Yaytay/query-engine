@@ -96,7 +96,7 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
             , executor.createProcessors(vertx, childContext, definition.getInput(), null)
             , format
     );
-    return executor.initializePipeline(dePipeline)
+    return executor.initializePipeline(childContext, dePipeline)
             .onFailure(ex -> {
               logger.error("Dynamic pipeline initialization failed: ", ex);
             })

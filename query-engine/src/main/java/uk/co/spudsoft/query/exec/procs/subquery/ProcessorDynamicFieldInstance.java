@@ -117,7 +117,7 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
             , fieldDefnStreamCapture
     );
 
-    return executor.initializePipeline(childPipeline)
+    return executor.initializePipeline(childContext, childPipeline)
             .compose(v -> {
               return ReadStreamToList.map(pipelineContext
                       , fieldDefnStreamCapture.getReadStream().getStream()

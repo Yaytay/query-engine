@@ -105,7 +105,7 @@ public class JsonToPipelineIT {
               args.add("key", serverProvider.getName());
               args.add("port", Integer.toString(serverProvider.getPort()));
               PipelineContext pipelineContext = new PipelineContext("test", req);
-              Format chosenFormat = executor.getFormat(pipeline.getFormats(), null);
+              Format chosenFormat = executor.getFormat(pipelineContext, pipeline.getFormats(), null);
               FormatInstance formatInstance = chosenFormat.createInstance(vertx, pipelineContext, new ListingWriteStream<>(new ArrayList<>()));
               SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, pipelineContext, meterRegistry, executor);
               PipelineInstance instance;
@@ -126,7 +126,7 @@ public class JsonToPipelineIT {
       
               assertNotNull(instance);
 
-              return executor.initializePipeline(instance);
+              return executor.initializePipeline(pipelineContext, instance);
             })
             .onComplete(ar -> {
               logger.debug("Pipeline complete");

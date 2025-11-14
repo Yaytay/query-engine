@@ -109,19 +109,21 @@ public interface PipelineExecutor extends SharedMap {
    * After this method has been called the only external progress notification will be when the returned {@link Future} completes
    * (or the {@link PipelineInstance#finalPromise} completes, which will happen immediately after).
    *
+   * @param pipelineContext The context in which the parent {@link SourcePipeline} is being run.
    * @param pipeline the {@link PipelineInstance} to initialize.
    * @return A Future that will be completed when the pipeline completes.
    */
-  Future<Void> initializePipeline(PipelineInstance pipeline);
+  Future<Void> initializePipeline(PipelineContext pipelineContext, PipelineInstance pipeline);
 
   /**
    * Get the correct format to use given the prepared information from the request.
    *
+   * @param pipelineContext The context in which the parent {@link SourcePipeline} is being run.
    * @param formats The {@link Format} specifications from the {@link Pipeline} definition.
    * @param requested The formats specified in the request
    * @return the correct format to use given the prepared information from the request.
    */
-  Format getFormat(List<Format> formats, FormatRequest requested);
+  Format getFormat(PipelineContext pipelineContext, List<Format> formats, FormatRequest requested);
 
   /**
    * Report an event relating to the current run.

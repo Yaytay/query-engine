@@ -126,7 +126,7 @@ public class PipelineRunningVerticle extends VerticleBase {
               .addArgument(instance)
               .log("PipelineInstance: {}")
               ;
-      return pipelineExecutor.initializePipeline(instance).map(v -> instance)
+      return pipelineExecutor.initializePipeline(rootContext, instance).map(v -> instance)
               .compose(i -> {
                 Log.decorate(logger.atInfo(), rootContext)
                         .log("Pipeline initiated")
