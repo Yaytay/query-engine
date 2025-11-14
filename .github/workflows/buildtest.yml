@@ -62,7 +62,7 @@ jobs:
       with:
         package-name: 'query-engine'
         package-type: container
-        min-versions-to-keep: 4
+        min-versions-to-keep: 20
         num-old-versions-to-delete: 0
         delete-only-pre-release-versions: "true"
 
@@ -72,7 +72,7 @@ jobs:
       with:
         package-name: 'query-engine-design-mode'
         package-type: container
-        min-versions-to-keep: 4
+        min-versions-to-keep: 20
         num-old-versions-to-delete: 0
         delete-only-pre-release-versions: "true"
 
