@@ -48,9 +48,8 @@ public class PipelineContext {
     } else {
       Tracer tracer = GlobalOpenTelemetry.getTracer("query-engine:pipeline");
       Context parentContext = Context.current().with(requestContext.getSpan());
-      this.span = tracer.spanBuilder("child-span")
+      this.span = tracer.spanBuilder(pipe)
               .setParent(parentContext)
-              .setAttribute("pipe", pipe)
               .startSpan();
     }
   }
