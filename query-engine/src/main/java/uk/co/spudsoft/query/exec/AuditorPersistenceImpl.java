@@ -441,6 +441,7 @@ public class AuditorPersistenceImpl implements Auditor {
           where
             #responseTime# is null
             and #timestamp# > ?
+            and (exceptionTime is null or exceptionTime > ?)
           """
     ),
     MARK_RATE_LIMIT_RULES_PROCESSED("""
@@ -1073,15 +1074,30 @@ public class AuditorPersistenceImpl implements Auditor {
 
     LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
     Timestamp relevanceThreshold = Timestamp.from(now.minusDays(1).toInstant(ZoneOffset.UTC));
-    waitForOutstandingRequests(promise, relevanceThreshold, System.currentTimeMillis() + timeoutMs);
+    waitForOutstandingRequests(promise, relevanceThreshold, 10, System.currentTimeMillis() + timeoutMs);
     return promise.future();
   }
 
-  private void waitForOutstandingRequests(Promise<Void> promise, Timestamp relevanceThreshold, long terminalTime) {
+  /**
+   * Spin non-blocking, until there are no outstanding requests or the System.currentTimeMillis() > terminalTimeMs.
+   * 
+   * A request is considered outstanding if the responseTime is null or if the exceptionTime is more than 10 seconds ago.
+   * This is because when the client drops the connection there is no responseTime, and 10s should be more than long enough to tidy up.
+   * Only requests in the past 24 hours are considered.
+   * 
+   * @param promise The promise to be completed when there are no requests outstanding (or failed if the time is exceeded).
+   * @param relevanceThreshold 24 hours before {@link #waitForOutstandingRequests(long)} was called.
+   * @param exceptionTimeLagSeconds the time to allow after exceptionTime is set before considering it complete (expected to be 10s).
+   * @param terminalTimeMs the time (is milliseconds since epoch) at which this function should give up.
+   */
+  private void waitForOutstandingRequests(Promise<Void> promise, Timestamp relevanceThreshold, long exceptionTimeLagSeconds, long terminalTimeMs) {
 
     jdbcHelper.runSqlSelect(SqlTemplate.COUNT_OUTSTANDING_REQUESTS.sql(), ps -> {
       Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
       ps.setTimestamp(1, relevanceThreshold, cal);
+      LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+      Timestamp exceptionAllowance = Timestamp.from(now.minusSeconds(exceptionTimeLagSeconds).toInstant(ZoneOffset.UTC));
+      ps.setTimestamp(2, exceptionAllowance, cal);
     }, rs -> {
       while (rs.next()) {
         return rs.getLong(1);
@@ -1097,12 +1113,12 @@ public class AuditorPersistenceImpl implements Auditor {
                   promise.fail(new IllegalStateException("Outstanding requests query returned null"));
                 } else if (count == 0) {
                   promise.complete();
-                } else if (System.currentTimeMillis() > terminalTime) {
+                } else if (System.currentTimeMillis() > terminalTimeMs) {
                   promise.fail(new TimeoutException("Outstanding requests (" + count + ") remain after timeout"));
                 } else {
                   logger.info("There are {} outstanding requests to be resolved", count);
                   vertx.setTimer(500, l -> {
-                    waitForOutstandingRequests(promise, relevanceThreshold, terminalTime);
+                    waitForOutstandingRequests(promise, relevanceThreshold, exceptionTimeLagSeconds, terminalTimeMs);
                   });
                 }
               }
