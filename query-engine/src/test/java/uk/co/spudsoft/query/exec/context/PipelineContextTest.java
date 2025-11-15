@@ -19,6 +19,8 @@ package uk.co.spudsoft.query.exec.context;
 import inet.ipaddr.IPAddressString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  *
@@ -33,6 +35,13 @@ public class PipelineContextTest {
     
     assertEquals("name", context.getPipe());
     assertEquals("host", context.getRequestContext().getHost());
+  }
+  
+  @Test
+  public void testCoverConstructor() {
+    RequestContext reqctx = mock(RequestContext.class);
+    when(reqctx.getSpan()).thenReturn(null);
+    PipelineContext context = new PipelineContext("name", reqctx);
   }
   
 }

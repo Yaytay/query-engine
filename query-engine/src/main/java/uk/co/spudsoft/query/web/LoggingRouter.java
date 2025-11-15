@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.web;
 
 import com.google.common.collect.ImmutableMap;
+import io.opentelemetry.api.trace.Span;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.RoutingContext;
@@ -57,6 +58,14 @@ public class LoggingRouter implements Handler<RoutingContext> {
     requestContext.storeInRoutingContext(routingContext);
     PipelineContext pipelineContext = new PipelineContext(null, requestContext);
 
+    Span span = Span.current();
+    logger.debug("Span.current: traceId={}, spanId={}, sampled={}, remote={}, recording={}",
+        span.getSpanContext().getTraceId(),
+        span.getSpanContext().getSpanId(),
+        span.getSpanContext().isSampled(),
+        span.getSpanContext().isRemote(),
+        span.isRecording());
+    
     Log.decorate(logger.atInfo(), pipelineContext)
             .log("Request: {} {}", routingContext.request().method(), routingContext.request().uri());
 

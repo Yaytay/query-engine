@@ -17,6 +17,10 @@
 package uk.co.spudsoft.query.exec.context;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
 
 /**
  * Context data for the running of a SourcePipeline within a request.
@@ -26,6 +30,7 @@ public class PipelineContext {
   
   private final String pipe;
   private final RequestContext requestContext;
+  private final Span span;
 
   /**
    * Constructor.
@@ -38,6 +43,16 @@ public class PipelineContext {
   public PipelineContext(String pipe, RequestContext requestContext) {
     this.pipe = pipe;
     this.requestContext = requestContext;
+    if (requestContext == null || requestContext.getSpan() == null) {
+      this.span = null;
+    } else {
+      Tracer tracer = GlobalOpenTelemetry.getTracer("query-engine:pipeline");
+      Context parentContext = Context.current().with(requestContext.getSpan());
+      this.span = tracer.spanBuilder("child-span")
+              .setParent(parentContext)
+              .setAttribute("pipe", pipe)
+              .startSpan();
+    }
   }
 
   /**
@@ -56,6 +71,14 @@ public class PipelineContext {
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "The RequestContext may be modified in a few very specific ways during a pipeline run")
   public RequestContext getRequestContext() {
     return requestContext;
+  }
+
+  /**
+   * Get the Span for this  {@link uk.co.spudsoft.query.defn.SourcePipeline}.
+   * @return the Span for this  {@link uk.co.spudsoft.query.defn.SourcePipeline}.
+   */
+  public Span getSpan() {
+    return span;
   }
   
   /**

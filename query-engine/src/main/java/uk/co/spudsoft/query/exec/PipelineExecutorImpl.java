@@ -412,7 +412,12 @@ public class PipelineExecutorImpl implements PipelineExecutor {
 
               return pipeline.getSink().initialize(this, pipeline, streamWithTypes);
             })
-            .andThen(ar -> pipeline.getFinalPromise().handle(ar))
+            .andThen(ar -> {
+              pipeline.getFinalPromise().handle(ar);
+              if (pipelineContext.getSpan() != null) {
+                pipelineContext.getSpan().end();
+              }
+            })
             ;
   }
 

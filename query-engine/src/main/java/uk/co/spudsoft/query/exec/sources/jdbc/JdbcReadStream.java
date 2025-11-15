@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.exec.sources.jdbc;
 
 import com.microsoft.sqlserver.jdbc.SQLServerStatement;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.opentelemetry.context.Scope;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
@@ -68,6 +69,8 @@ public class JdbcReadStream implements ReadStream<DataRow> {
   private final PipelineContext pipelineContext;
   private final Log log;
   
+  private final io.opentelemetry.context.Context telemetryContext;
+  
   private Types types;
 
   private final Deque<DataRow> items = new ArrayDeque<>();
@@ -101,6 +104,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     this.processingBatchSize = definition.getProcessingBatchSize();
     this.initPromise = initPromise;
     this.log = new Log(logger, pipelineContext);
+    this.telemetryContext = io.opentelemetry.context.Context.current().with(pipelineContext.getSpan());
   }
 
   /**
@@ -152,8 +156,9 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     ResultSetMetaData rsmeta = null;
 
     long start = System.currentTimeMillis();
-
-    try {
+    
+    try (Scope scope = this.telemetryContext.makeCurrent()) {
+      log.trace().log("Current scope: {}", scope);
       try {
         log.debug().log("{}: Connecting to {}", (System.currentTimeMillis() - start) / 1000.0, dataSourceUrl);
         connection = DriverManager.getConnection(dataSourceUrl, credentials[0], credentials[1]);

@@ -474,7 +474,7 @@ public class Main extends Application {
     VertxBuilder vertxBuilder = Vertx.builder()
             .with(vertxOptions);
 
-    OpenTelemetry openTelemetry = buildOpenTelemetry(params.getTracing());
+    openTelemetry = buildOpenTelemetry(params.getTracing());
     if (openTelemetry != null) {
       TracingOptions options = new OpenTelemetryOptions(openTelemetry);
       OpenTelemetryTracingFactory tracingFactory = new OpenTelemetryTracingFactory();
@@ -1033,8 +1033,8 @@ public class Main extends Application {
     logger.debug("Building OpenTelemetry");
     try {
       return openTelemetryBuilder.buildAndRegisterGlobal();
-    } catch (IllegalStateException e) {
-      // GlobalOpenTelemetry already set, return the existing instance
+    } catch (IllegalStateException ex) {
+      logger.warn("Failed to build and registry OpenTelemetry: ", ex);
       return GlobalOpenTelemetry.get();
     }
   }
