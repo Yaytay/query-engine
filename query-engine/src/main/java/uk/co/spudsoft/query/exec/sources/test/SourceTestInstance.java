@@ -29,6 +29,7 @@ import uk.co.spudsoft.query.defn.SourceTest;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
@@ -61,13 +62,14 @@ public class SourceTestInstance extends AbstractSource {
   /**
    * Constructor.
    * @param vertx The vertx instance.
+   * @param auditor The auditor that the source should use for recording details of the data accessed.
    * @param meterRegistry MeterRegistry for production of processor-specific metrics.
    * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param definition The configuration of this source.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
-  public SourceTestInstance(Vertx vertx, MeterRegistry meterRegistry, PipelineContext pipelineContext, SourceTest definition) {
-    super(vertx, meterRegistry, pipelineContext);
+  public SourceTestInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, SourceTest definition) {
+    super(vertx, meterRegistry, auditor, pipelineContext);
     this.rowCount = definition.getRowCount();
     this.delayMs = definition.getDelayMs();
     this.types = new Types();
@@ -84,6 +86,9 @@ public class SourceTestInstance extends AbstractSource {
 
   @Override
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline) {
+    
+    auditor.recordSource(pipelineContext, null, "test:" + this.name, null, null, null);
+    
     stream.pause();
     if (delayMs == 0) {
       try {

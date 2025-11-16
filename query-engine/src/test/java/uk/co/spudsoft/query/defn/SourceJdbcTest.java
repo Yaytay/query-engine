@@ -68,7 +68,7 @@ class SourceJdbcTest {
             .type(SourceType.JDBC)
             .build();
 
-    SourceJdbcInstance inst = src.createInstance(vertx, pipctx, null, sharedMap);
+    SourceJdbcInstance inst = src.createInstance(vertx, null, null, pipctx, sharedMap);
     assertNotNull(inst);
   }
 
@@ -85,7 +85,7 @@ class SourceJdbcTest {
             .type(SourceType.JDBC)
             .build();
 
-    SourceJdbcInstance inst = src.createInstance(vertx, pipctx, null, sharedMap);
+    SourceJdbcInstance inst = src.createInstance(vertx, null, null, pipctx, sharedMap);
     assertNotNull(inst);
   }
 

@@ -18,7 +18,6 @@ package uk.co.spudsoft.query.exec.sources.jdbc;
 
 import com.google.common.collect.ImmutableMap;
 import inet.ipaddr.IPAddressString;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
@@ -35,9 +34,10 @@ import uk.co.spudsoft.query.defn.Condition;
 import uk.co.spudsoft.query.defn.Endpoint;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.defn.SourceJdbc;
+import uk.co.spudsoft.query.exec.Auditor;
+import uk.co.spudsoft.query.exec.AuditorMemoryImpl;
 import uk.co.spudsoft.query.exec.FilterFactory;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
-import uk.co.spudsoft.query.exec.PipelineExecutorImpl;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
@@ -63,13 +63,14 @@ public class SourceJdbcInstanceTest {
       RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
       
+      Auditor auditor = new AuditorMemoryImpl(vertx);
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
-      PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
+      PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, auditor, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
       
       SourceJdbc definition = SourceJdbc.builder()
               .endpoint("bob")
               .build();
-      SourceJdbcInstance instance = new SourceJdbcInstance(vertx, pipelineContext, null, definition);
+      SourceJdbcInstance instance = new SourceJdbcInstance(vertx, null, auditor, pipelineContext, definition);
       
       Pipeline pipeline = Pipeline.builder()
               .sourceEndpoints(
@@ -132,13 +133,14 @@ public class SourceJdbcInstanceTest {
     vertx.getOrCreateContext().runOnContext(v -> {
       RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
       PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+      Auditor auditor = new AuditorMemoryImpl(vertx);
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
-      PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
+      PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, auditor, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
       
       SourceJdbc definition = SourceJdbc.builder()
               .endpoint("bob")
               .build();
-      SourceJdbcInstance instance = new SourceJdbcInstance(vertx, pipelineContext, null, definition);
+      SourceJdbcInstance instance = new SourceJdbcInstance(vertx, null, auditor, pipelineContext, definition);
       
       Pipeline pipeline = Pipeline.builder()
               .sourceEndpoints(

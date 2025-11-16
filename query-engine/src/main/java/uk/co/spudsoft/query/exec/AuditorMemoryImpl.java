@@ -33,6 +33,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
@@ -59,6 +60,7 @@ import static uk.co.spudsoft.query.exec.AuditHistorySortOrder.responseStreamStar
 import static uk.co.spudsoft.query.exec.AuditHistorySortOrder.timestamp;
 import static uk.co.spudsoft.query.exec.AuditorPersistenceImpl.multiMapToJson;
 import static uk.co.spudsoft.query.exec.AuditorPersistenceImpl.requestId;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.main.ExceptionToString;
 
@@ -79,6 +81,25 @@ public class AuditorMemoryImpl implements Auditor {
 
   private final ObjectMapper mapper = DatabindCodec.mapper();
 
+  static class AuditSource {
+    private final String pipe;
+    private final String endpoint;
+    private final String url;
+    private final String username;
+    private final String query;
+    private final String arguments;
+
+    AuditSource(String pipe, String endpoint, String url, String username, String query, String arguments) {
+      this.pipe = pipe;
+      this.endpoint = endpoint;
+      this.url = url;
+      this.username = username;
+      this.query = query;
+      this.arguments = arguments;
+    }
+    
+  }
+  
   @SuppressFBWarnings(value = "URF_UNREAD_FIELD", justification = "Many fields here only exist for synchronicity with the persistence auditor")
   static class AuditRow {
     private String id;
@@ -115,6 +136,8 @@ public class AuditorMemoryImpl implements Auditor {
     private LocalDateTime cacheExpiry;
     private LocalDateTime cacheDeleted;
     private String cacheFile;
+    private List<AuditLogMessage> logMessages;
+    private List<AuditSource> sources;
 
     AuditRow(String id, LocalDateTime timestamp, String processId, String url, String clientIp, String host, String path, String arguments, String headers) {
       this.id = id;
@@ -126,6 +149,7 @@ public class AuditorMemoryImpl implements Auditor {
       this.path = path;
       this.arguments = arguments;
       this.headers = headers;
+      this.sources = new ArrayList<>();
     }
 
     void setTokenDetails(String openIdDetails, String issuer, String subject, String username, String name, String groups) {
@@ -571,6 +595,35 @@ public class AuditorMemoryImpl implements Auditor {
     );
   }
 
+  @Override
+  public Future<Void> recordAuditLogMessages(RequestContext requestContext, List<AuditLogMessage> logMessages) {
+    AuditRow row = find(requestContext);
+    if (row != null) {
+      row.logMessages = logMessages;
+    }
+    return Future.succeededFuture();
+  }
+
+  @Override
+  public Future<Void> recordSource(PipelineContext pipelineContext, String endpointName, String dataSourceUrl, String username, String query, String argsJson) {
+    AuditRow row = find(pipelineContext.getRequestContext());
+    if (row != null) {
+      synchronized (row) {
+        row.sources.add(
+                new AuditSource(
+                        pipelineContext.getPipe()
+                        , endpointName
+                        , dataSourceUrl
+                        , username
+                        , query
+                        , argsJson
+                )
+        );
+      }
+    }
+    return Future.succeededFuture();
+  }
+  
   private AuditHistoryRow mapAuditHistoryRow(RequestContext requestContext, AuditRow row) {
     ObjectNode arguments = null;
     try {

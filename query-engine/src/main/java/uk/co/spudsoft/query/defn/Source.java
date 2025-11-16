@@ -24,6 +24,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.DiscriminatorMapping;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Vertx;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.SharedMap;
 import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
@@ -57,13 +58,14 @@ public interface Source {
   /**
    * Create a new {@link SourceInstance} specialized for this Source instance.
    * @param vertx The Vert.x instance.
-   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param meterRegistry MeterRegistry for production of metrics.
+   * @param auditor The auditor that the source should use for recording details of the data accessed.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param sharedMap Pooling map.
    * @return A newly created instance of an implementation of {@link SourceInstance}.
    */
   @JsonIgnore
-  SourceInstance createInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, SharedMap sharedMap);
+  SourceInstance createInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, SharedMap sharedMap);
   
   /**
    * The type of Source being configured.

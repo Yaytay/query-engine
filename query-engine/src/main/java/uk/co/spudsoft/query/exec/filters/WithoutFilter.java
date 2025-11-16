@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import uk.co.spudsoft.query.defn.ProcessorMap;
 import uk.co.spudsoft.query.defn.ProcessorMapLabel;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 
@@ -46,7 +47,7 @@ public class WithoutFilter implements Filter {
   }
 
   @Override
-  public ProcessorInstance createProcessor(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, String argument, String name) {
+  public ProcessorInstance createProcessor(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, String argument, String name) {
     List<ProcessorMapLabel> relabels = new ArrayList<>();
 
     String sourceLabel = argument;
@@ -54,7 +55,7 @@ public class WithoutFilter implements Filter {
     relabels.add(ProcessorMapLabel.builder().sourceLabel(sourceLabel).newLabel(newLabel).build());
 
     ProcessorMap definition = ProcessorMap.builder().relabels(relabels).build();
-    return definition.createInstance(vertx, pipelineContext, meterRegistry, name);
+    return definition.createInstance(vertx, meterRegistry, auditor, pipelineContext, name);
   }
 
 }

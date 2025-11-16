@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.ProcessorLimit;
 import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.DataRow;
@@ -53,13 +54,14 @@ public class ProcessorLimitInstance extends AbstractProcessor {
    * Constructor.
    * @param vertx the Vert.x instance.
    * @param meterRegistry MeterRegistry for production of metrics.
+   * @param auditor The auditor that the source should use for recording details of the data accessed.
    * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
-  public ProcessorLimitInstance(Vertx vertx, MeterRegistry meterRegistry, PipelineContext pipelineContext, ProcessorLimit definition, String name) {
-    super(vertx, meterRegistry, pipelineContext, name);
+  public ProcessorLimitInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, ProcessorLimit definition, String name) {
+    super(vertx, meterRegistry, auditor, pipelineContext, name);
     this.definition = definition;
   }
 

@@ -28,6 +28,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import uk.co.spudsoft.query.defn.ProcessorExpression;
+import uk.co.spudsoft.query.exec.Auditor;
+import uk.co.spudsoft.query.exec.AuditorMemoryImpl;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
@@ -50,7 +52,7 @@ public class ProcessorExpressionInstanceTest {
     ProcessorExpression definition = ProcessorExpression.builder().name("id").build();
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    ProcessorExpressionInstance instance = definition.createInstance(null, pipelineContext, null, "P0-Expression");
+    ProcessorExpressionInstance instance = definition.createInstance(null, null, null, pipelineContext, "P0-Expression");
     assertEquals("P0-Expression", instance.getName());
   }
 
@@ -60,8 +62,9 @@ public class ProcessorExpressionInstanceTest {
     ProcessorExpression definition = ProcessorExpression.builder().name("id").predicate("iteration < 2").build();
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    Auditor auditor = new AuditorMemoryImpl(vertx);
 
-    ProcessorExpressionInstance instance = definition.createInstance(vertx, pipelineContext, null, "P0-Expression");
+    ProcessorExpressionInstance instance = definition.createInstance(vertx, null, auditor, pipelineContext, "P0-Expression");
 
     Types types = new Types();
     ListReadStream<DataRow> inputStream = new ListReadStream<>(pipelineContext, vertx.getOrCreateContext(), Arrays.asList(
@@ -108,7 +111,8 @@ public class ProcessorExpressionInstanceTest {
 
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new inet.ipaddr.IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    ProcessorExpressionInstance instance = definition.createInstance(vertx, pipelineContext, null, "P0-Expression");
+    Auditor auditor = new AuditorMemoryImpl(vertx);
+    ProcessorExpressionInstance instance = definition.createInstance(vertx, null, auditor, pipelineContext, "P0-Expression");
 
     Types types = new Types();
     // input has only "iteration" initially, "result" should be inserted by initialize()
@@ -154,7 +158,8 @@ public class ProcessorExpressionInstanceTest {
 
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new inet.ipaddr.IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    ProcessorExpressionInstance instance = definition.createInstance(vertx, pipelineContext, null, "P0-Expression");
+    Auditor auditor = new AuditorMemoryImpl(vertx);
+    ProcessorExpressionInstance instance = definition.createInstance(vertx, null, auditor, pipelineContext, "P0-Expression");
 
     Types types = new Types();
     // predefine conflicting type

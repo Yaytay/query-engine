@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.ProcessorGroupConcat;
 import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.DataRow;
@@ -59,13 +60,14 @@ import uk.co.spudsoft.query.exec.context.PipelineContext;
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
-   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param meterRegistry MeterRegistry for production of metrics.
+   * @param auditor The auditor that the source should use for recording details of the data accessed.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
-  public ProcessorGroupConcatInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, ProcessorGroupConcat definition, String name) {
-    super(logger, vertx, pipelineContext, meterRegistry, name, definition.getParentIdColumns(), definition.getChildIdColumns(), definition.isInnerJoin());
+  public ProcessorGroupConcatInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, ProcessorGroupConcat definition, String name) {
+    super(logger, vertx, meterRegistry, auditor, pipelineContext, name, definition.getParentIdColumns(), definition.getChildIdColumns(), definition.isInnerJoin());
     this.definition = definition;
     this.childIdColumns = ImmutableSet.copyOf(definition.getChildIdColumns());
   }

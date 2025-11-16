@@ -42,6 +42,7 @@ import static uk.co.spudsoft.query.defn.DataType.Float;
 import static uk.co.spudsoft.query.defn.DataType.Integer;
 import static uk.co.spudsoft.query.defn.DataType.Time;
 import uk.co.spudsoft.query.defn.ProcessorSort;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.ColumnDefn;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
@@ -82,13 +83,14 @@ public class ProcessorSortInstance extends AbstractProcessor {
    * Constructor.
    * @param vertx the Vert.x instance.
    * @param meterRegistry MeterRegistry for production of metrics.
+   * @param auditor The auditor that the source should use for recording details of the data accessed.
    * @param pipelineContext The context in which this {@link uk.co.spudsoft.query.defn.SourcePipeline} is being run.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
-  public ProcessorSortInstance(Vertx vertx, MeterRegistry meterRegistry, PipelineContext pipelineContext, ProcessorSort definition, String name) {
-    super(vertx, meterRegistry, pipelineContext, name);
+  public ProcessorSortInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, ProcessorSort definition, String name) {
+    super(vertx, meterRegistry, auditor, pipelineContext, name);
     this.definition = definition;
   }
 

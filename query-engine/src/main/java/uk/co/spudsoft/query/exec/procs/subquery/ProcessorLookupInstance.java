@@ -32,6 +32,7 @@ import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.ProcessorLookup;
 import uk.co.spudsoft.query.defn.ProcessorLookupField;
 import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
@@ -70,14 +71,15 @@ public class ProcessorLookupInstance extends AbstractProcessor {
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
-   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param meterRegistry MeterRegistry for production of metrics.
+   * @param auditor The auditor that the source should use for recording details of the data accessed.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
-  public ProcessorLookupInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, ProcessorLookup definition, String name) {
-    super(vertx, meterRegistry, pipelineContext, name);
+  public ProcessorLookupInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, ProcessorLookup definition, String name) {
+    super(vertx, meterRegistry, auditor, pipelineContext, name);
     this.definition = definition;
   }
 
@@ -95,7 +97,7 @@ public class ProcessorLookupInstance extends AbstractProcessor {
     PipelineContext childContext = pipeline.getPipelineContext().child(childName);
     
     
-    SourceInstance sourceInstance = definition.getMap().getSource().createInstance(vertx, pipelineContext, meterRegistry, executor);
+    SourceInstance sourceInstance = definition.getMap().getSource().createInstance(vertx, meterRegistry, auditor, pipelineContext, executor);
     FormatCaptureInstance fieldDefnStreamCapture = new FormatCaptureInstance();
     PipelineInstance childPipeline = new PipelineInstance(
             childContext

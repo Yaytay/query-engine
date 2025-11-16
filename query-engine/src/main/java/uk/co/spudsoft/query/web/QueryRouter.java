@@ -57,6 +57,7 @@ import uk.co.spudsoft.query.exec.ArgumentInstance;
 import uk.co.spudsoft.query.exec.CachingWriteStream;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.logging.Log;
+import uk.co.spudsoft.query.logging.RequestCollatingAppender;
 
 
 /**
@@ -86,6 +87,7 @@ public class QueryRouter implements Handler<RoutingContext> {
   private final Authenticator authenticator;
   private final PipelineDefnLoader loader;
   private final PipelineExecutor pipelineExecutor;
+  private final RequestCollatingAppender requestCollatingAppender;
   private final String outputCacheDir;
   private final int writeStreamBufferSize;
   private final boolean outputAllErrorMessages;
@@ -103,6 +105,7 @@ public class QueryRouter implements Handler<RoutingContext> {
    * @param authenticator The builder that does the actual work.
    * @param loader Pipeline loader.
    * @param pipelineExecutor Pipeline executor.
+   * @param requestCollatingAppender Logback appender that collates warning messages during a pipeline.
    * @param outputCacheDir Directory to store output in where output caching is enabled (see {@link uk.co.spudsoft.query.defn.Pipeline#cacheDuration}).
    * @param writeStreamBufferSize The number of bytes to buffer before each write to the output, each write involves a context switch so this should not be too small.
    * @param outputAllErrorMessages In a production environment error messages should usually not leak information that may assist a bad actor, set this to true to return full details in error responses.
@@ -115,6 +118,7 @@ public class QueryRouter implements Handler<RoutingContext> {
           , Authenticator authenticator
           , PipelineDefnLoader loader
           , PipelineExecutor pipelineExecutor
+          , RequestCollatingAppender requestCollatingAppender
           , String outputCacheDir
           , int writeStreamBufferSize
           , boolean outputAllErrorMessages
@@ -126,6 +130,7 @@ public class QueryRouter implements Handler<RoutingContext> {
     this.authenticator = authenticator;
     this.loader = loader;
     this.pipelineExecutor = pipelineExecutor;
+    this.requestCollatingAppender = requestCollatingAppender;
     this.outputCacheDir = outputCacheDir;
     this.writeStreamBufferSize = writeStreamBufferSize;
     this.outputAllErrorMessages = outputAllErrorMessages;
@@ -225,6 +230,9 @@ public class QueryRouter implements Handler<RoutingContext> {
                 
                 response.closeHandler(v2 -> {
                   Log.decorate(logger.atWarn(), requestContext).log("The connection has been closed.");
+                  if (requestContext != null) {
+                    auditor.recordAuditLogMessages(requestContext, requestCollatingAppender.getAndRemoveEventsForRequest(requestContext.getRequestId()));
+                  }
                 });
                 
                 WriteStream<Buffer> responseStream = response;
@@ -292,6 +300,7 @@ public class QueryRouter implements Handler<RoutingContext> {
                   pipelineExecutor.progressNotification(requestContext, pipelineTitle[0], null, null, null, true, false, "Pipeline failed: ", ar.cause());
                 }
                 Log.decorate(logger.atInfo(), requestContext).log("Request completed");
+                auditor.recordAuditLogMessages(requestContext, requestCollatingAppender.getAndRemoveEventsForRequest(requestContext.getRequestId()));
               });
     } else {
       routingContext.next();

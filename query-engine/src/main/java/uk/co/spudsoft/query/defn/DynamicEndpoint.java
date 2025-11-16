@@ -22,6 +22,7 @@ import com.google.common.base.Strings;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Vertx;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.PreProcessorInstance;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.preprocess.DynamicEndpointPreProcessorInstance;
@@ -116,13 +117,14 @@ public class DynamicEndpoint {
   /**
    * Create a {@link DynamicEndpointPreProcessorInstance} based on this configuration.
    * @param vertx The Vert.x instance.
-   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param meterRegistry MeterRegistry for production of metrics.
+   * @param auditor The auditor that the source should use for recording details of the data accessed.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param index zero based index of this pre-processor within the list of pre-processors in the pipeline.
    * @return a newly created {@link DynamicEndpointPreProcessorInstance} object.
    */
-  public PreProcessorInstance createInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, int index) {
-    return new DynamicEndpointPreProcessorInstance(vertx, pipelineContext, meterRegistry, this, index);
+  public PreProcessorInstance createInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, int index) {
+    return new DynamicEndpointPreProcessorInstance(vertx, meterRegistry, auditor, pipelineContext, this, index);
   }
   
   /**

@@ -41,6 +41,8 @@ import uk.co.spudsoft.query.defn.Condition;
 import uk.co.spudsoft.query.defn.Endpoint;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.defn.SourceSql;
+import uk.co.spudsoft.query.exec.Auditor;
+import uk.co.spudsoft.query.exec.AuditorMemoryImpl;
 import uk.co.spudsoft.query.exec.FilterFactory;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
@@ -66,14 +68,15 @@ public class SourceSqlStreamingInstanceTest {
     
     vertx.getOrCreateContext().runOnContext(v -> {
       RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+      Auditor auditor = new AuditorMemoryImpl(vertx);
       PipelineContext pipelineContext = new PipelineContext("test", reqctx);
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
-      PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
+      PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, auditor, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
       
       SourceSql definition = SourceSql.builder()
               .endpoint("bob")
               .build();
-      SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, pipelineContext, null, pipelineExecutor, definition);
+      SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, null, auditor, pipelineContext, pipelineExecutor, definition);
       
       Pipeline pipeline = Pipeline.builder()
               .sourceEndpoints(
@@ -134,15 +137,16 @@ public class SourceSqlStreamingInstanceTest {
   public void testInitializeEndpointNotPermitted(Vertx vertx, VertxTestContext testContext) {
     
     vertx.getOrCreateContext().runOnContext(v -> {
+      Auditor auditor = new AuditorMemoryImpl(vertx);
       RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
       PipelineContext pipelineContext = new PipelineContext("test", reqctx);
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
-      PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
+      PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, auditor, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
       
       SourceSql definition = SourceSql.builder()
               .endpoint("bob")
               .build();
-      SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, pipelineContext, null, pipelineExecutor, definition);
+      SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, null, auditor, pipelineContext, pipelineExecutor, definition);
       
       Pipeline pipeline = Pipeline.builder()
               .sourceEndpoints(
@@ -205,16 +209,17 @@ public class SourceSqlStreamingInstanceTest {
   @Test
   public void testGetPreparer(Vertx vertx, VertxTestContext testContext) {
     vertx.getOrCreateContext().runOnContext(v -> {
+      Auditor auditor = new AuditorMemoryImpl(vertx);
       RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
       PipelineContext pipelineContext = new PipelineContext("test", reqctx);
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
-      PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
+      PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, auditor, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
       
       SourceSql definition = SourceSql.builder()
               .endpoint("bob")
               .build();
       
-      SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, pipelineContext, null, pipelineExecutor, definition);
+      SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, null, auditor, pipelineContext, pipelineExecutor, definition);
       
       testContext.verify(() -> {
         assertThat(instance.getPreparer("sqlserver:nonsense"), instanceOf(MsSqlPreparer.class));

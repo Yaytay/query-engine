@@ -57,8 +57,6 @@ public final class RequestContext {
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(RequestContext.class);
   
-  private static final String REQUEST_ID = "requestId";
-  
   private static final String REQUEST_CONTEXT = RequestContext.class.getName();
   
   private static final Base64.Decoder B64 = Base64.getDecoder();

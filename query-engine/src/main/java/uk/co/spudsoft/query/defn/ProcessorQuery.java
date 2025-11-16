@@ -22,6 +22,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Vertx;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.procs.query.ProcessorQueryInstance;
 
@@ -42,8 +43,8 @@ public class ProcessorQuery implements Processor {
   private final String expression;
 
   @Override
-  public ProcessorQueryInstance createInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, String name) {
-    return new ProcessorQueryInstance(vertx, meterRegistry, pipelineContext, this, name);
+  public ProcessorQueryInstance createInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, String name) {
+    return new ProcessorQueryInstance(vertx, meterRegistry, auditor, pipelineContext, this, name);
   }
 
   @Override

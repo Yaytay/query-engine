@@ -22,6 +22,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.ProcessorSort;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.logging.Log;
@@ -58,14 +59,14 @@ public class SortFilter implements Filter {
   }
 
   @Override
-  public ProcessorInstance createProcessor(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, String argument, String name) {
+  public ProcessorInstance createProcessor(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, String argument, String name) {
     List<String> fields = SpaceParser.parse(argument);
     if (fields.isEmpty()) {
       Log.decorate(logger.atWarn(), pipelineContext).log("Invalid argument to _sort filter: no fields found");
       throw new IllegalArgumentException("Invalid argument to _sort filter, should be a space delimited list of fields");
     } else {
       ProcessorSort definition = ProcessorSort.builder().fields(fields).build();
-      return definition.createInstance(vertx, pipelineContext, meterRegistry, name);
+      return definition.createInstance(vertx, meterRegistry, auditor, pipelineContext, name);
     }
   }
 

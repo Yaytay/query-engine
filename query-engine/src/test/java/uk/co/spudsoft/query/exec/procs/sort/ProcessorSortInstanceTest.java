@@ -39,6 +39,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.ProcessorSort;
+import uk.co.spudsoft.query.exec.Auditor;
+import uk.co.spudsoft.query.exec.AuditorMemoryImpl;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
@@ -70,7 +72,8 @@ public class ProcessorSortInstanceTest {
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
     
-    ProcessorSortInstance instance = new ProcessorSortInstance(vertx, null, pipelineContext
+    Auditor auditor = new AuditorMemoryImpl(vertx);
+    ProcessorSortInstance instance = new ProcessorSortInstance(vertx, null, auditor, pipelineContext
             , ProcessorSort.builder().fields(Arrays.asList("timestamp")).build()
             , "P0-Sort"
     );
@@ -81,7 +84,7 @@ public class ProcessorSortInstanceTest {
   @Test
   public void testGetId() {
     ProcessorSort defn = ProcessorSort.builder().name("id").build();
-    ProcessorSortInstance instance = new ProcessorSortInstance(null, null, null, defn, "P0-Sort");
+    ProcessorSortInstance instance = new ProcessorSortInstance(null, null, null, null, defn, "P0-Sort");
     assertEquals("P0-Sort", instance.getName());
   }
   
@@ -103,8 +106,9 @@ public class ProcessorSortInstanceTest {
 
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    Auditor auditor = new AuditorMemoryImpl(vertx);
     
-    ProcessorSortInstance instance = new ProcessorSortInstance(vertx, null, pipelineContext
+    ProcessorSortInstance instance = new ProcessorSortInstance(vertx, null, auditor, pipelineContext
             , ProcessorSort.builder().fields(Arrays.asList("timestamp")).build()
             , "P0-Sort"
     );
@@ -143,8 +147,9 @@ public class ProcessorSortInstanceTest {
 
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    Auditor auditor = new AuditorMemoryImpl(vertx);
     
-    ProcessorSortInstance instance = new ProcessorSortInstance(vertx, null, pipelineContext
+    ProcessorSortInstance instance = new ProcessorSortInstance(vertx, null, auditor, pipelineContext
             , ProcessorSort.builder().fields(Arrays.asList("timestamp")).build()
             , "P0-Sort"
     );

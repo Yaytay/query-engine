@@ -21,6 +21,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.Json;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
@@ -36,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Endpoint;
 import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.defn.SourceSql;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
@@ -74,14 +76,15 @@ public class SourceSqlStreamingInstance extends AbstractSource {
   /**
    * Constructor.
    * @param vertx The Vert.x instance.
-   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param meterRegistry MeterRegistry for production of metrics.
+   * @param auditor The auditor that the source should use for recording details of the data accessed.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param sharedMap Pooling map.
    * @param definition The {@link SourceSql} definition.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
-  public SourceSqlStreamingInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, SharedMap sharedMap, SourceSql definition) {
-    super(vertx, meterRegistry, pipelineContext);
+  public SourceSqlStreamingInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, SharedMap sharedMap, SourceSql definition) {
+    super(vertx, meterRegistry, auditor, pipelineContext);
 
     Object pco = sharedMap.get(PoolCreator.class.toString());
     if (pco instanceof PoolCreator pc) {
@@ -211,6 +214,8 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     String sql = queryAndArgs.query();
     Tuple args = Tuple.from(queryAndArgs.args());
 
+    auditor.recordSource(pipelineContext, endpointName, url, connectOptions.getUser(), queryAndArgs.query(), Json.encode(queryAndArgs.args()));
+    
     long start = System.currentTimeMillis();
     return pool.getConnection()
             .recover(ex -> {

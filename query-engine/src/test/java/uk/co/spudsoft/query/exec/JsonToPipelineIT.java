@@ -68,10 +68,11 @@ public class JsonToPipelineIT {
   public void testParsingJsonToPipelineStreaming(Vertx vertx, VertxTestContext testContext) throws Throwable {
 
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
+    Auditor auditor = new AuditorMemoryImpl(vertx);
     CacheConfig cacheConfig = new CacheConfig();
     cacheConfig.setMaxDuration(Duration.ZERO);
     PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*"), null));
-    PipelineExecutor executor = PipelineExecutor.create(meterRegistry, new FilterFactory(Collections.emptyList()), null);   
+    PipelineExecutor executor = PipelineExecutor.create(meterRegistry, auditor, new FilterFactory(Collections.emptyList()), null);   
 
     RequestContext req = new RequestContext(
             null
@@ -107,7 +108,7 @@ public class JsonToPipelineIT {
               PipelineContext pipelineContext = new PipelineContext("test", req);
               Format chosenFormat = executor.getFormat(pipelineContext, pipeline.getFormats(), null);
               FormatInstance formatInstance = chosenFormat.createInstance(vertx, pipelineContext, new ListingWriteStream<>(new ArrayList<>()));
-              SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, pipelineContext, meterRegistry, executor);
+              SourceInstance sourceInstance = pipeline.getSource().createInstance(vertx, meterRegistry, auditor, pipelineContext, executor);
               PipelineInstance instance;
               try {
                 instance = new PipelineInstance(

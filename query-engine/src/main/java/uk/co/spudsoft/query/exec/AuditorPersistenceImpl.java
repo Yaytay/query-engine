@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 jtalbut
+ * Copyright (C) 2025 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.jackson.DatabindCodec;
 import io.vertx.ext.healthchecks.Status;
 import java.io.IOException;
+import java.io.StringReader;
 import java.lang.management.ManagementFactory;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
@@ -77,6 +78,7 @@ import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.defn.RateLimitRule;
 import uk.co.spudsoft.query.defn.RateLimitScopeType;
 import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.main.Persistence;
 import uk.co.spudsoft.query.main.DataSourceConfig;
@@ -299,6 +301,48 @@ public class AuditorPersistenceImpl implements Auditor {
                     , ?
                     , ?
                   )"""
+    ),
+    RECORD_LOG_MESSAGE("""
+                  insert into #SCHEMA#.#logs# (
+                        #requestId#
+                        , #idx#
+                        , #timestamp#
+                        , #pipe#
+                        , #level#
+                        , #loggerName#
+                        , #threadName#
+                        , #message#
+                        , #kvp#
+                      ) values (
+                        ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                      )"""
+    ),
+    RECORD_SOURCE("""
+                  insert into #SCHEMA#.#source# (
+                        #requestId#
+                        , #pipe#
+                        , #endpoint#
+                        , #url#
+                        , #username#
+                        , #query#
+                        , #arguments#
+                      ) values (
+                        ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                        , ?
+                      )"""
     ),
     RECORD_TOKEN_DETAILS("""
                   update
@@ -1068,6 +1112,43 @@ public class AuditorPersistenceImpl implements Auditor {
     return arguments;
   }
 
+  @Override
+  public Future<Void> recordAuditLogMessages(RequestContext requestContext, List<AuditLogMessage> logMessages) {
+    return jdbcHelper.runSqlUpdate("recordAuditLogMessages", SqlTemplate.RECORD_LOG_MESSAGE.sql(), ps -> {
+      Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+      int idx = 0;
+      for (AuditLogMessage entry : logMessages) {
+          ps.setString(1, requestContext.getRequestId());
+          ps.setInt(2, idx++);
+          ps.setTimestamp(3, Timestamp.from(entry.getTimestamp().toInstant(ZoneOffset.UTC)), cal);
+          ps.setString(4, JdbcHelper.limitLength(entry.getPipe(), 250));
+          ps.setString(5, JdbcHelper.limitLength(entry.getLevel(), 16));
+          ps.setString(6, JdbcHelper.limitLength(entry.getLoggerName(), 250));
+          ps.setString(7, JdbcHelper.limitLength(entry.getThreadName(), 250));
+          ps.setClob(8, new StringReader(entry.getMessage())); // CLOB-safe
+          ps.setClob(9, new StringReader(entry.getKvpDataJson())); // CLOB-safe
+          ps.addBatch();
+      }
+    }).mapEmpty();
+  }
+
+  @Override
+  public Future<Void> recordSource(PipelineContext pipelineContext, String endpointName, String dataSourceUrl, String username, String query, String argsJson) {
+    if (pipelineContext == null || pipelineContext.getRequestContext() == null || pipelineContext.getRequestContext().getRequestId() == null || pipelineContext.getPipe() == null) {
+      return Future.succeededFuture();
+    }
+    return jdbcHelper.runSqlUpdate("recordSource", SqlTemplate.RECORD_SOURCE.sql(), ps -> {
+      ps.setString(1, pipelineContext.getRequestContext().getRequestId());
+      ps.setString(2, JdbcHelper.limitLength(pipelineContext.getPipe(), 250));
+      ps.setString(3, JdbcHelper.limitLength(endpointName, 250));
+      ps.setString(4, JdbcHelper.limitLength(dataSourceUrl, 1000));
+      ps.setString(5, JdbcHelper.limitLength(username, 250));
+      ps.setClob(6, new StringReader(query)); // CLOB-safe
+      ps.setClob(7, new StringReader(argsJson)); // CLOB-safe
+      ps.addBatch();
+    }).mapEmpty();
+  }
+  
   @Override
   public Future<Void> waitForOutstandingRequests(long timeoutMs) {
     Promise<Void> promise = Promise.promise();

@@ -38,6 +38,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import uk.co.spudsoft.query.defn.ProcessorQuery;
+import uk.co.spudsoft.query.exec.Auditor;
+import uk.co.spudsoft.query.exec.AuditorMemoryImpl;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
@@ -68,8 +70,9 @@ public class ProcessorQueryInstanceTest {
     
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    Auditor auditor = new AuditorMemoryImpl(vertx);
         
-    ProcessorQueryInstance instance = ProcessorQuery.builder().expression("value!=three").build().createInstance(vertx, pipelineContext, null, "P0-Query");
+    ProcessorQueryInstance instance = ProcessorQuery.builder().expression("value!=three").build().createInstance(vertx, null, auditor, pipelineContext, "P0-Query");
     assertEquals("P0-Query", instance.getName());
     
     Future<?> initFuture = instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(pipelineContext, vertx.getOrCreateContext(), rowsList), types));
@@ -202,8 +205,9 @@ public class ProcessorQueryInstanceTest {
     
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    Auditor auditor = new AuditorMemoryImpl(vertx);
     
-    ProcessorQueryInstance instance = new ProcessorQueryInstance(vertx, null, pipelineContext
+    ProcessorQueryInstance instance = new ProcessorQueryInstance(vertx, null, auditor, pipelineContext
             , ProcessorQuery.builder().name("fred").expression("value!=three").build()
             , "P0-Query"
     );

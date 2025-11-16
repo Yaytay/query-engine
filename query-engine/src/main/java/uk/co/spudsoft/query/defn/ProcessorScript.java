@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Vertx;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.procs.script.ProcessorScriptInstance;
 
@@ -48,8 +49,8 @@ public class ProcessorScript implements Processor {
   private final String process;
 
   @Override
-  public ProcessorScriptInstance createInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, String name) {
-    return new ProcessorScriptInstance(vertx, meterRegistry, pipelineContext, this, name);
+  public ProcessorScriptInstance createInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, String name) {
+    return new ProcessorScriptInstance(vertx, meterRegistry, auditor, pipelineContext, this, name);
   }
   
   @Override

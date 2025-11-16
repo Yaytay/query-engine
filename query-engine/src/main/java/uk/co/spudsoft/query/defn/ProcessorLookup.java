@@ -25,6 +25,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Vertx;
 import java.util.List;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.procs.subquery.ProcessorLookupInstance;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
@@ -78,8 +79,8 @@ public class ProcessorLookup implements Processor {
   private final SourcePipeline map;
   
   @Override
-  public ProcessorLookupInstance createInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, String name) {
-    return new ProcessorLookupInstance(vertx, pipelineContext, meterRegistry, this, name);
+  public ProcessorLookupInstance createInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, String name) {
+    return new ProcessorLookupInstance(vertx, meterRegistry, auditor, pipelineContext, this, name);
   }
 
   @Override

@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.ProcessorMap;
 import uk.co.spudsoft.query.defn.ProcessorMapLabel;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.logging.Log;
@@ -52,7 +53,7 @@ public class MapFilter implements Filter {
   }
 
   @Override
-  public ProcessorInstance createProcessor(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, String argument, String name) {
+  public ProcessorInstance createProcessor(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, String argument, String name) {
     List<String> fields = SpaceParser.parse(argument);
     if (fields.isEmpty()) {
       Log.decorate(logger.atWarn(), pipelineContext).log("Invalid argument to _map filter, no fields found");
@@ -72,7 +73,7 @@ public class MapFilter implements Filter {
       }
 
       ProcessorMap definition = ProcessorMap.builder().relabels(relabels).build();
-      return definition.createInstance(vertx, pipelineContext, meterRegistry, name);
+      return definition.createInstance(vertx, meterRegistry, auditor, pipelineContext, name);
     }
   }
 

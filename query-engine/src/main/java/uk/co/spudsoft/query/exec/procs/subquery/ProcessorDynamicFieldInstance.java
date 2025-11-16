@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.ProcessorDynamicField;
 import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.DataRow;
@@ -83,13 +84,14 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
-   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param meterRegistry MeterRegistry for production of metrics.
+   * @param auditor The auditor that the source should use for recording details of the data accessed.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
-  public ProcessorDynamicFieldInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, ProcessorDynamicField definition, String name) {
-    super(logger, vertx, pipelineContext, meterRegistry, name, definition.getParentIdColumns(), definition.getValuesParentIdColumns(), definition.isInnerJoin());
+  public ProcessorDynamicFieldInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, ProcessorDynamicField definition, String name) {
+    super(logger, vertx, meterRegistry, auditor, pipelineContext, name, definition.getParentIdColumns(), definition.getValuesParentIdColumns(), definition.isInnerJoin());
     this.definition = definition;
     if (Strings.isNullOrEmpty(definition.getFieldValueColumnName())) {
       this.fieldValueColumnNames = Collections.emptyList();
@@ -104,7 +106,7 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
     String childName = getName() + ".fieldDefns";
     PipelineContext childContext = pipeline.getPipelineContext().child(childName);
     
-    SourceInstance sourceInstance = definition.getFieldDefns().getSource().createInstance(vertx, childContext, meterRegistry, executor);
+    SourceInstance sourceInstance = definition.getFieldDefns().getSource().createInstance(vertx, meterRegistry, auditor, childContext, executor);
     FormatCaptureInstance fieldDefnStreamCapture = new FormatCaptureInstance();
     PipelineInstance childPipeline = new PipelineInstance(
             childContext

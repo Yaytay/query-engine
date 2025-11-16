@@ -25,6 +25,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
@@ -59,8 +60,9 @@ public abstract class AbstractJoiningProcessor extends AbstractProcessor {
    * Constructor.
    * @param logger  The logger that should be used (so that log messages identify the child class).
    * @param vertx The vertx instance.
-   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param meterRegistry MeterRegistry for production of metrics.
+   * @param auditor The auditor that the source should use for recording details of the data accessed.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param name The name to use in logs for this processor - not nullable.
    * @param parentIdColumns The columns from the parent dataset that identifies a row.
    * @param childIdColumns The columns from the child dataset that identifies a row.
@@ -69,8 +71,8 @@ public abstract class AbstractJoiningProcessor extends AbstractProcessor {
    * It is safe to suppress the "this-escape" lint check as long as none of the streams are flowing until the constructor completes.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "None of the mutable values passed in to this class should be modified")
-  public AbstractJoiningProcessor(Logger logger, Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, String name, List<String> parentIdColumns, List<String> childIdColumns, boolean innerJoin) {
-    super(vertx, meterRegistry, pipelineContext, name);
+  public AbstractJoiningProcessor(Logger logger, Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, String name, List<String> parentIdColumns, List<String> childIdColumns, boolean innerJoin) {
+    super(vertx, meterRegistry, auditor, pipelineContext, name);
     this.logger = logger;
     this.parentIdColumns = parentIdColumns;
     this.childIdColumns = childIdColumns;
@@ -93,7 +95,7 @@ public abstract class AbstractJoiningProcessor extends AbstractProcessor {
     String childName = getName() + "." + fieldName;
     PipelineContext childContext = pipeline.getPipelineContext().child(childName);
 
-    SourceInstance sourceInstance = sourcePipeline.getSource().createInstance(vertx, childContext, meterRegistry, executor);
+    SourceInstance sourceInstance = sourcePipeline.getSource().createInstance(vertx, meterRegistry, auditor, childContext, executor);
     FormatCaptureInstance sinkInstance = new FormatCaptureInstance();
 
     PipelineInstance childPipeline = new PipelineInstance(

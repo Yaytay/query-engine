@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Vertx;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.SharedMap;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.sources.test.SourceTestInstance;
@@ -114,8 +115,8 @@ public class SourceTest implements Source {
   }
 
   @Override
-  public SourceTestInstance createInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, SharedMap sharedMap) {
-    return new SourceTestInstance(vertx, meterRegistry, pipelineContext, this);
+  public SourceTestInstance createInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, SharedMap sharedMap) {
+    return new SourceTestInstance(vertx, meterRegistry, auditor, pipelineContext, this);
   }
   
   /**

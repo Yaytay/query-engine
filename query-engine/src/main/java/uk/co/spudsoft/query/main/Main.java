@@ -122,6 +122,7 @@ import uk.co.spudsoft.query.exec.filters.SortFilter;
 import uk.co.spudsoft.query.exec.filters.WithoutFilter;
 import uk.co.spudsoft.query.exec.procs.sort.ProcessorSortInstance;
 import uk.co.spudsoft.query.json.ObjectMapperConfiguration;
+import uk.co.spudsoft.query.logging.RequestCollatingAppender;
 import static uk.co.spudsoft.query.main.TracingSampler.alwaysOff;
 import static uk.co.spudsoft.query.main.TracingSampler.alwaysOn;
 import static uk.co.spudsoft.query.main.TracingSampler.parent;
@@ -418,7 +419,9 @@ public class Main extends Application {
 
     LoggingConfiguration.configureLogbackFromEnvironment((LoggerContext) LoggerFactory.getILoggerFactory(), env);
     Parameters params = p4j.gatherParameters();
-    LoggingConfiguration.configureLogback((LoggerContext) LoggerFactory.getILoggerFactory(), params.getLogging());
+    
+    RequestCollatingAppender requestLoggingAppender = new RequestCollatingAppender();    
+    LoggingConfiguration.configureLogback((LoggerContext) LoggerFactory.getILoggerFactory(), params.getLogging(), requestLoggingAppender);
 
     SLF4JBridgeHandler.removeHandlersForRootLogger();
     SLF4JBridgeHandler.install();
@@ -487,6 +490,10 @@ public class Main extends Application {
     vertx = vertxBuilder.build();
     meterRegistry = (PrometheusMeterRegistry) BackendRegistries.getDefaultNow();
 
+    vertx.setPeriodic(Duration.ofHours(1).toMillis(), id -> {
+      requestLoggingAppender.purgeOlderThanDefault();
+    });
+    
     LoginDao loginDao;
     if (params.getPersistence().getDataSource() != null
             && !Strings.isNullOrEmpty(params.getPersistence().getDataSource().getUrl())) {
@@ -627,7 +634,7 @@ public class Main extends Application {
     OpenApiHandler openApiHandler = new OpenApiHandler(this, openApiConfig, "/api", params.getOpenApiExplorerUrl());
     ModelConverters.getInstance(true).addConverter(new OpenApiModelConverter());
 
-    PipelineExecutor pipelineExecutor = PipelineExecutor.create(meterRegistry, filterFactory, params.getSecrets());
+    PipelineExecutor pipelineExecutor = PipelineExecutor.create(meterRegistry, auditor, filterFactory, params.getSecrets());
     vertx.fileSystem().mkdirs(params.getOutputCacheDir());
     
     int pipelineVerticleInstances = params.getVertxOptions().getEventLoopPoolSize();
@@ -635,7 +642,7 @@ public class Main extends Application {
       pipelineVerticleInstances = 2 * CpuCoreSensor.availableProcessors();
     }
     
-    QueryRouter queryRouter = new QueryRouter(vertx, meterRegistry, auditor, authenticator, defnLoader, pipelineExecutor, params.getOutputCacheDir(), params.getWriteStreamBufferSize(), outputAllErrorMessages(), pipelineVerticleInstances);
+    QueryRouter queryRouter = new QueryRouter(vertx, meterRegistry, auditor, authenticator, defnLoader, pipelineExecutor, requestLoggingAppender, params.getOutputCacheDir(), params.getWriteStreamBufferSize(), outputAllErrorMessages(), pipelineVerticleInstances);
     
     router.route(QueryRouter.PATH_ROOT + "/*").handler(queryRouter);
 

@@ -28,6 +28,7 @@ import uk.co.spudsoft.query.defn.Endpoint;
 import uk.co.spudsoft.query.defn.SourceJdbc;
 import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.defn.SourceSql;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
@@ -63,13 +64,14 @@ public class SourceJdbcInstance extends AbstractSource {
   /**
    * Constructor.
    * @param vertx The Vert.x instance.
-   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param meterRegistry MeterRegistry for production of metrics.
+   * @param auditor The auditor that the source should use for recording details of the data accessed.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param definition The {@link SourceSql} definition.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
-  public SourceJdbcInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, SourceJdbc definition) {
-    super(vertx, meterRegistry, pipelineContext);
+  public SourceJdbcInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, SourceJdbc definition) {
+    super(vertx, meterRegistry, auditor, pipelineContext);
     this.definition = definition;
     this.log = new Log(logger, pipelineContext);
   }
@@ -131,15 +133,15 @@ public class SourceJdbcInstance extends AbstractSource {
       return Future.failedFuture(ex);
     }
 
-    return runInitialization(finalUrl, credentials, finalQuery, pipeline);
+    return runInitialization(endpointName, finalUrl, credentials, finalQuery, pipeline);
   }
 
   @SuppressFBWarnings(value = {"OBL_UNSATISFIED_OBLIGATION", "ODR_OPEN_DATABASE_RESOURCE", "SQL_INJECTION_JDBC"}, justification = "JDBC objects must be closed by JdbcReadStream")
-  private Future<ReadStreamWithTypes> runInitialization(String finalUrl, String[] credentials, String finalQuery, PipelineInstance pipeline) throws RuntimeException {
+  private Future<ReadStreamWithTypes> runInitialization(String endpointName, String finalUrl, String[] credentials, String finalQuery, PipelineInstance pipeline) throws RuntimeException {
 
     Promise<ReadStreamWithTypes> result = Promise.promise();
 
-    jdbcReadStream = new JdbcReadStream(Vertx.currentContext(), pipelineContext, definition, result);
+    jdbcReadStream = new JdbcReadStream(Vertx.currentContext(), auditor, pipelineContext, endpointName, definition, result);
     jdbcReadStream.exceptionHandler(ex -> {
       log.error().log("Exception occured in stream: ", ex);
     });

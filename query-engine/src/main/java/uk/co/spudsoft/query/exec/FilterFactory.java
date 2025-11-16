@@ -62,18 +62,19 @@ public class FilterFactory {
   /**
    * Create the {@link ProcessorInstance} for the identified {@link Filter}.
    * @param vertx the Vert.x instance.
-   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param meterRegistry MeterRegistry for production of metrics.
+   * @param auditor The auditor that the source should use for recording details of the data accessed.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param arg the query string parameter name (the key for the filter).
    * @param value the value of the query string parameter, that must be parsed into the configuration for this {@link ProcessorInstance}.
    * @param name the generated name of the processor to be used in logging and tracking
    * @return a newly created {@link ProcessorInstance} of the appropriate type.
    */
-  public ProcessorInstance createFilter(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, String arg, String value, String name) {
+  public ProcessorInstance createFilter(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, String arg, String value, String name) {
     Filter filter = filters.get(arg);
     if (filter != null) {
       logger.debug("Creating processor from {}={}", arg, value);
-      return filter.createProcessor(vertx, pipelineContext, meterRegistry, value, name);
+      return filter.createProcessor(vertx, meterRegistry, auditor, pipelineContext, value, name);
     } else {
       return null;
     }

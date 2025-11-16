@@ -22,7 +22,7 @@ public class LoggingConfigurationTest {
   @Test
   public void test1Default() {
     LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-    LoggingConfiguration.configureLogback(loggerContext, null);
+    LoggingConfiguration.configureLogback(loggerContext, null, null);
     logger.info("Hello by default");
   }
   
@@ -30,11 +30,11 @@ public class LoggingConfigurationTest {
   public void test2Json() {
     LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
     LogbackOptions options = new LogbackOptions().setJsonFormat(true);
-    LoggingConfiguration.configureLogback(loggerContext, options);
+    LoggingConfiguration.configureLogback(loggerContext, options, null);
     logger.info("Hello Json");
     
     options = new LogbackOptions().setJsonFormat(false);
-    LoggingConfiguration.configureLogback(loggerContext, options);
+    LoggingConfiguration.configureLogback(loggerContext, options, null);
     logger.info("Hello Text");
   }
   
@@ -52,7 +52,7 @@ public class LoggingConfigurationTest {
                             .build()
             )
             ;
-    LoggingConfiguration.configureLogback(loggerContext, options);
+    LoggingConfiguration.configureLogback(loggerContext, options, null);
     logger.info("Hello with config file");
   }
   
@@ -62,7 +62,7 @@ public class LoggingConfigurationTest {
     LogbackOptions options = new LogbackOptions()
             .setConfigFile("target/test-classes/logback-test.xml")
             ;
-    LoggingConfiguration.configureLogback(loggerContext, options);
+    LoggingConfiguration.configureLogback(loggerContext, options, null);
     logger.info("Hello after reset");
   }
 }

@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.helpers.CheckReturnValue;
 import org.slf4j.spi.LoggingEventBuilder;
 import org.slf4j.spi.NOPLoggingEventBuilder;
+import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 
@@ -32,6 +33,21 @@ import uk.co.spudsoft.query.exec.context.RequestContext;
  * @author jtalbut
  */
 public class Log {
+  
+  /**
+   * KeyValuePair key for the request ID.
+   */
+  public static final String REQUEST_ID_KEY = "requestId";
+  
+  /**
+   * KeyValuePair key for the run ID.
+   */
+  public static final String RUN_ID_KEY = "runId";
+  
+  /**
+   * KeyValuePair key for the {@link SourcePipeline} name.
+   */
+  public static final String PIPE_KEY = "pipe";
 
   private final Logger logger;
   private final PipelineContext pipelineContext;
@@ -126,7 +142,7 @@ public class Log {
     if (event != NOPLoggingEventBuilder.singleton()) {
       event = decorate(event, requestContext);
       if (pipe != null) {
-        event = event.addKeyValue("pipeline", pipe);
+        event = event.addKeyValue(PIPE_KEY, pipe);
       }
     }
     return event;
@@ -143,11 +159,11 @@ public class Log {
     if (requestContext != null) {
       String requestId = requestContext.getRequestId();
       if (requestId != null) {
-        event = event.addKeyValue("requestId", requestId);
+        event = event.addKeyValue(REQUEST_ID_KEY, requestId);
       }
       String runId = requestContext.getRunID();
       if (runId != null) {
-        event = event.addKeyValue("runId", runId);
+        event = event.addKeyValue(RUN_ID_KEY, runId);
       }
     }
     return event;

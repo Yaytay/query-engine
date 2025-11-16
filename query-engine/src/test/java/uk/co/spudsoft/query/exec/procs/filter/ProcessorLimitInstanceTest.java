@@ -34,6 +34,8 @@ import uk.co.spudsoft.query.exec.DataRow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import uk.co.spudsoft.query.defn.ProcessorLimit;
+import uk.co.spudsoft.query.exec.Auditor;
+import uk.co.spudsoft.query.exec.AuditorMemoryImpl;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
@@ -64,8 +66,9 @@ public class ProcessorLimitInstanceTest {
     
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    Auditor auditor = new AuditorMemoryImpl(vertx);
     
-    ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, null, pipelineContext, ProcessorLimit.builder().limit(17).build(), "P0-Limit");
+    ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, null, auditor, pipelineContext, ProcessorLimit.builder().limit(17).build(), "P0-Limit");
     assertEquals("P0-Limit", instance.getName());
     assertTrue(instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(pipelineContext, Vertx.currentContext(), rowsList), types)).isComplete());
   }
@@ -83,8 +86,9 @@ public class ProcessorLimitInstanceTest {
     
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    Auditor auditor = new AuditorMemoryImpl(vertx);
     
-    ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, null, pipelineContext, ProcessorLimit.builder().name("fred").limit(3).build(), "P0-Limit");
+    ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, null, auditor, pipelineContext, ProcessorLimit.builder().name("fred").limit(3).build(), "P0-Limit");
     assertEquals("P0-Limit", instance.getName());
     instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(pipelineContext, vertx.getOrCreateContext(), rowsList), types))
             .compose(rswt -> {

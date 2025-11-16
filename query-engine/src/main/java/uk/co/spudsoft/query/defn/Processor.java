@@ -23,6 +23,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.DiscriminatorMapping;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Vertx;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 
@@ -79,13 +80,14 @@ public interface Processor {
   /**
    * Create a new instance of the appropriate {@link ProcessorInstance}.
    * @param vertx The Vert.x instance.
-   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param meterRegistry MeterRegistry for production of metrics.
+   * @param auditor The auditor that the source should use for recording details of the data accessed.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param name The name of this processor, either from the definition or generated.
    * @return a newly created {@link ProcessorInstance}.
    */
   @JsonIgnore
-  ProcessorInstance createInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, String name);
+  ProcessorInstance createInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, String name);
   
   /**
    * The type of Processor being configured.

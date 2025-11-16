@@ -22,6 +22,7 @@ import ch.qos.logback.classic.PatternLayout;
 import ch.qos.logback.classic.encoder.JsonEncoder;
 import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.ConsoleAppender;
 import ch.qos.logback.core.CoreConstants;
 import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
@@ -99,8 +100,9 @@ public class LoggingConfiguration {
    * Configure Logback according to the passed in options.
    * @param loggerContext the result of calling {@link org.slf4j.LoggerFactory#getILoggerFactory()} cast to (LoggerContext).
    * @param options logging options specified in parameters ({@link uk.co.spudsoft.query.main.Parameters#logging}).
+   * @param additionalAppender another appender that will have the opportunity to process every LogEvent.
    */
-  public static void configureLogback(LoggerContext loggerContext, LogbackOptions options) {
+  public static void configureLogback(LoggerContext loggerContext, LogbackOptions options, Appender<ILoggingEvent> additionalAppender) {
     if (options == null) {
       // No configuration, so just leave as default
       return;
@@ -129,10 +131,15 @@ public class LoggingConfiguration {
     rootLogger.addAppender(appender);
     rootLogger.setLevel(ch.qos.logback.classic.Level.INFO);
 
+
+    if (additionalAppender != null) {
+      additionalAppender.start();
+      rootLogger.addAppender(appender);
+    }
+
     if (options.getLevel() != null) {
       overrideLevels(options.getLevel());
     }
-
   }
 
   @SuppressFBWarnings(value = "INFORMATION_EXPOSURE_THROUGH_AN_ERROR_MESSAGE", justification = "No other way to report the problem to user, the user should be a sysadmin")

@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.Test;
 import uk.co.spudsoft.query.defn.DataType;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.ColumnDefn;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.Types;
@@ -49,7 +50,7 @@ public class ProcessorDynamicFieldInstanceTest {
   @Test
   public void testGetId() {
     ProcessorDynamicField defn = ProcessorDynamicField.builder().name("id").build();
-    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstance(null, null, null, defn, "P0-DynamicField");
+    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstance(null, null, null, null, defn, "P0-DynamicField");
     assertEquals("P0-DynamicField", instance.getName());
   }
 
@@ -59,13 +60,15 @@ public class ProcessorDynamicFieldInstanceTest {
      * Constructor allowing manual specification of fields for testing.
      *
      * @param vertx the Vert.x instance.
-     * @param requestContext the request context.
-     * @param definition the definition of this processor.
-     * @param name the name of this processor, used in tracking and logging.
-     * @param fields override the collection of fields for testing
+     * @param meterRegistry
+     * @param auditor
+     * @param pipelineContext
+     * @param definition
+     * @param name
+     * @param fields 
      */
-    ProcessorDynamicFieldInstanceTester(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, ProcessorDynamicField definition, String name, List<FieldDefn> fields) {
-      super(vertx, pipelineContext, meterRegistry, definition, name);
+    ProcessorDynamicFieldInstanceTester(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, ProcessorDynamicField definition, String name, List<FieldDefn> fields) {
+      super(vertx, meterRegistry, auditor, pipelineContext, definition, name);
       this.fields = ImmutableCollectionTools.copy(fields);
     }
 
@@ -77,7 +80,7 @@ public class ProcessorDynamicFieldInstanceTest {
             .useCaseInsensitiveFieldNames(false)
             .valuesFieldIdColumn("fieldId")
             .build();
-    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstanceTester(null, null, null, defn, "P0-DynamicField",
+    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstanceTester(null, null, null, null, defn, "P0-DynamicField",
              Arrays.asList(
                     new FieldDefn(0, "field", "field", DataType.String, "stringValue"),
                      new FieldDefn(1, "Field", "Field", DataType.String, "stringValue")
@@ -115,7 +118,7 @@ public class ProcessorDynamicFieldInstanceTest {
             .useCaseInsensitiveFieldNames(true)
             .valuesFieldIdColumn("fieldId")
             .build();
-    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstanceTester(null, null, null, defn, "P0-DynamicField",
+    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstanceTester(null, null, null, null, defn, "P0-DynamicField",
              Arrays.asList(
                     new FieldDefn(0, "field", "field", DataType.String, "stringValue"),
                      new FieldDefn(1, "field", "Field", DataType.String, "stringValue")
@@ -152,7 +155,7 @@ public class ProcessorDynamicFieldInstanceTest {
             .useCaseInsensitiveFieldNames(true)
             .valuesFieldIdColumn("fieldId")
             .build();
-    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstanceTester(null, null, null, defn, "P0-DynamicField", 
+    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstanceTester(null, null, null, null, defn, "P0-DynamicField", 
              Arrays.asList(
                     new FieldDefn(1, "field", "Field", DataType.String, "stringValue"),
                      new FieldDefn(0, "field", "field", DataType.String, "stringValue")
@@ -189,7 +192,7 @@ public class ProcessorDynamicFieldInstanceTest {
             .useCaseInsensitiveFieldNames(true)
             .valuesFieldIdColumn("fieldId")
             .build();
-    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstanceTester(null, null, null, defn, "P0-DynamicField",
+    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstanceTester(null, null, null, null, defn, "P0-DynamicField",
              Arrays.asList(
                     new FieldDefn(0, "field", "Field", DataType.String, "stringValue"),
                      new FieldDefn(1, "field", "field", DataType.String, "stringValue")
@@ -228,7 +231,7 @@ public class ProcessorDynamicFieldInstanceTest {
             .useCaseInsensitiveFieldNames(true)
             .valuesFieldIdColumn("fieldId")
             .build();
-    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstanceTester(null, null, null, defn, "P0-DynamicField",
+    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstanceTester(null, null, null, null, defn, "P0-DynamicField",
              Arrays.asList(
                     new FieldDefn(0, "field", "Field", DataType.String, "stringValue"),
                      new FieldDefn(1, "field", "field", DataType.String, "stringValue")
@@ -267,7 +270,7 @@ public class ProcessorDynamicFieldInstanceTest {
     
     ProcessorDynamicField defn = ProcessorDynamicField.builder()
             .build();
-    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstanceTester(null, pipelineContext, null, defn, "P0-DynamicField",
+    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstanceTester(null, null, null, pipelineContext, defn, "P0-DynamicField",
              Arrays.asList(
                     new FieldDefn(0, "field", "Field", DataType.String, "stringValue"),
                      new FieldDefn(1, "field", "field", DataType.String, "stringValue")

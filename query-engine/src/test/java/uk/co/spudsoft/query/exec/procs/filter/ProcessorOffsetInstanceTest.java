@@ -33,6 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.defn.ProcessorOffset;
+import uk.co.spudsoft.query.exec.Auditor;
+import uk.co.spudsoft.query.exec.AuditorMemoryImpl;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
@@ -64,8 +66,9 @@ public class ProcessorOffsetInstanceTest {
     
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    Auditor auditor = new AuditorMemoryImpl(vertx);
         
-    ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, null, pipelineContext, ProcessorOffset.builder().offset(17).build(), "P0-Offset");
+    ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, null, auditor, pipelineContext, ProcessorOffset.builder().offset(17).build(), "P0-Offset");
     assertEquals("P0-Offset", instance.getName());
     assertTrue(instance.initialize(null, null, "source", 1, new ReadStreamWithTypes(new ListReadStream<>(pipelineContext, vertx.getOrCreateContext(), rowsList), types)).succeeded());
   }
@@ -84,8 +87,9 @@ public class ProcessorOffsetInstanceTest {
     
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
+    Auditor auditor = new AuditorMemoryImpl(vertx);
     
-    ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, null, pipelineContext
+    ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, null, auditor, pipelineContext
             , ProcessorOffset.builder().name("fred").offset(2).build()
             , "P0-Offset"
     );

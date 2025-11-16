@@ -22,6 +22,7 @@ import io.opentelemetry.context.Scope;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
+import io.vertx.core.json.Json;
 import io.vertx.core.streams.ReadStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -42,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.SourceJdbc;
 import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
@@ -62,6 +64,8 @@ public class JdbcReadStream implements ReadStream<DataRow> {
   private static final Logger logger = LoggerFactory.getLogger(JdbcReadStream.class);
 
   private final Context context;
+  private final Auditor auditor;
+  private final String endpointName;
   private final SourceJdbc definition;
   private final int processingBatchSize;
   private final Promise<ReadStreamWithTypes> initPromise;
@@ -92,13 +96,17 @@ public class JdbcReadStream implements ReadStream<DataRow> {
   /**
    * Constructor.
    * @param context The Vert.x context to use for asynchronous method calls.
+   * @param auditor The auditor that the source should use for recording details of the data accessed.
    * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
+   * @param endpointName The name of selected endpoint.
    * @param definition The source definition.
    * @param initPromise The promise to complete when the query starts returning data.
    */
   @SuppressFBWarnings("EI_EXPOSE_REP2")
-  public JdbcReadStream(Context context, PipelineContext pipelineContext, SourceJdbc definition, Promise<ReadStreamWithTypes> initPromise) {
+  public JdbcReadStream(Context context, Auditor auditor, PipelineContext pipelineContext, String endpointName, SourceJdbc definition, Promise<ReadStreamWithTypes> initPromise) {
     this.context = context;
+    this.auditor = auditor;
+    this.endpointName = endpointName;
     this.pipelineContext = pipelineContext;
     this.definition = definition;
     this.processingBatchSize = definition.getProcessingBatchSize();
@@ -190,6 +198,13 @@ public class JdbcReadStream implements ReadStream<DataRow> {
             statement.setObject(i + 1, queryAndArgs.args().get(i));
           }
         }
+
+        String auditSql = preparedSql;
+        context.runOnContext(v -> {
+          auditor.recordSource(pipelineContext, endpointName, dataSourceUrl, credentials[0], auditSql, Json.encode(queryAndArgs.args()));
+        });
+
+
       } catch (Throwable ex) {
         log.warn().log("{}: Failed to prepare statement \"{}\": ", (System.currentTimeMillis() - start) / 1000.0, preparedSql, ex);
         context.runOnContext(v -> {
@@ -197,7 +212,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
         });
         return;
       }
-
+      
       try {
         log.debug().log("{}: Executing query", (System.currentTimeMillis() - start) / 1000.0);
         rs = statement.executeQuery();

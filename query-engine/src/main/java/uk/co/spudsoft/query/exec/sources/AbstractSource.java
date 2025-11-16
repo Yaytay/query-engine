@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.exec.sources;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Vertx;
 import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 
@@ -43,18 +44,25 @@ public abstract class AbstractSource implements SourceInstance {
    * The context in which this {@link SourcePipeline} is being run.
    */
   protected final PipelineContext pipelineContext;
-  
 
+  /**
+   * The auditor that the source should use for recording details of the data accessed.
+   */
+  protected final Auditor auditor;
+
+  
   /**
    * Constructor.
    * 
    * @param vertx the Vert.x instance.
    * @param meterRegistry MeterRegistry for production of processor-specific metrics.
+   * @param auditor The auditor that the source should use for recording details of the data accessed.
    * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    */
-  protected AbstractSource(Vertx vertx, MeterRegistry meterRegistry, PipelineContext pipelineContext) {
+  protected AbstractSource(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext) {
     this.vertx = vertx;
     this.meterRegistry = meterRegistry;
+    this.auditor = auditor;
     this.pipelineContext = pipelineContext;
   }
   

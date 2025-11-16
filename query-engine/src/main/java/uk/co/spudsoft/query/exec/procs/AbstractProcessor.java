@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.exec.procs;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Vertx;
 import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 
@@ -37,6 +38,11 @@ public abstract class AbstractProcessor implements ProcessorInstance {
    * MeterRegistry for production of processor-specific metrics.
    */
   protected final MeterRegistry meterRegistry;
+  
+  /**
+   * The auditor that the source should use for recording details of the data accessed.
+   */
+  protected final Auditor auditor;
   
   /**
    * The context in which this {@link SourcePipeline} is being run.
@@ -60,12 +66,15 @@ public abstract class AbstractProcessor implements ProcessorInstance {
    * 
    * @param vertx the Vert.x instance.
    * @param meterRegistry MeterRegistry for production of processor-specific metrics.
-   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
+   * @param auditor The auditor that the source should use for recording details of the data accessed.
+
+* @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param name The name of the processor.
    */
-  protected AbstractProcessor(Vertx vertx, MeterRegistry meterRegistry, PipelineContext pipelineContext, String name) {
+  protected AbstractProcessor(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, String name) {
     this.vertx = vertx;
     this.meterRegistry = meterRegistry;
+    this.auditor = auditor;
     this.pipelineContext = pipelineContext;
     this.name = name;
   }

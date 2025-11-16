@@ -30,6 +30,7 @@ import io.vertx.core.Vertx;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.SharedMap;
 import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
@@ -52,8 +53,8 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 public final class SourceSql implements Source {
 
   @Override
-  public SourceInstance createInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, SharedMap sharedMap) {
-    return new SourceSqlStreamingInstance(vertx, pipelineContext, meterRegistry, sharedMap, this);
+  public SourceInstance createInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, SharedMap sharedMap) {
+    return new SourceSqlStreamingInstance(vertx, meterRegistry, auditor, pipelineContext, sharedMap, this);
   }
 
   /**

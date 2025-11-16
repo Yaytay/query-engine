@@ -62,6 +62,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
   private static final Logger logger = LoggerFactory.getLogger(PipelineExecutorImpl.class);
 
   private final MeterRegistry meterRegistry;
+  private final Auditor auditor;
   private final FilterFactory filterFactory;
   private final Map<String, ProtectedCredentials> secrets;
   private final Map<String, Object> sharedMap;
@@ -69,12 +70,14 @@ public class PipelineExecutorImpl implements PipelineExecutor {
   /**
    * Constructor.
    * @param meterRegistry MeterRegistry for production of metrics.
+   * @param auditor The auditor that the source should use for recording details of the data accessed.
    * @param filterFactory The {@link FilterFactory} for creating {@link ProcessorInstance} objects from command line arguments.
    * @param secrets The preconfigured secrets that can be used by pipelines.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "MeterRegistry is designed to be modified")
-  PipelineExecutorImpl(MeterRegistry meterRegistry, FilterFactory filterFactory, Map<String, ProtectedCredentials> secrets) {
+  PipelineExecutorImpl(MeterRegistry meterRegistry, Auditor auditor, FilterFactory filterFactory, Map<String, ProtectedCredentials> secrets) {
     this.meterRegistry = meterRegistry;
+    this.auditor = auditor;
     this.filterFactory = filterFactory;
     this.secrets = ImmutableCollectionTools.copy(secrets);
     this.sharedMap = new HashMap<>();
@@ -119,12 +122,12 @@ public class PipelineExecutorImpl implements PipelineExecutor {
       Condition condition = processor.getCondition();
       if (condition == null) {
         Log.decorate(logger.atDebug(), pipelineContext).log("Added {} processor named {} with no condition", processor.getType(), processorName);
-        result.add(processor.createInstance(vertx, pipelineContext, meterRegistry, processorName));
+        result.add(processor.createInstance(vertx, meterRegistry, auditor, pipelineContext, processorName));
       } else {
         ConditionInstance cond = new ConditionInstance(condition.getExpression());
         if (cond.evaluate(pipelineContext, null)) {
           Log.decorate(logger.atDebug(), pipelineContext).log("Added {} processor named {} because condition {} met", processor.getType(), processorName, cond);
-          result.add(processor.createInstance(vertx, pipelineContext, meterRegistry, processorName));
+          result.add(processor.createInstance(vertx, meterRegistry, auditor, pipelineContext, processorName));
         } else {
           Log.decorate(logger.atDebug(), pipelineContext).log("Skipped {} processor {} because condition {} not met", processor.getType(), processor.getName(), cond);
         }
@@ -135,7 +138,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
       for (Entry<String, String> entry : params.entries()) {
         ++index;
         String filterName = pipelineContext.getPipe() + ".filter[" + index + "]";
-        ProcessorInstance processor = filterFactory.createFilter(vertx, pipelineContext, meterRegistry, entry.getKey(), entry.getValue(), filterName);
+        ProcessorInstance processor = filterFactory.createFilter(vertx, meterRegistry, auditor, pipelineContext, entry.getKey(), entry.getValue(), filterName);
         if (processor != null) {
           result.add(processor);
         }
@@ -150,7 +153,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
     List<PreProcessorInstance> result = new ArrayList<>();
     int index = 0;
     for (DynamicEndpoint de : definition.getDynamicEndpoints()) {
-      result.add(de.createInstance(vertx, pipelineContext, meterRegistry, index++));
+      result.add(de.createInstance(vertx, meterRegistry, auditor, pipelineContext, index++));
     }
     return result;
   }

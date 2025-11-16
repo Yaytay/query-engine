@@ -28,6 +28,7 @@ import java.util.List;
 import liquibase.exception.LiquibaseException;
 import uk.co.spudsoft.dircache.DirCacheTree.File;
 import uk.co.spudsoft.query.defn.Pipeline;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 
 /**
@@ -159,6 +160,28 @@ public interface Auditor {
    */
   Future<AuditHistory> getHistory(RequestContext requestContext, String issuer, String subject, int skipRows, int maxRows, AuditHistorySortOrder sortOrder, boolean sortDescending);
 
+  /**
+   * Write the passed in {@link AuditLogMessage}s to long term storage.
+   * 
+   * @param requestContext The context in which this request is being made (not related to that being searched).
+   * @param logMessages The collection of log messages recorded during processing.
+   * @return A Future that will be completed when the data has been recorded.
+   */
+  Future<Void> recordAuditLogMessages(RequestContext requestContext, List<AuditLogMessage> logMessages);
+
+  /**
+   * Write the details of the data source to the audit.
+   * 
+   * @param pipelineContext The pipeline context - must include the pipe name.
+   * @param endpointName The name of the selected endpoint.
+   * @param dataSourceUrl The URL to the source of the data, this is the only data parameter that cannot be null.
+   * @param username The username used to access the data.
+   * @param query The specific query used - mandatory for SQL/JDBC sources, optional for others.
+   * @param argsJson JSON representation of any arguments to the query.
+   * @return A Future that will be completed when the data has been recorded.
+   */
+  Future<Void> recordSource(PipelineContext pipelineContext, String endpointName, String dataSourceUrl, String username, String query, String argsJson);
+  
   /**
    * Return a username with any '@&lt;domain&gt;' stripped off.
    * @param username The username, which may be an email address.

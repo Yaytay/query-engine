@@ -33,7 +33,7 @@ public class ProcessorGroupConcatInstanceTest {
   @Test
   public void testGetId() {
     ProcessorGroupConcat defn = ProcessorGroupConcat.builder().name("id").build();
-    ProcessorGroupConcatInstance instance = new ProcessorGroupConcatInstance(null, null, null, defn, "P0-GroupConcat");
+    ProcessorGroupConcatInstance instance = new ProcessorGroupConcatInstance(null, null, null, null, defn, "P0-GroupConcat");
     assertEquals("P0-GroupConcat", instance.getName());
   }
 
@@ -44,7 +44,7 @@ public class ProcessorGroupConcatInstanceTest {
             .delimiter("#")
             .parentValueColumn("kids")
             .build();
-    ProcessorGroupConcatInstance instance = new ProcessorGroupConcatInstance(null, null, null, defn, "P0-GroupConcat");
+    ProcessorGroupConcatInstance instance = new ProcessorGroupConcatInstance(null, null, null, null, defn, "P0-GroupConcat");
     
     Types parentTypes = new Types();
     DataRow parent = DataRow.create(parentTypes).put("id", "one");
@@ -69,7 +69,7 @@ public class ProcessorGroupConcatInstanceTest {
             .childValueColumn("value")
             .delimiter("#")
             .build();
-    ProcessorGroupConcatInstance instance = new ProcessorGroupConcatInstance(null, null, null, defn, "P0-GroupConcat");
+    ProcessorGroupConcatInstance instance = new ProcessorGroupConcatInstance(null, null, null, null, defn, "P0-GroupConcat");
     
     Types parentTypes = new Types();
     DataRow parent = DataRow.create(parentTypes).put("id", "one");
@@ -94,7 +94,7 @@ public class ProcessorGroupConcatInstanceTest {
             .delimiter("#")
             .childIdColumns(Arrays.asList("id"))
             .build();
-    ProcessorGroupConcatInstance instance = new ProcessorGroupConcatInstance(null, null, null, defn, "P0-GroupConcat");
+    ProcessorGroupConcatInstance instance = new ProcessorGroupConcatInstance(null, null, null, null, defn, "P0-GroupConcat");
     
     Types parentTypes = new Types();
     DataRow parent = DataRow.create(parentTypes).put("id", "one");

@@ -29,6 +29,7 @@ import uk.co.spudsoft.query.defn.DynamicEndpoint;
 import uk.co.spudsoft.query.defn.Endpoint;
 import uk.co.spudsoft.query.defn.EndpointType;
 import uk.co.spudsoft.query.defn.SourcePipeline;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
@@ -57,6 +58,7 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
 
   private final Vertx vertx;
   private final MeterRegistry meterRegistry;
+  private final Auditor auditor;
   private final PipelineContext pipelineContext;
   private final DynamicEndpoint definition;
   private final String name;
@@ -64,15 +66,17 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
   /**
    * Constructor.
    * @param vertx the Vert.x instance.
-   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param meterRegistry MeterRegistry for production of metrics.
+   * @param auditor The auditor that the source should use for recording details of the data accessed.
+   * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param definition the definition of this processor.
    * @param index zero based index of this pre-processor within the list of pre-processors in the pipeline.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "MeterRegistry is designed to be modified")
-  public DynamicEndpointPreProcessorInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, DynamicEndpoint definition, int index) {
+  public DynamicEndpointPreProcessorInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, DynamicEndpoint definition, int index) {
     this.vertx = vertx;
     this.meterRegistry = meterRegistry;
+    this.auditor = auditor;
     this.pipelineContext = pipelineContext;
     this.definition = definition;
     this.name = Strings.isNullOrEmpty(definition.getName()) ? "dynamicEndpoints[" + index + "]" : definition.getName();
@@ -85,7 +89,7 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
     String childName = pipeline.getPipelineContext().getPipe() + "." + name + ".input";
     PipelineContext childContext = pipeline.getPipelineContext().child(childName);
 
-    SourceInstance sourceInstance = definition.getInput().getSource().createInstance(vertx, childContext, meterRegistry, executor);
+    SourceInstance sourceInstance = definition.getInput().getSource().createInstance(vertx, meterRegistry, auditor, childContext, executor);
     FormatCaptureInstance format = new FormatCaptureInstance();
     PipelineInstance dePipeline = new PipelineInstance(
             childContext

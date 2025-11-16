@@ -111,7 +111,7 @@ public class PipelineRunningVerticle extends VerticleBase {
       PipelineInstance instance;
       PipelineContext rootContext = new PipelineContext("$", task.requestContext);
       FormatInstance formatInstance = task.chosenFormat.createInstance(vertx, rootContext, task.responseStream);
-      SourceInstance sourceInstance = task.pipeline.getSource().createInstance(vertx, rootContext, meterRegistry, pipelineExecutor);
+      SourceInstance sourceInstance = task.pipeline.getSource().createInstance(vertx, meterRegistry, auditor, rootContext, pipelineExecutor);
       instance = new PipelineInstance(
               rootContext
               , task.pipeline

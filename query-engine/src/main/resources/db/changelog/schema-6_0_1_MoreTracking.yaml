@@ -7,17 +7,28 @@ databaseChangeLog:
     - createTable:
         tableName: source
         columns:
-        - {column: {name: id, type: varchar(100), constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_query}}}
-        - {column: {name: name, type: varchar(100), constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_query}}}
-        - {column: {name: connection, type: varchar(1000), constraints: {nullable: false}}}
-        - {column: {name: username, type: varchar(1000), constraints: {nullable: false}}}
-        - {column: {name: query, type: clob, constraints: {nullable: false}}}
+        - {column: {name: requestId, type: varchar(100), constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_source}}}
+        - {column: {name: pipe, type: varchar(250), constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_source}}}
+        - {column: {name: endpoint, type: varchar(250), constraints: {nullable: true}}}
+        - {column: {name: url, type: varchar(1000), constraints: {nullable: false}}}
+        - {column: {name: username, type: varchar(250), constraints: {nullable: true}}}
+        - {column: {name: query, type: clob, constraints: {nullable: true}}}
         - {column: {name: arguments, type: clob, constraints: {nullable: true}}}
 
+- changeSet:
+    id: 6_0_1-2
+    author: jtalbut
+    runWith: jdbc
+    changes:
     - createTable:
-        tableName: warnings
+        tableName: logs
         columns:
-        - {column: {name: id, type: varchar(100), constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_query}}}
+        - {column: {name: requestId, type: varchar(100), constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_logs}}}
+        - {column: {name: idx, type: int, constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_logs}}}
         - {column: {name: timestamp, type: timestamp, constraints: {nullable: false}}}
-        - {column: {name: warnings, type: clob, constraints: {nullable: true}}}
-
+        - {column: {name: pipe, type: varchar(250), constraints: {nullable: true}}}
+        - {column: {name: level, type: varchar(16), constraints: {nullable: true}}}
+        - {column: {name: loggerName, type: varchar(250), constraints: {nullable: true}}}
+        - {column: {name: threadName, type: varchar(250), constraints: {nullable: true}}}
+        - {column: {name: message, type: clob, constraints: {nullable: true}}}
+        - {column: {name: kvp, type: clob, constraints: {nullable: true}}}

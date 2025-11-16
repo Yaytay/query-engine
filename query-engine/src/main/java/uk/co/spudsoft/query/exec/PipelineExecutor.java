@@ -41,13 +41,14 @@ public interface PipelineExecutor extends SharedMap {
    * Factory method for creating PipelineExecutors.
    *
    * @param meterRegistry MeterRegistry for production of metrics.
+   * @param auditor The auditor that the source should use for recording details of the data accessed.
    * @param filterFactory The {@link FilterFactory} for creating {@link ProcessorInstance} objects from command line arguments.
    * @param secrets The preconfigured secrets that can be used by pipelines.
    * @return newly created PipelineExecutor.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "MeterRegistry is designed to be modified")
-  static PipelineExecutor create(MeterRegistry meterRegistry, FilterFactory filterFactory, Map<String, ProtectedCredentials> secrets) {
-    return new PipelineExecutorImpl(meterRegistry, filterFactory, secrets);
+  static PipelineExecutor create(MeterRegistry meterRegistry, Auditor auditor, FilterFactory filterFactory, Map<String, ProtectedCredentials> secrets) {
+    return new PipelineExecutorImpl(meterRegistry, auditor, filterFactory, secrets);
   }
 
   /**

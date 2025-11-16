@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Vertx;
+import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.procs.filters.ProcessorOffsetInstance;
 
@@ -41,8 +42,8 @@ public class ProcessorOffset implements Processor {
   private final int offset;
 
   @Override
-  public ProcessorOffsetInstance createInstance(Vertx vertx, PipelineContext pipelineContext, MeterRegistry meterRegistry, String name) {
-    return new ProcessorOffsetInstance(vertx, meterRegistry, pipelineContext, this, name);
+  public ProcessorOffsetInstance createInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, String name) {
+    return new ProcessorOffsetInstance(vertx, meterRegistry, auditor, pipelineContext, this, name);
   }
 
   @Override
