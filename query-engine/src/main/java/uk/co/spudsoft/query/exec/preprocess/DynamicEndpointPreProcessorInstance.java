@@ -103,14 +103,18 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
     );
     return executor.initializePipeline(childContext, dePipeline)
             .onFailure(ex -> {
-              Log.decorate(logger.atError(), pipelineContext).log("Dynamic pipeline initialization failed: ", ex);
+              Log.decorate(logger.atError(), pipelineContext).log("DynamicEndpoint pipeline initialization failed: ", ex);
             })
             .compose(v -> {
-              Log.decorate(logger.atDebug(), pipelineContext).log("de pipeline initialized, getting future");
+              Log.decorate(logger.atDebug(), pipelineContext).log("DynamicEndpoint pipeline initialized, getting future");
               return ReadStreamToList.capture(pipelineContext, format.getReadStream().getStream());
             })
             .compose(rows -> {
-              Log.decorate(logger.atDebug(), pipelineContext).log("de pipeline completed, processing {} rows", rows.size());
+              if (rows.size() > 2) {
+                Log.decorate(logger.atWarn(), pipelineContext).log("DynamicEndpoint pipeline completed, processing generated {} rows - please make the query more specific", rows.size());
+              } else {
+                Log.decorate(logger.atDebug(), pipelineContext).log("DynamicEndpoint pipeline completed, processing {} rows", rows.size());
+              }
               try {
                 for (int i = 0; i < rows.size(); ++i) {
                   processEndpoint(pipeline, i, rows.get(i));
@@ -118,7 +122,7 @@ public class DynamicEndpointPreProcessorInstance implements PreProcessorInstance
               } catch (IllegalArgumentException ex) {
                 return Future.failedFuture(new ServiceException(500, "Unable to process DynamicEndpoint: " + ex.getMessage()));
               }
-              Log.decorate(logger.atDebug(), pipelineContext).log("de pipeline completed");
+              Log.decorate(logger.atDebug(), pipelineContext).log("DynamicEndpoint pipeline completed");
               return Future.succeededFuture();
             });
   }

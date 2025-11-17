@@ -128,14 +128,14 @@ public class LoggingConfiguration {
     appender.start();
     
     Logger rootLogger = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
-    rootLogger.addAppender(appender);
-    rootLogger.setLevel(ch.qos.logback.classic.Level.INFO);
-
 
     if (additionalAppender != null) {
       additionalAppender.start();
-      rootLogger.addAppender(appender);
+      rootLogger.addAppender(additionalAppender);
     }
+
+    rootLogger.addAppender(appender);
+    rootLogger.setLevel(ch.qos.logback.classic.Level.INFO);
 
     if (options.getLevel() != null) {
       overrideLevels(options.getLevel());

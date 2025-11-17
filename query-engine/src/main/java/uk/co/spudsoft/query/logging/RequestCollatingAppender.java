@@ -89,10 +89,12 @@ public class RequestCollatingAppender extends AppenderBase<ILoggingEvent> {
   private static final Duration DEFAULT_RETENTION = Duration.ofHours(12);
 
   static String getKvpStringValue(List<KeyValuePair> kvps, String key) {
-    for (KeyValuePair kvp : kvps) {
-      if (key.equals(kvp.key)) {
-        if (kvp.value instanceof String s) {
-          return s;
+    if (kvps != null) {
+      for (KeyValuePair kvp : kvps) {
+        if (key.equals(kvp.key)) {
+          if (kvp.value instanceof String s) {
+            return s;
+          }
         }
       }
     }
