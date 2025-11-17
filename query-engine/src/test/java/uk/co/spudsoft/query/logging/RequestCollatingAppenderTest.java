@@ -100,8 +100,8 @@ public class RequestCollatingAppenderTest {
     String requestId = "req-123";
     long baseTs = System.currentTimeMillis();
 
-    ILoggingEvent e1 = createEvent(Level.INFO, "message-1", requestId, "pipeA", baseTs);
-    ILoggingEvent e2 = createEvent(Level.INFO, "message-2", requestId, "pipeA", baseTs + 10);
+    ILoggingEvent e1 = createEvent(Level.WARN, "message-1", requestId, "pipeA", baseTs);
+    ILoggingEvent e2 = createEvent(Level.WARN, "message-2", requestId, "pipeA", baseTs + 10);
 
     appender.doAppend(e1);
     appender.doAppend(e2);
@@ -169,6 +169,8 @@ public class RequestCollatingAppenderTest {
     appender.setMaxEventsPerRequest(2);
     // This shouldn't do anything
     appender.setMaxEventsPerRequest(0);
+    
+    appender.setMinimumLevel("INFO");
 
     String requestId = "req-cap";
     long ts = System.currentTimeMillis();
@@ -206,8 +208,8 @@ public class RequestCollatingAppenderTest {
     // New events: now
     long newTs = System.currentTimeMillis();
 
-    ILoggingEvent oldEvent = createEvent(Level.INFO, "old", oldReq, null, oldTs);
-    ILoggingEvent newEvent = createEvent(Level.INFO, "new", newReq, null, newTs);
+    ILoggingEvent oldEvent = createEvent(Level.WARN, "old", oldReq, null, oldTs);
+    ILoggingEvent newEvent = createEvent(Level.WARN, "new", newReq, null, newTs);
 
     appender.doAppend(oldEvent);
     appender.doAppend(newEvent);
