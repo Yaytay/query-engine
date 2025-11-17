@@ -75,7 +75,7 @@ public class RequestCollatingAppender extends AppenderBase<ILoggingEvent> {
   /**
    * Optional: minimum level of events to record (defaults to INFO).
    */
-  private Level minimumLevel = Level.INFO;
+  private Level minimumLevel = Level.WARN;
 
   /**
    * Optional: maximum number of events per request (to avoid unbounded memory use).

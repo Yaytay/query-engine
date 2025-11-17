@@ -372,16 +372,16 @@ public class AuditorPersistenceImpl implements Auditor {
             #id# = ?"""
     ),
     RECORD_EXCEPTION("""
-                                    update
-                                      #SCHEMA#.#request#
-                                    set
-                                      #exceptionTime# = ?
-                                      , #exceptionClass# = ?
-                                      , #exceptionMessage# = ?
-                                      , #exceptionStackTrace# = ?
-                                    where
-                                      #id# = ?
-                                   """
+                    update
+                      #SCHEMA#.#request#
+                    set
+                      #exceptionTime# = ?
+                      , #exceptionClass# = ?
+                      , #exceptionMessage# = ?
+                      , #exceptionStackTrace# = ?
+                    where
+                      #id# = ?
+                   """
     ),
     RECORD_RESPONSE("""
            update
@@ -1117,7 +1117,7 @@ public class AuditorPersistenceImpl implements Auditor {
     if (logMessages.isEmpty()) {
       return Future.succeededFuture();
     }
-    return jdbcHelper.runSqlUpdate("recordAuditLogMessages", SqlTemplate.RECORD_LOG_MESSAGE.sql(), ps -> {
+    return jdbcHelper.runSqlBatchUpdate("recordAuditLogMessages", SqlTemplate.RECORD_LOG_MESSAGE.sql(), ps -> {
       Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
       int idx = 0;
       for (AuditLogMessage entry : logMessages) {

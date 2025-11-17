@@ -285,6 +285,20 @@ public class JdbcHelper {
   }
 
   /**
+   * Run a SQL update asynchronously (in the Vertx worker thread).
+   * @param name name of the action being taken for log messages.
+   * @param sql statement to be run.
+   * @param prepareStatement a {@link SqlConsumer} to use to set parameters on the {@link PreparedStatement}.
+   * @return A Future that will be completed when the operation is complete.
+   */
+  public Future<int[]> runSqlBatchUpdate(String name, String sql, SqlConsumer<PreparedStatement> prepareStatement) {
+    checkNotShuttingDown();
+
+    Future<int[]> future = vertx.executeBlocking(() -> runSqlBatchUpdateSynchronously(name, sql, prepareStatement));
+    return trackFuture(future);
+  }
+
+  /**
    * Run a SQL select asynchronously (in the Vertx worker thread).
    *
    * @param <R> The type of data being returned.
@@ -464,6 +478,43 @@ public class JdbcHelper {
       Connection conn = dataSource.getConnection();
       try {
         return consumer.accept(conn);
+      } finally {
+        closeConnection(conn);
+      }
+    } catch (Exception ex) {
+      logger.error(logMessage, name, ex);
+      throw ex;
+    } catch (Throwable ex) {
+      logger.error(logMessage, name, ex);
+      throw new RuntimeException(logMessage.replace("{}", name), ex);
+    }
+  }
+
+  /**
+   * Run a SQL update batch synchronously.
+   * @param name name of the action being taken for log messages.
+   * @param sql statement to be run.
+   * @param prepareStatement a {@link SqlConsumer} to use to set parameters on the {@link PreparedStatement}.
+   * @return the number of rows affected.
+   * @throws Exception if anything goes wrong.
+   */
+  @SuppressFBWarnings(value = "SQL_INJECTION_JDBC", justification = "SQL is generated from static strings")
+  public int[] runSqlBatchUpdateSynchronously(String name, String sql, SqlConsumer<PreparedStatement> prepareStatement) throws Exception {
+    logger.trace("Executing update ({}: {})", name, sql);
+    String logMessage = "Failed to get connection ({}): ";
+    try {
+      Connection conn = dataSource.getConnection();
+      try {
+        logMessage = "Failed to create statement ({}): ";
+        PreparedStatement statement = conn.prepareStatement(sql);
+        try {
+          logMessage = "Failed to prepare statement ({}): ";
+          prepareStatement.accept(statement);
+          logMessage = "Failed to execute query ({}): ";
+          return statement.executeBatch();
+        } finally {
+          closeStatement(statement);
+        }
       } finally {
         closeConnection(conn);
       }
