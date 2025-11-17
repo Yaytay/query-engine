@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.pipeline;
 
+import inet.ipaddr.IPAddressString;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.vertx.core.Future;
@@ -34,6 +35,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.dircache.DirCache;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.main.CacheConfig;
 import uk.co.spudsoft.query.main.Main;
 
@@ -60,7 +62,9 @@ public class PipelineDefnLoaderIT {
     cacheConfig.setMaxItems(10);
     PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(1), Pattern.compile("\\..*"), null));
 
-    loader.readJsonFile(CONFS_DIR + "/sub1/sub2/JsonToPipelineIT.json")
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    
+    loader.readJsonFile(reqctx, CONFS_DIR + "/sub1/sub2/JsonToPipelineIT.json")
             .compose(p -> {
               testContext.verify(() -> {
                 assertNotNull(p);
@@ -68,7 +72,7 @@ public class PipelineDefnLoaderIT {
               return loader.writeJsonFile(CONFS_DIR + "/sub1/sub2/JsonToPipelineIT.json", p);
             })
             .compose(v -> {
-              return loader.readYamlFile(CONFS_DIR + "/sub1/sub2/YamlToPipelineIT.yaml");
+              return loader.readYamlFile(reqctx, CONFS_DIR + "/sub1/sub2/YamlToPipelineIT.yaml");
             })
             .compose(p -> {
               testContext.verify(() -> {
@@ -86,7 +90,7 @@ public class PipelineDefnLoaderIT {
             })
             .recover(ex -> Future.succeededFuture())
             .compose(v -> {
-              return loader.readJsonFile("nonexistant/nonexisteant/file.json");
+              return loader.readJsonFile(reqctx, "nonexistant/nonexisteant/file.json");
             })
             .andThen(ar -> {
               testContext.verify(() -> {
@@ -104,7 +108,7 @@ public class PipelineDefnLoaderIT {
             })
             .recover(ex -> Future.succeededFuture())
             .compose(v -> {
-              return loader.readYamlFile("nonexistant/nonexisteant/file.yaml");
+              return loader.readYamlFile(reqctx, "nonexistant/nonexisteant/file.yaml");
             })
             .andThen(ar -> {
               testContext.verify(() -> {

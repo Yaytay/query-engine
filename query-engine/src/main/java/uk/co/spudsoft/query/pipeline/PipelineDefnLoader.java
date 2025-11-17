@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import uk.co.spudsoft.query.trees.AsyncDirTreeMapper;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -96,7 +95,7 @@ public final class PipelineDefnLoader {
   private final FileSystem fs;
   private final VelocityEngine velocity;
   
-  private static final DeserializationProblemHandler PROBLEM_HANDLER = new PipelineParsingErrorHandler();
+  private static final PipelineParsingErrorHandler PROBLEM_HANDLER = new PipelineParsingErrorHandler();
   /**
    * The ObjectMapper to reading/writing JSON files containing {@link Pipeline} definitions.
    */
@@ -399,11 +398,14 @@ public final class PipelineDefnLoader {
             });
   }
   
-  private Future<Pipeline> readFile(ObjectMapper mapper, String absolutePath) {
+  private Future<Pipeline> readFile(ObjectMapper mapper, RequestContext requestContext, String absolutePath) {    
     return fs.readFile(absolutePath)
             .compose(buffer -> {
               try {
-                return Future.succeededFuture(mapper.readValue(buffer.getBytes(), Pipeline.class));
+                byte[] bytes = buffer.getBytes();
+                PROBLEM_HANDLER.setRequestContext(requestContext);
+                Pipeline pipeline = mapper.readValue(bytes, Pipeline.class);
+                return Future.succeededFuture(pipeline);
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);
               }
@@ -412,20 +414,22 @@ public final class PipelineDefnLoader {
   
   /**
    * Read a {@link Pipeline} from a file containing JSON.
+   * @param requestContext The context in which this request is being made.
    * @param absolutePath the path to the file that is to be read.
    * @return A Future that will be completed with the {@link Pipeline} definition when the file has been written.
    */
-  public Future<Pipeline> readJsonFile(String absolutePath) {
-    return readFile(JSON_OBJECT_MAPPER, absolutePath);
+  public Future<Pipeline> readJsonFile(RequestContext requestContext, String absolutePath) {
+    return readFile(JSON_OBJECT_MAPPER, requestContext, absolutePath);
   }
   
   /**
    * Read a {@link Pipeline} from a file containing YAML.
+   * @param requestContext The context in which this request is being made.
    * @param absolutePath the path to the file that is to be read.
    * @return A Future that will be completed with the {@link Pipeline} definition when the file has been written.
    */
-  public Future<Pipeline> readYamlFile(String absolutePath) {
-    return readFile(YAML_OBJECT_MAPPER, absolutePath);
+  public Future<Pipeline> readYamlFile(RequestContext requestContext, String absolutePath) {
+    return readFile(YAML_OBJECT_MAPPER, requestContext, absolutePath);
   }
   
   private Future<Void> writeFile(ObjectMapper mapper, String absolutePath, Pipeline pipeline) {
@@ -457,10 +461,11 @@ public final class PipelineDefnLoader {
     return writeFile(YAML_OBJECT_MAPPER, absolutePath, pipeline);
   }
   
-  private Future<Pipeline> readPipeline(DirCacheTree.File file, ObjectMapper mapper) {
+  private Future<Pipeline> readPipeline(RequestContext requestContext, DirCacheTree.File file, ObjectMapper mapper) {
     return pipelineCache.get(file, buffer -> {
             try {
               byte[] bytes = buffer.getBytes();
+              PROBLEM_HANDLER.setRequestContext(requestContext);
               Pipeline pipeline = mapper.readValue(bytes, Pipeline.class);
               pipeline.setSha256(Hashing.sha256().hashBytes(bytes).toString());
               return pipeline;
@@ -496,6 +501,7 @@ public final class PipelineDefnLoader {
       try {
         String config = sw.toString();
         Log.decorate(logger.atTrace(), requestContext).log("Template evaluated as: {} using {}", config, requestContext);
+        PROBLEM_HANDLER.setRequestContext(requestContext);
         Pipeline pipeline = mapper.readValue(config, Pipeline.class);
         pipeline.setSha256(Hashing.sha256().hashString(config, StandardCharsets.UTF_8).toString());
         return Future.succeededFuture(pipeline);
@@ -563,9 +569,9 @@ public final class PipelineDefnLoader {
   private Future<PipelineAndFile> readPipelineFromFile(DirCacheTree.File file, RequestContext requestContext) {
     Log.decorate(logger.atTrace(), requestContext).log("Reading pipeline {}", file);
     if (file.getName().endsWith(".json")) {
-      return readPipeline(file, JSON_OBJECT_MAPPER).map(pipeline -> new PipelineAndFile(file, pipeline));
+      return readPipeline(requestContext, file, JSON_OBJECT_MAPPER).map(pipeline -> new PipelineAndFile(file, pipeline));
     } else if (file.getName().endsWith(".yaml") || file.getName().endsWith(".yml")) {
-      return readPipeline(file, YAML_OBJECT_MAPPER).map(pipeline -> new PipelineAndFile(file, pipeline));
+      return readPipeline(requestContext, file, YAML_OBJECT_MAPPER).map(pipeline -> new PipelineAndFile(file, pipeline));
     } else if (file.getName().endsWith(".json.vm")) {
       return readTemplate(file, JSON_OBJECT_MAPPER, requestContext).map(pipeline -> new PipelineAndFile(file, pipeline));
     } else if (file.getName().endsWith(".yaml.vm") || file.getName().endsWith(".yml.vm")) {

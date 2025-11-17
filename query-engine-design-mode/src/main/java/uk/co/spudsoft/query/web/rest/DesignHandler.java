@@ -923,7 +923,7 @@ public class DesignHandler {
       String fullPath = resolveToAbsolutePath(path);
 
       if (fullPath.endsWith(".json")) {
-        loader.readJsonFile(fullPath)
+        loader.readJsonFile(unauthedRequestContext, fullPath)
                 .onSuccess(pipeline -> {
                   response.resume(Response.ok(pipeline, MEDIA_TYPE_JSON).build());
                 })
@@ -932,7 +932,7 @@ public class DesignHandler {
                 })
                 ;
       } else if (fullPath.endsWith(".yaml")) {
-        loader.readYamlFile(fullPath)
+        loader.readYamlFile(unauthedRequestContext, fullPath)
                 .onSuccess(pipeline -> {
                   response.resume(Response.ok(pipeline, MEDIA_TYPE_JSON).build());
                 })

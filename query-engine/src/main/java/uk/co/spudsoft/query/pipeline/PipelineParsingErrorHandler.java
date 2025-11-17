@@ -29,6 +29,8 @@ import java.util.Collections;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * {@link com.fasterxml.jackson.databind.deser.DeserializationProblemHandler} that just reports any errors by WARN level log messages.
@@ -38,6 +40,16 @@ public class PipelineParsingErrorHandler extends DeserializationProblemHandler {
 
   private static final Logger logger = LoggerFactory.getLogger(PipelineParsingErrorHandler.class);
 
+  private final ThreadLocal<RequestContext> contextHolder = new ThreadLocal<>();
+
+  /**
+   * Store the RequestContext that is causing the subsequent mapping.
+   * @param requestContext the RequestContext that is causing the subsequent mapping.
+   */
+  public void setRequestContext(RequestContext requestContext) {
+    contextHolder.set(requestContext);
+  }
+
   /**
    * Constructor.
    */
@@ -46,13 +58,13 @@ public class PipelineParsingErrorHandler extends DeserializationProblemHandler {
 
   @Override
   public Object handleUnexpectedToken(DeserializationContext ctxt, JavaType targetType, JsonToken t, JsonParser p, String failureMsg) throws IOException {
-    logger.warn("Unexpected token: {} at {}: {}", targetType, buildLocation(ctxt.getParser()), failureMsg);
+    Log.decorate(logger.atWarn(), contextHolder.get()).log("Unexpected token: {} at {}: {}", targetType, buildLocation(ctxt.getParser()), failureMsg);
     return null;
   }
 
   @Override
   public boolean handleUnknownProperty(DeserializationContext ctxt, JsonParser p, JsonDeserializer<?> deserializer, Object beanOrClass, String propertyName) throws IOException {
-    logger.warn("Unknown property: {} at {} with value {}", propertyName, buildLocation(ctxt.getParser()), p.readValueAsTree());
+    Log.decorate(logger.atWarn(), contextHolder.get()).log("Unknown property: {} at {} with value {}", propertyName, buildLocation(ctxt.getParser()), p.readValueAsTree());
     return true; 
   }
 
