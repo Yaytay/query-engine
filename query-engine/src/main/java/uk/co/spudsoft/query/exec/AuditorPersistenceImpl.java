@@ -1114,6 +1114,9 @@ public class AuditorPersistenceImpl implements Auditor {
 
   @Override
   public Future<Void> recordAuditLogMessages(RequestContext requestContext, List<AuditLogMessage> logMessages) {
+    if (logMessages.isEmpty()) {
+      return Future.succeededFuture();
+    }
     return jdbcHelper.runSqlUpdate("recordAuditLogMessages", SqlTemplate.RECORD_LOG_MESSAGE.sql(), ps -> {
       Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
       int idx = 0;
