@@ -132,7 +132,10 @@ public class OpenApiSchemaIT {
       }
       JsonObject props = schema.getJsonObject("properties");
       if (schema.containsKey("allOf")) {
-        props = schema.getJsonArray("allOf").getJsonObject(1).getJsonObject("properties");
+        JsonArray allOf = schema.getJsonArray("allOf");
+        if (allOf.size() > 1) {
+          props = allOf.getJsonObject(1).getJsonObject("properties");
+        }
       }
       if (props != null) {
         for (Iterator<Entry<String,Object>> iter = props.iterator(); iter.hasNext(); ) {
@@ -296,20 +299,18 @@ public class OpenApiSchemaIT {
          if (allOf == null || allOf.isEmpty()) {
            return name + " has no type or allOf field";
          } else {
-           if (allOf.size() != 2) {
-             return name + " has allOf array with " + allOf.size() + " values";
-           }
            if (!allOf.getJsonObject(0).containsKey("$ref")) {
              return name + " has allOf array with first element that does not have a \"$ref\" field";
            }
-           type = allOf.getJsonObject(1).getString("type");
-           if (Strings.isNullOrEmpty(type)) {
-             return name + " has allOf array with select element that does not have a \"type\" field";
+           if (allOf.size() > 1) {
+             type = allOf.getJsonObject(1).getString("type");
+             if (Strings.isNullOrEmpty(type)) {
+               return name + " has allOf array with select element that does not have a \"type\" field";
+             }
            }
          }
-       }
-       if (!"object".equals(type)) {
-         return name + " is a top level schema type that is not an object";
+       } else if (!"object".equals(type)) {
+         return name + " is a top level schema type that is not an object (being " + type + ")";
        }
     } else {
       // Properties must all have a type or a $ref

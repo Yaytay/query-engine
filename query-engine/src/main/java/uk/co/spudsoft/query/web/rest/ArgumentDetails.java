@@ -248,6 +248,7 @@ public final class ArgumentDetails {
                         """
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           , type = "boolean"
+          , types = { "boolean" }
           , defaultValue = "false"          
           )
   public boolean isOptional() {
@@ -272,6 +273,7 @@ public final class ArgumentDetails {
                         """
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           , type = "boolean"
+          , types = { "boolean" }
           , defaultValue = "false"
           )
   public boolean isMultiValued() {
@@ -296,6 +298,7 @@ public final class ArgumentDetails {
                         """
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           , type = "boolean"
+          , types = { "boolean" }
           , defaultValue = "false"
           )
   public boolean isIgnored() {
@@ -330,6 +333,7 @@ public final class ArgumentDetails {
                         """
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           , type = "boolean"
+          , types = { "boolean" }
           , defaultValue = "true"
           )
   public boolean isValidate() {

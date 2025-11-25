@@ -14,4 +14,11 @@
     <packageUrl regex="true">^pkg:maven/io\.vertx/vertx-mysql-client@.*$</packageUrl>
     <cpe>cpe:/a:mysql:mysql</cpe>
   </suppress>
+  <suppress>
+    <notes><![CDATA[
+   testcontainers-postgresql is being picked up as a very old version of postgres.  The version actually used is defined at ServerProviderPostgreSQL.PGSQL_IMAGE_NAME, and it's only used in integration tests.
+   ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org.testcontainers/testcontainers-postgresql@.*$</packageUrl>
+    <cpe>cpe:/a:postgresql:postgresql</cpe>
+  </suppress>
 </suppressions>
