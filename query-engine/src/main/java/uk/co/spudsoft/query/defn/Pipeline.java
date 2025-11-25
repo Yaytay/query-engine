@@ -409,6 +409,7 @@ public final class Pipeline extends SourcePipeline {
    */
   @Schema(
           type = "object"
+          , types = { "object" }
           , description = """
                           <P>
                           The endpoints used by the sources in the pipeline.

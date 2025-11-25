@@ -250,18 +250,32 @@ public class Argument {
 
   /**
    * Return true if the argument is optional.
-   * Optional arguments will be considered to have their default value, if the default value is not set they will be null.
+   * 
+   * If set to false the pipeline will fail if the argument is not supplied.
+   * 
+   * Declaring mandatory arguments to not be optional results in a better user experience when the users fail to provide it.
+   * 
+   * The hidden and optional values should not both be set to true at the same time - optional arguments can be provided, hidden ones cannot.
+   * 
+   * Optional arguments will be considered to have their default value if they are not provided.
+   * 
    * @return true if the argument is optional.
    */
   @Schema(description = """
-                        <P>If set to false the pipeline will fail if the argument is not supplied.</P>
+                        <P>
+                        If set to false the pipeline will fail if the argument is not supplied.
+                        </P>
                         <P>
                         Declaring mandatory arguments to not be optional results in a better user experience when
                         the users fail to provide it.
                         </P>
+                        <P>
+                        The hidden and optional values should not both be set to true at the same time - optional arguments can be provided, hidden ones cannot.
+                        </P>
                         """
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           , type = "boolean"
+          , types = { "boolean" }
           , defaultValue = "false"          
           )
   public boolean isOptional() {
@@ -270,19 +284,26 @@ public class Argument {
 
   /**
    * Return true if the argument is hidden.
+   * 
    * Hidden arguments will not be presented in the UI and cannot be set via query string parameters.
    * The purpose of hidden arguments is to use the defaultValueExpression to present dynamic data to the query.
+   * 
+   * The hidden and optional values should not both be set to true at the same time - optional arguments can be provided, hidden ones cannot.
    * @return true if the argument is hidden.
    */
   @Schema(description = """
-                        <P>If set to true the pipeline UI will not show this argument and the pipeline will fail if the argument is supplied.</P>
                         <P>
+                        If set to true the pipeline UI will not show this argument and the pipeline will fail if the argument is supplied.
+                        </P><P>
                         The purpose of hidden arguments is to use the defaultValueExpression to present dynamic data to the query.
                         Suggested uses include dynamic limits on a query or values extracted from the token.
+                        </P><P>
+                        The hidden and optional values should not both be set to true at the same time - optional arguments can be provided, hidden ones cannot.
                         </P>
                         """
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           , type = "boolean"
+          , types = { "boolean" }
           , defaultValue = "false"          
           )
   public boolean isHidden() {
@@ -307,6 +328,7 @@ public class Argument {
                         """
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           , type = "boolean"
+          , types = { "boolean" }
           , defaultValue = "false"
           )
   public boolean isMultiValued() {
@@ -331,6 +353,7 @@ public class Argument {
                         """
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           , type = "boolean"
+          , types = { "boolean" }
           , defaultValue = "false"
           )
   public boolean isIgnored() {
@@ -365,6 +388,7 @@ public class Argument {
                         """
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           , type = "boolean"
+          , types = { "boolean" }
           , defaultValue = "true"
           )
   public boolean isValidate() {
@@ -389,6 +413,7 @@ public class Argument {
                         """
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
           , type = "boolean"
+          , types = { "boolean" }
           , defaultValue = "false"
           )
   public boolean isEmptyIsAbsent() {
