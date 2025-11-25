@@ -22,11 +22,10 @@ import io.vertx.core.Vertx;
 import io.vertx.mysqlclient.MySQLConnectOptions;
 import java.io.File;
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.mysql.MySQLContainer;
 import uk.co.spudsoft.query.main.sample.SampleDataLoader;
 import uk.co.spudsoft.query.main.sample.SampleDataLoaderMySQL;
 import static uk.co.spudsoft.query.testcontainers.AbstractServerProvider.ROOT_PASSWORD;
@@ -43,7 +42,7 @@ public class ServerProviderMySQL extends AbstractServerProvider implements Serve
   public static final String MYSQL_IMAGE_NAME = "mysql:8.3";
 
   private static final Object lock = new Object();
-  private static MySQLContainer<?> mysqlserver;
+  private static MySQLContainer mysqlserver;
   private static int port;
   
   @Override
@@ -115,7 +114,7 @@ public class ServerProviderMySQL extends AbstractServerProvider implements Serve
     return "`";
   }
     
-  public MySQLContainer<?> getContainer() {
+  public MySQLContainer getContainer() {
     synchronized (lock) {
       long start = System.currentTimeMillis();
       
@@ -125,7 +124,7 @@ public class ServerProviderMySQL extends AbstractServerProvider implements Serve
         return null;
       } 
       if (mysqlserver == null) {
-        mysqlserver = new MySQLContainer<>(MYSQL_IMAGE_NAME)
+        mysqlserver = new MySQLContainer(MYSQL_IMAGE_NAME)
                 .withUsername("user")
                 .withPassword(ROOT_PASSWORD)
                 .withExposedPorts(3306)

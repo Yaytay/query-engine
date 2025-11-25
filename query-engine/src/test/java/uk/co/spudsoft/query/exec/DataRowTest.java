@@ -17,7 +17,6 @@
 package uk.co.spudsoft.query.exec;
 
 import com.google.common.collect.ImmutableMap;
-import io.vertx.core.json.JsonObject;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -119,48 +118,4 @@ public class DataRowTest {
     assertEquals("{text=hello}", row.get("convertedStringValue"));
   }
 
-  @Test
-  public void testGetMap() {
-  }
-
-  @org.junit.Test
-  public void testCreate_Types() {
-  }
-
-  @org.junit.Test
-  public void testPutTypeIfAbsent() {
-  }
-
-  @org.junit.Test
-  public void testCreate_List() {
-  }
-
-  @org.junit.Test
-  public void testIsEmpty() {
-  }
-
-  @org.junit.Test
-  public void testToString() {
-  }
-
-  @org.junit.Test
-  public void testGetType() {
-  }
-
-  @org.junit.Test
-  public void testSize() {
-  }
-
-  @org.junit.Test
-  public void testPut_String_Object() {
-  }
-
-  @org.junit.Test
-  public void testPut_3args() {
-  }
-
-  @org.junit.Test
-  public void testContainsKey() {
-  }
-  
 }

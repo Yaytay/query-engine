@@ -28,7 +28,8 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testcontainers.containers.MSSQLServerContainer;
+import org.testcontainers.containers.JdbcDatabaseContainer;
+import org.testcontainers.mssqlserver.MSSQLServerContainer;
 import uk.co.spudsoft.query.exec.JdbcHelper;
 import uk.co.spudsoft.query.main.Credentials;
 import uk.co.spudsoft.query.main.DataSourceConfig;
@@ -47,7 +48,7 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
   public static final String MSSQL_IMAGE_NAME = "mcr.microsoft.com/mssql/server:2022-latest";
 
   private static final Object lock = new Object();
-  private static MSSQLServerContainer<?> mssqlserver;
+  private static JdbcDatabaseContainer<?> mssqlserver;
   private static int port;
 
   @Override
@@ -117,7 +118,7 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
     return port;
   }
 
-  public MSSQLServerContainer<?> getContainer() {
+  public JdbcDatabaseContainer<?> getContainer() {
     synchronized (lock) {
       long start = System.currentTimeMillis();
 
@@ -128,7 +129,7 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
       }
 
       if (mssqlserver == null) {
-        mssqlserver = new MSSQLServerContainer<>(MSSQL_IMAGE_NAME)
+        mssqlserver = new MSSQLServerContainer(MSSQL_IMAGE_NAME)
                 .withPassword(ROOT_PASSWORD)
                 .withEnv("ACCEPT_EULA", "Y")
                 .withExposedPorts(1433)

@@ -25,7 +25,7 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import uk.co.spudsoft.query.main.sample.SampleDataLoader;
 import uk.co.spudsoft.query.main.sample.SampleDataLoaderPostgreSQL;
 import static uk.co.spudsoft.query.testcontainers.AbstractServerProvider.ROOT_PASSWORD;
@@ -42,7 +42,7 @@ public class ServerProviderPostgreSQL extends AbstractServerProvider implements 
   public static final String PGSQL_IMAGE_NAME = "postgres:16.2-alpine";
 
   private static final Object lock = new Object();
-  private static PostgreSQLContainer<?> pgsqlserver;
+  private static PostgreSQLContainer pgsqlserver;
   private static int port;
   
   @Override
@@ -102,7 +102,7 @@ public class ServerProviderPostgreSQL extends AbstractServerProvider implements 
     return port;
   }
     
-  public PostgreSQLContainer<?> getContainer() {
+  public PostgreSQLContainer getContainer() {
     synchronized (lock) {
       long start = System.currentTimeMillis();
       
@@ -113,7 +113,7 @@ public class ServerProviderPostgreSQL extends AbstractServerProvider implements 
       } 
       
       if (pgsqlserver == null) {
-        pgsqlserver = new PostgreSQLContainer<>(PGSQL_IMAGE_NAME)
+        pgsqlserver = new PostgreSQLContainer(PGSQL_IMAGE_NAME)
                 .withPassword(ROOT_PASSWORD)
                 .withUsername("postgres")
                 .withExposedPorts(5432)

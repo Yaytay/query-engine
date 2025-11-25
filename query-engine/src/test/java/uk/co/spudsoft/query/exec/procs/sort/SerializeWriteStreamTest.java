@@ -30,7 +30,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import org.junit.AfterClass;
+import org.junit.jupiter.api.AfterAll;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.MethodOrderer;
@@ -146,7 +146,7 @@ public class SerializeWriteStreamTest {
     }
   }
   
-  @AfterClass
+  @AfterAll
   public void cleanup(Vertx vertx) {
     vertx.fileSystem().delete(outputFile)
             .onFailure(ex -> {

@@ -29,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.util.Comparator;
+import org.apache.commons.io.FileUtils;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,11 +42,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testcontainers.shaded.org.apache.commons.io.FileUtils;
-import static uk.co.spudsoft.query.main.TracingSampler.alwaysOff;
-import static uk.co.spudsoft.query.main.TracingSampler.alwaysOn;
-import static uk.co.spudsoft.query.main.TracingSampler.parent;
-import static uk.co.spudsoft.query.main.TracingSampler.ratio;
 
 /**
  *
