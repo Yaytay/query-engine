@@ -40,6 +40,7 @@ import uk.co.spudsoft.query.exec.SourceInstance;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
+import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
@@ -53,7 +54,7 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
 
   @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(ProcessorDynamicFieldInstance.class);
+  private static final Logger slf4jlogger = LoggerFactory.getLogger(ProcessorDynamicFieldInstance.class);
 
   private final ProcessorDynamicField definition;
 
@@ -91,7 +92,7 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
    * @param name the name of this processor, used in tracking and logging.
    */
   public ProcessorDynamicFieldInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, ProcessorDynamicField definition, String name) {
-    super(logger, vertx, meterRegistry, auditor, pipelineContext, name, definition.getParentIdColumns(), definition.getValuesParentIdColumns(), definition.isInnerJoin());
+    super(slf4jlogger, vertx, meterRegistry, auditor, pipelineContext, name, definition.getParentIdColumns(), definition.getValuesParentIdColumns(), definition.isInnerJoin());
     this.definition = definition;
     if (Strings.isNullOrEmpty(definition.getFieldValueColumnName())) {
       this.fieldValueColumnNames = Collections.emptyList();
@@ -132,37 +133,37 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
               for (FieldDefn field : fields) {
                 types.putIfAbsent(field.key, field.name, field.type);
               }
-              if (logger.isTraceEnabled()) {
-                logger.trace("Defined dynamic fields: {}", Json.encode(fields));
-                logger.debug("Dynamic field types: {}", types);
+              if (slf4jlogger.isTraceEnabled()) {
+                logger.trace().log("Defined dynamic fields: {}", Json.encode(fields));
+                logger.debug().log("Dynamic field types: {}", types);
               }
               return initializeChildStream(executor, pipeline, "fieldValues", definition.getFieldValues()).map(rswt -> rswt.getStream());
             });
   }
 
-  static FieldDefn rowToFieldDefn(ProcessorDynamicField definition, DataRow row) {
+  FieldDefn rowToFieldDefn(ProcessorDynamicField definition, DataRow row) {
     if (row.isEmpty()) {
       return null;
     } else {
       Object id = row.get(definition.getFieldIdColumn());
       if (id == null) {
-        logger.debug("Skipping field defn row ({}) with no id", row.toString());
+        logger.debug().log("Skipping field defn row ({}) with no id", row.toString());
         return null;
       }
       Object fieldNameObject = row.get(definition.getFieldNameColumn());
       if (fieldNameObject == null) {
-        logger.debug("Skipping field defn row ({}) because field name column {} is null", row.toString(), definition.getFieldNameColumn());
+        logger.debug().log("Skipping field defn row ({}) because field name column {} is null", row.toString(), definition.getFieldNameColumn());
         return null;
       }
       String fieldNameString = (fieldNameObject instanceof String s) ? s : fieldNameObject.toString();
       if (Strings.isNullOrEmpty(fieldNameString)) {
-        logger.debug("Skipping field defn row ({}) with no name", row.toString());
+        logger.debug().log("Skipping field defn row ({}) with no name", row.toString());
         return null;
       }
       String key = definition.isUseCaseInsensitiveFieldNames() ? fieldNameString.toLowerCase(Locale.ROOT) : fieldNameString;
       Object fieldTypeObject = row.get(definition.getFieldTypeColumn());
       if (fieldTypeObject == null) {
-        logger.debug("Skipping field defn row ({}) because field type column {} is null", row.toString(), definition.getFieldTypeColumn());
+        logger.debug().log("Skipping field defn row ({}) because field type column {} is null", row.toString(), definition.getFieldTypeColumn());
         return null;
       }
       String fieldTypeString = (fieldTypeObject instanceof String s) ? s : fieldTypeObject.toString();
@@ -170,7 +171,7 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
       try {
         type = DataType.valueOf(fieldTypeString);
       } catch (Throwable ex) {
-        logger.debug("Skipping field defn row ({}) because type ({}) is not understood", row.toString(), fieldTypeString);
+        logger.debug().log("Skipping field defn row ({}) because type ({}) is not understood", row.toString(), fieldTypeString);
         return null;
       }
       Comparable<?> valueColumn = row.get(definition.getFieldColumnColumn());
@@ -181,9 +182,9 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
 
   @Override
   DataRow processChildren(DataRow parentRow, List<DataRow> childRows) {
-    logger.trace("Got child rows: {}", childRows);
+    logger.trace().log("Got child rows: {}", childRows);
     if (parentRow == null) {
-      logger.warn("No parentRow matching {}", childRows);
+      logger.warn().log("No parentRow matching {}", childRows);
       return null;
     }
     for (FieldDefn fieldDefn : fields) {
@@ -219,7 +220,7 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
         }
       }
     }
-    logger.trace("Resulting row: {}", parentRow);
+    logger.trace().log("Resulting row: {}", parentRow);
     return parentRow;
   }
 
@@ -227,7 +228,7 @@ public class ProcessorDynamicFieldInstance extends AbstractJoiningProcessor {
     try {
       value = fieldDefn.type.cast(pipelineContext, value);
     } catch (Throwable ex) {
-      logger.warn("Failed to cast field {} with value {} ({}) to {}", fieldDefn.key, value, value.getClass(), fieldDefn.type);
+      logger.warn().log("Failed to cast field {} with value {} ({}) to {}", fieldDefn.key, value, value.getClass(), fieldDefn.type);
     }
     return value;
   }

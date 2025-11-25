@@ -39,7 +39,6 @@ import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.procs.AbstractProcessor;
 import uk.co.spudsoft.query.exec.procs.query.FilteringStream;
-import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
@@ -50,7 +49,7 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 public class ProcessorExpressionInstance extends AbstractProcessor {
 
   @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(ProcessorScriptInstance.class);
+  private static final Logger slf4jlogger = LoggerFactory.getLogger(ProcessorScriptInstance.class);
 
   private static final ZoneId UTC = ZoneId.of("UTC");
 
@@ -75,7 +74,7 @@ public class ProcessorExpressionInstance extends AbstractProcessor {
    * @param name the name of this processor, used in tracking and logging.
    */
   public ProcessorExpressionInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, ProcessorExpression definition, String name) {
-    super(vertx, meterRegistry, auditor, pipelineContext, name);
+    super(slf4jlogger, vertx, meterRegistry, auditor, pipelineContext, name);
     this.definition = definition;
     this.arguments = ImmutableCollectionTools.copy(pipelineContext.getRequestContext() == null ? null : pipelineContext.getRequestContext().getArguments());
   }
@@ -91,7 +90,7 @@ public class ProcessorExpressionInstance extends AbstractProcessor {
       typedResult = definition.getFieldType().cast(pipelineContext, result);
       data.put(definition.getField(), definition.getFieldType(), typedResult);
     } catch (Throwable ex) {
-      Log.decorate(logger.atWarn(), pipelineContext).log("Expression evaluation resulted in {} ({}): ", result, result.getClass(), ex);
+      logger.warn().log("Expression evaluation resulted in {} ({}): ", result, result.getClass(), ex);
     }
     return data;
   }

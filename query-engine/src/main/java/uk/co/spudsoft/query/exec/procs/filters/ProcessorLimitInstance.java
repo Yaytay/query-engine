@@ -44,7 +44,7 @@ import uk.co.spudsoft.query.exec.procs.AbstractProcessor;
 public class ProcessorLimitInstance extends AbstractProcessor {
 
   @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(ProcessorLimitInstance.class);
+  private static final Logger slf4jlogger = LoggerFactory.getLogger(ProcessorLimitInstance.class);
 
   private final ProcessorLimit definition;
   private LimitingStream<DataRow> stream; 
@@ -61,7 +61,7 @@ public class ProcessorLimitInstance extends AbstractProcessor {
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
   public ProcessorLimitInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, ProcessorLimit definition, String name) {
-    super(vertx, meterRegistry, auditor, pipelineContext, name);
+    super(slf4jlogger, vertx, meterRegistry, auditor, pipelineContext, name);
     this.definition = definition;
   }
 

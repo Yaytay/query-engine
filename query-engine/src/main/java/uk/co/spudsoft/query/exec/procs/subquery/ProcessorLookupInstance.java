@@ -58,7 +58,7 @@ import uk.co.spudsoft.query.exec.procs.AbstractProcessor;
 public class ProcessorLookupInstance extends AbstractProcessor {
 
   @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(ProcessorLookupInstance.class);
+  private static final Logger slf4jlogger = LoggerFactory.getLogger(ProcessorLookupInstance.class);
 
   private final ProcessorLookup definition;
   private final Map<Comparable<?>, Comparable<?>> map = new HashMap<>();
@@ -79,7 +79,7 @@ public class ProcessorLookupInstance extends AbstractProcessor {
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
   public ProcessorLookupInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, ProcessorLookup definition, String name) {
-    super(vertx, meterRegistry, auditor, pipelineContext, name);
+    super(slf4jlogger, vertx, meterRegistry, auditor, pipelineContext, name);
     this.definition = definition;
   }
 
@@ -120,7 +120,7 @@ public class ProcessorLookupInstance extends AbstractProcessor {
         if (cond.evaluate(pipelineContext, null)) {
           includedFields.add(field.getKeyField());
         } else {
-          logger.info("Field {} excluded by condition {}", field.getKeyField(), field.getCondition().getExpression());
+          logger.info().log("Field {} excluded by condition {}", field.getKeyField(), field.getCondition().getExpression());
         }
       }
     }
@@ -147,7 +147,7 @@ public class ProcessorLookupInstance extends AbstractProcessor {
               for (KVP kvp : collated) {
                 map.put(kvp.key, kvp.value);
               }
-              logger.info("{} Loaded {} mappings in {}s", getName(), map.size(), ((System.currentTimeMillis() - start) / 1000.0));
+              logger.info().log("{} Loaded {} mappings in {}s", getName(), map.size(), ((System.currentTimeMillis() - start) / 1000.0));
               for (ProcessorLookupField field : definition.getLookupFields()) {
                 if (includedFields.contains(field.getKeyField())) {
                   input.getTypes().putIfAbsent(field.getValueField(), outputFieldType);

@@ -38,12 +38,12 @@ import uk.co.spudsoft.query.exec.Types;
  */
 public class AbstractJoiningProcessorTest {
   
-  private static final Logger logger = LoggerFactory.getLogger(AbstractJoiningProcessorTest.class);
+  private static final Logger slf4jlogger = LoggerFactory.getLogger(AbstractJoiningProcessorTest.class);
   
   private static final class TestClass extends AbstractJoiningProcessor {
 
     public TestClass(List<String> parentIdColumns, List<String> childIdColumns) {
-      super(logger, null, null, null, null, null, parentIdColumns, childIdColumns, true);
+      super(slf4jlogger, null, null, null, null, null, parentIdColumns, childIdColumns, true);
     }
 
     @Override

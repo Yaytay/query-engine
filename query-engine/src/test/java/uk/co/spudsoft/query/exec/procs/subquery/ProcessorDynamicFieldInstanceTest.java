@@ -38,7 +38,6 @@ import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.procs.subquery.ProcessorDynamicFieldInstance.FieldDefn;
-import static uk.co.spudsoft.query.exec.procs.subquery.ProcessorDynamicFieldInstance.rowToFieldDefn;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
@@ -72,6 +71,10 @@ public class ProcessorDynamicFieldInstanceTest {
       this.fields = ImmutableCollectionTools.copy(fields);
     }
 
+    @Override
+    FieldDefn rowToFieldDefn(ProcessorDynamicField definition, DataRow row) {
+      return super.rowToFieldDefn(definition, row); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
+    }
   }
   
   @Test
@@ -294,9 +297,20 @@ public class ProcessorDynamicFieldInstanceTest {
             .fieldColumnColumn(column)
             .build();
     
+    RequestContext requestContext = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    PipelineContext pipelineContext = new PipelineContext("test", requestContext);
+    
+    ProcessorDynamicFieldInstance instance = new ProcessorDynamicFieldInstanceTester(null, null, null, pipelineContext, def, "P0-DynamicField",
+             Arrays.asList(
+                    new FieldDefn(0, "field", "Field", DataType.String, "stringValue"),
+                     new FieldDefn(1, "field", "field", DataType.String, "stringValue")
+            )
+    );    
+    
+    
     // 1. Empty row
     DataRow r = DataRow.EMPTY_ROW;
-    assertNull(ProcessorDynamicFieldInstance.rowToFieldDefn(def, r), "Empty row should return null");
+    assertNull(instance.rowToFieldDefn(def, r), "Empty row should return null");
 
     Types types = new Types();
     
@@ -304,33 +318,33 @@ public class ProcessorDynamicFieldInstanceTest {
     r = DataRow.create(types);
     r.put(name, "n");
     r.put(type, "STRING");
-    assertNull(ProcessorDynamicFieldInstance.rowToFieldDefn(def, r), "Missing id should return null");
+    assertNull(instance.rowToFieldDefn(def, r), "Missing id should return null");
 
     // 3. Missing name
     r = DataRow.create(types);
     r.put(id, 123);
     r.put(type, "STRING");
-    assertNull(ProcessorDynamicFieldInstance.rowToFieldDefn(def, r), "Missing name should return null");
+    assertNull(instance.rowToFieldDefn(def, r), "Missing name should return null");
 
     // 4. Empty name
     r = DataRow.create(types);
     r.put(id, 123);
     r.put(name, "");
     r.put(type, "STRING");
-    assertNull(ProcessorDynamicFieldInstance.rowToFieldDefn(def, r), "Empty name should return null");
+    assertNull(instance.rowToFieldDefn(def, r), "Empty name should return null");
 
     // 5. Missing type
     r = DataRow.create(types);
     r.put(id, 123);
     r.put(name, "abc");
-    assertNull(ProcessorDynamicFieldInstance.rowToFieldDefn(def, r), "Missing type should return null");
+    assertNull(instance.rowToFieldDefn(def, r), "Missing type should return null");
 
     // 6. Invalid type string
     r = DataRow.create(types);
     r.put(id, 123);
     r.put(name, "abc");
     r.put(type, "NOPE");
-    assertNull(ProcessorDynamicFieldInstance.rowToFieldDefn(def, r), "Unknown type should return null");
+    assertNull(instance.rowToFieldDefn(def, r), "Unknown type should return null");
 
     // 7. Valid type: value as string
     r = DataRow.create(types);
@@ -338,7 +352,7 @@ public class ProcessorDynamicFieldInstanceTest {
     r.put(name, "Field1");
     r.put(type, "String");
     r.put(column, "C1");
-    FieldDefn f = rowToFieldDefn(def, r);
+    FieldDefn f = instance.rowToFieldDefn(def, r);
     assertNotNull(f);
     assertEquals("id1", f.id);
     assertEquals("Field1", f.key);
@@ -351,9 +365,9 @@ public class ProcessorDynamicFieldInstanceTest {
     r.put(id, "id2");
     r.put(name, "Test");
     r.put(type, DataType.Integer.name()); // type as enum
-    assertNotNull(ProcessorDynamicFieldInstance.rowToFieldDefn(def, r));
-    assertEquals(DataType.Integer, rowToFieldDefn(def, r).type);
-    assertNull(ProcessorDynamicFieldInstance.rowToFieldDefn(def, r).column);
+    assertNotNull(instance.rowToFieldDefn(def, r));
+    assertEquals(DataType.Integer, instance.rowToFieldDefn(def, r).type);
+    assertNull(instance.rowToFieldDefn(def, r).column);
 
     // 9. Case insensitive name
     ProcessorDynamicField defCase = ProcessorDynamicField.builder()
@@ -367,7 +381,7 @@ public class ProcessorDynamicFieldInstanceTest {
     r.put(id, "id3");
     r.put(name, "CamelCase");
     r.put(type, "Float");
-    FieldDefn f2 = rowToFieldDefn(defCase, r);
+    FieldDefn f2 = instance.rowToFieldDefn(defCase, r);
     assertEquals("camelcase", f2.key, "Key should be lowercase when case-insensitive");
 
     // 10. Name is number but should still work (converted via Objects.toString)
@@ -375,7 +389,7 @@ public class ProcessorDynamicFieldInstanceTest {
     r.put(id, "id4");
     r.put(name, 1234);
     r.put(type, "String");
-    FieldDefn f3 = rowToFieldDefn(def, r);
+    FieldDefn f3 = instance.rowToFieldDefn(def, r);
     assertEquals("1234", f3.key);
     assertEquals("1234", f3.name);
   }

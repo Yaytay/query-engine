@@ -50,7 +50,7 @@ import uk.co.spudsoft.query.exec.procs.AbstractProcessor;
 public class ProcessorMapInstance extends AbstractProcessor {
 
   @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(ProcessorMapInstance.class);
+  private static final Logger slf4jlogger = LoggerFactory.getLogger(ProcessorMapInstance.class);
 
   private final ProcessorMap definition;
   private MappingStream<DataRow, DataRow> stream;
@@ -70,7 +70,7 @@ public class ProcessorMapInstance extends AbstractProcessor {
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
   public ProcessorMapInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, ProcessorMap definition, String name) {
-    super(vertx, meterRegistry, auditor, pipelineContext, name);
+    super(slf4jlogger, vertx, meterRegistry, auditor, pipelineContext, name);
     this.definition = definition;
     ImmutableMap.Builder<String, String> builder = ImmutableMap.<String, String>builder();
     for (ProcessorMapLabel relabel : definition.getRelabels()) {

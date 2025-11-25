@@ -68,7 +68,7 @@ import uk.co.spudsoft.query.logging.Log;
 public class ProcessorSortInstance extends AbstractProcessor {
 
   @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(ProcessorSortInstance.class);
+  private static final Logger slf4jlogger = LoggerFactory.getLogger(ProcessorSortInstance.class);
 
   private static String tempDir = System.getProperty("java.io.tmpdir");
   private static int memoryLimit = 1 << 22; // 4MB
@@ -90,7 +90,7 @@ public class ProcessorSortInstance extends AbstractProcessor {
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
   public ProcessorSortInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, ProcessorSort definition, String name) {
-    super(vertx, meterRegistry, auditor, pipelineContext, name);
+    super(slf4jlogger, vertx, meterRegistry, auditor, pipelineContext, name);
     this.definition = definition;
   }
 
@@ -168,7 +168,7 @@ public class ProcessorSortInstance extends AbstractProcessor {
       }
       byte[] result = baos.toByteArray();
       if (result.length > sizeGuess) {
-        Log.decorate(logger.atWarn(), pipelineContext).log("Guessed at {} bytes, but was actually {} bytes", sizeGuess, result.length);
+        logger.warn().log("Guessed at {} bytes, but was actually {} bytes", sizeGuess, result.length);
       }
       return result;
     }
@@ -233,7 +233,7 @@ public class ProcessorSortInstance extends AbstractProcessor {
         }
       }
     } catch (ClassNotFoundException ex) {
-      Log.decorate(logger.atError(), pipelineContext).log("ObjectInputStream threw ClassNotFoundException, which shouldn't happen: ", ex);
+      logger.error().log("ObjectInputStream threw ClassNotFoundException, which shouldn't happen: ", ex);
       throw new IOException("Unable to deserialize stream", ex);
     }
     return result;

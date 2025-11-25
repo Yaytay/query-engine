@@ -51,7 +51,7 @@ import uk.co.spudsoft.query.exec.context.PipelineContext;
  public class ProcessorGroupConcatInstance extends AbstractJoiningProcessor {
 
   @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(ProcessorGroupConcatInstance.class);
+  private static final Logger slf4jlogger = LoggerFactory.getLogger(ProcessorGroupConcatInstance.class);
 
   private final ProcessorGroupConcat definition;
   private final Set<String> childIdColumns;
@@ -67,7 +67,7 @@ import uk.co.spudsoft.query.exec.context.PipelineContext;
    * @param name the name of this processor, used in tracking and logging.
    */
   public ProcessorGroupConcatInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, ProcessorGroupConcat definition, String name) {
-    super(logger, vertx, meterRegistry, auditor, pipelineContext, name, definition.getParentIdColumns(), definition.getChildIdColumns(), definition.isInnerJoin());
+    super(slf4jlogger, vertx, meterRegistry, auditor, pipelineContext, name, definition.getParentIdColumns(), definition.getChildIdColumns(), definition.isInnerJoin());
     this.definition = definition;
     this.childIdColumns = ImmutableSet.copyOf(definition.getChildIdColumns());
   }
@@ -103,7 +103,7 @@ import uk.co.spudsoft.query.exec.context.PipelineContext;
 
   @Override
   protected DataRow processChildren(DataRow parentRow, List<DataRow> childRows) {
-    logger.trace("Got child rows: {}", childRows);
+    logger.trace().log("Got child rows: {}", childRows);
 
     /**
      * Three options:

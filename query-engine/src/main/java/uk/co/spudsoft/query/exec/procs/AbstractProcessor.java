@@ -18,10 +18,12 @@ package uk.co.spudsoft.query.exec.procs;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Vertx;
+import org.slf4j.Logger;
 import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * Base class for {@link ProcessorInstance} implementations.
@@ -29,6 +31,11 @@ import uk.co.spudsoft.query.exec.context.PipelineContext;
  */
 public abstract class AbstractProcessor implements ProcessorInstance {
 
+  /**
+   * The wrapped logger to use for any logging.
+   */
+  protected final Log logger;
+  
   /**
    * The Vert.x instance.
    */
@@ -64,6 +71,7 @@ public abstract class AbstractProcessor implements ProcessorInstance {
    * In both cases the name should already have any parent processor name prepended to it.
    * In this way, if processors are not explicitly named, the name used should be a full JsonPath to it.
    * 
+   * @param logger  The slf4j logger that should be used (so that log messages identify the child class).
    * @param vertx the Vert.x instance.
    * @param meterRegistry MeterRegistry for production of processor-specific metrics.
    * @param auditor The auditor that the source should use for recording details of the data accessed.
@@ -71,7 +79,8 @@ public abstract class AbstractProcessor implements ProcessorInstance {
 * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param name The name of the processor.
    */
-  protected AbstractProcessor(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, String name) {
+  protected AbstractProcessor(Logger logger, Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, String name) {
+    this.logger = new Log(logger, pipelineContext);
     this.vertx = vertx;
     this.meterRegistry = meterRegistry;
     this.auditor = auditor;

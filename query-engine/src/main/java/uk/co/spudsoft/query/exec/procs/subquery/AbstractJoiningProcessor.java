@@ -43,8 +43,6 @@ import uk.co.spudsoft.query.exec.procs.AbstractProcessor;
  */
 public abstract class AbstractJoiningProcessor extends AbstractProcessor {
 
-  private final Logger logger;
-
   private final List<String> parentIdColumns;
   private final List<String> childIdColumns;
   private final boolean innerJoin;
@@ -72,8 +70,7 @@ public abstract class AbstractJoiningProcessor extends AbstractProcessor {
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "None of the mutable values passed in to this class should be modified")
   public AbstractJoiningProcessor(Logger logger, Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, String name, List<String> parentIdColumns, List<String> childIdColumns, boolean innerJoin) {
-    super(vertx, meterRegistry, auditor, pipelineContext, name);
-    this.logger = logger;
+    super(logger, vertx, meterRegistry, auditor, pipelineContext, name);
     this.parentIdColumns = parentIdColumns;
     this.childIdColumns = childIdColumns;
     this.innerJoin = innerJoin;
@@ -143,14 +140,14 @@ public abstract class AbstractJoiningProcessor extends AbstractProcessor {
             try {
               parentKeyItem = target.cast(pipelineContext, parentKeyItem);
             } catch (Exception ex) {
-              logger.warn("parentKeyItem {}/{}:{} cannot be converted to {}", parentIdColumns.get(i), parentType, parentKeyItem, target);
+              logger.warn().log("parentKeyItem {}/{}:{} cannot be converted to {}", parentIdColumns.get(i), parentType, parentKeyItem, target);
             }
           }
           if (target != childType) {
             try {
               childKeyItem = target.cast(pipelineContext, childKeyItem);
             } catch (Exception ex) {
-              logger.warn("childKeyItem {}/{}:{} cannot be converted to {}", childIdColumns.get(i), childType, childKeyItem, target);
+              logger.warn().log("childKeyItem {}/{}:{} cannot be converted to {}", childIdColumns.get(i), childType, childKeyItem, target);
             }
           }
         }

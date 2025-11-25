@@ -58,7 +58,7 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 public final class ProcessorScriptInstance extends AbstractProcessor {
 
   @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(ProcessorScriptInstance.class);
+  private static final Logger slf4jlogger = LoggerFactory.getLogger(ProcessorScriptInstance.class);
 
   private static final ZoneId UTC = ZoneId.of("UTC");
 
@@ -87,14 +87,14 @@ public final class ProcessorScriptInstance extends AbstractProcessor {
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
   public ProcessorScriptInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, ProcessorScript definition, String name) {
-    super(vertx, meterRegistry, auditor, pipelineContext, name);
+    super(slf4jlogger, vertx, meterRegistry, auditor, pipelineContext, name);
     this.definition = definition;
   }
 
   private boolean runPredicate(DataRow data) {
     return runSource(engine, "predicate", definition.getLanguage(), predicateSource, data, (returnValue, row) -> {
-      Log.decorate(logger.atDebug(), pipelineContext).log("returnValue ({}): {}", nullableClass(returnValue), returnValue);
-      Log.decorate(logger.atDebug(), pipelineContext).log("row ({}): {}", nullableClass(row), row);
+      logger.debug().log("returnValue ({}): {}", nullableClass(returnValue), returnValue);
+      logger.debug().log("row ({}): {}", nullableClass(row), row);
       return returnValue.asBoolean();
     });
   }
@@ -109,8 +109,8 @@ public final class ProcessorScriptInstance extends AbstractProcessor {
 
   private DataRow runProcess(DataRow data) {
     return runSource(engine, "process", definition.getLanguage(), processSource, data, (returnValue, row) -> {
-      Log.decorate(logger.atDebug(), pipelineContext).log("returnValue ({}): {}", nullableClass(returnValue), returnValue);
-      Log.decorate(logger.atDebug(), pipelineContext).log("row ({}): {}", nullableClass(row), row);
+      logger.debug().log("returnValue ({}): {}", nullableClass(returnValue), returnValue);
+      logger.debug().log("row ({}): {}", nullableClass(row), row);
       return row;
      });
   }
@@ -125,10 +125,10 @@ public final class ProcessorScriptInstance extends AbstractProcessor {
       bindings.putMember("row", new ProxyDataRow(pipelineContext, data)); // ProxyObject.fromMap(data.getMap()));
       Value outputValue = graalContext.eval(source);
       T result = postProcess.apply(outputValue, data);
-      Log.decorate(logger.atDebug(), pipelineContext).log("Running {} {} gave {}", name, source.getCharacters(), result);
+      logger.debug().log("Running {} {} gave {}", name, source.getCharacters(), result);
       return result;
     } catch (Throwable ex) {
-      Log.decorate(logger.atWarn(), pipelineContext).log("Failed to evaluate {}: ", name, ex);
+      logger.warn().log("Failed to evaluate {}: ", name, ex);
       return null;
     }
   }
@@ -172,7 +172,7 @@ public final class ProcessorScriptInstance extends AbstractProcessor {
     } else if (value.isException()) {
       value.throwException();
     }
-    Log.decorate(logger.atWarn(), pipelineContext).log("Unknown value type: {}", value);
+    Log.decorate(slf4jlogger.atWarn(), pipelineContext).log("Unknown value type: {}", value);
     return null;
   }
 
