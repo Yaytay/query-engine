@@ -98,7 +98,13 @@ public class Parameters {
   private CacheConfig pipelineCache = new CacheConfig();
 
   /**
-   * By default requests to / redirect to /openapi and display the OpenAPI docs.
+   * The URL to redirect requests to / to.
+   * <P>
+   * By default requests to / redirect to /ui/ and display the Query Engine UI.
+   * This is not much use in a path hijack situation, so this allows for the provision of an alternative.
+   * <P>
+   * The redirection is literally to the string provided here, so this may either be a full URL or a path (which may be relative or absolute).
+   * 
    * This is not much use in a path hijack situation, so allow for the provision of an alternative.
    */
   private String rootRedirectUrl;
@@ -1324,10 +1330,12 @@ public class Parameters {
 
   /**
    * Get the URL to redirect requests to / to.
-   *
-   * By default requests to / redirect to /openapi and display the OpenAPI docs.
-   * This is not much use in a path hijack situation, so allow for the provision of an alternative.
-   *
+   * <P>
+   * By default requests to / redirect to /ui/ and display the Query Engine UI.
+   * This is not much use in a path hijack situation, so this allows for the provision of an alternative.
+   * <P>
+   * The redirection is literally to the string provided here, so this may either be a full URL or a path (which may be relative or absolute).
+   * 
    * @return the URL to redirect requests to / to.
    */
   public String getRootRedirectUrl() {
@@ -1336,9 +1344,11 @@ public class Parameters {
 
   /**
    * Set the URL to redirect requests to / to.
-   *
-   * By default requests to / redirect to /openapi and display the OpenAPI docs.
-   * This is not much use in a path hijack situation, so allow for the provision of an alternative.
+   * <P>
+   * By default requests to / redirect to /ui/ and display the Query Engine UI.
+   * This is not much use in a path hijack situation, so this allows for the provision of an alternative.
+   * <P>
+   * The redirection is literally to the string provided here, so this may either be a full URL or a path (which may be relative or absolute).
    *
    * @param rootRedirectUrl the URL to redirect requests to / to.
    */
