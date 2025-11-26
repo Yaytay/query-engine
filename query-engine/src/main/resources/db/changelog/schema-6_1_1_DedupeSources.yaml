@@ -1,0 +1,36 @@
+databaseChangeLog:
+- changeSet:
+    id: 6_1_1-1
+    author: jtalbut
+    runWith: jdbc
+    changes:
+    - dropTable:
+        tableName: source
+
+- changeSet:
+    id: 6_1_1-2
+    author: jtalbut
+    runWith: jdbc
+    changes:
+    - createTable:
+        tableName: source
+        columns:
+        - {column: {name: hash, type: char(32), constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_source}}}
+        - {column: {name: endpoint, type: varchar(250), constraints: {nullable: true}}}
+        - {column: {name: url, type: varchar(1000), constraints: {nullable: false}}}
+        - {column: {name: username, type: varchar(250), constraints: {nullable: true}}}
+        - {column: {name: query, type: clob, constraints: {nullable: true}}}
+        - {column: {name: arguments, type: clob, constraints: {nullable: true}}}
+
+- changeSet:
+    id: 6_1_1-3
+    author: jtalbut
+    runWith: jdbc
+    changes:
+    - createTable:
+        tableName: requestSource
+        columns:
+        - {column: {name: requestId, type: varchar(100), constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_requestSource}}}
+        - {column: {name: pipe, type: varchar(250), constraints: {nullable: false, primaryKey: true, primaryKeyName: pk_requestSource}}}
+        - {column: {name: timestamp, type: datetime, constraints: {nullable: false}}}
+        - {column: {name: sourceHash, type: char(32), constraints: {nullable: true}}}

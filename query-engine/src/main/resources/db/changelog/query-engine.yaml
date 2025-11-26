@@ -24,3 +24,6 @@ databaseChangeLog:
      relativeToChangelogFile: true
      file: schema-6_0_1_MoreTracking.yaml
 
+  - include:
+     relativeToChangelogFile: true
+     file: schema-6_1_1_DedupeSources.yaml

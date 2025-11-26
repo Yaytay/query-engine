@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -57,6 +58,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import static java.util.Objects.hash;
 import java.util.TimeZone;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -105,6 +107,8 @@ public class AuditorPersistenceImpl implements Auditor {
   private static final Base64.Encoder ENCODER = java.util.Base64.getEncoder();
   private static final Base64.Decoder DECODER = java.util.Base64.getDecoder();
 
+  private static final HashFunction DEDUPE_HASH = Hashing.murmur3_128();
+  
   private static final EnumMap<AuditHistorySortOrder, String> SORT_COLUMN_NAMES = prepareSortColumnNames();
 
   private static EnumMap<AuditHistorySortOrder, String> prepareSortColumnNames() {
@@ -327,8 +331,7 @@ public class AuditorPersistenceImpl implements Auditor {
     ),
     RECORD_SOURCE("""
                   insert into #SCHEMA#.#source# (
-                        #requestId#
-                        , #pipe#
+                        #hash#
                         , #endpoint#
                         , #url#
                         , #username#
@@ -338,6 +341,19 @@ public class AuditorPersistenceImpl implements Auditor {
                         ?
                         , ?
                         , ?
+                        , ?
+                        , ?
+                        , ?
+                      )"""
+    ),
+    RECORD_REQUEST_SOURCE("""
+                  insert into #SCHEMA#.#requestSource# (
+                        #requestId#
+                        , #pipe#
+                        , #timestamp#
+                        , #sourceHash#
+                      ) values (
+                        ?
                         , ?
                         , ?
                         , ?
@@ -1135,20 +1151,51 @@ public class AuditorPersistenceImpl implements Auditor {
     }).mapEmpty();
   }
 
+  private String buildHash(String endpointName, String dataSourceUrl, String username, String query, String argsJson) {
+    Hasher hasher = DEDUPE_HASH.newHasher();
+    if (endpointName != null) {
+      hasher.putString(endpointName, StandardCharsets.UTF_8);
+    }
+    if (dataSourceUrl != null) {
+      hasher.putString(dataSourceUrl, StandardCharsets.UTF_8);
+    }
+    if (username != null) {
+      hasher.putString(username, StandardCharsets.UTF_8);
+    }
+    if (query != null) {
+      hasher.putString(query, StandardCharsets.UTF_8);
+    }
+    if (argsJson != null) {
+     hasher.putString(argsJson, StandardCharsets.UTF_8);
+    }
+    return hasher.hash().toString();
+  }
+  
   @Override
   public Future<Void> recordSource(PipelineContext pipelineContext, String endpointName, String dataSourceUrl, String username, String query, String argsJson) {
     if (pipelineContext == null || pipelineContext.getRequestContext() == null || pipelineContext.getRequestContext().getRequestId() == null || pipelineContext.getPipe() == null) {
       return Future.succeededFuture();
     }
+    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+    String hash = buildHash(endpointName, dataSourceUrl, username, query, argsJson);
+
     return jdbcHelper.runSqlUpdate("recordSource", SqlTemplate.RECORD_SOURCE.sql(), ps -> {
-      ps.setString(1, pipelineContext.getRequestContext().getRequestId());
-      ps.setString(2, JdbcHelper.limitLength(pipelineContext.getPipe(), 250));
-      ps.setString(3, JdbcHelper.limitLength(endpointName, 250));
-      ps.setString(4, JdbcHelper.limitLength(dataSourceUrl, 1000));
-      ps.setString(5, JdbcHelper.limitLength(username, 250));
-      ps.setClob(6, new StringReader(query)); // CLOB-safe
-      ps.setClob(7, new StringReader(argsJson)); // CLOB-safe
-      ps.addBatch();
+      ps.setString(1, JdbcHelper.limitLength(hash, 32));
+      ps.setString(2, JdbcHelper.limitLength(endpointName, 250));
+      ps.setString(3, JdbcHelper.limitLength(dataSourceUrl, 1000));
+      ps.setString(4, JdbcHelper.limitLength(username, 250));
+      ps.setClob(5, new StringReader(query)); // CLOB-safe
+      ps.setClob(6, new StringReader(argsJson)); // CLOB-safe
+    }).onComplete(ar -> {
+      if (ar.failed()) {
+        Log.decorate(logger.atWarn(), pipelineContext).log("Faild to write record source: ", ar.cause());
+      }
+      jdbcHelper.runSqlUpdate("recordRequestSource", SqlTemplate.RECORD_REQUEST_SOURCE.sql(), ps -> {
+          ps.setString(1, pipelineContext.getRequestContext().getRequestId());
+          ps.setString(2, JdbcHelper.limitLength(pipelineContext.getPipe(), 250));
+          ps.setTimestamp(3, Timestamp.from(Instant.now()), cal);
+          ps.setString(4, JdbcHelper.limitLength(hash, 32));
+      });
     }).mapEmpty();
   }
   
