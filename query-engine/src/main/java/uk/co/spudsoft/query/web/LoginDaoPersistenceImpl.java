@@ -283,7 +283,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
   @SuppressFBWarnings(value = "SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING", justification = "Generated SQL is safe")
   void timezoneHandlingTest() throws Exception {
 
-    int purgedTokens = jdbcHelper.runSqlUpdateSynchronously("purgeLogins", SqlTemplate.PURGE_LOGINS.sql(), ps -> {
+    int purgedTokens = jdbcHelper.runSqlUpdateSynchronously("purgeLogins", SqlTemplate.PURGE_LOGINS.sql(), false, ps -> {
       JdbcHelper.setLocalDateTimeUTC(ps, 1, LocalDateTime.now(ZoneOffset.UTC).minusMonths(1));
     });
     logger.info("Purged {} expired tokens on startup", purgedTokens);
@@ -293,7 +293,7 @@ public class LoginDaoPersistenceImpl implements LoginDao {
     String token = "Startup test " + ManagementFactory.getRuntimeMXBean().getName();
     int rows;
     try {
-      rows = jdbcHelper.runSqlUpdateSynchronously("storeToken", SqlTemplate.STORE_TOKENS.sql(), ps -> {
+      rows = jdbcHelper.runSqlUpdateSynchronously("storeToken", SqlTemplate.STORE_TOKENS.sql(), false, ps -> {
         int param = 1;
         ps.setString(param++, startupTestSessionId);
         JdbcHelper.setLocalDateTimeUTC(ps, param++, expiry);

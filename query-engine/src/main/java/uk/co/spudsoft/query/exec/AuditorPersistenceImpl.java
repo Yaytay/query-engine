@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import com.microsoft.sqlserver.jdbc.SQLServerException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Future;
@@ -45,6 +46,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Instant;
@@ -58,7 +60,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import static java.util.Objects.hash;
 import java.util.TimeZone;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -73,6 +74,7 @@ import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.LiquibaseException;
 import org.apache.commons.collections4.CollectionUtils;
+import org.postgresql.util.PSQLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.dircache.DirCacheTree;
@@ -354,7 +356,6 @@ public class AuditorPersistenceImpl implements Auditor {
                         , #sourceHash#
                       ) values (
                         ?
-                        , ?
                         , ?
                         , ?
                         , ?
@@ -1179,16 +1180,26 @@ public class AuditorPersistenceImpl implements Auditor {
     Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
     String hash = buildHash(endpointName, dataSourceUrl, username, query, argsJson);
 
-    return jdbcHelper.runSqlUpdate("recordSource", SqlTemplate.RECORD_SOURCE.sql(), ps -> {
+    return jdbcHelper.runSqlUpdateSilently("recordSource", SqlTemplate.RECORD_SOURCE.sql(), ps -> {
       ps.setString(1, JdbcHelper.limitLength(hash, 32));
       ps.setString(2, JdbcHelper.limitLength(endpointName, 250));
       ps.setString(3, JdbcHelper.limitLength(dataSourceUrl, 1000));
       ps.setString(4, JdbcHelper.limitLength(username, 250));
-      ps.setClob(5, new StringReader(query)); // CLOB-safe
-      ps.setClob(6, new StringReader(argsJson)); // CLOB-safe
+      ps.setString(5, query);
+      ps.setString(6, argsJson);
     }).onComplete(ar -> {
       if (ar.failed()) {
-        Log.decorate(logger.atWarn(), pipelineContext).log("Faild to record source: ", ar.cause());
+        Throwable ex = ar.cause();
+        String message = ex.getMessage();
+        if ((ex instanceof SQLIntegrityConstraintViolationException) 
+                || ((ex instanceof SQLServerException) && message.startsWith("Violation of PRIMARY KEY constraint"))
+                || ((ex instanceof PSQLException) && message.startsWith("ERROR: duplicate key value violates unique constraint"))
+                ) {
+          Log.decorate(logger.atDebug(), pipelineContext).log("Failed to record duplicate source (expected): {}", message);
+          Log.decorate(logger.atTrace(), pipelineContext).log("Failed to record duplicate source (expected): ", ex);
+        } else {
+          Log.decorate(logger.atWarn(), pipelineContext).log("Failed to record source: ", ex);
+        }
       }
       jdbcHelper.runSqlUpdate("recordRequestSource", SqlTemplate.RECORD_REQUEST_SOURCE.sql(), ps -> {
           ps.setString(1, pipelineContext.getRequestContext().getRequestId());
@@ -1198,7 +1209,7 @@ public class AuditorPersistenceImpl implements Auditor {
       })
       .onComplete(ar2 -> {
         if (ar2.failed()) {
-          Log.decorate(logger.atWarn(), pipelineContext).log("Faild to record request source: ", ar.cause());
+          Log.decorate(logger.atWarn(), pipelineContext).log("Failed to record request source: ", ar2.cause());
         }
       });
     }).mapEmpty();

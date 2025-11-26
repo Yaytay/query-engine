@@ -280,7 +280,21 @@ public class JdbcHelper {
   public Future<Integer> runSqlUpdate(String name, String sql, SqlConsumer<PreparedStatement> prepareStatement) {
     checkNotShuttingDown();
 
-    Future<Integer> future = vertx.executeBlocking(() -> runSqlUpdateSynchronously(name, sql, prepareStatement));
+    Future<Integer> future = vertx.executeBlocking(() -> runSqlUpdateSynchronously(name, sql, false, prepareStatement));
+    return trackFuture(future);
+  }
+
+  /**
+   * Run a SQL update asynchronously (in the Vertx worker thread) without outputting error logs.
+   * @param name name of the action being taken for log messages.
+   * @param sql statement to be run.
+   * @param prepareStatement a {@link SqlConsumer} to use to set parameters on the {@link PreparedStatement}.
+   * @return A Future that will be completed when the operation is complete.
+   */
+  public Future<Integer> runSqlUpdateSilently(String name, String sql, SqlConsumer<PreparedStatement> prepareStatement) {
+    checkNotShuttingDown();
+
+    Future<Integer> future = vertx.executeBlocking(() -> runSqlUpdateSynchronously(name, sql, true, prepareStatement));
     return trackFuture(future);
   }
 
@@ -531,12 +545,13 @@ public class JdbcHelper {
    * Run a SQL update synchronously.
    * @param name name of the action being taken for log messages.
    * @param sql statement to be run.
+   * @param silent when set to true errors will only be output at trace level, rather than error level
    * @param prepareStatement a {@link SqlConsumer} to use to set parameters on the {@link PreparedStatement}.
    * @return the number of rows affected.
    * @throws Exception if anything goes wrong.
    */
   @SuppressFBWarnings(value = "SQL_INJECTION_JDBC", justification = "SQL is generated from static strings")
-  public int runSqlUpdateSynchronously(String name, String sql, SqlConsumer<PreparedStatement> prepareStatement) throws Exception {
+  public int runSqlUpdateSynchronously(String name, String sql, boolean silent, SqlConsumer<PreparedStatement> prepareStatement) throws Exception {
     logger.trace("Executing update ({}: {})", name, sql);
     String logMessage = "Failed to get connection ({}): ";
     try {
@@ -556,10 +571,18 @@ public class JdbcHelper {
         closeConnection(conn);
       }
     } catch (Exception ex) {
-      logger.error(logMessage, name, ex);
+      if (silent) {
+        logger.trace(logMessage, name, ex);
+      } else {
+        logger.error(logMessage, name, ex);
+      }
       throw ex;
     } catch (Throwable ex) {
-      logger.error(logMessage, name, ex);
+      if (silent) {
+        logger.trace(logMessage, name, ex);
+      } else {
+        logger.error(logMessage, name, ex);
+      }
       throw new RuntimeException(logMessage.replace("{}", name), ex);
     }
   }
