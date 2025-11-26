@@ -60,12 +60,12 @@ public class ProcessorLimitTest {
   @Test
   public void testValidate() {
     assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorLimit.builder().limit(0).build().validate();
+      ProcessorLimit.builder().limit(0).build().validate(null);
     }, "Zero limit provided");
     assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorLimit.builder().limit(-1).build().validate();
+      ProcessorLimit.builder().limit(-1).build().validate(null);
     }, "Negative limit provided");
-    ProcessorLimit.builder().limit(1).build().validate();
+    ProcessorLimit.builder().limit(1).build().validate(null);
   }
   
 }

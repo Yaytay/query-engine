@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Vertx;
 import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.procs.script.ProcessorExpressionInstance;
 
 /**
@@ -58,7 +59,7 @@ public class ProcessorExpression implements Processor {
   }
   
   @Override
-  public void validate() {
+  public void validate(RequestContext requestContext) {
     validateType(ProcessorType.EXPRESSION, type);
     if (!Strings.isNullOrEmpty(field)) {
       if (Strings.isNullOrEmpty(fieldValue)) {

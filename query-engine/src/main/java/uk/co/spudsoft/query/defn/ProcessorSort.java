@@ -26,6 +26,7 @@ import io.vertx.core.Vertx;
 import java.util.List;
 import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.procs.sort.ProcessorSortInstance;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
@@ -58,7 +59,7 @@ public class ProcessorSort implements Processor {
   }
 
   @Override
-  public void validate() {
+  public void validate(RequestContext requestContext) {
     validateType(ProcessorType.SORT, type);
     if (fields == null || fields.isEmpty()) {
       throw new IllegalArgumentException("No fields provided for sorting");

@@ -99,9 +99,9 @@ public class PipelineExecutorImpl implements PipelineExecutor {
   }
 
   @Override
-  public Future<Pipeline> validatePipeline(Pipeline definition) {
+  public Future<Pipeline> validatePipeline(RequestContext requestContext, Pipeline definition) {
     try {
-      definition.validate();
+      definition.validate(requestContext);
     } catch (Throwable ex) {
       return Future.failedFuture(ex);
     }

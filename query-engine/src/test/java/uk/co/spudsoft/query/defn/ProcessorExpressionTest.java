@@ -51,18 +51,18 @@ public class ProcessorExpressionTest {
   @Test
   public void testValidate() {
     assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorExpression.builder().field("field").build().validate();
+      ProcessorExpression.builder().field("field").build().validate(null);
     }, "");
     assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorExpression.builder().field("field").fieldValue("2").fieldType(null).build().validate();
+      ProcessorExpression.builder().field("field").fieldValue("2").fieldType(null).build().validate(null);
     }, "");
     assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorExpression.builder().fieldValue("7").build().validate();
+      ProcessorExpression.builder().fieldValue("7").build().validate(null);
     }, "");
     assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorExpression.builder().build().validate();
+      ProcessorExpression.builder().build().validate(null);
     }, "");
-    ProcessorExpression.builder().predicate("true").build().validate();
+    ProcessorExpression.builder().predicate("true").build().validate(null);
   }
   
 }

@@ -329,7 +329,7 @@ public final class PipelineDefnLoader {
                   Log.decorate(logger.atDebug(), requestContext).log("Loaded {} as {}", file, Json.encode(paf.pipeline));
                 }
                 try {
-                  paf.pipeline.validate();
+                  paf.pipeline.validate(requestContext);
                 } catch (Throwable ex) {
                   Log.decorate(logger.atWarn(), requestContext).log("File {} invalid: {}", file, ex.getMessage());
                 }

@@ -56,9 +56,9 @@ public class ProcessorQueryTest {
   @Test
   public void testValidate() {
     assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorQuery.builder().expression("bob").build().validate();
+      ProcessorQuery.builder().expression("bob").build().validate(null);
     }, "Zero limit provided");
-    ProcessorQuery.builder().expression("x==7").build().validate();
+    ProcessorQuery.builder().expression("x==7").build().validate(null);
   }
   
   

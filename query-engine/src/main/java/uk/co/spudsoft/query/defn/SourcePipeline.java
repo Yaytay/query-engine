@@ -23,6 +23,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
@@ -49,15 +50,16 @@ public class SourcePipeline {
 
   /**
    * Validate the definition.
+   * @param requestContext The context in which this pipeline is being validated.
    * @param name The name of the pipeline, to include in failure messages.
    * @throws IllegalArgumentException if the definition is not valid.
    */
-  public void validate(String name) throws IllegalArgumentException {
+  public void validate(RequestContext requestContext, String name) throws IllegalArgumentException {
     if (source == null) {
       throw new IllegalArgumentException("Source not specified in " + name + " pipeline");
     }
     source.validate();
-    processors.forEach(Processor::validate);
+    processors.forEach(p -> p.validate(requestContext));
   }
 
   /**

@@ -270,7 +270,7 @@ public class QueryRouter implements Handler<RoutingContext> {
                                   .map(v2 -> pipelineAndFile.pipeline());
                         })
                         .compose(pipeline -> {
-                          return pipelineExecutor.validatePipeline(pipeline);
+                          return pipelineExecutor.validatePipeline(requestContext, pipeline);
                         })
                         .compose(pipeline -> {
                           return auditor.runRateLimitRules(requestContext, pipeline);

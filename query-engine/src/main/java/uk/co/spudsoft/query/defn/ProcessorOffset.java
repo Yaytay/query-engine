@@ -23,6 +23,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.vertx.core.Vertx;
 import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.procs.filters.ProcessorOffsetInstance;
 
 /**
@@ -47,7 +48,7 @@ public class ProcessorOffset implements Processor {
   }
 
   @Override
-  public void validate() {
+  public void validate(RequestContext requestContext) {
     validateType(ProcessorType.OFFSET, type);
     if (offset < 0) {
       throw new IllegalArgumentException("Negative offset provided");

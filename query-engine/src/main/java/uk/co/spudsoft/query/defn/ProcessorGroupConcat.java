@@ -27,6 +27,7 @@ import io.vertx.core.Vertx;
 import java.util.List;
 import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.procs.subquery.ProcessorGroupConcatInstance;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
@@ -67,13 +68,13 @@ public class ProcessorGroupConcat implements Processor {
   }
 
   @Override
-  public void validate() {
+  public void validate(RequestContext requestContext) {
     validateType(ProcessorType.GROUP_CONCAT, type);
     
     if (input == null) {
       throw new IllegalArgumentException("Input (input) pipeline not provided");
     }
-    input.validate((Strings.isNullOrEmpty(name) ? "GroupConcat" : "GroupConcat " + name) + " fieldDefns");
+    input.validate(requestContext, (Strings.isNullOrEmpty(name) ? "GroupConcat" : "GroupConcat " + name) + " fieldDefns");
     
     if (Strings.isNullOrEmpty(childValueColumn) && !Strings.isNullOrEmpty(parentValueColumn)) {
       throw new IllegalArgumentException("The parentValueColumn name is specified, but the childValueColumn is not");

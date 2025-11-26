@@ -49,18 +49,18 @@ public class ProcessorMergeTest {
   @Test
   public void testValidate() {
     assertEquals("Processor of type MERGE configured with type GROUP_CONCAT", assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorMerge.builder().type(ProcessorType.GROUP_CONCAT).build().validate();
+      ProcessorMerge.builder().type(ProcessorType.GROUP_CONCAT).build().validate(null);
     }).getMessage());
     assertEquals("ID column(s) not specified for parent stream", assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorMerge.builder().build().validate();
+      ProcessorMerge.builder().build().validate(null);
     }).getMessage());
     assertEquals("ID column(s) not specified for child stream", assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorMerge.builder().parentIdColumns(Arrays.asList("one")).build().validate();
+      ProcessorMerge.builder().parentIdColumns(Arrays.asList("one")).build().validate(null);
     }).getMessage());
     assertEquals("ID column(s) specified for parent stream does not have the same number of fields as those specified for input stream", assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorMerge.builder().parentIdColumns(Arrays.asList("one")).childIdColumns(Arrays.asList("two", "three")).build().validate();
+      ProcessorMerge.builder().parentIdColumns(Arrays.asList("one")).childIdColumns(Arrays.asList("two", "three")).build().validate(null);
     }).getMessage());
-    ProcessorMerge.builder().parentIdColumns(Arrays.asList("one")).childIdColumns(Arrays.asList("two")).build().validate();
+    ProcessorMerge.builder().parentIdColumns(Arrays.asList("one")).childIdColumns(Arrays.asList("two")).build().validate(null);
   }
   
   @Test

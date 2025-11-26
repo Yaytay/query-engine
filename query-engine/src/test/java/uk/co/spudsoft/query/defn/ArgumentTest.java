@@ -120,35 +120,35 @@ public class ArgumentTest {
   public void testValidate() {
     assertEquals("The argument \"£$%^\" does not have a valid name."
             , assertThrows(IllegalArgumentException.class
-                    , () -> Argument.builder().name("£$%^").build().validate()
+                    , () -> Argument.builder().name("£$%^").build().validate(null)
             ).getMessage()
     );
     
     
     Argument instance2 = Argument.builder().name("name").build();
-    instance2.validate();
+    instance2.validate(null);
     
     assertThat(
             assertThrows(IllegalArgumentException.class
-                    , () -> Argument.builder().name("name").permittedValuesRegex("[").build().validate()
+                    , () -> Argument.builder().name("name").permittedValuesRegex("[").build().validate(null)
             ).getMessage()
             , startsWith("The argument \"name\" does not have a valid permittedValuesRegex.Unclosed character class near index 0")
     );
-    Argument.builder().name("name").permittedValuesRegex("[A-Za-z]+").build().validate();
+    Argument.builder().name("name").permittedValuesRegex("[A-Za-z]+").build().validate(null);
     
     assertEquals("The argument \"arg\" has a minimum value of \"fred\" but that cannot be parsed as Integer."
             , assertThrows(IllegalArgumentException.class
-                    , () -> Argument.builder().name("arg").type(DataType.Integer).minimumValue("fred").build().validate()
+                    , () -> Argument.builder().name("arg").type(DataType.Integer).minimumValue("fred").build().validate(null)
             ).getMessage()
     );
     assertEquals("The argument \"arg\" has a maximum value of \"fred\" but that cannot be parsed as Integer."
             , assertThrows(IllegalArgumentException.class
-                    , () -> Argument.builder().name("arg").type(DataType.Integer).maximumValue("fred").build().validate()
+                    , () -> Argument.builder().name("arg").type(DataType.Integer).maximumValue("fred").build().validate(null)
             ).getMessage()
     );
     assertEquals("The argument \"arg\" has a default value specified, but is not optional, hidden or conditional."
             , assertThrows(IllegalArgumentException.class
-                    , () -> Argument.builder().name("arg").type(DataType.Integer).defaultValueExpression("7").optional(false).build().validate()
+                    , () -> Argument.builder().name("arg").type(DataType.Integer).defaultValueExpression("7").optional(false).build().validate(null)
             ).getMessage()
     );
     

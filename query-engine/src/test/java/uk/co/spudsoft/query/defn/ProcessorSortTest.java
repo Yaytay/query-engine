@@ -55,15 +55,15 @@ public class ProcessorSortTest {
   @Test
   public void testValidate() {
     assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorSort.builder().fields(Collections.emptyList()).build().validate();
+      ProcessorSort.builder().fields(Collections.emptyList()).build().validate(null);
     }, "No fields provided for sorting");
     assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorSort.builder().fields(null).build().validate();
+      ProcessorSort.builder().fields(null).build().validate(null);
     }, "No fields provided for sorting");
     assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorSort.builder().build().validate();
+      ProcessorSort.builder().build().validate(null);
     }, "Negative limit provided");
-    ProcessorSort.builder().fields(Arrays.asList("xz")).build().validate();
+    ProcessorSort.builder().fields(Arrays.asList("xz")).build().validate(null);
   }
   
 }

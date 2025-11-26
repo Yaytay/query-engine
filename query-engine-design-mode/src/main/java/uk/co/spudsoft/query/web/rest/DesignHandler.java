@@ -542,7 +542,7 @@ public class DesignHandler {
       }
       if (forValidation != null) {
         try {
-          forValidation.validate();
+          forValidation.validate(unauthedRequestContext);
         } catch (Throwable ex) {
           logger.warn("The Pipeline is not valid: {}", ex);
           reportError(unauthedRequestContext, logger, "The Pipeline is not valid: " + ex.getMessage(), response, new ServiceException(400, "The Pipeline is not valid: " + ex.getMessage()), true);
@@ -667,7 +667,7 @@ public class DesignHandler {
           }
           if (forValidation != null) {
             try {
-              forValidation.validate();
+              forValidation.validate(unauthedRequestContext);
             } catch (Throwable ex) {
               return Future.failedFuture("The file has been saved, but is not a valid Pipeline: " + ex.getMessage());
             }

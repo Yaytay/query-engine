@@ -26,6 +26,7 @@ import io.vertx.core.Vertx;
 import java.util.List;
 import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.procs.filters.ProcessorMapInstance;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
@@ -51,7 +52,7 @@ public class ProcessorMap implements Processor {
   }
 
   @Override
-  public void validate() {
+  public void validate(RequestContext requestContext) {
     validateType(ProcessorType.MAP, type);
     if (relabels.isEmpty()) {
       throw new IllegalArgumentException("No relabels provided");

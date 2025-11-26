@@ -171,7 +171,7 @@ public class DynamicEndpointPipelineSqlIT {
                 return Future.failedFuture(ex);
               }
             })
-            .compose(pipelineAndFile -> executor.validatePipeline(pipelineAndFile.pipeline()))
+            .compose(pipelineAndFile -> executor.validatePipeline(req, pipelineAndFile.pipeline()))
             .compose(pipeline -> {
               PipelineContext pipelineContext = new PipelineContext("test", req);
               Format chosenFormat = executor.getFormat(pipelineContext, pipeline.getFormats(), null);
@@ -279,7 +279,7 @@ public class DynamicEndpointPipelineSqlIT {
                 return Future.failedFuture(ex);
               }
             })
-            .compose(pipelineAndFile -> executor.validatePipeline(pipelineAndFile.pipeline()))
+            .compose(pipelineAndFile -> executor.validatePipeline(req, pipelineAndFile.pipeline()))
             .compose(pipeline -> {
               PipelineContext pipelineContext = new PipelineContext("test", req);
               Format chosenFormat = executor.getFormat(pipelineContext, pipeline.getFormats(), null);
@@ -384,7 +384,7 @@ public class DynamicEndpointPipelineSqlIT {
                 return Future.failedFuture(ex);
               }
             })
-            .compose(pipelineAndFile -> executor.validatePipeline(pipelineAndFile.pipeline()))
+            .compose(pipelineAndFile -> executor.validatePipeline(req, pipelineAndFile.pipeline()))
             .compose(pipeline -> {
               PipelineContext pipelineContext = new PipelineContext("test", req);
               Format chosenFormat = executor.getFormat(pipelineContext, pipeline.getFormats(), null);
@@ -487,7 +487,7 @@ public class DynamicEndpointPipelineSqlIT {
                 return Future.failedFuture(ex);
               }
             })
-            .compose(pipelineAndFile -> executor.validatePipeline(pipelineAndFile.pipeline()))
+            .compose(pipelineAndFile -> executor.validatePipeline(req, pipelineAndFile.pipeline()))
             .compose(pipeline -> {
               PipelineContext pipelineContext = new PipelineContext("test", req);
               Format chosenFormat = executor.getFormat(pipelineContext, pipeline.getFormats(), null);

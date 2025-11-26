@@ -28,7 +28,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import java.util.regex.Pattern;
 import static java.util.regex.Pattern.UNICODE_CHARACTER_CLASS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
+import uk.co.spudsoft.query.exec.context.RequestContext;
+import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
@@ -50,6 +54,8 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
                       </P>
                       """)
 public class Argument {
+  
+  private static final Logger logger = LoggerFactory.getLogger(Argument.class);
   
   /**
    * Regular expression for a valid argument name - a case sensitive string of alpha numeric characters.
@@ -79,9 +85,11 @@ public class Argument {
 
   /**
    * Validate the provided definition.
+   * 
+   * @param requestContext The context in which this pipeline is being validated.
    * @throws IllegalArgumentException If the argument definition is not valid.
    */
-  public void validate() throws IllegalArgumentException {
+  public void validate(RequestContext requestContext) throws IllegalArgumentException {
     if (!VALID_NAME.matcher(name).matches()) {
       throw new IllegalArgumentException("The argument \"" + name + "\" does not have a valid name.");
     }
@@ -94,6 +102,9 @@ public class Argument {
       } catch (Throwable ex) {
         throw new IllegalArgumentException("The argument \"" + name + "\" does not have a valid permittedValuesRegex." + ex.getMessage());
       }
+    }
+    if (hidden && optional) {
+      Log.decorate(logger.atWarn(), requestContext).log("The argument \"{}\" is both optional and hidden.", name);
     }
     if (!Strings.isNullOrEmpty(defaultValueExpression)) {
       if (!optional && !hidden && condition == null) {

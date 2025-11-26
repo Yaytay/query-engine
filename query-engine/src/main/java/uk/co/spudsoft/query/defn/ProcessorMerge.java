@@ -26,6 +26,7 @@ import io.vertx.core.Vertx;
 import java.util.List;
 import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.procs.subquery.ProcessorMergeInstance;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
@@ -59,7 +60,7 @@ public class ProcessorMerge implements Processor {
   }
 
   @Override
-  public void validate() {
+  public void validate(RequestContext requestContext) {
     validateType(ProcessorType.MERGE, type);
     if (parentIdColumns == null || parentIdColumns.isEmpty()) {
       throw new IllegalArgumentException("ID column(s) not specified for parent stream");      

@@ -25,6 +25,7 @@ import io.vertx.core.Vertx;
 import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.PreProcessorInstance;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.preprocess.DynamicEndpointPreProcessorInstance;
 
 /**
@@ -99,13 +100,14 @@ public class DynamicEndpoint {
   /**
    * Validate the configuration.
    * 
+   * @param requestContext The context in which this pipeline is being validated.
    * @throws IllegalArgumentException if the definition is not valid.
    */
-  public void validate() throws IllegalArgumentException {
+  public void validate(RequestContext requestContext) throws IllegalArgumentException {
     if (input == null) {
       throw new IllegalArgumentException("Input not specified in dynamic endpoint");
     }
-    input.validate(Strings.isNullOrEmpty(name) ? "DynamicEndpoint" : "DynamicEndpoint " + name);
+    input.validate(requestContext, Strings.isNullOrEmpty(name) ? "DynamicEndpoint" : "DynamicEndpoint " + name);
     if (Strings.isNullOrEmpty(key) && Strings.isNullOrEmpty(keyField)) {
       throw new IllegalArgumentException("Neither key nor keyField specified in dynamic endpoint");
     }

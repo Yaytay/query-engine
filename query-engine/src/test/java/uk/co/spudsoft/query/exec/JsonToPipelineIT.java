@@ -100,7 +100,7 @@ public class JsonToPipelineIT {
                 return Future.failedFuture(ex);
               }
             })
-            .compose(pipelineAndFile -> executor.validatePipeline(pipelineAndFile.pipeline()))
+            .compose(pipelineAndFile -> executor.validatePipeline(req, pipelineAndFile.pipeline()))
             .compose(pipeline -> {
               MultiMap args = MultiMap.caseInsensitiveMultiMap();
               args.add("key", serverProvider.getName());

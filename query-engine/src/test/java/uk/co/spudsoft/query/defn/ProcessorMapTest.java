@@ -57,13 +57,13 @@ public class ProcessorMapTest {
   @Test
   public void testValidate() {
     assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorMap.builder().relabels(Arrays.asList()).build().validate();
+      ProcessorMap.builder().relabels(Arrays.asList()).build().validate(null);
     }, "Zero relabels provided");
     assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorMap.builder().relabels(Arrays.asList(ProcessorMapLabel.builder().build())).build().validate();
+      ProcessorMap.builder().relabels(Arrays.asList(ProcessorMapLabel.builder().build())).build().validate(null);
     }, "Zero relabels provided");
-    ProcessorMap.builder().relabels(Arrays.asList(ProcessorMapLabel.builder().sourceLabel("source").build())).build().validate();
-    ProcessorMap.builder().relabels(Arrays.asList(ProcessorMapLabel.builder().sourceLabel("source").newLabel("new").build())).build().validate();
+    ProcessorMap.builder().relabels(Arrays.asList(ProcessorMapLabel.builder().sourceLabel("source").build())).build().validate(null);
+    ProcessorMap.builder().relabels(Arrays.asList(ProcessorMapLabel.builder().sourceLabel("source").newLabel("new").build())).build().validate(null);
   }
   
 }

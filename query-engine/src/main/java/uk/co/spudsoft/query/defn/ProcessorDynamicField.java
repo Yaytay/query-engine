@@ -27,6 +27,7 @@ import io.vertx.core.Vertx;
 import java.util.List;
 import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.procs.subquery.ProcessorDynamicFieldInstance;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
@@ -144,16 +145,16 @@ public class ProcessorDynamicField implements Processor {
   }
 
   @Override
-  public void validate() {
+  public void validate(RequestContext requestContext) {
     validateType(ProcessorType.DYNAMIC_FIELD, type);
     if (fieldDefns == null) {
       throw new IllegalArgumentException("Field definitions (fieldDefns) pipeline not provided");
     }
-    fieldDefns.validate((Strings.isNullOrEmpty(name) ? "DynamicField" : "DynamicField " + name) + " fieldDefns");
+    fieldDefns.validate(requestContext, (Strings.isNullOrEmpty(name) ? "DynamicField" : "DynamicField " + name) + " fieldDefns");
     if (fieldValues == null) {
       throw new IllegalArgumentException("Field values (fieldValues) pipeline not provided");
     }
-    fieldValues.validate((Strings.isNullOrEmpty(name) ? "DynamicField" : "DynamicField " + name) + " fieldValues");
+    fieldValues.validate(requestContext, (Strings.isNullOrEmpty(name) ? "DynamicField" : "DynamicField " + name) + " fieldValues");
     if (parentIdColumns == null || parentIdColumns.isEmpty()) {
       throw new IllegalArgumentException("ID column(s) not specified for parent stream");      
     }

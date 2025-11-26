@@ -26,6 +26,7 @@ import io.vertx.core.Vertx;
 import uk.co.spudsoft.query.exec.Auditor;
 import uk.co.spudsoft.query.exec.ProcessorInstance;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 
 /**
  *
@@ -73,9 +74,10 @@ public interface Processor {
   
   /**
    * Throw an IllegalArgumentException if the Processor is not usable.
+   * @param requestContext The context in which this pipeline is being validated.
    * @throws IllegalArgumentException if the Processor is not usable.
    */
-  void validate();
+  void validate(RequestContext requestContext);
     
   /**
    * Create a new instance of the appropriate {@link ProcessorInstance}.

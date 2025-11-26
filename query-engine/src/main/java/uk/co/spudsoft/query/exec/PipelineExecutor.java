@@ -77,10 +77,11 @@ public interface PipelineExecutor extends SharedMap {
   /**
    * Validate a {@link Pipeline} definition.
    *
-   * @param definition The {@link Pipeline} on which {@link Pipeline#validate()} will be called.
+   * @param requestContext The request context, the calculated {@link Map} is stored in the request context.
+   * @param definition The {@link Pipeline} on which {@link Pipeline#validate(uk.co.spudsoft.query.exec.context.RequestContext)} will be called.
    * @return A Future that will be completed with the unchanged Pipeline if it is valid, or an {@link IllegalArgumentException} if not.
    */
-  Future<Pipeline> validatePipeline(Pipeline definition);
+  Future<Pipeline> validatePipeline(RequestContext requestContext, Pipeline definition);
 
   /**
    * Create all of the {@link ProcessorInstance} objects specified in the {@link Pipeline} definition and {@link uk.co.spudsoft.query.exec.filters.Filter} arguments in the query string.

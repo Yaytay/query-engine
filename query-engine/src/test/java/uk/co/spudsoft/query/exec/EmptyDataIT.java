@@ -111,7 +111,7 @@ public class EmptyDataIT {
                 return Future.failedFuture(ex);
               }
             })
-            .compose(pipelineAndFile -> executor.validatePipeline(pipelineAndFile.pipeline()))
+            .compose(pipelineAndFile -> executor.validatePipeline(req, pipelineAndFile.pipeline()))
             .compose(pipeline -> {
               AsyncFile output = fs.openBlocking("target/temp/EmptyDataIT/output.html", new OpenOptions().setCreate(true));
               PipelineContext pipelineContext = new PipelineContext("test", req);

@@ -60,12 +60,12 @@ public class ProcessorOffsetTest {
   @Test
   public void testValidate() {
     assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorOffset.builder().offset(0).build().validate();
+      ProcessorOffset.builder().offset(0).build().validate(null);
     }, "Zero offset provided");
     assertThrows(IllegalArgumentException.class, () -> {
-      ProcessorOffset.builder().offset(-1).build().validate();
+      ProcessorOffset.builder().offset(-1).build().validate(null);
     }, "Negative offset provided");
-    ProcessorOffset.builder().offset(1).build().validate();
+    ProcessorOffset.builder().offset(1).build().validate(null);
   }
   
 }

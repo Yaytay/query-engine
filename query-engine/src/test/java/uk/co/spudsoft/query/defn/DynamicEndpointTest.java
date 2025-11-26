@@ -32,14 +32,14 @@ public class DynamicEndpointTest {
   @Test
   public void testValidate() {
     assertThrows(IllegalArgumentException.class, () -> {
-      DynamicEndpoint.builder().build().validate();
+      DynamicEndpoint.builder().build().validate(null);
     });
     assertThrows(IllegalArgumentException.class, () -> {
       DynamicEndpoint.builder().input(
               SourcePipeline.builder()
                       .source(SourceTest.builder().name("test").build())                      
                       .build()
-      ).build().validate();
+      ).build().validate(null);
     });
     assertThrows(IllegalArgumentException.class, () -> {
       DynamicEndpoint.builder()
@@ -52,7 +52,7 @@ public class DynamicEndpointTest {
               .urlField(null)
               .urlTemplateField("")
               .build()
-              .validate();
+              .validate(null);
     });
     DynamicEndpoint.builder()
             .input(
@@ -62,7 +62,7 @@ public class DynamicEndpointTest {
                     )
             .key("key")
             .urlField("url")
-            .build().validate();    
+            .build().validate(null);    
     DynamicEndpoint.builder()
             .input(
                     SourcePipeline.builder()
@@ -71,7 +71,7 @@ public class DynamicEndpointTest {
                     )
             .keyField("key")
             .urlTemplateField("url")
-            .build().validate();    
+            .build().validate(null);    
   }
   
   @Test

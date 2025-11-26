@@ -35,7 +35,7 @@ public class ProcessorLookupTest {
             "Lookup source (lookupSource) pipeline not provided"
             , assertThrows(IllegalArgumentException.class, () -> {
               ProcessorLookup.builder()
-                      .build().validate();
+                      .build().validate(null);
             }).getMessage()
     );
     
@@ -51,7 +51,7 @@ public class ProcessorLookupTest {
                                       )
                                       .build()
                       )
-                      .build().validate();
+                      .build().validate(null);
             }).getMessage()
     );
     
@@ -72,7 +72,7 @@ public class ProcessorLookupTest {
                                       ProcessorLookupField.builder().keyField("key").valueField("value").build()
                               )
                       )
-                      .build().validate();
+                      .build().validate(null);
             }).getMessage()
     );
 
@@ -94,7 +94,7 @@ public class ProcessorLookupTest {
                               )
                       )
                       .lookupKeyField("key")
-                      .build().validate();
+                      .build().validate(null);
             }).getMessage()
     );
 
@@ -114,7 +114,7 @@ public class ProcessorLookupTest {
                             ProcessorLookupField.builder().keyField("key").valueField("value").build()
                     )
             )
-            .build().validate();
+            .build().validate(null);
   }
 
   @Test

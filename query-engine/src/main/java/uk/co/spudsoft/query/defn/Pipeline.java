@@ -30,6 +30,7 @@ import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
@@ -106,10 +107,11 @@ public final class Pipeline extends SourcePipeline {
    * <p>
    * Work through as much of the pipeline structure as possible to ensure that the definition can work.
    * 
+   * @param requestContext The context in which this pipeline is being validated.
    * @throws IllegalArgumentException if anything is unacceptable in the definition.
    */
-  public void validate() throws IllegalArgumentException {
-    super.validate("root");
+  public void validate(RequestContext requestContext) throws IllegalArgumentException {
+    super.validate(requestContext, "root");
     if (condition != null) {
       condition.validate();
     }
@@ -143,7 +145,7 @@ public final class Pipeline extends SourcePipeline {
       }
 
       for (Argument arg : arguments) {
-        arg.validate();
+        arg.validate(requestContext);
         List<String> dependsUpon = arg.getDependsUpon();
         if (dependsUpon != null && !dependsUpon.isEmpty()) {
           for (String depend : dependsUpon) {

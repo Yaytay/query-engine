@@ -42,7 +42,7 @@ public class ProcessorDynamicFieldTest {
   public void testValidate() {
     ProcessorDynamicField instance = ProcessorDynamicField.builder().build();
     assertThrows(IllegalArgumentException.class, () -> {
-      instance.validate();
+      instance.validate(null);
     });
   }
     
@@ -59,7 +59,7 @@ public class ProcessorDynamicFieldTest {
             .build();
     assertEquals("Field values (fieldValues) pipeline not provided"
             , assertThrows(IllegalArgumentException.class, () -> {
-              instance.validate();
+              instance.validate(null);
             }).getMessage()
     );
   }
@@ -84,7 +84,7 @@ public class ProcessorDynamicFieldTest {
             .build();
     assertEquals("ID column(s) not specified for parent stream"
             , assertThrows(IllegalArgumentException.class, () -> {
-              instance.validate();
+              instance.validate(null);
             }).getMessage()
     );
   }
@@ -110,7 +110,7 @@ public class ProcessorDynamicFieldTest {
             .build();
     assertEquals("ID column(s) not specified for values stream"
             , assertThrows(IllegalArgumentException.class, () -> {
-              instance.validate();
+              instance.validate(null);
             }).getMessage()
     );
   }
@@ -137,7 +137,7 @@ public class ProcessorDynamicFieldTest {
             .build();
     assertEquals("ID column(s) specified for parent stream does not have the same number of fields as those specified for values stream"
             , assertThrows(IllegalArgumentException.class, () -> {
-              instance.validate();
+              instance.validate(null);
             }).getMessage()
     );
   }
@@ -165,7 +165,7 @@ public class ProcessorDynamicFieldTest {
             .build();
     assertEquals("Type column not set (fieldTypeColumn)"
             , assertThrows(IllegalArgumentException.class, () -> {
-              instance.validate();
+              instance.validate(null);
             }).getMessage()
     );
   }
@@ -190,7 +190,7 @@ public class ProcessorDynamicFieldTest {
             .parentIdColumns(Arrays.asList("name"))
             .valuesParentIdColumns(Arrays.asList("name"))
             .build();
-    instance.validate();
+    instance.validate(null);
   }
 
   @Test

@@ -84,7 +84,7 @@ public class PipelineExecutorImplTest {
             .build();
     Auditor auditor = new AuditorMemoryImpl(vertx);
     PipelineExecutor instance = PipelineExecutor.create(null, auditor, new FilterFactory(Collections.emptyList()), null);
-    instance.validatePipeline(definition).onComplete(testContext.succeedingThenComplete());
+    instance.validatePipeline(null, definition).onComplete(testContext.succeedingThenComplete());
   }
 
   @Test
@@ -326,7 +326,7 @@ public class PipelineExecutorImplTest {
     Pipeline pipeline = Pipeline.builder().build();
 
     PipelineExecutor instance = PipelineExecutor.create(null, null, new FilterFactory(Collections.emptyList()), null);
-    Future<Pipeline> future = instance.validatePipeline(pipeline);
+    Future<Pipeline> future = instance.validatePipeline(null, pipeline);
     assertTrue(future.failed());
     assertThat(future.cause(), instanceOf(IllegalArgumentException.class));
     assertEquals("Source not specified in root pipeline", future.cause().getMessage());

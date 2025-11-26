@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 
 /**
@@ -38,7 +39,7 @@ public class PipelineTest {
   public void testValidateNullFormats() {
     Pipeline instance = Pipeline.builder().source(SourceSql.builder().endpoint("end").query("select 1").build()).build();
     assertThrows(IllegalArgumentException.class, () -> {
-      instance.validate();
+      instance.validate((RequestContext) null);
     });
   }
 
@@ -46,7 +47,7 @@ public class PipelineTest {
   public void testValidateNoFormats() {
     Pipeline instance = Pipeline.builder().source(SourceSql.builder().endpoint("end").query("select 1").build()).formats(Arrays.asList()).build();
     assertThrows(IllegalArgumentException.class, () -> {
-      instance.validate();
+      instance.validate((RequestContext) null);
     });
   }
 
@@ -60,7 +61,7 @@ public class PipelineTest {
                     )
             )
             .build();
-    instance1.validate();
+    instance1.validate((RequestContext) null);
 
     Pipeline instance2 = Pipeline.builder()
             .source(SourceTest.builder().name("test").rowCount(1).build())
@@ -72,7 +73,7 @@ public class PipelineTest {
                     )
             )
             .build();
-    instance2.validate();
+    instance2.validate((RequestContext) null);
 
     Pipeline instance3 = Pipeline.builder()
             .source(SourceTest.builder().name("test").rowCount(1).build())
@@ -84,7 +85,7 @@ public class PipelineTest {
                     )
             )
             .build();
-    instance3.validate();
+    instance3.validate((RequestContext) null);
 
     // Does not fail on construction
     Pipeline.builder()
@@ -109,7 +110,7 @@ public class PipelineTest {
                           )
                   )
                   .build()
-                  .validate();
+                  .validate((RequestContext) null);
     });
     
 
@@ -122,28 +123,28 @@ public class PipelineTest {
                   .source(SourceTest.builder().name("test").rowCount(1).build())
                   .formats(Arrays.asList(FormatDelimited.builder().build(), FormatDelimited.builder().build()))
                   .build()
-                  .validate();
+                  .validate((RequestContext) null);
     });
     
     Pipeline instance4 = Pipeline.builder()
             .source(SourceTest.builder().name("test").rowCount(1).build())
             .formats(Arrays.asList(FormatDelimited.builder().build()))
             .build();
-    instance4.validate();
+    instance4.validate((RequestContext) null);
     
     Pipeline instance5 = Pipeline.builder()
             .condition(new Condition("£$%£$%"))
             .source(SourceTest.builder().name("test").rowCount(1).build())
             .formats(Arrays.asList(FormatDelimited.builder().build()))
             .build();
-    assertThrows(IllegalArgumentException.class, () -> {instance5.validate();});
+    assertThrows(IllegalArgumentException.class, () -> {instance5.validate((RequestContext) null);});
 
     Pipeline instance7 = Pipeline.builder()
             .rateLimitRules(Arrays.asList(RateLimitRule.builder().build()))
             .source(SourceTest.builder().name("test").rowCount(1).build())
             .formats(Arrays.asList(FormatDelimited.builder().build()))
             .build();
-    assertThrows(IllegalArgumentException.class, () -> {instance7.validate();});
+    assertThrows(IllegalArgumentException.class, () -> {instance7.validate((RequestContext) null);});
 
     Pipeline instance8 = Pipeline.builder()
             .source(SourceTest.builder().name("test").rowCount(1).build())
@@ -155,7 +156,7 @@ public class PipelineTest {
                     )
             )
             .build();
-    assertThrows(IllegalArgumentException.class, () -> {instance8.validate();});
+    assertThrows(IllegalArgumentException.class, () -> {instance8.validate((RequestContext) null);});
   }
 
   @Test
@@ -164,7 +165,7 @@ public class PipelineTest {
             .source(SourceTest.builder().name("test").rowCount(1).build())
             .formats(Arrays.asList(FormatDelimited.builder().build()))
             .build();
-    instance1.validate();
+    instance1.validate((RequestContext) null);
 
     Pipeline instance2 = Pipeline.builder()
             .source(SourceTest.builder().name("test").rowCount(1).build())
@@ -181,7 +182,7 @@ public class PipelineTest {
                     )
             )
             .build();
-    instance2.validate();
+    instance2.validate((RequestContext) null);
 
     Pipeline instance3 = Pipeline.builder()
             .source(SourceTest.builder().name("test").rowCount(1).build())
@@ -198,7 +199,7 @@ public class PipelineTest {
                     )
             )
             .build();
-    assertThrows(IllegalArgumentException.class, () -> {instance3.validate();});
+    assertThrows(IllegalArgumentException.class, () -> {instance3.validate((RequestContext) null);});
   }
 
   @Test
@@ -253,7 +254,7 @@ public class PipelineTest {
     Format format = FormatDelimited.builder().build();
     instance = Pipeline.builder().source(SourceSql.builder().endpoint("end").query("select 1").build()).formats(Arrays.asList(format)).build();
     assertEquals(format, instance.getFormats().get(0));
-    instance.validate();
+    instance.validate((RequestContext) null);
   }
 
   @Test
@@ -267,7 +268,7 @@ public class PipelineTest {
                               )
                       )
                       .build()
-                      .validate();
+                      .validate((RequestContext) null);
             });
   }
   
@@ -287,7 +288,7 @@ public class PipelineTest {
                  """;
     Pipeline pipeline = PipelineDefnLoader.JSON_OBJECT_MAPPER.readValue(src, Pipeline.class);
     assertNotNull(pipeline);
-    pipeline.validate();
+    pipeline.validate((RequestContext) null);
   }
 
   @Test
@@ -309,7 +310,7 @@ public class PipelineTest {
                  """;
     Pipeline pipeline = PipelineDefnLoader.YAML_OBJECT_MAPPER.readValue(src, Pipeline.class);
     assertNotNull(pipeline);
-    pipeline.validate();
+    pipeline.validate((RequestContext) null);
   }
   
 }
