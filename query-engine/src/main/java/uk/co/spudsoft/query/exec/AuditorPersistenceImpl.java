@@ -1188,13 +1188,18 @@ public class AuditorPersistenceImpl implements Auditor {
       ps.setClob(6, new StringReader(argsJson)); // CLOB-safe
     }).onComplete(ar -> {
       if (ar.failed()) {
-        Log.decorate(logger.atWarn(), pipelineContext).log("Faild to write record source: ", ar.cause());
+        Log.decorate(logger.atWarn(), pipelineContext).log("Faild to record source: ", ar.cause());
       }
       jdbcHelper.runSqlUpdate("recordRequestSource", SqlTemplate.RECORD_REQUEST_SOURCE.sql(), ps -> {
           ps.setString(1, pipelineContext.getRequestContext().getRequestId());
           ps.setString(2, JdbcHelper.limitLength(pipelineContext.getPipe(), 250));
           ps.setTimestamp(3, Timestamp.from(Instant.now()), cal);
           ps.setString(4, JdbcHelper.limitLength(hash, 32));
+      })
+      .onComplete(ar2 -> {
+        if (ar2.failed()) {
+          Log.decorate(logger.atWarn(), pipelineContext).log("Faild to record request source: ", ar.cause());
+        }
       });
     }).mapEmpty();
   }
