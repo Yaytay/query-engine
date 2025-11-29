@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.exec.procs.subquery;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.streams.ReadStream;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -89,6 +90,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
   private boolean primaryEnded = false;
   private T currentPrimary;
   private List<U> currentSecondaryRows;
+  private int childRowInitialCount = 32;
   private final Deque<T> primaryRows;
   private final Deque<U> secondaryRows;
 
@@ -189,7 +191,10 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
     synchronized (lock) {
       if (currentPrimary == null) {
         currentPrimary = item;
-        currentSecondaryRows = new ArrayList<>();
+        if (currentSecondaryRows != null && currentSecondaryRows.size() > childRowInitialCount) {
+          childRowInitialCount = currentSecondaryRows.size();
+        }
+        currentSecondaryRows = new ArrayList<>(childRowInitialCount);
       } else {
         primaryRows.add(item);
         if (!secondaryEnded) {
@@ -236,7 +241,12 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
 
   private void doEmit() {
     if (emitting.compareAndSet(false, true)) {
-      context.runOnContext(this::emit);
+      Context currentContext = Vertx.currentContext();
+      if (currentContext == context) {
+        emit(null);
+      } else {
+        context.runOnContext(this::emit);
+      }
     }
   }
 
@@ -246,7 +256,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
         U curSec = secondaryRows.peek();
         int compare = this.comparator.compare(currentPrimary, curSec);
         if (compare > 0) {
-          Log.decorate(logger.atTrace(), pipelineContext).log("Skipping secondary row {} because it is before {}", curSec, currentPrimary);
+          Log.decorate(logger.atWarn(), pipelineContext).log("Skipping secondary row {} because it is before {}", curSec, currentPrimary);
           secondaryRows.pop();
         } else if (compare == 0) {
           currentSecondaryRows.add(secondaryRows.pop());
@@ -288,14 +298,15 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
             capturedEndHandler = endHandler;
             endHandler = null;
           } else {
-            if (!secondaryRows.isEmpty() && (currentSecondaryRows == null || currentSecondaryRows.isEmpty())) {
-              bringInSecondaries();
-            }
+            bringInSecondaries();
             if (!secondaryRows.isEmpty() || secondaryEnded) {
               mergePrimary = currentPrimary;
               mergeSecondary = currentSecondaryRows;
               capturedHandler = handler;
-              currentSecondaryRows = new ArrayList<>();
+              if (currentSecondaryRows != null && currentSecondaryRows.size() > childRowInitialCount) {
+                childRowInitialCount = currentSecondaryRows.size();
+              }
+              currentSecondaryRows = new ArrayList<>(childRowInitialCount);
               if (!primaryRows.isEmpty()) {
                 currentPrimary = primaryRows.pop();
                 bringInSecondaries();

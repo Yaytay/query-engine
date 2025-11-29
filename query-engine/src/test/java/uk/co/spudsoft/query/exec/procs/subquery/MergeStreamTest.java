@@ -32,7 +32,9 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.not;
+import org.junit.jupiter.api.AfterAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -56,9 +58,22 @@ public class MergeStreamTest {
 
   private static final Logger logger = LoggerFactory.getLogger(MergeStreamTest.class);
 
-  private static final int PRIMARY_ROWS = 3770;
-  private static final int TEST_ITERATIONS = 10;
+  private static final int PRIMARY_ROWS = 1000;
+  private static final int TEST_ITERATIONS = 1000;
 
+  private Vertx vertx;
+
+  @BeforeAll
+  public void setup(Vertx vertx, VertxTestContext testContext) {
+    this.vertx = vertx;
+    testContext.completeNow();
+  }
+
+  @AfterAll
+  public void teardown(VertxTestContext testContext) {
+    testContext.completeNow();
+  }
+  
   private DataRow merge(DataRow parent, Collection<DataRow> children) {
     int sum = 0;
     for (DataRow child : children) {
@@ -80,7 +95,7 @@ public class MergeStreamTest {
 
   @ParameterizedTest
   @MethodSource("iterationProvider")
-  public void testInnerJoin(int iteration, Vertx vertx, VertxTestContext testContext) {
+  public void testInnerJoin(int iteration, VertxTestContext testContext) {
 
     logger.info("Running inner join iteration {}", iteration);
 
@@ -127,7 +142,7 @@ public class MergeStreamTest {
 
   @ParameterizedTest
   @MethodSource("iterationProvider")
-  public void testLeftJoin(int iteration, Vertx vertx, VertxTestContext testContext) {
+  public void testLeftJoin(int iteration, VertxTestContext testContext) {
 
     logger.info("Running left join iteration {}", iteration);
     
