@@ -25,6 +25,8 @@ import io.vertx.junit5.VertxTestContext;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
@@ -33,6 +35,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.DataRow;
@@ -67,8 +71,15 @@ public class MergeStreamTest {
     return i1.compareTo(i2);
   }
    
-  @Test
-  public void testInnerJoin(Vertx vertx, VertxTestContext testContext) {
+  static Stream<Integer> iterationProvider() {
+    return IntStream.rangeClosed(1, 1000).boxed();
+  }
+
+  @ParameterizedTest
+  @MethodSource("iterationProvider")
+  public void testInnerJoin(int iteration, Vertx vertx, VertxTestContext testContext) {
+    
+    logger.info("Running iteration {}", iteration);
 
     Context context = vertx.getOrCreateContext();
         
