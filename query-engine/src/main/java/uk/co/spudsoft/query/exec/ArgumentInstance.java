@@ -56,7 +56,7 @@ public final class ArgumentInstance {
     if (!definition.isMultiValued() && this.values.size() > 1) {
       throw new IllegalArgumentException("Argument " + definition.getName() + " is not multi valued but " + this.values.size() + " values supplied");
     }
-    if (!definition.isOptional() && this.values.isEmpty()) {
+    if (!definition.isOptional() && !definition.isHidden() && this.values.isEmpty()) {
       throw new IllegalArgumentException("Argument " + definition.getName() + " is not optional but has no value");
     }
   }
