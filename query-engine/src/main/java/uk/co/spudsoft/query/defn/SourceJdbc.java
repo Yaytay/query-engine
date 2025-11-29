@@ -74,12 +74,12 @@ public final class SourceJdbc implements Source {
   
   private final Duration connectionTimeout;
   private final Boolean replaceDoubleQuotes;
-  private final ImmutableList<ColumnTypeOverride> columnTypeOverrides;
+  private final ImmutableList<ColumnType> columnTypeOverrides;
   private final ImmutableMap<String, DataType> columnTypeOverrideMap;
   
   
   @Override
-  public void validate() throws IllegalArgumentException {
+  public void validate(PipelineContext pipelineContext) throws IllegalArgumentException {
     validateType(SourceType.JDBC, type);
     if (Strings.isNullOrEmpty(endpoint) && Strings.isNullOrEmpty(endpointTemplate)) {
       throw new IllegalArgumentException("Neither endpoint nor endpointTemplate specified in JDBC source");
@@ -381,7 +381,7 @@ public final class SourceJdbc implements Source {
                         Setting a column to use a type that the result does not fit is going to cause problems (loss of data or errors) - so be sure you do this with care.
                         """
   )
-  public List<ColumnTypeOverride> getColumnTypeOverrides() {
+  public List<ColumnType> getColumnTypeOverrides() {
     return columnTypeOverrides;
   }
   
@@ -410,7 +410,7 @@ public final class SourceJdbc implements Source {
     private int processingBatchSize = 1000;
     private Duration connectionTimeout;
     private Boolean replaceDoubleQuotes;
-    private ImmutableList<ColumnTypeOverride> columnTypeOverrides;
+    private ImmutableList<ColumnType> columnTypeOverrides;
 
     private Builder() {
     }
@@ -520,7 +520,7 @@ public final class SourceJdbc implements Source {
      * @param value The value for the {@link SourceJdbc#columnTypeOverrides}.
      * @return this, so that this builder may be used in a fluent manner.
      */
-    public Builder columnTypeOverrides(final List<ColumnTypeOverride> value) {
+    public Builder columnTypeOverrides(final List<ColumnType> value) {
       this.columnTypeOverrides = ImmutableCollectionTools.copy(value);
       return this;
     }
@@ -572,7 +572,7 @@ public final class SourceJdbc implements Source {
           , final int processingBatchSize
           , final Duration connectionTimeout
           , final Boolean replaceDoubleQuotes
-          , final List<ColumnTypeOverride> columnTypeOverrides
+          , final List<ColumnType> columnTypeOverrides
   ) {
     validateType(SourceType.JDBC, type);
     this.type = type;

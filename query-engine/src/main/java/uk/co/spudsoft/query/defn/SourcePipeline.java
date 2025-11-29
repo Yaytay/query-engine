@@ -23,6 +23,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
@@ -58,7 +59,7 @@ public class SourcePipeline {
     if (source == null) {
       throw new IllegalArgumentException("Source not specified in " + name + " pipeline");
     }
-    source.validate();
+    source.validate(new PipelineContext(name, requestContext));
     processors.forEach(p -> p.validate(requestContext));
   }
 

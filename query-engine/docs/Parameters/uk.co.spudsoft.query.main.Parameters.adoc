@@ -315,8 +315,13 @@ add additional environmental information to the context.
 
 | [[rootRedirectUrl]]rootRedirectUrl
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
-| Set the URL to redirect requests to / to.By default requests to / redirect to /openapi and display the OpenAPI docs.
-This is not much use in a path hijack situation, so allow for the provision of an alternative.
+| Set the URL to redirect requests to / to.
+
+By default requests to / redirect to /ui/ and display the Query Engine UI.
+This is not much use in a path hijack situation, so this allows for the provision of an alternative.
+
+
+The redirection is literally to the string provided here, so this may either be a full URL or a path (which may be relative or absolute).
 
 | [[securityHeaders]]securityHeaders
 | uk.co.spudsoft.query.main.SecurityHeadersConfig

@@ -60,7 +60,7 @@ public class SourceTest implements Source {
   private final int delayMs;
 
   @Override
-  public void validate() {
+  public void validate(PipelineContext pipelineContext) {
     validateType(SourceType.TEST, type);
     if (rowCount < 0) {
       throw new IllegalArgumentException(type + "Source has negative value for rowCount");

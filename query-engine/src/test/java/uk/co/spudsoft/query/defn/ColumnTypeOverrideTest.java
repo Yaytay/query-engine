@@ -29,19 +29,19 @@ public class ColumnTypeOverrideTest {
   
   @Test
   public void testGetColumn() {
-    ColumnTypeOverride cto = ColumnTypeOverride.builder().build();
+    ColumnType cto = ColumnType.builder().build();
     assertNotNull(cto);
     assertNull(cto.getColumn());
-    cto = ColumnTypeOverride.builder().column("col").build();
+    cto = ColumnType.builder().column("col").build();
     assertEquals("col", cto.getColumn());
   }
 
   @Test
   public void testGetType() {
-    ColumnTypeOverride cto = ColumnTypeOverride.builder().build();
+    ColumnType cto = ColumnType.builder().build();
     assertNotNull(cto);
     assertNull(cto.getType());
-    cto = ColumnTypeOverride.builder().type(DataType.Double).build();
+    cto = ColumnType.builder().type(DataType.Double).build();
     assertEquals(DataType.Double, cto.getType());
   }
 

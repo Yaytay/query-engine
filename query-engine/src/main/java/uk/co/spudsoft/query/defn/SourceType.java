@@ -39,6 +39,10 @@ public enum SourceType {
    */
   JDBC, 
   /**
+   * The static source that outputs fixed, defined, data.
+   */
+  STATIC, 
+  /**
    * The HTTP source that can pull data from an HTTP endpoint that outputs JSON.
    */
   HTTP

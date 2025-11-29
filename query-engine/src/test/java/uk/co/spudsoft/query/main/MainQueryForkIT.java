@@ -243,7 +243,22 @@ public class MainQueryForkIT {
             .statusCode(200)
             .extract().body().asString();
     
-    assertThat(body, startsWith("1,\"1971-05-07T03:00\",\"antiquewhite\",\"first\",\""));
+    assertThat(body, startsWith(""));
+    
+    body = given()
+            .log().all()
+            .get("/query/sub1/sub2/DemoStatic?_fmt=tab")
+            .then()
+            .log().ifError()
+            .statusCode(200)
+            .extract().body().asString();
+    
+    assertThat(body, equalTo("""
+                             "Id"\t"DoubleField"\t"TextField"\t"DateField"\t"TimeField"\t"DateTimeField"
+                             1\t1.2\t"Text"\t"1971-05-06"\t"08:19"\t"1971-05-06T08:19"
+                             2\t2.4\t"Text2"\t"1971-05-07"\t"08:20"\t"1971-05-07T08:20"
+                             3\t3.6\t"Text3"\t"1971-05-08"\t"08:21"\t"1971-05-08T08:21"
+                             """));
     
     body = given()
             .queryParam("key", postgres.getName())

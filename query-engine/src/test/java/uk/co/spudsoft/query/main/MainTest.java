@@ -108,13 +108,13 @@ public class MainTest {
     
     Main.prepareBaseConfigPath(testDir, null);
     assertTrue(testDir.exists());
-    assertEquals(35, countFilesInDir(testDir));
+    assertEquals(36, countFilesInDir(testDir));
     FileTime lastMod1 = Files.getLastModifiedTime(testDir.toPath());
     Thread.sleep(1000);
     
     Main.prepareBaseConfigPath(testDir, null);
     assertTrue(testDir.exists());
-    assertEquals(35, countFilesInDir(testDir));
+    assertEquals(36, countFilesInDir(testDir));
     FileTime lastMod2 = Files.getLastModifiedTime(testDir.toPath());
     assertEquals(lastMod1, lastMod2);
     logger.info("testPrepareBaseConfigPath - exit");

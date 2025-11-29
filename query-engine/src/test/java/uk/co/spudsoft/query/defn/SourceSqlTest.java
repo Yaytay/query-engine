@@ -38,31 +38,31 @@ public class SourceSqlTest {
   public void testValidate() {
     assertThrows(IllegalArgumentException.class
             , () -> {
-              SourceSql.builder().endpoint(null).endpointTemplate(null).build().validate();
+              SourceSql.builder().endpoint(null).endpointTemplate(null).build().validate(null);
             });
     assertThrows(IllegalArgumentException.class
             , () -> {
-              SourceSql.builder().endpoint(null).endpointTemplate("endpointTemplate").query(null).build().validate();
+              SourceSql.builder().endpoint(null).endpointTemplate("endpointTemplate").query(null).build().validate(null);
             });
     assertThrows(IllegalArgumentException.class
             , () -> {
-              SourceSql.builder().endpoint(null).endpointTemplate("endpointTemplate").query("").build().validate();
+              SourceSql.builder().endpoint(null).endpointTemplate("endpointTemplate").query("").build().validate(null);
             });
     assertThrows(IllegalArgumentException.class
             , () -> {
-              SourceSql.builder().endpoint(null).endpointTemplate("endpointTemplate").query("select").maxPoolSize(-1).build().validate();
+              SourceSql.builder().endpoint(null).endpointTemplate("endpointTemplate").query("select").maxPoolSize(-1).build().validate(null);
             });
     assertThrows(IllegalArgumentException.class
             , () -> {
-              SourceSql.builder().endpoint(null).endpointTemplate("endpointTemplate").query("select").maxPoolWaitQueueSize(-1).build().validate();
+              SourceSql.builder().endpoint(null).endpointTemplate("endpointTemplate").query("select").maxPoolWaitQueueSize(-1).build().validate(null);
             });
     assertThrows(IllegalArgumentException.class
             , () -> {
-              SourceSql.builder().endpoint(null).endpointTemplate("endpointTemplate").query("select").idleTimeout(Duration.ofMillis(-10)).build().validate();
+              SourceSql.builder().endpoint(null).endpointTemplate("endpointTemplate").query("select").idleTimeout(Duration.ofMillis(-10)).build().validate(null);
             });
     assertThrows(IllegalArgumentException.class
             , () -> {
-              SourceSql.builder().endpoint(null).endpointTemplate("endpointTemplate").query("select").connectionTimeout(Duration.ofMillis(-10)).build().validate();
+              SourceSql.builder().endpoint(null).endpointTemplate("endpointTemplate").query("select").connectionTimeout(Duration.ofMillis(-10)).build().validate(null);
             });
     SourceSql.builder()
             .endpoint(null)
@@ -73,7 +73,7 @@ public class SourceSqlTest {
             .idleTimeout(Duration.ofMillis(10))
             .connectionTimeout(Duration.ofMillis(10))
             .build()
-            .validate();
+            .validate(null);
   }
   
   @Test

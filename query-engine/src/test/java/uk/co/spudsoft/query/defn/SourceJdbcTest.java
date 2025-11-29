@@ -97,7 +97,7 @@ class SourceJdbcTest {
             .type(SourceType.JDBC)
             .query("select 1")
             .build();
-    assertDoesNotThrow(src::validate);
+    assertDoesNotThrow(() -> src.validate(null));
   }
 
   @Test
@@ -108,7 +108,7 @@ class SourceJdbcTest {
             .type(SourceType.JDBC)
             .queryTemplate("select 2")
             .build();
-    assertDoesNotThrow(src::validate);
+    assertDoesNotThrow(() -> src.validate(null));
   }
 
   @Test
@@ -118,7 +118,7 @@ class SourceJdbcTest {
             .endpoint("ep")
             .type(SourceType.JDBC)
             .build();
-    Exception ex = assertThrows(IllegalArgumentException.class, src::validate);
+    Exception ex = assertThrows(IllegalArgumentException.class, () -> src.validate(null));
     assertThat(ex.getMessage().toLowerCase(), containsString("query nor querytemplate"));
   }
 
@@ -131,7 +131,7 @@ class SourceJdbcTest {
             .queryTemplate("query")
             .type(SourceType.JDBC)
             .build();
-    Exception ex = assertThrows(IllegalArgumentException.class, src::validate);
+    Exception ex = assertThrows(IllegalArgumentException.class, () -> src.validate(null));
     assertThat(ex.getMessage().toLowerCase(), containsString("query and querytemplate"));
   }
 
@@ -155,7 +155,7 @@ class SourceJdbcTest {
             .type(SourceType.JDBC)
             .queryTemplate("select 2")
             .build();
-    Exception ex = assertThrows(IllegalArgumentException.class, src::validate);
+    Exception ex = assertThrows(IllegalArgumentException.class, () -> src.validate(null));
     assertThat(ex.getMessage().toLowerCase(), containsString("endpoint nor endpointtemplate"));
   }
   
@@ -168,7 +168,7 @@ class SourceJdbcTest {
             .queryTemplate("select 2")
             .connectionTimeout(Duration.ofDays(-1))
             .build();
-    Exception ex = assertThrows(IllegalArgumentException.class, src::validate);
+    Exception ex = assertThrows(IllegalArgumentException.class, () -> src.validate(null));
     assertThat(ex.getMessage().toLowerCase(), containsString("connectiontimeout"));
   }
   
@@ -181,7 +181,7 @@ class SourceJdbcTest {
             .queryTemplate("select 2")
             .processingBatchSize(57)
             .build();
-    Exception ex = assertThrows(IllegalArgumentException.class, src::validate);
+    Exception ex = assertThrows(IllegalArgumentException.class, () -> src.validate(null));
     assertThat(ex.getMessage().toLowerCase(), containsString("processingbatchsize"));
   }
 }

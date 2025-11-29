@@ -21,28 +21,16 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
- * Override of the data type for a specific column.
- * 
- * This facility is rarely required, but can be useful when a database does not provide adequate information for Query Engine to correctly identify the type of a field.
- * 
- * This is known to be useful for boolean fields with MySQL.
- * 
- * Setting a column to use a type that the result does not fit is going to cause problems (loss of data or errors) - so be sure you do this with care.
+ * Specify the data type for a column.
  * 
  * @author jtalbut
  */
-@JsonDeserialize(builder = ColumnTypeOverride.Builder.class)
+@JsonDeserialize(builder = ColumnType.Builder.class)
 @Schema(description = """
-                      Override of the data type for a specific column.
-                      
-                      This facility is rarely required, but can be useful when a database does not provide adequate information for Query Engine to correctly identify the type of a field.
-                      
-                      This is known to be useful for boolean fields with MySQL.
-                      
-                      Setting a column to use a type that the result does not fit is going to cause problems (loss of data or errors) - so be sure you do this with care.
+                      Specify the data type for a column.
                       """
 )
-public class ColumnTypeOverride {
+public class ColumnType {
   
   private final String column;
   private final DataType type;
@@ -73,7 +61,7 @@ public class ColumnTypeOverride {
   }
   
   /**
-   * Builder class for ColumnTypeOverride.
+   * Builder class for ColumnType.
    */
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class Builder {
@@ -85,8 +73,8 @@ public class ColumnTypeOverride {
     }
 
     /**
-     * Set the {@link ColumnTypeOverride#column} value in the builder.
-     * @param value The value for the {@link ColumnTypeOverride#column}.
+     * Set the {@link ColumnType#column} value in the builder.
+     * @param value The value for the {@link ColumnType#column}.
      * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder column(final String value) {
@@ -95,8 +83,8 @@ public class ColumnTypeOverride {
     }
 
     /**
-     * Set the {@link ColumnTypeOverride#type} value in the builder.
-     * @param value The value for the {@link ColumnTypeOverride#type}.
+     * Set the {@link ColumnType#type} value in the builder.
+     * @param value The value for the {@link ColumnType#type}.
      * @return this, so that this builder may be used in a fluent manner.
      */
     public Builder type(final DataType value) {
@@ -105,23 +93,23 @@ public class ColumnTypeOverride {
     }
 
     /**
-     * Create a new ColumnTypeOverride object.
-     * @return a new ColumnTypeOverride object. 
+     * Create a new ColumnType object.
+     * @return a new ColumnType object. 
      */
-    public ColumnTypeOverride build() {
-      return new uk.co.spudsoft.query.defn.ColumnTypeOverride(column, type);
+    public ColumnType build() {
+      return new uk.co.spudsoft.query.defn.ColumnType(column, type);
     }
   }
   
   /**
-   * Create a new ColumnTypeOverride builder.
-   * @return a new ColumnTypeOverride builder. 
+   * Create a new ColumnType builder.
+   * @return a new ColumnType builder. 
    */
-  public static ColumnTypeOverride.Builder builder() {
-    return new ColumnTypeOverride.Builder();
+  public static ColumnType.Builder builder() {
+    return new ColumnType.Builder();
   }
 
-  private ColumnTypeOverride(final String column, final DataType type) {
+  private ColumnType(final String column, final DataType type) {
     this.column = column;
     this.type = type;
   }

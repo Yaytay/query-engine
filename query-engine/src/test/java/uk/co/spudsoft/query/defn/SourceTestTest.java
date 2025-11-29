@@ -61,10 +61,10 @@ public class SourceTestTest {
   @Test
   public void testValidate() {
     assertThrows(IllegalArgumentException.class, () -> {
-      SourceTest.builder().name("name").rowCount(-1).build().validate();
+      SourceTest.builder().name("name").rowCount(-1).build().validate(null);
     });
     assertThrows(IllegalArgumentException.class, () -> {
-      SourceTest.builder().name("name").delayMs(-1).build().validate();
+      SourceTest.builder().name("name").delayMs(-1).build().validate(null);
     });
     
   }

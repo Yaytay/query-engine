@@ -41,7 +41,8 @@ import uk.co.spudsoft.query.exec.context.PipelineContext;
 @JsonSubTypes({ 
   @Type(value = SourceSql.class, name = "SQL"), 
   @Type(value = SourceJdbc.class, name = "JDBC"), 
-  @Type(value = SourceTest.class, name = "TEST") 
+  @Type(value = SourceTest.class, name = "TEST"),
+  @Type(value = SourceStatic.class, name = "STATIC") 
 })
 @Schema(description = """
                       A Source is the source of data for a pipeline.
@@ -51,6 +52,7 @@ import uk.co.spudsoft.query.exec.context.PipelineContext;
           @DiscriminatorMapping(schema = SourceSql.class, value = "SQL")
           , @DiscriminatorMapping(schema = SourceJdbc.class, value = "JDBC")
           , @DiscriminatorMapping(schema = SourceTest.class, value = "TEST")
+          , @DiscriminatorMapping(schema = SourceStatic.class, value = "STATIC")
         }
 )
 public interface Source {
@@ -80,9 +82,10 @@ public interface Source {
   
   /**
    * Validate the Source.
+   * @param pipelineContext The context in which this pipeline is being validated.
    * @throws IllegalArgumentException if the Source is not usable.
    */
-  void validate() throws IllegalArgumentException;
+  void validate(PipelineContext pipelineContext) throws IllegalArgumentException;
   
   /**
    * Get the name of the Source, this is now deprecated.
