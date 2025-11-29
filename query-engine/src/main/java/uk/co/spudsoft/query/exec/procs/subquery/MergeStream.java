@@ -29,6 +29,7 @@ import java.util.function.BiFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.logging.Log;
 
 
 /**
@@ -121,7 +122,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
           , int secondaryStreamBufferHighThreshold
           , int secondaryStreamBufferLowThreshold
   ) {
-    logger.trace("Constructor streams: {} and {}; inner join: {}; primary thresholds: {}/{}; secondary thresholds: {}/{}"
+    Log.decorate(logger.atTrace(), pipelineContext).log("Constructor streams: {} and {}; inner join: {}; primary thresholds: {}/{}; secondary thresholds: {}/{}"
             , primaryStream, secondaryStream
             , innerJoin
             , primaryStreamBufferHighThreshold, primaryStreamBufferLowThreshold
@@ -164,14 +165,14 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
               .handler(null);
     } else {
       primaryStream.endHandler(v -> {
-        logger.trace("Ending primary stream");
+        Log.decorate(logger.atTrace(), pipelineContext).log("Ending primary stream");
         synchronized (lock) {
           primaryEnded = true;
         }
         doEmit();
       });
       secondaryStream.endHandler(v -> {
-        logger.trace("Ending secondary stream");
+        Log.decorate(logger.atTrace(), pipelineContext).log("Ending secondary stream");
         synchronized (lock) {
           secondaryEnded = true;
         }
@@ -184,7 +185,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
   }
 
   private void handlePrimaryItem(T item) {
-    logger.trace("Handling primary {}", item);
+    Log.decorate(logger.atTrace(), pipelineContext).log("Handling primary {}", item);
     synchronized (lock) {
       if (currentPrimary == null) {
         currentPrimary = item;
@@ -193,10 +194,10 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
         primaryRows.add(item);
         if (!secondaryEnded) {
           if (primaryRows.size() > this.primaryStreamBufferHighThreshold) {
-            logger.trace("Pausing primary stream at {} (childStream at {})", primaryRows.size(), secondaryRows.size());
+            Log.decorate(logger.atTrace(), pipelineContext).log("Pausing primary stream at {} (childStream at {})", primaryRows.size(), secondaryRows.size());
             primaryStream.pause();
             if (secondaryRows.size() < this.secondaryStreamBufferLowThreshold) {
-              logger.trace("Resuming secondary stream at {}", secondaryRows.size());
+              Log.decorate(logger.atTrace(), pipelineContext).log("Resuming secondary stream at {}", secondaryRows.size());
               secondaryStream.resume();
             }
           }
@@ -207,7 +208,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
   }
 
   private void handleSecondaryItem(U item) {
-    logger.trace("Handling secondary {}", item);
+    Log.decorate(logger.atTrace(), pipelineContext).log("Handling secondary {}", item);
     synchronized (lock) {
       if (currentPrimary == null) {
         if (primaryEnded) {
@@ -224,10 +225,10 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
         }
       }
       if (secondaryRows.size() > this.secondaryStreamBufferHighThreshold && !primaryEnded) {
-        logger.trace("Pausing secondary stream at {}", secondaryRows.size());
+        Log.decorate(logger.atTrace(), pipelineContext).log("Pausing secondary stream at {}", secondaryRows.size());
         secondaryStream.pause();
       } else if (secondaryRows.size() < this.secondaryStreamBufferLowThreshold) {
-        logger.trace("Resuming secondary stream at {}", secondaryRows.size());
+        Log.decorate(logger.atTrace(), pipelineContext).log("Resuming secondary stream at {}", secondaryRows.size());
         secondaryStream.resume();
       }
     }
@@ -245,7 +246,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
         U curSec = secondaryRows.peek();
         int compare = this.comparator.compare(currentPrimary, curSec);
         if (compare > 0) {
-          logger.trace("Skipping secondary row {} because it is before {}", curSec, currentPrimary);
+          Log.decorate(logger.atTrace(), pipelineContext).log("Skipping secondary row {} because it is before {}", curSec, currentPrimary);
           secondaryRows.pop();
         } else if (compare == 0) {
           currentSecondaryRows.add(secondaryRows.pop());
@@ -268,7 +269,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
         boolean resumePrimary = false;
         boolean resumeSecondary = false;
         synchronized (lock) {
-          logger.trace("Current: {} and {}, got {} primary rows{} and {} secondary rows{}"
+          Log.decorate(logger.atTrace(), pipelineContext).log("Current: {} and {}, got {} primary rows{} and {} secondary rows{}"
             , currentPrimary
             , currentSecondaryRows
             , primaryRows.size()
@@ -328,23 +329,23 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
           if (!innerJoin || (mergeSecondary != null && !mergeSecondary.isEmpty())) {
             if (mergePrimary != null) {
               V result = merger.apply(mergePrimary, mergeSecondary);
-              logger.trace("Outputting {}", result);
+              Log.decorate(logger.atTrace(), pipelineContext).log("Outputting {}", result);
               capturedHandler.handle(result);
             }
           }
         }
         if (capturedEndHandler != null) {
-          logger.trace("Ending");
+          Log.decorate(logger.atTrace(), pipelineContext).log("Ending");
           capturedEndHandler.handle(null);
           primaryStream.handler(null);
           secondaryStream.handler(null);
         } else {
           if (resumePrimary) {
-            logger.trace("Resuming primary stream at {} rows", primaryRows.size());
+            Log.decorate(logger.atTrace(), pipelineContext).log("Resuming primary stream at {} rows", primaryRows.size());
             primaryStream.resume();
           }
           if (resumeSecondary) {
-            logger.trace("Resuming secondary stream at {} rows", secondaryRows.size());
+            Log.decorate(logger.atTrace(), pipelineContext).log("Resuming secondary stream at {} rows", secondaryRows.size());
             secondaryStream.resume();
           }
         }
