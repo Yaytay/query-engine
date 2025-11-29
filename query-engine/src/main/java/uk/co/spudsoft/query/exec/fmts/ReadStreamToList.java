@@ -107,7 +107,7 @@ public class ReadStreamToList {
     }).exceptionHandler(ex -> {
       promise.tryFail(ex);
     }).handler(item -> {
-      log.debug().log("Got item: {}", item);
+      log.trace().log("Got item: {}", item);
       collected.add(item);
       if (subsequentFetch > 0 && (collected.size() % subsequentFetch == 0)) {
         input.fetch(subsequentFetch);

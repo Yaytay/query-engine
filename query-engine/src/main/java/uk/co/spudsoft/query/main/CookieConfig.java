@@ -37,7 +37,7 @@ public class CookieConfig {
   private String path;
   private CookieSameSite sameSite;
 
-  private static final Pattern VALID_NAME = Pattern.compile("^[-a-zA-Z0-9!#$%&'*+.^_`|~]+$");
+  private static final Pattern VALID_NAME = Pattern.compile("^[-a-zA-Z0-9+._]+$");
   
   /**
    * Constructor.
@@ -47,8 +47,10 @@ public class CookieConfig {
 
   /**
    * Constructor taking in minimal configuration.
-   * 
-   * The cookie name must be alphanumeric characters or any of the characters in "!#$%&amp;'*+.^_`|~]+".
+   * <P>
+   * The cookie name must be alphanumeric (ASCII) characters or any of the characters in "+-._".
+   * <P>
+   * This is more restrictive than browser specifications for cookies, but it should be adequate.
    * 
    * @param name the name of the cookie.
    */
@@ -59,7 +61,9 @@ public class CookieConfig {
   /**
    * The name of the cookie.
    * <P>
-   * The name must be alphanumeric characters or any of the characters in "!#$%&amp;'*+.^_`|~]+".
+   * The name must be alphanumeric characters or any of the characters in "+-._".
+   * <P>
+   * This is more restrictive than browser specifications for cookies, but it should be adequate.
    * 
    * @return name of the cookie.
    */
@@ -70,7 +74,9 @@ public class CookieConfig {
   /**
    * The name of the cookie.
    * <P>
-   * The name must be alphanumeric characters or any of the characters in "!#$%&amp;'*+.^_`|~]+".
+   * The name must be alphanumeric characters or any of the characters in "+-._".
+   * <P>
+   * This is more restrictive than browser specifications for cookies, but it should be adequate.
    * 
    * @param name the name of the cookie.
    */

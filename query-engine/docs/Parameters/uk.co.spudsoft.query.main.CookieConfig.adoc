@@ -16,7 +16,10 @@ The cookie value is a randomly generated key pointing to the JWT generated durin
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | The name of the cookie.
 
-The name must be alphanumeric characters or any of the characters in "!#$%&'*+.^_`|~]+".
+The name must be alphanumeric characters or any of the characters in "+-._".
+
+
+This is more restrictive than browser specifications for cookies, but it should be adequate.
 
 | [[secure]]secure
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Boolean.html[Boolean]

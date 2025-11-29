@@ -257,101 +257,100 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
   }
 
   private void emit(Void v) {
-    boolean moreToDo = true;
-    while (moreToDo) {
-      Handler<V> capturedHandler = null;
-      Handler<Void> capturedEndHandler = null;
-      T mergePrimary = null;
-      List<U> mergeSecondary = null;
+    try {
+      boolean moreToDo = true;
+      while (moreToDo) {
+        Handler<V> capturedHandler = null;
+        Handler<Void> capturedEndHandler = null;
+        T mergePrimary = null;
+        List<U> mergeSecondary = null;
 
-      boolean resumePrimary = false;
-      boolean resumeSecondary = false;
-      synchronized (lock) {
-        logger.trace("Current: {} and {}, got {} primary rows{} and {} secondary rows{}"
-                , currentPrimary
-                , currentSecondaryRows
-                , primaryRows.size()
-                , primaryEnded ? " (ended)" : ""
-                , secondaryRows.size()
-                , secondaryEnded ? " (ended)" : ""
-        );
-        if (demand  != Long.MAX_VALUE) {
-          if (demand <= 0) {
-            emitting.set(false);
-            return ;
-          }
-        }
-        if (primaryRows.isEmpty() && primaryEnded
-                && currentPrimary == null && (currentSecondaryRows == null || currentSecondaryRows.isEmpty())) {
-          emitting.set(false);
-          moreToDo = false;
-          capturedEndHandler = endHandler;
-          endHandler = null;
-        } else {
-          if (!secondaryRows.isEmpty() && (currentSecondaryRows == null || currentSecondaryRows.isEmpty())) {
-            bringInSecondaries();
-          }
-          if (!secondaryRows.isEmpty() || secondaryEnded) {
-            mergePrimary = currentPrimary;
-            mergeSecondary = currentSecondaryRows;
-            capturedHandler = handler;
-            currentSecondaryRows = new ArrayList<>();
-            if (!primaryRows.isEmpty()) {
-              currentPrimary = primaryRows.pop();
-              bringInSecondaries();
-            } else {
-              currentPrimary = null;
-              if (primaryEnded) {
-                emitting.set(false);
-                moreToDo = false;
-                capturedEndHandler = endHandler;
-                endHandler = null;
-              } else {
-                emitting.set(false);
-                moreToDo = false;
-              }
+        boolean resumePrimary = false;
+        boolean resumeSecondary = false;
+        synchronized (lock) {
+          logger.trace("Current: {} and {}, got {} primary rows{} and {} secondary rows{}"
+            , currentPrimary
+            , currentSecondaryRows
+            , primaryRows.size()
+            , primaryEnded ? " (ended)" : ""
+            , secondaryRows.size()
+            , secondaryEnded ? " (ended)" : ""
+          );
+          if (demand != Long.MAX_VALUE) {
+            if (demand <= 0) {
+              moreToDo = false;
             }
-          } else if (!secondaryEnded) {
-            emitting.set(false);
+          }
+          if (primaryRows.isEmpty() && primaryEnded
+            && currentPrimary == null && (currentSecondaryRows == null || currentSecondaryRows.isEmpty())) {
             moreToDo = false;
-          }
-          resumePrimary = !primaryEnded && primaryRows.size() < primaryStreamBufferLowThreshold;
-          resumeSecondary = !secondaryEnded && secondaryRows.size() < secondaryStreamBufferLowThreshold;
+            capturedEndHandler = endHandler;
+            endHandler = null;
+          } else {
+            if (!secondaryRows.isEmpty() && (currentSecondaryRows == null || currentSecondaryRows.isEmpty())) {
+              bringInSecondaries();
+            }
+            if (!secondaryRows.isEmpty() || secondaryEnded) {
+              mergePrimary = currentPrimary;
+              mergeSecondary = currentSecondaryRows;
+              capturedHandler = handler;
+              currentSecondaryRows = new ArrayList<>();
+              if (!primaryRows.isEmpty()) {
+                currentPrimary = primaryRows.pop();
+                bringInSecondaries();
+              } else {
+                currentPrimary = null;
+                if (primaryEnded) {
+                  moreToDo = false;
+                  capturedEndHandler = endHandler;
+                  endHandler = null;
+                } else {
+                  moreToDo = false;
+                }
+              }
+            } else if (!secondaryEnded) {
+              moreToDo = false;
+            }
+            resumePrimary = !primaryEnded && primaryRows.size() < primaryStreamBufferLowThreshold;
+            resumeSecondary = !secondaryEnded && secondaryRows.size() < secondaryStreamBufferLowThreshold;
 
-          if (capturedHandler != null) {
-            if (!innerJoin || (mergeSecondary != null && !mergeSecondary.isEmpty())) {
-              if (demand != Long.MAX_VALUE) {
-                --demand;
+            if (capturedHandler != null) {
+              if (!innerJoin || (mergeSecondary != null && !mergeSecondary.isEmpty())) {
+                if (demand != Long.MAX_VALUE) {
+                  --demand;
+                }
               }
             }
           }
         }
-      }
 
-      if (capturedHandler != null) {
-        if (!innerJoin || (mergeSecondary != null && !mergeSecondary.isEmpty())) {
-          if (mergePrimary != null) {
-            V result = merger.apply(mergePrimary, mergeSecondary);
-            logger.trace("Outputting {}", result);
-            capturedHandler.handle(result);
+        if (capturedHandler != null) {
+          if (!innerJoin || (mergeSecondary != null && !mergeSecondary.isEmpty())) {
+            if (mergePrimary != null) {
+              V result = merger.apply(mergePrimary, mergeSecondary);
+              logger.trace("Outputting {}", result);
+              capturedHandler.handle(result);
+            }
+          }
+        }
+        if (capturedEndHandler != null) {
+          logger.trace("Ending");
+          capturedEndHandler.handle(null);
+          primaryStream.handler(null);
+          secondaryStream.handler(null);
+        } else {
+          if (resumePrimary) {
+            logger.trace("Resuming primary stream at {} rows", primaryRows.size());
+            primaryStream.resume();
+          }
+          if (resumeSecondary) {
+            logger.trace("Resuming secondary stream at {} rows", secondaryRows.size());
+            secondaryStream.resume();
           }
         }
       }
-      if (capturedEndHandler != null) {
-        logger.trace("Ending");
-        capturedEndHandler.handle(null);
-        primaryStream.handler(null);
-        secondaryStream.handler(null);
-      } else {
-        if (resumePrimary) {
-          logger.trace("Resuming primary stream at {} rows", primaryRows.size());
-          primaryStream.resume();
-        }
-        if (resumeSecondary) {
-          logger.trace("Resuming secondary stream at {} rows", secondaryRows.size());
-          secondaryStream.resume();
-        }
-      }
+    } finally {
+      emitting.set(false);
     }
   }
 

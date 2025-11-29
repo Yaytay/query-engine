@@ -99,7 +99,7 @@ public class ListReadStream<T> implements ReadStream<T> {
       callHandler(item, handlerCaptured, exceptionHandlerCaptured);
 
       if (ended && endHandlerCaptured != null) {
-        Log.decorate(logger.atDebug(), pipelineContext).log("Ending");
+        Log.decorate(logger.atTrace(), pipelineContext).log("Ending");
         endHandlerCaptured.handle(null);
         return;
       }
