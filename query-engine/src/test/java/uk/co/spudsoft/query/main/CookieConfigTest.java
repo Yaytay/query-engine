@@ -97,7 +97,6 @@ public class CookieConfigTest {
     ex = assertThrows(IllegalArgumentException.class, () -> {
       new CookieConfig("£4.50").validate("cookie");
     });
-    assertEquals("cookie.name is invalid, must match ^[-a-zA-Z0-9!#$%&'*+.^_`|~]+$, was \"£4.50\"", ex.getMessage());
+    assertEquals("cookie.name is invalid, must match ^[-a-zA-Z0-9+._]+$, was \"£4.50\"", ex.getMessage());
   }
-  
 }
