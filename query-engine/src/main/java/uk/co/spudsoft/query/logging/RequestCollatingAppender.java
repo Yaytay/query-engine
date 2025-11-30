@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.logging;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.core.AppenderBase;
 import com.google.common.base.Strings;
 import io.vertx.core.json.Json;
@@ -141,6 +142,10 @@ public class RequestCollatingAppender extends AppenderBase<ILoggingEvent> {
     String logger = event.getLoggerName();
     String thread = event.getThreadName();
     String msg = event.getFormattedMessage();
+    IThrowableProxy exception = event.getThrowableProxy();
+    if (exception != null) {
+      msg = msg + exception.getClassName() + ": " + exception.getMessage();
+    }
     String kvpJson = null;
     try {
       kvpJson = Json.encode(event.getKeyValuePairs());

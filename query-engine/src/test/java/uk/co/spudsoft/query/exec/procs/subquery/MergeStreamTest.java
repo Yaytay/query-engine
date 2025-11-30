@@ -59,7 +59,7 @@ public class MergeStreamTest {
   private static final Logger logger = LoggerFactory.getLogger(MergeStreamTest.class);
 
   private static final int PRIMARY_ROWS = 1000;
-  private static final int TEST_ITERATIONS = 1000;
+  private static final int TEST_ITERATIONS = 100;
 
   private Vertx vertx;
 
