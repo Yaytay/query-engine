@@ -807,11 +807,10 @@
             <executions>
               <execution>
                 <id>copy-ui</id>
-                <!-- here the phase you need -->
-                <phase>generate-resources</phase>
                 <goals>
                   <goal>copy-resources</goal>
                 </goals>
+                <phase>compile</phase>
                 <configuration>
                   <outputDirectory>${basedir}/target/classes/www</outputDirectory>
                   <includeEmptyDirs>true</includeEmptyDirs>
