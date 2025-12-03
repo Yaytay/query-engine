@@ -250,13 +250,19 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
     }
   }
 
+  private int skippedSecondaryLogsCount = 0;
+  
   private void bringInSecondaries() {
     if (currentPrimary != null) {
       while (!secondaryRows.isEmpty()) {
         U curSec = secondaryRows.peek();
         int compare = this.comparator.compare(currentPrimary, curSec);
         if (compare > 0) {
-          Log.decorate(logger.atWarn(), pipelineContext).log("Skipping secondary row {} because it is before {}", curSec, currentPrimary);
+          if (++skippedSecondaryLogsCount < 100) {
+            Log.decorate(logger.atWarn(), pipelineContext).log("Skipping secondary row {} because it is before {}", curSec, currentPrimary);
+          } else if (skippedSecondaryLogsCount == 100) {
+            Log.decorate(logger.atWarn(), pipelineContext).log("100 secondary rows have been skipped and logged, not logging any more");
+          }
           secondaryRows.pop();
         } else if (compare == 0) {
           currentSecondaryRows.add(secondaryRows.pop());
