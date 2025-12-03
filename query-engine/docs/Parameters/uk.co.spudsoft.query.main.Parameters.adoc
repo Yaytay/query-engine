@@ -346,4 +346,10 @@ All of these values are optional, the default values are secure, but may be too 
 | Set the enableForceJwt parameter.If true, the path /login/forcejwt can be PUT to create a session based on the the JWT in the message body.
 This should be secure even in a production environment (because the caller must be still be able to create an acceptable JWT)
 , but for the sake of safety it defaults to being disabled.
+
+| [[operators]]operators
+| uk.co.spudsoft.query.main.Operators
+| Set the conditions for defining operators.
+
+Operators make no difference to query running, but can access more data via the API.
 |===

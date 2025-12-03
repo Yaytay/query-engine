@@ -650,6 +650,7 @@ public class AuditorMemoryImpl implements Auditor {
             , row.responseSize
             , row.responseStreamStartMillis
             , row.responseDurationMillis
+            , row.logMessages == null ? 0 : row.logMessages.size()
     );
   }
 

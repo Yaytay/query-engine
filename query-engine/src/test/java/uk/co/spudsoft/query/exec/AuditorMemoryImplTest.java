@@ -129,9 +129,9 @@ public class AuditorMemoryImplTest {
   @Test
   public void testCreateComparatorId() {
     Comparator<AuditHistoryRow> comparator;
-    AuditHistoryRow row1 = new AuditHistoryRow(null, "A", null, null, null, null, null, null, null, null, null, null, null, null);
-    AuditHistoryRow row2 = new AuditHistoryRow(null, "B", null, null, null, null, null, null, null, null, null, null, null, null);
-    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    AuditHistoryRow row1 = new AuditHistoryRow(null, "A", null, null, null, null, null, null, null, null, null, null, null, null, 0);
+    AuditHistoryRow row2 = new AuditHistoryRow(null, "B", null, null, null, null, null, null, null, null, null, null, null, null, 0);
+    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0);
     comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.id, false);
     assertThat(comparator.compare(row1, row2), lessThan(0));
     assertThat(comparator.compare(row1, row3), lessThan(0));
@@ -151,9 +151,9 @@ public class AuditorMemoryImplTest {
   @Test
   public void testCreateComparatorPath() {
     Comparator<AuditHistoryRow> comparator;
-    AuditHistoryRow row1 = new AuditHistoryRow(null, null, "A", null, null, null, null, null, null, null, null, null, null, null);
-    AuditHistoryRow row2 = new AuditHistoryRow(null, null, "B", null, null, null, null, null, null, null, null, null, null, null);
-    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    AuditHistoryRow row1 = new AuditHistoryRow(null, null, "A", null, null, null, null, null, null, null, null, null, null, null, 0);
+    AuditHistoryRow row2 = new AuditHistoryRow(null, null, "B", null, null, null, null, null, null, null, null, null, null, null, 0);
+    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0);
     comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.path, false);
     assertThat(comparator.compare(row1, row2), lessThan(0));
     assertThat(comparator.compare(row1, row3), lessThan(0));
@@ -173,9 +173,9 @@ public class AuditorMemoryImplTest {
   @Test
   public void testCreateComparatorHost() {
     Comparator<AuditHistoryRow> comparator;
-    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, "A", null, null, null, null, null, null, null, null, null);
-    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, "B", null, null, null, null, null, null, null, null, null);
-    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, "A", null, null, null, null, null, null, null, null, null, 0);
+    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, "B", null, null, null, null, null, null, null, null, null, 0);
+    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0);
     comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.host, false);
     assertThat(comparator.compare(row1, row2), lessThan(0));
     assertThat(comparator.compare(row1, row3), lessThan(0));
@@ -195,9 +195,9 @@ public class AuditorMemoryImplTest {
   @Test
   public void testCreateComparatorIssuer() {
     Comparator<AuditHistoryRow> comparator;
-    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, "A", null, null, null, null, null, null, null, null);
-    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, "B", null, null, null, null, null, null, null, null);
-    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, "A", null, null, null, null, null, null, null, null, 0);
+    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, "B", null, null, null, null, null, null, null, null, 0);
+    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0);
     comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.issuer, false);
     assertThat(comparator.compare(row1, row2), lessThan(0));
     assertThat(comparator.compare(row1, row3), lessThan(0));
@@ -217,9 +217,9 @@ public class AuditorMemoryImplTest {
   @Test
   public void testCreateComparatorSubject() {
     Comparator<AuditHistoryRow> comparator;
-    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, null, "A", null, null, null, null, null, null, null);
-    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, null, "B", null, null, null, null, null, null, null);
-    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, null, "A", null, null, null, null, null, null, null, 0);
+    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, null, "B", null, null, null, null, null, null, null, 0);
+    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0);
     comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.subject, false);
     assertThat(comparator.compare(row1, row2), lessThan(0));
     assertThat(comparator.compare(row1, row3), lessThan(0));
@@ -239,9 +239,9 @@ public class AuditorMemoryImplTest {
   @Test
   public void testCreateComparatorUsername() {
     Comparator<AuditHistoryRow> comparator;
-    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, null, null, "A", null, null, null, null, null, null);
-    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, null, null, "B", null, null, null, null, null, null);
-    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, null, null, "A", null, null, null, null, null, null, 0);
+    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, null, null, "B", null, null, null, null, null, null, 0);
+    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0);
     comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.username, false);
     assertThat(comparator.compare(row1, row2), lessThan(0));
     assertThat(comparator.compare(row1, row3), lessThan(0));
@@ -261,9 +261,9 @@ public class AuditorMemoryImplTest {
   @Test
   public void testCreateComparatorName() {
     Comparator<AuditHistoryRow> comparator;
-    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, null, null, null, "A", null, null, null, null, null);
-    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, null, null, null, "B", null, null, null, null, null);
-    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, null, null, null, "A", null, null, null, null, null, 0);
+    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, null, null, null, "B", null, null, null, null, null, 0);
+    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0);
     comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.name, false);
     assertThat(comparator.compare(row1, row2), lessThan(0));
     assertThat(comparator.compare(row1, row3), lessThan(0));
@@ -283,9 +283,9 @@ public class AuditorMemoryImplTest {
   @Test
   public void testCreateComparatorResponseCode() {
     Comparator<AuditHistoryRow> comparator;
-    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, 200, null, null, null, null);
-    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, 400, null, null, null, null);
-    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, 200, null, null, null, null, 0);
+    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, 400, null, null, null, null, 0);
+    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0);
     comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.responseCode, false);
     assertThat(comparator.compare(row1, row2), lessThan(0));
     assertThat(comparator.compare(row1, row3), lessThan(0));
@@ -305,9 +305,9 @@ public class AuditorMemoryImplTest {
   @Test
   public void testCreateComparatorResponseRows() {
     Comparator<AuditHistoryRow> comparator;
-    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, 7L, null, null, null);
-    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, 8L, null, null, null);
-    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, 7L, null, null, null, 0);
+    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, 8L, null, null, null, 0);
+    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0);
     comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.responseRows, false);
     assertThat(comparator.compare(row1, row2), lessThan(0));
     assertThat(comparator.compare(row1, row3), lessThan(0));
@@ -327,9 +327,9 @@ public class AuditorMemoryImplTest {
   @Test
   public void testCreateComparatorResponseSize() {
     Comparator<AuditHistoryRow> comparator;
-    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, 8L, null, null);
-    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, 9L, null, null);
-    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, 8L, null, null, 0);
+    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, 9L, null, null, 0);
+    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0);
     comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.responseSize, false);
     assertThat(comparator.compare(row1, row2), lessThan(0));
     assertThat(comparator.compare(row1, row3), lessThan(0));
@@ -349,9 +349,9 @@ public class AuditorMemoryImplTest {
   @Test
   public void testCreateComparatorResponseStreamStart() {
     Comparator<AuditHistoryRow> comparator;
-    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, 3456L, null);
-    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, 4567L, null);
-    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, 3456L, null, 0);
+    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, 4567L, null, 0);
+    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0);
     comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.responseStreamStart, false);
     assertThat(comparator.compare(row1, row2), lessThan(0));
     assertThat(comparator.compare(row1, row3), lessThan(0));
@@ -371,9 +371,9 @@ public class AuditorMemoryImplTest {
   @Test
   public void testCreateComparatorResponseDuration() {
     Comparator<AuditHistoryRow> comparator;
-    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, 1234L);
-    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, 2345L);
-    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+    AuditHistoryRow row1 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, 1234L, 0);
+    AuditHistoryRow row2 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, 2345L, 0);
+    AuditHistoryRow row3 = new AuditHistoryRow(null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0);
     comparator = AuditorMemoryImpl.createComparator(AuditHistorySortOrder.responseDuration, false);
     assertThat(comparator.compare(row1, row2), lessThan(0));
     assertThat(comparator.compare(row1, row3), lessThan(0));

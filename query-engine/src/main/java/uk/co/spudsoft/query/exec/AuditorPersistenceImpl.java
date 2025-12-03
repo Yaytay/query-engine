@@ -438,8 +438,9 @@ public class AuditorPersistenceImpl implements Auditor {
              , #responseSize#
              , #responseStreamStartMillis#
              , #responseDurationMillis#
+             , (select count(*) from #SCHEMA#.#logs# l where l.#requestId# = r.#id#) as #logCount#
            from
-             #SCHEMA#.#request#
+             #SCHEMA#.#request# r
            where
              #issuer# = ?
              and #subject# = ?
@@ -1085,8 +1086,9 @@ public class AuditorPersistenceImpl implements Auditor {
         Long responseSize = getLong(rs, 12);
         Long responseStreamStartMs = rs.getLong(13);
         Long responseDurationMs = rs.getLong(14);
+        int warningCount = rs.getInt(15);
 
-        AuditHistoryRow ah = new AuditHistoryRow(timestamp, id, path, arguments, host, issuer, subject, username, name, responseCode, responseRows, responseSize, responseStreamStartMs, responseDurationMs);
+        AuditHistoryRow ah = new AuditHistoryRow(timestamp, id, path, arguments, host, issuer, subject, username, name, responseCode, responseRows, responseSize, responseStreamStartMs, responseDurationMs, warningCount);
         builder.add(ah);
       }
       return builder.build();
