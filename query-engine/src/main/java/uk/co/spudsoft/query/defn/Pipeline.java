@@ -409,21 +409,26 @@ public final class Pipeline extends SourcePipeline {
    * 
    * @return the endpoints used by the sources in the pipeline.
    */
-  @Schema(
-          type = "object"
-          , types = { "object" }
-          , description = """
-                          <P>
-                          The endpoints used by the sources in the pipeline.
-                          </P>
-                          <P>
-                          Endpoints are the actual providers of data to the Pipeline.
-                          Most Sources (all except the TestSource) work through an Endpoint.
-                          </P>
-                          <P>
-                          The segregation between Source and Endpoint allows a single Source to work with multiple Endpoints.
-                          </P>
-                          """
+  @ArraySchema(
+          arraySchema = @Schema(
+                    description = """
+                                    <P>
+                                    The endpoints used by the sources in the pipeline.
+                                    </P>
+                                    <P>
+                                    Endpoints are the actual providers of data to the Pipeline.
+                                    Most Sources (all except the TestSource) work through an Endpoint.
+                                    </P>
+                                    <P>
+                                    The segregation between Source and Endpoint allows a single Source to work with multiple Endpoints.
+                                    </P>
+                                    """
+          )
+          , schema = @Schema(
+                  implementation = Endpoint.class
+          )
+          , minItems = 0
+          , uniqueItems = true
   )
   public List<Endpoint> getSourceEndpoints() {
     return sourceEndpoints;

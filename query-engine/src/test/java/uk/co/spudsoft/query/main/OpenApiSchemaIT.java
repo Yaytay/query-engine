@@ -288,6 +288,17 @@ public class OpenApiSchemaIT {
       if (!"Profile.claims".equals(name)) {
         return name + " is a map (object with additionalProperties), please change to a List";
       }
+    }    
+    if (type != null && type.contains("boolean")) {
+      if (type.contains("string") && !type.contains("number") && !type.contains("array")) {
+        return name + " is a boolean with type " + type;
+      }
+      Object defaultValue = schema.getValue("default");
+      if (defaultValue != null) {
+        if (!(defaultValue instanceof Boolean)) {
+          return name + " is a boolean with default value that is " + defaultValue.getClass();
+        }
+      }
     }
     if (isTopLevelSchema) {
       // Must either have a type, or have an allOf with a ref and then a type

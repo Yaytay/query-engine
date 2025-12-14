@@ -25,8 +25,9 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * OpenAPI filter for removing some types from the schema, either because they are mappable from strings or have no specific schema.
- * 
+ * OpenAPI filter for removing some types from the schema, either because they are mappable from strings or have no specific
+ * schema.
+ *
  * @author jtalbut
  */
 public class OpenApiFilterClass extends AbstractSpecFilter {
@@ -41,19 +42,49 @@ public class OpenApiFilterClass extends AbstractSpecFilter {
    */
   public OpenApiFilterClass() {
   }
-  
+
   @Override
   public boolean isOpenAPI31Filter() {
     return true;
   }
 
   @Override
-  @SuppressWarnings({"unchecked", "rawtypes"})  
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public Optional<Schema> filterSchema(Schema schema, Map<String, List<String>> params, Map<String, String> cookies, Map<String, List<String>> headers) {
     if (UNDESIRABLE.contains(schema.getName())) {
       return Optional.empty();
     }
     return super.filterSchema(schema, params, cookies, headers); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
   }
-  
+
+  @Override
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  public Optional<Schema> filterSchemaProperty(Schema propertySchema, Schema parentSchema, String propName, Map<String, List<String>> params, Map<String, String> cookies, Map<String, List<String>> headers) {
+    fixBooleanDefault(propertySchema);
+    return super.filterSchemaProperty(propertySchema, parentSchema, propName, params, cookies, headers);
+  }
+
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  private static void fixBooleanDefault(Schema schema) {
+    if (schema == null) {
+      return;
+    }
+
+    Object def = schema.getDefault();
+    boolean isBooleanSchema = "boolean".equals(schema.getType()) || (schema.getTypes() != null && schema.getTypes().contains("boolean"));
+
+    if (isBooleanSchema && def instanceof String s) {
+      if ("true".equalsIgnoreCase(s)) {
+        schema.setDefault(Boolean.TRUE);
+        if (schema.getTypes() != null) {
+          schema.getTypes().remove("string");
+        }
+      } else if ("false".equalsIgnoreCase(s)) {
+        schema.setDefault(Boolean.FALSE);
+        if (schema.getTypes() != null) {
+          schema.getTypes().remove("string");
+        }
+      }
+    }
+  }
 }
