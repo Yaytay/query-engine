@@ -94,7 +94,8 @@ public class QueryRouter implements Handler<RoutingContext> {
   
   private final PipelineRunningVerticle[] verticles;
   
-  private AtomicInteger count = new AtomicInteger();
+  private final AtomicInteger count = new AtomicInteger();
+  private final AtomicInteger queriesExecuting = new AtomicInteger();
 
   /**
    * Constructor.
@@ -138,6 +139,9 @@ public class QueryRouter implements Handler<RoutingContext> {
     
     verticles = new PipelineRunningVerticle[instances];
     
+    if (meterRegistry != null) {
+      meterRegistry.gauge("queryengine.queries.active", queriesExecuting);
+    }
     
   }
   
@@ -216,6 +220,7 @@ public class QueryRouter implements Handler<RoutingContext> {
     }
     
     if (request.method() == HttpMethod.GET) {
+      queriesExecuting.incrementAndGet();
       authenticator.authenticate(routingContext, requestContext)
               .compose(req -> {
                 return auditor.recordRequest(req);
@@ -261,7 +266,7 @@ public class QueryRouter implements Handler<RoutingContext> {
                 routingContext.addBodyEndHandler(v1 -> {
                   auditor.recordResponse(requestContext, response);
                 });
-
+                
                 return loader.loadPipeline(query, requestContext, (file, ex) -> auditor.recordFileDetails(requestContext, file, null))
                         .compose(pipelineAndFile -> {
                           pipelineTitle[0] = pipelineAndFile.pipeline().getTitle();
@@ -301,6 +306,7 @@ public class QueryRouter implements Handler<RoutingContext> {
                 }
                 Log.decorate(logger.atInfo(), requestContext).log("Request completed");
                 auditor.recordAuditLogMessages(requestContext, requestCollatingAppender.getAndRemoveEventsForRequest(requestContext.getRequestId()));
+                queriesExecuting.decrementAndGet();
               });
     } else {
       routingContext.next();
