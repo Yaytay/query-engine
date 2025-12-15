@@ -41,6 +41,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -95,7 +97,7 @@ public class QueryRouter implements Handler<RoutingContext> {
   private final PipelineRunningVerticle[] verticles;
   
   private final AtomicInteger count = new AtomicInteger();
-  private final AtomicInteger queriesExecuting = new AtomicInteger();
+  private final Set<String> queriesExecuting = ConcurrentHashMap.newKeySet();
 
   /**
    * Constructor.
@@ -140,7 +142,7 @@ public class QueryRouter implements Handler<RoutingContext> {
     verticles = new PipelineRunningVerticle[instances];
     
     if (meterRegistry != null) {
-      meterRegistry.gauge("queryengine.queries.active", queriesExecuting);
+      meterRegistry.gauge("queryengine.queries.active", queriesExecuting, o -> o.size());
     }
     
   }
@@ -220,7 +222,12 @@ public class QueryRouter implements Handler<RoutingContext> {
     }
     
     if (request.method() == HttpMethod.GET) {
-      queriesExecuting.incrementAndGet();
+      queriesExecuting.add(requestContext.getRequestId());
+      if (logger.isTraceEnabled()) {
+        Log.decorate(logger.atTrace(), requestContext).log("Currently executing queries: {}", queriesExecuting);
+      } else if (logger.isDebugEnabled()) {
+        Log.decorate(logger.atTrace(), requestContext).log("There are now {} currently executing queries", queriesExecuting.size());
+      }
       authenticator.authenticate(routingContext, requestContext)
               .compose(req -> {
                 return auditor.recordRequest(req);
@@ -235,9 +242,7 @@ public class QueryRouter implements Handler<RoutingContext> {
                 
                 response.closeHandler(v2 -> {
                   Log.decorate(logger.atWarn(), requestContext).log("The connection has been closed.");
-                  if (requestContext != null) {
-                    auditor.recordAuditLogMessages(requestContext, requestCollatingAppender.getAndRemoveEventsForRequest(requestContext.getRequestId()));
-                  }
+                  auditor.recordAuditLogMessages(requestContext, requestCollatingAppender.getAndRemoveEventsForRequest(requestContext.getRequestId()));
                 });
                 
                 WriteStream<Buffer> responseStream = response;
@@ -306,7 +311,7 @@ public class QueryRouter implements Handler<RoutingContext> {
                 }
                 Log.decorate(logger.atInfo(), requestContext).log("Request completed");
                 auditor.recordAuditLogMessages(requestContext, requestCollatingAppender.getAndRemoveEventsForRequest(requestContext.getRequestId()));
-                queriesExecuting.decrementAndGet();
+                queriesExecuting.remove(requestContext.getRequestId());
               });
     } else {
       routingContext.next();
