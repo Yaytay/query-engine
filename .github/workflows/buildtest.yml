@@ -25,7 +25,7 @@ jobs:
         ! egrep '<qe-version>([^<]+)<\/qe-version>' query-engine-design-mode/pom.xml
 
     - name: Cache Maven packages
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.m2
         key: ${{ runner.os }}-m2
