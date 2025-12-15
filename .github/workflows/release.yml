@@ -72,7 +72,7 @@ jobs:
         docker push ghcr.io/yaytay/${PARTS[0]}:${PARTS[1]}
         
     - name: Upload site reports on success
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       if: success()
       with:
         name: reports
@@ -81,7 +81,7 @@ jobs:
           query-engine-design-mode/target/site
 
     - name: Upload site reports on failure
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       if: failure()
       with:
         name: reports
