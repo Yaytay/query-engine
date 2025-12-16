@@ -14,6 +14,10 @@ updates:
     schedule:
       interval: "weekly"
   - package-ecosystem: "docker"
-    directory: "/"
+    directory: "/query-engine/src/main/docker/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "docker"
+    directory: "/query-engine-design-mode/src/main/docker/"
     schedule:
       interval: "weekly"
