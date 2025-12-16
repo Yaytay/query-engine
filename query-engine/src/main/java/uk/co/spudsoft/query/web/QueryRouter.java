@@ -226,7 +226,7 @@ public class QueryRouter implements Handler<RoutingContext> {
       if (logger.isTraceEnabled()) {
         Log.decorate(logger.atTrace(), requestContext).log("Currently executing queries: {}", queriesExecuting);
       } else if (logger.isDebugEnabled()) {
-        Log.decorate(logger.atTrace(), requestContext).log("There are now {} currently executing queries", queriesExecuting.size());
+        Log.decorate(logger.atDebug(), requestContext).log("There are now {} currently executing queries", queriesExecuting.size());
       }
       authenticator.authenticate(routingContext, requestContext)
               .compose(req -> {
