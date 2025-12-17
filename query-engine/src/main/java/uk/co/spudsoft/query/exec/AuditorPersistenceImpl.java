@@ -502,7 +502,7 @@ public class AuditorPersistenceImpl implements Auditor {
           where
             #responseTime# is null
             and #timestamp# > ?
-            and (exceptionTime is null or exceptionTime > ?)
+            and (#exceptionTime# is null or #exceptionTime# > ?)
           """
     ),
     MARK_RATE_LIMIT_RULES_PROCESSED("""
