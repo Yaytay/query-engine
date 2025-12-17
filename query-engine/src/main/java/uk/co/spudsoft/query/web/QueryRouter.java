@@ -31,6 +31,7 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.Json;
 import io.vertx.core.streams.WriteStream;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.impl.Utils;
@@ -224,7 +225,7 @@ public class QueryRouter implements Handler<RoutingContext> {
     if (request.method() == HttpMethod.GET) {
       queriesExecuting.add(requestContext.getRequestId());
       if (logger.isTraceEnabled()) {
-        Log.decorate(logger.atTrace(), requestContext).log("Currently executing queries: {}", queriesExecuting);
+        Log.decorate(logger.atTrace(), requestContext).log("There are now {} currently executing queries: ", queriesExecuting.size(), Json.encode(queriesExecuting));
       } else if (logger.isDebugEnabled()) {
         Log.decorate(logger.atDebug(), requestContext).log("There are now {} currently executing queries", queriesExecuting.size());
       }
