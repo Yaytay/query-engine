@@ -243,6 +243,7 @@ public class QueryRouter implements Handler<RoutingContext> {
                 response.closeHandler(v2 -> {
                   Log.decorate(logger.atWarn(), requestContext).log("The connection has been closed.");
                   auditor.recordAuditLogMessages(requestContext, requestCollatingAppender.getAndRemoveEventsForRequest(requestContext.getRequestId()));
+                  queriesExecuting.remove(requestContext.getRequestId());
                 });
                 
                 WriteStream<Buffer> responseStream = response;
