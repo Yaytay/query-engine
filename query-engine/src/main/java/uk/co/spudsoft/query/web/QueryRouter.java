@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.web;
 import com.google.common.base.Strings;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -99,6 +100,7 @@ public class QueryRouter implements Handler<RoutingContext> {
   
   private final AtomicInteger count = new AtomicInteger();
   private final Set<String> queriesExecuting = ConcurrentHashMap.newKeySet();
+  private final Counter queriesExecuted;
 
   /**
    * Constructor.
@@ -143,7 +145,10 @@ public class QueryRouter implements Handler<RoutingContext> {
     verticles = new PipelineRunningVerticle[instances];
     
     if (meterRegistry != null) {
+      queriesExecuted = meterRegistry.counter("queryengine.queries.total");
       meterRegistry.gauge("queryengine.queries.active", queriesExecuting, o -> o.size());
+    } else {
+      queriesExecuted = null;
     }
     
   }
@@ -224,6 +229,9 @@ public class QueryRouter implements Handler<RoutingContext> {
     
     if (request.method() == HttpMethod.GET) {
       queriesExecuting.add(requestContext.getRequestId());
+      if (queriesExecuted != null) {
+        queriesExecuted.increment();
+      }
       if (logger.isTraceEnabled()) {
         Log.decorate(logger.atTrace(), requestContext).log("There are now {} currently executing queries: ", queriesExecuting.size(), Json.encode(queriesExecuting));
       } else if (logger.isDebugEnabled()) {
