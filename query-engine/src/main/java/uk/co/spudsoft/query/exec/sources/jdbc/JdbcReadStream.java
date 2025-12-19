@@ -72,9 +72,9 @@ public class JdbcReadStream implements ReadStream<DataRow> {
 
   private final PipelineContext pipelineContext;
   private final Log log;
-  
+
   private final io.opentelemetry.context.Context telemetryContext;
-  
+
   private Types types;
 
   private final Deque<DataRow> items = new ArrayDeque<>();
@@ -132,7 +132,6 @@ public class JdbcReadStream implements ReadStream<DataRow> {
           , PipelineInstance pipeline
   ) {
     Thread thread = new Thread(() -> {
-
       runOnThread(dataSourceUrl, credentials, sql, pipeline);
     }, name);
     thread.start();
@@ -164,7 +163,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     ResultSetMetaData rsmeta = null;
 
     long start = System.currentTimeMillis();
-    
+
     try (Scope scope = this.telemetryContext.makeCurrent()) {
       log.trace().log("Current scope: {}", scope);
       try {
@@ -212,7 +211,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
         });
         return;
       }
-      
+
       try {
         log.debug().log("{}: Executing query", (System.currentTimeMillis() - start) / 1000.0);
         rs = statement.executeQuery();

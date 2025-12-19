@@ -37,7 +37,6 @@ import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.sources.AbstractSource;
-import uk.co.spudsoft.query.exec.sources.sql.SourceSqlStreamingInstance;
 import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.main.ProtectedCredentials;
 import uk.co.spudsoft.query.web.ServiceException;
@@ -52,15 +51,15 @@ import uk.co.spudsoft.query.web.ServiceException;
 public class SourceJdbcInstance extends AbstractSource {
 
   @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(SourceSqlStreamingInstance.class);
+  private static final Logger logger = LoggerFactory.getLogger(SourceJdbcInstance.class);
 
   private final SourceJdbc definition;
 
   private JdbcReadStream jdbcReadStream;
 
   private final Log log;
-  
-  
+
+
   /**
    * Constructor.
    * @param vertx The Vert.x instance.
@@ -125,7 +124,7 @@ public class SourceJdbcInstance extends AbstractSource {
     }
     String finalQuery = query;
 
-    String credentials[];
+    String[] credentials;
     try {
       credentials = processCredentials(endpoint, executor, requestContext);
     } catch (Throwable ex) {
@@ -143,7 +142,7 @@ public class SourceJdbcInstance extends AbstractSource {
 
     jdbcReadStream = new JdbcReadStream(Vertx.currentContext(), auditor, pipelineContext, endpointName, definition, result);
     jdbcReadStream.exceptionHandler(ex -> {
-      log.error().log("Exception occured in stream: ", ex);
+      log.error().log("Exception occurred in stream: ", ex);
     });
 
     jdbcReadStream.start(pipelineContext.getRequestContext().getRequestId() + " " + pipelineContext.getPipe(), finalUrl, credentials, finalQuery, pipeline);

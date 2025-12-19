@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.exec.fmts;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import org.slf4j.Logger;
@@ -33,25 +34,25 @@ import uk.co.spudsoft.query.logging.Log;
  * {@link io.vertx.core.streams.WriteStream}@lt;{@link uk.co.spudsoft.query.exec.DataRow}@gt; that formats the inbound DataRow values and writes them to a {@link io.vertx.core.streams.WriteStream}@lt;{@link io.vertx.core.buffer.Buffer}@gt;.
  * <p>
  * Actual formatting is carried out by a "process" method passed in to the constructor.
- * 
+ *
  * @author jtalbut
  */
 public class FormattingWriteStream implements WriteStream<DataRow> {
-  
+
   private static final Logger logger = LoggerFactory.getLogger(FormattingWriteStream.class);
-  
+
   private final WriteStream<Buffer> outputStream;
   private boolean initialized;
   private final AsyncHandler<Void> initialize;
   private final AsyncHandler<DataRow> process;
   private final AsyncHandler<Long> terminate;
-  
+
   private final Log log;
-  
+
   private long rowCount = 0;
-  
+
   private final Object lastProcessFutureLock = new Object();
-  private Future<Void> lastProcessFuture;
+  private Future<Void> lastProcessFuture = Future.succeededFuture();
 
   /**
    * Constructor.
@@ -85,21 +86,35 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
 
   @Override
   public Future<Void> write(DataRow data) {
-    return lastProcessFuture.compose(v -> {
-      ++rowCount;
-      Future<Void> result;
-      if (initialized) {
-        result = process.handle(data);
+    Promise<Void> currentWritePromise = Promise.promise();
+    Future<Void> previous;
+
+    synchronized (lastProcessFutureLock) {
+      previous = lastProcessFuture;
+      lastProcessFuture = currentWritePromise.future();
+    }
+
+    previous.onComplete(ar -> {
+      if (ar.failed()) {
+        currentWritePromise.fail(ar.cause());
       } else {
-        initialized = true;
-        result = initialize.handle(null)
-                .compose(v2 -> process.handle(data));
+        try {
+          ++rowCount;
+          Future<Void> result;
+          if (initialized) {
+            result = process.handle(data);
+          } else {
+            initialized = true;
+            result = initialize.handle(null).compose(v -> process.handle(data));
+          }
+          result.onComplete(currentWritePromise);
+        } catch (Throwable t) {
+          currentWritePromise.fail(t);
+        }
       }
-      synchronized (lastProcessFutureLock) {
-        lastProcessFuture = result;        
-      }
-      return result;
     });
+
+    return currentWritePromise.future();
   }
 
   private Future<Void> handleTermination() {
@@ -110,7 +125,7 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
       return Future.failedFuture(ex);
     }
   }
-  
+
   @Override
   public Future<Void> end() {
     return lastProcessFuture
@@ -128,6 +143,7 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
 
   @Override
   public WriteStream<DataRow> setWriteQueueMaxSize(int maxSize) {
+    outputStream.setWriteQueueMaxSize(maxSize);
     return this;
   }
 
@@ -141,5 +157,5 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
     outputStream.drainHandler(handler);
     return this;
   }
-  
+
 }
