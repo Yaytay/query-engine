@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.JdbcDatabaseContainer;
-import org.testcontainers.mssqlserver.MSSQLServerContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import uk.co.spudsoft.query.exec.JdbcHelper;
 import uk.co.spudsoft.query.main.Credentials;
 import uk.co.spudsoft.query.main.DataSourceConfig;
@@ -129,11 +129,13 @@ public class ServerProviderMsSQL extends AbstractServerProvider implements Serve
       }
 
       if (mssqlserver == null) {
-        mssqlserver = new MSSQLServerContainer(MSSQL_IMAGE_NAME)
+        mssqlserver = new ImprovedMsSqlDatabaseContainer(MSSQL_IMAGE_NAME)
                 .withPassword(ROOT_PASSWORD)
                 .withEnv("ACCEPT_EULA", "Y")
                 .withExposedPorts(1433)
-                .withUrlParam("trustServerCertificate", "true");
+                .withUrlParam("trustServerCertificate", "true")
+                .waitingFor(Wait.forLogMessage(".*The default language .* has been set for engine and full-text services.*\\n", 1))
+                ;
       }
       if (!mssqlserver.isRunning()) {
         mssqlserver.start();

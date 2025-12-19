@@ -27,6 +27,8 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.lessThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.Types;
 
@@ -35,6 +37,8 @@ import uk.co.spudsoft.query.exec.Types;
  * @author jtalbut
  */
 public class DataRowComparatorTest {
+  
+  private static final Logger logger = LoggerFactory.getLogger(DataRowComparatorTest.class);
   
   private final Types types = new Types();
   private final DataRow rowN = DataRow.create(types);
@@ -125,17 +129,17 @@ public class DataRowComparatorTest {
 
     // Finding test values
 //    java.sql.Date s =new java.sql.Date(71, 04, 05);
-//    System.out.println("Number: " + s.toString() + " = " + s.getTime());
+//    logger.debug("{}", "Number: " + s.toString() + " = " + s.getTime());
 //    s =new java.sql.Date(71, 04, 06);
-//    System.out.println("Number: " + s.toString() + " = " + s.getTime());
+//    logger.debug("{}", "Number: " + s.toString() + " = " + s.getTime());
 //    s =new java.sql.Date(71, 04, 07);
-//    System.out.println("Number: " + s.toString() + " = " + s.getTime());
+//    logger.debug("{}", "Number: " + s.toString() + " = " + s.getTime());
 //    java.sql.Time t =new java.sql.Time(12, 33, 00);
-//    System.out.println("Number: " + t.toString() + " = " + t.getTime());
+//    logger.debug("{}", "Number: " + t.toString() + " = " + t.getTime());
 //    t =new java.sql.Time(12, 34, 00);
-//    System.out.println("Number: " + t.toString() + " = " + t.getTime());
+//    logger.debug("{}", "Number: " + t.toString() + " = " + t.getTime());
 //    t =new java.sql.Time(12, 35, 00);
-//    System.out.println("Number: " + t.toString() + " = " + t.getTime());
+//    logger.debug("{}", "Number: " + t.toString() + " = " + t.getTime());
     
     Comparator<DataRow> comp = new DataRowComparator(null, Arrays.asList("intValue"));
     assertEquals(-1, comp.compare(row1, row2));

@@ -158,7 +158,7 @@ public class DocHandlerTest {
     DocNodesTree.DocNode root = DocHandler.buildAlternativeDocs(rootPath.toString());
     assertNotNull(root);
 
-    System.out.println("Result: " + Json.encode(root));
+    logger.debug("{}", "Result: " + Json.encode(root));
 
     assertEquals("", root.getName());
     assertEquals("", root.getPath());

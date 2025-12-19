@@ -13,6 +13,7 @@
   <!-- logger name="uk.co.spudsoft.query.exec.procs.subquery" level="TRACE" /-->
 
   <logger name="ContainerOutput" level="WARN" />
+  <logger name="liquibase.changelog" level="WARN" />
 
   <root level="INFO">
     <appender-ref ref="STDOUTPUT"/>

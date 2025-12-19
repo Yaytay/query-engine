@@ -20,6 +20,8 @@ import inet.ipaddr.IPAddressString;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 
@@ -29,6 +31,8 @@ import uk.co.spudsoft.query.exec.context.RequestContext;
  */
 public class CustomDateTimeFormatterTest {
   
+  private static final Logger logger = LoggerFactory.getLogger(CustomDateTimeFormatterTest.class);
+  
   @Test
   public void testFormat() {
     
@@ -37,26 +41,26 @@ public class CustomDateTimeFormatterTest {
     
     LocalDateTime dateTime = LocalDateTime.of(2023, 5, 15, 13, 45, 30, 120000000);
     
-    System.out.println(new CustomDateTimeFormatter("EPOCH_SECONDS").format(pipelineContext, dateTime));
-    System.out.println(new CustomDateTimeFormatter("EPOCH_MILLISECONDS").format(pipelineContext, dateTime));
-    System.out.println(new CustomDateTimeFormatter("BASIC_ISO_DATE").format(pipelineContext, dateTime));
-    System.out.println(new CustomDateTimeFormatter("ISO_LOCAL_DATE").format(pipelineContext, dateTime));
-    System.out.println(new CustomDateTimeFormatter("ISO_DATE").format(pipelineContext, dateTime));
-    System.out.println(new CustomDateTimeFormatter("ISO_LOCAL_TIME").format(pipelineContext, dateTime));
-    System.out.println(new CustomDateTimeFormatter("ISO_TIME").format(pipelineContext, dateTime));
-    System.out.println(new CustomDateTimeFormatter("ISO_LOCAL_DATE_TIME").format(pipelineContext, dateTime));
-    System.out.println(new CustomDateTimeFormatter("ISO_ORDINAL_DATE").format(pipelineContext, dateTime));
-    System.out.println(new CustomDateTimeFormatter("ISO_WEEK_DATE").format(pipelineContext, dateTime));
+    logger.debug("{}", new CustomDateTimeFormatter("EPOCH_SECONDS").format(pipelineContext, dateTime));
+    logger.debug("{}", new CustomDateTimeFormatter("EPOCH_MILLISECONDS").format(pipelineContext, dateTime));
+    logger.debug("{}", new CustomDateTimeFormatter("BASIC_ISO_DATE").format(pipelineContext, dateTime));
+    logger.debug("{}", new CustomDateTimeFormatter("ISO_LOCAL_DATE").format(pipelineContext, dateTime));
+    logger.debug("{}", new CustomDateTimeFormatter("ISO_DATE").format(pipelineContext, dateTime));
+    logger.debug("{}", new CustomDateTimeFormatter("ISO_LOCAL_TIME").format(pipelineContext, dateTime));
+    logger.debug("{}", new CustomDateTimeFormatter("ISO_TIME").format(pipelineContext, dateTime));
+    logger.debug("{}", new CustomDateTimeFormatter("ISO_LOCAL_DATE_TIME").format(pipelineContext, dateTime));
+    logger.debug("{}", new CustomDateTimeFormatter("ISO_ORDINAL_DATE").format(pipelineContext, dateTime));
+    logger.debug("{}", new CustomDateTimeFormatter("ISO_WEEK_DATE").format(pipelineContext, dateTime));
 
-    System.out.println(new CustomDateTimeFormatter("ISO_OFFSET_DATE").format(pipelineContext, dateTime));
-    System.out.println(new CustomDateTimeFormatter("ISO_OFFSET_TIME").format(pipelineContext, dateTime));
-    System.out.println(new CustomDateTimeFormatter("ISO_OFFSET_DATE_TIME").format(pipelineContext, dateTime));
-    System.out.println(new CustomDateTimeFormatter("ISO_ZONED_DATE_TIME").format(pipelineContext, dateTime));
-    System.out.println(new CustomDateTimeFormatter("ISO_DATE_TIME").format(pipelineContext, dateTime));
-    System.out.println(new CustomDateTimeFormatter("ISO_INSTANT").format(pipelineContext, dateTime));
-    System.out.println(new CustomDateTimeFormatter("RFC_1123_DATE_TIME").format(pipelineContext, dateTime));
+    logger.debug("{}", new CustomDateTimeFormatter("ISO_OFFSET_DATE").format(pipelineContext, dateTime));
+    logger.debug("{}", new CustomDateTimeFormatter("ISO_OFFSET_TIME").format(pipelineContext, dateTime));
+    logger.debug("{}", new CustomDateTimeFormatter("ISO_OFFSET_DATE_TIME").format(pipelineContext, dateTime));
+    logger.debug("{}", new CustomDateTimeFormatter("ISO_ZONED_DATE_TIME").format(pipelineContext, dateTime));
+    logger.debug("{}", new CustomDateTimeFormatter("ISO_DATE_TIME").format(pipelineContext, dateTime));
+    logger.debug("{}", new CustomDateTimeFormatter("ISO_INSTANT").format(pipelineContext, dateTime));
+    logger.debug("{}", new CustomDateTimeFormatter("RFC_1123_DATE_TIME").format(pipelineContext, dateTime));
 
-    System.out.println(new CustomDateTimeFormatter("VV zzz O X x Z").format(pipelineContext, dateTime));
+    logger.debug("{}", new CustomDateTimeFormatter("VV zzz O X x Z").format(pipelineContext, dateTime));
 
     assertEquals(1684158330L, new CustomDateTimeFormatter("EPOCH_SECONDS").format(pipelineContext, dateTime));
     assertEquals(1684158330120L, new CustomDateTimeFormatter("EPOCH_MILLISECONDS").format(pipelineContext, dateTime));
