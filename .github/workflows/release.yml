@@ -45,7 +45,7 @@ jobs:
       env:
         NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         JAVA_OPTS: -Djava.security.manager=allow
-      run: mvn -P ui -B clean install site
+      run: mvn -P ui -Dsurefire.redirectTestOutputToFile=true -B clean install site
 
     - uses: codecov/codecov-action@v5
       with:
