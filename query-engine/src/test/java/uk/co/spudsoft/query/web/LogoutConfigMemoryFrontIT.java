@@ -69,7 +69,7 @@ public class LogoutConfigMemoryFrontIT extends AbstractLoginLogoutTester {
        "--jwt.defaultJwksCacheDuration=PT1M",
        "--jwt.jwksEndpoints[0]=http://localhost:" + oidcPort + "/jwks_uri",
        "--logging.jsonFormat=false",
-       "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.web=TRACE",
+       // "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.web=TRACE",
        "--sampleDataLoads[0].url=" + postgres.getVertxUrl(),
        "--sampleDataLoads[0].adminUser.username=" + postgres.getUser(),
        "--sampleDataLoads[0].adminUser.password=" + postgres.getPassword(),

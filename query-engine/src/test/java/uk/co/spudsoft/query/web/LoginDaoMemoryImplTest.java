@@ -23,6 +23,8 @@ import io.vertx.core.json.jackson.DatabindCodec;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -123,7 +125,75 @@ public class LoginDaoMemoryImplTest {
   }
   
   @Test
-  public void testStoreThenGetRequestDataThenMarkUsedExpired(Vertx vertx, VertxTestContext testContext) {
+  public void testStoreThenWaitThenGetExpired(Vertx vertx, VertxTestContext testContext) {
+    
+    LoginDao dao = new LoginDaoMemoryImpl(Duration.of(100, ChronoUnit.MILLIS));
+
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    
+    dao.store(reqctx, "state", "provider", "codeVerifier", "nonce", "redirectUri", "targetUrl")
+            .compose(v -> {
+              return dao.getRequestData(reqctx, "state");
+            })
+            .compose(rd -> {
+              testContext.verify(() -> {
+                assertEquals("nonce", rd.nonce());
+                assertEquals("provider", rd.provider());
+                assertEquals("redirectUri", rd.redirectUri());
+                assertEquals("targetUrl", rd.targetUrl());
+              });
+              return dao.markUsed(reqctx, "state");
+            })
+            .compose(v -> {
+              return dao.getRequestData(reqctx, "state");
+            })
+            .onSuccess(v -> {
+              testContext.failNow("Expected exception");
+            })
+            .onFailure(ex -> {
+              testContext.completeNow();
+            });
+  }
+  
+  @Test
+  public void testStoreTokenThenWaitThenGetExpired(Vertx vertx, VertxTestContext testContext) {
+    LoginDao dao = new LoginDaoMemoryImpl(Duration.of(1, ChronoUnit.MINUTES));
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+
+    // Store a token that expires in 100 milliseconds
+    LocalDateTime expiry = LocalDateTime.now(ZoneOffset.UTC).plus(100, ChronoUnit.MILLIS);
+
+    dao.storeTokens(reqctx, "session-id", expiry, "access-token", "provider", "refresh-token", "id-token")
+        .compose(v -> {
+          // Verify it exists immediately
+          return dao.getToken(reqctx, "session-id");
+        })
+        .compose(token -> {
+          testContext.verify(() -> {
+            assertEquals("access-token", token);
+          });
+          
+          // Wait for the token to expire
+          Promise<Void> delay = Promise.promise();
+          vertx.setTimer(150, id -> delay.complete());
+          return delay.future();
+        })
+        .compose(v -> {
+          // Attempt to get the expired token
+          return dao.getToken(reqctx, "session-id");
+        })
+        .onSuccess(token -> {
+          testContext.verify(() -> {
+            // According to the Javadoc and implementation, expired tokens return null
+            assertEquals(null, token);
+          });
+          testContext.completeNow();
+        })
+        .onFailure(testContext::failNow);
+  }
+  
+  @Test
+  public void testStoreThenMarkUsedThenGet(Vertx vertx, VertxTestContext testContext) {
     
     LoginDao dao = new LoginDaoMemoryImpl(Duration.of(100, ChronoUnit.MILLIS));
 
@@ -155,6 +225,44 @@ public class LoginDaoMemoryImplTest {
             .onFailure(ex -> {
               testContext.completeNow();
             });
+  }
+  
+  @Test
+  public void testStoreTokenThenWaitThenGetProviderAndTokensExpired(Vertx vertx, VertxTestContext testContext) {
+    LoginDao dao = new LoginDaoMemoryImpl(Duration.of(1, ChronoUnit.MINUTES));
+    RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+
+    // Store a token that expires in 100 milliseconds
+    LocalDateTime expiry = LocalDateTime.now(ZoneOffset.UTC).plus(100, ChronoUnit.MILLIS);
+
+    dao.storeTokens(reqctx, "session-id", expiry, "access-token", "provider-name", "refresh-token", "id-token")
+        .compose(v -> {
+          // Verify it exists immediately
+          return dao.getProviderAndTokens(reqctx, "session-id");
+        })
+        .compose(pat -> {
+          testContext.verify(() -> {
+            assertEquals("provider-name", pat.provider());
+            assertEquals("access-token", pat.accessToken());
+          });
+          
+          // Wait for the token to expire
+          Promise<Void> delay = Promise.promise();
+          vertx.setTimer(150, id -> delay.complete());
+          return delay.future();
+        })
+        .compose(v -> {
+          // Attempt to get the provider and tokens for the expired session
+          return dao.getProviderAndTokens(reqctx, "session-id");
+        })
+        .onSuccess(pat -> {
+          testContext.verify(() -> {
+            // According to the implementation, expired tokens return null
+            assertEquals(null, pat);
+          });
+          testContext.completeNow();
+        })
+        .onFailure(testContext::failNow);
   }
   
   @Test

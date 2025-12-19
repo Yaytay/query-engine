@@ -302,6 +302,7 @@
                 <useModulePath>false</useModulePath>
                 <reuseForks>true</reuseForks>
                 <workingDirectory>${project.basedir}</workingDirectory>
+                <consoleOutputReporter></consoleOutputReporter>
                 <argLine>@{argLine} -Dfile.encoding=UTF-8 -XX:+UnlockExperimentalVMOptions -XX:+UseJVMCICompiler --module-path=${compiler.dir} --upgrade-module-path=${compiler.dir}</argLine>
                 <argLine>
                   @{argLine}
