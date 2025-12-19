@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.exec.fmts;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
@@ -88,33 +89,42 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
   public Future<Void> write(DataRow data) {
     Promise<Void> currentWritePromise = Promise.promise();
     Future<Void> previous;
+    boolean immediate;
 
     synchronized (lastProcessFutureLock) {
       previous = lastProcessFuture;
       lastProcessFuture = currentWritePromise.future();
+      immediate = previous.isComplete();
     }
 
-    previous.onComplete(ar -> {
-      if (ar.failed()) {
-        currentWritePromise.fail(ar.cause());
-      } else {
-        try {
-          ++rowCount;
-          Future<Void> result;
-          if (initialized) {
-            result = process.handle(data);
-          } else {
-            initialized = true;
-            result = initialize.handle(null).compose(v -> process.handle(data));
-          }
-          result.onComplete(currentWritePromise);
-        } catch (Throwable t) {
-          currentWritePromise.fail(t);
-        }
-      }
-    });
-
+    if (immediate) {
+      performWrite(previous, currentWritePromise, data);
+    } else {
+      previous.onComplete(ar -> {
+        performWrite(ar, currentWritePromise, data);
+      });
+    }
     return currentWritePromise.future();
+  }
+
+  void performWrite(AsyncResult<Void> ar, Promise<Void> currentWritePromise, DataRow data) {
+    if (ar.failed()) {
+      currentWritePromise.fail(ar.cause());
+    } else {
+      try {
+        ++rowCount;
+        Future<Void> result;
+        if (initialized) {
+          result = process.handle(data);
+        } else {
+          initialized = true;
+          result = initialize.handle(null).compose(v -> process.handle(data));
+        }
+        result.onComplete(currentWritePromise);
+      } catch (Throwable t) {
+        currentWritePromise.fail(t);
+      }
+    }
   }
 
   private Future<Void> handleTermination() {
