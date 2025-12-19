@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="false" scan="true" scanPeriod="10 minutes">
-  <appender name="STDOUTPUT" class="ch.qos.logback.core.ConsoleAppender">
+  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+    <file>target/test-logs.log</file>
+    <append>true</append>
     <encoder>
-      <charset>UTF-8</charset>
       <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} %line %kvp - %msg%n</pattern>
     </encoder>
   </appender>
