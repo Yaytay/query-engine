@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.main;
 
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
+import io.restassured.config.HttpClientConfig;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import java.io.ByteArrayOutputStream;
@@ -25,6 +26,7 @@ import java.io.File;
 import java.io.PrintStream;
 import java.lang.invoke.MethodHandles;
 import org.apache.commons.io.FileUtils;
+import static org.apache.http.params.CoreConnectionPNames.SO_TIMEOUT;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -108,6 +110,11 @@ public class SortIT {
     
     RestAssured.port = main.getPort();
     
+    RestAssured.config = RestAssured.config().httpClient(
+        HttpClientConfig.httpClientConfig()
+            .setParam(SO_TIMEOUT, 500000)
+    );
+
     String body = given()
             .queryParam("key", "PostgreSQL")
             .queryParam("port", postgres.getPort())
