@@ -90,6 +90,9 @@
               <goals>
                 <goal>display-plugin-updates</goal>
               </goals>
+              <configuration>
+                <logOutput>false</logOutput>
+              </configuration>
             </execution>
             <execution>
               <id>display-dependency-updates</id>
@@ -97,6 +100,9 @@
               <goals>
                 <goal>display-dependency-updates</goal>
               </goals>
+              <configuration>
+                <logOutput>false</logOutput>
+              </configuration>
             </execution>
           </executions>
         </plugin>
@@ -274,6 +280,7 @@
               -Dfile.encoding=UTF-8
               -XX:+UnlockExperimentalVMOptions
               -XX:+EnableJVMCI
+              --enable-native-access=ALL-UNNAMED
               --upgrade-module-path=${project.build.directory}/compiler
               --add-exports org.graalvm.nativeimage/org.graalvm.nativeimage.impl=ALL-UNNAMED
               --add-exports org.graalvm.polyglot/org.graalvm.polyglot.impl=ALL-UNNAMED
@@ -309,6 +316,7 @@
                   -Dfile.encoding=UTF-8
                   -XX:+UnlockExperimentalVMOptions
                   -XX:+EnableJVMCI
+                  --enable-native-access=ALL-UNNAMED
                   --module-path=${compiler.dir}
                   --upgrade-module-path=${project.build.directory}/compiler
                   --add-exports org.graalvm.nativeimage/org.graalvm.nativeimage.impl=ALL-UNNAMED

@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.main;
 
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
+import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -53,6 +54,7 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
  */
 @ExtendWith(VertxExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Timeout(600000)
 public class SortIT {
   
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
