@@ -74,7 +74,8 @@ public final class SortingStream<T> implements ReadStream<T> {
   private final AtomicInteger state = new AtomicInteger(State.PENDING.ordinal());
   private final AtomicLong demand = new AtomicLong(0);
   private final AtomicBoolean processing = new AtomicBoolean(false);
-
+  private final AtomicBoolean checkAgain = new AtomicBoolean(false);
+  
   // Collection phase
   private final List<T> currentChunk = new ArrayList<>();
   private long currentChunkSize = 0;
@@ -296,11 +297,16 @@ public final class SortingStream<T> implements ReadStream<T> {
     if (processing.compareAndSet(false, true)) {
       context.runOnContext(v -> {
         try {
-          processOutput();
+          do {
+            checkAgain.set(false);
+            processOutput();
+          } while (checkAgain.get());
         } finally {
           processing.set(false);
         }
       });
+    } else {
+      checkAgain.set(true);
     }
   }
 
