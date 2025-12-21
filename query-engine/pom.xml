@@ -584,7 +584,7 @@
                 <docletArtifact>
                   <groupId>uk.co.spudsoft</groupId>
                   <artifactId>params4j</artifactId>
-                  <version>0.2.2</version>
+                  <version>0.2.3</version>
                   <classifier>doclet</classifier>
                 </docletArtifact>
               </docletArtifacts>

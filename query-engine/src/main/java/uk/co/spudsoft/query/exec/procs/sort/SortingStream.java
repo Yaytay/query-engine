@@ -111,7 +111,7 @@ public final class SortingStream<T> implements ReadStream<T> {
     long sizeof(T item);
   }
 
-  private enum State {
+  enum State {
     PENDING,      // Not yet started collecting input
     COLLECTING,   // Still collecting input
     MERGING,      // Merging sorted chunks
@@ -205,12 +205,16 @@ public final class SortingStream<T> implements ReadStream<T> {
                   .onSuccess(v2 -> {
                     logger.trace("Merge state initialized, scheduling output processing");
                     // Ensure we start processing if handlers are already set
-                    if (dataHandler != null && demand.get() > 0) {
+                    if (haveHandlerAndDemand(dataHandler, demand)) {
                       scheduleProcessOutput();
                     }
                   });
             })
             .onFailure(this::handleException);
+  }
+
+  static boolean haveHandlerAndDemand(Handler<?> handler, AtomicLong demand) {
+    return handler != null && demand.get() > 0;
   }
 
   private Future<Void> flushChunkAsync(List<T> chunkToFlush) {
@@ -302,13 +306,13 @@ public final class SortingStream<T> implements ReadStream<T> {
             checkAgain.set(false);
             processOutput();
             // If checkAgain was set while processOutput was running and we are still merging, loop.
-            loop = shouldLoop();
+            loop = shouldLoop(checkAgain, state);
           } while (loop);
         } finally {
           processing.set(false);
           // Safety: If checkAgain was set at the exact moment we released 'processing',
           // we need one more pass to be absolutely sure.
-          if (shouldLoop()) {
+          if (shouldLoop(checkAgain, state)) {
             scheduleProcessOutput();
           }
         }
@@ -318,11 +322,11 @@ public final class SortingStream<T> implements ReadStream<T> {
     }
   }
 
-  boolean shouldLoop() {
+  static boolean shouldLoop(AtomicBoolean checkAgain, AtomicInteger state) {
     return checkAgain.get() && state.get() == State.MERGING.ordinal();
   }
 
-  private void processOutput() {
+  void processOutput() {
     if (state.get() != State.MERGING.ordinal() || mergeState == null) {
       return;
     }
@@ -423,7 +427,7 @@ public final class SortingStream<T> implements ReadStream<T> {
     this.dataHandler = handler;
 
     // If we're already in merge phase and have data, start processing
-    if (state.get() == State.MERGING.ordinal() && handler != null && demand.get() > 0) {
+    if (state.get() == State.MERGING.ordinal() && haveHandlerAndDemand(handler, demand)) {
       scheduleProcessOutput();
     }
 
