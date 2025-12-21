@@ -301,15 +301,14 @@ public final class SortingStream<T> implements ReadStream<T> {
           do {
             checkAgain.set(false);
             processOutput();
-            // If checkAgain was set while processOutput was running, loop.
-            // ALSO loop if we aren't merging anymore (to handle final completion/cleanup)
-            loop = checkAgain.get() && state.get() == State.MERGING.ordinal();
+            // If checkAgain was set while processOutput was running and we are still merging, loop.
+            loop = shouldLoop();
           } while (loop);
         } finally {
           processing.set(false);
           // Safety: If checkAgain was set at the exact moment we released 'processing',
           // we need one more pass to be absolutely sure.
-          if (checkAgain.get() && state.get() == State.MERGING.ordinal()) {
+          if (shouldLoop()) {
             scheduleProcessOutput();
           }
         }
@@ -317,6 +316,10 @@ public final class SortingStream<T> implements ReadStream<T> {
     } else {
       checkAgain.set(true);
     }
+  }
+
+  boolean shouldLoop() {
+    return checkAgain.get() && state.get() == State.MERGING.ordinal();
   }
 
   private void processOutput() {
@@ -789,7 +792,7 @@ public final class SortingStream<T> implements ReadStream<T> {
     }
 
     private void checkFillComplete() {
-      if (fillPromise != null && (buffer.size() >= targetFillSize || streamEnded)) {
+      if (fillPromise != null && (!buffer.isEmpty() || streamEnded)) {
         logger.trace("{} fill complete, buffer size: {}, target was: {}", this, buffer.size(), targetFillSize);
         completeFill();
       }
