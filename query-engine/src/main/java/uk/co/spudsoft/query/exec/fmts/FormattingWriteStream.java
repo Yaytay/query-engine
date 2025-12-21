@@ -134,12 +134,15 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
 
   @Override
   public Future<Void> end() {
+    log.info().log("WriteStream end: {}", lastProcessFuture);
     // Ensure we run on the context to allow pending I/O tasks
     // a chance to execute before we try to compose the end.
     Promise<Void> endPromise = Promise.promise();
 
     lastProcessFuture.onComplete(ar -> {
+      log.info().log("LastProcessFuture completed: {}", lastProcessFuture);
       Vertx.currentContext().runOnContext(v -> {
+        log.info().log("Running on context: {}", initialized);
         Future<Void> finalStep;
         if (initialized) {
           finalStep = handleTermination();
