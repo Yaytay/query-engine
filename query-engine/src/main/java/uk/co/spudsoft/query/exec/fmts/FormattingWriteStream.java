@@ -143,16 +143,13 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
 
     lastProcessFuture.onComplete(ar -> {
       log.info().log("LastProcessFuture completed: {}", lastProcessFuture);
-      Vertx.currentContext().runOnContext(v -> {
-        log.info().log("Running on context: {}", initialized);
-        Future<Void> finalStep;
-        if (initialized) {
-          finalStep = handleTermination();
-        } else {
-          finalStep = initialize.handle(null).compose(v2 -> handleTermination());
-        }
-        finalStep.onComplete(endPromise);
-      });
+      Future<Void> finalStep;
+      if (initialized) {
+        finalStep = handleTermination();
+      } else {
+        finalStep = initialize.handle(null).compose(v2 -> handleTermination());
+      }
+      finalStep.onComplete(endPromise);
     });
 
     return endPromise.future();
