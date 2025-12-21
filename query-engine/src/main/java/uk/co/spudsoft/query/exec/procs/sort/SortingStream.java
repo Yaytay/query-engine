@@ -718,6 +718,7 @@ public final class SortingStream<T> implements ReadStream<T> {
     private final SerializeReadStream<T> readStream;
     private Promise<Void> fillPromise;
     private int targetFillSize;
+    private int itemsReceivedThisFill; // NEW: Track items received for this specific request
     private long totalItemsRead = 0;
     private boolean streamStarted = false;
     private boolean streamEnded = false;
@@ -734,6 +735,7 @@ public final class SortingStream<T> implements ReadStream<T> {
         readStream.handler(item -> {
           buffer.offer(item);
           totalItemsRead++;
+          itemsReceivedThisFill++; // NEW
           logger.trace("{} received item {}, buffer size now: {}", this, item, buffer.size());
           checkFillComplete();
         });
@@ -759,7 +761,7 @@ public final class SortingStream<T> implements ReadStream<T> {
 
     @Override
     Future<Void> fillBuffer(int targetSize) {
-      if (streamEnded || buffer.size() >= targetSize) {
+      if (streamEnded || !buffer.isEmpty()) { // Logic: If we have data, we aren't "Pending"
         return Future.succeededFuture();
       }
 
@@ -770,6 +772,7 @@ public final class SortingStream<T> implements ReadStream<T> {
 
       fillPromise = Promise.promise();
       targetFillSize = targetSize;
+      itemsReceivedThisFill = 0; // NEW: Reset counter
 
       logger.trace("{} starting fill, target: {}, current buffer: {}", this, targetSize, buffer.size());
 
@@ -780,8 +783,10 @@ public final class SortingStream<T> implements ReadStream<T> {
     }
 
     private void checkFillComplete() {
-      if (fillPromise != null && (buffer.size() >= targetFillSize || streamEnded)) {
-        logger.trace("{} fill complete, buffer size: {}, target was: {}", this, buffer.size(), targetFillSize);
+      // Logic: Complete the promise as soon as we have ANY data to compare,
+      // or we've received the full batch we asked for, or the stream is dead.
+      if (fillPromise != null && (itemsReceivedThisFill > 0 || streamEnded)) {
+        logger.trace("{} fill complete, received: {}, buffer size: {}, target was: {}", this, itemsReceivedThisFill, buffer.size(), targetFillSize);
         completeFill();
       }
     }
