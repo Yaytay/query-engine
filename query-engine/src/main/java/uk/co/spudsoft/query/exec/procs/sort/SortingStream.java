@@ -638,6 +638,7 @@ public final class SortingStream<T> implements ReadStream<T> {
       List<Future<Void>> fillFutures = new ArrayList<>();
 
       // Fill buffers for all Pending sources
+      logger.trace("Filling buffers");
       for (BufferedMergeSource source : sources) {
         if (!source.isEnded() && !source.hasNext()) {
           // This source is Pending - make it Ready or Ended

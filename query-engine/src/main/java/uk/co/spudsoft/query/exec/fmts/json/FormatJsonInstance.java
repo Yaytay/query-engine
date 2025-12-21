@@ -52,20 +52,20 @@ import uk.co.spudsoft.query.logging.Log;
  * Output {@link uk.co.spudsoft.query.exec.FormatInstance} that generates JSON output.
  * <P>
  * The JSON structure itself is a single array, with one object for each row.
- * 
+ *
  * @author jtalbut
  */
 public final class FormatJsonInstance implements FormatInstance {
-  
+
   private static final Logger logger = LoggerFactory.getLogger(FormatJsonInstance.class);
-  private static final JsonFactory JSON_FACTORY = new JsonFactory(); 
- 
+  private static final JsonFactory JSON_FACTORY = new JsonFactory();
+
   private final WriteStream<Buffer> outputStream;
   private final FormatJson defn;
   private final FormattingWriteStream formattingStream;
   private final PipelineContext pipelineContext;
   private final Log log;
-  
+
   private static final Buffer EMPTY_OBJECT = Buffer.buffer("{}");
   private static final Buffer OPEN_ARRAY = Buffer.buffer("[");
   private static final Buffer OPEN_ARRAY_NL = Buffer.buffer("[\n  ");
@@ -80,9 +80,9 @@ public final class FormatJsonInstance implements FormatInstance {
   private Types types;
   private String title;
   private String description;
-  
+
   private final ValueFormatters valueFormatters;
-  
+
   /**
    * Constructor.
    * @param outputStream The WriteStream that the data is to be sent to.
@@ -93,11 +93,11 @@ public final class FormatJsonInstance implements FormatInstance {
   public FormatJsonInstance(WriteStream<Buffer> outputStream, PipelineContext pipelineContext, FormatJson defn) {
     this.outputStream = outputStream;
     this.defn = defn;
-    
+
     this.valueFormatters = defn.toValueFormatters("\"", "\"", true);
-    
+
     this.baseIndent = Strings.isNullOrEmpty(defn.getDataName()) ? 1 : 2;
-    
+
     this.pipelineContext = pipelineContext;
     this.log = new Log(logger, pipelineContext);
 
@@ -107,7 +107,7 @@ public final class FormatJsonInstance implements FormatInstance {
               return Future.succeededFuture();
             }
             , row -> {
-              try {                
+              try {
                 if (row.isEmpty()) {
                   return Future.succeededFuture();
                 } else {
@@ -133,6 +133,7 @@ public final class FormatJsonInstance implements FormatInstance {
             , rows -> {
               pipelineContext.getRequestContext().setRowsWritten(rows);
               try {
+                logger.trace("FormatJsonInstance: terminating with {} rows", rows);
                 return end();
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);
@@ -140,10 +141,10 @@ public final class FormatJsonInstance implements FormatInstance {
             }
     );
   }
-  
+
   Buffer toJsonBuffer(DataRow row, boolean firstRow) throws IOException {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    
+
     try (JsonGenerator gen = JSON_FACTORY.createGenerator(out)) {
       if (defn.getPrettiness() > 1) {
         gen.setPrettyPrinter(new PrettyPrinterIndent(baseIndent));
@@ -152,7 +153,7 @@ public final class FormatJsonInstance implements FormatInstance {
         gen.writeRaw('\n');
       }
       gen.writeStartObject();
-      
+
       row.forEach((cd, value) -> {
         try {
           if (value == null) {
@@ -165,7 +166,7 @@ public final class FormatJsonInstance implements FormatInstance {
                 gen.writeFieldName(cd.name());
                 gen.writeRawValue(valueFormatters.getBooleanFormatter(cd.name()).format(pipelineContext, value));
                 break ;
-                
+
               case Double:
               case Float:
                   gen.writeFieldName(cd.name());
@@ -176,18 +177,18 @@ public final class FormatJsonInstance implements FormatInstance {
                     gen.writeRawValue(formatter.format(pipelineContext, value));
                   }
                 break ;
-                
+
               case Integer:
               case Long:
                 if (value instanceof Number numValue) {
                   gen.writeNumberField(cd.name(), numValue.longValue());
                 }
                 break ;
-                
+
               case Null:
                 gen.writeNullField(cd.name());
                 break ;
-                
+
               case String:
                 if (value instanceof String stringValue) {
                   gen.writeStringField(cd.name(), stringValue);
@@ -195,11 +196,11 @@ public final class FormatJsonInstance implements FormatInstance {
                   gen.writeStringField(cd.name(), value.toString());
                 }
                 break ;
-                
+
               case Date:
                 gen.writeStringField(cd.name(), valueFormatters.getDateFormatter(cd.name()).format(pipelineContext, value));
                 break ;
-                
+
               case DateTime:
                 Object formatted = valueFormatters.getDateTimeFormatter(cd.name()).format(pipelineContext, value);
                 if (formatted instanceof String stringFormatted) {
@@ -208,11 +209,11 @@ public final class FormatJsonInstance implements FormatInstance {
                   gen.writeNumberField(cd.name(), longFormatted);
                 }
                 break ;
-                
+
               case Time:
                 gen.writeStringField(cd.name(), valueFormatters.getTimeFormatter(cd.name()).format(pipelineContext, value));
                 break ;
-                
+
               default:
                 log.warn().log("Field {} if of unknown type {} with value {} ({})", cd.name(), cd.type(), value, value.getClass());
                 throw new IllegalStateException("Field of unknown type " + cd.type());
@@ -221,14 +222,14 @@ public final class FormatJsonInstance implements FormatInstance {
         } catch (Throwable ex) {
           log.warn().log("Failed to write JSON field {} with value {} ({})", cd.name(), value, value == null ? null : value.getClass(), ex);
         }
-        
+
       });
       gen.writeEndObject();
     }
-    
+
     return Buffer.buffer(out.toByteArray());
   }
-  
+
   private Buffer start() throws IOException {
     if (Strings.isNullOrEmpty(defn.getDataName())) {
       if (defn.getPrettiness() > 1) {
@@ -246,23 +247,23 @@ public final class FormatJsonInstance implements FormatInstance {
         }
       } else {
         log.debug().log("Data types: {}", types);
-        
+
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         try (JsonGenerator gen = JSON_FACTORY.createGenerator(out)) {
           if (defn.getPrettiness() > 1) {
             gen.setPrettyPrinter(new PrettyPrinterIndent(1));
           }
-          
+
           gen.writeStartObject();
           if (!Strings.isNullOrEmpty(title)) {
             gen.writeStringField("name", title);
           }
           if (!Strings.isNullOrEmpty(description)) {
-            gen.writeStringField("description", description.trim());            
+            gen.writeStringField("description", description.trim());
           }
           gen.writeFieldName("fields");
-          
+
           gen.writeStartObject();
           types.forEach(cd -> {
             String typeName = cd.typeName();
@@ -280,10 +281,10 @@ public final class FormatJsonInstance implements FormatInstance {
             } catch (Throwable ex) {
               log.warn().log("Failed to write JSON meta {} with value {}", cd.name(), typeName, ex);
             }
-            
+
           });
           gen.writeEndObject();
-          
+
           gen.writeEndObject();
         }
 
@@ -318,10 +319,10 @@ public final class FormatJsonInstance implements FormatInstance {
         outBuffer.appendBuffer(startBuffer);
         outBuffer.appendBuffer(tailBuffer);
         return outputStream.end(outBuffer);
-      } 
+      }
     }
   }
-  
+
   @Override
   public Future<Void> initialize(PipelineExecutor executor, PipelineInstance pipeline, ReadStreamWithTypes input) {
     this.types = input.getTypes();
@@ -332,5 +333,5 @@ public final class FormatJsonInstance implements FormatInstance {
     }
     return input.getStream().pipeTo(formattingStream);
   }
-  
+
 }
