@@ -338,8 +338,15 @@ public final class SortingStream<T> implements ReadStream<T> {
 
     try {
       // Process items while we have demand
+      int rowsProcessedInThisPass = 0;
       while (demand.get() > 0) {
         if (mergeState.hasNext()) {
+          // YIELD CHECK: After every 1000 rows, yield the event loop to allow I/O and signals
+          if (++rowsProcessedInThisPass >= 1000) {
+            scheduleProcessOutput();
+            return;
+          }
+
           T nextItem = mergeState.next();
           if (nextItem != null) {
             if (demand.get() != Long.MAX_VALUE) {
