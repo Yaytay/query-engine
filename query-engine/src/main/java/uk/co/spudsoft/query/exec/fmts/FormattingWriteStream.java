@@ -21,7 +21,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import org.slf4j.Logger;
@@ -88,6 +87,7 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
 
   @Override
   public Future<Void> write(DataRow data) {
+    logger.debug("write {}", data);
     Promise<Void> currentWritePromise = Promise.promise();
 
     synchronized (lastProcessFutureLock) {
@@ -98,13 +98,13 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
       });
 
       // Only now do we update the field so that end() can see Row N as the new tail.
-      lastProcessFuture = currentWritePromise.future();
+      lastProcessFuture = currentWritePromise.future();      
+      return lastProcessFuture;
     }
-
-    return currentWritePromise.future();
   }
 
   void performWrite(AsyncResult<Void> ar, Promise<Void> currentWritePromise, DataRow data) {
+    logger.debug("performWrite called with {}, {}, {}", ar, currentWritePromise, data);
     if (ar.failed()) {
       currentWritePromise.fail(ar.cause());
     } else {
@@ -136,13 +136,18 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
 
   @Override
   public Future<Void> end() {
-    log.info().log("WriteStream end: {}", lastProcessFuture);
+    Future<Void> lpf;
+    synchronized (lastProcessFutureLock) {
+      lpf = lastProcessFuture;
+    }
+    
+    log.info().log("WriteStream end: {}", lpf);
     // Ensure we run on the context to allow pending I/O tasks
     // a chance to execute before we try to compose the end.
     Promise<Void> endPromise = Promise.promise();
 
-    lastProcessFuture.onComplete(ar -> {
-      log.info().log("LastProcessFuture completed: {}", lastProcessFuture);
+    lpf.onComplete(ar -> {
+      log.info().log("LastProcessFuture completed: {}", ar);
       Future<Void> finalStep;
       if (initialized) {
         finalStep = handleTermination();

@@ -24,6 +24,7 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +45,8 @@ public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
   private final int flushThreshold;
   private Buffer buffer = Buffer.buffer();
 
+  private final AtomicBoolean flushing = new AtomicBoolean();
+  
   /**
    * Constructor.
    * @param delegate The target WriteStream (typically RoutingContext.response().
@@ -70,6 +73,7 @@ public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
     if (buffer.length() == 0) {
       return Future.succeededFuture();
     }
+    flushing.set(true);
     Buffer toWrite = buffer;
     buffer = Buffer.buffer();
     logger.info("flush called with {} bytes", toWrite.length());
@@ -78,8 +82,9 @@ public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
     context.runOnContext(v -> {
       delegate.write(toWrite)
               .onComplete(ar -> {
+                flushing.set(false);
                 thisContext.runOnContext(v2 -> {
-                  logger.info("completing with {}", ar);
+                  logger.info("flush completed with {}", ar);
                   if (ar.succeeded()) {
                     promise.complete(ar.result());
                   } else {
@@ -93,6 +98,7 @@ public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
 
   @Override
   public Future<Void> end() {
+    logger.info("end called");
     return flush()
             .compose(v -> {
               Promise<Void> promise = Promise.promise();
@@ -128,7 +134,7 @@ public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
   @Override
   public boolean writeQueueFull() {
     // Safe to call directly; doesn't mutate state
-    return delegate.writeQueueFull();
+    return delegate.writeQueueFull() || flushing.get();
   }
 
   @Override
