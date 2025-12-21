@@ -92,6 +92,7 @@ public class SortIT {
       , "--pipelineCache.maxDuration=PT10M"
       , "--logging.jsonFormat=false"
       , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec\\\\.procs\\\\.sort=TRACE"
+      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec\\\\.fmts\\\\.json=TRACE"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--sampleDataLoads[0].url=" + postgres.getVertxUrl()
