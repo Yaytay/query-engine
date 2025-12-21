@@ -380,46 +380,50 @@ public class FormatJsonInstanceStreamTest {
   }
   
   void doTest(Vertx vertx, VertxTestContext testContext, FormatJson definition, TestBlock testBlock) {
-    // Create a list to capture output buffers
-    List<Buffer> outputBuffers = new ArrayList<>();
-    WriteStream<Buffer> writeStream = new ListingWriteStream<>(outputBuffers);
-
-    // Create request context
-    RequestContext requestContext = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
-    PipelineContext pipelineContext = new PipelineContext("test", requestContext);
-
-    // Create format instance
-    FormatJsonInstance instance = new FormatJsonInstance(writeStream, pipelineContext, definition);
-
-    // Create types and sample data rows
-    Types types = new Types();
-    List<DataRow> rows = Arrays.asList(
-            DataRow.create(types, "name", "Alice", "age", 25),
-            DataRow.create(types, "name", "Bob", "age", 30)
-    );
-
-    // Create read stream
-    ReadStream<DataRow> readStream = new ListReadStream<>(pipelineContext, vertx.getOrCreateContext(), rows);
-    ReadStreamWithTypes streamWithTypes = new ReadStreamWithTypes(readStream, types);
-
-    Pipeline pipeline = Pipeline.builder()
-            .title(MethodHandles.lookup().lookupClass().getSimpleName())
-            .build();            
-    PipelineInstance pipelineInstance = mock(PipelineInstance.class);
-    when(pipelineInstance.getDefinition()).thenReturn(pipeline);
     
-    // Test the complete flow
-    instance.initialize(null, pipelineInstance, streamWithTypes)
-            .onComplete(testContext.succeeding(result -> {
-              // Combine all output buffers into single string
-              Buffer combined = Buffer.buffer();
-              outputBuffers.forEach(combined::appendBuffer);
-              String jsonOutput = combined.toString();
+    vertx.getOrCreateContext()
+            .runOnContext(v -> {
+              // Create a list to capture output buffers
+              List<Buffer> outputBuffers = new ArrayList<>();
+              WriteStream<Buffer> writeStream = new ListingWriteStream<>(outputBuffers);
 
-              testContext.verify(() -> {
-                testBlock.apply(jsonOutput);
-              });
-              testContext.completeNow();
-            }));
-  }
+              // Create request context
+              RequestContext requestContext = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+              PipelineContext pipelineContext = new PipelineContext("test", requestContext);
+
+              // Create format instance
+              FormatJsonInstance instance = new FormatJsonInstance(writeStream, pipelineContext, definition);
+
+              // Create types and sample data rows
+              Types types = new Types();
+              List<DataRow> rows = Arrays.asList(
+                      DataRow.create(types, "name", "Alice", "age", 25),
+                      DataRow.create(types, "name", "Bob", "age", 30)
+              );
+
+              // Create read stream
+              ReadStream<DataRow> readStream = new ListReadStream<>(pipelineContext, vertx.getOrCreateContext(), rows);
+              ReadStreamWithTypes streamWithTypes = new ReadStreamWithTypes(readStream, types);
+
+              Pipeline pipeline = Pipeline.builder()
+                      .title(MethodHandles.lookup().lookupClass().getSimpleName())
+                      .build();            
+              PipelineInstance pipelineInstance = mock(PipelineInstance.class);
+              when(pipelineInstance.getDefinition()).thenReturn(pipeline);
+
+              // Test the complete flow
+              instance.initialize(null, pipelineInstance, streamWithTypes)
+                      .onComplete(testContext.succeeding(result -> {
+                        // Combine all output buffers into single string
+                        Buffer combined = Buffer.buffer();
+                        outputBuffers.forEach(combined::appendBuffer);
+                        String jsonOutput = combined.toString();
+
+                        testContext.verify(() -> {
+                          testBlock.apply(jsonOutput);
+                        });
+                        testContext.completeNow();
+                      }));
+            });
+  }    
 }
