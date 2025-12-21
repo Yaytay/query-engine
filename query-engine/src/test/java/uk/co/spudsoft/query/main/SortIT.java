@@ -119,10 +119,8 @@ public class SortIT {
             .queryParam("key", "PostgreSQL")
             .queryParam("port", postgres.getPort())
             .queryParam("_sort", "sort -dataId")
-            .log().all()
             .get("/query/sub1/sub2/SortableIT.tsv")
             .then()
-            .log().headers()
             .log().ifError()
             .statusCode(200)
             .extract().body().asString();

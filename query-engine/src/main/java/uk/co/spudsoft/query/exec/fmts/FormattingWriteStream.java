@@ -54,7 +54,7 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
   private long rowCount = 0;
 
   private final Object lastProcessFutureLock = new Object();
-  private Future<Void> lastProcessFuture = Future.succeededFuture();
+  private volatile Future<Void> lastProcessFuture = Future.succeededFuture();
 
   /**
    * Constructor.
@@ -89,16 +89,18 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
   @Override
   public Future<Void> write(DataRow data) {
     Promise<Void> currentWritePromise = Promise.promise();
-    Future<Void> previous;
 
     synchronized (lastProcessFutureLock) {
-      previous = lastProcessFuture;
+      // ATOMIC UPDATE: We must attach Row N to Row N-1
+      // while we still hold the lock on the chain.
+      lastProcessFuture.onComplete(ar -> {
+        performWrite(ar, currentWritePromise, data);
+      });
+
+      // Only now do we update the field so that end() can see Row N as the new tail.
       lastProcessFuture = currentWritePromise.future();
     }
 
-    previous.onComplete(ar -> {
-      performWrite(ar, currentWritePromise, data);
-    });
     return currentWritePromise.future();
   }
 
