@@ -89,21 +89,15 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
   public Future<Void> write(DataRow data) {
     Promise<Void> currentWritePromise = Promise.promise();
     Future<Void> previous;
-    boolean immediate;
 
     synchronized (lastProcessFutureLock) {
       previous = lastProcessFuture;
       lastProcessFuture = currentWritePromise.future();
-      immediate = previous.isComplete();
     }
 
-    if (immediate) {
-      performWrite(previous, currentWritePromise, data);
-    } else {
-      previous.onComplete(ar -> {
-        performWrite(ar, currentWritePromise, data);
-      });
-    }
+    previous.onComplete(ar -> {
+      performWrite(ar, currentWritePromise, data);
+    });
     return currentWritePromise.future();
   }
 

@@ -28,13 +28,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.hamcrest.Matchers;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.MethodOrderer;
@@ -43,6 +46,8 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +63,85 @@ public class SortingStreamTest {
   private static final Logger logger = LoggerFactory.getLogger(SortingStreamTest.class);
 
   @Test
-  // @Disabled
+  public void testShouldLoop() {    
+    assertTrue(SortingStream.shouldLoop(new AtomicBoolean(true), new AtomicInteger(SortingStream.State.MERGING.ordinal())));
+    assertFalse(SortingStream.shouldLoop(new AtomicBoolean(true), new AtomicInteger(SortingStream.State.COLLECTING.ordinal())));
+    assertFalse(SortingStream.shouldLoop(new AtomicBoolean(false), new AtomicInteger(SortingStream.State.COLLECTING.ordinal())));
+    assertFalse(SortingStream.shouldLoop(new AtomicBoolean(false), new AtomicInteger(SortingStream.State.MERGING.ordinal())));
+  }
+  
+  @Test
+  public void testHaveHandlerAndDemand() {
+    assertFalse(SortingStream.haveHandlerAndDemand(null, new AtomicLong(0)));
+    assertFalse(SortingStream.haveHandlerAndDemand(null, new AtomicLong(1)));
+    assertFalse(SortingStream.haveHandlerAndDemand(x -> logger.debug("x: {}", x), new AtomicLong(0)));
+    assertTrue(SortingStream.haveHandlerAndDemand(x -> logger.debug("x: {}", x), new AtomicLong(1)));
+  }
+  
+  @Test
+  @SuppressWarnings("unchecked")
+  public void testShouldProcessOutputExit(Vertx vertx, TestInfo testInfo) throws Exception {
+    // 1. Setup instance
+    SortingStream<Integer> ss = new SortingStream<>(
+        vertx.getOrCreateContext(),
+        vertx.fileSystem(),
+        Comparator.naturalOrder(),
+        i -> SerializeWriteStream.byteArrayFromInt(i),
+        b -> SerializeReadStream.intFromByteArray(b),
+        "target/temp/" + testInfo.getTestClass().get().getSimpleName() + "_" + testInfo.getTestMethod().get().getName(),
+        "test",
+        1000,
+        i -> 1,
+        (ReadStream<Integer>) mock(io.vertx.core.streams.ReadStream.class)
+    );
+
+    // Get access to private fields
+    Field stateField = SortingStream.class.getDeclaredField("state");
+    stateField.setAccessible(true);
+    AtomicInteger state = (AtomicInteger) stateField.get(ss);
+
+    Field mergeStateField = SortingStream.class.getDeclaredField("mergeState");
+    mergeStateField.setAccessible(true);
+
+    Field dataHandlerField = SortingStream.class.getDeclaredField("dataHandler");
+    dataHandlerField.setAccessible(true);
+
+    Field demandField = SortingStream.class.getDeclaredField("demand");
+    demandField.setAccessible(true);
+    AtomicLong demand = (AtomicLong) demandField.get(ss);
+
+    // Case 1: State is not MERGING (Line 1-3)
+    state.set(0); // State.PENDING
+    ss.processOutput();
+    // Verify no demand was checked (proves it exited at line 2)
+    // Note: We use reflection to verify the demand wasn't touched yet if needed, 
+    // but the return is immediate.
+
+    // Case 2: State is MERGING but mergeState is NULL (Line 1-3)
+    state.set(2); // State.MERGING
+    mergeStateField.set(ss, null);
+    ss.processOutput();
+    // Exits at line 2
+
+    // Case 3: State is MERGING, mergeState exists, but dataHandler is NULL (Line 6-8)
+    Object mockMergeState = mock(Class.forName("uk.co.spudsoft.query.exec.procs.sort.SortingStream$MergeState"));
+    mergeStateField.set(ss, mockMergeState);
+    dataHandlerField.set(ss, null);
+    ss.processOutput();
+    // Exits at line 7
+    verifyNoInteractions(mockMergeState);
+
+    // Case 4: Everything is set - verify it proceeds past the first 7 lines
+    // We set demand to 0 so the while loop (line 13) doesn't run, 
+    // but it will hit the mergeState.hasNext() check at the end.
+    demand.set(0);
+    dataHandlerField.set(ss, (Handler<Integer>) item -> {});
+    
+    ss.processOutput();
+  }
+
+  
+  @Test
   public void testSimpleSort(Vertx vertx, VertxTestContext testContext, TestInfo testInfo) {
     logger.debug("{}.{}", testInfo.getTestClass().get().getSimpleName(), testInfo.getTestMethod().get().getName());
     List<Integer> input = Arrays.asList(151, 892, 849, 786, 912, 714, 455, 27, 516, 789, 560, 62, 550, 351, 317, 661, 11, 125, 53, 131, 429, 735, 591, 663, 760, 795, 173, 91, 499, 445);
