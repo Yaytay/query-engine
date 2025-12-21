@@ -24,6 +24,8 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An implementation of {@link WriteStream} that bridges Vert.x {@link Context}s.
@@ -34,6 +36,9 @@ import io.vertx.core.streams.WriteStream;
  * @author jtalbut
  */
 public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
+  
+  private static final Logger logger = LoggerFactory.getLogger(BufferingContextAwareWriteStream.class);
+  
   private final WriteStream<Buffer> delegate;
   private final Context context;
   private final int flushThreshold;
@@ -67,12 +72,14 @@ public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
     }
     Buffer toWrite = buffer;
     buffer = Buffer.buffer();
+    logger.info("flush called with {} bytes", toWrite.length());
     Promise<Void> promise = Promise.promise();
     Context thisContext = Vertx.currentContext();
     context.runOnContext(v -> {
       delegate.write(toWrite)
               .onComplete(ar -> {
                 thisContext.runOnContext(v2 -> {
+                  logger.info("completing with {}", ar);
                   if (ar.succeeded()) {
                     promise.complete(ar.result());
                   } else {
