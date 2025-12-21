@@ -26,7 +26,6 @@ import java.io.File;
 import java.io.PrintStream;
 import java.lang.invoke.MethodHandles;
 import org.apache.commons.io.FileUtils;
-import static org.apache.http.params.CoreConnectionPNames.SO_TIMEOUT;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -92,7 +91,7 @@ public class SortIT {
       , "--httpServerOptions.tracingPolicy=ALWAYS"
       , "--pipelineCache.maxDuration=PT10M"
       , "--logging.jsonFormat=false"
-      , "--logging.level.uk\\\\.co\\\\.spudsoft=TRACE"
+      , "--logging.level.uk\\\\.co\\\\.spudsoft\\\\.query\\\\.exec\\\\.procs\\\\.sort=TRACE"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
       , "--sampleDataLoads[0].url=" + postgres.getVertxUrl()
@@ -112,7 +111,7 @@ public class SortIT {
     
     RestAssured.config = RestAssured.config().httpClient(
         HttpClientConfig.httpClientConfig()
-            .setParam(SO_TIMEOUT, 500000)
+            .setParam("http.socket.timeout", 120000)
     );
 
     String body = given()

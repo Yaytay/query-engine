@@ -646,8 +646,12 @@ public final class SortingStream<T> implements ReadStream<T> {
       }
 
       return Future.all(fillFutures)
-              .onSuccess(v -> {
-                logger.trace("After buffer fill, no more pending sources");
+              .onComplete(ar -> {
+                if (ar.failed()) {
+                  logger.warn("Buffer fill failed: ", ar.cause());
+                } else {
+                  logger.trace("After buffer fill, no more pending sources");
+                }
               })
               .mapEmpty();
     }
