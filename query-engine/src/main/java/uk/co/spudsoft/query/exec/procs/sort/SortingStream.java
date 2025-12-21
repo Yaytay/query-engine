@@ -385,7 +385,7 @@ public final class SortingStream<T> implements ReadStream<T> {
 
   private void complete() {
     if (state.compareAndSet(State.MERGING.ordinal(), State.COMPLETED.ordinal())) {
-      logger.trace("Sorting stream completed");
+      logger.debug("Sorting stream completed");
       if (mergeState != null) {
         mergeState.cleanup();
       }
