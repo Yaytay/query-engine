@@ -42,7 +42,6 @@ import java.util.ListIterator;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.Disabled;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
 
 /**
@@ -50,7 +49,6 @@ import uk.co.spudsoft.query.exec.procs.ListReadStream;
  * Tests cover all edge cases, error conditions, and normal operation scenarios.
  */
 @ExtendWith(VertxExtension.class)
-@Disabled
 public class SortingStream_FileBufferedSourceFillBufferTest {
 
     private static final Logger logger = LoggerFactory.getLogger(SortingStream_FileBufferedSourceFillBufferTest.class);

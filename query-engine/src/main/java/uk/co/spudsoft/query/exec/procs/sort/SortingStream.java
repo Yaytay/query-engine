@@ -297,12 +297,21 @@ public final class SortingStream<T> implements ReadStream<T> {
     if (processing.compareAndSet(false, true)) {
       context.runOnContext(v -> {
         try {
+          boolean loop;
           do {
             checkAgain.set(false);
             processOutput();
-          } while (checkAgain.get());
+            // If checkAgain was set while processOutput was running, loop.
+            // ALSO loop if we aren't merging anymore (to handle final completion/cleanup)
+            loop = checkAgain.get() && state.get() == State.MERGING.ordinal();
+          } while (loop);
         } finally {
           processing.set(false);
+          // Safety: If checkAgain was set at the exact moment we released 'processing',
+          // we need one more pass to be absolutely sure.
+          if (checkAgain.get() && state.get() == State.MERGING.ordinal()) {
+            scheduleProcessOutput();
+          }
         }
       });
     } else {
@@ -718,7 +727,6 @@ public final class SortingStream<T> implements ReadStream<T> {
     private final SerializeReadStream<T> readStream;
     private Promise<Void> fillPromise;
     private int targetFillSize;
-    private int itemsReceivedThisFill; // NEW: Track items received for this specific request
     private long totalItemsRead = 0;
     private boolean streamStarted = false;
     private boolean streamEnded = false;
@@ -735,7 +743,6 @@ public final class SortingStream<T> implements ReadStream<T> {
         readStream.handler(item -> {
           buffer.offer(item);
           totalItemsRead++;
-          itemsReceivedThisFill++; // NEW
           logger.trace("{} received item {}, buffer size now: {}", this, item, buffer.size());
           checkFillComplete();
         });
@@ -761,7 +768,7 @@ public final class SortingStream<T> implements ReadStream<T> {
 
     @Override
     Future<Void> fillBuffer(int targetSize) {
-      if (streamEnded || !buffer.isEmpty()) { // Logic: If we have data, we aren't "Pending"
+      if (streamEnded || buffer.size() >= targetSize) {
         return Future.succeededFuture();
       }
 
@@ -772,7 +779,6 @@ public final class SortingStream<T> implements ReadStream<T> {
 
       fillPromise = Promise.promise();
       targetFillSize = targetSize;
-      itemsReceivedThisFill = 0; // NEW: Reset counter
 
       logger.trace("{} starting fill, target: {}, current buffer: {}", this, targetSize, buffer.size());
 
@@ -783,10 +789,8 @@ public final class SortingStream<T> implements ReadStream<T> {
     }
 
     private void checkFillComplete() {
-      // Logic: Complete the promise as soon as we have ANY data to compare,
-      // or we've received the full batch we asked for, or the stream is dead.
-      if (fillPromise != null && (itemsReceivedThisFill > 0 || streamEnded)) {
-        logger.trace("{} fill complete, received: {}, buffer size: {}, target was: {}", this, itemsReceivedThisFill, buffer.size(), targetFillSize);
+      if (fillPromise != null && (buffer.size() >= targetFillSize || streamEnded)) {
+        logger.trace("{} fill complete, buffer size: {}, target was: {}", this, buffer.size(), targetFillSize);
         completeFill();
       }
     }
