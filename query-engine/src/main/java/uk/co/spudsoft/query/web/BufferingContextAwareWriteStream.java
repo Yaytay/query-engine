@@ -45,8 +45,6 @@ public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
   private final int flushThreshold;
   private Buffer buffer = Buffer.buffer();
 
-  private final AtomicBoolean flushing = new AtomicBoolean();
-  
   /**
    * Constructor.
    * @param delegate The target WriteStream (typically RoutingContext.response().
@@ -73,7 +71,6 @@ public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
     if (buffer.length() == 0) {
       return Future.succeededFuture();
     }
-    flushing.set(true);
     Buffer toWrite = buffer;
     buffer = Buffer.buffer();
     logger.info("flush called with {} bytes", toWrite.length());
@@ -82,7 +79,7 @@ public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
     context.runOnContext(v -> {
       delegate.write(toWrite)
               .onComplete(ar -> {
-                flushing.set(false);
+                logger.info("delegate.write completed with {}", ar);
                 thisContext.runOnContext(v2 -> {
                   logger.info("flush completed with {}", ar);
                   if (ar.succeeded()) {
@@ -99,24 +96,22 @@ public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
   @Override
   public Future<Void> end() {
     logger.info("end called");
-    return flush()
-            .compose(v -> {
-              Promise<Void> promise = Promise.promise();
-              Context thisContext = Vertx.currentContext();
-              context.runOnContext(v2 -> {
-                delegate.end()
-                        .onComplete(ar -> {
-                          thisContext.runOnContext(v3 -> {
-                            if (ar.succeeded()) {
-                              promise.complete(ar.result());
-                            } else {
-                              promise.fail(ar.cause());
-                            }
-                          });
-                        });
+    flush();
+    Promise<Void> promise = Promise.promise();
+    Context thisContext = Vertx.currentContext();
+    context.runOnContext(v2 -> {
+      delegate.end()
+              .onComplete(ar -> {
+                thisContext.runOnContext(v3 -> {
+                  if (ar.succeeded()) {
+                    promise.complete(ar.result());
+                  } else {
+                    promise.fail(ar.cause());
+                  }
+                });
               });
-              return promise.future();
-            });
+    });
+    return promise.future();
   }
 
   @Override
@@ -134,7 +129,7 @@ public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
   @Override
   public boolean writeQueueFull() {
     // Safe to call directly; doesn't mutate state
-    return delegate.writeQueueFull() || flushing.get();
+    return delegate.writeQueueFull();
   }
 
   @Override

@@ -52,9 +52,6 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
 
   private long rowCount = 0;
 
-  private final Object lastProcessFutureLock = new Object();
-  private volatile Future<Void> lastProcessFuture = Future.succeededFuture();
-
   /**
    * Constructor.
    * @param pipelineContext The context in which this {@link SourcePipeline} is being run.  The container requestContext must have the rowCount updated at the end.
@@ -75,7 +72,6 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
     this.initialize = initialize;
     this.process = process;
     this.terminate = terminate;
-    this.lastProcessFuture = Future.succeededFuture();
     this.log = new Log(logger, pipelineContext);
   }
 
@@ -90,38 +86,21 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
     logger.debug("write {}", data);
     Promise<Void> currentWritePromise = Promise.promise();
 
-    synchronized (lastProcessFutureLock) {
-      // ATOMIC UPDATE: We must attach Row N to Row N-1
-      // while we still hold the lock on the chain.
-      lastProcessFuture.onComplete(ar -> {
-        performWrite(ar, currentWritePromise, data);
-      });
-
-      // Only now do we update the field so that end() can see Row N as the new tail.
-      lastProcessFuture = currentWritePromise.future();      
-      return lastProcessFuture;
-    }
-  }
-
-  void performWrite(AsyncResult<Void> ar, Promise<Void> currentWritePromise, DataRow data) {
-    logger.debug("performWrite called with {}, {}, {}", ar, currentWritePromise, data);
-    if (ar.failed()) {
-      currentWritePromise.fail(ar.cause());
-    } else {
-      try {
-        ++rowCount;
-        Future<Void> result;
-        if (initialized) {
-          result = process.handle(data);
-        } else {
-          initialized = true;
-          result = initialize.handle(null).compose(v -> process.handle(data));
-        }
-        result.onComplete(currentWritePromise);
-      } catch (Throwable t) {
-        currentWritePromise.fail(t);
+    try {
+      ++rowCount;
+      Future<Void> result;
+      if (initialized) {
+        result = process.handle(data);
+      } else {
+        initialized = true;
+        initialize.handle(null);
+        result = process.handle(data);
       }
+      result.onComplete(currentWritePromise);
+    } catch (Throwable t) {
+      currentWritePromise.fail(t);
     }
+    return currentWritePromise.future();
   }
 
   private Future<Void> handleTermination() {
@@ -136,26 +115,17 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
 
   @Override
   public Future<Void> end() {
-    Future<Void> lpf;
-    synchronized (lastProcessFutureLock) {
-      lpf = lastProcessFuture;
-    }
-    
-    log.info().log("WriteStream end: {}", lpf);
+    log.info().log("WriteStream end");
     // Ensure we run on the context to allow pending I/O tasks
     // a chance to execute before we try to compose the end.
     Promise<Void> endPromise = Promise.promise();
-
-    lpf.onComplete(ar -> {
-      log.info().log("LastProcessFuture completed: {}", ar);
-      Future<Void> finalStep;
-      if (initialized) {
-        finalStep = handleTermination();
-      } else {
-        finalStep = initialize.handle(null).compose(v2 -> handleTermination());
-      }
-      finalStep.onComplete(endPromise);
-    });
+    Future<Void> finalStep;
+    if (initialized) {
+      finalStep = handleTermination();
+    } else {
+      finalStep = initialize.handle(null).compose(v2 -> handleTermination());
+    }
+    finalStep.onComplete(endPromise);
 
     return endPromise.future();
   }
