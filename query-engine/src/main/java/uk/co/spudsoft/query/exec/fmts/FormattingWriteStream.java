@@ -124,6 +124,7 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
 
   private Future<Void> handleTermination() {
     try {
+      log.info().log("WriteStream terminating");
       return terminate.handle(rowCount);
     } catch (Throwable ex) {
       log.error().log("Termination callback failed: ", ex);
