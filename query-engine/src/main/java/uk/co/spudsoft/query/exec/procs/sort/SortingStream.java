@@ -75,7 +75,7 @@ public final class SortingStream<T> implements ReadStream<T> {
   private final AtomicLong demand = new AtomicLong(0);
   private final AtomicBoolean processing = new AtomicBoolean(false);
   private final AtomicBoolean checkAgain = new AtomicBoolean(false);
-  
+
   // Collection phase
   private final List<T> currentChunk = new ArrayList<>();
   private long currentChunkSize = 0;
@@ -343,8 +343,9 @@ public final class SortingStream<T> implements ReadStream<T> {
           mergeState.ensureBuffersFilled()
                   .onComplete(ar -> {
                     if (ar.succeeded()) {
-                      // Continue processing after buffer fill
-                      scheduleProcessOutput();
+                      // Force a re-entry on the context to ensure the stack is clean
+                      // and the processing flag state is correctly handled.
+                      context.runOnContext(v -> scheduleProcessOutput());
                     } else {
                       handleException(ar.cause());
                     }
