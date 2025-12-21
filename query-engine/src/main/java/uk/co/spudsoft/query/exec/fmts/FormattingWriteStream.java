@@ -18,9 +18,11 @@ package uk.co.spudsoft.query.exec.fmts;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
 import org.slf4j.Logger;
@@ -132,17 +134,23 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
 
   @Override
   public Future<Void> end() {
-    return lastProcessFuture
-            .compose(v -> {
-              if (initialized) {
-                return handleTermination();
-              } else {
-                return initialize
-                        .handle(null).compose(v2 -> {
-                          return handleTermination();
-                        });
-              }
-            });
+    // Ensure we run on the context to allow pending I/O tasks
+    // a chance to execute before we try to compose the end.
+    Promise<Void> endPromise = Promise.promise();
+
+    lastProcessFuture.onComplete(ar -> {
+      Vertx.currentContext().runOnContext(v -> {
+        Future<Void> finalStep;
+        if (initialized) {
+          finalStep = handleTermination();
+        } else {
+          finalStep = initialize.handle(null).compose(v2 -> handleTermination());
+        }
+        finalStep.onComplete(endPromise);
+      });
+    });
+
+    return endPromise.future();
   }
 
   @Override
