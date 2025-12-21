@@ -122,7 +122,8 @@ public class SortIT {
             .log().all()
             .get("/query/sub1/sub2/SortableIT.tsv")
             .then()
-            .log().all()
+            .log().headers()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     
