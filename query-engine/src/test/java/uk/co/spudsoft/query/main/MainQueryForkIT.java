@@ -107,7 +107,6 @@ public class MainQueryForkIT {
     RestAssured.port = main.getPort();
     
     String body = given()
-            .log().all()
             .get("/openapi.yaml")
             .then()
             .log().ifError()
@@ -119,7 +118,6 @@ public class MainQueryForkIT {
     assertThat(body, not(containsString("empty")));
     
     body = given()
-            .log().all()
             .get("/openapi.json")
             .then()
             .log().ifError()
@@ -131,20 +129,18 @@ public class MainQueryForkIT {
     assertThat(body, not(containsString("empty")));
     
     body = given()
-            .log().all()
             .get("/api/info/available")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     
     assertThat(body, startsWith("{\"name\":\"\",\"children\":[{\"name\":\"args\",\"children\":[{\"name\":\"Args00\",\"path\":\"args/Args00\",\"title\":\"No Arguments\",\"description\":\"Test pipeline that has no arguments\"},{\"name\":\"Args01\",\"path\":\"args/Args01\",\"title\":\"One Argument\",\"description\":\"Test pipeline that has 1 argument\"}"));
         
     body = given()
-            .log().all()
             .get("/api/formio/demo/FeatureRichExample")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     
@@ -154,10 +150,9 @@ public class MainQueryForkIT {
         
     body = given()
             .queryParam("_fmt", "rss")
-            .log().all()
             .get("/query/demo/FeatureRichExample")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .contentType("application/rss+xml; charset=utf-8")
             .extract().body().asString();
@@ -168,10 +163,9 @@ public class MainQueryForkIT {
         
     body = given()
             .queryParam("_fmt", "metajson")
-            .log().all()
             .get("/query/demo/FeatureRichExample")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .contentType("application/json")
             .extract().body().asString();
@@ -182,10 +176,9 @@ public class MainQueryForkIT {
     body = given()
             .queryParam("minDate", "2097-01-01")
             .queryParam("_fmt", "metajson")
-            .log().all()
             .get("/query/demo/FeatureRichExample")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .contentType("application/json")
             .extract().body().asString();
@@ -198,7 +191,6 @@ public class MainQueryForkIT {
             .queryParam("port", postgres.getPort())
             .queryParam("_runid", UUID.randomUUID().toString())
             .accept("text/html, application/xhtml+xml, image/webp, image/apng, application/xml; q=0.9, application/signed-exchange; v=b3; q=0.9, */*; q=0.8")
-            .log().all()
             .get("/query/sub1/sub2/TemplatedJsonToPipelineIT")
             .then()
             .log().ifError()
@@ -210,7 +202,6 @@ public class MainQueryForkIT {
     body = given()
             .queryParam("key", mysql.getName())
             .queryParam("port", mysql.getPort())
-            .log().all()
             .get("/query/sub1/sub2/TemplatedJsonToPipelineIT")
             .then()
             .log().ifError()
@@ -224,7 +215,6 @@ public class MainQueryForkIT {
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
             .accept("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-            .log().all()
             .get("/query/sub1/sub2/TemplatedYamlToPipelineIT")
             .then()
             .log().ifError()
@@ -236,7 +226,6 @@ public class MainQueryForkIT {
     body = given()
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
-            .log().all()
             .get("/query/sub1/sub2/TemplatedYamlToPipelineIT?_fmt=csv")
             .then()
             .log().ifError()
@@ -246,7 +235,6 @@ public class MainQueryForkIT {
     assertThat(body, startsWith(""));
     
     body = given()
-            .log().all()
             .get("/query/sub1/sub2/DemoStatic?_fmt=tab")
             .then()
             .log().ifError()
@@ -263,7 +251,6 @@ public class MainQueryForkIT {
     body = given()
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
-            .log().all()
             .get("/query/sub1/sub2/TemplatedYamlToPipelineIT?_fmt=json1")
             .then()
             .log().ifError()
@@ -275,7 +262,6 @@ public class MainQueryForkIT {
     body = given()
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
-            .log().all()
             .get("/query/sub1/sub2/TemplatedYamlToPipelineIT?_fmt=json2")
             .then()
             .log().ifError()
@@ -288,7 +274,6 @@ public class MainQueryForkIT {
     body = given()
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
-            .log().all()
             .get("/query/sub1/sub2/TemplatedYamlToPipelineIT.tsv")
             .then()
             .log().ifError()
@@ -301,7 +286,6 @@ public class MainQueryForkIT {
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
             .queryParam("_without", "children")
-            .log().all()
             .get("/query/sub1/sub2/TemplatedYamlToPipelineIT.tsv")
             .then()
             .log().ifError()
@@ -313,7 +297,6 @@ public class MainQueryForkIT {
     body = given()
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
-            .log().all()
             .get("/query/sub1/sub2/TemplatedYamlToPipelineIT.html")
             .then()
             .log().ifError()
@@ -332,7 +315,6 @@ public class MainQueryForkIT {
     body = given()
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
-            .log().all()
             .get("/api/history")
             .then()
             .log().ifError()

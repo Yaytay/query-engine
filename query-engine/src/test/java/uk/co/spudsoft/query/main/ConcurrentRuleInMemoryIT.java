@@ -89,11 +89,10 @@ public class ConcurrentRuleInMemoryIT {
 
       long startTime = System.currentTimeMillis();
       given()
-              .log().all()
               .get("/query/sub1/sub2/ConcurrentRulesIT?_fmt=oneline")
               .then()
               .statusCode(200)
-              .log().all()
+              .log().ifError()
               ;
       long endTime = System.currentTimeMillis();
       assertThat(endTime - startTime, greaterThan(2500L));
@@ -122,10 +121,9 @@ public class ConcurrentRuleInMemoryIT {
   
   private void runQuery(List<Response> responses) {
     Response response = given()
-            .log().all()
             .get("/query/sub1/sub2/ConcurrentRulesIT?_fmt=oneline")
             .then()
-            .log().all()
+            .log().ifError()
             .extract().response()
             ;
     synchronized(responses) {

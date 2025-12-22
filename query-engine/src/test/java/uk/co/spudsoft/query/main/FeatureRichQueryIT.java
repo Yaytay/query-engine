@@ -110,7 +110,6 @@ public class FeatureRichQueryIT {
     RestAssured.port = main.getPort();
     
     String body = given()
-            .log().all()
             .get("/openapi.yaml")
             .then()
             .log().ifError()
@@ -125,10 +124,9 @@ public class FeatureRichQueryIT {
             .queryParam("maxId", "20")
             .queryParam("_fmt", "tab")
             .accept("text/html")
-            .log().all()
             .get("/query/demo/FeatureRichExample")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     
@@ -139,10 +137,9 @@ public class FeatureRichQueryIT {
             .queryParam("maxId", "20")
             .queryParam("_fmt", "metajson")
             .accept("text/html")
-            .log().all()
             .get("/query/demo/FeatureRichExample")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     
@@ -152,7 +149,6 @@ public class FeatureRichQueryIT {
             .queryParam("minDate", "2971-05-06")
             .queryParam("_fmt", "json")
             .accept("text/html")
-            .log().all()
             .get("/query/demo/FeatureRichExample")
             .then()
             .log().ifError()
@@ -166,7 +162,6 @@ public class FeatureRichQueryIT {
             .queryParam("_fmt", "json")
             .queryParam("clientIp", "192.168.1.1")
             .accept("text/html")
-            .log().all()
             .get("/query/demo/FeatureRichExample")
             .then()
             .log().ifError()
@@ -179,7 +174,6 @@ public class FeatureRichQueryIT {
             .queryParam("minDate", "1971-05-06")
             .queryParam("_fmt", "xlsx")
             .accept("text/html")
-            .log().all()
             .get("/query/demo/FeatureRichExample")
             .then()
             .log().ifError()

@@ -188,119 +188,106 @@ public class MainIT {
     RestAssured.port = main.getPort();
     
     given()
-            .log().all()
             .get("/query/sub1/sub2/TemplatedJsonToPipelineIT.json.vm")
             .then()
             .statusCode(400)
-            .log().all()
+            .log().ifError()
             ;
     
     given()
-            .log().all()
             .post("/query/sub1/sub2/TemplatedJsonToPipelineIT.json.vm")
             .then()
             .statusCode(404)
-            .log().all()
+            .log().ifError()
             ;
     
     // Basic auth passed in but not configured
     given()
-            .log().all()
             .header("Authorization", "Basic bm9ib2R5OmlycmVsZXZhbnQ")
             .get("/api/openapi.yaml")
             .then()
             .statusCode(401)
-            .log().all()
+            .log().ifError()
             ;
     
     // Basic auth passed in but not configured
     given()
-            .log().all()
             .header("Authorization", "Basic bm9ib2R5OmlycmVsZXZhbnQ")
             .get("/api/formio/demo/FeatureRichExample")
             .then()
             .statusCode(401)
-            .log().all()
+            .log().ifError()
             ;
     
     // Bearer auth passed in but not configured
     given()
-            .log().all()
             .header("Authorization", "Bearer non.access.token")
             .get("/api/openapi.yaml")
             .then()
             .statusCode(401)
-            .log().all()
+            .log().ifError()
             ;
     
     // Bearer auth passed in but not configured
     given()
-            .log().all()
             .header("Authorization", "Bearer non.access.token")
             .get("/api/formio/demo/FeatureRichExample")
             .then()
             .statusCode(401)
-            .log().all()
+            .log().ifError()
             ;
     
     // This isn't a short path because the router stop it reaching the QueryRouter
     given()
-            .log().all()
             .post("/query")
             .then()
             .statusCode(404)
-            .log().all()
+            .log().ifError()
             ;
     
      given()
-            .log().all()
             .get("/query/bob")
             .then()
             .statusCode(404)
-            .log().all()
+            .log().ifError()
             ;
     
      given()
-            .log().all()
             .get("/ui/index.html")
             .then()
             .statusCode(200)
-            .log().all()
+            .log().ifError()
             ;
     
      given()
-            .log().all()
             .get("/ui")
             .then()
             .statusCode(200)
-            .log().all()
+            .log().ifError()
             ;
     
      given()
             .config(RestAssuredConfig.config().redirect(redirectConfig().followRedirects(false)))
-            .log().all()
             .get("/")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(307)
             .header("Location", "/ui/")
             ;
      
      given()
-            .log().all()
             .get("/manage")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .body(equalTo("{\"location\":\"http://localhost:" + mgmtPort + "/manage\"}"))
             ;
     
      String manageEndpointsString = given()
-            .log().all()
             .get(URI.create("http://localhost:" + mgmtPort + "/manage"))
             .then()
             .statusCode(200)
-            .log().all()
+            .log().ifError()
             .extract().body().asString()
             ;
     logger.info("Management endpoints: {}", manageEndpointsString);
@@ -308,50 +295,45 @@ public class MainIT {
     assertEquals("[{\"name\":\"Thread Dump\",\"url\":\"http://localhost:" + mgmtPort + "/manage/threads\"},{\"name\":\"Up\",\"url\":\"http://localhost:" + mgmtPort + "/manage/up\"},{\"name\":\"Prometheus\",\"url\":\"http://localhost:" + mgmtPort + "/manage/prometheus\"}]", manageEndpointsString);
     
      given()
-            .log().all()
             .get(URI.create("http://localhost:" + mgmtPort + "/manage/up"))
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .body(equalTo(""))
             ;
     
      // Health endpoint isn't enabled
      given()
-            .log().all()
             .get(URI.create("http://localhost:" + mgmtPort + "/manage/health"))
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(404)
             ;
     
     given()
             .config(RestAssuredConfig.config().redirect(redirectConfig().followRedirects(false)))
-            .log().all()
             .get("/api")
             .then()
             .statusCode(301)
-            .log().all()
+            .log().ifError()
             .header("Location", equalTo("../openapi"))
             .extract().body().asString()
             ;
 
     String nonProfile = given()
-            .log().all()
             .get("/api/session/profile")
             .then()
             .statusCode(200)
-            .log().all()
+            .log().ifError()
             .extract().body().asString()
             ;
     assertEquals("{\"version\":\"" + Version.MAVEN_PROJECT_NAME + " " + Version.MAVEN_PROJECT_VERSION + "\"}", nonProfile);
             
     String authConfig = given()
-            .log().all()
             .get("/api/auth-config")
             .then()
             .statusCode(200)
-            .log().all()
+            .log().ifError()
             .extract().body().asString()
             ;
     assertEquals("[{\"name\":\"GitHub\",\"logo\":\"https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg\"}]", authConfig);
@@ -405,73 +387,65 @@ public class MainIT {
     
     // UI does not require auth
     given()
-            .log().all()
             .get("/ui/index.html")
             .then()
             .statusCode(200)
-            .log().all()
+            .log().ifError()
             ;
     
     // Manage endpoints do not require auth
     given()
-            .log().all()
             .get("/manage")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .body(equalTo("{\"location\":\"http://localhost:" + mgmtPort + "/manage\"}"))
             ;
     
     given()
-            .log().all()
             .get("/api/session/profile")
             .then()
             .statusCode(401)
-            .log().all()
+            .log().ifError()
             ;
            
     // Autho config does not require auth
     String authConfig = given()
-            .log().all()
             .get("/api/auth-config")
             .then()
             .statusCode(200)
-            .log().all()
+            .log().ifError()
             .extract().body().asString()
             ;
     assertEquals("[{\"name\":\"GitHub\",\"logo\":\"https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg\"}]", authConfig);
             
     given()
-            .log().all()
             .get("/api/docs/")
             .then()
             .statusCode(401)
-            .log().all()
+            .log().ifError()
             ;
             
     given()
-            .log().all()
             .get("/api/formio/doesntmatterwhatgoeshere-authfailsfirst")
             .then()
             .statusCode(401)
-            .log().all()
+            .log().ifError()
             ;
             
     given()
-            .log().all()
             .get("/api/info/available")
             .then()
             .statusCode(401)
-            .log().all()
+            .log().ifError()
             ;
 
     // Management endpoint does not require auth
     String manageEndpointsString = given()
-            .log().all()
             .get(URI.create("http://localhost:" + mgmtPort + "/manage"))
             .then()
             .statusCode(200)
-            .log().all()
+            .log().ifError()
             .extract().body().asString()
             ;
     logger.info("Management endpoints: {}", manageEndpointsString);
@@ -479,11 +453,10 @@ public class MainIT {
     assertEquals("[{\"name\":\"Thread Dump\",\"url\":\"http://localhost:" + mgmtPort + "/manage/threads\"},{\"name\":\"Up\",\"url\":\"http://localhost:" + mgmtPort + "/manage/up\"},{\"name\":\"Prometheus\",\"url\":\"http://localhost:" + mgmtPort + "/manage/prometheus\"},{\"name\":\"Dir Cache\",\"url\":\"http://localhost:" + mgmtPort + "/manage/dircache\"}]", manageEndpointsString);
         
     String dirCacheString = given()
-            .log().all()
             .get(URI.create("http://localhost:" + mgmtPort + "/manage/dircache"))
             .then()
             .statusCode(200)
-            .log().all()
+            .log().ifError()
             .extract().body().asString()
             ;
     JsonObject dirCacheJson = new JsonObject(dirCacheString);
@@ -493,33 +466,30 @@ public class MainIT {
 
     dirCacheString = given()
             .accept(ContentType.HTML)
-            .log().all()
             .get(URI.create("http://localhost:" + mgmtPort + "/manage/dircache?refresh=anythingatall"))
             .then()
             .statusCode(200)
-            .log().all()
+            .log().ifError()
             .extract().body().asString()
             ;
     assertThat(dirCacheString, startsWith("<html><head><title>Dir Cache Contents</title>"));
 
     dirCacheString = given()
             .accept(ContentType.TEXT)
-            .log().all()
             .get(URI.create("http://localhost:" + mgmtPort + "/manage/dircache"))
             .then()
             .statusCode(200)
-            .log().all()
+            .log().ifError()
             .extract().body().asString()
             ;
     assertThat(dirCacheString, startsWith("Last walk:"));
 
     given()
             .accept(ContentType.TEXT)
-            .log().all()
             .post(URI.create("http://localhost:" + mgmtPort + "/manage/dircache"))
             .then()
             .statusCode(405)
-            .log().all()
+            .log().ifError()
             .extract().body().asString()
             ;
 

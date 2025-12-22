@@ -116,13 +116,12 @@ public class AllFiltersIT {
     String body = given()
             .queryParam("minDate", "1971-05-06")
             .queryParam("maxId", "20")
-            .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
             .then()
             .header("Content-Disposition", equalTo("attachment; filename=\"dynamism.txt\""))
             .header("X-Frame-Options", equalTo("SAMEORIGIN"))
             .header("Referrer-Policy", "same-origin")
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     
@@ -138,10 +137,9 @@ public class AllFiltersIT {
             .queryParam("minDate", "1971-05-06")
             .queryParam("maxId", "20")
             .queryParam("_map", "BoolField: TextField:")
-            .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     
@@ -156,10 +154,9 @@ public class AllFiltersIT {
             .queryParam("minDate", "1971-05-06")
             .queryParam("maxId", "20")
             .queryParam("_limit", "12")
-            .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     
@@ -174,10 +171,9 @@ public class AllFiltersIT {
             .queryParam("minDate", "1971-05-06")
             .queryParam("maxId", "20")
             .queryParam("_limit", "bob")
-            .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(400)
             .extract().body().asString();
     
@@ -187,10 +183,9 @@ public class AllFiltersIT {
             .queryParam("minDate", "1971-05-06")
             .queryParam("maxId", "20")
             .queryParam("_query", "dataId==4")
-            .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     
@@ -206,10 +201,9 @@ public class AllFiltersIT {
             .queryParam("minDate", "1971-05-06")
             .queryParam("maxId", "20")
             .queryParam("_query", "colour==beige and dataId=le=40")
-            .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     
@@ -225,10 +219,9 @@ public class AllFiltersIT {
             .queryParam("minDate", "1971-05-06")
             .queryParam("maxId", "20")
             .queryParam("_query", "colour==beige;dataId=le=40")
-            .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     
@@ -245,10 +238,9 @@ public class AllFiltersIT {
             .queryParam("minDate", "1971-05-06")
             .queryParam("maxId", "20")
             .queryParam("_query", "colour==\"beige\";dataId=le=40")
-            .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     
@@ -265,10 +257,9 @@ public class AllFiltersIT {
             .queryParam("minDate", "1971-05-06")
             .queryParam("maxId", "20")
             .queryParam("_query", "bob")
-            .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(400)
             .extract().body().asString();
     
@@ -279,10 +270,9 @@ public class AllFiltersIT {
             .queryParam("minDate", "1971-05-06")
             .queryParam("maxId", "20")
             .queryParam("_offset", "bob")
-            .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(400)
             .extract().body().asString();
     
@@ -293,10 +283,9 @@ public class AllFiltersIT {
             .queryParam("maxId", "20")
             .queryParam("_offset", "0")
             .queryParam("_limit", "12")
-            .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();  
     
@@ -315,10 +304,9 @@ public class AllFiltersIT {
             .queryParam("maxId", "20")
             .queryParam("_offset", "1")
             .queryParam("_limit", "12")
-            .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     
@@ -334,10 +322,9 @@ public class AllFiltersIT {
     long start = System.currentTimeMillis();
     
     body = given()
-            .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv?minDate=1971-05-06&maxId=20&_limit=12&_offset=1")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     
@@ -356,10 +343,9 @@ public class AllFiltersIT {
     start = System.currentTimeMillis();
     
     String body2 = given()
-            .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv?minDate=1971-05-06&maxId=20&_limit=12&_offset=1")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     
@@ -372,10 +358,9 @@ public class AllFiltersIT {
     start = System.currentTimeMillis();
     
     body = given()
-            .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv?minDate=1971-05-06&maxId=21")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     
@@ -394,10 +379,9 @@ public class AllFiltersIT {
     start = System.currentTimeMillis();
     
     body2 = given()
-            .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv?minDate=1971-05-06&maxId=21")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     
@@ -411,10 +395,9 @@ public class AllFiltersIT {
             .queryParam("minDate", "1971-05-06")
             .queryParam("maxId", "20")
             .queryParam("_map", "")
-            .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(400)
             .extract().body().asString();
     
@@ -424,10 +407,9 @@ public class AllFiltersIT {
             .queryParam("minDate", "1971-05-06")
             .queryParam("maxId", "20")
             .queryParam("_map", "bob")
-            .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(400)
             .extract().body().asString();
     
@@ -437,10 +419,9 @@ public class AllFiltersIT {
             .queryParam("minDate", "1971-05-06")
             .queryParam("maxId", "20")
             .queryParam("_map", "BoolField:YesNo TimeField:When")
-            .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     
@@ -455,10 +436,9 @@ public class AllFiltersIT {
             .queryParam("minDate", "1971-05-06")
             .queryParam("maxId", "20")
             .queryParam("_sort", "-value")
-            .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     

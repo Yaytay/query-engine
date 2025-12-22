@@ -112,10 +112,9 @@ public class CachingIT {
             .header("Query", "query1")
             .queryParam("rows", "37")
             .queryParam("delay", "100")
-            .log().all()
             .get("/query/sub1/sub2/TestData.tsv")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .header("X-Frame-Options", equalTo("DENY"))
             .header("Referrer-Policy", equalTo("same-origin"))
@@ -146,10 +145,9 @@ public class CachingIT {
             .header("Query", "query2")
             .queryParam("rows", "37")
             .queryParam("delay", "100")
-            .log().all()
             .get("/query/sub1/sub2/TestData.tsv")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().response();
     
@@ -173,10 +171,9 @@ public class CachingIT {
             .header("Query", "query3")
             .queryParam("rows", "37")
             .queryParam("delay", "100")
-            .log().all()
             .get("/query/sub1/sub2/TestData.tsv")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(304)
             .extract().response();
     
@@ -204,10 +201,9 @@ public class CachingIT {
             .header("Query", "query4")
             .queryParam("rows", "37")
             .queryParam("delay", "100")
-            .log().all()
             .get("/query/sub1/sub2/TestData.tsv")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().response();
     

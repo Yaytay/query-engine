@@ -124,10 +124,9 @@ public class EmptyQueryIT {
             .queryParam("key", "PostgreSQL")
             .queryParam("port", postgres.getPort())
             .queryParam("_fmt", "tab")
-            .log().all()
             .get("/query/sub1/sub2/EmptyDataIT")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
 
@@ -139,10 +138,9 @@ public class EmptyQueryIT {
             .queryParam("key", "PostgreSQL")
             .queryParam("port", postgres.getPort())
             .queryParam("_fmt", "html")
-            .log().all()
             .get("/query/sub1/sub2/EmptyDataIT")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
 
@@ -154,10 +152,9 @@ public class EmptyQueryIT {
             .queryParam("key", "PostgreSQL")
             .queryParam("port", postgres.getPort())
             .queryParam("_fmt", "xlsx")
-            .log().all()
             .get("/query/sub1/sub2/EmptyDataIT")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asByteArray();
 
@@ -171,10 +168,9 @@ public class EmptyQueryIT {
             .queryParam("maxId", "20")
             .queryParam("_fmt", "tab")
             .accept("text/html")
-            .log().all()
             .get("/query/demo/FeatureRichExample")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
 
@@ -187,7 +183,6 @@ public class EmptyQueryIT {
             .queryParam("minDate", "2971-05-06")
             .queryParam("_fmt", "json")
             .accept("text/html")
-            .log().all()
             .get("/query/demo/FeatureRichExample")
             .then()
             .log().ifError()

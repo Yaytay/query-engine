@@ -135,10 +135,9 @@ public class ConditionalArgumentIT {
     String body;
     
     body = given()
-            .log().all()
             .get("/api/info/available")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     
@@ -146,10 +145,9 @@ public class ConditionalArgumentIT {
     assertThat(body, containsString("ConditionalArgument"));
         
     body = given()
-            .log().all()
             .get("/api/formio/sub1/sub2/ConditionalArgument")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     
@@ -175,10 +173,9 @@ public class ConditionalArgumentIT {
     
     body = given()
             .header(new Header("Authorization", "Bearer " + token))
-            .log().all()
             .get("/api/formio/sub1/sub2/ConditionalArgument")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     formDef = new JsonObject(body);
@@ -190,10 +187,9 @@ public class ConditionalArgumentIT {
     // Output with no query or token
     
     body = given()
-            .log().all()
             .get("/query/sub1/sub2/ConditionalArgument")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(400)
             .extract().body().asString();
 
@@ -203,11 +199,10 @@ public class ConditionalArgumentIT {
     // Output with query but no token
     
     body = given()
-            .log().all()
             .queryParam("name", "Name From Query")
             .get("/query/sub1/sub2/ConditionalArgument")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
 
@@ -222,10 +217,9 @@ public class ConditionalArgumentIT {
     
     body = given()
             .header(new Header("Authorization", "Bearer " + token))
-            .log().all()
             .get("/query/sub1/sub2/ConditionalArgument")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
 
@@ -241,10 +235,9 @@ public class ConditionalArgumentIT {
     body = given()
             .header(new Header("Authorization", "Bearer " + token))
             .queryParam("name", "Name From Query")
-            .log().all()
             .get("/query/sub1/sub2/ConditionalArgument")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
 

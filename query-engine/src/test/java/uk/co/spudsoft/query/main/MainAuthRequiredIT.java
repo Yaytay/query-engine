@@ -99,64 +99,57 @@ public class MainAuthRequiredIT {
     
     // UI does not require auth
     given()
-            .log().all()
             .get("/ui/index.html")
             .then()
             .statusCode(200)
-            .log().all()
+            .log().ifError()
             ;
     
     // Manage endpoints do not require auth
     given()
-            .log().all()
             .get("/manage")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .body(equalTo("{\"location\":\"http://localhost:" + mgmtPort + "/manage\"}"))
             ;
     
     given()
-            .log().all()
             .get("/api/session/profile")
             .then()
             .statusCode(401)
-            .log().all()
+            .log().ifError()
             ;
            
     // Auth config does not require auth
     String authConfig = given()
-            .log().all()
             .get("/api/auth-config")
             .then()
             .statusCode(200)
-            .log().all()
+            .log().ifError()
             .extract().body().asString()
             ;
     assertEquals("[{\"name\":\"GitHub\",\"logo\":\"https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg\"}]", authConfig);
             
     given()
-            .log().all()
             .get("/api/docs/")
             .then()
             .statusCode(401)
-            .log().all()
+            .log().ifError()
             ;
             
     given()
-            .log().all()
             .get("/api/formio/doesntmatterwhatgoeshere-authfailsfirst")
             .then()
             .statusCode(401)
-            .log().all()
+            .log().ifError()
             ;
             
     given()
-            .log().all()
             .get("/api/info/available")
             .then()
             .statusCode(401)
-            .log().all()
+            .log().ifError()
             ;
     
     main.shutdown();

@@ -101,7 +101,6 @@ public class MainQueryWithoutPersistenceIT {
     RestAssured.port = main.getPort();
     
     String body = given()
-            .log().all()
             .get("/openapi.yaml")
             .then()
             .log().ifError()
@@ -113,7 +112,6 @@ public class MainQueryWithoutPersistenceIT {
     assertThat(body, not(containsString("empty")));
     
     body = given()
-            .log().all()
             .get("/openapi.json")
             .then()
             .log().ifError()
@@ -125,20 +123,18 @@ public class MainQueryWithoutPersistenceIT {
     assertThat(body, not(containsString("empty")));
     
     body = given()
-            .log().all()
             .get("/api/info/available")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     
     assertThat(body, startsWith("{\"name\":\"\",\"children\":[{\"name\":\"args\",\"children\":[{\"name\":\"Args00\",\"path\":\"args/Args00\",\"title\":\"No Arguments\",\"description\":\"Test pipeline that has no arguments\"},{\"name\":\"Args01\",\"path\":\"args/Args01\",\"title\":\"One Argument\",\"description\":\"Test pipeline that has 1 argument\"}"));
         
     body = given()
-            .log().all()
             .get("/api/formio/demo/FeatureRichExample")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     
@@ -148,10 +144,9 @@ public class MainQueryWithoutPersistenceIT {
     long start = System.currentTimeMillis();
     
     body = given()
-            .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv?minDate=1971-05-06&maxId=20&_limit=12&_offset=1")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     
@@ -170,10 +165,9 @@ public class MainQueryWithoutPersistenceIT {
     start = System.currentTimeMillis();
     
     String body2 = given()
-            .log().all()
             .get("/query/sub1/sub2/AllDynamicIT.tsv?minDate=1971-05-06&maxId=20&_limit=12&_offset=1")
             .then()
-            .log().all()
+            .log().ifError()
             .statusCode(200)
             .extract().body().asString();
     
@@ -187,7 +181,6 @@ public class MainQueryWithoutPersistenceIT {
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
             .accept("text/html, application/xhtml+xml, image/webp, image/apng, application/xml; q=0.9, application/signed-exchange; v=b3; q=0.9, */*; q=0.8")
-            .log().all()
             .get("/query/sub1/sub2/TemplatedJsonToPipelineIT")
             .then()
             .log().ifError()
@@ -199,7 +192,6 @@ public class MainQueryWithoutPersistenceIT {
     body = given()
             .queryParam("key", mysql.getName())
             .queryParam("port", mysql.getPort())
-            .log().all()
             .get("/query/sub1/sub2/TemplatedJsonToPipelineIT")
             .then()
             .log().ifError()
@@ -213,7 +205,6 @@ public class MainQueryWithoutPersistenceIT {
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
             .accept("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-            .log().all()
             .get("/query/sub1/sub2/TemplatedYamlToPipelineIT")
             .then()
             .log().ifError()
@@ -225,7 +216,6 @@ public class MainQueryWithoutPersistenceIT {
     body = given()
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
-            .log().all()
             .get("/query/sub1/sub2/TemplatedYamlToPipelineIT?_fmt=csv")
             .then()
             .log().ifError()
@@ -237,7 +227,6 @@ public class MainQueryWithoutPersistenceIT {
     body = given()
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
-            .log().all()
             .get("/query/sub1/sub2/TemplatedYamlToPipelineIT.tsv")
             .then()
             .log().ifError()
@@ -249,7 +238,6 @@ public class MainQueryWithoutPersistenceIT {
     body = given()
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
-            .log().all()
             .get("/query/sub1/sub2/TemplatedYamlToPipelineIT.html")
             .then()
             .log().ifError()

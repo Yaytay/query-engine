@@ -104,7 +104,6 @@ public class OpenApiSchemaIT {
     RestAssured.port = main.getPort();
     
     String body = given()
-            .log().all()
             .get("/openapi.json")
             .then()
             .log().ifError()

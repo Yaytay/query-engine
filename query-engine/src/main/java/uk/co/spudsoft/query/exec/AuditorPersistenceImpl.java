@@ -38,7 +38,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.jackson.DatabindCodec;
 import io.vertx.ext.healthchecks.Status;
 import java.io.IOException;
-import java.io.StringReader;
 import java.lang.management.ManagementFactory;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;

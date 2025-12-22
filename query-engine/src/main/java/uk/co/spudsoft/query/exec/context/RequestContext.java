@@ -43,7 +43,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.spi.LoggingEventBuilder;
 import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
-import uk.co.spudsoft.query.logging.Log;
 import static uk.co.spudsoft.query.logging.Log.REQUEST_ID_KEY;
 import static uk.co.spudsoft.query.logging.Log.RUN_ID_KEY;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;

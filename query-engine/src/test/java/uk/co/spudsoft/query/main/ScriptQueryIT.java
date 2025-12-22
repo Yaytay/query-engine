@@ -105,7 +105,6 @@ public class ScriptQueryIT {
             .queryParam("arg1", "First")
             .queryParam("arg2", "Second")
             .accept("text/tsv")
-            .log().all()
             .get("/query/args/Args02")
             .then()
             .log().ifError()

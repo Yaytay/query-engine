@@ -105,7 +105,6 @@ public class MainJustOneQueryIT {
             .queryParam("port", postgres.getPort())
             .queryParam("_runid", UUID.randomUUID().toString())
             .accept("text/html, application/xhtml+xml, image/webp, image/apng, application/xml; q=0.9, application/signed-exchange; v=b3; q=0.9, */*; q=0.8")
-            .log().all()
             .get("/query/sub1/sub2/TemplatedJsonToPipelineIT")
             .then()
             .log().ifError()

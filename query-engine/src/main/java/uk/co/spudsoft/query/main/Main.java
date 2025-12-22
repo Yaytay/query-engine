@@ -1042,7 +1042,7 @@ public class Main extends Application {
     try {
       return openTelemetryBuilder.buildAndRegisterGlobal();
     } catch (IllegalStateException ex) {
-      logger.warn("Failed to build and registry OpenTelemetry: ", ex);
+      logger.warn("Failed to build and registry OpenTelemetry: {}", ex.getMessage());
       return GlobalOpenTelemetry.get();
     }
   }
