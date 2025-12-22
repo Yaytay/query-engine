@@ -88,7 +88,9 @@ public final class FormatDelimitedInstance implements FormatInstance {
             , v -> Future.succeededFuture()
             , row -> {
               if (started.compareAndSet(false, true)) {
-                return outputHeader().compose(v -> outputRow(row));
+                Future<Void> headerFuture = outputHeader();
+                Future<Void> rowFuture = outputRow(row);
+                return Future.all(headerFuture, rowFuture).mapEmpty();
               } else {
                 return outputRow(row);
               }

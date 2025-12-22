@@ -259,28 +259,24 @@ public final class SortingStream<T> implements ReadStream<T> {
 
   private void writeItemsIteratively(SerializeWriteStream<T> stream, ListIterator<T> iterator, Promise<Void> promise) {
     // Process items synchronously when possible
-    while (iterator.hasNext()) {
+    while (iterator.hasNext() && !promise.future().isComplete()) {
       T item = iterator.next();
-      Future<Void> writeFuture = stream.write(item);
-
-      if (writeFuture.isComplete()) {
-        // Future is already complete, check result and continue synchronously
-        if (writeFuture.failed()) {
-          promise.fail(writeFuture.cause());
-          return;
+      stream.write(item).onComplete(ar -> {
+        if (ar.failed()) {
+          promise.tryFail(ar.cause());
         }
-        // Success - continue the loop
-      } else {
-        // Future is not complete, set up async continuation
-        writeFuture.onComplete(ar -> {
-          if (ar.succeeded()) {
-            // Continue writing remaining items
+      });
+      
+      if (stream.writeQueueFull()) {
+        Promise<Void> drainPromise = Promise.promise();
+        stream.drainHandler(v -> drainPromise.complete());
+        drainPromise.future().onComplete(v -> {
+          stream.drainHandler(null);
+          context.runOnContext(v2 -> {
             writeItemsIteratively(stream, iterator, promise);
-          } else {
-            promise.fail(ar.cause());
-          }
+          });
         });
-        return; // Exit the loop, will continue async
+        return ;
       }
     }
 
@@ -288,9 +284,9 @@ public final class SortingStream<T> implements ReadStream<T> {
     Future<Void> endFuture = stream.end();
     if (endFuture.isComplete()) {
       if (endFuture.succeeded()) {
-        promise.complete();
+        promise.tryComplete();
       } else {
-        promise.fail(endFuture.cause());
+        promise.tryFail(endFuture.cause());
       }
     } else {
       endFuture.onComplete(promise);

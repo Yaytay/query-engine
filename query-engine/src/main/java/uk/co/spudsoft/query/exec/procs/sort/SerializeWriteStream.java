@@ -159,10 +159,8 @@ public class SerializeWriteStream<T> implements WriteStream<T> {
       buff.appendBytes(byteArrayFromInt(serialized.length));
       buff.appendBytes(serialized);
       if (writePos > 0) {
-        return writeWriteBuffer(true)
-                .compose(v -> {
-                  return file.write(buff);
-                });
+        writeWriteBuffer(true);
+        return file.write(buff);
       } else {
         return file.write(buff);
       }
@@ -186,22 +184,9 @@ public class SerializeWriteStream<T> implements WriteStream<T> {
   public Future<Void> end() {
     logger.trace("endHandler");
     if (writePos > 0) {
-      Promise<Void> result = Promise.promise();
-
-      writeWriteBuffer(false).onComplete(writeResult -> {
-        file.end().onComplete(endResult -> {
-          if (writeResult.succeeded()) {
-            result.handle(endResult);
-          } else {
-            result.fail(writeResult.cause());
-          }
-        });
-      });
-
-      return result.future();
-    } else {
-      return file.end();
+      writeWriteBuffer(false);
     }
+    return file.end();
   }
 
   /**
