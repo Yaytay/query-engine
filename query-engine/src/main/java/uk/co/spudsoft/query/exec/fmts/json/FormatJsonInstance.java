@@ -133,7 +133,7 @@ public final class FormatJsonInstance implements FormatInstance {
             , rows -> {
               pipelineContext.getRequestContext().setRowsWritten(rows);
               try {
-                logger.trace("FormatJsonInstance: terminating with {} rows", rows);
+                log.trace().log("FormatJsonInstance: terminating with {} rows", rows);
                 return end();
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);

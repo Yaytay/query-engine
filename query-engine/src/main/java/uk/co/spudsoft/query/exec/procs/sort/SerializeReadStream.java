@@ -129,7 +129,6 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
     this.context = Vertx.currentContext();
     file.handler(this::handle);
     file.endHandler(v -> {
-      logger.trace("File input ended");
       synchronized (lock) {
         ended = true;
       }
@@ -249,7 +248,6 @@ public final class SerializeReadStream<T> implements ReadStream<T> {
   }
 
   private void handle(Buffer buffer) {
-    logger.trace("Handler {} bytes", buffer.length());
     int bufferCount;
     synchronized (lock) {
       buffers.add(buffer);

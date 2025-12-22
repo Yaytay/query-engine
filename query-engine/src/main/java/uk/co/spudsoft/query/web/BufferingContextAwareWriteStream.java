@@ -37,8 +37,6 @@ import org.slf4j.LoggerFactory;
  */
 public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
   
-  private static final Logger logger = LoggerFactory.getLogger(BufferingContextAwareWriteStream.class);
-  
   private final WriteStream<Buffer> delegate;
   private final Context context;
   private final int flushThreshold;
@@ -72,15 +70,12 @@ public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
     }
     Buffer toWrite = buffer;
     buffer = Buffer.buffer();
-    logger.info("flush called with {} bytes", toWrite.length());
     Promise<Void> promise = Promise.promise();
     Context thisContext = Vertx.currentContext();
     context.runOnContext(v -> {
       delegate.write(toWrite)
               .onComplete(ar -> {
-                logger.info("delegate.write completed with {}", ar);
                 thisContext.runOnContext(v2 -> {
-                  logger.info("flush completed with {}", ar);
                   if (ar.succeeded()) {
                     promise.complete(ar.result());
                   } else {
@@ -94,7 +89,6 @@ public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
 
   @Override
   public Future<Void> end() {
-    logger.info("end called");
     flush();
     Promise<Void> promise = Promise.promise();
     Context thisContext = Vertx.currentContext();

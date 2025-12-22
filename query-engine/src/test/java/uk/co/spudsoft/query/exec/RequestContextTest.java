@@ -68,42 +68,42 @@ public class RequestContextTest {
 
   @Test
   public void testExtractRemoteIp() {
-    assertNull(RequestContext.extractRemoteIp(null));
+    assertNull(RequestContext.extractRemoteIp(null, null));
 
     HttpServerRequest request = mock(HttpServerRequest.class);
     when(request.getHeader("X-Cluster-Client-IP")).thenReturn("111.122.133.144");
     when(request.scheme()).thenReturn("http");
-    assertEquals(new IPAddressString("111.122.133.144"), RequestContext.extractRemoteIp(request));
+    assertEquals(new IPAddressString("111.122.133.144"), RequestContext.extractRemoteIp(null, request));
 
     request = mock(HttpServerRequest.class);
     when(request.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
-    assertEquals(new IPAddressString("111.122.133.144"), RequestContext.extractRemoteIp(request));
+    assertEquals(new IPAddressString("111.122.133.144"), RequestContext.extractRemoteIp(null, request));
 
     request = mock(HttpServerRequest.class);
     when(request.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144, 122.133.144.155");
-    assertEquals(new IPAddressString("111.122.133.144"), RequestContext.extractRemoteIp(request));
+    assertEquals(new IPAddressString("111.122.133.144"), RequestContext.extractRemoteIp(null, request));
 
     request = mock(HttpServerRequest.class);
     when(request.remoteAddress()).thenReturn(SocketAddress.inetSocketAddress(80, "111.122.133.144"));
-    assertEquals(new IPAddressString("111.122.133.144"), RequestContext.extractRemoteIp(request));
+    assertEquals(new IPAddressString("111.122.133.144"), RequestContext.extractRemoteIp(null, request));
 
     request = mock(HttpServerRequest.class);
-    assertNull(RequestContext.extractRemoteIp(request));
+    assertNull(RequestContext.extractRemoteIp(null, request));
   }
 
   @Test
   public void testExtractHost() {
-    assertNull(RequestContext.extractHost(null));
+    assertNull(RequestContext.extractHost("testExtractHost", null));
 
     HttpServerRequest request = mock(HttpServerRequest.class);
     when(request.getHeader("X-Forwarded-Host")).thenReturn("bob");
     when(request.getHeader("X-Forwarded-Proto")).thenReturn("https");
     when(request.scheme()).thenReturn("http");
-    assertEquals("bob", RequestContext.extractHost(request));
+    assertEquals("bob", RequestContext.extractHost(null, request));
 
     request = mock(HttpServerRequest.class);
     when(request.authority()).thenReturn(new HostAndPortImpl("bob", 1234));
-    assertEquals("bob", RequestContext.extractHost(request));
+    assertEquals("bob", RequestContext.extractHost(null, request));
   }
 
   private static final String OPENID = Base64.getEncoder().encodeToString("{\"jti\":\"a28849b9-3624-42c3-aaad-21c5f80ffc55\",\"exp\":1653142100,\"nbf\":0,\"iat\":1653142040,\"iss\":\"http://ca.localtest.me\",\"aud\":\"security-admin-console\",\"sub\":\"af78202f-b54a-439d-913c-0bbe99ba6bf8\",\"typ\":\"Bearer\",\"azp\":\"QE2\",\"scope\":\"openid profile email qe2\",\"email_verified\":false,\"name\":\"Bob Fred\",\"preferred_username\":\"bob.fred\",\"given_name\":\"Bob\",\"family_name\":\"Fred\",\"email\":\"bob@localtest.me\",\"groups\":[\"group1\",\"group2\",\"group3\"]}".getBytes(StandardCharsets.UTF_8));

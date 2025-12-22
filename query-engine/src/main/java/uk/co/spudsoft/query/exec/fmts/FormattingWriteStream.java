@@ -82,7 +82,7 @@ public class FormattingWriteStream implements WriteStream<DataRow> {
 
   @Override
   public Future<Void> write(DataRow data) {
-    logger.debug("write {}", data);
+    log.trace().log("write {}", data);
     Promise<Void> currentWritePromise = Promise.promise();
 
     try {

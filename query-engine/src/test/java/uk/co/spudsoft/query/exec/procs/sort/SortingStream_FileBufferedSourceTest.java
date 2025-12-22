@@ -38,7 +38,7 @@ public class SortingStream_FileBufferedSourceTest {
 
   @SuppressWarnings("unchecked")
   private Object createSource(Vertx vertx, TestInfo testInfo, SerializeReadStream<Integer> mockReadStream) throws Exception {
-    SortingStream<Integer> ss = new SortingStream<>(
+    SortingStream<Integer> ss = new SortingStream<>(null,
         vertx.getOrCreateContext(),
         vertx.fileSystem(),
         Comparator.naturalOrder(),

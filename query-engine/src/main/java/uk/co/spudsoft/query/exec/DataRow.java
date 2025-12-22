@@ -164,7 +164,6 @@ public class DataRow {
     int total[] = {0};
     types.forEach(cd -> {
       Object value = get(cd.name());
-      // logger.info("{} ({}): {} @ {} bytes or {} bytes", cd.name(), value, cd.type(), SizeOfAgent.fullSizeOf(value), value == null ? 0 : SizeOfAgent.sizeOf(value));
       if (value != null) {
         if (cd.type() == DataType.String) {
           if (value instanceof String str) {

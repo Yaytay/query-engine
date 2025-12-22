@@ -182,7 +182,6 @@ public class SerializeWriteStream<T> implements WriteStream<T> {
 
   @Override
   public Future<Void> end() {
-    logger.trace("endHandler");
     if (writePos > 0) {
       writeWriteBuffer(false);
     }

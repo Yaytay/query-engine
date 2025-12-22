@@ -37,6 +37,7 @@ import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.procs.QueueReadStream;
 import uk.co.spudsoft.query.exec.sources.AbstractSource;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * {@link uk.co.spudsoft.query.exec.SourceInstance} class for generating a simple test stream.
@@ -116,7 +117,7 @@ public class SourceTestInstance extends AbstractSource {
   }
 
   void addNewRow(int i) {
-    logger.debug("Creating row {}", i);
+    Log.decorate(logger.atDebug(), pipelineContext).log("Creating row {}", i);
     DataRow data = DataRow.create(types);
     data.put("value", i);
     if (name != null) {

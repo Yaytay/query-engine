@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.filters.Filter;
+import uk.co.spudsoft.query.logging.Log;
 
 /**
  * Factory for creating Processors from command line arguments.
@@ -73,7 +74,7 @@ public class FilterFactory {
   public ProcessorInstance createFilter(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, String arg, String value, String name) {
     Filter filter = filters.get(arg);
     if (filter != null) {
-      logger.debug("Creating processor from {}={}", arg, value);
+      Log.decorate(logger.atDebug(), pipelineContext).log("Creating processor from {}={}", arg, value);
       return filter.createProcessor(vertx, meterRegistry, auditor, pipelineContext, value, name);
     } else {
       return null;

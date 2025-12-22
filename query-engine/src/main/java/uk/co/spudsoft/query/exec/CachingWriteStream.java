@@ -100,7 +100,6 @@ public final class CachingWriteStream implements WriteStream<Buffer> {
 
   @Override
   public Future<Void> write(Buffer data) {
-    logger.trace("Writing {}", data);
     return Future.all(
             cacheStream.write(data).recover(ex -> {
               logger.warn("Failed to write to cache stream: ", ex);

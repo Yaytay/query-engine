@@ -251,7 +251,8 @@ public class ProcessorSortInstance extends AbstractProcessor {
 
     return fileSystem.mkdirs(dir)
             .compose(v -> {
-              this.stream = new SortingStream<>(Vertx.currentContext()
+              this.stream = new SortingStream<>(pipelineContext
+                    , Vertx.currentContext()
                     , fileSystem
                     , new DataRowComparator(pipelineContext, definition.getFields())
                     , this::dataRowSerializer

@@ -38,6 +38,8 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.logging.Log;
 
 
 /**
@@ -86,6 +88,8 @@ public final class SortingStream<T> implements ReadStream<T> {
 
   // Merge phase
   private MergeState mergeState;
+  
+  private final Log log;
 
   /**
    * Interface for calculating the size of an item.
@@ -122,6 +126,7 @@ public final class SortingStream<T> implements ReadStream<T> {
   /**
    * Constructor.
    *
+   * @param pipelineContext The context in which this {@link uk.co.spudsoft.query.defn.SourcePipeline} is being run.
    * @param context The vertx {@link Context} to use for asynchronous operations.
    * @param fileSystem The vertx {@link FileSystem} to use for temporary file operations.
    * @param comparator The comparator to use to sort objects of type T.
@@ -134,7 +139,8 @@ public final class SortingStream<T> implements ReadStream<T> {
    * @param input The input stream of items, which should be cold (paused, with no handlers set).
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The filesystem is clearly mutable")
-  public SortingStream(Context context,
+  public SortingStream(PipelineContext pipelineContext,
+           Context context,
            FileSystem fileSystem,
            Comparator<T> comparator,
            SerializeWriteStream.Serializer<T> serializer,
@@ -155,6 +161,7 @@ public final class SortingStream<T> implements ReadStream<T> {
     this.memoryLimit = memoryLimit;
     this.memoryEvaluator = memoryEvaluator;
     this.input = input;
+    this.log = new Log(logger, pipelineContext);
 
     fileSystem.mkdirsBlocking(tempDir);
 
@@ -185,11 +192,11 @@ public final class SortingStream<T> implements ReadStream<T> {
       return;
     }
 
-    logger.trace("Input ended, transitioning to merge phase");
+    log.trace().log("Input ended, transitioning to merge phase");
 
     Future.all(pendingChunkFlushes)
             .compose(v1 -> {
-              logger.trace("Starting merge phase with {} temp files and {} items in memory", tempFiles.size(), currentChunk.size());
+              log.trace().log("Starting merge phase with {} temp files and {} items in memory", tempFiles.size(), currentChunk.size());
 
               // Choose merge strategy
               if (tempFiles.isEmpty()) {
@@ -203,7 +210,7 @@ public final class SortingStream<T> implements ReadStream<T> {
 
               return mergeState.initialize()
                   .onSuccess(v2 -> {
-                    logger.trace("Merge state initialized, scheduling output processing");
+                    log.trace().log("Merge state initialized, scheduling output processing");
                     // Ensure we start processing if handlers are already set
                     if (haveHandlerAndDemand(dataHandler, demand)) {
                       scheduleProcessOutput();
@@ -241,7 +248,7 @@ public final class SortingStream<T> implements ReadStream<T> {
     pendingChunkFlushes.add(future);
     future.onComplete(ar -> {
       if (ar.failed()) {
-        logger.warn("Failed to write chunk to disc: ", ar.cause());
+        log.warn().log("Failed to write chunk to disc: ", ar.cause());
         handleException(ar.cause());
       }
       pendingChunkFlushes.remove(future);
@@ -388,7 +395,7 @@ public final class SortingStream<T> implements ReadStream<T> {
 
   private void complete() {
     if (state.compareAndSet(State.MERGING.ordinal(), State.COMPLETED.ordinal())) {
-      logger.debug("Sorting stream completed");
+      log.debug().log("Sorting stream completed");
       if (mergeState != null) {
         mergeState.cleanup();
       }
@@ -401,7 +408,7 @@ public final class SortingStream<T> implements ReadStream<T> {
 
   private void handleException(Throwable ex) {
     if (state.getAndSet(State.FAILED.ordinal()) != State.FAILED.ordinal()) {
-      logger.error("Error in sorting stream", ex);
+      log.error().log("Error in sorting stream", ex);
       if (mergeState != null) {
         mergeState.cleanup();
       }
@@ -418,7 +425,7 @@ public final class SortingStream<T> implements ReadStream<T> {
       try {
         fileSystem.deleteBlocking(tempFile);
       } catch (Exception e) {
-        logger.warn("Failed to delete temp file {}: {}", tempFile, e.getMessage());
+        log.warn().log("Failed to delete temp file {}: {}", tempFile, e.getMessage());
       }
     }
     tempFiles.clear();
@@ -589,7 +596,7 @@ public final class SortingStream<T> implements ReadStream<T> {
             return Future.all(fillFutures);
           })
           .onSuccess(v -> {
-            logger.trace("Initialized merge state with {} sources", sources.size());
+            log.trace().log("Initialized merge state with {} sources", sources.size());
           })
           .mapEmpty();
     }
@@ -647,7 +654,7 @@ public final class SortingStream<T> implements ReadStream<T> {
       }
 
       T result = source.takeNext();
-      logger.trace("Taking {} from source {}", result, source);
+      log.trace().log("Taking {} from source {}", result, source);
 
       return result;
     }
@@ -657,7 +664,7 @@ public final class SortingStream<T> implements ReadStream<T> {
       List<Future<Void>> fillFutures = new ArrayList<>();
 
       // Fill buffers for all Pending sources
-      logger.trace("Filling buffers");
+      log.trace().log("Filling buffers");
       for (BufferedMergeSource source : sources) {
         if (!source.isEnded() && !source.hasNext()) {
           // This source is Pending - make it Ready or Ended
@@ -668,9 +675,9 @@ public final class SortingStream<T> implements ReadStream<T> {
       return Future.all(fillFutures)
               .onComplete(ar -> {
                 if (ar.failed()) {
-                  logger.warn("Buffer fill failed: ", ar.cause());
+                  log.warn().log("Buffer fill failed: ", ar.cause());
                 } else {
-                  logger.trace("After buffer fill, no more pending sources");
+                  log.trace().log("After buffer fill, no more pending sources");
                 }
               })
               .mapEmpty();
@@ -753,21 +760,21 @@ public final class SortingStream<T> implements ReadStream<T> {
         readStream.handler(item -> {
           buffer.offer(item);
           totalItemsRead++;
-          logger.trace("{} received item {}, buffer size now: {}", this, item, buffer.size());
+          log.trace().log("{} received item {}, buffer size now: {}", this, item, buffer.size());
           checkFillComplete();
         });
 
         readStream.endHandler(v -> {
           ended = true;
           streamEnded = true;
-          logger.trace("{} ended after reading {} items, buffer size: {}", this, totalItemsRead, buffer.size());
+          log.trace().log("{} ended after reading {} items, buffer size: {}", this, totalItemsRead, buffer.size());
           if (fillPromise != null) {
             completeFill();
           }
         });
 
         readStream.exceptionHandler(ex -> {
-          logger.error("Error in {}", this, ex);
+          log.error().log("Error in {}", this, ex);
           if (fillPromise != null) {
             fillPromise.fail(ex);
             fillPromise = null;
@@ -790,7 +797,7 @@ public final class SortingStream<T> implements ReadStream<T> {
       fillPromise = Promise.promise();
       targetFillSize = targetSize;
 
-      logger.trace("{} starting fill, target: {}, current buffer: {}", this, targetSize, buffer.size());
+      log.trace().log("{} starting fill, target: {}, current buffer: {}", this, targetSize, buffer.size());
 
       // Start reading from the stream
       readStream.fetch(targetSize);
@@ -800,7 +807,7 @@ public final class SortingStream<T> implements ReadStream<T> {
 
     private void checkFillComplete() {
       if (fillPromise != null && (!buffer.isEmpty() || streamEnded)) {
-        logger.trace("{} fill complete, buffer size: {}, target was: {}", this, buffer.size(), targetFillSize);
+        log.trace().log("{} fill complete, buffer size: {}, target was: {}", this, buffer.size(), targetFillSize);
         completeFill();
       }
     }
@@ -808,7 +815,7 @@ public final class SortingStream<T> implements ReadStream<T> {
     private void completeFill() {
       fillPromise.complete();
       fillPromise = null;
-      logger.trace("{} complete, promise signalled", this);
+      log.trace().log("{} complete, promise signalled", this);
     }
 
     @Override

@@ -181,23 +181,23 @@ public class JexlEvaluator {
   /**
    * Evaluate the expression for the given RequestContext and DataRow, which may be null.
    *
-   * @param request The context of the request.
+   * @param requestContext The context of the request.
    * @param row The current DataRow, if this expression is to be evaluated in the context of a row.
    * @return true is the expression evaluates to true.
    */
   // Compare the bindings with PipelineInstance#renderTemplate and ProcessorScriptInstance#runSource
-  public boolean evaluate(RequestContext request, DataRow row) {
-    Object result = evaluateAsObject(request, row);
+  public boolean evaluate(RequestContext requestContext, DataRow row) {
+    Object result = evaluateAsObject(requestContext, row);
     if (result instanceof Boolean b) {
       return b;
     } else if (result == null) {
-      logger.trace("The result of expression \"{}\" was null", expression);
+      uk.co.spudsoft.query.logging.Log.decorate(logger.atDebug(), requestContext).log("The result of expression \"{}\" was null", expression);
       return false;
     } else if (result instanceof String s) {
-      logger.warn("The result of expression \"{}\" was \"{}\", avoid returning strings", expression, s);
+      uk.co.spudsoft.query.logging.Log.decorate(logger.atDebug(), requestContext).log("The result of expression \"{}\" was \"{}\", avoid returning strings", expression, s);
       return Boolean.parseBoolean(s);
     } else {
-      logger.warn("The result of expression \"{}\" was <{}>, should have been a Boolean", expression, result);
+      uk.co.spudsoft.query.logging.Log.decorate(logger.atDebug(), requestContext).log("The result of expression \"{}\" was <{}>, should have been a Boolean", expression, result);
       return false;
     }
   }

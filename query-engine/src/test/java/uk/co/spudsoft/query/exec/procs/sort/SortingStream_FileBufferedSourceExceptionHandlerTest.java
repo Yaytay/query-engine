@@ -67,7 +67,7 @@ public class SortingStream_FileBufferedSourceExceptionHandlerTest {
           // Now create a SortingStream that will use file-based merging
           ReadStream<String> inputStream = new ListReadStream<>(null, vertx.getOrCreateContext(), inputData);
           
-          SortingStream<String> sortingStream = new SortingStream<>(
+          SortingStream<String> sortingStream = new SortingStream<>(null,
               context,
               fileSystem,
               Comparator.naturalOrder(),

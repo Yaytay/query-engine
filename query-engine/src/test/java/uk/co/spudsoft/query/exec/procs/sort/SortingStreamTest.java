@@ -82,7 +82,7 @@ public class SortingStreamTest {
   @SuppressWarnings("unchecked")
   public void testShouldProcessOutputExit(Vertx vertx, TestInfo testInfo) throws Exception {
     // 1. Setup instance
-    SortingStream<Integer> ss = new SortingStream<>(
+    SortingStream<Integer> ss = new SortingStream<>(null,
         vertx.getOrCreateContext(),
         vertx.fileSystem(),
         Comparator.naturalOrder(),
@@ -152,7 +152,7 @@ public class SortingStreamTest {
     List<Integer> captured = new ArrayList<>();
     ListReadStream<Integer> lrs = new ListReadStream<>(null, vertx.getOrCreateContext(), input);
 
-    SortingStream<Integer> ss = new SortingStream<>(
+    SortingStream<Integer> ss = new SortingStream<>(null,
             vertx.getOrCreateContext(),
              vertx.fileSystem(),
              Comparator.naturalOrder(),
@@ -198,7 +198,7 @@ public class SortingStreamTest {
 
     ListReadStream<Integer> lrs = new ListReadStream<>(null, vertx.getOrCreateContext(), input);
 
-    SortingStream<Integer> ss = new SortingStream<>(
+    SortingStream<Integer> ss = new SortingStream<>(null,
             vertx.getOrCreateContext(),
              vertx.fileSystem(),
              Comparator.naturalOrder(),
@@ -257,7 +257,7 @@ public class SortingStreamTest {
 
     ListReadStream<Integer> lrs = new ThrowingReadStream(vertx.getOrCreateContext(), input);
 
-    SortingStream<Integer> ss = new SortingStream<>(
+    SortingStream<Integer> ss = new SortingStream<>(null,
             vertx.getOrCreateContext(),
              vertx.fileSystem(),
              Comparator.naturalOrder(),
@@ -297,7 +297,7 @@ public class SortingStreamTest {
     AtomicInteger last = new AtomicInteger(Integer.MIN_VALUE);
     ReadStream<Integer> rs = new RandomIntegerReadStream(vertx.getOrCreateContext(), total);
 
-    SortingStream<Integer> ss = new SortingStream<>(
+    SortingStream<Integer> ss = new SortingStream<>(null,
             vertx.getOrCreateContext(),
              vertx.fileSystem(),
              Comparator.naturalOrder(),
@@ -350,7 +350,7 @@ public class SortingStreamTest {
     AtomicInteger last = new AtomicInteger(Integer.MIN_VALUE);
     ReadStream<Integer> rs = new RandomIntegerReadStream(vertx.getOrCreateContext(), total);
 
-    SortingStream<Integer> ss = new SortingStream<>(
+    SortingStream<Integer> ss = new SortingStream<>(null,
             vertx.getOrCreateContext(),
              vertx.fileSystem(),
              Comparator.naturalOrder(),
@@ -400,7 +400,7 @@ public class SortingStreamTest {
 
     ListReadStream<Integer> lrs = new ListReadStream<>(null, vertx.getOrCreateContext(), input);
 
-    SortingStream<Integer> ss = new SortingStream<>(
+    SortingStream<Integer> ss = new SortingStream<>(null,
             vertx.getOrCreateContext(),
             vertx.fileSystem(),
             Comparator.naturalOrder(),
@@ -447,7 +447,7 @@ public class SortingStreamTest {
 
     ListReadStream<Integer> lrs = new ListReadStream<>(null, vertx.getOrCreateContext(), input);
 
-    SortingStream<Integer> ss = new SortingStream<>(
+    SortingStream<Integer> ss = new SortingStream<>(null,
             vertx.getOrCreateContext(),
             vertx.fileSystem(),
             Comparator.naturalOrder(),
@@ -494,7 +494,7 @@ public class SortingStreamTest {
 
     ListReadStream<Integer> lrs = new ListReadStream<>(null, vertx.getOrCreateContext(), input);
 
-    SortingStream<Integer> ss = new SortingStream<>(
+    SortingStream<Integer> ss = new SortingStream<>(null,
             vertx.getOrCreateContext(),
             vertx.fileSystem(),
             Comparator.naturalOrder(),
@@ -548,7 +548,7 @@ public class SortingStreamTest {
             .mkdirsBlocking(tmpDir)
             ;
 
-    SortingStream<Integer> ss = new SortingStream<>(
+    SortingStream<Integer> ss = new SortingStream<>(null,
             vertx.getOrCreateContext(),
             vertx.fileSystem(),
             Comparator.naturalOrder(),
@@ -594,7 +594,7 @@ public class SortingStreamTest {
 
     ListReadStream<Integer> lrs = new ListReadStream<>(null, vertx.getOrCreateContext(), input);
 
-    SortingStream<Integer> ss = new SortingStream<>(
+    SortingStream<Integer> ss = new SortingStream<>(null,
             vertx.getOrCreateContext(),
             vertx.fileSystem(),
             Comparator.naturalOrder(),
@@ -637,7 +637,7 @@ public class SortingStreamTest {
 
     ListReadStream<Integer> lrs = new ListReadStream<>(null, vertx.getOrCreateContext(), input);
 
-    SortingStream<Integer> ss = new SortingStream<>(
+    SortingStream<Integer> ss = new SortingStream<>(null,
             vertx.getOrCreateContext(),
             vertx.fileSystem(),
             Comparator.naturalOrder(),

@@ -217,7 +217,7 @@ public class SortingStream_WriteAllItemsTest {
 
   // Helper method to create a SortingStream instance for testing
   private SortingStream<Integer> createSortingStream(Vertx vertx, FileSystem fs) {
-    return new SortingStream<>(
+    return new SortingStream<>(null,
             vertx.getOrCreateContext(),
             fs,
             Integer::compareTo,

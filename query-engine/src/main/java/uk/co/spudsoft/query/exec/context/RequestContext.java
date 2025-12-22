@@ -41,7 +41,11 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.spi.LoggingEventBuilder;
 import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
+import uk.co.spudsoft.query.logging.Log;
+import static uk.co.spudsoft.query.logging.Log.REQUEST_ID_KEY;
+import static uk.co.spudsoft.query.logging.Log.RUN_ID_KEY;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 import uk.co.spudsoft.query.web.OriginalUrl;
 
@@ -102,6 +106,7 @@ public final class RequestContext {
    * @param request HttpServerRequest to extract the context from.
    *
    */
+  @SuppressWarnings("this-escape") // Calling System.identityHashCode(this) is safe
   public RequestContext(Map<String, String> environment, HttpServerRequest request) {
     this.environment = ImmutableCollectionTools.copy(environment);
     this.startTime = System.currentTimeMillis();
@@ -109,15 +114,23 @@ public final class RequestContext {
     this.requestId = extractSpanId(span);
     this.url = OriginalUrl.get(request);
     this.uri = parseURI(this.url);
-    this.clientIp = extractRemoteIp(request);
-    this.host = extractHost(request);
+    this.clientIp = extractRemoteIp(requestId, request);
+    this.host = extractHost(requestId, request);
     this.path = request.path();
     this.params = request.params();
     this.headers = request.headers();
     this.cookies = ImmutableSet.copyOf(request.cookies());
     this.runId = this.params == null ? null : this.params.get("_runid");
 
-    logger.debug("Created {} RequestContext@{} from HttpServerRequest", requestId, System.identityHashCode(this));
+    // Expanded iin full to avoid leaking this in constructor.
+    LoggingEventBuilder logEvent = logger.atDebug();
+    if (requestId != null) {
+      logEvent = logEvent.addKeyValue(REQUEST_ID_KEY, requestId);
+    }
+    if (runId != null) {
+      logEvent = logEvent.addKeyValue(RUN_ID_KEY, runId);
+    }
+    logEvent.log("Created {} RequestContext@{} from HttpServerRequest", requestId, System.identityHashCode(this));
   }
 
   /**
@@ -133,6 +146,7 @@ public final class RequestContext {
    * @param clientIp Client IP address that should have been extracted from the request.
    * @param jwt JWT that should have been extracted from the request.
    */
+  @SuppressWarnings("this-escape") // Calling System.identityHashCode(this) is safe
   public RequestContext(Map<String, String> environment, String requestId, String url, String host, String path, MultiMap params, MultiMap headers, Set<Cookie> cookies, IPAddressString clientIp, Jwt jwt) {
     this.environment = ImmutableCollectionTools.copy(environment);
     this.startTime = System.currentTimeMillis();
@@ -149,7 +163,16 @@ public final class RequestContext {
     this.clientIp = clientIp;
     this.jwt = jwt;
     this.runId = params == null ? null : params.get("_runid");
-    logger.trace("Created {} RequestContext@{} from values", requestId, System.identityHashCode(this));
+
+    // Expanded iin full to avoid leaking this in constructor.
+    LoggingEventBuilder logEvent = logger.atTrace();
+    if (requestId != null) {
+      logEvent = logEvent.addKeyValue(REQUEST_ID_KEY, requestId);
+    }
+    if (runId != null) {
+      logEvent = logEvent.addKeyValue(RUN_ID_KEY, runId);
+    }
+    logEvent.log("Created {} RequestContext@{} from values", requestId, System.identityHashCode(this));
   }
   
   private static String extractSpanId(Span span) {
@@ -337,10 +360,11 @@ public final class RequestContext {
 
   /**
    * Get the Host of the original request from an HttpServerRequest.
+   * @param requestId The ID that is unique to this request.
    * @param request the HttpServerRequest.
    * @return the value of either the X-Forwarded-Host or Host header.
    */
-  public static String extractHost(HttpServerRequest request) {
+  public static String extractHost(String requestId, HttpServerRequest request) {
     if (request == null) {
       return null;
     }
@@ -354,26 +378,37 @@ public final class RequestContext {
       }
     }
     if (host == null) {
-      logger.trace("No Host found in request");
+      // Expanded iin full to avoid leaking this in constructor.
+      LoggingEventBuilder logEvent = logger.atInfo();
+      if (requestId != null) {
+        logEvent = logEvent.addKeyValue(REQUEST_ID_KEY, requestId);
+      }
+      logEvent.log("No Host found in request");
       return null;
+    }
+    // Expanded iin full to avoid leaking this in constructor.
+    LoggingEventBuilder logEvent = logger.atTrace();
+    if (requestId != null) {
+      logEvent = logEvent.addKeyValue(REQUEST_ID_KEY, requestId);
     }
     int colonPos = host.indexOf(":");
     if (colonPos > 0) {
       String original = host;
       host = original.substring(0, colonPos);
-      logger.trace("Host of {} extracted from {} found from {}", host, original, source);
+      logEvent.log("Host of {} extracted from {} found from {}", host, original, source);
     } else {
-      logger.trace("Host of {} found from {}", host, source);
+      logEvent.log("Host of {} found from {}", host, source);
     }
     return host;
   }
 
   /**
    * Get the remote IP address from an HttpServerRequest.
+   * @param requestId The ID that is unique to this request.
    * @param request the HttpServerRequest.
    * @return the remote IP address from an HttpServerRequest.
    */
-  public static IPAddressString extractRemoteIp(HttpServerRequest request) {
+  public static IPAddressString extractRemoteIp(String requestId, HttpServerRequest request) {
     if (request == null) {
       return null;
     }
@@ -388,16 +423,24 @@ public final class RequestContext {
       ipAddress = request.remoteAddress() == null ? null : request.remoteAddress().hostAddress();
     }
     if (ipAddress == null) {
-      logger.trace("No IP Address found in request");
+      LoggingEventBuilder logEvent = logger.atInfo();
+      if (requestId != null) {
+        logEvent = logEvent.addKeyValue(REQUEST_ID_KEY, requestId);
+      }
+      logEvent.log("No IP Address found in request");
       return null;
     }
     int commaPos = ipAddress.indexOf(",");
+    LoggingEventBuilder logEvent = logger.atTrace();
+    if (requestId != null) {
+      logEvent = logEvent.addKeyValue(REQUEST_ID_KEY, requestId);
+    }
     if (commaPos > 0) {
       String original = ipAddress;
       ipAddress = original.substring(0, commaPos);
-      logger.trace("IP address of {} extracted from {} found from {}", ipAddress, original, source);
+      logEvent.log("IP address of {} extracted from {} found from {}", ipAddress, original, source);
     } else {
-      logger.trace("IP address of {} found from {}", ipAddress, source);
+      logEvent.log("IP address of {} found from {}", ipAddress, source);
     }
 
     return new IPAddressString(ipAddress);
