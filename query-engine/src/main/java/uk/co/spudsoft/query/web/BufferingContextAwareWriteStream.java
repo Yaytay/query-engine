@@ -81,7 +81,6 @@ public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
     context.runOnContext(v -> {
       delegate.write(toWrite)
               .onComplete(ar -> {
-                pendingFlushes.decrementAndGet();
                 thisContext.runOnContext(v2 -> {
                   int remaining = pendingFlushes.decrementAndGet();
 
@@ -91,7 +90,7 @@ public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
                     promise.fail(ar.cause());
                   }
 
-                  if (remaining <= 4 && !delegate.writeQueueFull() && drainHandler != null) {
+                  if (remaining <= MAX_PENDING_WRITES / 2 && !delegate.writeQueueFull() && drainHandler != null) {
                     drainHandler.handle(null);
                   }
                 });
