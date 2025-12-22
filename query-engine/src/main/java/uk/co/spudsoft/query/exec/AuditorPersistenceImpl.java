@@ -1145,8 +1145,8 @@ public class AuditorPersistenceImpl implements Auditor {
           ps.setString(5, JdbcHelper.limitLength(entry.getLevel(), 16));
           ps.setString(6, JdbcHelper.limitLength(entry.getLoggerName(), 250));
           ps.setString(7, JdbcHelper.limitLength(entry.getThreadName(), 250));
-          ps.setClob(8, new StringReader(entry.getMessage())); // CLOB-safe
-          ps.setClob(9, new StringReader(entry.getKvpDataJson())); // CLOB-safe
+          ps.setString(8, entry.getMessage());
+          ps.setString(9, entry.getKvpDataJson());
           ps.addBatch();
       }
     }).mapEmpty();
