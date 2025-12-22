@@ -70,12 +70,15 @@ public class Parameters {
   private TracingConfig tracing = new TracingConfig();
 
   /**
-   * if true the process will end rather than waiting for requests.
+   * If true the process will end rather than waiting for requests.
    */
   private boolean exitOnRun = false;
 
   /**
    * The path to the root of the configuration files.
+   * 
+   * Default value "/var/query-engine".
+   * 
    */
   private String baseConfigPath = "/var/query-engine";
 
@@ -106,6 +109,9 @@ public class Parameters {
    * The redirection is literally to the string provided here, so this may either be a full URL or a path (which may be relative or absolute).
    * 
    * This is not much use in a path hijack situation, so allow for the provision of an alternative.
+   * 
+   * Default value null.
+   * 
    */
   private String rootRedirectUrl;
   
@@ -113,6 +119,9 @@ public class Parameters {
    * If true, the path /login/forcejwt can be PUT to create a session based on the the JWT in the message body.
    * This should be secure even in a production environment (because the caller must be still be able to create an acceptable JWT)
    * , but for the sake of safety it defaults to being disabled.
+   * 
+   * Default value false.
+   * 
    */
   private boolean enableForceJwt = false;
 
@@ -188,6 +197,8 @@ public class Parameters {
    *   </tbody>
    * </table>
    * 
+   * Default value 32 * 1024.
+   * 
    */
   private int writeStreamBufferSize = 32 * 1024;
   
@@ -196,6 +207,8 @@ public class Parameters {
    * 
    * Without setting the WriteQueueMaxSize the Netty buffers can get very large with no back pressure.
    * The value provided is a count of writes, so the actual memory used is responseWriteQueueMaxSize * writeStreamBufferSize.
+   * 
+   * Default value 32.
    * 
    */
   private int responseWriteQueueMaxSize = 32;
@@ -217,7 +230,9 @@ public class Parameters {
    * a delay has to be put in to avoid reading the changes whilst they are still be written.
    * <p>
    * If this value is less than zero file notifications will be disabled.
-   *
+   * <p>
+   * Default value 2.
+   * 
    */
   private int fileStabilisationDelaySeconds = 2;
 
@@ -231,6 +246,8 @@ public class Parameters {
    * <p>
    * If this value is less than or equal to zero polling will be disabled.
    *
+   * Default value 0.
+   * 
    */
   private int filePollPeriodSeconds = 0;
 
@@ -249,6 +266,9 @@ public class Parameters {
 
   /**
    * If set to false any bearer auth header will be ignored.
+   * 
+   * Default value true.
+   * 
    */
   private boolean enableBearerAuth = true;
 
