@@ -237,7 +237,7 @@ public class QueryRouter implements Handler<RoutingContext> {
         queriesExecuted.increment();
       }
       if (logger.isTraceEnabled()) {
-        Log.decorate(logger.atTrace(), requestContext).log("There are now {} currently executing queries: ", queriesExecuting.size(), Json.encode(queriesExecuting));
+        Log.decorate(logger.atTrace(), requestContext).log("There are now {} currently executing queries: {}", queriesExecuting.size(), Json.encode(queriesExecuting));
       } else if (logger.isDebugEnabled()) {
         Log.decorate(logger.atDebug(), requestContext).log("There are now {} currently executing queries", queriesExecuting.size());
       }

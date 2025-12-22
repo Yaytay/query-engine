@@ -24,21 +24,26 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * An implementation of {@link WriteStream} that bridges Vert.x {@link Context}s.
  * <p>
- * Every request that can write to the delegate WriteStream is run using runOnContext, and if there is a return value 
+ * Every request that can write to the delegate WriteStream is run using runOnContext, and if there is a return value
  * it is returned by another runOnContext.
- * 
+ *
  * @author jtalbut
  */
 public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
-  
+
+  private static final int MAX_PENDING_WRITES = 16;
+
   private final WriteStream<Buffer> delegate;
   private final Context context;
   private final int flushThreshold;
   private Buffer buffer = Buffer.buffer();
+  private final AtomicInteger pendingFlushes = new AtomicInteger();
+  private Handler<Void> drainHandler;
 
   /**
    * Constructor.
@@ -52,7 +57,7 @@ public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
     this.context = context;
     this.flushThreshold = flushThreshold;
   }
-  
+
   @Override
   public Future<Void> write(Buffer data) {
     buffer.appendBuffer(data);
@@ -68,16 +73,26 @@ public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
     }
     Buffer toWrite = buffer;
     buffer = Buffer.buffer();
+
+    pendingFlushes.incrementAndGet();
+
     Promise<Void> promise = Promise.promise();
     Context thisContext = Vertx.currentContext();
     context.runOnContext(v -> {
       delegate.write(toWrite)
               .onComplete(ar -> {
+                pendingFlushes.decrementAndGet();
                 thisContext.runOnContext(v2 -> {
+                  int remaining = pendingFlushes.decrementAndGet();
+
                   if (ar.succeeded()) {
                     promise.complete(ar.result());
                   } else {
                     promise.fail(ar.cause());
+                  }
+
+                  if (remaining <= 4 && !delegate.writeQueueFull() && drainHandler != null) {
+                    drainHandler.handle(null);
                   }
                 });
               });
@@ -120,12 +135,23 @@ public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
   @Override
   public boolean writeQueueFull() {
     // Safe to call directly; doesn't mutate state
-    return delegate.writeQueueFull();
+    return delegate.writeQueueFull() || pendingFlushes.get() > MAX_PENDING_WRITES;
   }
 
   @Override
   public WriteStream<Buffer> drainHandler(Handler<Void> handler) {
-    context.runOnContext(v -> delegate.drainHandler(handler));
+    this.drainHandler = handler;
+    Context thisContext = Vertx.currentContext();
+    // Intercept the delegate's drain signal too
+    context.runOnContext(v -> {
+      delegate.drainHandler(v2 -> {
+        thisContext.runOnContext(v3 -> {
+          if (!writeQueueFull() && drainHandler != null) {
+            drainHandler.handle(null);
+          }
+        });
+      });
+    });
     return this;
   }
 
