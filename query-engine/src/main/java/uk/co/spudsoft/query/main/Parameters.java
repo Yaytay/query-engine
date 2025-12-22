@@ -192,6 +192,15 @@ public class Parameters {
   private int writeStreamBufferSize = 32 * 1024;
   
   /**
+   * The maximum number of buffers in the response queue before back-pressure kicks in.
+   * 
+   * Without setting the WriteQueueMaxSize the Netty buffers can get very large with no back pressure.
+   * The value provided is a count of writes, so the actual memory used is responseWriteQueueMaxSize * writeStreamBufferSize.
+   * 
+   */
+  private int responseWriteQueueMaxSize = 32;
+  
+  /**
    * Configuration of specific processors.
    */
   private ProcessorConfig processors = new ProcessorConfig();
@@ -1182,7 +1191,32 @@ public class Parameters {
     this.writeStreamBufferSize = writeStreamBufferSize;
   }
 
+  /**
+   * Get the maximum number of buffers in the response queue before back-pressure kicks in.
+   * 
+   * Without setting the WriteQueueMaxSize the Netty buffers can get very large with no back pressure.
+   * The value provided is a count of writes, so the actual memory used is responseWriteQueueMaxSize * writeStreamBufferSize.
+   * 
+   * @return the maximum number of buffers in the response queue before back-pressure kicks in.
+   */
+  public int getResponseWriteQueueMaxSize() {
+    return responseWriteQueueMaxSize;
+  }
 
+  /**
+   * Set the maximum number of buffers in the response queue before back-pressure kicks in.
+   * 
+   * Without setting the WriteQueueMaxSize the Netty buffers can get very large with no back pressure.
+   * The value provided is a count of writes, so the actual memory used is responseWriteQueueMaxSize * writeStreamBufferSize.
+   * 
+   * @param responseWriteQueueMaxSize the maximum number of buffers in the response queue before back-pressure kicks in.
+   */
+  public void setResponseWriteQueueMaxSize(int responseWriteQueueMaxSize) {
+    this.responseWriteQueueMaxSize = responseWriteQueueMaxSize;
+  }
+
+
+  
   /**
    * Get the configuration of the handling of requests using basic authentication for data requests.
    * <P>

@@ -260,6 +260,11 @@ Recommended Buffer Sizes
 !===
 
 
+| [[responseWriteQueueMaxSize]]responseWriteQueueMaxSize
+| int
+| Set the maximum number of buffers in the response queue before back-pressure kicks in.Without setting the WriteQueueMaxSize the Netty buffers can get very large with no back pressure.
+The value provided is a count of writes, so the actual memory used is responseWriteQueueMaxSize * writeStreamBufferSize.
+
 | [[basicAuth]]basicAuth
 | xref:uk.co.spudsoft.query.main.BasicAuthConfig.adoc[BasicAuthConfig]
 | Set the configuration of the handling of requests using basic authentication for data requests.

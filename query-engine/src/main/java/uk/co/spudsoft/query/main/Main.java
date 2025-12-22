@@ -642,7 +642,19 @@ public class Main extends Application {
       pipelineVerticleInstances = 2 * CpuCoreSensor.availableProcessors();
     }
     
-    QueryRouter queryRouter = new QueryRouter(vertx, meterRegistry, auditor, authenticator, defnLoader, pipelineExecutor, requestLoggingAppender, params.getOutputCacheDir(), params.getWriteStreamBufferSize(), outputAllErrorMessages(), pipelineVerticleInstances);
+    QueryRouter queryRouter = new QueryRouter(vertx
+            , meterRegistry
+            , auditor
+            , authenticator
+            , defnLoader
+            , pipelineExecutor
+            , requestLoggingAppender
+            , params.getOutputCacheDir()
+            , params.getWriteStreamBufferSize()
+            , params.getResponseWriteQueueMaxSize()
+            , outputAllErrorMessages()
+            , pipelineVerticleInstances
+    );
     
     router.route(QueryRouter.PATH_ROOT + "/*").handler(queryRouter);
 

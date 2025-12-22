@@ -72,10 +72,10 @@ import uk.co.spudsoft.query.logging.RequestCollatingAppender;
  * @author jtalbut
  */
 public class QueryRouter implements Handler<RoutingContext> {
-  
+
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(QueryRouter.class);
-  
+
   /**
    * The URL path prefix for this router.
    */
@@ -84,7 +84,7 @@ public class QueryRouter implements Handler<RoutingContext> {
    * The base name of any sources that do not have a specified name.
    */
   public static final String ROOT_SOURCE_DEFAULT_NAME = "Source";
-  
+
   private final Vertx vertx;
   private final MeterRegistry meterRegistry;
   private final Auditor auditor;
@@ -94,17 +94,18 @@ public class QueryRouter implements Handler<RoutingContext> {
   private final RequestCollatingAppender requestCollatingAppender;
   private final String outputCacheDir;
   private final int writeStreamBufferSize;
+  private final int responseWriteQueueMaxSize;
   private final boolean outputAllErrorMessages;
-  
+
   private final PipelineRunningVerticle[] verticles;
-  
+
   private final AtomicInteger count = new AtomicInteger();
   private final Set<String> queriesExecuting = ConcurrentHashMap.newKeySet();
   private final Counter queriesExecuted;
 
   /**
    * Constructor.
-   * 
+   *
    * @param vertx Vertx instance.
    * @param meterRegistry MeterRegistry for production of metrics.
    * @param auditor Auditor interface for tracking requests.
@@ -114,6 +115,7 @@ public class QueryRouter implements Handler<RoutingContext> {
    * @param requestCollatingAppender Logback appender that collates warning messages during a pipeline.
    * @param outputCacheDir Directory to store output in where output caching is enabled (see {@link uk.co.spudsoft.query.defn.Pipeline#cacheDuration}).
    * @param writeStreamBufferSize The number of bytes to buffer before each write to the output, each write involves a context switch so this should not be too small.
+   * @param responseWriteQueueMaxSize The number of 
    * @param outputAllErrorMessages In a production environment error messages should usually not leak information that may assist a bad actor, set this to true to return full details in error responses.
    * @param instances The number of {@link PipelineRunningVerticle}s to create, typically this should be the same as VertxOptions.getEventLoopPoolSize
    */
@@ -127,6 +129,7 @@ public class QueryRouter implements Handler<RoutingContext> {
           , RequestCollatingAppender requestCollatingAppender
           , String outputCacheDir
           , int writeStreamBufferSize
+          , int responseWriteQueueMaxSize
           , boolean outputAllErrorMessages
           , int instances
   ) {
@@ -139,20 +142,21 @@ public class QueryRouter implements Handler<RoutingContext> {
     this.requestCollatingAppender = requestCollatingAppender;
     this.outputCacheDir = outputCacheDir;
     this.writeStreamBufferSize = writeStreamBufferSize;
+    this.responseWriteQueueMaxSize = responseWriteQueueMaxSize;
     this.outputAllErrorMessages = outputAllErrorMessages;
-    
-    
+
+
     verticles = new PipelineRunningVerticle[instances];
-    
+
     if (meterRegistry != null) {
       queriesExecuted = meterRegistry.counter("queryengine.queries.total");
       meterRegistry.gauge("queryengine.queries.active", queriesExecuting, o -> o.size());
     } else {
       queriesExecuted = null;
     }
-    
+
   }
-  
+
   /**
    * Deploy the Verticles for the QueryRouter.
    * @return A Future that will be completed when all deployment attempts are complete.
@@ -173,7 +177,7 @@ public class QueryRouter implements Handler<RoutingContext> {
             })
             .mapEmpty();
   }
-  
+
   /**
    * Find the index of the last dot after the last slash in a string.
    * @param path The string being examined.
@@ -188,7 +192,7 @@ public class QueryRouter implements Handler<RoutingContext> {
       return -1;
     }
   }
-  
+
   static String removeMatrixParams(String input) {
     // Find the first occurrence of ? or # to identify where the path ends
     int queryStart = input.indexOf('?');
@@ -213,20 +217,20 @@ public class QueryRouter implements Handler<RoutingContext> {
     // Reconstruct the full URL/path
     return cleanedPath + remainder;
   }
-  
-    
+
+
   @Override
   public void handle(RoutingContext routingContext) {
-    
+
     HttpServerRequest request = routingContext.request();
     String pipelineTitle[] = new String[1];
     RequestContext requestContext = RequestContext.retrieveRequestContext(routingContext);
     Log.decorate(logger.atTrace(), requestContext).log("Retrieved RequestContext@{}", System.identityHashCode(requestContext));
-    
+
     if (verticles[0] == null) {
       throw new IllegalStateException("QueryRouter#deploy not called");
     }
-    
+
     if (request.method() == HttpMethod.GET) {
       queriesExecuting.add(requestContext.getRequestId());
       if (queriesExecuted != null) {
@@ -248,13 +252,13 @@ public class QueryRouter implements Handler<RoutingContext> {
                   return Future.failedFuture(new ServiceException(400, "Invalid path"));
                 }
                 HttpServerResponse response = routingContext.response();
-                
+
                 response.closeHandler(v2 -> {
                   Log.decorate(logger.atWarn(), requestContext).log("The connection has been closed.");
                   auditor.recordAuditLogMessages(requestContext, requestCollatingAppender.getAndRemoveEventsForRequest(requestContext.getRequestId()));
                   queriesExecuting.remove(requestContext.getRequestId());
                 });
-                
+
                 WriteStream<Buffer> responseStream = response;
                 response.setChunked(true);
                 path = path.substring(PATH_ROOT.length() + 1);
@@ -281,7 +285,7 @@ public class QueryRouter implements Handler<RoutingContext> {
                 routingContext.addBodyEndHandler(v1 -> {
                   auditor.recordResponse(requestContext, response);
                 });
-                
+
                 return loader.loadPipeline(query, requestContext, (file, ex) -> auditor.recordFileDetails(requestContext, file, null))
                         .compose(pipelineAndFile -> {
                           pipelineTitle[0] = pipelineAndFile.pipeline().getTitle();
@@ -313,7 +317,7 @@ public class QueryRouter implements Handler<RoutingContext> {
               })
               .onComplete(ar -> {
                 if (ar.succeeded()) {
-                  pipelineExecutor.progressNotification(requestContext, pipelineTitle[0], null, null, null, true, true, "Pipeline completed.");                    
+                  pipelineExecutor.progressNotification(requestContext, pipelineTitle[0], null, null, null, true, true, "Pipeline completed.");
                 } else {
                   auditor.recordException(requestContext, ar.cause());
                   internalError(ar.cause(), routingContext, outputAllErrorMessages);
@@ -338,11 +342,11 @@ public class QueryRouter implements Handler<RoutingContext> {
     }
     return false;
   }
-  
+
   private Future<Void> runCachedPipeline(Pipeline pipeline, FormatRequest formatRequest, HttpServerResponse response, WriteStream<Buffer> responseStream, RoutingContext routingContext) {
 
     RequestContext requestContext = RequestContext.retrieveRequestContext(routingContext);
-    
+
     return auditor.getCacheFile(requestContext, pipeline)
             .compose(cacheDetails -> {
               if (cacheDetails == null) {
@@ -351,13 +355,13 @@ public class QueryRouter implements Handler<RoutingContext> {
               } else {
                 // Return from cache
                 Log.decorate(logger.atDebug(), requestContext).log("Caching pipeline {} found file {} from run {}.", requestContext.getPath(), cacheDetails.cacheFile(), cacheDetails.auditId());
-                
+
                 if (notModifiedSince(routingContext, cacheDetails.expiry())) {
                   response.setStatusCode(304);
                   // bodyEndHandler not called, so must explicitly audit reponse
                   auditor.recordResponse(requestContext, response);
                   return response.end();
-                } else {                  
+                } else {
                   Format chosenFormat = pipelineExecutor.getFormat(new PipelineContext(null, requestContext), pipeline.getFormats(), formatRequest);
                   String filename = buildDesiredFilename(chosenFormat);
                   if (filename != null) {
@@ -413,11 +417,16 @@ public class QueryRouter implements Handler<RoutingContext> {
               }
             });
   }
-  
+
   private Future<Void> runPipeline(Pipeline pipeline, RequestContext requestContext, FormatRequest formatRequest, HttpServerResponse response, WriteStream<Buffer> rawResponseStream, RoutingContext routingContext) {
     try {
       Format chosenFormat = pipelineExecutor.getFormat(new PipelineContext(null, requestContext), pipeline.getFormats(), formatRequest);
       response.headers().set("Content-Type", chosenFormat.getMediaType().toString());
+
+      // Without setting the WriteQueueMaxSize the Netty buffers can get very large with no back pressure.
+      // The value provided is a count of writes, so the actual memory used is responseWriteQueueMaxSize * writeStreamBufferSize.
+      response.setWriteQueueMaxSize(responseWriteQueueMaxSize);
+
       String filename = buildDesiredFilename(chosenFormat);
       if (filename != null) {
         response.headers().set("Content-Disposition", "attachment; filename=\"" + filename + "\"");
@@ -425,19 +434,19 @@ public class QueryRouter implements Handler<RoutingContext> {
       if (pipeline.supportsCaching()) {
         routingContext.lastModified(Instant.ofEpochMilli(requestContext.getStartTime()));
       }
-      
+
       Context vertxContext = vertx.getOrCreateContext();
-      
+
       WriteStream<Buffer> responseStream = new BufferingContextAwareWriteStream(rawResponseStream, vertxContext, writeStreamBufferSize);
-      
+
       MultiMap queryStringParams = routingContext.request().params();
       Map<String, ArgumentInstance> arguments = pipelineExecutor.prepareArguments(requestContext, pipeline.getArguments(), queryStringParams);
-      
+
       PipelineRunningTask task = new PipelineRunningTask(requestContext, pipeline, chosenFormat, queryStringParams, arguments, responseStream);
 
       PipelineRunningVerticle verticle = chooseVerticle(requestContext);
       return verticle.handleRequest(task);
-      
+
     } catch (Throwable ex) {
       return Future.failedFuture(ex);
     }
@@ -445,7 +454,7 @@ public class QueryRouter implements Handler<RoutingContext> {
 
   private PipelineRunningVerticle chooseVerticle(RequestContext requestContext) {
     String httpThread = Thread.currentThread().getName();
-    
+
     for (int i = 0; i < verticles.length; ++i) {
       int next = count.updateAndGet(current ->
               current == Integer.MAX_VALUE ? 0 : current + 1
@@ -467,10 +476,10 @@ public class QueryRouter implements Handler<RoutingContext> {
   static void internalError(Throwable ex, RoutingContext routingContext, boolean outputAllErrorMessages) {
     RequestContext requestContext = RequestContext.retrieveRequestContext(routingContext);
     Log.decorate(logger.atWarn(), requestContext).log("Request failed: ", ex);
-    
+
     int statusCode = 500;
     String message = "Failed";
-    
+
     if (ex instanceof ServiceException serviceException) {
       statusCode = serviceException.getStatusCode();
       message = serviceException.getMessage();
@@ -478,11 +487,11 @@ public class QueryRouter implements Handler<RoutingContext> {
       statusCode = 400;
       message = ex.getMessage();
     }
-    
+
     if (outputAllErrorMessages) {
       message = ExceptionToString.convert(ex, "\n\t");
     }
-    
+
     HttpServerResponse response = routingContext.response();
     response.putHeader("Content-Type", "text/plain");
     response.setStatusCode(statusCode)
@@ -492,7 +501,7 @@ public class QueryRouter implements Handler<RoutingContext> {
   static String buildDesiredFilename(Format chosenFormat) {
     String fmtFilename = chosenFormat.getFilename();
     String fmtExtention = chosenFormat.getExtension();
-    
+
     if (Strings.isNullOrEmpty(fmtFilename)) {
       return null;
     } else {
