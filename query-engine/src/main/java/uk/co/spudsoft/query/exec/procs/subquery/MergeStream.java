@@ -374,6 +374,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
 
   @Override
   public MergeStream<T, U, V> pause() {
+    logger.trace("pause");
     primaryStream.pause();
     secondaryStream.pause();
     synchronized (lock) {
@@ -384,6 +385,7 @@ public class MergeStream<T, U, V> implements ReadStream<V> {
 
   @Override
   public MergeStream<T, U, V> resume() {
+    logger.trace("resume");
     primaryStream.resume();
     secondaryStream.resume();
     synchronized (lock) {
