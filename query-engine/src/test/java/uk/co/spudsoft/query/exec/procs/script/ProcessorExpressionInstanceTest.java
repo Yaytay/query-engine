@@ -38,6 +38,7 @@ import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
+import uk.co.spudsoft.query.main.OperatorsInstance;
 
 /**
  *
@@ -62,7 +63,7 @@ public class ProcessorExpressionInstanceTest {
     ProcessorExpression definition = ProcessorExpression.builder().name("id").predicate("iteration < 2").build();
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    Auditor auditor = new AuditorMemoryImpl(vertx);
+    Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
 
     ProcessorExpressionInstance instance = definition.createInstance(vertx, null, auditor, pipelineContext, "P0-Expression");
 
@@ -111,7 +112,7 @@ public class ProcessorExpressionInstanceTest {
 
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new inet.ipaddr.IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    Auditor auditor = new AuditorMemoryImpl(vertx);
+    Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
     ProcessorExpressionInstance instance = definition.createInstance(vertx, null, auditor, pipelineContext, "P0-Expression");
 
     Types types = new Types();
@@ -158,7 +159,7 @@ public class ProcessorExpressionInstanceTest {
 
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new inet.ipaddr.IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    Auditor auditor = new AuditorMemoryImpl(vertx);
+    Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
     ProcessorExpressionInstance instance = definition.createInstance(vertx, null, auditor, pipelineContext, "P0-Expression");
 
     Types types = new Types();

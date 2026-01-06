@@ -262,7 +262,7 @@ public class RequestCollatingAppenderTest {
     assertNotNull(msg.getTimestamp());
     assertNotNull(msg.getLoggerName());
     assertNotNull(msg.getThreadName());
-    assertNotNull(msg.getKvpDataJson(), "KVP JSON should be populated");
+    assertNotNull(msg.getKvpData(), "KVP JSON should be populated");
   }
 
 }

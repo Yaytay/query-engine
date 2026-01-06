@@ -177,10 +177,10 @@ public interface Auditor {
    * @param dataSourceUrl The URL to the source of the data, this is the only data parameter that cannot be null.
    * @param username The username used to access the data.
    * @param query The specific query used - mandatory for SQL/JDBC sources, optional for others.
-   * @param argsJson JSON representation of any arguments to the query.
+   * @param args any arguments to the query.
    * @return A Future that will be completed when the data has been recorded.
    */
-  Future<Void> recordSource(PipelineContext pipelineContext, String endpointName, String dataSourceUrl, String username, String query, String argsJson);
+  Future<Void> recordSource(PipelineContext pipelineContext, String endpointName, String dataSourceUrl, String username, String query, List<Object> args);
   
   /**
    * Return a username with any '@&lt;domain&gt;' stripped off.

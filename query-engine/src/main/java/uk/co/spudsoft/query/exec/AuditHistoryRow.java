@@ -52,10 +52,10 @@ public class AuditHistoryRow {
   private final int warningCount;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private final List<AuditHistoryLogRow> warnings;
+  private List<AuditHistoryLogRow> warnings;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private final List<AuditHistorySourceRow> sources;
+  private List<AuditHistorySourceRow> sources;
 
 
   /**
@@ -110,61 +110,6 @@ public class AuditHistoryRow {
     this.warningCount = warningCount;
     this.warnings = null;
     this.sources = null;
-  }
-
-  /**
-   * Constructor.
-   * @param timestamp Timestamp of the request.
-   * @param id Unique ID for the request.
-   * @param path Path to the pipeline.
-   * @param arguments Arguments passed to the pipeline.
-   * @param host The issuer of the token used to authenticate the user.
-   * @param issuer The issuer of the token used to authenticate the user.
-   * @param subject The subject from the token (unique ID for the user within the issuer).
-   * @param username The username of the user making the request.
-   * @param name The human name of the user making the request.
-   * @param responseCode The HTTP response code that the request generated.
-   * @param responseRows The number of rows returned by the request.
-   * @param responseSize The number of bytes returned by the request.
-   * @param responseStreamStartMillis The time (in milliseconds) between the request being made and the first row being returned.
-   * @param responseDurationMillis The time (in milliseconds) between the request being made and the final row being returned.
-   * @param warnings Warnings or errors recorded during the pipeline run.
-   * @param sources Details of the queries actually used during the pipeline run.
-   */
-  @SuppressFBWarnings(value="EI_EXPOSE_REP2", justification = "AuditHistory is just a carrier")
-  public AuditHistoryRow(LocalDateTime timestamp
-          , String id
-          , String path
-          , ObjectNode arguments
-          , String host
-          , String issuer
-          , String subject
-          , String username
-          , String name
-          , Integer responseCode
-          , Long responseRows
-          , Long responseSize
-          , Long responseStreamStartMillis
-          , Long responseDurationMillis
-          , List<AuditHistoryLogRow> warnings
-          , List<AuditHistorySourceRow> sources) {
-    this.timestamp = timestamp;
-    this.id = id;
-    this.path = path;
-    this.arguments = arguments;
-    this.host = host;
-    this.issuer = issuer;
-    this.subject = subject;
-    this.username = username;
-    this.name = name;
-    this.responseCode = responseCode;
-    this.responseRows = responseRows;
-    this.responseSize = responseSize;
-    this.responseStreamStart = responseStreamStartMillis == null ? null : responseStreamStartMillis / 1000.0;
-    this.responseDuration = responseDurationMillis == null ? null : responseDurationMillis / 1000.0;
-    this.warnings = ImmutableCollectionTools.copy(warnings);
-    this.warningCount = this.warnings.size();
-    this.sources = ImmutableCollectionTools.copy(sources);
   }
 
   /**
@@ -406,6 +351,14 @@ public class AuditHistoryRow {
   }
 
   /**
+   * Set warnings and errors recorded during the pipeline run.
+   * @param warnings warnings and errors recorded during the pipeline run.
+   */
+  public void setWarnings(List<AuditHistoryLogRow> warnings) {
+    this.warnings = ImmutableCollectionTools.copy(warnings);
+  }
+
+  /**
    * Get details of the queries actually used during the pipeline run.
    * @return details of the queries actually used during the pipeline run.
    */
@@ -422,5 +375,14 @@ public class AuditHistoryRow {
     return sources;
   }
 
+  /**
+   * Set details of the queries actually used during the pipeline run.
+   * @param sources details of the queries actually used during the pipeline run.
+   */
+  public void setSources(List<AuditHistorySourceRow> sources) {
+    this.sources = ImmutableCollectionTools.copy(sources);
+  }
+
+  
   
 }

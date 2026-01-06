@@ -35,6 +35,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
 import uk.co.spudsoft.query.defn.RateLimitRule;
 import uk.co.spudsoft.query.defn.RateLimitScopeType;
+import uk.co.spudsoft.query.main.OperatorsInstance;
 
 
 /**
@@ -48,7 +49,7 @@ public class AuditorMemoryImplTest {
   public void testDeleteCacheFile(Vertx vertx) {
     RequestContext context = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     RequestContext context2 = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
-    AuditorMemoryImpl auditor = new AuditorMemoryImpl(vertx);
+    AuditorMemoryImpl auditor = new AuditorMemoryImpl(vertx, null);
     
     LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
     auditor.recordRequest(context);
@@ -120,9 +121,8 @@ public class AuditorMemoryImplTest {
   public void testNotFound(Vertx vertx) {
     // Just checking that these don't throw
     RequestContext context = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
-    AuditorMemoryImpl auditor = new AuditorMemoryImpl(vertx);
-    auditor.recordException(context, new Throwable("test"));
-    context = new RequestContext(null, null, "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
+    AuditorMemoryImpl auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
+    auditor.recordException(context, new Throwable("test"));    context = new RequestContext(null, null, "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     auditor.recordException(context, new Throwable("test"));
   }
 
@@ -393,7 +393,7 @@ public class AuditorMemoryImplTest {
   @Test
   public void testNullRequestId(Vertx vertx) {
     
-    Auditor auditor = new AuditorMemoryImpl(vertx);
+    Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
 
     assertTrue(auditor.getCacheFile(null, null).succeeded());
     assertTrue(auditor.recordCacheFile(null, null, null).failed());

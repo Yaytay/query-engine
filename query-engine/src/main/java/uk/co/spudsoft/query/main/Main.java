@@ -495,6 +495,7 @@ public class Main extends Application {
     });
     
     LoginDao loginDao;
+    OperatorsInstance operators = new OperatorsInstance(params.getOperators());
     if (params.getPersistence().getDataSource() != null
             && !Strings.isNullOrEmpty(params.getPersistence().getDataSource().getUrl())) {
 
@@ -504,11 +505,11 @@ public class Main extends Application {
       }
       this.jdbcHelper = new JdbcHelper(vertx, JdbcHelper.createDataSource(params.getPersistence().getDataSource(), credentials, meterRegistry));
 
-      auditor = new AuditorPersistenceImpl(vertx, meterRegistry, params.getPersistence(), jdbcHelper);
+      auditor = new AuditorPersistenceImpl(vertx, meterRegistry, params.getPersistence(), jdbcHelper, operators);
       loginDao = new LoginDaoPersistenceImpl(vertx, meterRegistry, params.getPersistence(), params.getSession().getPurgeDelay(), jdbcHelper);
     } else {
       logger.info("Persistence is not configured, using in-memory tracking of last {} runs", AuditorMemoryImpl.SIZE);
-      auditor = new AuditorMemoryImpl(vertx);
+      auditor = new AuditorMemoryImpl(vertx, operators);
       loginDao = new LoginDaoMemoryImpl(params.getSession().getPurgeDelay());
     }
     try {

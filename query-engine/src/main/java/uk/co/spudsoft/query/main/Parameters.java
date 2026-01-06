@@ -1485,6 +1485,7 @@ public class Parameters {
    * Operators make no difference to query running, but can access more data via the API.
    * @return the conditions for defining operators.
    */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public Operators getOperators() {
     return operators;
   }
@@ -1495,6 +1496,7 @@ public class Parameters {
    * Operators make no difference to query running, but can access more data via the API.
    * @param operators the conditions for defining operators.
    */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public void setOperators(Operators operators) {
     this.operators = operators;
   }

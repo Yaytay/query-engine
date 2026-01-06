@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 njt
+ * Copyright (C) 2026 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,6 +53,7 @@ import uk.co.spudsoft.query.defn.RateLimitRule;
 import uk.co.spudsoft.query.defn.RateLimitScopeType;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.main.DataSourceConfig;
+import uk.co.spudsoft.query.main.OperatorsInstance;
 import uk.co.spudsoft.query.main.Persistence;
 import uk.co.spudsoft.query.web.ServiceException;
 
@@ -71,18 +72,18 @@ public class AuditorPersistenceImplTest {
     Persistence audit = new Persistence();
     audit.setRetryBase(null);
     audit.setRetryIncrement(null);
-    AuditorPersistenceImpl instance1 = new AuditorPersistenceImpl(vertx, null, audit, null);
+    AuditorPersistenceImpl instance1 = new AuditorPersistenceImpl(vertx, null, audit, null, new OperatorsInstance(null));
 
     audit.setRetryBase(Duration.ofMillis(10));
     audit.setRetryIncrement(Duration.ofMillis(10));
-    AuditorPersistenceImpl instance2 = new AuditorPersistenceImpl(vertx, null, audit, null);
+    AuditorPersistenceImpl instance2 = new AuditorPersistenceImpl(vertx, null, audit, null, new OperatorsInstance(null));
 
     assertEquals("AuditorPersistenceImpl configured without datasource", assertThrows(IllegalStateException.class, () -> {
       instance2.prepare();
     }).getMessage());
 
     audit.setDataSource(new DataSourceConfig());
-    AuditorPersistenceImpl instance3 = new AuditorPersistenceImpl(vertx, null, audit, null);
+    AuditorPersistenceImpl instance3 = new AuditorPersistenceImpl(vertx, null, audit, null, new OperatorsInstance(null));
 
     assertEquals("AuditorPersistenceImpl configured without datasource", assertThrows(IllegalStateException.class, () -> {
       instance3.prepare();
@@ -899,7 +900,7 @@ public class AuditorPersistenceImplTest {
     when(rs1.wasNull()).thenReturn(false);
 
     Persistence audit = new Persistence();
-    AuditorPersistenceImpl instance = new AuditorPersistenceImpl(vertx, null, audit, null);
+    AuditorPersistenceImpl instance = new AuditorPersistenceImpl(vertx, null, audit, null, new OperatorsInstance(null));
     
     
     ObjectNode result1 = instance.getArguments(reqctx, rs1, 1, "test-id-1");

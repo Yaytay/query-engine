@@ -47,6 +47,7 @@ import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
+import uk.co.spudsoft.query.main.OperatorsInstance;
 
 /**
  *
@@ -70,7 +71,7 @@ public class ProcessorQueryInstanceTest {
     
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    Auditor auditor = new AuditorMemoryImpl(vertx);
+    Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
         
     ProcessorQueryInstance instance = ProcessorQuery.builder().expression("value!=three").build().createInstance(vertx, null, auditor, pipelineContext, "P0-Query");
     assertEquals("P0-Query", instance.getName());
@@ -205,7 +206,7 @@ public class ProcessorQueryInstanceTest {
     
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    Auditor auditor = new AuditorMemoryImpl(vertx);
+    Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
     
     ProcessorQueryInstance instance = new ProcessorQueryInstance(vertx, null, auditor, pipelineContext
             , ProcessorQuery.builder().name("fred").expression("value!=three").build()

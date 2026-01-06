@@ -63,6 +63,7 @@ import static uk.co.spudsoft.query.exec.AuditorPersistenceImpl.requestId;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.main.ExceptionToString;
+import uk.co.spudsoft.query.main.OperatorsInstance;
 
 /**
  * Audit implementation that is based on a size-constrained list in memory.
@@ -87,9 +88,9 @@ public class AuditorMemoryImpl implements Auditor {
     private final String url;
     private final String username;
     private final String query;
-    private final String arguments;
+    private final List<Object> arguments;
 
-    AuditSource(String pipe, String endpoint, String url, String username, String query, String arguments) {
+    AuditSource(String pipe, String endpoint, String url, String username, String query, List<Object> arguments) {
       this.pipe = pipe;
       this.endpoint = endpoint;
       this.url = url;
@@ -163,14 +164,17 @@ public class AuditorMemoryImpl implements Auditor {
   }
 
   private final Vertx vertx;
+  private final OperatorsInstance operators;
   private final Deque<AuditRow> auditRows = new ArrayDeque<>(SIZE + 1);
 
   /**
    * Constructor.
    * @param vertx The Vert.x instance.
+   * @param operators Conditions defining whether the current user is an operator.
    */
-  public AuditorMemoryImpl(Vertx vertx) {
+  public AuditorMemoryImpl(Vertx vertx, OperatorsInstance operators) {
     this.vertx = vertx;
+    this.operators = operators;
   }
 
   @Override
@@ -574,10 +578,20 @@ public class AuditorMemoryImpl implements Auditor {
   @Override
   public Future<AuditHistory> getHistory(RequestContext requestContext, String issuer, String subject, int skipRows, int maxRows, AuditHistorySortOrder sortOrder, boolean sortDescending) {
 
+    OperatorsInstance.Flags operatorFlags = operators.evaluate(requestContext);
+    
     long count[] = {0};
     List<AuditHistoryRow> output = this.auditRows.stream()
-            .filter(ar -> Objects.equals(issuer, ar.issuer) && Objects.equals(subject, ar.subject))
-            .map(row -> mapAuditHistoryRow(requestContext, row))
+            .filter(ar -> {
+              if (operatorFlags.global()) {
+                return true;
+              } else if (operatorFlags.client()) {
+                return Objects.equals(issuer, ar.issuer);
+              } else {
+                return Objects.equals(issuer, ar.issuer) && Objects.equals(subject, ar.subject);
+              }
+            })
+            .map(row -> mapAuditHistoryRow(requestContext, operatorFlags, row))
             .sorted(createComparator(sortOrder, sortDescending))
             .filter(ar -> {
               count[0]++;
@@ -605,7 +619,7 @@ public class AuditorMemoryImpl implements Auditor {
   }
 
   @Override
-  public Future<Void> recordSource(PipelineContext pipelineContext, String endpointName, String dataSourceUrl, String username, String query, String argsJson) {
+  public Future<Void> recordSource(PipelineContext pipelineContext, String endpointName, String dataSourceUrl, String username, String query, List<Object> args) {
     AuditRow row = find(pipelineContext.getRequestContext());
     if (row != null) {
       synchronized (row) {
@@ -616,7 +630,7 @@ public class AuditorMemoryImpl implements Auditor {
                         , dataSourceUrl
                         , username
                         , query
-                        , argsJson
+                        , args
                 )
         );
       }
@@ -624,7 +638,7 @@ public class AuditorMemoryImpl implements Auditor {
     return Future.succeededFuture();
   }
   
-  private AuditHistoryRow mapAuditHistoryRow(RequestContext requestContext, AuditRow row) {
+  private AuditHistoryRow mapAuditHistoryRow(RequestContext requestContext, OperatorsInstance.Flags operatorFlags, AuditRow row) {
     ObjectNode arguments = null;
     try {
       if (!Strings.isNullOrEmpty(row.arguments)) {
@@ -635,7 +649,7 @@ public class AuditorMemoryImpl implements Auditor {
               .log("Arguments from database ({}) for id {} failed to parse: ", row.arguments.replaceAll("[\r\n]", ""), row.id, ex);
     }
 
-    return new AuditHistoryRow(
+    AuditHistoryRow output = new AuditHistoryRow(
             row.timestamp
             , row.id
             , row.path
@@ -652,6 +666,15 @@ public class AuditorMemoryImpl implements Auditor {
             , row.responseDurationMillis
             , row.logMessages == null ? 0 : row.logMessages.size()
     );
+    if (operatorFlags.global()) {
+      output.setSources(row.sources.stream().map(as -> {
+        return new AuditHistorySourceRow(as.pipe, row.timestamp, null, as.endpoint, as.url, as.username, as.query, as.arguments);
+      }).collect(Collectors.toList()));
+      output.setWarnings(row.logMessages.stream().map(lm -> {
+        return new AuditHistoryLogRow(lm.getTimestamp(), lm.getPipe(), lm.getLevel(), lm.getLoggerName(), lm.getThreadName(), lm.getMessage(), lm.getKvpData());
+      }).collect(Collectors.toList()));
+    }
+    return output;
   }
 
   @Override
