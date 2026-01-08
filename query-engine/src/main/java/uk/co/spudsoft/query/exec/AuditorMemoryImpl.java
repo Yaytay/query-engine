@@ -576,26 +576,27 @@ public class AuditorMemoryImpl implements Auditor {
   }
 
   @Override
-  public Future<AuditHistory> getHistory(RequestContext requestContext, String issuer, String subject, int skipRows, int maxRows, AuditHistorySortOrder sortOrder, boolean sortDescending) {
+  public Future<AuditHistory> getHistory(RequestContext requestContext, String issuer, String subject, int skipRows, int maxRows, AuditHistorySortOrder sortOrder, boolean sortDescending, HistoryFilters filters) {
 
     OperatorsInstance.Flags operatorFlags = operators.evaluate(requestContext);
     
     long count[] = {0};
     List<AuditHistoryRow> output = this.auditRows.stream()
-            .filter(ar -> {
+            .filter(row -> {
               if (operatorFlags.global()) {
                 return true;
               } else if (operatorFlags.client()) {
-                return Objects.equals(issuer, ar.issuer);
+                return Objects.equals(issuer, row.issuer);
               } else {
-                return Objects.equals(issuer, ar.issuer) && Objects.equals(subject, ar.subject);
+                return Objects.equals(issuer, row.issuer) && Objects.equals(subject, row.subject);
               }
             })
+            .filter(row -> filterHistoryRows(filters, row))
             .map(row -> mapAuditHistoryRow(requestContext, operatorFlags, row))
             .sorted(createComparator(sortOrder, sortDescending))
             .filter(ar -> {
               count[0]++;
-              return (count[0] > skipRows && count[0] < skipRows + maxRows);
+              return (count[0] > skipRows && count[0] <= skipRows + maxRows);
             })
             .collect(Collectors.toList())
             ;
@@ -607,6 +608,30 @@ public class AuditorMemoryImpl implements Auditor {
                       , output
                       )
     );
+  }
+
+  boolean filterHistoryRows(HistoryFilters filters, AuditRow row) {
+    if (filters.filterTimestampStart() != null && filters.filterTimestampStart().isAfter(row.timestamp)) {
+      return false;
+    }
+    if (filters.filterTimestampEnd() != null && filters.filterTimestampEnd().isBefore(row.timestamp)) {
+      return false;
+    }
+    if (!Strings.isNullOrEmpty(filters.filterIssuer()) && !filters.filterIssuer().equals(row.issuer)) {
+      return false;
+    }
+    if (!Strings.isNullOrEmpty(filters.filterPath())) {
+      if (row.path == null || !row.path.startsWith(filters.filterPath())) {
+        return false;
+      }
+    }
+    if (!Strings.isNullOrEmpty(filters.filterName()) && !filters.filterName().equals(row.name)) {
+      return false;
+    }
+    if (filters.filterResponseCode() != null && (filters.filterResponseCode().equals(row.responseCode))) {
+      return false;
+    }
+    return true;
   }
 
   @Override

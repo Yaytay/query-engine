@@ -34,9 +34,14 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.List;
 import net.jcip.annotations.NotThreadSafe;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -51,6 +56,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import uk.co.spudsoft.query.defn.RateLimitRule;
 import uk.co.spudsoft.query.defn.RateLimitScopeType;
+import uk.co.spudsoft.query.exec.Auditor.HistoryFilters;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.main.DataSourceConfig;
 import uk.co.spudsoft.query.main.OperatorsInstance;
@@ -94,50 +100,6 @@ public class AuditorPersistenceImplTest {
     assertTrue(promise.future().isComplete());
     assertTrue(promise.future().succeeded());
     assertFalse(promise.future().result().isOk());
-  }
-
-  @Test
-  public void testHealthCheck() {
-  }
-
-  @Test
-  public void testBuildCacheKey() {
-  }
-
-  @Test
-  public void testGetCacheFile() {
-  }
-
-  @Test
-  public void testRecordCacheFile() {
-  }
-
-  @Test
-  public void testRecordCacheFileUsed() {
-  }
-
-  @Test
-  public void testDeleteCacheFile() {
-  }
-
-  @Test
-  public void testRecordRequest() {
-  }
-
-  @Test
-  public void testRecordFileDetails() {
-  }
-
-  @Test
-  public void testRecordException() {
-  }
-
-  @Test
-  public void testRecordResponse() {
-  }
-
-  @Test
-  public void testRunRateLimitRules() {
   }
 
   // Helper method to create rules
@@ -892,7 +854,6 @@ public class AuditorPersistenceImplTest {
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
 
     // ====== VALID JSON TESTS ======
-
     // Test 1: Valid simple JSON object
     ResultSet rs1 = mock(ResultSet.class);
     String validJson = "{\"key1\":\"value1\",\"key2\":123}";
@@ -901,8 +862,7 @@ public class AuditorPersistenceImplTest {
 
     Persistence audit = new Persistence();
     AuditorPersistenceImpl instance = new AuditorPersistenceImpl(vertx, null, audit, null, new OperatorsInstance(null));
-    
-    
+
     ObjectNode result1 = instance.getArguments(reqctx, rs1, 1, "test-id-1");
     assertNotNull(result1);
     assertEquals("value1", result1.get("key1").asText());
@@ -1074,5 +1034,88 @@ public class AuditorPersistenceImplTest {
 
     ObjectNode result18 = instance.getArguments(reqctx, rs18, 1, "special-id-123");
     assertNull(result18); // Should handle invalid JSON gracefully regardless of ID
+  }
+
+  private final String quote = "\"";
+
+  @Test
+  void buildHistoryRowsFilter_GlobalOperator_AppendsAlwaysTrue() {
+    StringBuilder filterBuilder = new StringBuilder();
+    List<Object> args = new ArrayList<>();
+    OperatorsInstance.Flags flags = new OperatorsInstance.Flags(true, false);
+    HistoryFilters filters = new HistoryFilters(null, null, null, null, null, null);
+
+    AuditorPersistenceImpl.buildHistoryRowsFilter(flags, filterBuilder, args, quote, "iss", "sub", filters);
+    
+    assertThat(filterBuilder.toString(), equalTo(" 1 = 1 "));
+    assertThat(args, empty());
+  }
+
+  @Test
+  void buildHistoryRowsFilter_ClientOperator_FiltersByIssuerOnly() {
+    StringBuilder filterBuilder = new StringBuilder();
+    List<Object> args = new ArrayList<>();
+    OperatorsInstance.Flags flags = new OperatorsInstance.Flags(false, true);
+    HistoryFilters filters = new HistoryFilters(null, null, null, null, null, null);
+
+    AuditorPersistenceImpl.buildHistoryRowsFilter(flags, filterBuilder, args, quote, "my-issuer", "sub", filters);
+
+    assertThat(filterBuilder.toString(), equalTo(" \"issuer\" = ? "));
+    assertThat(args, equalTo(Arrays.asList("my-issuer")));
+  }
+
+  @Test
+  void buildHistoryRowsFilter_RegularUser_FiltersByIssuerAndSubject() {
+    StringBuilder filterBuilder = new StringBuilder();
+    List<Object> args = new ArrayList<>();
+    OperatorsInstance.Flags flags = new OperatorsInstance.Flags(false, false);
+    HistoryFilters filters = new HistoryFilters(null, null, null, null, null, null);
+
+    AuditorPersistenceImpl.buildHistoryRowsFilter(flags, filterBuilder, args, quote, "iss", "sub", filters);
+
+    assertThat(filterBuilder.toString(), equalTo(" \"issuer\" = ?  and \"subject\" = ? "));
+    assertThat(args, equalTo(Arrays.asList("iss", "sub")));
+  }
+
+  @Test
+  void buildHistoryRowsFilter_WithAllFilters_AppendsCorrectClausesAndArgs() {
+    StringBuilder filterBuilder = new StringBuilder();
+    List<Object> args = new ArrayList<>();
+    OperatorsInstance.Flags flags = new OperatorsInstance.Flags(true, false);
+    LocalDateTime start = LocalDateTime.of(2025, 1, 1, 10, 0);
+    LocalDateTime end = LocalDateTime.of(2025, 1, 2, 10, 0);
+    HistoryFilters filters = new HistoryFilters(start, end, "filt-iss", "filt-name", "/api/data", 200);
+
+
+    AuditorPersistenceImpl.buildHistoryRowsFilter(flags, filterBuilder, args, quote, "iss", "sub", filters);
+
+    assertThat(filterBuilder.toString(), equalTo(" 1 = 1  and \"timestamp\" > ?  and \"timestamp\" <= ?  and \"issuer\" = ?  and \"name\" = ?  and \"path\" like ?  and \"responseCode\" = ? "));
+    assertThat(args, equalTo(Arrays.asList(start, end, "filt-iss", "filt-name", "/api/data%", 200)));
+  }
+
+  @Test
+  void buildHistoryRowsFilter_PathEscaping_HandlesSpecialSqlCharacters() {
+    StringBuilder filterBuilder = new StringBuilder();
+    List<Object> args = new ArrayList<>();
+    OperatorsInstance.Flags flags = new OperatorsInstance.Flags(true, false);
+    HistoryFilters filters = new HistoryFilters(null, null, null, null, "a_b%c\\d", null);
+
+    AuditorPersistenceImpl.buildHistoryRowsFilter(flags, filterBuilder, args, quote, "iss", "sub", filters);
+
+    // Expected escaping: \ -> \\, % -> \%, _ -> \_ and suffix %
+    assertTrue(args.contains("a\\_b\\%c\\\\d%"));
+  }
+
+  @Test
+  void buildHistoryRowsFilter_NullFilters_DoesNotAppendExtraClauses() {
+    StringBuilder filterBuilder = new StringBuilder();
+    List<Object> args = new ArrayList<>();
+    OperatorsInstance.Flags flags = new OperatorsInstance.Flags(true, false);
+    HistoryFilters filters = new HistoryFilters(null, null, null, null, null, null);
+
+    AuditorPersistenceImpl.buildHistoryRowsFilter(flags, filterBuilder, args, quote, "iss", "sub", filters);
+
+    assertThat(filterBuilder.toString(), equalTo(" 1 = 1 "));
+    assertThat(args, empty());
   }
 }

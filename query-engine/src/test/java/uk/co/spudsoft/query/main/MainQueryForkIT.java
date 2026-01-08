@@ -321,6 +321,8 @@ public class MainQueryForkIT {
             .statusCode(401)
             .extract().body().asString();
     
+    
+    
     main.shutdown();
 
     // Audit records should all have been sorted by main.shutdown

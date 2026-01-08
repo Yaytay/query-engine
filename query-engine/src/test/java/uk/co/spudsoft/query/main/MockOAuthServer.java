@@ -157,7 +157,7 @@ public class MockOAuthServer {
                  "sub" + clientId,
                  Arrays.asList("query-engine"),
                  System.currentTimeMillis() / 1000,
-                 System.currentTimeMillis() / 1000 + 3600,
+                 System.currentTimeMillis() / 1000 + 2,
                  ImmutableMap.<String, Object>builder()
                         .put("name", "Full Name")
                         .put("preferred_username", clientId)

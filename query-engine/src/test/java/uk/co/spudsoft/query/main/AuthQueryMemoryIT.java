@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 jtalbut
+ * Copyright (C) 2022 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.main;
 
 import com.google.common.cache.Cache;
+import com.google.common.collect.ImmutableMap;
 import io.restassured.RestAssured;
 import static io.restassured.RestAssured.given;
 import io.restassured.http.Header;
@@ -27,9 +28,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.invoke.MethodHandles;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.Base64;
+import java.util.Arrays;
+import java.util.UUID;
 import org.apache.commons.io.FileUtils;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeAll;
@@ -41,13 +42,16 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
-import org.junit.jupiter.api.AfterAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import uk.co.spudsoft.jwtvalidatorvertx.AlgorithmAndKeyPair;
+import uk.co.spudsoft.jwtvalidatorvertx.JsonWebAlgorithm;
 import uk.co.spudsoft.jwtvalidatorvertx.TokenBuilder;
 import uk.co.spudsoft.jwtvalidatorvertx.jdk.JdkJwksHandler;
 import uk.co.spudsoft.jwtvalidatorvertx.jdk.JdkTokenBuilder;
@@ -62,22 +66,18 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
  */
 @ExtendWith(VertxExtension.class)
 @TestInstance(Lifecycle.PER_CLASS)
-public class BasicAuthQueryIT {
+public class AuthQueryMemoryIT {
   
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
   private static final ServerProviderMySQL mysql = new ServerProviderMySQL().init();
 
   private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
   
-  private static final String BASIC_CREDS = Base64.getEncoder().encodeToString("Username:Password".getBytes(StandardCharsets.UTF_8));
-  private static final String BAD_CREDS = Base64.getEncoder().encodeToString("SomeoneElse:Password".getBytes(StandardCharsets.UTF_8));
-  
   private JdkJwksHandler jwks;
   private TokenBuilder tokenBuilder;
-  private MockOAuthServer mockOAuthServer;
 
   @SuppressWarnings("constantname")
-  private static final Logger logger = LoggerFactory.getLogger(BasicAuthQueryIT.class);
+  private static final Logger logger = LoggerFactory.getLogger(AuthQueryMemoryIT.class);
   
   @BeforeAll
   public void createDirs() throws IOException {
@@ -92,17 +92,6 @@ public class BasicAuthQueryIT {
     logger.debug("Starting JWKS endpoint");
     jwks.start();
     jwks.setKeyCache(keyCache);
-    
-    // Start the mock OAuth server
-    mockOAuthServer = new MockOAuthServer(tokenBuilder, jwks);
-    mockOAuthServer.start();
-  }
-  
-  @AfterAll
-  public void cleanup() {
-    if (mockOAuthServer != null) {
-      mockOAuthServer.stop();
-    }
   }
   
   @Test
@@ -111,37 +100,34 @@ public class BasicAuthQueryIT {
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
     main.testMain(new String[]{
-      "--persistence.datasource.url=" + mysql.getJdbcUrl()
-      , "--persistence.datasource.adminUser.username=" + mysql.getUser()
-      , "--persistence.datasource.adminUser.password=" + mysql.getPassword()
-      , "--persistence.datasource.user.username=" + mysql.getUser()
-      , "--persistence.datasource.user.password=" + mysql.getPassword()
-      , "--persistence.retryLimit=100"
-      , "--baseConfigPath=" + CONFS_DIR
+      "--baseConfigPath=" + CONFS_DIR
       , "--vertxOptions.eventLoopPoolSize=5"
       , "--vertxOptions.workerPoolSize=5"
       , "--httpServerOptions.tracingPolicy=ALWAYS"
-      , "--pipelineCache.maxDuration=PT10M"
+      , "--pipelineCache.maxDurationMs=PT10M"
       , "--logging.jsonFormat=false"
-      , "--logging.level.uk\\\\.co\\\\.spudsoft=INFO"
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.jwksEndpoints[0]=" + jwks.getBaseUrl() + "/jwks"
       , "--jwt.defaultJwksCacheDuration=PT1M"
-      , "--basicAuth.defaultIdp.url=" + mockOAuthServer.getBaseUrl() + "/token"
-      , "--basicAuth.defaultIdp.credentials.username=test-client"
-      , "--basicAuth.defaultIdp.credentials.password=test-secret"
       , "--sampleDataLoads[0].url=" + postgres.getVertxUrl()
       , "--sampleDataLoads[0].adminUser.username=" + postgres.getUser()
       , "--sampleDataLoads[0].adminUser.password=" + postgres.getPassword()
       , "--sampleDataLoads[1].url=" + mysql.getVertxUrl()
       , "--sampleDataLoads[1].user.username=" + mysql.getUser()
       , "--sampleDataLoads[1].user.password=" + mysql.getPassword()
+      , "--session.requireSession=true"
+      , "--session.oauth.Test.logoUrl=https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg"
+      , "--session.oauth.Test.authorizationEndpoint=https://github.com/login/oauth/authorize"
+      , "--session.oauth.Test.tokenEndpoint=https://github.com/login/oauth/access_token"
+      , "--session.oauth.Test.credentials.id=bdab017f4732085a51f9"
+      , "--session.oauth.Test.credentials.secret=" + System.getProperty("queryEngineGithubSecret")
+      , "--session.oauth.Test.pkce=false"
       , "--securityHeaders.xFrameOptions=BOB"
+      , "--operators.global=request.issuer == '" + jwks.getBaseUrl() + "' && request.sub == 'global-operator'"
+      , "--operators.client=request.issuer == '" + jwks.getBaseUrl() + "' && request.sub == 'client-operator'"
     }, stdout, System.getenv());
     
     RestAssured.port = main.getPort();
-    
-    main.getAuthenticator().purgeCache();
     
     String body = given()
             .get("/openapi.yaml")
@@ -165,7 +151,27 @@ public class BasicAuthQueryIT {
     assertThat(body, containsString("SpudSoft Query Engine"));
     
     body = given()
-            .header(new Header("Authorization", "Basic " + BASIC_CREDS))
+            .get("/api/info/available")
+            .then()
+            .log().ifError()
+            .statusCode(401)
+            .extract().body().asString();
+    
+    String token = tokenBuilder.buildToken(JsonWebAlgorithm.RS512
+            , "AuthQueryIT-" + UUID.randomUUID().toString()
+            , jwks.getBaseUrl()
+            , "sub" + System.currentTimeMillis()
+            , Arrays.asList("query-engine")
+            , System.currentTimeMillis() / 1000
+            , System.currentTimeMillis() / 1000 + 3600
+            , ImmutableMap.<String, Object>builder()
+                    .put("name", "Full Name")
+                    .put("preferred_username", "username")
+                    .build()
+    );
+    
+    body = given()
+            .header(new Header("Authorization", "Bearer " + token))
             .get("/api/info/available")
             .then()
             .log().ifError()
@@ -175,7 +181,14 @@ public class BasicAuthQueryIT {
     assertThat(body, startsWith("{\"name\":\"\",\"children\":[{\"name\":\"args\",\"children\":[{\"name\":\"Args00\",\"path\":\"args/Args00\",\"title\":\"No Arguments\",\"description\":\"Test pipeline that has no arguments\"},{\"name\":\"Args01\",\"path\":\"args/Args01\",\"title\":\"One Argument\",\"description\":\"Test pipeline that has 1 argument\"}"));
         
     body = given()
-            .header(new Header("Authorization", "Basic " + BASIC_CREDS))
+            .get("/api/formio/demo/FeatureRichExample")
+            .then()
+            .log().ifError()
+            .statusCode(401)
+            .extract().body().asString();
+    
+    body = given()
+            .header(new Header("Authorization", "Bearer " + token))
             .get("/api/formio/demo/FeatureRichExample")
             .then()
             .log().ifError()
@@ -186,7 +199,7 @@ public class BasicAuthQueryIT {
     assertThat(body, containsString("Output"));
         
     body = given()
-            .header(new Header("Authorization", "Basic " + BASIC_CREDS))
+            .header(new Header("Authorization", "Bearer " + token))
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
             .accept("text/html, application/xhtml+xml, image/webp, image/apng, application/xml; q=0.9, application/signed-exchange; v=b3; q=0.9, */*; q=0.8")
@@ -196,10 +209,10 @@ public class BasicAuthQueryIT {
             .statusCode(200)
             .extract().body().asString();
     
-    assertThat(body, startsWith("[\n{\"dataId\":1,\"instant\":\"1971-05-07T03:00\",\"ref\":\"antiquewhite\",\"value\":\"first\",\"children\":\"one\",\"DateField\":\"2023-05-05\",\"TimeField\":null,\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null},\n{\"dataId\":2,\"instant\":\"1971-05-08T06:00\",\"ref\":\"aqua\",\"value\":\"second\",\"children\":\"two,four\",\"DateField\":\"2023-05-04\",\"TimeField\":\"23:58\",\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null},"));
+    assertThat(body, startsWith("[\n{\"dataId\":1,\"instant\":\"1971-05-07T03:00\",\"ref\":\"antiquewhite\",\"value\":\"first\",\"children\":\"one\",\"DateField\":\"2023-05-05\",\"TimeField\":null,\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null},\n{\"dataId\":2,\"instant\":\"1971-05-08T06:00\",\"ref\":\"aqua\",\"value\":\"second\",\"children\":\"two,four\",\"DateField\":\"2023-05-04\",\"TimeField\":\"23:58\",\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null},\n"));
     
     body = given()
-            .header(new Header("Authorization", "Basic " + BASIC_CREDS))
+            .header(new Header("Authorization", "Bearer " + token))
             .queryParam("key", mysql.getName())
             .queryParam("port", mysql.getPort())
             .get("/query/sub1/sub2/TemplatedJsonToPipelineIT")
@@ -209,10 +222,10 @@ public class BasicAuthQueryIT {
             .extract().body().asString();
     
     // Note that MySQL doesn't do booleans
-    assertThat(body, startsWith("[\n{\"dataId\":1,\"instant\":\"1971-05-07T03:00\",\"ref\":\"antiquewhite\",\"value\":\"first\",\"children\":\"one\",\"DateField\":\"2023-05-05\",\"TimeField\":null,\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null},\n{\"dataId\":2,\"instant\":\"1971-05-08T06:00\",\"ref\":\"aqua\",\"value\":\"second\",\"children\":\"two,four\",\"DateField\":\"2023-05-04\",\"TimeField\":\"23:58\",\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null},"));
+    assertThat(body, startsWith("[\n{\"dataId\":1,\"instant\":\"1971-05-07T03:00\",\"ref\":\"antiquewhite\",\"value\":\"first\",\"children\":\"one\",\"DateField\":\"2023-05-05\",\"TimeField\":null,\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null},\n{\"dataId\":2,\"instant\":\"1971-05-08T06:00\",\"ref\":\"aqua\",\"value\":\"second\",\"children\":\"two,four\",\"DateField\":\"2023-05-04\",\"TimeField\":\"23:58\",\"DateTimeField\":null,\"LongField\":null,\"DoubleField\":null,\"BoolField\":null,\"TextField\":null},\n"));
     
     byte[] bodyBytes = given()
-            .header(new Header("Authorization", "Basic " + BASIC_CREDS))
+            .header(new Header("Authorization", "Bearer " + token))
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
             .accept("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
@@ -225,7 +238,7 @@ public class BasicAuthQueryIT {
     assertThat(bodyBytes, notNullValue());
     
     body = given()
-            .header(new Header("Authorization", "Basic " + BASIC_CREDS))
+            .header(new Header("Authorization", "Bearer " + token))
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
             .get("/query/sub1/sub2/TemplatedYamlToPipelineIT?_fmt=csv")
@@ -237,7 +250,19 @@ public class BasicAuthQueryIT {
     assertThat(body, startsWith("1,\"1971-05-07T03:00\",\"antiquewhite\",\"first\",\""));
     
     body = given()
-            .header(new Header("Authorization", "Basic " + BASIC_CREDS))
+            .header(new Header("Authorization", "Bearer " + token))
+            .queryParam("key", "unknown")
+            .queryParam("port", postgres.getPort())
+            .get("/query/sub1/sub2/TemplatedYamlToPipelineIT.tsv")
+            .then()
+            .log().ifError()
+            .statusCode(400)
+            .extract().body().asString();
+        
+    assertThat(body, equalTo("The argument \"key\" was passed a value which is not permitted."));
+    
+    body = given()
+            .header(new Header("Authorization", "Bearer " + token))
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
             .get("/query/sub1/sub2/TemplatedYamlToPipelineIT.tsv")
@@ -249,7 +274,20 @@ public class BasicAuthQueryIT {
     assertThat(body, startsWith("\"dataId\"\t\"instant\"\t\"ref\"\t\"value\"\t\"children\"\n1\t\"1971-05-07T03:00\"\t\"antiquewhite\"\t\"first\"\t\"one\""));
     
     body = given()
-            .header(new Header("Authorization", "Basic " + BASIC_CREDS))
+            .header(new Header("Authorization", "Bearer " + token))
+            .queryParam("key", postgres.getName())
+            .queryParam("port", "notanumber")
+            .get("/query/sub1/sub2/TemplatedYamlToPipelineIT.tsv")
+            .then()
+            .log().ifError()
+            .statusCode(400)
+            .extract().body().asString();
+        
+    assertThat(body, equalTo("The argument \"port\" was passed a value which cannot be converted to Integer."));
+    
+    
+    body = given()
+            .header(new Header("Authorization", "Bearer " + token))
             .queryParam("key", postgres.getName())
             .queryParam("port", postgres.getPort())
             .get("/query/sub1/sub2/TemplatedYamlToPipelineIT.html")
@@ -268,51 +306,98 @@ public class BasicAuthQueryIT {
                                 """));
 
     body = given()
-            .header(new Header("Authorization", "Basic " + BAD_CREDS))
-            .queryParam("key", postgres.getName())
-            .queryParam("port", postgres.getPort())
-            .get("/query/sub1/sub2/TemplatedYamlToPipelineIT.html")
-            .then()
-            .log().ifError()
-            .statusCode(401)
-            .extract().body().asString();
-    assertEquals("Invalid credentials", body);
-    
-    body = given()
-            .header(new Header("Authorization", "Basic " + BASIC_CREDS))
+            .header(new Header("Authorization", "Bearer " + token))
             .get("/api/history")
             .then()
-            .log().ifError()
+            .log().all()
             .statusCode(200)
             .extract().body().asString();
     logger.debug("History: {}", body);
     
     JsonObject history1 = new JsonObject(body);
-    assertEquals(6, history1.getJsonArray("rows").size());    
-    assertEquals(6, history1.getInteger("totalRows"));    
+    assertEquals(8, history1.getJsonArray("rows").size());    
+    assertEquals(8, history1.getInteger("totalRows"));    
     assertEquals(0, history1.getInteger("firstRow"));
     assertThat(history1.getJsonArray("rows").getJsonObject(0).getString("subject"), startsWith("sub"));
     assertEquals("Full Name", history1.getJsonArray("rows").getJsonObject(0).getString("name"));
-    assertEquals("Username", history1.getJsonArray("rows").getJsonObject(0).getString("username"));
+    assertEquals("username", history1.getJsonArray("rows").getJsonObject(0).getString("username"));
     
     body = given()
-            .header(new Header("Authorization", "Basic " + BASIC_CREDS))
-            .get("/api/session/profile")
+            .header(new Header("Authorization", "Bearer " + token))
+            .get("/api/history?skipRows=2&maxRows=3")
+            .then()
+            .log().all()
+            .statusCode(200)
+            .extract().body().asString();
+    logger.debug("History: {}", body);
+    
+    JsonObject history2 = new JsonObject(body);
+    assertEquals(3, history2.getJsonArray("rows").size());    
+    assertEquals(8, history2.getInteger("totalRows"));    
+    assertEquals(2, history2.getInteger("firstRow"));
+    assertThat(history2.getJsonArray("rows").getJsonObject(0).getString("subject"), startsWith("sub"));
+    assertEquals("Full Name", history2.getJsonArray("rows").getJsonObject(0).getString("name"));
+    assertEquals("username", history2.getJsonArray("rows").getJsonObject(0).getString("username"));
+    
+    assertEquals(history2.getJsonArray("rows").getJsonObject(0).getString("id"), history1.getJsonArray("rows").getJsonObject(2).getString("id"));
+    assertEquals(history2.getJsonArray("rows").getJsonObject(1).getString("id"), history1.getJsonArray("rows").getJsonObject(3).getString("id"));
+    assertEquals(history2.getJsonArray("rows").getJsonObject(2).getString("id"), history1.getJsonArray("rows").getJsonObject(4).getString("id"));
+
+    String clientOperatorToken = tokenBuilder.buildToken(JsonWebAlgorithm.RS512
+            , "AuthQueryIT-" + UUID.randomUUID().toString()
+            , jwks.getBaseUrl()
+            , "client-operator"
+            , Arrays.asList("query-engine")
+            , System.currentTimeMillis() / 1000
+            , System.currentTimeMillis() / 1000 + 3600
+            , ImmutableMap.<String, Object>builder()
+                    .put("name", "Full Name")
+                    .put("preferred_username", "username")
+                    .build()
+    );
+    
+    body = given()
+            .header(new Header("Authorization", "Bearer " + clientOperatorToken))
+            .get("/api/history?skipRows=2&maxRows=3")
             .then()
             .log().ifError()
             .statusCode(200)
             .extract().body().asString();
-    logger.debug("Profile: {}", body);
+    logger.info("History from client operator: {}", body);
+    // Client operator should see exactly the same as the other user
+    JsonObject history3 = new JsonObject(body);
+    assertEquals(3, history3.getJsonArray("rows").size());    
+    assertThat(history3.getInteger("totalRows"), not(lessThan(8)));
+    assertEquals(2, history3.getInteger("firstRow"));
     
-    JsonObject profile = new JsonObject(body);
-    assertEquals("Username", profile.getString("username"));
-    assertEquals("Full Name", profile.getString("fullname"));
-    assertEquals("subUsername", profile.getJsonObject("claims").getString("sub"));
-    assertEquals("query-engine", profile.getJsonObject("claims").getString("aud"));
+    String globalOperatorToken = tokenBuilder.buildToken(JsonWebAlgorithm.RS512
+            , "AuthQueryIT-" + UUID.randomUUID().toString()
+            , jwks.getBaseUrl()
+            , "global-operator"
+            , Arrays.asList("query-engine")
+            , System.currentTimeMillis() / 1000
+            , System.currentTimeMillis() / 1000 + 3600
+            , ImmutableMap.<String, Object>builder()
+                    .put("name", "Full Name")
+                    .put("preferred_username", "username")
+                    .build()
+    );
+    body = given()
+            .header(new Header("Authorization", "Bearer " + globalOperatorToken))
+            .get("/api/history?skipRows=2&maxRows=3")
+            .then()
+            .log().ifError()
+            .statusCode(200)
+            .extract().body().asString();
+    logger.info("History from global operator: {}", body);
+    // Global operator should see more, including logs and sources
+    JsonObject history4 = new JsonObject(body);
+    assertEquals(3, history4.getJsonArray("rows").size());    
+    assertThat(history3.getInteger("totalRows"), not(lessThan(8)));
+    assertEquals(2, history4.getInteger("firstRow"));
     
-    main.getAuthenticator().purgeCache();
-
     main.shutdown();
+
   }
   
 }

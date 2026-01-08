@@ -45,6 +45,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
@@ -448,8 +449,7 @@ public class AuditorPersistenceImpl implements Auditor {
           from
             #SCHEMA#.#request#
           where
-            #issuer# = ?
-            and #subject# = ?
+             FILTERS
           """
     ),
     GET_HISTORY("""
@@ -472,8 +472,7 @@ public class AuditorPersistenceImpl implements Auditor {
            from
              #SCHEMA#.#request# r
            where
-             #issuer# = ?
-             and #subject# = ?
+             FILTERS
            order by
              #ORDERBY# ASCDESC"""
     ),
@@ -1087,16 +1086,16 @@ public class AuditorPersistenceImpl implements Auditor {
 
 
   @Override
-  public Future<AuditHistory> getHistory(RequestContext requestContext, String issuerArg, String subjectArg, int skipRows, int maxRows, AuditHistorySortOrder sortOrder, boolean sortDescending) {
+  public Future<AuditHistory> getHistory(RequestContext requestContext, String issuerArg, String subjectArg, int skipRows, int maxRows, AuditHistorySortOrder sortOrder, boolean sortDescending, HistoryFilters filters) {
     OperatorsInstance.Flags operatorFlags = operators.evaluate(requestContext);
     Log.decorate(logger.atInfo(), requestContext).log("Get history for : {} {} ({}, {}, {} {}) as {}", issuerArg, subjectArg, skipRows, maxRows, sortOrder, sortDescending, operatorFlags);
 
-    Future<Long> countFuture = countRows(issuerArg, subjectArg);
+    Future<Long> countFuture = getHistoryRowCount(operatorFlags, issuerArg, subjectArg, filters);
 
     Future<List<AuditHistoryRow>> rowsFuture;
     
     if (operatorFlags.global()) {
-      rowsFuture = getRows(requestContext, issuerArg, subjectArg, skipRows, maxRows, sortOrder, sortDescending)
+      rowsFuture = getHistoryRows(operatorFlags, requestContext, issuerArg, subjectArg, skipRows, maxRows, sortOrder, sortDescending, filters)
               .compose(ahrs -> {
         List<String> ids = ahrs.stream().map(ahr -> ahr.getId()).collect(Collectors.toList());
 
@@ -1113,7 +1112,7 @@ public class AuditorPersistenceImpl implements Auditor {
                 .map(ahrs);
       });
     } else {
-      rowsFuture = getRows(requestContext, issuerArg, subjectArg, skipRows, maxRows, sortOrder, sortDescending);
+      rowsFuture = getHistoryRows(operatorFlags, requestContext, issuerArg, subjectArg, skipRows, maxRows, sortOrder, sortDescending, filters);
     }
     
     return Future.all(rowsFuture, countFuture)
@@ -1126,11 +1125,16 @@ public class AuditorPersistenceImpl implements Auditor {
             });    
   }
 
-  private Future<Long> countRows(String issuerArg, String subjectArg) {
-    return jdbcHelper.runSqlSelect(SqlTemplate.GET_HISTORY_COUNT.sql(), ps -> {
-      int param = 1;
-      ps.setString(param++, JdbcHelper.limitLength(issuerArg, 1000));
-      ps.setString(param++, JdbcHelper.limitLength(subjectArg, 1000));
+  private Future<Long> getHistoryRowCount(OperatorsInstance.Flags operatorFlags, String issuerArg, String subjectArg, HistoryFilters filters) {
+    StringBuilder filterBuilder = new StringBuilder();
+    List<Object> args = new ArrayList<>();
+    buildHistoryRowsFilter(operatorFlags, filterBuilder, args, quote, issuerArg, subjectArg, filters);
+
+    String sql = SqlTemplate.GET_HISTORY_COUNT.sql();
+    sql = sql.replaceAll("FILTERS", filterBuilder.toString());
+
+    return jdbcHelper.runSqlSelect(sql, ps -> {
+      setPsArgsFromArray(ps, args);
     }, rs -> {
       while (rs.next()) {
         return rs.getLong(1);
@@ -1156,7 +1160,7 @@ public class AuditorPersistenceImpl implements Auditor {
         String hash = rs.getString(3);
         LocalDateTime timestamp = LocalDateTime.ofInstant(rs.getTimestamp(4).toInstant(), ZoneOffset.UTC);
         String endpoint = rs.getString(5);
-        String url = rs.getString(66);
+        String url = rs.getString(6);
         String username = rs.getString(7);
         String query = rs.getString(8);
         String argsJson = rs.getString(9);
@@ -1303,15 +1307,20 @@ public class AuditorPersistenceImpl implements Auditor {
   }
 
 
-  private Future<List<AuditHistoryRow>> getRows(RequestContext requestContext, String issuerArg, String subjectArg
-          , int skipRows, int maxRows
-          , AuditHistorySortOrder sortOrder, boolean sortDescending
+  private Future<List<AuditHistoryRow>> getHistoryRows(OperatorsInstance.Flags operatorFlags, RequestContext requestContext
+          , String issuerArg, String subjectArg
+          , int skipRows, int maxRows, AuditHistorySortOrder sortOrder, boolean sortDescending
+          , HistoryFilters filters
   ) {
+    StringBuilder filterBuilder = new StringBuilder();
+    List<Object> args = new ArrayList<>();
+    buildHistoryRowsFilter(operatorFlags, filterBuilder, args, quote, issuerArg, subjectArg, filters);
 
     String sql = SqlTemplate.GET_HISTORY.sql();
     sql = sql.replaceAll("ORDERBY", SORT_COLUMN_NAMES.get(sortOrder));
     sql = sql.replaceAll("ASCDESC", sortDescending ? "desc" : "asc");
-
+    sql = sql.replaceAll("FILTERS", filterBuilder.toString());
+    
     switch (offsetLimitType) {
       case limitOffset -> sql = sql + " limit " + maxRows + " offset " + skipRows + " ";
       case offsetFetch -> sql = sql + " offset " + skipRows + " rows fetch next " + maxRows + " rows only ";
@@ -1319,9 +1328,7 @@ public class AuditorPersistenceImpl implements Auditor {
     }
 
     return jdbcHelper.runSqlSelect(sql, ps -> {
-      int param = 1;
-      ps.setString(param++, JdbcHelper.limitLength(issuerArg, 1000));
-      ps.setString(param++, JdbcHelper.limitLength(subjectArg, 1000));
+      setPsArgsFromArray(ps, args);
       ps.setMaxRows(maxHistoryRows);
     }, rs -> {
       ImmutableList.Builder<AuditHistoryRow> builder = ImmutableList.<AuditHistoryRow>builder();
@@ -1347,6 +1354,65 @@ public class AuditorPersistenceImpl implements Auditor {
       }
       return builder.build();
     });
+  }
+
+  void setPsArgsFromArray(PreparedStatement ps, List<Object> args) throws SQLException {
+    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+    int param = 0;
+    for (Object arg: args) {
+      if (arg instanceof String s) {
+        ps.setString(++param, s);
+      } else if (arg instanceof LocalDateTime ldt) {
+        Timestamp ts = Timestamp.from(ldt.toInstant(ZoneOffset.UTC));
+        ps.setTimestamp(++param, ts, cal);
+      } else {
+        ps.setObject(++param, arg);
+      }
+    }
+  }
+
+  static void buildHistoryRowsFilter(OperatorsInstance.Flags operatorFlags, StringBuilder filterBuilder, List<Object> args, String quote, String issuerArg, String subjectArg, HistoryFilters filters) {
+    if (operatorFlags.global()) {
+      filterBuilder.append(" 1 = 1 ");
+    } else if (operatorFlags.client()) {
+      filterBuilder.append(" ").append(quote).append("issuer").append(quote).append(" = ? ");
+      args.add(JdbcHelper.limitLength(issuerArg, 1000));
+    } else {
+      filterBuilder.append(" ").append(quote).append("issuer").append(quote).append(" = ? ");
+      filterBuilder.append(" and ").append(quote).append("subject").append(quote).append(" = ? ");
+      args.add(JdbcHelper.limitLength(issuerArg, 1000));
+      args.add(JdbcHelper.limitLength(subjectArg, 1000));
+    }
+    if (filters.filterTimestampStart() != null) {
+      filterBuilder.append(" and ").append(quote).append("timestamp").append(quote).append(" > ? ");
+      args.add(filters.filterTimestampStart());
+    }
+    if (filters.filterTimestampEnd() != null) {
+      filterBuilder.append(" and ").append(quote).append("timestamp").append(quote).append(" <= ? ");
+      args.add(filters.filterTimestampEnd());
+    }
+    if (!Strings.isNullOrEmpty(filters.filterIssuer())) {
+      filterBuilder.append(" and ").append(quote).append("issuer").append(quote).append(" = ? ");
+      args.add(filters.filterIssuer());
+    }
+    if (!Strings.isNullOrEmpty(filters.filterName())) {
+      filterBuilder.append(" and ").append(quote).append("name").append(quote).append(" = ? ");
+      args.add(filters.filterName());
+    }
+    if (!Strings.isNullOrEmpty(filters.filterPath())) {
+      filterBuilder.append(" and ").append(quote).append("path").append(quote).append(" like ? ");
+      String pathFilter = filters.filterPath()
+              .replace("\\", "\\\\")
+              .replace("%", "\\%")
+              .replace("_", "\\_")
+              + "%"
+              ;
+      args.add(pathFilter);
+    }
+    if (filters.filterResponseCode() != null) {
+      filterBuilder.append(" and ").append(quote).append("responseCode").append(quote).append(" = ? ");
+      args.add(filters.filterResponseCode());
+    }
   }
 
   static Integer getInteger(ResultSet rs, int colIdx) throws SQLException {

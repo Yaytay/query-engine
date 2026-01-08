@@ -32,6 +32,11 @@ import jakarta.ws.rs.container.Suspended;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.AuditHistory;
@@ -78,6 +83,12 @@ public class HistoryHandler {
    * @param maxRows Maximum number of rows to return, for paging.
    * @param sortOrder The field to sort by.
    * @param sortDescending If true the results are sorted in descending order.
+   * @param filterTimestampStart Only provide results after this timestamp.
+   * @param filterTimestampEnd Only provide results before this timestamp.
+   * @param filterIssuer Only provide results with this issuer.
+   * @param filterName Only provide results with this username.
+   * @param filterPath Only provide results with a path that begins with this.
+   * @param filterResponseCode Only provide results with this response code.
    */
   @GET
   @Path("/")
@@ -133,6 +144,57 @@ public class HistoryHandler {
             )
             @QueryParam("desc") 
             Boolean sortDescending
+          , @Schema(
+                  description = """
+                                Only provide results after this timestamp.
+                                """
+                  , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+            )
+            @QueryParam("filterTimestampStart") 
+            String filterTimestampStart
+          , @Schema(
+                  description = """
+                                Only provide results before this timestamp.
+                                """
+                  , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+            )
+            @QueryParam("filterTimestampEnd") 
+            String filterTimestampEnd
+          , @Schema(
+                  description = """
+                                Only provide results with this issuer.
+                                <P>
+                                Note that only the global operator can see history for requests outside of their own issuer.
+                                If this parameter is set to a value that does not match the issuer in the callers token no results will be returned unless the request is from a global operator.
+                                """
+                  , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+            )
+            @QueryParam("filterIssuer") 
+            String filterIssuer
+          , @Schema(
+                  description = """
+                                Only provide results with this username.
+                                """
+                  , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+            )
+            @QueryParam("filterName") 
+            String filterName
+          , @Schema(
+                  description = """
+                                Only provide results with a path that begins with this.
+                                """
+                  , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+            )
+            @QueryParam("filterPath") 
+            String filterPath
+          , @Schema(
+                  description = """
+                                Only provide results with this response code.
+                                """
+                  , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+            )
+            @QueryParam("filterResponseCode") 
+            Integer filterResponseCode
   ) {
     RequestContext unauthedRequestContext = RequestContext.retrieveRequestContext(routingContext);
     try {
@@ -146,8 +208,13 @@ public class HistoryHandler {
       if (sortDescending == null) {
         sortDescending = Boolean.TRUE;
       }
+      
+      LocalDateTime filterTimestampStartLdt = parseIso8601("filterTimestampStart", filterTimestampStart);
+      LocalDateTime filterTimestampEndLdt = parseIso8601("filterTimestampEnd", filterTimestampEnd);
 
-      auditor.getHistory(requestContext, requestContext.getIssuer(), requestContext.getSubject(), skipRows, maxRows, sortOrder, sortDescending)
+      Auditor.HistoryFilters filters = new Auditor.HistoryFilters(filterTimestampStartLdt, filterTimestampEndLdt, filterIssuer, filterName, filterPath, filterResponseCode);
+      
+      auditor.getHistory(requestContext, requestContext.getIssuer(), requestContext.getSubject(), skipRows, maxRows, sortOrder, sortDescending, filters)
               .onSuccess(history -> {
                 response.resume(Response.ok(history, MediaType.APPLICATION_JSON).build());
               })
@@ -160,6 +227,43 @@ public class HistoryHandler {
     }    
   }
   
+  /**
+   * Parses an ISO8601 string which can be either a specific date/time or a duration.
+   *
+   * @param name The name of the parameter to report in any exception thrown.
+   * @param input ISO8601 string (e.g., "2026-01-07T12:00:00Z" or "PT1H").
+   * @return LocalDateTime in UTC, or null if input is null.
+   */
+  public static LocalDateTime parseIso8601(String name, String input) {
+    if (input == null || input.isBlank()) {
+      return null;
+    }
+
+    // 1. Try to parse as a Duration (starts with 'P')
+    if (input.startsWith("P") || input.startsWith("-P")) {
+      try {
+        Duration duration = Duration.parse(input);
+        return LocalDateTime.now(ZoneOffset.UTC).plus(duration);
+      } catch (DateTimeParseException e) {
+        // Fall through to try date/time parsing
+      }
+    }
+
+    // 2. Try to parse as a Date/Time
+    try {
+      // OffsetDateTime handles the 'Z' or '+01:00' suffix
+      return OffsetDateTime.parse(input).withOffsetSameInstant(ZoneOffset.UTC).toLocalDateTime();
+    } catch (DateTimeParseException e) {
+      try {
+        // If it fails, try parsing as LocalDateTime (no timezone specified)
+        // and treat as UTC as requested
+        return LocalDateTime.parse(input);
+      } catch (DateTimeParseException e2) {
+        throw new IllegalArgumentException(name + " is neither a valid ISO8601 date/time nor a duration: " + input, e2);
+      }
+    }
+  }
+
   /**
    * Return an integer value that is definitely not null and is &gt;= min and &lt;= max.
    * @param input The input value, which may be null.

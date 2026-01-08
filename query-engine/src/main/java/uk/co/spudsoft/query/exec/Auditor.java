@@ -148,6 +148,24 @@ public interface Auditor {
   void recordResponse(RequestContext requestContext, HttpServerResponse response);
 
   /**
+   * Details of the filters to apply to a getHistory call.
+   * @param filterTimestampStart Only provide results after this timestamp.
+   * @param filterTimestampEnd Only provide results before this timestamp.
+   * @param filterIssuer Only provide results with this issuer.
+   * @param filterName Only provide results with this user's name.
+   * @param filterPath Only provide results with a path that begins with this.
+   * @param filterResponseCode Only provide results with this response code.
+   */
+  record HistoryFilters(
+            LocalDateTime filterTimestampStart
+          , LocalDateTime filterTimestampEnd
+          , String filterIssuer
+          , String filterName
+          , String filterPath
+          , Integer filterResponseCode
+          ) {}
+  
+  /**
    * Get the details of any recorded requests matching the passed in values.
    * @param requestContext The context in which this request is being made (not related to that being searched).
    * @param issuer The issuer to match.
@@ -156,9 +174,10 @@ public interface Auditor {
    * @param maxRows The maximum number of rows to return.
    * @param sortOrder The field to sort by.
    * @param sortDescending If true the sort will be in descending order.
+   * @param filters Filters to apply to the request.
    * @return A Future that will be completed with the audit history.
    */
-  Future<AuditHistory> getHistory(RequestContext requestContext, String issuer, String subject, int skipRows, int maxRows, AuditHistorySortOrder sortOrder, boolean sortDescending);
+  Future<AuditHistory> getHistory(RequestContext requestContext, String issuer, String subject, int skipRows, int maxRows, AuditHistorySortOrder sortOrder, boolean sortDescending, HistoryFilters filters);
 
   /**
    * Write the passed in {@link AuditLogMessage}s to long term storage.

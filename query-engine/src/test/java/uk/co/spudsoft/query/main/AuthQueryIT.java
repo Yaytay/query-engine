@@ -42,6 +42,8 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderPostgreSQL;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -127,9 +129,13 @@ public class AuthQueryIT {
       , "--session.oauth.Test.credentials.secret=" + System.getProperty("queryEngineGithubSecret")
       , "--session.oauth.Test.pkce=false"
       , "--securityHeaders.xFrameOptions=BOB"
+      , "--operators.global=request.issuer == '" + jwks.getBaseUrl() + "' && request.sub == 'global-operator'"
+      , "--operators.client=request.issuer == '" + jwks.getBaseUrl() + "' && request.sub == 'client-operator'"
     }, stdout, System.getenv());
     
     RestAssured.port = main.getPort();
+    
+    main.getAuthenticator().purgeCache();
     
     String body = given()
             .get("/openapi.yaml")
@@ -345,6 +351,61 @@ public class AuthQueryIT {
     assertEquals(history2.getJsonArray("rows").getJsonObject(1).getString("id"), history1.getJsonArray("rows").getJsonObject(3).getString("id"));
     assertEquals(history2.getJsonArray("rows").getJsonObject(2).getString("id"), history1.getJsonArray("rows").getJsonObject(4).getString("id"));
 
+    String clientOperatorToken = tokenBuilder.buildToken(JsonWebAlgorithm.RS512
+            , "AuthQueryIT-" + UUID.randomUUID().toString()
+            , jwks.getBaseUrl()
+            , "client-operator"
+            , Arrays.asList("query-engine")
+            , System.currentTimeMillis() / 1000
+            , System.currentTimeMillis() / 1000 + 3600
+            , ImmutableMap.<String, Object>builder()
+                    .put("name", "Full Name")
+                    .put("preferred_username", "username")
+                    .build()
+    );
+    
+    body = given()
+            .header(new Header("Authorization", "Bearer " + clientOperatorToken))
+            .get("/api/history?skipRows=2&maxRows=3")
+            .then()
+            .log().ifError()
+            .statusCode(200)
+            .extract().body().asString();
+    logger.info("History from client operator: {}", body);
+    // Client operator should see exactly the same as the other user
+    JsonObject history3 = new JsonObject(body);
+    assertEquals(3, history3.getJsonArray("rows").size());    
+    assertThat(history3.getInteger("totalRows"), not(lessThan(8)));
+    assertEquals(2, history3.getInteger("firstRow"));
+    
+    String globalOperatorToken = tokenBuilder.buildToken(JsonWebAlgorithm.RS512
+            , "AuthQueryIT-" + UUID.randomUUID().toString()
+            , jwks.getBaseUrl()
+            , "global-operator"
+            , Arrays.asList("query-engine")
+            , System.currentTimeMillis() / 1000
+            , System.currentTimeMillis() / 1000 + 3600
+            , ImmutableMap.<String, Object>builder()
+                    .put("name", "Full Name")
+                    .put("preferred_username", "username")
+                    .build()
+    );
+    body = given()
+            .header(new Header("Authorization", "Bearer " + globalOperatorToken))
+            .get("/api/history?skipRows=2&maxRows=3")
+            .then()
+            .log().ifError()
+            .statusCode(200)
+            .extract().body().asString();
+    logger.info("History from global operator: {}", body);
+    // Global operator should see more, including logs and sources
+    JsonObject history4 = new JsonObject(body);
+    assertEquals(3, history4.getJsonArray("rows").size());    
+    assertThat(history3.getInteger("totalRows"), not(lessThan(8)));
+    assertEquals(2, history4.getInteger("firstRow"));
+    
+    main.getAuthenticator().purgeCache();
+    
     main.shutdown();
 
     // Audit records should all have been sorted by main.shutdown

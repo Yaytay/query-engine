@@ -190,6 +190,7 @@ public class Main extends Application {
   private volatile int port;
 
   private JdbcHelper jdbcHelper;
+  private Authenticator authenticator;
 
 
   /**
@@ -223,6 +224,15 @@ public class Main extends Application {
     return vertx;
   }
 
+  /**
+   * Get the running authenticator.
+   * This is for tests only.
+   * @return the running authenticator.
+   */
+  Authenticator getAuthenticator() {
+    return authenticator;
+  }
+  
   /**
    * Get the {@link DirCache} for the {@link uk.co.spudsoft.query.defn.Pipeline} definitions.
    * @return the {@link DirCache} for the {@link uk.co.spudsoft.query.defn.Pipeline} definitions.
@@ -607,9 +617,8 @@ public class Main extends Application {
     corsHandler.allowCredentials(true);
     router.route("/*").handler(corsHandler);
 
-    Authenticator authenticator;
     try {
-      authenticator = createAuthenticator(params, loginDao);
+      this.authenticator = createAuthenticator(params, loginDao);
     } catch (Throwable ex) {
       logger.error("Failed to create request context builder: ", ex);
       return Future.succeededFuture(-2);
@@ -971,7 +980,7 @@ public class Main extends Application {
       jwtValidator.setTimeLeeway(jwtConfig.getPermittedTimeSkew());
     }
 
-    Authenticator rcb = new Authenticator(WebClient.create(vertx, new WebClientOptions().setConnectTimeout(60000))
+    Authenticator auther = new Authenticator(WebClient.create(vertx, new WebClientOptions().setConnectTimeout(60000))
             , jwtValidator
             , openIdDiscoveryHandler
             , loginDao
@@ -984,7 +993,12 @@ public class Main extends Application {
             , jwtConfig.getRequiredAudiences()
             , params.getSession().getSessionCookie() != null ? params.getSession().getSessionCookie().getName() : null
     );
-    return rcb;
+    
+    vertx.setPeriodic(Duration.ofHours(1).toMillis(), id -> {
+      auther.purgeCache();
+    });
+    
+    return auther;    
   }
 
   static OpenAPIConfiguration createOpenapiConfiguration(List<Object> resources, Object application, String openApiContextId) {
