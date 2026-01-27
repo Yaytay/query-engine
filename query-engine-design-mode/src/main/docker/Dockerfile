@@ -1,5 +1,5 @@
 # ---- Stage 0: Build a jlinked runtime and create a base CDS archive ----
-FROM azul/zulu-openjdk-alpine:25.0.1-jdk AS jlink
+FROM azul/zulu-openjdk-alpine:25.0.2-jdk AS jlink
 
 # Create minimized Java runtime
 RUN jlink \
@@ -17,7 +17,7 @@ RUN /qe-java/bin/java -Xshare:off -XX:DumpLoadedClassList=/tmp/base.classlist -v
       -XX:SharedArchiveFile=/qe-java/lib/server/classes.jsa
 
 # ---- Stage 1: Produce application CDS archive on top of base CDS ----
-FROM azul/zulu-openjdk-alpine:25.0.1-jdk AS appcds
+FROM azul/zulu-openjdk-alpine:25.0.2-jdk AS appcds
 
 ARG DEPS
 ARG mainClass
