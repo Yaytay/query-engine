@@ -1,7 +1,7 @@
 # Full JDK image with all JDK/bin tools available, plus optional AppCDS warmup
 
 # Build + warmup stage (keeps full JDK)
-FROM azul/zulu-openjdk-alpine:25.0.1-jdk AS build
+FROM azul/zulu-openjdk-alpine:25.0.2-jdk AS build
 
 ARG DEPS
 ARG mainClass
@@ -26,7 +26,7 @@ RUN mkdir -p /cds && \
       --ExitOnRun || true
 
 # Final runtime stage: keep the WHOLE JDK to retain all executables (javac, jcmd, jmap, jstat, etc.)
-FROM azul/zulu-openjdk-alpine:25.0.1-jdk
+FROM azul/zulu-openjdk-alpine:25.0.2-jdk
 
 ARG DEPS
 ARG mainClass
