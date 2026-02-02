@@ -141,6 +141,8 @@ public class BasicAuthQueryIT {
     
     RestAssured.port = main.getPort();
     
+    main.getAuthenticator().purgeCache();
+    
     String body = given()
             .get("/openapi.yaml")
             .then()
@@ -308,6 +310,7 @@ public class BasicAuthQueryIT {
     assertEquals("subUsername", profile.getJsonObject("claims").getString("sub"));
     assertEquals("query-engine", profile.getJsonObject("claims").getString("aud"));
     
+    main.getAuthenticator().purgeCache();
 
     main.shutdown();
   }

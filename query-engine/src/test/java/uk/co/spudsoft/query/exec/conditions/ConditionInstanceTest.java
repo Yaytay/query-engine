@@ -59,7 +59,7 @@ public class ConditionInstanceTest {
 
 
   private static final String OPENID = Base64.getEncoder().encodeToString("{\"jti\":\"a28849b9-3624-42c3-aaad-21c5f80ffc55\",\"exp\":1653142100,\"nbf\":0,\"iat\":1653142040,\"iss\":\"http://ca.localtest.me\",\"aud\":\"security-admin-console\",\"sub\":\"af78202f-b54a-439d-913c-0bbe99ba6bf8\",\"typ\":\"Bearer\",\"azp\":\"QE2\",\"scope\":\"openid profile email qe2\",\"email_verified\":false,\"name\":\"Bob Fred\",\"preferred_username\":\"bob.fred\",\"given_name\":\"Bob\",\"family_name\":\"Fred\",\"email\":\"bob@localtest.me\",\"groups\":[\"group1\",\"group2\",\"group3\"]}".getBytes(StandardCharsets.UTF_8));
-  private static final String OPENID2 = Base64.getEncoder().encodeToString("{\"jti\":\"a28849b9-3624-42c3-aaad-21c5f80ffc55\",\"exp\":1653142100,\"nbf\":0,\"iat\":1653142040,\"iss\":\"http://ca.localtest.me\",\"aud\":[\"service-query-engine\", \"client-root-bob.fred.net\", \"thingummy\"],\"sub\":\"af78202f-b54a-439d-913c-0bbe99ba6bf8\",\"typ\":\"Bearer\",\"azp\":\"QE2\",\"scope\":\"openid profile email qe2\",\"email_verified\":false,\"name\":\"Bob Fred\",\"preferred_username\":\"bob.fred\",\"given_name\":\"Bob\",\"family_name\":\"Fred\",\"email\":\"bob@localtest.me\",\"groups\":[\"group1\",\"group2\",\"group3\"]}".getBytes(StandardCharsets.UTF_8));
+  private static final String OPENID2 = Base64.getEncoder().encodeToString("{\"jti\":\"a28849b9-3624-42c3-aaad-21c5f80ffc55\",\"exp\":1653142100,\"nbf\":0,\"iat\":1653142040,\"iss\":\"http://ca.localtest.me\",\"aud\":[\"service-query-engine\", \"client-root-bob.fred.net\", \"client-root-bob.carol.net\", \"thingummy\"],\"sub\":\"af78202f-b54a-439d-913c-0bbe99ba6bf8\",\"typ\":\"Bearer\",\"azp\":\"QE2\",\"scope\":\"openid profile email qe2\",\"email_verified\":false,\"name\":\"Bob Fred\",\"preferred_username\":\"bob.fred\",\"given_name\":\"Bob\",\"family_name\":\"Fred\",\"email\":\"bob@localtest.me\",\"groups\":[\"group1\",\"group2\",\"group3\"]}".getBytes(StandardCharsets.UTF_8));
     
 
   @Test
@@ -117,6 +117,10 @@ public class ConditionInstanceTest {
     assertTrue(new ConditionInstance("firstMatchingStringWithPrefix(request.getAudience(), 'client-root-', true) =~ ['bob-sandbox.fred.net', 'bob.fred.net']").evaluate(ctx, null, null));
     assertTrue(new ConditionInstance("firstMatchingStringWithPrefix(request.audience, 'client-root-', true) =~ ['bob-sandbox.fred.net', 'bob.fred.net']").evaluate(ctx, null, null));
     assertTrue(new ConditionInstance("firstMatchingStringWithPrefix(request.aud, 'client-root-', true) =~ ['bob-sandbox.fred.net', 'bob.fred.net']").evaluate(ctx, null, null));
+
+    assertTrue(new ConditionInstance("allStringsWithPrefix(request.getAudience(), 'client-root-', true).equals(list('bob.fred.net','bob.carol.net'))").evaluate(ctx, null, null));
+    assertTrue(new ConditionInstance("allStringsWithPrefix(request.audience, 'client-root-', false).equals(list('client-root-bob.fred.net','client-root-bob.carol.net'))").evaluate(ctx, null, null));
+    assertTrue(new ConditionInstance("allStringsWithPrefix(request.aud, 'client-root-', true).equals(list('bob.fred.net','bob.carol.net'))").evaluate(ctx, null, null));
     
     lg.setLevel(origLvl);
   }

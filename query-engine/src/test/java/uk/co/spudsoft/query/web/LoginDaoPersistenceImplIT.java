@@ -37,6 +37,7 @@ import uk.co.spudsoft.query.exec.JdbcHelper;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.main.Credentials;
 import uk.co.spudsoft.query.main.DataSourceConfig;
+import uk.co.spudsoft.query.main.OperatorsInstance;
 import uk.co.spudsoft.query.main.Persistence;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMsSQL;
 import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
@@ -68,7 +69,7 @@ public class LoginDaoPersistenceImplIT {
     
     JdbcHelper jdbcHelper = new JdbcHelper(vertx, JdbcHelper.createDataSource(dataSource, dataSource.getAdminUser(), null));
     
-    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config, jdbcHelper);
+    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config, jdbcHelper, new OperatorsInstance(null));
     auditor.prepare();
     
     LoginDaoPersistenceImpl instance = new LoginDaoPersistenceImpl(vertx, null, config, Duration.ofMillis(500), jdbcHelper);
@@ -107,7 +108,7 @@ public class LoginDaoPersistenceImplIT {
     
     JdbcHelper jdbcHelper = new JdbcHelper(vertx, JdbcHelper.createDataSource(dataSource, dataSource.getAdminUser(), null));
     
-    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config, jdbcHelper);
+    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config, jdbcHelper, new OperatorsInstance(null));
     auditor.prepare();
     
     LoginDaoPersistenceImpl instance = new LoginDaoPersistenceImpl(vertx, null, config, Duration.ofMillis(500), jdbcHelper);
@@ -148,7 +149,7 @@ public class LoginDaoPersistenceImplIT {
     
     JdbcHelper jdbcHelper = new JdbcHelper(vertx, JdbcHelper.createDataSource(dataSource, dataSource.getAdminUser(), null));
     
-    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config, jdbcHelper);
+    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config, jdbcHelper, new OperatorsInstance(null));
     auditor.prepare();
     
     LoginDaoPersistenceImpl instance = new LoginDaoPersistenceImpl(vertx, null, config, Duration.ofMillis(500), jdbcHelper);
@@ -187,7 +188,7 @@ public class LoginDaoPersistenceImplIT {
     
     JdbcHelper jdbcHelper = new JdbcHelper(vertx, JdbcHelper.createDataSource(dataSource, dataSource.getAdminUser(), null));
     
-    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config, jdbcHelper);
+    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config, jdbcHelper, new OperatorsInstance(null));
     auditor.prepare();
     
     LoginDaoPersistenceImpl instance = new LoginDaoPersistenceImpl(vertx, null, config, Duration.ofMillis(500), jdbcHelper);
@@ -228,7 +229,7 @@ public class LoginDaoPersistenceImplIT {
     
     JdbcHelper jdbcHelper = new JdbcHelper(vertx, JdbcHelper.createDataSource(dataSource, dataSource.getAdminUser(), null));
     
-    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config, jdbcHelper);
+    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config, jdbcHelper, new OperatorsInstance(null));
     auditor.prepare();
     
     LoginDaoPersistenceImpl instance = new LoginDaoPersistenceImpl(vertx, null, config, Duration.ofMillis(500), jdbcHelper);
@@ -267,7 +268,7 @@ public class LoginDaoPersistenceImplIT {
     
     JdbcHelper jdbcHelper = new JdbcHelper(vertx, JdbcHelper.createDataSource(dataSource, dataSource.getAdminUser(), null));
     
-    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config, jdbcHelper);
+    AuditorPersistenceImpl auditor = new AuditorPersistenceImpl(vertx, null, config, jdbcHelper, new OperatorsInstance(null));
     auditor.prepare();
     
     LoginDaoPersistenceImpl instance = new LoginDaoPersistenceImpl(vertx, null, config, Duration.ofMillis(500), jdbcHelper);

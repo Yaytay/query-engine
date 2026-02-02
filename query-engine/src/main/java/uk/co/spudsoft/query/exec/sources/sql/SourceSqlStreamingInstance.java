@@ -21,7 +21,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.Json;
 import io.vertx.core.tracing.TracingPolicy;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
@@ -214,7 +213,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
     String sql = queryAndArgs.query();
     Tuple args = Tuple.from(queryAndArgs.args());
 
-    auditor.recordSource(pipelineContext, endpointName, url, connectOptions.getUser(), queryAndArgs.query(), Json.encode(queryAndArgs.args()));
+    auditor.recordSource(pipelineContext, endpointName, url, connectOptions.getUser(), queryAndArgs.query(), queryAndArgs.args());
     
     long start = System.currentTimeMillis();
     return pool.getConnection()

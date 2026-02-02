@@ -42,6 +42,7 @@ import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
 import uk.co.spudsoft.query.exec.procs.filters.ProcessorOffsetInstance;
+import uk.co.spudsoft.query.main.OperatorsInstance;
 
 /**
  *
@@ -66,7 +67,7 @@ public class ProcessorOffsetInstanceTest {
     
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    Auditor auditor = new AuditorMemoryImpl(vertx);
+    Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
         
     ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, null, auditor, pipelineContext, ProcessorOffset.builder().offset(17).build(), "P0-Offset");
     assertEquals("P0-Offset", instance.getName());
@@ -87,7 +88,7 @@ public class ProcessorOffsetInstanceTest {
     
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    Auditor auditor = new AuditorMemoryImpl(vertx);
+    Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
     
     ProcessorOffsetInstance instance = new ProcessorOffsetInstance(vertx, null, auditor, pipelineContext
             , ProcessorOffset.builder().name("fred").offset(2).build()

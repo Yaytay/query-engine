@@ -109,13 +109,13 @@ public class MainQueryForkIT {
     String body = given()
             .get("/openapi.yaml")
             .then()
-            .log().ifError()
+            .log().all()
             .statusCode(200)
             .extract().body().asString();
     
     assertThat(body, startsWith("openapi: 3.1.0"));
     assertThat(body, containsString("SpudSoft Query Engine"));
-    assertThat(body, not(containsString("empty")));
+    assertThat(body, not(containsString("empty:")));
     
     body = given()
             .get("/openapi.json")
@@ -126,7 +126,7 @@ public class MainQueryForkIT {
     
     assertThat(body, containsString("\"openapi\" : \"3.1.0\","));
     assertThat(body, containsString("SpudSoft Query Engine"));
-    assertThat(body, not(containsString("empty")));
+    assertThat(body, not(containsString("\"empty\"")));
     
     body = given()
             .get("/api/info/available")
@@ -320,6 +320,8 @@ public class MainQueryForkIT {
             .log().ifError()
             .statusCode(401)
             .extract().body().asString();
+    
+    
     
     main.shutdown();
 

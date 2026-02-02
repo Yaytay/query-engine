@@ -50,6 +50,7 @@ import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.FormatCaptureInstance;
+import uk.co.spudsoft.query.main.OperatorsInstance;
 import uk.co.spudsoft.query.main.ProtectedCredentials;
 
 /**
@@ -68,7 +69,7 @@ public class SourceSqlStreamingInstanceTest {
     
     vertx.getOrCreateContext().runOnContext(v -> {
       RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
-      Auditor auditor = new AuditorMemoryImpl(vertx);
+      Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
       PipelineContext pipelineContext = new PipelineContext("test", reqctx);
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
       PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, auditor, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
@@ -137,7 +138,7 @@ public class SourceSqlStreamingInstanceTest {
   public void testInitializeEndpointNotPermitted(Vertx vertx, VertxTestContext testContext) {
     
     vertx.getOrCreateContext().runOnContext(v -> {
-      Auditor auditor = new AuditorMemoryImpl(vertx);
+      Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
       RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
       PipelineContext pipelineContext = new PipelineContext("test", reqctx);
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
@@ -209,7 +210,7 @@ public class SourceSqlStreamingInstanceTest {
   @Test
   public void testGetPreparer(Vertx vertx, VertxTestContext testContext) {
     vertx.getOrCreateContext().runOnContext(v -> {
-      Auditor auditor = new AuditorMemoryImpl(vertx);
+      Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
       RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
       PipelineContext pipelineContext = new PipelineContext("test", reqctx);
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());

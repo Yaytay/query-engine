@@ -16,6 +16,7 @@
  */
 package uk.co.spudsoft.query.exec;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -33,6 +34,7 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.jackson.DatabindCodec;
@@ -43,6 +45,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
@@ -80,12 +83,17 @@ import uk.co.spudsoft.dircache.DirCacheTree;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.defn.RateLimitRule;
 import uk.co.spudsoft.query.defn.RateLimitScopeType;
+import static uk.co.spudsoft.query.defn.RateLimitScopeType.host;
+import static uk.co.spudsoft.query.defn.RateLimitScopeType.issuer;
+import static uk.co.spudsoft.query.defn.RateLimitScopeType.path;
+import static uk.co.spudsoft.query.defn.RateLimitScopeType.subject;
 import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.main.Persistence;
 import uk.co.spudsoft.query.main.DataSourceConfig;
 import uk.co.spudsoft.query.main.ExceptionToString;
+import uk.co.spudsoft.query.main.OperatorsInstance;
 import uk.co.spudsoft.query.web.ServiceException;
 
 /**
@@ -133,7 +141,10 @@ public class AuditorPersistenceImpl implements Auditor {
   private OffsetLimitType offsetLimitType;
 
   private final JdbcHelper jdbcHelper;
+  private final OperatorsInstance operators;
 
+  private final int maxHistoryRows;
+  
   private boolean prepared;
 
   /**
@@ -142,15 +153,35 @@ public class AuditorPersistenceImpl implements Auditor {
    * @param meterRegistry Meter registry to record metrics.
    * @param audit Configuration.
    * @param jdbcHelper Helper object for making DB calls.
+   * @param operators Conditions defining whether the current user is an operator.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "MeterRegisty is intended to be mutable by any user")
-  public AuditorPersistenceImpl(Vertx vertx, MeterRegistry meterRegistry, Persistence audit, JdbcHelper jdbcHelper) {
+  public AuditorPersistenceImpl(Vertx vertx, MeterRegistry meterRegistry, Persistence audit, JdbcHelper jdbcHelper, OperatorsInstance operators) {
     this.vertx = vertx;
     this.meterRegistry = meterRegistry;
     this.configuration = audit;
     this.retryBaseMs = audit.getRetryBase() == null ? 1000 : audit.getRetryBase().toMillis();
     this.retryIncrementMs = audit.getRetryIncrement() == null ? 0 : audit.getRetryIncrement().toMillis();
     this.jdbcHelper = jdbcHelper;
+    this.operators = operators;
+    if (isMicrosoft(audit.getDataSource())) {
+      this.maxHistoryRows = 2000;
+    } else {
+      this.maxHistoryRows = 60000;
+    }
+  }
+  
+  private boolean isMicrosoft(DataSourceConfig dataSource) {
+    if (dataSource == null) {
+      return false;
+    } else {
+      if (dataSource.getUrl() != null && dataSource.getUrl().contains("jdbc:sqlserver:")) {
+        return true;
+      } else if (dataSource.getDataSourceClassName() != null && dataSource.getDataSourceClassName().contains("com.microsoft.sqlserver.jdbc.SQLServerDriver")) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -418,8 +449,7 @@ public class AuditorPersistenceImpl implements Auditor {
           from
             #SCHEMA#.#request#
           where
-            #issuer# = ?
-            and #subject# = ?
+             FILTERS
           """
     ),
     GET_HISTORY("""
@@ -438,13 +468,51 @@ public class AuditorPersistenceImpl implements Auditor {
              , #responseSize#
              , #responseStreamStartMillis#
              , #responseDurationMillis#
+             , (select count(*) from #SCHEMA#.#logs# l where l.#requestId# = r.#id#) as #logCount#
            from
-             #SCHEMA#.#request#
+             #SCHEMA#.#request# r
            where
-             #issuer# = ?
-             and #subject# = ?
+             FILTERS
            order by
              #ORDERBY# ASCDESC"""
+    ),
+    GET_HISTORY_SOURCES("""
+          select
+            rs.#requestId#
+            , rs.#pipe#
+            , s.#hash#
+            , rs.#timestamp#
+            , s.#endpoint#
+            , s.#url#
+            , s.#username#
+            , s.#query#
+            , s.#arguments#
+          from
+            #SCHEMA#.#source# s
+            join #SCHEMA#.#requestSource# rs on rs.#sourceHash# = s.#hash#
+          where
+            #requestId# in (REQ_IDS)
+          order by
+            #requestId#, #timestamp#
+          """
+    ),
+    GET_HISTORY_WARNINGS("""
+          select
+            #requestId#
+            , #timestamp#
+            , #pipe#
+            , #level#
+            , #loggerName#
+            , #threadName#
+            , #message#
+            , #kvp#
+          from
+            #logs#
+          where
+            #requestId# in (REQ_IDS)
+          order by
+            #requestId#, #idx#
+          """
     ),
     GET_CACHE_FILE("""
           select
@@ -1018,12 +1086,35 @@ public class AuditorPersistenceImpl implements Auditor {
 
 
   @Override
-  public Future<AuditHistory> getHistory(RequestContext requestContext, String issuerArg, String subjectArg, int skipRows, int maxRows, AuditHistorySortOrder sortOrder, boolean sortDescending) {
-    Log.decorate(logger.atInfo(), requestContext).log("Get history for : {} {} ({}, {}, {} {})", issuerArg, subjectArg, skipRows, maxRows, sortOrder, sortDescending);
+  public Future<AuditHistory> getHistory(RequestContext requestContext, String issuerArg, String subjectArg, int skipRows, int maxRows, AuditHistorySortOrder sortOrder, boolean sortDescending, HistoryFilters filters) {
+    OperatorsInstance.Flags operatorFlags = operators.evaluate(requestContext);
+    Log.decorate(logger.atInfo(), requestContext).log("Get history for : {} {} ({}, {}, {} {}) as {}", issuerArg, subjectArg, skipRows, maxRows, sortOrder, sortDescending, operatorFlags);
 
-    Future<List<AuditHistoryRow>> rowsFuture = getRows(requestContext, issuerArg, subjectArg, skipRows, maxRows, sortOrder, sortDescending);
-    Future<Long> countFuture = countRows(issuerArg, subjectArg);
+    Future<Long> countFuture = getHistoryRowCount(operatorFlags, issuerArg, subjectArg, filters);
 
+    Future<List<AuditHistoryRow>> rowsFuture;
+    
+    if (operatorFlags.global()) {
+      rowsFuture = getHistoryRows(operatorFlags, requestContext, issuerArg, subjectArg, skipRows, maxRows, sortOrder, sortDescending, filters)
+              .compose(ahrs -> {
+        List<String> ids = ahrs.stream().map(ahr -> ahr.getId()).collect(Collectors.toList());
+
+        String params = ids.stream().map(id -> "?").collect(Collectors.joining(", "));
+        Map<String, Integer> idMap = new HashMap<>();
+        for (int i = 0; i < ahrs.size(); ++i) {
+          idMap.put(ahrs.get(i).getId(), i);
+        }
+        
+        Future<Void> futureSources = getSources(requestContext, ids, params, idMap, ahrs);
+        Future<Void> futureWarnings = getWarnings(requestContext, ids, params, idMap, ahrs);
+
+        return Future.all(futureSources, futureWarnings)
+                .map(ahrs);
+      });
+    } else {
+      rowsFuture = getHistoryRows(operatorFlags, requestContext, issuerArg, subjectArg, skipRows, maxRows, sortOrder, sortDescending, filters);
+    }
+    
     return Future.all(rowsFuture, countFuture)
             .map(cf -> {
               return new AuditHistory(
@@ -1031,14 +1122,19 @@ public class AuditorPersistenceImpl implements Auditor {
                       , countFuture.result()
                       , rowsFuture.result()
                       );
-            });
+            });    
   }
 
-  private Future<Long> countRows(String issuerArg, String subjectArg) {
-    return jdbcHelper.runSqlSelect(SqlTemplate.GET_HISTORY_COUNT.sql(), ps -> {
-      int param = 1;
-      ps.setString(param++, JdbcHelper.limitLength(issuerArg, 1000));
-      ps.setString(param++, JdbcHelper.limitLength(subjectArg, 1000));
+  private Future<Long> getHistoryRowCount(OperatorsInstance.Flags operatorFlags, String issuerArg, String subjectArg, HistoryFilters filters) {
+    StringBuilder filterBuilder = new StringBuilder();
+    List<Object> args = new ArrayList<>();
+    buildHistoryRowsFilter(operatorFlags, filterBuilder, args, quote, issuerArg, subjectArg, filters);
+
+    String sql = SqlTemplate.GET_HISTORY_COUNT.sql();
+    sql = sql.replaceAll("FILTERS", filterBuilder.toString());
+
+    return jdbcHelper.runSqlSelect(sql, ps -> {
+      setPsArgsFromArray(ps, args);
     }, rs -> {
       while (rs.next()) {
         return rs.getLong(1);
@@ -1047,17 +1143,184 @@ public class AuditorPersistenceImpl implements Auditor {
     });
   }
 
+  private Future<Void> getSources(RequestContext requestContext, List<String> ids, String params, Map<String, Integer> idMap, List<AuditHistoryRow> auditHistoryRows) {
+    String sql = SqlTemplate.GET_HISTORY_SOURCES.sql();
+    sql = sql.replaceAll("REQ_IDS", params);
+
+    return jdbcHelper.runSqlSelect(sql, ps -> {
+      for (int i = 0; i < ids.size(); ++i) {
+        ps.setString(i + 1, ids.get(i));
+      }
+    }, rs -> {
+      String currentId = "";
+      List<AuditHistorySourceRow> ahsrs = new ArrayList<>();
+      while (rs.next()) {
+        String requestId = rs.getString(1);
+        String pipe = rs.getString(2);
+        String hash = rs.getString(3);
+        LocalDateTime timestamp = LocalDateTime.ofInstant(rs.getTimestamp(4).toInstant(), ZoneOffset.UTC);
+        String endpoint = rs.getString(5);
+        String url = rs.getString(6);
+        String username = rs.getString(7);
+        String query = rs.getString(8);
+        String argsJson = rs.getString(9);
+        
+        List<Object> args = decodeArgs(requestContext, requestId, argsJson);
+        
+        AuditHistorySourceRow ahsr = new AuditHistorySourceRow(pipe, timestamp, hash, endpoint, url, username, query, args);
+        
+        if (requestId.equals(currentId)) {
+          ahsrs.add(ahsr);
+        } else {
+          setSources(idMap, requestId, auditHistoryRows, ahsrs);
+          ahsrs = new ArrayList<>();
+          currentId = requestId;
+        }
+      }
+      setSources(idMap, currentId, auditHistoryRows, ahsrs);
+      return null;
+    }).mapEmpty();
+  }
+
+  @SuppressWarnings("unchecked")
+  List<Object> decodeArgs(RequestContext requestContext, String requestId, String argsJson) {
+    List<Object> args = null;
+    try {
+      args = Json.decodeValue(argsJson, List.class);
+    } catch (Throwable ex) {
+      Log.decorate(logger.atWarn(), requestContext).log("Unable to decode args for {} ({}) from database: ", requestId, argsJson, ex);
+    }
+    return args;
+  }
+
+  void setSources(Map<String, Integer> idMap, String requestId, List<AuditHistoryRow> auditHistoryRows, List<AuditHistorySourceRow> ahsrs) {
+    Integer rowNum = idMap.get(requestId);
+    if (rowNum != null && rowNum < auditHistoryRows.size()) {
+      AuditHistoryRow row = auditHistoryRows.get(rowNum);
+      if (requestId.equals(row.getId())) {
+        row.setSources(ahsrs);
+      }
+    }
+  }
+
+  private Future<Void> getWarnings(RequestContext requestContext, List<String> ids, String params, Map<String, Integer> idMap, List<AuditHistoryRow> auditHistoryRows) {
+    String sql = SqlTemplate.GET_HISTORY_WARNINGS.sql();
+    sql = sql.replaceAll("REQ_IDS", params);
+
+    return jdbcHelper.runSqlSelect(sql, ps -> {
+      for (int i = 0; i < ids.size(); ++i) {
+        ps.setString(i + 1, ids.get(i));
+      }
+    }, rs -> {
+      String currentId = "";
+      List<AuditHistoryLogRow> ahlrs = new ArrayList<>();
+      while (rs.next()) {
+        String requestId = rs.getString(1);
+        LocalDateTime timestamp = LocalDateTime.ofInstant(rs.getTimestamp(2).toInstant(), ZoneOffset.UTC);
+        String pipe = rs.getString(3);
+        String level = rs.getString(4);
+        String loggerName = rs.getString(4);
+        String threadName = rs.getString(4);
+        String message = rs.getString(4);
+        String kvpJson = rs.getString(5);
+        
+        List<AuditLogMessage.PrimitiveKeyValuePair> kvp = decodeKvp(requestContext, requestId, kvpJson);
+        
+        AuditHistoryLogRow ahsr = new AuditHistoryLogRow(timestamp, pipe, level, loggerName, threadName, message, kvp);
+        
+        if (requestId.equals(currentId)) {
+          ahlrs.add(ahsr);
+        } else {
+          setWarnings(idMap, requestId, auditHistoryRows, ahlrs);
+          ahlrs = new ArrayList<>();
+          currentId = requestId;
+        }
+      }
+      setWarnings(idMap, currentId, auditHistoryRows, ahlrs);
+      return null;
+    }).mapEmpty();
+  }
+
+  static List<AuditLogMessage.PrimitiveKeyValuePair> decodeKvp(RequestContext requestContext, String requestId, String kvpJson) {
+    if (kvpJson == null || kvpJson.isBlank()) {
+      return ImmutableList.of();
+    }
+
+    try {
+      JsonNode root = DatabindCodec.mapper().readTree(kvpJson);
+
+      if (!root.isArray()) {
+        // Not an array → log and bail
+        Log.decorate(logger.atWarn(), requestContext).log("Expected JSON array for KVP for {} but got {} from database", requestId, kvpJson);
+        return ImmutableList.of();
+      }
+
+      ImmutableList.Builder<AuditLogMessage.PrimitiveKeyValuePair> builder = ImmutableList.builderWithExpectedSize(root.size());
+
+      for (JsonNode node : root) {
+        JsonNode keyNode = node.get("key");
+        JsonNode valueNode = node.get("value");
+
+        if (keyNode == null || !keyNode.isTextual()) {
+          Log.decorate(logger.atWarn(), requestContext).log("Skipping KVP entry with missing/invalid key for {}, got ({}) from database", requestId, kvpJson);
+          continue;
+        }
+
+        String key = keyNode.asText();
+        Object value = convertJsonValue(valueNode);
+
+        builder.add(new AuditLogMessage.PrimitiveKeyValuePair(key, value));
+      }
+
+      return builder.build();
+
+    } catch (Exception ex) {
+      Log.decorate(logger.atWarn(), requestContext).log("Failed to parse KVP for {} ({}) from database: ", requestId, kvpJson, ex);
+      return ImmutableList.of();
+    }
+  }
+
+  static Object convertJsonValue(JsonNode valueNode) {
+    if (valueNode == null || valueNode.isNull()) {
+      return null;
+    }
+    if (valueNode.isTextual()) {
+      return valueNode.asText();
+    }
+    if (valueNode.isNumber()) {
+      return valueNode.numberValue();
+    }
+    if (valueNode.isBoolean()) {
+      return valueNode.asBoolean();
+    }
+    return valueNode.toString();
+  }
+
+  void setWarnings(Map<String, Integer> idMap, String requestId, List<AuditHistoryRow> auditHistoryRows, List<AuditHistoryLogRow> ahlrs) {
+    Integer rowNum = idMap.get(requestId);
+    if (rowNum != null && rowNum < auditHistoryRows.size()) {
+      AuditHistoryRow row = auditHistoryRows.get(rowNum);
+      if (requestId.equals(row.getId())) {
+        row.setWarnings(ahlrs);
+      }
+    }
+  }
 
 
-  private Future<List<AuditHistoryRow>> getRows(RequestContext requestContext, String issuerArg, String subjectArg
-          , int skipRows, int maxRows
-          , AuditHistorySortOrder sortOrder, boolean sortDescending
+  private Future<List<AuditHistoryRow>> getHistoryRows(OperatorsInstance.Flags operatorFlags, RequestContext requestContext
+          , String issuerArg, String subjectArg
+          , int skipRows, int maxRows, AuditHistorySortOrder sortOrder, boolean sortDescending
+          , HistoryFilters filters
   ) {
+    StringBuilder filterBuilder = new StringBuilder();
+    List<Object> args = new ArrayList<>();
+    buildHistoryRowsFilter(operatorFlags, filterBuilder, args, quote, issuerArg, subjectArg, filters);
 
     String sql = SqlTemplate.GET_HISTORY.sql();
     sql = sql.replaceAll("ORDERBY", SORT_COLUMN_NAMES.get(sortOrder));
     sql = sql.replaceAll("ASCDESC", sortDescending ? "desc" : "asc");
-
+    sql = sql.replaceAll("FILTERS", filterBuilder.toString());
+    
     switch (offsetLimitType) {
       case limitOffset -> sql = sql + " limit " + maxRows + " offset " + skipRows + " ";
       case offsetFetch -> sql = sql + " offset " + skipRows + " rows fetch next " + maxRows + " rows only ";
@@ -1065,9 +1328,8 @@ public class AuditorPersistenceImpl implements Auditor {
     }
 
     return jdbcHelper.runSqlSelect(sql, ps -> {
-      int param = 1;
-      ps.setString(param++, JdbcHelper.limitLength(issuerArg, 1000));
-      ps.setString(param++, JdbcHelper.limitLength(subjectArg, 1000));
+      setPsArgsFromArray(ps, args);
+      ps.setMaxRows(maxHistoryRows);
     }, rs -> {
       ImmutableList.Builder<AuditHistoryRow> builder = ImmutableList.<AuditHistoryRow>builder();
       while (rs.next()) {
@@ -1085,12 +1347,72 @@ public class AuditorPersistenceImpl implements Auditor {
         Long responseSize = getLong(rs, 12);
         Long responseStreamStartMs = rs.getLong(13);
         Long responseDurationMs = rs.getLong(14);
+        int warningCount = rs.getInt(15);
 
-        AuditHistoryRow ah = new AuditHistoryRow(timestamp, id, path, arguments, host, issuer, subject, username, name, responseCode, responseRows, responseSize, responseStreamStartMs, responseDurationMs);
+        AuditHistoryRow ah = new AuditHistoryRow(timestamp, id, path, arguments, host, issuer, subject, username, name, responseCode, responseRows, responseSize, responseStreamStartMs, responseDurationMs, warningCount);
         builder.add(ah);
       }
       return builder.build();
     });
+  }
+
+  void setPsArgsFromArray(PreparedStatement ps, List<Object> args) throws SQLException {
+    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+    int param = 0;
+    for (Object arg: args) {
+      if (arg instanceof String s) {
+        ps.setString(++param, s);
+      } else if (arg instanceof LocalDateTime ldt) {
+        Timestamp ts = Timestamp.from(ldt.toInstant(ZoneOffset.UTC));
+        ps.setTimestamp(++param, ts, cal);
+      } else {
+        ps.setObject(++param, arg);
+      }
+    }
+  }
+
+  static void buildHistoryRowsFilter(OperatorsInstance.Flags operatorFlags, StringBuilder filterBuilder, List<Object> args, String quote, String issuerArg, String subjectArg, HistoryFilters filters) {
+    if (operatorFlags.global()) {
+      filterBuilder.append(" 1 = 1 ");
+    } else if (operatorFlags.client()) {
+      filterBuilder.append(" ").append(quote).append("issuer").append(quote).append(" = ? ");
+      args.add(JdbcHelper.limitLength(issuerArg, 1000));
+    } else {
+      filterBuilder.append(" ").append(quote).append("issuer").append(quote).append(" = ? ");
+      filterBuilder.append(" and ").append(quote).append("subject").append(quote).append(" = ? ");
+      args.add(JdbcHelper.limitLength(issuerArg, 1000));
+      args.add(JdbcHelper.limitLength(subjectArg, 1000));
+    }
+    if (filters.filterTimestampStart() != null) {
+      filterBuilder.append(" and ").append(quote).append("timestamp").append(quote).append(" > ? ");
+      args.add(filters.filterTimestampStart());
+    }
+    if (filters.filterTimestampEnd() != null) {
+      filterBuilder.append(" and ").append(quote).append("timestamp").append(quote).append(" <= ? ");
+      args.add(filters.filterTimestampEnd());
+    }
+    if (!Strings.isNullOrEmpty(filters.filterIssuer())) {
+      filterBuilder.append(" and ").append(quote).append("issuer").append(quote).append(" = ? ");
+      args.add(filters.filterIssuer());
+    }
+    if (!Strings.isNullOrEmpty(filters.filterName())) {
+      filterBuilder.append(" and ").append(quote).append("name").append(quote).append(" = ? ");
+      args.add(filters.filterName());
+    }
+    if (!Strings.isNullOrEmpty(filters.filterPath())) {
+      filterBuilder.append(" and ").append(quote).append("path").append(quote).append(" like ? ");
+      String pathFilter = filters.filterPath()
+              .replace("\\", "\\\\")
+              .replace("%", "\\%")
+              .replace("_", "\\_")
+              + "%"
+              ;
+      args.add(pathFilter);
+    }
+    if (filters.filterResponseCode() != null) {
+      filterBuilder.append(" and ").append(quote).append("responseCode").append(quote).append(" = ? ");
+      args.add(filters.filterResponseCode());
+    }
   }
 
   static Integer getInteger(ResultSet rs, int colIdx) throws SQLException {
@@ -1145,7 +1467,7 @@ public class AuditorPersistenceImpl implements Auditor {
           ps.setString(6, JdbcHelper.limitLength(entry.getLoggerName(), 250));
           ps.setString(7, JdbcHelper.limitLength(entry.getThreadName(), 250));
           ps.setString(8, entry.getMessage());
-          ps.setString(9, entry.getKvpDataJson());
+          ps.setString(9, Json.encode(entry.getKvpData()));
           ps.addBatch();
       }
     }).mapEmpty();
@@ -1172,11 +1494,12 @@ public class AuditorPersistenceImpl implements Auditor {
   }
   
   @Override
-  public Future<Void> recordSource(PipelineContext pipelineContext, String endpointName, String dataSourceUrl, String username, String query, String argsJson) {
+  public Future<Void> recordSource(PipelineContext pipelineContext, String endpointName, String dataSourceUrl, String username, String query, List<Object> args) {
     if (pipelineContext == null || pipelineContext.getRequestContext() == null || pipelineContext.getRequestContext().getRequestId() == null || pipelineContext.getPipe() == null) {
       return Future.succeededFuture();
     }
     Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+    String argsJson = Json.encode(args);
     String hash = buildHash(endpointName, dataSourceUrl, username, query, argsJson);
 
     return jdbcHelper.runSqlUpdateSilently("recordSource", SqlTemplate.RECORD_SOURCE.sql(), ps -> {

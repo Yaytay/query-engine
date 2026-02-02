@@ -21,7 +21,6 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.core.AppenderBase;
 import com.google.common.base.Strings;
-import io.vertx.core.json.Json;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -146,13 +145,7 @@ public class RequestCollatingAppender extends AppenderBase<ILoggingEvent> {
     if (exception != null) {
       msg = msg + exception.getClassName() + ": " + exception.getMessage();
     }
-    String kvpJson = null;
-    try {
-      kvpJson = Json.encode(event.getKeyValuePairs());
-    } catch (Throwable ex) {
-      // Ignore error
-    }
-    return new AuditLogMessage(pipe, ts, level, logger, thread, kvpJson, msg);
+    return new AuditLogMessage(pipe, ts, level, logger, thread, event.getKeyValuePairs(), msg);
   }
   
   /**

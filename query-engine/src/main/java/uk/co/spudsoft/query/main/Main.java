@@ -59,7 +59,6 @@ import io.vertx.core.http.HttpServer;
 import io.vertx.core.impl.cpu.CpuCoreSensor;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.jackson.DatabindCodec;
-import io.vertx.core.tracing.TracingOptions;
 import io.vertx.ext.healthchecks.HealthChecks;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.WebClient;
@@ -69,7 +68,6 @@ import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import io.vertx.micrometer.impl.PrometheusScrapingHandlerImpl;
-import io.vertx.tracing.opentelemetry.OpenTelemetryOptions;
 import io.vertx.tracing.opentelemetry.OpenTelemetryTracingFactory;
 import jakarta.ws.rs.core.Application;
 import java.io.File;
@@ -190,6 +188,7 @@ public class Main extends Application {
   private volatile int port;
 
   private JdbcHelper jdbcHelper;
+  private Authenticator authenticator;
 
 
   /**
@@ -223,6 +222,15 @@ public class Main extends Application {
     return vertx;
   }
 
+  /**
+   * Get the running authenticator.
+   * This is for tests only.
+   * @return the running authenticator.
+   */
+  Authenticator getAuthenticator() {
+    return authenticator;
+  }
+  
   /**
    * Get the {@link DirCache} for the {@link uk.co.spudsoft.query.defn.Pipeline} definitions.
    * @return the {@link DirCache} for the {@link uk.co.spudsoft.query.defn.Pipeline} definitions.
@@ -479,9 +487,7 @@ public class Main extends Application {
 
     openTelemetry = buildOpenTelemetry(params.getTracing());
     if (openTelemetry != null) {
-      TracingOptions options = new OpenTelemetryOptions(openTelemetry);
-      OpenTelemetryTracingFactory tracingFactory = new OpenTelemetryTracingFactory();
-      tracingFactory.tracer(options);
+      OpenTelemetryTracingFactory tracingFactory = new OpenTelemetryTracingFactory(openTelemetry);
       vertxBuilder = vertxBuilder.withTracer(tracingFactory);
     } else {
       logger.warn("OpenTelemetry NOT set");
@@ -495,6 +501,7 @@ public class Main extends Application {
     });
     
     LoginDao loginDao;
+    OperatorsInstance operators = new OperatorsInstance(params.getOperators());
     if (params.getPersistence().getDataSource() != null
             && !Strings.isNullOrEmpty(params.getPersistence().getDataSource().getUrl())) {
 
@@ -504,11 +511,11 @@ public class Main extends Application {
       }
       this.jdbcHelper = new JdbcHelper(vertx, JdbcHelper.createDataSource(params.getPersistence().getDataSource(), credentials, meterRegistry));
 
-      auditor = new AuditorPersistenceImpl(vertx, meterRegistry, params.getPersistence(), jdbcHelper);
+      auditor = new AuditorPersistenceImpl(vertx, meterRegistry, params.getPersistence(), jdbcHelper, operators);
       loginDao = new LoginDaoPersistenceImpl(vertx, meterRegistry, params.getPersistence(), params.getSession().getPurgeDelay(), jdbcHelper);
     } else {
       logger.info("Persistence is not configured, using in-memory tracking of last {} runs", AuditorMemoryImpl.SIZE);
-      auditor = new AuditorMemoryImpl(vertx);
+      auditor = new AuditorMemoryImpl(vertx, operators);
       loginDao = new LoginDaoMemoryImpl(params.getSession().getPurgeDelay());
     }
     try {
@@ -606,9 +613,8 @@ public class Main extends Application {
     corsHandler.allowCredentials(true);
     router.route("/*").handler(corsHandler);
 
-    Authenticator authenticator;
     try {
-      authenticator = createAuthenticator(params, loginDao);
+      this.authenticator = createAuthenticator(params, loginDao);
     } catch (Throwable ex) {
       logger.error("Failed to create request context builder: ", ex);
       return Future.succeededFuture(-2);
@@ -970,7 +976,7 @@ public class Main extends Application {
       jwtValidator.setTimeLeeway(jwtConfig.getPermittedTimeSkew());
     }
 
-    Authenticator rcb = new Authenticator(WebClient.create(vertx, new WebClientOptions().setConnectTimeout(60000))
+    Authenticator auther = new Authenticator(WebClient.create(vertx, new WebClientOptions().setConnectTimeout(60000))
             , jwtValidator
             , openIdDiscoveryHandler
             , loginDao
@@ -983,7 +989,12 @@ public class Main extends Application {
             , jwtConfig.getRequiredAudiences()
             , params.getSession().getSessionCookie() != null ? params.getSession().getSessionCookie().getName() : null
     );
-    return rcb;
+    
+    vertx.setPeriodic(Duration.ofHours(1).toMillis(), id -> {
+      auther.purgeCache();
+    });
+    
+    return auther;    
   }
 
   static OpenAPIConfiguration createOpenapiConfiguration(List<Object> resources, Object application, String openApiContextId) {

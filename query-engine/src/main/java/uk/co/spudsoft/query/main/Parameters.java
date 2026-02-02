@@ -125,6 +125,13 @@ public class Parameters {
    */
   private boolean enableForceJwt = false;
 
+  
+  /**
+   * Conditions for defining operators.
+   * <P>
+   * Operators make no difference to query running, but can access more data via the API.
+   */
+  private Operators operators;
 
   /**
    * The directory to contain cached output.
@@ -403,7 +410,7 @@ public class Parameters {
   /**
    * Additional data that is made available via the request object.
    * <p>
-   * The {@link uk.co.spudsoft.query.exec.conditions.RequestContext} is made available in both
+   * The {@link uk.co.spudsoft.query.exec.context.RequestContext} is made available in both
    * {@link uk.co.spudsoft.query.exec.conditions.Condition}s and various templates
    * (such as {@link uk.co.spudsoft.query.defn.SourceSql#queryTemplate} and {@link uk.co.spudsoft.query.defn.Endpoint#urlTemplate}).
    * By default this context contains information specific to the request, and very little information about
@@ -1472,6 +1479,28 @@ public class Parameters {
     this.enableForceJwt = enableForceJwt;
   }
 
+  /**
+   * Get the conditions for defining operators.
+   * <P>
+   * Operators make no difference to query running, but can access more data via the API.
+   * @return the conditions for defining operators.
+   */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
+  public Operators getOperators() {
+    return operators;
+  }
+
+  /**
+   * Set the conditions for defining operators.
+   * <P>
+   * Operators make no difference to query running, but can access more data via the API.
+   * @param operators the conditions for defining operators.
+   */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
+  public void setOperators(Operators operators) {
+    this.operators = operators;
+  }
+
   
   
   /**
@@ -1522,7 +1551,9 @@ public class Parameters {
     if (writeStreamBufferSize < 1024) {
       throw new IllegalArgumentException("The writeStreamBufferSize cannot be less than 1024.");
     }
+    if (operators != null) {
+      operators.validate();
+    }
   }
-
 }
 

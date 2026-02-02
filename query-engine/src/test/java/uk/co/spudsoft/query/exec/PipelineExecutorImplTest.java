@@ -65,6 +65,7 @@ import uk.co.spudsoft.query.defn.FormatXlsx;
 import uk.co.spudsoft.query.exec.fmts.logger.LoggingWriteStream;
 import uk.co.spudsoft.query.defn.Format;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.main.OperatorsInstance;
 
 /**
  *
@@ -82,7 +83,7 @@ public class PipelineExecutorImplTest {
             .source(SourceTest.builder().name("test").build())
             .formats(Arrays.asList(FormatDelimited.builder().build()))
             .build();
-    Auditor auditor = new AuditorMemoryImpl(vertx);
+    Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
     PipelineExecutor instance = PipelineExecutor.create(null, auditor, new FilterFactory(Collections.emptyList()), null);
     instance.validatePipeline(null, definition).onComplete(testContext.succeedingThenComplete());
   }
@@ -100,7 +101,7 @@ public class PipelineExecutorImplTest {
                     )
             )
             .build();
-    Auditor auditor = new AuditorMemoryImpl(vertx);
+    Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
     PipelineExecutor instance = PipelineExecutor.create(null, auditor, new FilterFactory(Collections.emptyList()), null);
     List<ProcessorInstance> results = instance.createProcessors(vertx, pipelineContext, definition, null);
     assertThat(results, hasSize(2));
@@ -170,7 +171,7 @@ public class PipelineExecutorImplTest {
                     )
             )
             .build();
-    Auditor auditor = new AuditorMemoryImpl(vertx);
+    Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
     PipelineExecutor instance = PipelineExecutor.create(null, auditor, new FilterFactory(Collections.emptyList()), null);
     
     RequestContext req = new RequestContext(

@@ -46,6 +46,7 @@ import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.logging.RequestCollatingAppender;
 import uk.co.spudsoft.query.main.Authenticator;
+import uk.co.spudsoft.query.main.OperatorsInstance;
 
 /**
  *
@@ -60,7 +61,7 @@ public class QueryRouterTest {
     PipelineDefnLoader loader = mock(PipelineDefnLoader.class);
     Authenticator rcb = new Authenticator(null, null, null, null, null, null, true, null, false, null, Collections.singletonList("aud"), null);
     RequestCollatingAppender requestCollatingAppender = new RequestCollatingAppender();
-    QueryRouter router = new QueryRouter(vertx, null, new AuditorMemoryImpl(vertx), rcb, loader, null, requestCollatingAppender, System.getProperty("java.io.tmpdir"), 32768, 32, true, 2);
+    QueryRouter router = new QueryRouter(vertx, null, new AuditorMemoryImpl(vertx, new OperatorsInstance(null)), rcb, loader, null, requestCollatingAppender, System.getProperty("java.io.tmpdir"), 32768, 32, true, 2);
 
     RoutingContext routingContext = mock(RoutingContext.class);
     HttpServerRequest request = mock(HttpServerRequest.class);
@@ -76,7 +77,7 @@ public class QueryRouterTest {
     PipelineDefnLoader loader = mock(PipelineDefnLoader.class);
     Authenticator rcb = new Authenticator(null, null, null, null, null, null, true, null, false, null, Collections.singletonList("aud"), null);
     RequestCollatingAppender requestCollatingAppender = new RequestCollatingAppender();
-    QueryRouter router = new QueryRouter(vertx, null, new AuditorMemoryImpl(vertx), rcb, loader, null, requestCollatingAppender, System.getProperty("java.io.tmpdir"), 32768, 32, true, 2);
+    QueryRouter router = new QueryRouter(vertx, null, new AuditorMemoryImpl(vertx, new OperatorsInstance(null)), rcb, loader, null, requestCollatingAppender, System.getProperty("java.io.tmpdir"), 32768, 32, true, 2);
 
     Future<Void> deployFuture = router.deploy();
     await().until(() -> deployFuture.isComplete());
@@ -98,7 +99,7 @@ public class QueryRouterTest {
     Authenticator rcb = new Authenticator(null, null, null, null, null, null, true, null, false, null, Collections.singletonList("aud"), null);
     PipelineExecutor pipelineExecutor = mock(PipelineExecutor.class);
     RequestCollatingAppender requestCollatingAppender = new RequestCollatingAppender();
-    QueryRouter router = new QueryRouter(vertx, null, new AuditorMemoryImpl(vertx), rcb, loader, pipelineExecutor, requestCollatingAppender, System.getProperty("java.io.tmpdir"), 32768, 32, true, 2);
+    QueryRouter router = new QueryRouter(vertx, null, new AuditorMemoryImpl(vertx, new OperatorsInstance(null)), rcb, loader, pipelineExecutor, requestCollatingAppender, System.getProperty("java.io.tmpdir"), 32768, 32, true, 2);
     
     Future<Void> deployFuture = router.deploy();
     await().until(() -> deployFuture.isComplete());

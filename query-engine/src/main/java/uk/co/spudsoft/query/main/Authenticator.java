@@ -268,6 +268,21 @@ public class Authenticator {
     }
   }
 
+  /**
+   * Purge any stale cached data.
+   */
+  public void purgeCache() {
+    synchronized (credentialsCache) {
+      LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+      long pre = credentialsCache.size();
+      credentialsCache.entrySet().removeIf(entry -> entry.getValue().expiry.isBefore(now));
+      long post = credentialsCache.size();
+      if (pre != post) {
+        logger.info("Purged {} entries from credentials cache, leaving {}", pre - post, post);
+      }
+    }    
+  }
+  
   private String getCachedToken(Log log, String credentials) {
     int colonPos = credentials.indexOf(":");
     String username = colonPos > 0 ? credentials.substring(0, colonPos) : credentials;            

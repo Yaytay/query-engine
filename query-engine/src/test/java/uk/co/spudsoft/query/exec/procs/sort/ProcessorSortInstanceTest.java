@@ -47,6 +47,7 @@ import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
+import uk.co.spudsoft.query.main.OperatorsInstance;
 
 /**
  *
@@ -72,7 +73,7 @@ public class ProcessorSortInstanceTest {
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
     
-    Auditor auditor = new AuditorMemoryImpl(vertx);
+    Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
     ProcessorSortInstance instance = new ProcessorSortInstance(vertx, null, auditor, pipelineContext
             , ProcessorSort.builder().fields(Arrays.asList("timestamp")).build()
             , "P0-Sort"
@@ -106,7 +107,7 @@ public class ProcessorSortInstanceTest {
 
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    Auditor auditor = new AuditorMemoryImpl(vertx);
+    Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
     
     ProcessorSortInstance instance = new ProcessorSortInstance(vertx, null, auditor, pipelineContext
             , ProcessorSort.builder().fields(Arrays.asList("timestamp")).build()
@@ -147,7 +148,7 @@ public class ProcessorSortInstanceTest {
 
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    Auditor auditor = new AuditorMemoryImpl(vertx);
+    Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
     
     ProcessorSortInstance instance = new ProcessorSortInstance(vertx, null, auditor, pipelineContext
             , ProcessorSort.builder().fields(Arrays.asList("timestamp")).build()

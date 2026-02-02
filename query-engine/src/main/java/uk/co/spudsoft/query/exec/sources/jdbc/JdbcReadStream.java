@@ -22,7 +22,6 @@ import io.opentelemetry.context.Scope;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
-import io.vertx.core.json.Json;
 import io.vertx.core.streams.ReadStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -200,7 +199,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
 
         String auditSql = preparedSql;
         context.runOnContext(v -> {
-          auditor.recordSource(pipelineContext, endpointName, dataSourceUrl, credentials[0], auditSql, Json.encode(queryAndArgs.args()));
+          auditor.recordSource(pipelineContext, endpointName, dataSourceUrl, credentials[0], auditSql, queryAndArgs.args());
         });
 
 

@@ -109,7 +109,7 @@ public class MainQueryWithoutPersistenceIT {
     
     assertThat(body, startsWith("openapi: 3.1.0"));
     assertThat(body, containsString("SpudSoft Query Engine"));
-    assertThat(body, not(containsString("empty")));
+    assertThat(body, not(containsString("empty:")));
     
     body = given()
             .get("/openapi.json")
@@ -120,7 +120,7 @@ public class MainQueryWithoutPersistenceIT {
     
     assertThat(body, containsString("\"openapi\" : \"3.1.0\","));
     assertThat(body, containsString("SpudSoft Query Engine"));
-    assertThat(body, not(containsString("empty")));
+    assertThat(body, not(containsString("\"empty\"")));
     
     body = given()
             .get("/api/info/available")

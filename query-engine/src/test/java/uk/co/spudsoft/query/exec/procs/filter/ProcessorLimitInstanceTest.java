@@ -42,6 +42,7 @@ import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.fmts.ReadStreamToList;
 import uk.co.spudsoft.query.exec.procs.ListReadStream;
+import uk.co.spudsoft.query.main.OperatorsInstance;
 
 /**
  *
@@ -66,7 +67,7 @@ public class ProcessorLimitInstanceTest {
     
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    Auditor auditor = new AuditorMemoryImpl(vertx);
+    Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
     
     ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, null, auditor, pipelineContext, ProcessorLimit.builder().limit(17).build(), "P0-Limit");
     assertEquals("P0-Limit", instance.getName());
@@ -86,7 +87,7 @@ public class ProcessorLimitInstanceTest {
     
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    Auditor auditor = new AuditorMemoryImpl(vertx);
+    Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
     
     ProcessorLimitInstance instance = new ProcessorLimitInstance(vertx, null, auditor, pipelineContext, ProcessorLimit.builder().name("fred").limit(3).build(), "P0-Limit");
     assertEquals("P0-Limit", instance.getName());
