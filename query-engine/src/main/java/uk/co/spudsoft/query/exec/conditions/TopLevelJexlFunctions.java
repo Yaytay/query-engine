@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.exec.conditions;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -105,6 +106,33 @@ public class TopLevelJexlFunctions {
       }
     }
     return null;
+  }
+  /**
+   * Finds the first string in the provided list that starts with the specified prefix.
+   * If such a string is found and the removePrefix flag is set to true, the prefix
+   * is removed from the found string before returning it. If no matching string is found,
+   * this method returns null.
+   *
+   * @param strings The list of strings to search through. Can contain null elements.
+   * @param prefix The prefix to look for in the strings from the list.
+   * @param removePrefix A flag indicating whether to remove the prefix from the matching string.
+   * @return The first string that matches the specified prefix, with or without the
+   *         prefix removed based on the removePrefix flag, or null if no such string is found.
+   */
+  public List<String> allStringsWithPrefix(List<String> strings, String prefix, boolean removePrefix) {
+    List<String> result = new ArrayList<>();
+    if (strings != null) {
+      for (String string : strings) {
+        if (string != null && string.startsWith(prefix)) {
+          if (removePrefix) {
+            result.add(string.substring(prefix.length()));
+          } else {
+            result.add(string);
+          }
+        }
+      }
+    }
+    return result;
   }
 
   /**
