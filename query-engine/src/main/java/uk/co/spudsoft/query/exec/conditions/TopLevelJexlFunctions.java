@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.exec.conditions;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -142,6 +143,20 @@ public class TopLevelJexlFunctions {
    */
   public LocalDateTime now() {
     return LocalDateTime.now(ZoneOffset.UTC);
+  }
+  
+  /**
+   * Return an ArrayList of the passed in values.
+   * 
+   * JEXL can have some strange ways of handling arrays and lists, this method can be used to guarantee the type of a series.
+   * 
+   * The returned value is a copy of the list and changes made to either are independent of the other.
+   * 
+   * @param items a number of strings
+   * @return an ArrayList containing the items
+   */
+  public List<String> list(String... items) {
+    return new ArrayList<>(Arrays.asList(items));
   }
 
 }
