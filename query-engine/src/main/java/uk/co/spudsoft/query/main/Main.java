@@ -489,9 +489,7 @@ public class Main extends Application {
 
     openTelemetry = buildOpenTelemetry(params.getTracing());
     if (openTelemetry != null) {
-      TracingOptions options = new OpenTelemetryOptions(openTelemetry);
-      OpenTelemetryTracingFactory tracingFactory = new OpenTelemetryTracingFactory();
-      tracingFactory.tracer(options);
+      OpenTelemetryTracingFactory tracingFactory = new OpenTelemetryTracingFactory(openTelemetry);
       vertxBuilder = vertxBuilder.withTracer(tracingFactory);
     } else {
       logger.warn("OpenTelemetry NOT set");
