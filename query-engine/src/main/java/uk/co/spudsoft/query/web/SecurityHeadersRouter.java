@@ -89,11 +89,12 @@ public class SecurityHeadersRouter implements Handler<RoutingContext> {
    * @param cspStyleSrcs Set of hashes to add to the style-src content security policy.
    * @param cspContentSrcs Additional endpoints to add to the connect-src policy.
    * @param cspScriptSrcs Additional endpoints to add to the script-src policy.
+   * @param cspManifestSrcs Additional endpoints to add to the manifest-src policy.
    * @param xFrameOptions Value to use for the X-Frame-Options header.
    * @param referrerPolicy Value to use for the Referrer-Policy header.
    * @param permissionsPolicy Value to use for the Permissions-Policy header.
    */
-  public SecurityHeadersRouter(List<String> cspImageSrcs, List<String> cspStyleSrcs, List<String> cspContentSrcs, List<String> cspScriptSrcs, String xFrameOptions, String referrerPolicy, String permissionsPolicy) {
+  public SecurityHeadersRouter(List<String> cspImageSrcs, List<String> cspStyleSrcs, List<String> cspContentSrcs, List<String> cspScriptSrcs, List<String> cspManifestSrcs, String xFrameOptions, String referrerPolicy, String permissionsPolicy) {
     StringBuilder builder = new StringBuilder();
     builder.append("default-src 'self'; img-src 'self'");
     
@@ -112,6 +113,7 @@ public class SecurityHeadersRouter implements Handler<RoutingContext> {
     appendSources(builder, "style-src", "'unsafe-hashes'", cspStyleSrcs);
     appendSources(builder, "connect-src", null, cspContentSrcs);
     appendSources(builder, "script-src", "'unsafe-eval'", cspScriptSrcs);
+    appendSources(builder, "manifest-src", null, cspManifestSrcs);
     this.csp = builder.toString();
     
     if (!Strings.isNullOrEmpty(xFrameOptions)) {

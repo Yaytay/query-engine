@@ -48,7 +48,7 @@ class SecurityHeadersRouterTest {
     MultiMap requestHeaders = mock(MultiMap.class);
     MultiMap responseHeaders = mock(MultiMap.class);
 
-    SecurityHeadersRouter router = new SecurityHeadersRouter(null, null, null, null, null, null, null);
+    SecurityHeadersRouter router = new SecurityHeadersRouter(null, null, null, null, null, null, null, null);
 
     setupMocks(routingContext, request, response, requestHeaders, responseHeaders, "https", null);
 
@@ -75,6 +75,7 @@ class SecurityHeadersRouterTest {
     MultiMap responseHeaders = mock(MultiMap.class);
 
     SecurityHeadersRouter router = new SecurityHeadersRouter(
+      null,
       null,
       null,
       null,
@@ -113,6 +114,7 @@ class SecurityHeadersRouterTest {
       null,
       Arrays.asList("http://nonexistant/"),
       null,
+      null,
       "INVALID",
       null,
       null
@@ -142,6 +144,7 @@ class SecurityHeadersRouterTest {
     MultiMap responseHeaders = mock(MultiMap.class);
 
     SecurityHeadersRouter router = new SecurityHeadersRouter(
+      null,
       null,
       null,
       null,
@@ -179,7 +182,7 @@ class SecurityHeadersRouterTest {
       "https://cdn.example.com/assets/logo.svg"
     );
 
-    SecurityHeadersRouter router = new SecurityHeadersRouter(logoUrls, null, null, null, null, null, null);
+    SecurityHeadersRouter router = new SecurityHeadersRouter(logoUrls, null, null, null, null, null, null, null);
 
     setupMocks(routingContext, request, response, requestHeaders, responseHeaders, "https", null);
 
@@ -204,7 +207,7 @@ class SecurityHeadersRouterTest {
     MultiMap requestHeaders = mock(MultiMap.class);
     MultiMap responseHeaders = mock(MultiMap.class);
 
-    SecurityHeadersRouter router = new SecurityHeadersRouter(null, null, null, null, null, null, null);
+    SecurityHeadersRouter router = new SecurityHeadersRouter(null, null, null, null, null, null, null, null);
 
     setupMocks(routingContext, request, response, requestHeaders, responseHeaders, "https", null);
 
@@ -233,7 +236,7 @@ class SecurityHeadersRouterTest {
     MultiMap requestHeaders = mock(MultiMap.class);
     MultiMap responseHeaders = mock(MultiMap.class);
 
-    SecurityHeadersRouter router = new SecurityHeadersRouter(null, null, null, null, null, null, null);
+    SecurityHeadersRouter router = new SecurityHeadersRouter(null, null, null, null, null, null, null, null);
 
     setupMocks(routingContext, request, response, requestHeaders, responseHeaders, "http", null);
 
@@ -263,7 +266,7 @@ class SecurityHeadersRouterTest {
     MultiMap requestHeaders = mock(MultiMap.class);
     MultiMap responseHeaders = mock(MultiMap.class);
 
-    SecurityHeadersRouter router = new SecurityHeadersRouter(null, null, null, null, null, null, null);
+    SecurityHeadersRouter router = new SecurityHeadersRouter(null, null, null, null, null, null, null, null);
 
     setupMocks(routingContext, request, response, requestHeaders, responseHeaders, "http", "https");
 
@@ -288,7 +291,7 @@ class SecurityHeadersRouterTest {
     MultiMap requestHeaders = mock(MultiMap.class);
     MultiMap responseHeaders = mock(MultiMap.class);
 
-    SecurityHeadersRouter router = new SecurityHeadersRouter(null, null, null, null, null, null, null);
+    SecurityHeadersRouter router = new SecurityHeadersRouter(null, null, null, null, null, null, null, null);
 
     setupMocks(routingContext, request, response, requestHeaders, responseHeaders, "https", null);
 
@@ -386,7 +389,7 @@ class SecurityHeadersRouterTest {
       MultiMap requestHeaders = mock(MultiMap.class);
       MultiMap responseHeaders = mock(MultiMap.class);
 
-      SecurityHeadersRouter router = new SecurityHeadersRouter(null, null, null, null, null, policy, null);
+      SecurityHeadersRouter router = new SecurityHeadersRouter(null, null, null, null, null, null, policy, null);
 
       setupMocks(routingContext, request, response, requestHeaders, responseHeaders, "https", null);
 
@@ -415,6 +418,7 @@ class SecurityHeadersRouterTest {
       MultiMap responseHeaders = mock(MultiMap.class);
 
       SecurityHeadersRouter router = new SecurityHeadersRouter(
+              null,
               null,
               null,
               null,

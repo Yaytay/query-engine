@@ -575,11 +575,12 @@ public class Main extends Application {
     List<String> cspContentSrcs = 
             Strings.isNullOrEmpty(params.getManagementEndpointUrl()) ? null : Arrays.asList(params.getManagementEndpointUrl());
     List<String> cspScriptSrcs = Arrays.asList("'unsafe-inline'", "'unsafe-eval'", "https://cdn.form.io/");
+    List<String> cspManifestSrcs = Arrays.asList("'self'");
     SecurityHeadersConfig secHdrs = params.getSecurityHeaders();
     if (secHdrs == null) {
-      router.route().handler(new SecurityHeadersRouter(logoUrls, cspStyleSrcs, cspContentSrcs, cspScriptSrcs, null, null, null));
+      router.route().handler(new SecurityHeadersRouter(logoUrls, cspStyleSrcs, cspContentSrcs, cspScriptSrcs, cspManifestSrcs, null, null, null));
     } else {
-      router.route().handler(new SecurityHeadersRouter(logoUrls, cspStyleSrcs, cspContentSrcs, cspScriptSrcs
+      router.route().handler(new SecurityHeadersRouter(logoUrls, cspStyleSrcs, cspContentSrcs, cspScriptSrcs, cspManifestSrcs
               , secHdrs.getXFrameOptions(), secHdrs.getReferrerPolicy(), secHdrs.getPermissionsPolicy()));
     }
 
