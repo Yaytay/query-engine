@@ -344,7 +344,7 @@ public class DocHandler {
                   Response
                           .ok(file, MimeTypes.getMimeTypeForFilename(path))
                           .header(X_FRAME_OPTIONS.toString(), "SAMEORIGIN")
-                          .header(CONTENT_SECURITY_POLICY.toString(), "default-src 'self'; img-src 'self' cdn.prod.website-files.com; style-src 'self' 'unsafe-hashes' 'unsafe-inline'; connect-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' 'unsafe-eval'; manifest-src 'self'")
+                          .header(CONTENT_SECURITY_POLICY.toString(), "default-src 'self'; img-src 'self'; style-src 'self' 'unsafe-hashes' 'unsafe-inline'; connect-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' 'unsafe-eval'; manifest-src 'self'")
                           .build()
           );
         } else {
@@ -357,7 +357,7 @@ public class DocHandler {
                   Response
                           .ok(contents, MimeTypes.getMimeTypeForFilename(path))
                           .header(X_FRAME_OPTIONS.toString(), "SAMEORIGIN")
-                          .header(CONTENT_SECURITY_POLICY.toString(), "default-src 'self'; img-src 'self' cdn.prod.website-files.com; style-src 'self' 'unsafe-hashes' 'unsafe-inline'; connect-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' 'unsafe-eval'; manifest-src 'self'")
+                          .header(CONTENT_SECURITY_POLICY.toString(), "default-src 'self'; img-src 'self'; style-src 'self' 'unsafe-hashes' 'unsafe-inline'; connect-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' 'unsafe-eval'; manifest-src 'self'")
                           .build()
           );
         }
