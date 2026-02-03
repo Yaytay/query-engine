@@ -211,12 +211,9 @@ public class UiRouter implements Handler<RoutingContext> {
       } else {
         headers.add(HttpHeaders.CONTENT_TYPE, contentType);
       }
-
-      if (contentType.contains("html")) {
-        logger.debug("Adding X-Frame-Options header");
-        context.response().headers().add(X_FRAME_OPTIONS, "SAMEORIGIN");
-      }
     }
+
+    headers.add(X_FRAME_OPTIONS, "SAMEORIGIN");
     
     long maxAgeSeconds = 86400;
     if (loadedFile.path.endsWith("index.html")) {

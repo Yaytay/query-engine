@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.web.rest;
 import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.annotation.Timed;
+import static io.netty.handler.codec.http.HttpHeaderNames.X_FRAME_OPTIONS;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -338,14 +339,24 @@ public class DocHandler {
         if (altDocsRoot != null) {
           File file = new File(altDocsRoot + path);
 
-          response.resume(Response.ok(file, MimeTypes.getMimeTypeForFilename(path)).build());
+          response.resume(
+                  Response
+                          .ok(file, MimeTypes.getMimeTypeForFilename(path))
+                          .header(X_FRAME_OPTIONS.toString(), "SAMEORIGIN")
+                          .build()
+          );
         } else {
           String contents;
           try (InputStream strm = getClass().getResourceAsStream(BASE_DIR + path)) {
             contents = new String(strm.readAllBytes(), StandardCharsets.UTF_8);
           }
 
-          response.resume(Response.ok(contents, MimeTypes.getMimeTypeForFilename(path)).build());
+          response.resume(
+                  Response
+                          .ok(contents, MimeTypes.getMimeTypeForFilename(path))
+                          .header(X_FRAME_OPTIONS.toString(), "SAMEORIGIN")
+                          .build()
+          );
         }
       } else {
         throw new FileNotFoundException(path);
