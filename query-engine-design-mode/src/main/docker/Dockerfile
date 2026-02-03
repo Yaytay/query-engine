@@ -43,7 +43,7 @@ RUN mkdir -p /cds && \
       --ExitOnRun || rm -Rf /var/query-engine/* 
 
 # ---- Final Stage: tiny image with jlinked runtime + CDS archives ----
-FROM alpine:3.23.2
+FROM alpine:3.23.3
 
 ARG DEPS
 ARG mainClass
