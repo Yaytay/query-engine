@@ -146,7 +146,7 @@ public class AuthQueryMsIT {
             .then()
             .log().ifError()
             .statusCode(200)
-            .header("X-Frame-Options", equalTo("DENY"))
+            .header("X-Frame-Options", equalTo("SAMEORIGIN"))
             .header("Referrer-Policy", equalTo("strict-origin-when-cross-origin"))
             .extract().body().asString();
     

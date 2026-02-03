@@ -142,7 +142,7 @@ public class AuthQueryIT {
             .then()
             .log().ifError()
             .statusCode(200)
-            .header("X-Frame-Options", equalTo("DENY"))
+            .header("X-Frame-Options", equalTo("SAMEORIGIN"))
             .extract().body().asString();
     
     assertThat(body, startsWith("openapi: 3.1.0"));

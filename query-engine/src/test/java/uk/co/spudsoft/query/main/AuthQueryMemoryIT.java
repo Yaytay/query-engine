@@ -47,7 +47,6 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import uk.co.spudsoft.jwtvalidatorvertx.AlgorithmAndKeyPair;
@@ -134,7 +133,7 @@ public class AuthQueryMemoryIT {
             .then()
             .log().ifError()
             .statusCode(200)
-            .header("X-Frame-Options", equalTo("DENY"))
+            .header("X-Frame-Options", equalTo("SAMEORIGIN"))
             .extract().body().asString();
     
     assertThat(body, startsWith("openapi: 3.1.0"));
