@@ -19,6 +19,7 @@ package uk.co.spudsoft.query.web.rest;
 import com.google.common.base.Strings;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.annotation.Timed;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_SECURITY_POLICY;
 import static io.netty.handler.codec.http.HttpHeaderNames.X_FRAME_OPTIONS;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -343,6 +344,7 @@ public class DocHandler {
                   Response
                           .ok(file, MimeTypes.getMimeTypeForFilename(path))
                           .header(X_FRAME_OPTIONS.toString(), "SAMEORIGIN")
+                          .header(CONTENT_SECURITY_POLICY.toString(), "default-src 'self'; img-src 'self' cdn.prod.website-files.com; style-src 'self' 'unsafe-hashes' 'unsafe-inline'; connect-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' 'unsafe-eval'; manifest-src 'self'")
                           .build()
           );
         } else {
@@ -355,6 +357,7 @@ public class DocHandler {
                   Response
                           .ok(contents, MimeTypes.getMimeTypeForFilename(path))
                           .header(X_FRAME_OPTIONS.toString(), "SAMEORIGIN")
+                          .header(CONTENT_SECURITY_POLICY.toString(), "default-src 'self'; img-src 'self' cdn.prod.website-files.com; style-src 'self' 'unsafe-hashes' 'unsafe-inline'; connect-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' 'unsafe-eval'; manifest-src 'self'")
                           .build()
           );
         }
