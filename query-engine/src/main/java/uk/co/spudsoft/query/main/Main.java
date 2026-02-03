@@ -569,12 +569,18 @@ public class Main extends Application {
       logoUrls = params.getSession().getOauth().values().stream().map(o -> o.getLogoUrl()).toList();
     }
     List<String> cspStyleSrcs = Arrays.asList(
-              "'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='"
-              , "https://cdn.form.io/"
+            "'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='"
+            , "'sha256-0mzu5UIu3gOiGyl6mvUx0nLHxxPI+oMcehePE41fbMA='"
+            , "https://cdn.form.io/"
     );
     List<String> cspContentSrcs = 
             Strings.isNullOrEmpty(params.getManagementEndpointUrl()) ? null : Arrays.asList(params.getManagementEndpointUrl());
-    List<String> cspScriptSrcs = Arrays.asList("'unsafe-inline'", "'unsafe-eval'", "https://cdn.form.io/");
+    List<String> cspScriptSrcs = Arrays.asList(
+            "'unsafe-inline'"
+            , "'unsafe-eval'"
+            , "https://cdn.form.io/"
+            , "https://unpkg.com/"
+    );
     List<String> cspManifestSrcs = Arrays.asList();
     SecurityHeadersConfig secHdrs = params.getSecurityHeaders();
     if (secHdrs == null) {
