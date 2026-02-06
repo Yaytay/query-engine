@@ -17,7 +17,9 @@
 package uk.co.spudsoft.query.pipeline;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.DiscriminatorMapping;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -39,9 +41,13 @@ public class PipelineNodesTree extends AbstractTree {
   /**
    * Base class for pipelines and the directories that contain them.
    */
+  @JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.EXISTING_PROPERTY,
+    property = "type")
   @JsonSubTypes({
-    @JsonSubTypes.Type(value = PipelineDir.class),
-    @JsonSubTypes.Type(value = PipelineFile.class)
+    @JsonSubTypes.Type(value = PipelineDir.class, name = "dir"),
+    @JsonSubTypes.Type(value = PipelineFile.class, name = "file")
   })
   @Schema(description = """
                         Base class for pipelines and the directories that contain them.
@@ -50,8 +56,13 @@ public class PipelineNodesTree extends AbstractTree {
                   PipelineDir.class
                   , PipelineFile.class
           }
+          , discriminatorProperty = "type"
+          , discriminatorMapping = {
+            @DiscriminatorMapping(schema = PipelineDir.class, value = "dir")
+            , @DiscriminatorMapping(schema = PipelineFile.class, value = "file")
+          }
   )
-  public static class PipelineNode extends AbstractNode<PipelineNode> {
+  public abstract static class PipelineNode extends AbstractNode<PipelineNode> {
 
     /**
      * The path to the file, with no extension.
@@ -77,6 +88,21 @@ public class PipelineNodesTree extends AbstractTree {
       this.path = undot(path);
     }
 
+    /**
+     * Get the type of this node, whether it is a dir or a file.
+     * This enabled polymorphic de-serialization in platforms unable to do structural polymorphic de-serialization.
+     * @return the type of this node, whether it is a dir or a file.
+     */
+    @Schema(description = """
+                          <P>
+                          The type of this node, whether it is a dir or a file.
+                          </P>
+                          """
+            , maxLength = 5
+    )
+    @Override
+    public abstract NodeType getType();
+    
     /**
      * The relative path to the node from the root.
      * @return the relative path to the node from the root.
@@ -188,6 +214,11 @@ public class PipelineNodesTree extends AbstractTree {
       super(path, children);
     }
 
+    @Override
+    public NodeType getType() {
+      return NodeType.dir;
+    }
+
     /**
      * Get the children of the directory.
      * @return the children of the directory.
@@ -238,6 +269,12 @@ public class PipelineNodesTree extends AbstractTree {
       this.description = description;
     }
 
+
+    @Override
+    public NodeType getType() {
+      return NodeType.file;
+    }
+    
     /**
      * The title of the pipeline, to be displayed in the UI.
      * @return the title of the pipeline, to be displayed in the UI.

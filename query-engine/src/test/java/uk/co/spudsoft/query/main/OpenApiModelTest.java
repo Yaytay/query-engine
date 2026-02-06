@@ -46,7 +46,7 @@ public class OpenApiModelTest extends Application {
 
     ModelConverters.getInstance(true).addConverter(new OpenApiModelConverter());
 
-    OpenAPIConfiguration openApiConfig = Main.createOpenapiConfiguration(Arrays.asList(new OpenApiTestController()), this, "OpenApiModelTest#testPipeline");
+    OpenAPIConfiguration openApiConfig = Main.createOpenapiConfiguration(Arrays.asList(new OpenApiTestController()), this, "OpenApiModelTest#testPipeline", true);
 
     JaxrsOpenApiContextBuilder<?> oacb = new JaxrsOpenApiContextBuilder<>()
             .application(this);
@@ -74,7 +74,7 @@ public class OpenApiModelTest extends Application {
 
     ModelConverters.getInstance(true).addConverter(new OpenApiModelConverter());
 
-    OpenAPIConfiguration openApiConfig = Main.createOpenapiConfiguration(Arrays.asList(new DocHandler(null, true, false)), this, "OpenApiModelTest#testDocHandler");
+    OpenAPIConfiguration openApiConfig = Main.createOpenapiConfiguration(Arrays.asList(new DocHandler(null, true, false)), this, "OpenApiModelTest#testDocHandler", true);
 
     JaxrsOpenApiContextBuilder<?> oacb = new JaxrsOpenApiContextBuilder<>()
             .application(this);

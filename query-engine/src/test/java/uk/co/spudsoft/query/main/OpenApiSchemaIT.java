@@ -161,6 +161,18 @@ public class OpenApiSchemaIT {
     collateProps(typeProps, body, "type");
     logger.debug("Properties on type structures are: {}", typeProps.stream().sorted().toList());
     
+    body = given()
+            .get("/openapi30.json")
+            .then()
+            .log().ifError()
+            .statusCode(200)
+            .extract().body().asString();
+    
+    assertThat(body, containsString("\"openapi\" : \"3.0.1\","));
+    assertThat(body, containsString("SpudSoft Query Engine"));
+    
+    jo = new JsonObject(body);
+    logger.info("OpenAPI 3.0: {}", jo);
         
     main.shutdown();
   }

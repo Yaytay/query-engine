@@ -86,7 +86,7 @@
     <dependency>
       <groupId>uk.co.spudsoft</groupId>
       <artifactId>dir-cache</artifactId>
-      <version>0.0.33</version>
+      <version>0.0.35</version>
     </dependency>
     <dependency>
       <groupId>uk.co.spudsoft</groupId>

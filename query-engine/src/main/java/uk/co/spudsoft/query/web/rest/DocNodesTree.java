@@ -18,7 +18,9 @@ package uk.co.spudsoft.query.web.rest;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.DiscriminatorMapping;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -41,9 +43,13 @@ public class DocNodesTree extends AbstractTree {
   /**
    * Base class for documentation files and the directories that contain them.
    */
+  @JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.EXISTING_PROPERTY,
+    property = "type")
   @JsonSubTypes({
-    @JsonSubTypes.Type(value = DocNodesTree.DocDir.class),
-    @JsonSubTypes.Type(value = DocNodesTree.DocFile.class)
+    @JsonSubTypes.Type(value = DocNodesTree.DocDir.class, name = "dir"),
+    @JsonSubTypes.Type(value = DocNodesTree.DocFile.class, name = "file")
   })
   @Schema(description = """
                         <P>
@@ -54,10 +60,15 @@ public class DocNodesTree extends AbstractTree {
                   DocDir.class
                   , DocFile.class
           }
+          , discriminatorProperty = "type"
+          , discriminatorMapping = {
+            @DiscriminatorMapping(schema = DocDir.class, value = "dir")
+            , @DiscriminatorMapping(schema = DocFile.class, value = "file")
+          }
   )
   public abstract static class DocNode extends AbstractNode<DocNode> {
     
-    private final String path; 
+    private final String path;
 
     /**
      * Constructor that will result in a File node.
@@ -79,7 +90,22 @@ public class DocNodesTree extends AbstractTree {
       super(nameFromPath(path), children);
       this.path = path;      
     }
-
+    
+    /**
+     * Get the type of this node, whether it is a dir or a file.
+     * This enabled polymorphic de-serialization in platforms unable to do structural polymorphic de-serialization.
+     * @return the type of this node, whether it is a dir or a file.
+     */
+    @Schema(description = """
+                          <P>
+                          The type of this node, whether it is a dir or a file.
+                          </P>
+                          """
+            , maxLength = 5
+    )
+    @Override
+    public abstract NodeType getType();
+    
     /**
      * Get the relative path to the node from the root.
      * @return the relative path to the node from the root.
@@ -174,6 +200,11 @@ public class DocNodesTree extends AbstractTree {
       super(path, children);
     }
 
+    @Override
+    public NodeType getType() {
+      return NodeType.dir;
+    }
+
     /**
      * Get the children of the node.
      * This value must be not-null (though it may be empty), because this is a directory.
@@ -220,6 +251,11 @@ public class DocNodesTree extends AbstractTree {
     public DocFile(String path, String title) {
       super(path);
       this.title = Objects.requireNonNull(title);
+    }
+
+    @Override
+    public NodeType getType() {
+      return NodeType.file;
     }
 
     /**

@@ -384,7 +384,7 @@ public class Parameters {
    * It is not usually necessary to set this.
    */
   private String openApiExplorerUrl;
-
+  
   /**
    * Configuration of the session management for the UI and REST API.
    */

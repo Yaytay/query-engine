@@ -643,8 +643,11 @@ public class Main extends Application {
         new JacksonJsonProvider(PipelineDefnLoader.JSON_OBJECT_MAPPER, JacksonJsonProvider.BASIC_ANNOTATIONS)
     );
 
-    OpenAPIConfiguration openApiConfig = createOpenapiConfiguration(controllers, this, "QueryEngine");
+    OpenAPIConfiguration openApiConfig = createOpenapiConfiguration(controllers, this, "QueryEngine", true);
     OpenApiHandler openApiHandler = new OpenApiHandler(this, openApiConfig, "/api", params.getOpenApiExplorerUrl());
+    OpenAPIConfiguration openApi30Config = createOpenapiConfiguration(controllers, this, "QueryEngine", false);
+    OpenApiHandler openApi30Handler = new OpenApiHandler(this, openApi30Config, "/api", params.getOpenApiExplorerUrl());
+    openApi30Handler.setOpenContextId("openApi30");
     ModelConverters.getInstance(true).addConverter(new OpenApiModelConverter());
 
     PipelineExecutor pipelineExecutor = PipelineExecutor.create(meterRegistry, auditor, filterFactory, params.getSecrets());
@@ -687,6 +690,7 @@ public class Main extends Application {
     router.route("/api/*").handler(new JaxRsHandler(vertx, meterRegistry, "/api", controllers, providers, true, false));
     router.route("/ui/*").handler(UiRouter.create(vertx, meterRegistry, "/ui", "/www", "/www/index.html"));
     router.route("/tableau*").handler(TableauWDCRouter.create(vertx));
+    router.getWithRegex("/openapi30\\..*").blockingHandler(openApi30Handler);
     router.getWithRegex("/openapi\\..*").blockingHandler(openApiHandler);
     router.get("/openapi").handler(openApiHandler.getUiHandler());
     if (!params.getSession().getOauth().isEmpty() || params.isEnableForceJwt()) {
@@ -1004,14 +1008,17 @@ public class Main extends Application {
     return auther;    
   }
 
-  static OpenAPIConfiguration createOpenapiConfiguration(List<Object> resources, Object application, String openApiContextId) {
-    return new SwaggerConfiguration()
+  static OpenAPIConfiguration createOpenapiConfiguration(List<Object> resources, Object application, String openApiContextId, boolean useOpenApi31) {
+    SwaggerConfiguration config = new SwaggerConfiguration()
             .resourceClasses(Stream.concat(resources.stream(), Stream.of(application)).map(r -> r.getClass().getCanonicalName())
                     .collect(Collectors.toSet()))
             .id(openApiContextId)
-            .prettyPrint(true)
-            .filterClass("uk.co.spudsoft.query.main.OpenApiFilterClass")
-            .openAPI31(Boolean.TRUE)
+            .prettyPrint(true);
+    if (useOpenApi31) {
+      config.filterClass("uk.co.spudsoft.query.main.OpenApiFilterClass");
+    }
+    return config
+            .openAPI31(useOpenApi31)
             .openAPI(
                     new OpenAPI()
                             .info(
