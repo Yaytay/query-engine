@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 import uk.co.spudsoft.dircache.AbstractTree;
+import uk.co.spudsoft.dircache.AbstractTree.AbstractNode;
 import uk.co.spudsoft.dircache.DirCacheTree;
 
 /**
@@ -81,6 +82,22 @@ public class DesignNodesTree extends AbstractTree {
       this.path = path;
       this.modified = modified;
     }
+    
+    /**
+     * Get the type of this node, whether it is a dir or a file.
+     * This enabled polymorphic de-serialization in platforms unable to do structural polymorphic de-serialization.
+     * @return the type of this node, whether it is a dir or a file.
+     */
+    @Schema(description = """
+                          <P>
+                          The type of this node, whether it is a dir or a file.
+                          </P>
+                          """
+            , maxLength = 5
+    )
+    @Override
+    public abstract NodeType getType();
+    
 
     /**
      * Get the relative path to the node from the root.
@@ -182,7 +199,7 @@ public class DesignNodesTree extends AbstractTree {
 
       return children;
     }
-
+    
     /**
      * Constructor.
      * @param path The path represented by this Node.
@@ -203,6 +220,11 @@ public class DesignNodesTree extends AbstractTree {
      */
     public DesignDir(java.nio.file.Path root, DirCacheTree.Directory src, String name) {
       super(relativize(File.separator, root, src), src.getModified(), name, buildChildren(root, src));
+    }
+    
+    @Override
+    public NodeType getType() {
+      return NodeType.dir;
     }
 
     /**
@@ -276,6 +298,11 @@ public class DesignNodesTree extends AbstractTree {
       this.size = src.getSize();
     }
 
+    @Override
+    public NodeType getType() {
+      return NodeType.file;
+    }
+    
     /**
      * Get the size of the file on disc, in bytes.
      * @return the size of the file on disc, in bytes.
