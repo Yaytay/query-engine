@@ -21,6 +21,7 @@ import io.vertx.core.http.Cookie;
 import io.vertx.core.http.CookieSameSite;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.net.HostAndPort;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.HashMap;
@@ -292,7 +293,7 @@ public class LoginRouterTest {
     when(request.scheme()).thenReturn("http");
     when(request.headers()).thenReturn(headers);
 
-    assertEquals("https://example.com/", LoginRouter.loggedOutUri(request));
+    assertEquals("https://example.com:8080/", LoginRouter.loggedOutUri(request));
   }
 
   @Test
