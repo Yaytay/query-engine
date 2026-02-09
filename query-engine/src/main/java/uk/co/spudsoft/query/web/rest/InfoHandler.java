@@ -130,10 +130,10 @@ public class InfoHandler {
   @GET
   @Path("/details/{path:.*}")
   @Produces(MediaType.APPLICATION_JSON)
-  @Operation(description = "Return a form.io definition for a given document")
+  @Operation(description = "Return details of a pipeline that would be needed for a UI to run the pipeline without using formio")
   @ApiResponse(
           responseCode = "200"
-          , description = "A form.io definition for a given document."
+          , description = "Details of a pipeline as required by a custom UI."
           , content = @Content(
                   mediaType = MediaType.APPLICATION_JSON
                   , schema = @Schema(
@@ -180,7 +180,7 @@ public class InfoHandler {
                 reportError(unauthedRequestContext, logger, "Failed to generate list of available pipelines: ", response, ex, outputAllErrorMessages);
               });
     } catch (Throwable ex) {
-      reportError(unauthedRequestContext, logger, "Failed to get FormIO data: ", response, ex, outputAllErrorMessages);
+      reportError(unauthedRequestContext, logger, "Failed to get pipeline data: ", response, ex, outputAllErrorMessages);
     }    
 
   }

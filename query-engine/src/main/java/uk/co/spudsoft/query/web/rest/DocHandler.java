@@ -289,7 +289,7 @@ public class DocHandler {
                   )
           )
   )
-  public void getAvailable(
+  public void getAllDocumentation(
           @Context RoutingContext routingContext
           , @Suspended final AsyncResponse response
   ) {
@@ -325,7 +325,7 @@ public class DocHandler {
           content = @Content(mediaType = "text/markdown")
   )
   @SuppressFBWarnings(value = "PATH_TRAVERSAL_IN", justification = "User has specified the path to use for alternative documentation")
-  public void getDoc(
+  public void getSingleDocument(
           @Context RoutingContext routingContext,
           @Suspended final AsyncResponse response,
           @Schema(

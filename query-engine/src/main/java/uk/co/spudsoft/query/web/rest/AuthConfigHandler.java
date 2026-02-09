@@ -73,7 +73,7 @@ public class AuthConfigHandler {
                   )
           )
   )
-  public void get(
+  public void getAuthConfig(
           @Suspended final AsyncResponse response
   ) {
     response.resume(Response.ok(config).build());
