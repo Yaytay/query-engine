@@ -23,10 +23,13 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.net.HostAndPort;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.HashMap;
+import java.util.Map;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
@@ -275,4 +278,101 @@ public class LoginRouterTest {
     assertTrue(result);
   }
 
+  // ---------------------------------------------------------------------------
+  // Additional coverage for LoginRouter utilities
+  // ---------------------------------------------------------------------------
+
+  @Test
+  void testLoggedOutUri_usesForwardedHeaders() {
+    HttpServerRequest request = mock(HttpServerRequest.class);
+    MultiMap headers = MultiMap.caseInsensitiveMultiMap();
+    headers.add("X-Forwarded-Proto", "https");
+    headers.add("X-Forwarded-Host", "example.com");
+    when(request.authority()).thenReturn(HostAndPort.create("internal-host", 8080));
+    when(request.scheme()).thenReturn("http");
+    when(request.headers()).thenReturn(headers);
+
+    assertEquals("https://example.com/", LoginRouter.loggedOutUri(request));
+  }
+
+  @Test
+  void testLoggedOutUri_usesForwardedPort() {
+    HttpServerRequest request = mock(HttpServerRequest.class);
+    MultiMap headers = MultiMap.caseInsensitiveMultiMap();
+    headers.add("X-Forwarded-Proto", "http");
+    headers.add("X-Forwarded-Port", "1234");
+    when(request.authority()).thenReturn(HostAndPort.create("hap", 80));
+    when(request.scheme()).thenReturn("http");
+    when(request.headers()).thenReturn(headers);
+
+    assertEquals("http://hap:1234/", LoginRouter.loggedOutUri(request));
+  }
+
+  @Test
+  void testDeepCopyAuthEndpoints_createsNewObjects() {
+    AuthEndpoint original = new AuthEndpoint();
+    original.setIssuer("issuer");
+    original.setAuthorizationEndpoint("auth");
+    original.setTokenEndpoint("token");
+
+    Map<String, AuthEndpoint> input = new HashMap<>();
+    input.put("p1", original);
+
+    var copied = LoginRouter.deepCopyAuthEndpoints(input);
+
+    assertEquals(1, copied.size());
+    assertTrue(copied.containsKey("p1"));
+    assertNotSame(original, copied.get("p1"));
+
+    // Sanity-check a couple of fields were copied (and not nulled)
+    assertEquals("issuer", copied.get("p1").getIssuer());
+    assertEquals("auth", copied.get("p1").getAuthorizationEndpoint());
+    assertEquals("token", copied.get("p1").getTokenEndpoint());
+  }
+
+  @Test
+  void testRandomString_exactLength_andUrlSafeAlphabet() {
+    for (int len = 1; len < 256; len += 7) {
+      String s = LoginRouter.randomString(len);
+      assertEquals(len, s.length());
+
+      // URL-safe Base64 without padding should not contain '+', '/', '='
+      assertFalse(s.contains("+"), "randomString should be URL-safe Base64");
+      assertFalse(s.contains("/"), "randomString should be URL-safe Base64");
+      assertFalse(s.contains("="), "randomString should be unpadded");
+    }
+  }
+
+  @Test
+  void testCreateRandomSessionId_length100() {
+    String id = LoginRouter.createRandomSessionId();
+    assertEquals(100, id.length());
+  }
+
+  @Test
+  void testCreateCodeChallenge_knownVector() {
+    // PKCE S256 for "abc" (SHA-256 then base64url without padding)
+    // SHA-256("abc") = ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+    // base64url = ungWv48Bz-pBQUDeXa4iI7ADYaOWF3qctBD_YfIAFa0
+    assertEquals("ungWv48Bz-pBQUDeXa4iI7ADYaOWF3qctBD_YfIAFa0", LoginRouter.createCodeChallenge("abc"));
+  }
+
+  @Test
+  void testGetFastestSecureRandom_returnsWorkingInstance() {
+    SecureRandom sr = LoginRouter.getFastestSecureRandom();
+    assertThat(sr, notNullValue());
+
+    byte[] bytes = new byte[32];
+    sr.nextBytes(bytes);
+
+    // Extremely weak, but good enough to prove bytes were produced and code path executed
+    boolean anyNonZero = false;
+    for (byte b : bytes) {
+      if (b != 0) {
+        anyNonZero = true;
+        break;
+      }
+    }
+    assertTrue(anyNonZero);
+  }
 }
