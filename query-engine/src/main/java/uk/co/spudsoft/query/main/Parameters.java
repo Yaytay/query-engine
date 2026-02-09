@@ -22,6 +22,7 @@ import uk.co.spudsoft.query.logging.LogbackOptions;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.ext.web.client.WebClientOptions;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -57,6 +58,11 @@ public class Parameters {
    * The HttpServerOptions that will be used when creating the HTTP server.
    */
   private HttpServerOptions httpServerOptions = new HttpServerOptions().setPort(0);
+
+  /**
+   * Options to use on any Vert.x WebClients created by this project.
+   */
+  private WebClientOptions webClientOptions = new WebClientOptions();
 
   /**
    * The default Allowed-Origin.
@@ -502,6 +508,25 @@ public class Parameters {
   @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
   public HttpServerOptions getHttpServerOptions() {
     return httpServerOptions;
+  }
+
+  /**
+   * Get the WebClientOptions that will be used when creating the Vert.x WebClients.
+   *
+   * @return the WebClientOptions that will be used when creating the Vert.x WebClients.
+   */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
+  public WebClientOptions getWebClientOptions() {
+    return webClientOptions;
+  }
+
+  /**
+   * Set the WebClientOptions that will be used when creating the Vert.x WebClients.
+   * @param webClientOptions the WebClientOptions that will be used when creating the Vert.x WebClients.
+   */
+  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
+  public void setWebClientOptions(WebClientOptions webClientOptions) {
+    this.webClientOptions = webClientOptions;
   }
 
   /**

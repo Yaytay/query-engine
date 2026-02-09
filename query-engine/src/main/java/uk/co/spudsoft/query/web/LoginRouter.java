@@ -118,6 +118,7 @@ public class LoginRouter implements Handler<RoutingContext> {
    * for performing OpenID Connect Discovery.
    * @param jwtValidator Handler from <a href="https://github.com/Yaytay/jwt-validator-vertx">jwt-validator-vertx</a> for
    * validating JWTs.
+   * @param webClientOptions Options to use when creating the Vert.x WebClient used to perform login requests.
    * @param requestContextBuilder Creator of {@link uk.co.spudsoft.query.exec.context.RequestContext} objects, used here for
    * some utility functions.
    * @param sessionConfig Configuration data.
@@ -135,6 +136,7 @@ public class LoginRouter implements Handler<RoutingContext> {
            LoginDao loginDao,
            OpenIdDiscoveryHandler openIdDiscoveryHandler,
            JwtValidator jwtValidator,
+           WebClientOptions webClientOptions,
            Authenticator requestContextBuilder,
            SessionConfig sessionConfig,
            List<String> requiredAuds,
@@ -142,7 +144,7 @@ public class LoginRouter implements Handler<RoutingContext> {
            boolean enableForceJwt,
            CookieConfig sessionCookie
   ) {
-    return new LoginRouter(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, requestContextBuilder, sessionConfig, requiredAuds, outputAllErrorMessages, enableForceJwt, sessionCookie);
+    return new LoginRouter(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, webClientOptions, requestContextBuilder, sessionConfig, requiredAuds, outputAllErrorMessages, enableForceJwt, sessionCookie);
   }
 
   private static class RequestDataAndAuthEndpoint {
@@ -183,6 +185,7 @@ public class LoginRouter implements Handler<RoutingContext> {
    * for performing OpenID Connect Discovery.
    * @param jwtValidator Handler from <a href="https://github.com/Yaytay/jwt-validator-vertx">jwt-validator-vertx</a> for
    * validating JWTs.
+   * @param webClientOptions Options to use when creating the Vert.x WebClient used to perform login requests.
    * @param requestContextBuilder Creator of {@link uk.co.spudsoft.query.exec.context.RequestContext} objects, used here for
    * some utility functions.
    * @param sessionConfig Configuration data.
@@ -200,6 +203,7 @@ public class LoginRouter implements Handler<RoutingContext> {
            LoginDao loginDao,
            OpenIdDiscoveryHandler openIdDiscoveryHandler,
            JwtValidator jwtValidator,
+           WebClientOptions webClientOptions,
            Authenticator requestContextBuilder,
            SessionConfig sessionConfig,
            List<String> requiredAuds,
@@ -208,7 +212,7 @@ public class LoginRouter implements Handler<RoutingContext> {
            CookieConfig sessionCookie
   ) {
     this.vertx = vertx;
-    this.webClient = WebClient.create(vertx, new WebClientOptions().setConnectTimeout(60000));
+    this.webClient = WebClient.create(vertx, webClientOptions);
     this.loginDao = loginDao;
     this.openIdDiscoveryHandler = openIdDiscoveryHandler;
     this.jwtValidator = jwtValidator;

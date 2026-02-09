@@ -694,7 +694,7 @@ public class Main extends Application {
     router.getWithRegex("/openapi\\..*").blockingHandler(openApiHandler);
     router.get("/openapi").handler(openApiHandler.getUiHandler());
     if (!params.getSession().getOauth().isEmpty() || params.isEnableForceJwt()) {
-      LoginRouter loginRouter = LoginRouter.create(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, authenticator, params.getSession()
+      LoginRouter loginRouter = LoginRouter.create(vertx, loginDao, openIdDiscoveryHandler, jwtValidator, params.getWebClientOptions(), authenticator, params.getSession()
               , params.getJwt().getRequiredAudiences(), outputAllErrorMessages(), params.isEnableForceJwt(), params.getSession().getSessionCookie());
       if (params.isEnableForceJwt()) {
         router.put("/login/forcejwt").handler(loginRouter);
@@ -972,7 +972,7 @@ public class Main extends Application {
                     , jwtConfig.getFilePollPeriodDuration()
             );
 
-    WebClient webClient = WebClient.create(vertx, new WebClientOptions().setConnectTimeout(60000));
+    WebClient webClient = WebClient.create(vertx, params.getWebClientOptions());
     if (!jwtConfig.getJwksEndpoints().isEmpty()) {
       openIdDiscoveryHandler = JsonWebKeySetOpenIdDiscoveryHandler.create(webClient, iah, jwtConfig.getDefaultJwksCacheDuration());
       jwtValidator = JwtValidator.createStatic(webClient, jwtConfig.getJwksEndpoints(), jwtConfig.getDefaultJwksCacheDuration(), iah);
@@ -987,7 +987,7 @@ public class Main extends Application {
       jwtValidator.setTimeLeeway(jwtConfig.getPermittedTimeSkew());
     }
 
-    Authenticator auther = new Authenticator(WebClient.create(vertx, new WebClientOptions().setConnectTimeout(60000))
+    Authenticator auther = new Authenticator(WebClient.create(vertx, params.getWebClientOptions())
             , jwtValidator
             , openIdDiscoveryHandler
             , loginDao

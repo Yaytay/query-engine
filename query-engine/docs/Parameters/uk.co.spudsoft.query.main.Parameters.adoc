@@ -18,6 +18,10 @@ Top level configuration options for Query Engine.
 | link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String]
 | The temporary directory to use.Defaults to the value of System.getProperty("java.io.tmpdir").
 
+| [[webClientOptions]]webClientOptions
+| link:https://vertx.io/docs/apidocs/io/vertx/ext/web/client/WebClientOptions.html[WebClientOptions]
+| Set the WebClientOptions that will be used when creating the Vert.x WebClients.
+
 | [[fileStabilisationDelaySeconds]]fileStabilisationDelaySeconds
 | int
 | The seconds to wait after being notified or a file change to allow all file writes to complete.

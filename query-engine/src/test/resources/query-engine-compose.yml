@@ -1,7 +1,7 @@
 services:
   mysql:
     image: mysql:8.4
-    command: mysqld --skip-log-bin
+    command: mysqld --skip-log-bin --default-authentication-plugin=mysql_native_password
     ports:
     - 2001:3306
     healthcheck:
