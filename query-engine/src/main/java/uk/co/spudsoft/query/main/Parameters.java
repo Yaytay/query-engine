@@ -61,8 +61,10 @@ public class Parameters {
 
   /**
    * Options to use on any Vert.x WebClients created by this project.
+   * The default value sets a connect timeout of 10s to avoid excessive delays on bad URLs.
    */
-  private WebClientOptions webClientOptions = new WebClientOptions();
+  private WebClientOptions webClientOptions = new WebClientOptions()
+          .setConnectTimeout(10000);
 
   /**
    * The default Allowed-Origin.
@@ -512,6 +514,7 @@ public class Parameters {
 
   /**
    * Get the WebClientOptions that will be used when creating the Vert.x WebClients.
+   * The default value sets a connect timeout of 10s to avoid excessive delays on bad URLs.
    *
    * @return the WebClientOptions that will be used when creating the Vert.x WebClients.
    */
@@ -522,6 +525,7 @@ public class Parameters {
 
   /**
    * Set the WebClientOptions that will be used when creating the Vert.x WebClients.
+   * The default value sets a connect timeout of 10s to avoid excessive delays on bad URLs.
    * @param webClientOptions the WebClientOptions that will be used when creating the Vert.x WebClients.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")
