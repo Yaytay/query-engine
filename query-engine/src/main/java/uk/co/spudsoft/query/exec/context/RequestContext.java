@@ -689,35 +689,7 @@ public final class RequestContext {
    * @return true if the user is part of at least one of the specified groups, false otherwise
    */
   public boolean isInGroup(String... requirements) {
-    if (jwt != null) {
-      List<String> groups = jwt.getGroups();
-      if (groups == null) {
-        return false;
-      }
-      for (String requirement : requirements) {
-        if (Strings.isNullOrEmpty(requirement)) {
-          continue ;
-        }
-        Pattern pat = null;
-        try {
-          pat = Pattern.compile(requirement);
-        } catch (Throwable ex) {
-          logger.warn("Unable to trest required group \"{}\" as a regular expression: ", requirement, ex.getMessage());
-        }
-        for (String group : groups) {
-          if (pat != null) {
-            if (pat.matcher(group).matches()) {
-              return true;
-            }
-          } else {
-            if (requirement.equals(group)) {
-              return true;
-            }
-          }
-        }
-      }
-    }
-    return false;
+    return isInArray(jwt.getGroups(), requirements);
   }
 
   /**
@@ -731,6 +703,51 @@ public final class RequestContext {
     return null;
   }
 
+
+  /**
+   * Checks if the current user belongs to at least one of the specified roles.
+   * <P>
+   * Each listed role will be treated as a regular expression.
+   * 
+   * @param requirements the role names to check against, provided as a variable number of arguments
+   * @return true if the user is part of at least one of the specified roles, false otherwise
+   */
+  public boolean isInRole(String... requirements) {
+    return isInArray(jwt.getRoles(), requirements);
+  }
+
+  private boolean isInArray(List<String> input, String... requirements) {
+    if (jwt != null) {
+      if (input == null) {
+        return false;
+      }
+      for (String requirement : requirements) {
+        if (Strings.isNullOrEmpty(requirement)) {
+          continue ;
+        }
+        Pattern pat = null;
+        try {
+          pat = Pattern.compile(requirement);
+        } catch (Throwable ex) {
+          logger.warn("Unable to trest required role \"{}\" as a regular expression: ", requirement, ex.getMessage());
+        }
+        for (String entry : input) {
+          if (pat != null) {
+            if (pat.matcher(entry).matches()) {
+              return true;
+            }
+          } else {
+            if (requirement.equals(entry)) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  
   /**
    * Append a Map to a StringBuilder as JSON.
    * @param builder the StringBuilder that is used to build up the JSON.
