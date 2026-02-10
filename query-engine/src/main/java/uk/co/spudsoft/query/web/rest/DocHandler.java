@@ -22,7 +22,6 @@ import io.micrometer.core.annotation.Timed;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_SECURITY_POLICY;
 import static io.netty.handler.codec.http.HttpHeaderNames.X_FRAME_OPTIONS;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -283,10 +282,7 @@ public class DocHandler {
           description = "The list of available documents.",
           content = @Content(
                   mediaType = MediaType.APPLICATION_JSON,
-                  array = @ArraySchema(
-                          minItems = 0,
-                          schema = @Schema(implementation = DocNodesTree.DocNode.class)
-                  )
+                  schema = @Schema(implementation = DocNodesTree.DocNode.class)
           )
   )
   public void getAllDocumentation(

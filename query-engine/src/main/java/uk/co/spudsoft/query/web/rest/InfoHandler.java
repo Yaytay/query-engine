@@ -20,7 +20,6 @@ import uk.co.spudsoft.query.pipeline.PipelineNodesTree;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -90,10 +89,7 @@ public class InfoHandler {
           , description = "The list of available pipelines."
           , content = @Content(
                   mediaType = MediaType.APPLICATION_JSON
-                  , array = @ArraySchema(
-                          minItems = 0
-                          , schema = @Schema(implementation = PipelineNodesTree.PipelineNode.class)
-                  )
+                  , schema = @Schema(implementation = PipelineNodesTree.PipelineNode.class)
           )
   )
   public void getAvailable(
@@ -108,7 +104,11 @@ public class InfoHandler {
       loader.getAccessible(requestContext)
               .onSuccess(ap -> {
                 Log.decorate(logger.atDebug(), unauthedRequestContext).log("Available: {}", ap);
-                response.resume(Response.ok(ap, MediaType.APPLICATION_JSON).build());
+                if (ap == null) {
+                  response.resume(Response.status(Response.Status.NO_CONTENT).build());
+                } else {
+                  response.resume(Response.ok(ap, MediaType.APPLICATION_JSON).build());
+                }
               })
               .onFailure(ex -> {
                 reportError(unauthedRequestContext, logger, "Failed to generate list of available pipelines: ", response, ex, outputAllErrorMessages);
