@@ -19,7 +19,7 @@ package uk.co.spudsoft.query.web.rest;
 import uk.co.spudsoft.query.main.*;
 import com.google.common.collect.ImmutableMap;
 import io.restassured.RestAssured;
-import io.vertx.junit5.VertxExten87sion;
+import io.vertx.junit5.VertxExtension;
 import java.io.File;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
