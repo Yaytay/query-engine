@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 jtalbut
+ * Copyright (C) 2026 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,23 +18,27 @@ package uk.co.spudsoft.query.pipeline;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.google.common.collect.ImmutableList;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.DiscriminatorMapping;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
-import uk.co.spudsoft.dircache.AbstractTree;
-import uk.co.spudsoft.dircache.AbstractTree.AbstractNode;
+import uk.co.spudsoft.dircache.DirCacheTree;
+import uk.co.spudsoft.dircache.FileTree;
 
 /**
- * Tree of {@link uk.co.spudsoft.dircache.AbstractTree} specialized for pipelines.
+ * Implementation of {@link uk.co.spudsoft.dircache.FileTree} specialized for pipelines.
  * <p>
  * This is for returning a tree of directories and pipeline definitions to the UI.
  * 
  * @author jtalbut
  */
-public class PipelineNodesTree extends AbstractTree {
+public class PipelineNodesTree implements FileTree<DirCacheTree.Node> {
 
+  /**
+   * Constructor.
+   */
   private PipelineNodesTree() {
   }
 
@@ -62,7 +66,12 @@ public class PipelineNodesTree extends AbstractTree {
             , @DiscriminatorMapping(schema = PipelineFile.class, value = "file")
           }
   )
-  public abstract static class PipelineNode extends AbstractNode<PipelineNode> {
+  public abstract static class PipelineNode implements FileTree.FileTreeNode {
+    
+    /**
+     * Name of the file.
+     */
+    protected final String name;
 
     /**
      * The path to the file, with no extension.
@@ -74,17 +83,7 @@ public class PipelineNodesTree extends AbstractTree {
      * @param path full path to the file/directory.
      */
     public PipelineNode(String path) {
-      super(nameFromPath(path));
-      this.path = undot(path);
-    }
-
-    /**
-     * Constructor for a directory.
-     * @param path full path to the directory.
-     * @param children child directories/files.
-     */
-    public PipelineNode(String path, List<PipelineNode> children) {
-      super(nameFromPath(path), children);
+      this.name = nameFromPath(path);
       this.path = undot(path);
     }
 
@@ -120,29 +119,6 @@ public class PipelineNodesTree extends AbstractTree {
     }
 
     /**
-     * The children of the node.
-     * <p>
-     * If this is null then the node is a file, otherwise it is a directory.
-     * @return the children of the node.
-     */
-    @Override
-    @ArraySchema(
-            arraySchema = @Schema(
-                    description = """
-                                  The children of the node.
-                                  <P>
-                                  If this is null then the node is a file, otherwise it is a directory.
-                                  </P>
-                                  """
-                    , requiredMode = Schema.RequiredMode.NOT_REQUIRED
-                    , nullable = true
-            )
-    )
-    public List<PipelineNode> getChildren() {
-      return super.getChildren();
-    }
-
-    /**
      * The leaf name of the node.
      * @return the leaf name of the node.
      */
@@ -155,7 +131,7 @@ public class PipelineNodesTree extends AbstractTree {
             , maxLength = 100
     )
     public String getName() {
-      return super.getName();
+      return name;
     }
 
     /**
@@ -203,15 +179,18 @@ public class PipelineNodesTree extends AbstractTree {
                         A directory containing pipelines.
                         </P>
                         """)
-  public static class PipelineDir extends PipelineNode {
+  public static class PipelineDir extends PipelineNode implements FileTreeDir<PipelineNode> {
 
+    private List<PipelineNode> children;
+    
     /**
      * Constructor for a directory.
      * @param path full path to the directory.
      * @param children child directories/files.
      */
     public PipelineDir(String path, List<PipelineNode> children) {
-      super(path, children);
+      super(path);
+      this.children = ImmutableList.copyOf(children);
     }
 
     @Override
@@ -238,7 +217,7 @@ public class PipelineNodesTree extends AbstractTree {
             )
     )
     public List<PipelineNode> getChildren() {
-      return super.getChildren(); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
+      return children;
     }
 
   }

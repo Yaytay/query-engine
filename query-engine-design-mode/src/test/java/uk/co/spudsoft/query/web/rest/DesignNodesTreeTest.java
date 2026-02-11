@@ -23,7 +23,6 @@ import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Collections;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.Test;
 import uk.co.spudsoft.dircache.DirCacheTree;
 
@@ -41,7 +40,6 @@ public class DesignNodesTreeTest {
     assertEquals("name", file.getName());
     assertEquals(LocalDateTime.MIN, file.getModified());
     assertEquals(0L, file.getSize());
-    assertNull(file.getChildren());
   }
   
   @Test

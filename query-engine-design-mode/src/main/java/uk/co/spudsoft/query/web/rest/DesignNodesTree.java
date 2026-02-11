@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 jtalbut
+ * Copyright (C) 2026 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.web.rest;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.google.common.collect.ImmutableList;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -26,15 +27,14 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
-import uk.co.spudsoft.dircache.AbstractTree;
-import uk.co.spudsoft.dircache.AbstractTree.AbstractNode;
+import uk.co.spudsoft.dircache.FileTree;
 import uk.co.spudsoft.dircache.DirCacheTree;
 
 /**
- * Representation of directories of files that can be edited in DesignMode.
+ * Implementation of {@link uk.co.spudsoft.dircache.FileTree} specialized for representing directories of files that can be edited in DesignMode.
  * @author jtalbut
  */
-public class DesignNodesTree extends AbstractTree {
+public class DesignNodesTree implements FileTree<DesignNodesTree.DesignNode> {
 
   private DesignNodesTree() {
   }
@@ -51,8 +51,9 @@ public class DesignNodesTree extends AbstractTree {
                         Base class for pipeline design files and the directories that contain them.
                         </P>
                         """)
-  public abstract static class DesignNode extends AbstractNode<DesignNode> {
+  public abstract static class DesignNode implements FileTree.FileTreeNode {
 
+    private final String name;
     private final String path;
     private final LocalDateTime modified;
 
@@ -64,25 +65,11 @@ public class DesignNodesTree extends AbstractTree {
      * @param name The leaf name of the node.
      */
     protected DesignNode(@NotNull String path, @NotNull LocalDateTime modified, @NotNull String name) {
-      super(name);
+      this.name = name;
       this.path = path;
       this.modified = modified;
     }
 
-    /**
-     * Directory constructor.
-     *
-     * @param path The path represented by this Node.
-     * @param modified The modified timestamp.
-     * @param name The leaf name of the node.
-     * @param children The nodes in this directory.
-     */
-    protected DesignNode(@NotNull String path, @NotNull LocalDateTime modified, @NotNull String name, List<DesignNode> children) {
-      super(name, children);
-      this.path = path;
-      this.modified = modified;
-    }
-    
     /**
      * Get the type of this node, whether it is a dir or a file.
      * This enabled polymorphic de-serialization in platforms unable to do structural polymorphic de-serialization.
@@ -97,7 +84,7 @@ public class DesignNodesTree extends AbstractTree {
     )
     @Override
     public abstract NodeType getType();
-    
+
 
     /**
      * Get the relative path to the node from the root.
@@ -116,27 +103,6 @@ public class DesignNodesTree extends AbstractTree {
     }
 
     /**
-     * Get the children of the node.
-     * If this is null then the node is a file, otherwise it is a directory.
-     * @return the children of the node.
-     */
-    @Override
-    @ArraySchema(
-            arraySchema = @Schema(
-                    description = """
-                                  The children of the node.
-                                  <P>
-                                  If this is null then the node is a file, otherwise it is a directory.
-                                  </P>
-                                  """,
-                     requiredMode = Schema.RequiredMode.NOT_REQUIRED
-            )
-    )
-    public List<DesignNode> getChildren() {
-      return super.getChildren();
-    }
-
-    /**
      * Get the leaf name of the node.
      * @return the leaf name of the node.
      */
@@ -150,7 +116,7 @@ public class DesignNodesTree extends AbstractTree {
           , maxLength = 100
     )
     public String getName() {
-      return super.getName();
+      return name;
     }
 
     /**
@@ -184,7 +150,9 @@ public class DesignNodesTree extends AbstractTree {
                         A directory containing pipeline files.
                         </P>
                         """)
-  public static class DesignDir extends DesignNode {
+  public static class DesignDir extends DesignNode implements FileTree.FileTreeDir<DesignNode> {
+
+    private List<DesignNode> children;
 
     private static List<DesignNode> buildChildren(java.nio.file.Path root, DirCacheTree.Directory src) {
       List<DesignNode> children = new ArrayList<>();
@@ -199,7 +167,7 @@ public class DesignNodesTree extends AbstractTree {
 
       return children;
     }
-    
+
     /**
      * Constructor.
      * @param path The path represented by this Node.
@@ -209,7 +177,8 @@ public class DesignNodesTree extends AbstractTree {
      */
     @JsonCreator
     public DesignDir(String path, LocalDateTime modified, String name, List<DesignNode> children) {
-      super(path, modified, name, List.copyOf(children));
+      super(path, modified, name);
+      this.children = ImmutableList.copyOf(children);
     }
 
     /**
@@ -219,9 +188,10 @@ public class DesignNodesTree extends AbstractTree {
      * @param name The name of the directory.
      */
     public DesignDir(java.nio.file.Path root, DirCacheTree.Directory src, String name) {
-      super(relativize(File.separator, root, src), src.getModified(), name, buildChildren(root, src));
+      super(relativize(File.separator, root, src), src.getModified(), name);
+      this.children = ImmutableList.copyOf(buildChildren(root, src));
     }
-    
+
     @Override
     public NodeType getType() {
       return NodeType.dir;
@@ -246,7 +216,7 @@ public class DesignNodesTree extends AbstractTree {
             )
     )
     public List<DesignNodesTree.DesignNode> getChildren() {
-      return super.getChildren(); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
+      return children;
     }
   }
 
@@ -302,7 +272,7 @@ public class DesignNodesTree extends AbstractTree {
     public NodeType getType() {
       return NodeType.file;
     }
-    
+
     /**
      * Get the size of the file on disc, in bytes.
      * @return the size of the file on disc, in bytes.

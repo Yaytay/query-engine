@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.dircache.DirCache;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.main.CacheConfig;
+import uk.co.spudsoft.query.web.rest.DocNodesTree;
 
 /**
  *
@@ -81,59 +82,62 @@ public class PipelineDefnLoaderTest {
                   assertEquals("args", root.getChildren().get(0).getName());
                   assertEquals("demo", root.getChildren().get(1).getPath());
                   assertEquals("demo", root.getChildren().get(1).getName());
-                  assertEquals("demo/FeatureRichExample", root.getChildren().get(1).getChildren().get(0).getPath());
-                  assertEquals("FeatureRichExample", root.getChildren().get(1).getChildren().get(0).getName());
-                  assertEquals("demo/LookupValues", root.getChildren().get(1).getChildren().get(1).getPath());
-                  assertEquals("LookupValues", root.getChildren().get(1).getChildren().get(1).getName());
+                  assertEquals("demo/FeatureRichExample", dir(root.getChildren().get(1)).getChildren().get(0).getPath());
+                  assertEquals("FeatureRichExample", dir(root.getChildren().get(1)).getChildren().get(0).getName());
+                  assertEquals("demo/LookupValues", dir(root.getChildren().get(1)).getChildren().get(1).getPath());
+                  assertEquals("LookupValues", dir(root.getChildren().get(1)).getChildren().get(1).getName());
                   assertEquals("sub1", root.getChildren().get(2).getPath());
                   assertEquals("sub1", root.getChildren().get(2).getName());
-                  assertEquals("sub1/sub2", root.getChildren().get(2).getChildren().get(0).getPath());
-                  assertEquals("sub2", root.getChildren().get(2).getChildren().get(0).getName());
-                  assertEquals("sub1/sub2/AllDynamicIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(0).getPath());
-                  assertEquals("AllDynamicIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(0).getName());
-                  assertEquals("sub1/sub2/ConcurrentRulesIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(1).getPath());
-                  assertEquals("ConcurrentRulesIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(1).getName());
-                  assertEquals("sub1/sub2/ConditionalArgument", root.getChildren().get(2).getChildren().get(0).getChildren().get(2).getPath());                  
-                  assertEquals("ConditionalArgument", root.getChildren().get(2).getChildren().get(0).getChildren().get(2).getName());
+                  assertEquals("sub1/sub2", dir(root.getChildren().get(2)).getChildren().get(0).getPath());
+                  assertEquals("sub2", dir(root.getChildren().get(2)).getChildren().get(0).getName());
+                  assertEquals("sub1/sub2/AllDynamicIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(0).getPath());
+                  assertEquals("AllDynamicIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(0).getName());
+                  assertEquals("sub1/sub2/ConcurrentRulesIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(1).getPath());
+                  assertEquals("ConcurrentRulesIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(1).getName());
+                  assertEquals("sub1/sub2/ConditionalArgument", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(2).getPath());
+                  assertEquals("ConditionalArgument", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(2).getName());
 
-                  assertEquals("sub1/sub2/DemoStatic", root.getChildren().get(2).getChildren().get(0).getChildren().get(3).getPath());                  
-                  assertEquals("DemoStatic", root.getChildren().get(2).getChildren().get(0).getChildren().get(3).getName());
+                  assertEquals("sub1/sub2/DemoStatic", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(3).getPath());                  
+                  assertEquals("DemoStatic", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(3).getName());
 
-                  assertEquals("sub1/sub2/DynamicEndpointPipelineJdbcIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(4).getPath());                  
-                  assertEquals("DynamicEndpointPipelineJdbcIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(4).getName());
+                  assertEquals("sub1/sub2/DynamicEndpointPipelineJdbcIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(4).getPath());
+                  assertEquals("DynamicEndpointPipelineJdbcIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(4).getName());
                   
-                  assertEquals("sub1/sub2/DynamicEndpointPipelineSqlIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(5).getPath());
-                  assertEquals("DynamicEndpointPipelineSqlIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(5).getName());
+                  assertEquals("sub1/sub2/DynamicEndpointPipelineSqlIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(5).getPath());
+                  assertEquals("DynamicEndpointPipelineSqlIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(5).getName());
                   
-                  assertEquals("sub1/sub2/EmptyDataIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(6).getPath());
-                  assertEquals("EmptyDataIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(6).getName());
+                  assertEquals("sub1/sub2/EmptyDataIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(6).getPath());
+                  assertEquals("EmptyDataIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(6).getName());
                   
-                  assertEquals("sub1/sub2/JsonToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(7).getPath());
-                  assertEquals("JsonToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(7).getName());
+                  assertEquals("sub1/sub2/JsonToPipelineIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(7).getPath());
+                  assertEquals("JsonToPipelineIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(7).getName());
                   
-                  assertEquals("sub1/sub2/LookupIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(8).getPath());
-                  assertEquals("LookupIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(8).getName());
+                  assertEquals("sub1/sub2/LookupIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(8).getPath());
+                  assertEquals("LookupIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(8).getName());
                   
-                  assertEquals("sub1/sub2/SortableIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(9).getPath());
-                  assertEquals("SortableIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(9).getName());
+                  assertEquals("sub1/sub2/SortableIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(9).getPath());
+                  assertEquals("SortableIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(9).getName());
                   
-                  assertEquals("sub1/sub2/TemplatedJsonToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(10).getPath());
-                  assertEquals("TemplatedJsonToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(10).getName());
+                  assertEquals("sub1/sub2/TemplatedJsonToPipelineIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(10).getPath());
+                  assertEquals("TemplatedJsonToPipelineIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(10).getName());
                   
-                  assertEquals("sub1/sub2/TemplatedYamlToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(11).getPath());
-                  assertEquals("TemplatedYamlToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(11).getName());
+                  assertEquals("sub1/sub2/TemplatedYamlToPipelineIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(11).getPath());
+                  assertEquals("TemplatedYamlToPipelineIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(11).getName());
                   
-                  assertEquals("sub1/sub2/TestData", root.getChildren().get(2).getChildren().get(0).getChildren().get(12).getPath());
-                  assertEquals("TestData", root.getChildren().get(2).getChildren().get(0).getChildren().get(12).getName());
+                  assertEquals("sub1/sub2/TestData", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(12).getPath());
+                  assertEquals("TestData", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(12).getName());
                   
-                  assertEquals("sub1/sub2/YamlToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(13).getPath());
-                  assertEquals("YamlToPipelineIT", root.getChildren().get(2).getChildren().get(0).getChildren().get(13).getName());
+                  assertEquals("sub1/sub2/YamlToPipelineIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(13).getPath());
+                  assertEquals("YamlToPipelineIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(13).getName());
                 });
                 testContext.completeNow();
               }
             });
   }
 
+  private PipelineNodesTree.PipelineDir dir(PipelineNodesTree.PipelineNode node) {
+    return (PipelineNodesTree.PipelineDir) node;
+  }
   
   @Test
   public void testGetInaccessible(Vertx vertx, VertxTestContext testContext) throws Exception {
@@ -169,10 +173,10 @@ public class PipelineDefnLoaderTest {
                   assertEquals("args", root.getChildren().get(0).getName());
                   assertEquals("demo", root.getChildren().get(1).getPath());
                   assertEquals("demo", root.getChildren().get(1).getName());
-                  assertEquals("demo/FeatureRichExample", root.getChildren().get(1).getChildren().get(0).getPath());
-                  assertEquals("FeatureRichExample", root.getChildren().get(1).getChildren().get(0).getName());
-                  assertEquals("demo/LookupValues", root.getChildren().get(1).getChildren().get(1).getPath());
-                  assertEquals("LookupValues", root.getChildren().get(1).getChildren().get(1).getName());
+                  assertEquals("demo/FeatureRichExample", dir(root.getChildren().get(1)).getChildren().get(0).getPath());
+                  assertEquals("FeatureRichExample", dir(root.getChildren().get(1)).getChildren().get(0).getName());
+                  assertEquals("demo/LookupValues", dir(root.getChildren().get(1)).getChildren().get(1).getPath());
+                  assertEquals("LookupValues", dir(root.getChildren().get(1)).getChildren().get(1).getName());
                 });
                 testContext.completeNow();
               }

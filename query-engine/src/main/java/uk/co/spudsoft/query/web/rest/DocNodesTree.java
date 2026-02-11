@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 jtalbut
+ * Copyright (C) 2026 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,20 +19,21 @@ package uk.co.spudsoft.query.web.rest;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.google.common.collect.ImmutableList;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.DiscriminatorMapping;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Objects;
-import uk.co.spudsoft.dircache.AbstractTree;
-import uk.co.spudsoft.dircache.AbstractTree.AbstractNode;
+import uk.co.spudsoft.dircache.FileTree;
+import uk.co.spudsoft.dircache.FileTree.NodeType;
 
 /**
- * Specialization of {@link uk.co.spudsoft.dircache.AbstractTree} for reporting the Query Engine documentation.
+ * Implementation of {@link uk.co.spudsoft.dircache.FileTree} specialized for reporting the Query Engine documentation.
  * @author jtalbut
  */
-public class DocNodesTree extends AbstractTree {
+public class DocNodesTree implements FileTree<DocNodesTree.DocNode> {
 
   /**
    * Constructor.
@@ -66,8 +67,9 @@ public class DocNodesTree extends AbstractTree {
             , @DiscriminatorMapping(schema = DocFile.class, value = "file")
           }
   )
-  public abstract static class DocNode extends AbstractNode<DocNode> {
+  public abstract static class DocNode implements FileTree.FileTreeNode {
     
+    private final String name;
     private final String path;
 
     /**
@@ -76,21 +78,10 @@ public class DocNodesTree extends AbstractTree {
      * @param path the relative path to the node.
      */
     public DocNode(String path) {
-      super(nameFromPath(path));
+      this.name = nameFromPath(path);
       this.path = path;
     }    
 
-    /**
-     * Constructor that will result in a Directory node.
-     * 
-     * @param path  the relative path to the node.
-     * @param children children of the this node.
-     */
-    public DocNode(String path, List<DocNode> children) {
-      super(nameFromPath(path), children);
-      this.path = path;      
-    }
-    
     /**
      * Get the type of this node, whether it is a dir or a file.
      * This enabled polymorphic de-serialization in platforms unable to do structural polymorphic de-serialization.
@@ -123,28 +114,6 @@ public class DocNodesTree extends AbstractTree {
     }
 
     /**
-     * Get the children of the node.
-     * If this is null then the node is a file, otherwise it is a directory.
-     * @return the children of the node.
-     */
-    @Override
-    @ArraySchema(
-            arraySchema = @Schema(
-                    description = """
-                                  The children of the node.
-                                  <P>
-                                  If this is null then the node is a file, otherwise it is a directory.
-                                  </P>
-                                  """
-                    , requiredMode = Schema.RequiredMode.NOT_REQUIRED
-                    , nullable = true
-            )
-    )
-    public List<DocNode> getChildren() {
-      return super.getChildren();
-    }
-
-    /**
      * Get the leaf name of the node.
      * @return the leaf name of the node.
      */
@@ -157,7 +126,7 @@ public class DocNodesTree extends AbstractTree {
           , maxLength = 100
     )
     public String getName() {
-      return super.getName();
+      return name;
     }
 
     static String nameFromPath(String path) {
@@ -189,7 +158,9 @@ public class DocNodesTree extends AbstractTree {
                         A directory containing documentation files.
                         </P>
                         """)
-  public static class DocDir extends DocNode {
+  public static class DocDir extends DocNode implements FileTree.FileTreeDir<DocNode> {
+
+    private List<DocNode> children;
     
     /**
      * Constructor.
@@ -197,7 +168,8 @@ public class DocNodesTree extends AbstractTree {
      * @param children The children of the dir.
      */
     public DocDir(String path,  List<DocNode> children) {
-      super(path, children);
+      super(path);
+      this.children = ImmutableList.copyOf(children);
     }
 
     @Override
@@ -225,7 +197,7 @@ public class DocNodesTree extends AbstractTree {
             )
     )
     public List<DocNode> getChildren() {
-      return super.getChildren(); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
+      return children;
     }
     
   }

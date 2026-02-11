@@ -25,13 +25,12 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.dircache.AbstractTree;
 import uk.co.spudsoft.dircache.DirCacheTree;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.logging.Log;
 
 /**
- * Helper class for converting one {@link uk.co.spudsoft.dircache.AbstractTree} into another.
+ * Helper class for converting one {@link uk.co.spudsoft.dircache.FileTree} into another.
  *
  * @author jtalbut
  */
@@ -43,7 +42,7 @@ public class AsyncDirTreeMapper {
   }
 
   /**
-   * Map this Directory and all its children (recursively) into a different subclass of {@link AbstractTree}.
+   * Map this Directory and all its children (recursively) into a different implementation of {@link uk.co.spudsoft.dircache.FileTree}.
    *
    * Either of the mapping methods may return null, which will not be included in the output structure. This is the recommended
    * approach if empty Directories are to be trimmed from the output.

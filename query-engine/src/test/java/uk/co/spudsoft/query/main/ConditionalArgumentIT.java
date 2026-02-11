@@ -141,7 +141,7 @@ public class ConditionalArgumentIT {
             .statusCode(200)
             .extract().body().asString();
     
-    assertThat(body, startsWith("{\"name\":\"\",\"children\":[{\"name\":\"args\",\"children\":[{\"name\":\"Args00\",\"path\":\"args/Args00\",\"title\":\"No Arguments\",\"description\":\"Test pipeline that has no arguments\",\"type\":\"file\"},{\"name\":\"Args01\",\"path\":\"args/Args01\",\"title\":\"One Argument\",\"description\":\"Test pipeline that has 1 argument\",\"type\":\"file\"},{\"name\":\"Args02\",\"path\":\"args/Args02\",\"title\":\"Two Arguments\",\"description\":\"Test pipeline that has 2 arguments\",\"type\":\"file\"},"));
+    assertThat(body, startsWith(StandardExpectedResults.AVAILABLE_AS_JSON_START));
     assertThat(body, containsString("ConditionalArgument"));
         
     body = given()

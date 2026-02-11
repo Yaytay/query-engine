@@ -89,7 +89,7 @@ public class InfoHandler {
           , description = "The list of available pipelines."
           , content = @Content(
                   mediaType = MediaType.APPLICATION_JSON
-                  , schema = @Schema(implementation = PipelineNodesTree.PipelineNode.class)
+                  , schema = @Schema(implementation = PipelineNodesTree.PipelineDir.class)
           )
   )
   public void getAvailable(

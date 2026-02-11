@@ -135,7 +135,7 @@ public class MainQueryForkIT {
             .statusCode(200)
             .extract().body().asString();
     
-    assertThat(body, startsWith("{\"name\":\"\",\"children\":[{\"name\":\"args\",\"children\":[{\"name\":\"Args00\",\"path\":\"args/Args00\",\"title\":\"No Arguments\",\"description\":\"Test pipeline that has no arguments\",\"type\":\"file\"},{\"name\":\"Args01\",\"path\":\"args/Args01\",\"title\":\"One Argument\",\"description\":\"Test pipeline that has 1 argument\",\"type\":\"file\"}"));
+    assertThat(body, startsWith(StandardExpectedResults.AVAILABLE_AS_JSON_START));
         
     body = given()
             .get("/api/formio/demo/FeatureRichExample")

@@ -282,7 +282,7 @@ public class DocHandler {
           description = "The list of available documents.",
           content = @Content(
                   mediaType = MediaType.APPLICATION_JSON,
-                  schema = @Schema(implementation = DocNodesTree.DocNode.class)
+                  schema = @Schema(implementation = DocNodesTree.DocDir.class)
           )
   )
   public void getAllDocumentation(

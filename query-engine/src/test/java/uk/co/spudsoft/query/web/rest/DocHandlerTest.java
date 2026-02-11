@@ -155,7 +155,7 @@ public class DocHandlerTest {
       logger.warn("Unable to create soft links (probably running Windows: ", ex);
     }
 
-    DocNodesTree.DocNode root = DocHandler.buildAlternativeDocs(rootPath.toString());
+    DocNodesTree.DocDir root = DocHandler.buildAlternativeDocs(rootPath.toString());
     assertNotNull(root);
 
     logger.debug("{}", "Result: " + Json.encode(root));
@@ -164,7 +164,7 @@ public class DocHandlerTest {
     assertEquals("", root.getPath());
     assertEquals(4, root.getChildren().size());
 
-    DocNodesTree.DocNode argsNode = root.getChildren().stream().filter(n -> "args".equals(n.getName())).findFirst().get();
+    DocNodesTree.DocDir argsNode = dir(root.getChildren().stream().filter(n -> "args".equals(n.getName())).findFirst().get());
 
     assertEquals("args", argsNode.getName());
     assertEquals("args", argsNode.getPath());
@@ -176,12 +176,12 @@ public class DocHandlerTest {
     assertEquals("args" + File.separator + "Args00.yaml", args00Node.getPath());
     assertEquals("Args00", ((DocNodesTree.DocFile) args00Node).getTitle());
 
-    DocNodesTree.DocNode sub1Node = root.getChildren().stream().filter(n -> "sub1".equals(n.getName())).findFirst().get();
+    DocNodesTree.DocDir sub1Node = dir(root.getChildren().stream().filter(n -> "sub1".equals(n.getName())).findFirst().get());
 
     assertEquals("sub1", sub1Node.getName());
     assertEquals("sub1", sub1Node.getPath());
 
-    DocNodesTree.DocNode sub2Node = sub1Node.getChildren().stream().filter(n -> n.getName().endsWith("sub2")).findFirst().get();
+    DocNodesTree.DocDir sub2Node = dir(sub1Node.getChildren().stream().filter(n -> n.getName().endsWith("sub2")).findFirst().get());
 
     assertEquals("sub2", sub2Node.getName());
     assertEquals("sub1" + File.separator + "sub2", sub2Node.getPath());
@@ -196,5 +196,9 @@ public class DocHandlerTest {
     assertEquals("AllDynamicIT", dynNode.getName());
     assertEquals("sub1" + File.separator + "sub2" + File.separator + "AllDynamicIT.yaml", dynNode.getPath());
     assertEquals("AllDynamicIT", ((DocNodesTree.DocFile) dynNode).getTitle());
+  }
+
+  private DocNodesTree.DocDir dir(DocNodesTree.DocNode node) {
+    return (DocNodesTree.DocDir) node;
   }
 }
