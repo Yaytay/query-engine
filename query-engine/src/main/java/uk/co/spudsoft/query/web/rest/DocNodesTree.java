@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Objects;
 import uk.co.spudsoft.dircache.FileTree;
 import uk.co.spudsoft.dircache.FileTree.NodeType;
-import uk.co.spudsoft.query.pipeline.PipelineNodesTree;
 
 /**
  * Implementation of {@link uk.co.spudsoft.dircache.FileTree} specialized for reporting the Query Engine documentation.
