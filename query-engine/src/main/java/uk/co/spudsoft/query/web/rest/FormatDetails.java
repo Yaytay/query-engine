@@ -22,17 +22,13 @@ import uk.co.spudsoft.query.defn.Format;
 import uk.co.spudsoft.query.defn.FormatType;
 
 /**
- * An Argument represents a named piece of data that will be passed in to a pipeline.
- * Typically these correspond to query string arguments.
+ * A format that the data can be provided in.
  * 
  * @author jtalbut
  */
 @Schema(description = """
                       <P>
-                      An Argument represents a named piece of data that will be passed in to a pipeline.
-                      </P>
-                      <P>
-                      Typically these correspond to query string arguments.
+                      A format that the data can be provided in.
                       </P>
                       """)
 public final class FormatDetails {
@@ -44,8 +40,8 @@ public final class FormatDetails {
   private final MediaType mediaType;
 
   /**
-   * Constructor - create an ArgumentDetails from an Argument.
-   * @param format The Argument to represent.
+   * Constructor - create a FormatDetails from a Format.
+   * @param format The Format to represent.
    */
   public FormatDetails(Format format) {
 
@@ -131,8 +127,8 @@ public final class FormatDetails {
   @Schema(description = "The media type (e.g., application/xml).",
     maxLength = 100,
     defaultValue = "application/xml")
-  public MediaType getMediaType() {
-    return mediaType;
+  public String getMediaType() {
+    return mediaType.toString();
   }
   
 }

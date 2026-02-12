@@ -241,7 +241,7 @@ public interface Format {
                         The media type will also be set as the Content-Type header in the response.
                         </P>
                         """
-            , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
   MediaType getMediaType();
 
