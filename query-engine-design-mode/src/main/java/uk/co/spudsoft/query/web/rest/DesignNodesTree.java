@@ -145,11 +145,14 @@ public class DesignNodesTree implements FileTree<DesignNodesTree.DesignNode> {
    * Represents a directory containing pipeline design files and potentially other directories.
    * This is a subclass of {@link DesignNode}, specifically tailored to represent directories and manage their child nodes.
    */
-  @Schema(description = """
+  @Schema(
+          description = """
                         <P>
-                        A directory containing pipeline files.
+                        A directory containing pipeline definition files.
                         </P>
-                        """)
+                        """
+          , allOf = DesignNode.class
+  )
   public static class DesignDir extends DesignNode implements FileTree.FileTreeDir<DesignNode> {
 
     private List<DesignNode> children;
@@ -235,11 +238,14 @@ public class DesignNodesTree implements FileTree<DesignNodesTree.DesignNode> {
    * This class extends the {@link DesignNode} to include additional
    * properties and behavior specific to files.
    */
-  @Schema(description = """
+  @Schema(
+          description = """
                         <P>
                         A pipeline definition file.
                         </P>
-                        """)
+                        """
+          , allOf = DesignNode.class
+  )
   public static class DesignFile extends DesignNode {
 
     private final long size;

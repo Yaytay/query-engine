@@ -174,11 +174,14 @@ public class PipelineNodesTree implements FileTree<DirCacheTree.Node> {
   /**
    * A directory containing files or other directories.
    */
-  @Schema(description = """
+  @Schema(
+          description = """
                         <P>
                         A directory containing pipelines.
                         </P>
-                        """)
+                        """
+          , allOf = PipelineNode.class
+  )
   public static class PipelineDir extends PipelineNode implements FileTreeDir<PipelineNode> {
 
     private List<PipelineNode> children;
@@ -225,11 +228,14 @@ public class PipelineNodesTree implements FileTree<DirCacheTree.Node> {
   /**
    * A single pipeline file that contains enough information from the {@link uk.co.spudsoft.query.defn.Pipeline} definition to build an input form.
    */
-  @Schema(description = """
+  @Schema(
+          description = """
                         <P>
                         A pipeline.
                         </P>
-                        """)
+                        """
+          , allOf = PipelineNode.class
+  )
   public static class PipelineFile extends PipelineNode {
 
     private final String title;

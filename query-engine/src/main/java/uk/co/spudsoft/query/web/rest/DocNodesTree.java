@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Objects;
 import uk.co.spudsoft.dircache.FileTree;
 import uk.co.spudsoft.dircache.FileTree.NodeType;
+import uk.co.spudsoft.query.pipeline.PipelineNodesTree;
 
 /**
  * Implementation of {@link uk.co.spudsoft.dircache.FileTree} specialized for reporting the Query Engine documentation.
@@ -153,11 +154,14 @@ public class DocNodesTree implements FileTree<DocNodesTree.DocNode> {
   /**
    * A directory containing documentation files.
    */
-  @Schema(description = """
+  @Schema(
+          description = """
                         <P>
                         A directory containing documentation files.
                         </P>
-                        """)
+                        """
+          , allOf = DocNode.class
+  )
   public static class DocDir extends DocNode implements FileTree.FileTreeDir<DocNode> {
 
     private List<DocNode> children;
@@ -205,11 +209,14 @@ public class DocNodesTree implements FileTree<DocNodesTree.DocNode> {
   /**
    * A documentation file.
    */
-  @Schema(description = """
+  @Schema(
+          description = """
                         <P>
                         A documentation file.
                         </P>
-                        """)
+                        """
+          , allOf = DocNode.class
+  )
   public static class DocFile extends DocNode {
     
     private final String title;
