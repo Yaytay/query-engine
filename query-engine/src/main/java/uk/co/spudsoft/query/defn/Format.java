@@ -207,9 +207,30 @@ public interface Format {
   String getExtension();
 
   /**
+   * Get the filename to use in the Content-Disposition header as a <a href="http://www.stringtemplate.org">String Template</a>.
+   * 
+   * This takes precedence over the filename property.
+   * If not specified then the filename property is used.
+   * If neither is specified then the leaf name of the pipeline (with extension the value of {@link #getExtension()} appended) will be used.
+   *
+   * @return the filename of the format.
+   */
+  @Schema(description = """
+                        <P>The filename to specify in the Content-Disposition header as a <a href="http://www.stringtemplate.org">String Template</a>.</P>
+                        <P>
+                        If not specified then the leaf name of the pipeline (with extension the value of {@link #getExtension()} appended) will be used.
+                        </P>
+                        """
+          , maxLength = 1000
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  String getFilenameTemplate();
+  
+  /**
    * Get the filename to use in the Content-Disposition header.
    * 
-   * If not specified then the leaf name of the pipeline (with extension the value of {@link #getExtension()} appended) will be used.
+   * This is ignored if the filenameTemplate property is specified.
+   * If neither is specified then the leaf name of the pipeline (with extension the value of {@link #getExtension()} appended) will be used.
    *
    * @return the filename of the format.
    */
@@ -223,7 +244,7 @@ public interface Format {
           , requiredMode = Schema.RequiredMode.NOT_REQUIRED
   )
   String getFilename();
-
+  
   /**
    * Get the media type of the format.
    * The media type is used to determine the format based upon the Accept header in the request.

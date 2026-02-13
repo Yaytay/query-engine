@@ -17,12 +17,10 @@
 package uk.co.spudsoft.query.exec;
 
 import uk.co.spudsoft.query.exec.context.RequestContext;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.vertx.core.Promise;
-import io.vertx.core.json.Json;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,11 +28,11 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.stringtemplate.v4.ST;
-import org.stringtemplate.v4.STGroup;
 import uk.co.spudsoft.query.defn.Endpoint;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.exec.dynamic.StringTemplateEvaluator;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
 /**
@@ -200,22 +198,7 @@ public class PipelineInstance {
    */
   // Compare the values added with the ProcessorScriptInstance#runSource and ConditionInstance#evaluate
   public String renderTemplate(String name, String template) throws IllegalStateException {
-    if (Strings.isNullOrEmpty(template)) {
-      return template;
-    }
-    StringTemplateListener errorListener = new StringTemplateListener();
-    try {
-      STGroup stgroup = new STGroup();
-      stgroup.setListener(errorListener);
-      ST st = new ST(stgroup, template);
-      st.add("request", pipelineContext.getRequestContext());
-      st.add("args", arguments);
-      st.add("pipeline", definition);
-      return st.render();
-    } catch (Throwable ex) {
-      logger.warn("Failed to render template {} with values {}: ", template, arguments, ex);
-      logger.warn("Errors: ", Json.encode(errorListener.getErrors()));
-      throw new IllegalStateException("Error(s) evaluating " + name + " template: " + Json.encode(errorListener.getErrors()), ex);
-    }
+    return StringTemplateEvaluator.renderTemplate(name, template, pipelineContext, ImmutableMap.<String, Object>builder().put("pipeline", definition).put("args", arguments).build());
   }
+  
 }

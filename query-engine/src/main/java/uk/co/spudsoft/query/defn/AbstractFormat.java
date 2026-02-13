@@ -34,6 +34,7 @@ public abstract class AbstractFormat implements Format {
   private final String description;
   private final String extension;
   private final String filename;
+  private final String filenameTemplate;
   private final MediaType mediaType;
   private final boolean hidden;
 
@@ -47,6 +48,7 @@ public abstract class AbstractFormat implements Format {
     this.description = builder.description;
     this.extension = builder.extension;
     this.filename = builder.filename;
+    this.filenameTemplate = builder.filenameTemplate;
     this.mediaType = builder.mediaType;
     this.hidden = builder.hidden;
   }
@@ -59,6 +61,9 @@ public abstract class AbstractFormat implements Format {
     validateType(requiredType, type);
     if (Strings.isNullOrEmpty(name)) {
       throw new IllegalArgumentException("Format has no name");
+    }
+    if (Strings.isNullOrEmpty(extension)) {
+      throw new IllegalArgumentException("The format " + name + " has no extension");
     }
   }
   
@@ -80,6 +85,11 @@ public abstract class AbstractFormat implements Format {
   @Override
   public String getExtension() {
     return extension;
+  }
+
+  @Override
+  public String getFilenameTemplate() {
+    return filenameTemplate;
   }
 
   @Override
@@ -121,6 +131,10 @@ public abstract class AbstractFormat implements Format {
      */
     private String extension;
     /**
+     * The filename to use in the Content-Disposition header as a <a href="http://www.stringtemplate.org">String Template</a>.
+     */
+    private String filenameTemplate;
+    /**
      * The filename to use in the Content-Disposition header.
      */
     private String filename;
@@ -139,15 +153,17 @@ public abstract class AbstractFormat implements Format {
      * @param name The name of the format, as will be used on query string parameters.
      * @param description The description of the format, optional value to help UI users choose which format to use.
      * @param extension The the extension of the format, used to determine the format based upon the URL path.
+     * @param filenameTemplate The filename to use in the Content-Disposition header as a <a href="http://www.stringtemplate.org">String Template</a>.
      * @param filename The filename to use in the Content-Disposition header.
      * @param mediaType The media type of the format, used to determine the format based upon the Accept header in the request.
      * @param hidden  The hidden flag, to determine whether the format should be removed from the list when presented as an option to users.
      */
-    public Builder(FormatType type, String name, String description, String extension, String filename, MediaType mediaType, boolean hidden) {
+    public Builder(FormatType type, String name, String description, String extension, String filenameTemplate, String filename, MediaType mediaType, boolean hidden) {
       this.type = type;
       this.name = name;
       this.description = description;
       this.extension = extension;
+      this.filenameTemplate = filenameTemplate;
       this.filename = filename;
       this.mediaType = mediaType;
       this.hidden = hidden;
@@ -200,6 +216,17 @@ public abstract class AbstractFormat implements Format {
      */
     public T extension(final String value) {
       this.extension = value;
+      return self();
+    }
+
+    /**
+     * Set the filename for the format as a <a href="http://www.stringtemplate.org">String Template</a>.
+     *
+     * @param filenameTemplate the default filename for the forma as a <a href="http://www.stringtemplate.org">String Template</a>.
+     * @return this Builder instance.
+     */
+    public T filenameTemplate(String filenameTemplate) {
+      this.filenameTemplate = filenameTemplate;
       return self();
     }
 

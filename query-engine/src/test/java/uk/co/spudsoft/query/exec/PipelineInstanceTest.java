@@ -27,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 import uk.co.spudsoft.query.defn.Argument;
 import uk.co.spudsoft.query.defn.DataType;
+import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 
@@ -42,7 +43,7 @@ public class PipelineInstanceTest {
   @Test
   public void testRenderTemplate() {
     
-    PipelineInstance instance = new PipelineInstance(null, null, null, null, null, null, null, null);
+    PipelineInstance instance = new PipelineInstance(null, Pipeline.builder().build(), null, null, null, null, null, null);
     assertNull(instance.renderTemplate("test", null));
     assertEquals("", instance.renderTemplate("test", ""));
     
@@ -57,7 +58,7 @@ public class PipelineInstanceTest {
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
     PipelineInstance instance1 = new PipelineInstance(
-            pipelineContext, null, 
+            pipelineContext, Pipeline.builder().build(), 
             ImmutableMap.<String, ArgumentInstance>builder()
                     .put("port"
                             , new ArgumentInstance(

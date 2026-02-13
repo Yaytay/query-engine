@@ -238,7 +238,7 @@ public class FormatDelimited extends AbstractTextFormat implements Format {
     private String newline = DEFAULT_NEWLINE;
 
     private Builder() {
-      super(FormatType.Delimited, DEFAULT_NAME, null, DEFAULT_EXTENSION, null, MediaType.parse(DEFAULT_MEDIA_TYPE), false
+      super(FormatType.Delimited, DEFAULT_NAME, null, DEFAULT_EXTENSION, null, null, MediaType.parse(DEFAULT_MEDIA_TYPE), false
               , null, null, null, null, null
       );
     }

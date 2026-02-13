@@ -35,7 +35,7 @@ import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes; 
 import uk.co.spudsoft.query.exec.Types;
-import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
+import uk.co.spudsoft.query.exec.dynamic.JexlEvaluator;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.procs.AbstractProcessor;
 import uk.co.spudsoft.query.exec.procs.query.FilteringStream;

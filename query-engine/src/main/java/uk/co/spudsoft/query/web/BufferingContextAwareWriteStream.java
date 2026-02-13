@@ -24,6 +24,7 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.streams.WriteStream;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -44,6 +45,7 @@ public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
   private Buffer buffer = Buffer.buffer();
   private final AtomicInteger pendingFlushes = new AtomicInteger();
   private Handler<Void> drainHandler;
+  private final AtomicBoolean ended = new AtomicBoolean();
 
   /**
    * Constructor.
@@ -90,7 +92,7 @@ public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
                     promise.fail(ar.cause());
                   }
 
-                  if (remaining <= MAX_PENDING_WRITES / 2 && !delegate.writeQueueFull() && drainHandler != null) {
+                  if (!ended.get() && remaining <= MAX_PENDING_WRITES / 2 && !delegate.writeQueueFull() && drainHandler != null) {
                     drainHandler.handle(null);
                   }
                 });
@@ -105,6 +107,7 @@ public class BufferingContextAwareWriteStream implements WriteStream<Buffer> {
     Promise<Void> promise = Promise.promise();
     Context thisContext = Vertx.currentContext();
     context.runOnContext(v2 -> {
+      ended.set(true);
       delegate.end()
               .onComplete(ar -> {
                 thisContext.runOnContext(v3 -> {

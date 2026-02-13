@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
 import static java.util.regex.Pattern.UNICODE_CHARACTER_CLASS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
+import uk.co.spudsoft.query.exec.dynamic.JexlEvaluator;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;

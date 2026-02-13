@@ -18,7 +18,7 @@ package uk.co.spudsoft.query.main;
 
 import com.google.common.base.Strings;
 import uk.co.spudsoft.query.defn.Condition;
-import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
+import uk.co.spudsoft.query.exec.dynamic.JexlEvaluator;
 
 /**
  * Configuration of {@link Credentials} that also supports a {@link uk.co.spudsoft.query.defn.Condition}.

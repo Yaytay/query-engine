@@ -66,7 +66,7 @@ public class AbstractTextFormatTest {
     public static class Builder extends AbstractTextFormat.Builder<Builder> {
 
       public Builder() {
-        super(FormatType.Delimited, null, null, null, null, MediaType.BMP, false
+        super(FormatType.Delimited, null, null, null, null, null, MediaType.BMP, false
                 , null, null, null, null, null);
       }
 

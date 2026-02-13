@@ -17,6 +17,7 @@
 package uk.co.spudsoft.query.web;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.micrometer.core.instrument.Counter;
@@ -60,6 +61,7 @@ import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.ArgumentInstance;
 import uk.co.spudsoft.query.exec.CachingWriteStream;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.exec.dynamic.StringTemplateEvaluator;
 import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.logging.RequestCollatingAppender;
 
@@ -363,7 +365,7 @@ public class QueryRouter implements Handler<RoutingContext> {
                   return response.end();
                 } else {
                   Format chosenFormat = pipelineExecutor.getFormat(new PipelineContext(null, requestContext), pipeline.getFormats(), formatRequest);
-                  String filename = buildDesiredFilename(chosenFormat);
+                  String filename = buildDesiredFilename(requestContext, pipeline, chosenFormat);
                   if (filename != null) {
                     response.headers().set("Content-Disposition", "attachment; filename=\"" + filename + "\"");
                   }
@@ -427,7 +429,7 @@ public class QueryRouter implements Handler<RoutingContext> {
       // The value provided is a count of writes, so the actual memory used is responseWriteQueueMaxSize * writeStreamBufferSize.
       response.setWriteQueueMaxSize(responseWriteQueueMaxSize);
 
-      String filename = buildDesiredFilename(chosenFormat);
+      String filename = buildDesiredFilename(requestContext, pipeline, chosenFormat);
       if (filename != null) {
         response.headers().set("Content-Disposition", "attachment; filename=\"" + filename + "\"");
       }
@@ -498,18 +500,51 @@ public class QueryRouter implements Handler<RoutingContext> {
             .end(message);
   }
 
-  static String buildDesiredFilename(Format chosenFormat) {
-    String fmtFilename = chosenFormat.getFilename();
-    String fmtExtention = chosenFormat.getExtension();
-
-    if (Strings.isNullOrEmpty(fmtFilename)) {
-      return null;
-    } else {
-      if (!fmtFilename.contains(".") && !Strings.isNullOrEmpty(fmtExtention)) {
-        fmtFilename = fmtFilename + "." + fmtExtention;
+  static String buildDesiredFilename(RequestContext requestContext, Pipeline pipeline, Format chosenFormat) {
+    String fmtFilenameTemplate = chosenFormat.getFilenameTemplate();
+    
+    String filename = null;
+    if (!Strings.isNullOrEmpty(fmtFilenameTemplate)) {
+      filename = StringTemplateEvaluator.renderTemplate(
+              chosenFormat.getName() + ".filenameTemplate"
+              , fmtFilenameTemplate
+              , new PipelineContext(null, requestContext)
+              , ImmutableMap.<String, Object>builder()
+                      .put("format", chosenFormat)
+                      .build()
+      );
+      if (filename != null) {
+        filename = filename.replace(":", "")
+                .replace("/", "")
+                .replace("\\", "")
+                ;
       }
-      return fmtFilename;
     }
+    String fmtFilename = chosenFormat.getFilename();
+    if (Strings.isNullOrEmpty(filename) && !Strings.isNullOrEmpty(fmtFilename)) {
+      filename = fmtFilename;
+    }
+    if (Strings.isNullOrEmpty(filename)) {
+      String requestPath = requestContext.getPath();
+      int idx = requestPath.lastIndexOf("/");
+      if (idx > 0) {
+        requestPath = requestPath.substring(idx + 1);
+      }
+      idx = requestPath.indexOf(".");
+      if (idx > 0) {
+        requestPath = requestPath.substring(0, idx);
+      }
+      filename = requestPath;
+    }
+    if (Strings.isNullOrEmpty(filename)) {
+      filename = "data";
+    }
+    
+    String fmtExtention = chosenFormat.getExtension();
+    if (!filename.contains(".") && !Strings.isNullOrEmpty(fmtExtention)) {
+      filename = filename + "." + fmtExtention;
+    }
+    return filename;
   }
 
 }

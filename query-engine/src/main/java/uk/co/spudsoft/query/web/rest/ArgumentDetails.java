@@ -27,7 +27,7 @@ import uk.co.spudsoft.query.defn.Argument;
 import uk.co.spudsoft.query.defn.ArgumentValue;
 import uk.co.spudsoft.query.defn.Condition;
 import uk.co.spudsoft.query.defn.DataType;
-import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
+import uk.co.spudsoft.query.exec.dynamic.JexlEvaluator;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 

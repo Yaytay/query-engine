@@ -21,7 +21,7 @@ import org.apache.commons.jexl3.JexlContext;
 import org.apache.commons.jexl3.JexlExpression;
 import org.apache.commons.jexl3.MapContext;
 import uk.co.spudsoft.query.defn.SourcePipeline;
-import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
+import uk.co.spudsoft.query.exec.dynamic.JexlEvaluator;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 
 /**

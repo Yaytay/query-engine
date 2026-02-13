@@ -48,7 +48,7 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 import uk.co.spudsoft.query.main.ProtectedCredentials;
 import uk.co.spudsoft.query.defn.Format;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
-import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
+import uk.co.spudsoft.query.exec.dynamic.JexlEvaluator;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.logging.Log;
 
@@ -178,7 +178,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
 
   static ImmutableList<Comparable<?>> evaluateDefaultValues(PipelineContext pipelineContext, Argument arg, Pattern permittedValuesPattern) throws Throwable {
     JexlEvaluator evaluator = new JexlEvaluator(arg.getDefaultValueExpression());
-    Object raw = evaluator.evaluateAsObject(pipelineContext.getRequestContext(), null);
+    Object raw = evaluator.evaluateAsObject(pipelineContext.getRequestContext(), null, null);
     if (raw == null) {
       return ImmutableList.of();
     }

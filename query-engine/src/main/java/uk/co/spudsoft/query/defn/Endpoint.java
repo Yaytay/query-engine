@@ -167,14 +167,14 @@ public class Endpoint {
   }
 
   /**
-   * Get a StringTemplate that will be rendered as the URL for the Endpoint. Invalid if the URL value is set to a non-empty
+   * Get a <a href="http://www.stringtemplate.org">String Template</a> that will be rendered as the URL for the Endpoint. Invalid if the URL value is set to a non-empty
    * string. For security reasons the URL should not contain credentials - the URL may be logged but the username and password
    * will not be.
    *
-   * @return a StringTemplate that will be rendered as the URL for the Endpoint.
+   * @return a <a href="http://www.stringtemplate.org">String Template</a> that will be rendered as the URL for the Endpoint.
    */
   @Schema(description = """
-                        <P>A StringTemplate that will be rendered as the URL that defines the Endpoint.</P>
+                        <P>A <a href="http://www.stringtemplate.org">String Template</a> that will be rendered as the URL that defines the Endpoint.</P>
                         <P>
                         Invalid if the URL field is provided.
                         </P>

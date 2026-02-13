@@ -566,6 +566,7 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
      * @param name The default name to use.
      * @param description The default description to use.
      * @param extension The default extension to use.
+     * @param filenameTemplate The filename to use as a <a href="http://www.stringtemplate.org">String Template</a>.
      * @param filename The default filename to use.
      * @param mediaType The default mediaType to use.
      * @param hidden The default hidden to use.
@@ -575,10 +576,10 @@ public abstract class AbstractTextFormat extends AbstractFormat implements Forma
      * @param decimalFormat The default decimalFormat to use.
      * @param booleanFormat The default booleanFormat to use.
      */
-    protected Builder(FormatType type, String name, String description, String extension, String filename, MediaType mediaType, boolean hidden
+    protected Builder(FormatType type, String name, String description, String extension, String filenameTemplate, String filename, MediaType mediaType, boolean hidden
         , String dateFormat, String dateTimeFormat, String timeFormat, String decimalFormat, String booleanFormat
     ) {
-      super(type, name, description, extension, filename, mediaType, hidden);
+      super(type, name, description, extension, filenameTemplate, filename, mediaType, hidden);
       this.dateFormat = dateFormat;
       this.dateTimeFormat = dateTimeFormat;
       this.timeFormat = timeFormat;

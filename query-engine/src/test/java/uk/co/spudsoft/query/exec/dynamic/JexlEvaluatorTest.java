@@ -14,8 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package uk.co.spudsoft.query.exec.conditions;
+package uk.co.spudsoft.query.exec.dynamic;
 
+import uk.co.spudsoft.query.exec.dynamic.JexlEvaluator;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import inet.ipaddr.IPAddressString;
 import io.vertx.core.MultiMap;

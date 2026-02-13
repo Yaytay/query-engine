@@ -51,6 +51,7 @@ public class FormatXlsx implements Format {
   private final String name;
   private final String description;
   private final String extension;
+  private final String filenameTemplate;
   private final String filename;
   private final MediaType mediaType;
   private final boolean hidden;
@@ -181,7 +182,7 @@ public class FormatXlsx implements Format {
     return extension;
   }
 
-    /**
+  /**
    * Get the filename to use in the Content-Disposition header.
    * 
    * If not specified then the leaf name of the pipeline (with extension the value of {@link #getExtension()} appended) will be used.
@@ -200,6 +201,29 @@ public class FormatXlsx implements Format {
   @Override
   public String getFilename() {
     return filename;
+  }
+
+  /**
+   * Get the filename to use in the Content-Disposition header as a StringTemplate.
+   * 
+   * This takes precedence over the filename property.
+   * If not specified then the filename property is used.
+   * If neither is specified then the leaf name of the pipeline (with extension the value of {@link #getExtension()} appended) will be used.
+   *
+   * @return the filename of the format.
+   */
+  @Schema(description = """
+                        <P>The filename to specify in the Content-Disposition header as a StringTemplate.</P>
+                        <P>
+                        If not specified then the leaf name of the pipeline (with extension the value of {@link #getExtension()} appended) will be used.
+                        </P>
+                        """
+          , maxLength = 1000
+          , requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  @Override
+  public String getFilenameTemplate() {
+    return filenameTemplate;
   }
 
   /**
@@ -473,6 +497,7 @@ public class FormatXlsx implements Format {
     private String name = "xlsx";
     private String description;
     private String extension = "xlsx";
+    private String filenameTemplate = null;
     private String filename = null;
     private MediaType mediaType = MediaType.parse("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     private boolean hidden = false;
@@ -532,6 +557,17 @@ public class FormatXlsx implements Format {
      */
     public Builder extension(final String value) {
       this.extension = value;
+      return this;
+    }
+
+    /**
+     * Set the filename for the format as a StringTemplate.
+     *
+     * @param filenameTemplate the default filename for the format as a StringTemplate.
+     * @return this Builder instance.
+     */
+    public Builder filenameTemplate(String filenameTemplate) {
+      this.filenameTemplate = filenameTemplate;
       return this;
     }
 
@@ -702,7 +738,7 @@ public class FormatXlsx implements Format {
      * @return a new instance of the FormatXlsx class.
      */
     public FormatXlsx build() {
-      return new FormatXlsx(type, name, description, extension, filename, mediaType, hidden, sheetName, creator
+      return new FormatXlsx(type, name, description, extension, filenameTemplate, filename, mediaType, hidden, sheetName, creator
               , gridLines, headers, defaultDateFormat, defaultDateTimeFormat, defaultTimeFormat
               , headerFont, bodyFont, headerColours, evenColours, oddColours, columns);
     }
@@ -717,7 +753,7 @@ public class FormatXlsx implements Format {
     return new FormatXlsx.Builder();
   }
 
-  private FormatXlsx(final FormatType type, final String name, final String description, final String extension, final String filename, final MediaType mediaType, final boolean hidden
+  private FormatXlsx(final FormatType type, final String name, final String description, final String extension, final String filenameTemplate, final String filename, final MediaType mediaType, final boolean hidden
           , final String sheetName, final String creator
           , final boolean gridLines, final boolean headers, final String defaultDateFormat, final String defaultDateTimeFormat, final String defaultTimeFormat
           , final FormatXlsxFont headerFont, final FormatXlsxFont bodyFont, final FormatXlsxColours headerColours, final FormatXlsxColours evenColours, final FormatXlsxColours oddColours, final List<FormatXlsxColumn> columns) {
@@ -726,6 +762,7 @@ public class FormatXlsx implements Format {
     this.name = name;
     this.description = description;
     this.extension = extension;
+    this.filenameTemplate = filenameTemplate;
     this.filename = filename;
     this.mediaType = mediaType;
     this.hidden = hidden;

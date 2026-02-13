@@ -42,7 +42,7 @@ import uk.co.spudsoft.query.exec.PipelineInstance;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.SharedMap;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
-import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
+import uk.co.spudsoft.query.exec.dynamic.JexlEvaluator;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.exec.sources.AbstractSource;

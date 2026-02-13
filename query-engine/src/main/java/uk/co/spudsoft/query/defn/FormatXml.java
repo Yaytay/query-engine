@@ -375,7 +375,7 @@ public class FormatXml extends AbstractTextFormat implements Format {
      * Default constructor.
      */
     public Builder() {
-      super(FormatType.XML, "xml", null, "xml", null, MediaType.parse("application/xml; charset=utf-8"), false
+      super(FormatType.XML, "xml", null, "xml", null, null, MediaType.parse("application/xml; charset=utf-8"), false
               , null, null, null, null, null);
     }
 

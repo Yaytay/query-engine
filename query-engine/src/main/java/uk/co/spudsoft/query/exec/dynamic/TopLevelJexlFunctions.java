@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package uk.co.spudsoft.query.exec.conditions;
+package uk.co.spudsoft.query.exec.dynamic;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;

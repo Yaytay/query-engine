@@ -309,7 +309,7 @@ public class FormatJson extends AbstractTextFormat implements Format {
     private int prettiness = 1;
 
     private Builder() {
-      super(FormatType.JSON, "json", null, "json", null, MediaType.parse("application/json"), false
+      super(FormatType.JSON, "json", null, "json", null, null, MediaType.parse("application/json"), false
         , null, null, null, null, null
       );
     }

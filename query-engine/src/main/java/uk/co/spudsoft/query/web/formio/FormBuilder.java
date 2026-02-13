@@ -44,7 +44,7 @@ import uk.co.spudsoft.query.defn.Format;
 import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.exec.FilterFactory;
 import uk.co.spudsoft.query.exec.conditions.ConditionInstance;
-import uk.co.spudsoft.query.exec.conditions.JexlEvaluator;
+import uk.co.spudsoft.query.exec.dynamic.JexlEvaluator;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.pipeline.PipelineDefnLoader.PipelineAndFile;

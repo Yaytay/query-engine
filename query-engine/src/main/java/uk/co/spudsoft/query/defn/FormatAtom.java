@@ -167,7 +167,7 @@ public class FormatAtom extends AbstractTextFormat implements Format {
      * Default constructor.
      */
     public Builder() {
-      super(FormatType.Atom, DEFAULT_NAME, null, DEFAULT_EXTENSION, null, MediaType.parse(DEFAULT_MEDIA_TYPE), false
+      super(FormatType.Atom, DEFAULT_NAME, null, DEFAULT_EXTENSION, null, null, MediaType.parse(DEFAULT_MEDIA_TYPE), false
               , null, null, null, null, null
       );
     }

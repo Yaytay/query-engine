@@ -84,7 +84,7 @@ public class FormatHtml extends AbstractTextFormat implements Format {
      * Default constructor.
      */
     public Builder() {
-      super(FormatType.HTML, DEFAULT_NAME, null, DEFAULT_EXTENSION, null, MediaType.parse(DEFAULT_MEDIA_TYPE), false
+      super(FormatType.HTML, DEFAULT_NAME, null, DEFAULT_EXTENSION, null, null, MediaType.parse(DEFAULT_MEDIA_TYPE), false
               , null, null, null, null, null
       );
     }

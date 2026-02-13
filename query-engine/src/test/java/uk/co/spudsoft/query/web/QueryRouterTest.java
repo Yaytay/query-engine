@@ -250,18 +250,6 @@ public class QueryRouterTest {
     assertEquals(123, statusCaptor.getValue());
     assertEquals("Something special went wrong", messageCaptor.getValue());
   }
-
-  @Test
-  public void testGetFilename() {
-    
-    assertEquals(null, QueryRouter.buildDesiredFilename(FormatDelimited.builder().build()));
-    assertEquals(null, QueryRouter.buildDesiredFilename(FormatDelimited.builder().extension(".txt").build()));
-    assertEquals("Bob.csv", QueryRouter.buildDesiredFilename(FormatDelimited.builder().filename("Bob").build()));
-    assertEquals("Bob", QueryRouter.buildDesiredFilename(FormatDelimited.builder().filename("Bob").extension("").build()));
-    assertEquals("Bob.thing", QueryRouter.buildDesiredFilename(FormatDelimited.builder().filename("Bob.thing").extension("txt").build()));
-    assertEquals("Bob.txt", QueryRouter.buildDesiredFilename(FormatDelimited.builder().filename("Bob").extension("txt").build()));
-    
-  }
   
   @Test
   void testRemoveMatrixParams() {

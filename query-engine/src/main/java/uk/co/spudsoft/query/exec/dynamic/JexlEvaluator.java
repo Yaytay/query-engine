@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package uk.co.spudsoft.query.exec.conditions;
+package uk.co.spudsoft.query.exec.dynamic;
 
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.Condition;
 import uk.co.spudsoft.query.exec.DataRow;
+import uk.co.spudsoft.query.exec.conditions.DataRowUberspect;
 
 /**
  * An instance of a {@link uk.co.spudsoft.query.defn.Condition} to be evaluated before doing something else.
@@ -91,6 +92,7 @@ public class JexlEvaluator {
                      "uk.co.spudsoft.query.exec.DataRow",
                      "uk.co.spudsoft.query.exec.conditions.*",
                      "uk.co.spudsoft.query.exec.context.*",
+                     "uk.co.spudsoft.query.exec.dynamic.*",
                      "java.time.*"
             );
 
@@ -187,7 +189,7 @@ public class JexlEvaluator {
    */
   // Compare the bindings with PipelineInstance#renderTemplate and ProcessorScriptInstance#runSource
   public boolean evaluate(RequestContext requestContext, DataRow row) {
-    Object result = evaluateAsObject(requestContext, row);
+    Object result = evaluateAsObject(requestContext, row, null);
     if (result instanceof Boolean b) {
       return b;
     } else if (result == null) {
@@ -202,6 +204,7 @@ public class JexlEvaluator {
     }
   }
 
+
   /**
    * Evaluate the expression for the given RequestContext and DataRow, which may be null.
    *
@@ -210,6 +213,18 @@ public class JexlEvaluator {
    * @return the result of the expression, which may be of any type.
    */
   public Object evaluateAsObject(RequestContext request, DataRow row) {
+    return evaluateAsObject(request, row, null);
+  }
+
+  /**
+   * Evaluate the expression for the given RequestContext and DataRow, which may be null.
+   *
+   * @param request The context of the request.
+   * @param row The current DataRow, if this expression is to be evaluated in the context of a row.
+   * @param extraContext Additional data items that will be added to the evaluation context.
+   * @return the result of the expression, which may be of any type.
+   */
+  public Object evaluateAsObject(RequestContext request, DataRow row, Map<String, Object> extraContext) {
     JexlContext context = new MapContext();
     context.set("request", request);
     if (request != null) {
@@ -223,6 +238,9 @@ public class JexlEvaluator {
       context.set("row", DataRow.EMPTY_ROW);
     }
     context.set("iteration", iteration.getAndIncrement());
+    if (extraContext != null) {
+      extraContext.forEach(context::set);
+    }
 
     return expression.evaluate(context);
   }
