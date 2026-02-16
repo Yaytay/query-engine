@@ -505,14 +505,18 @@ public class QueryRouter implements Handler<RoutingContext> {
     
     String filename = null;
     if (!Strings.isNullOrEmpty(fmtFilenameTemplate)) {
-      filename = StringTemplateEvaluator.renderTemplate(
-              chosenFormat.getName() + ".filenameTemplate"
-              , fmtFilenameTemplate
-              , new PipelineContext(null, requestContext)
-              , ImmutableMap.<String, Object>builder()
-                      .put("format", chosenFormat)
-                      .build()
-      );
+      try {
+        filename = StringTemplateEvaluator.renderTemplate(
+                chosenFormat.getName() + ".filenameTemplate"
+                , fmtFilenameTemplate
+                , new PipelineContext(null, requestContext)
+                , ImmutableMap.<String, Object>builder()
+                        .put("format", chosenFormat)
+                        .build()
+        );
+      } catch (Throwable ex) {
+        logger.warn("Failed to evaluate filename template");
+      }
       if (filename != null) {
         filename = filename.replace(":", "")
                 .replace("/", "")

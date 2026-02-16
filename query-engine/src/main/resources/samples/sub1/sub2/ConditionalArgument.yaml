@@ -41,3 +41,4 @@ formats:
   extension: tsv
   headerRow: true
   mediaType: text/tsv
+  filenameTemplate: ConditionalArgument-<obj.now; format="yyyy-MM-dd_HHmm">

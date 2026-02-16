@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 jtalbut
+ * Copyright (C) 2026 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -144,14 +144,14 @@ public class TopLevelJexlFunctions {
   public LocalDateTime now() {
     return LocalDateTime.now(ZoneOffset.UTC);
   }
-  
+
   /**
    * Return an ArrayList of the passed in values.
-   * 
+   *
    * JEXL can have some strange ways of handling arrays and lists, this method can be used to guarantee the type of a series.
-   * 
+   *
    * The returned value is a copy of the list and changes made to either are independent of the other.
-   * 
+   *
    * @param items a number of strings
    * @return an ArrayList containing the items
    */

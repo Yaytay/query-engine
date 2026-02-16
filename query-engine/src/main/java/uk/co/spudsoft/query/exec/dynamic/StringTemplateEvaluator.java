@@ -18,6 +18,7 @@ package uk.co.spudsoft.query.exec.dynamic;
 
 import com.google.common.base.Strings;
 import io.vertx.core.json.Json;
+import java.time.LocalDateTime;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +39,21 @@ public class StringTemplateEvaluator {
 
   private static final Logger logger = LoggerFactory.getLogger(StringTemplateEvaluator.class);
 
+  private static TopLevelJexlFunctions fns = new TopLevelJexlFunctions();
+
   private StringTemplateEvaluator() {
+  }
+
+  /**
+   * Functional interface used by StringTemplate for top level functions.
+   */
+  public interface Fn {
+    /**
+     * Call the function.
+     * @param args Arguments to the function.
+     * @return The return value from the function.
+     */
+      Object call(Object... args);
   }
 
   /**
@@ -50,7 +65,8 @@ public class StringTemplateEvaluator {
    * @return the output from the {@link ST StringTemplate}.
    */
   // Compare the values added with the ProcessorScriptInstance#runSource and ConditionInstance#evaluate
-  public static String renderTemplate(String name
+  public static String renderTemplate(
+          String name
           , String template
           , PipelineContext pipelineContext
           , Map<String, Object> extraContext
@@ -58,32 +74,60 @@ public class StringTemplateEvaluator {
     if (Strings.isNullOrEmpty(template)) {
       return template;
     }
+
     StringTemplateListener errorListener = new StringTemplateListener();
     try {
+      /*
+       * IMPORTANT:
+       * - `template` is treated as a complete ST *template body*, not an STGroup definition.
+       * - `name` is only used for diagnostics (error reporting), not as a template identifier.
+       *
+       * This allows callers to pass templates like:
+       *   ConditionalArgument-<now.call("yyyy-MM-dd_HHmm")>
+       *
+       * If callers need a literal '<' or '>' in output, they must escape it per ST rules.
+       */
       STGroup stgroup = new STGroup();
       stgroup.setListener(errorListener);
+      stgroup.registerRenderer(LocalDateTime.class, new StringTemplateLocalDateTimeRenderer());
+
       ST st = new ST(stgroup, template);
-      st.add("fn", new TopLevelJexlFunctions());
+
+      // Provide "now" function object; invoke as: <now.call("pattern")>
+      st.add("obj", new TopLevelStringTemplateObjects());
+
+      // Common context
       st.add("request", pipelineContext.getRequestContext());
-      //st.add("args", arguments);
-      //st.add("pipeline", pipeline);
+
+      // Extra context
       if (extraContext != null) {
         extraContext.forEach(st::add);
       }
+
       return st.render();
     } catch (Throwable ex) {
       if (extraContext != null) {
         try {
           String contextAsJson = Json.encode(extraContext);
-          Log.decorate(logger.atWarn(), pipelineContext).log("Failed to render template {} with values {}: ", template, contextAsJson, ex);
+          Log.decorate(logger.atWarn(), pipelineContext)
+                  .log("Failed to render template {} with values {}: ", template, contextAsJson, ex);
         } catch (Throwable ex2) {
-          Log.decorate(logger.atWarn(), pipelineContext).log("Failed to render template and cannot represent context as json {}: ", template, ex);
+          Log.decorate(logger.atWarn(), pipelineContext)
+                  .log("Failed to render template and cannot represent context as json {}: ", template, ex);
         }
       } else {
-        Log.decorate(logger.atWarn(), pipelineContext).log("Failed to render template {}: ", template, ex);
+        Log.decorate(logger.atWarn(), pipelineContext)
+                .log("Failed to render template {}: ", template, ex);
       }
-      Log.decorate(logger.atWarn(), pipelineContext).log("Errors: ", Json.encode(errorListener.getErrors()));
-      throw new IllegalStateException("Error(s) evaluating " + name + " template: " + Json.encode(errorListener.getErrors()), ex);
+
+      throw new IllegalStateException(
+              "Error(s) evaluating " + name + " template: " + Json.encode(errorListener.getErrors()),
+              ex
+      );
+    } finally {
+      if (!errorListener.getErrors().isEmpty()) {
+        Log.decorate(logger.atWarn(), pipelineContext).log("Errors: ", Json.encode(errorListener.getErrors()));
+      }
     }
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 jtalbut
+ * Copyright (C) 2025 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,28 +15,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package uk.co.spudsoft.query.main;
+package uk.co.spudsoft.query.exec.dynamic;
+
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 /**
- * Set the version from the pom.
- * <p>
- * This file is updated by com.google.code.maven-replacer-plugin/replacer maven plugin.
- * 
+ * Accessor methods for creating standard objects that may be useful in a StringTemplate.
  * @author jtalbut
  */
-public final class Version {
+public class TopLevelStringTemplateObjects {
 
   /**
-   * The project name, as set in the Maven pom.xml.
+   * Constructor.
    */
-  public static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-  
-  /**
-   * The project version, as set in the Maven pom.xml.
-   */
-  public static final String MAVEN_PROJECT_VERSION = "0.2.43-1-main";
-
-  private Version() {
+  public TopLevelStringTemplateObjects() {
   }
   
+  /**
+   * Get the current time (UTC).
+   * @return the current time (UTC).
+   */
+  public LocalDateTime getNow() {
+    return LocalDateTime.now(ZoneOffset.UTC);
+  }
 }
