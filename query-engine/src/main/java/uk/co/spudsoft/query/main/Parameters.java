@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import uk.co.spudsoft.params4j.JavadocCapture;
 
 /**
@@ -61,10 +62,19 @@ public class Parameters {
 
   /**
    * Options to use on any Vert.x WebClients created by this project.
-   * The default value sets a connect timeout of 10s to avoid excessive delays on bad URLs.
+   * The default value sets:
+   * <ul>
+   * <li>a connect timeout of 10s to avoid excessive delays on bad URLs
+   * <li>a read idle timeout of 10s to avoid issues with upstream servers hanging
+   * <li>an idle timeout of 10 to avoid issues with upstream servers hanging
+   * </ul>
    */
   private WebClientOptions webClientOptions = new WebClientOptions()
-          .setConnectTimeout(10000);
+          .setConnectTimeout(10000)
+          .setReadIdleTimeout(10000)
+          .setIdleTimeout(10000)
+          .setIdleTimeoutUnit(TimeUnit.MILLISECONDS)
+          ;
 
   /**
    * The default Allowed-Origin.
@@ -514,7 +524,12 @@ public class Parameters {
 
   /**
    * Get the WebClientOptions that will be used when creating the Vert.x WebClients.
-   * The default value sets a connect timeout of 10s to avoid excessive delays on bad URLs.
+   * The default value sets:
+   * <ul>
+   * <li>a connect timeout of 10s to avoid excessive delays on bad URLs
+   * <li>a read idle timeout of 10s to avoid issues with upstream servers hanging
+   * <li>an idle timeout of 10 to avoid issues with upstream servers hanging
+   * </ul>
    *
    * @return the WebClientOptions that will be used when creating the Vert.x WebClients.
    */
@@ -525,7 +540,12 @@ public class Parameters {
 
   /**
    * Set the WebClientOptions that will be used when creating the Vert.x WebClients.
-   * The default value sets a connect timeout of 10s to avoid excessive delays on bad URLs.
+   * The default value sets:
+   * <ul>
+   * <li>a connect timeout of 10s to avoid excessive delays on bad URLs
+   * <li>a read idle timeout of 10s to avoid issues with upstream servers hanging
+   * <li>an idle timeout of 10 to avoid issues with upstream servers hanging
+   * </ul>
    * @param webClientOptions the WebClientOptions that will be used when creating the Vert.x WebClients.
    */
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Configuration parameter, should not be changed after being initialized by Jackson")

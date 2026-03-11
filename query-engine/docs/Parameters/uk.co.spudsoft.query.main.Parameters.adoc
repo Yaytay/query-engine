@@ -20,7 +20,12 @@ Top level configuration options for Query Engine.
 
 | [[webClientOptions]]webClientOptions
 | link:https://vertx.io/docs/apidocs/io/vertx/ext/web/client/WebClientOptions.html[WebClientOptions]
-| Set the WebClientOptions that will be used when creating the Vert.x WebClients.The default value sets a connect timeout of 10s to avoid excessive delays on bad URLs.
+| Set the WebClientOptions that will be used when creating the Vert.x WebClients.The default value sets:
+* a connect timeout of 10s to avoid excessive delays on bad URLs
+* a read idle timeout of 10s to avoid issues with upstream servers hanging
+* an idle timeout of 10 to avoid issues with upstream servers hanging
+
+
 
 | [[fileStabilisationDelaySeconds]]fileStabilisationDelaySeconds
 | int

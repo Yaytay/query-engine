@@ -42,6 +42,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
@@ -76,11 +78,11 @@ public class Authenticator {
   private final String issuerHostPath;
   private final ImmutableList<String> audList;
   private final String sessionCookieName;
-  
+
   private record TimestampedToken(LocalDateTime expiry, String token){};
-  
+
   private final MeterRegistry meterRegistry;
-  
+
   private final Map<String, TimestampedToken> credentialsCache = new HashMap<>();
 
 
@@ -135,7 +137,7 @@ public class Authenticator {
     this.issuerHostPath = ensureNonBlankStartsWith(issuerHostPath, "/");
     this.audList = ImmutableCollectionTools.copy(requiredAuds);
     this.sessionCookieName = sessionCookie;
-    
+
     if (meterRegistry != null) {
       meterRegistry.gauge("queryengine.cache.size"
               , Arrays.asList(
@@ -155,14 +157,14 @@ public class Authenticator {
 
   static String baseRequestUrl(HttpServerRequest request) {
     StringBuilder sb = new StringBuilder();
-    
+
     MultiMap headers = request.headers();
-    
+
     String proto = headers == null ? null : headers.get("X-Forwarded-Proto");
     if (Strings.isNullOrEmpty(proto) || (!"https".equals(proto) && !"http".equals(proto))) {
       proto = request.scheme();
     }
-    
+
     sb.append(proto);
     sb.append("://");
     HostAndPort hap = request.authority();
@@ -230,21 +232,21 @@ public class Authenticator {
    */
   public Future<RequestContext> authenticate(RoutingContext routingContext, RequestContext requestContext) {
 
-    HttpServerRequest request = routingContext.request();    
+    HttpServerRequest request = routingContext.request();
 
     PipelineContext pipelineContext = new PipelineContext(null, requestContext);
     Log log = new Log(logger, pipelineContext);
-        
+
     String runId = request.params() == null ? null : request.params().get("_runid");
     if (!Strings.isNullOrEmpty(runId)) {
       log.info().log("RunID: {}", runId);
     }
-    
+
     Cookie sessionCookie = getSessionCookie(request);
     if (sessionCookie != null) {
 
       request.pause();
-      
+
       return loginDao.getToken(requestContext, sessionCookie.getValue())
               .compose(token -> {
                 if (token == null) {
@@ -280,12 +282,12 @@ public class Authenticator {
       if (pre != post) {
         logger.info("Purged {} entries from credentials cache, leaving {}", pre - post, post);
       }
-    }    
+    }
   }
-  
+
   private String getCachedToken(Log log, String credentials) {
     int colonPos = credentials.indexOf(":");
-    String username = colonPos > 0 ? credentials.substring(0, colonPos) : credentials;            
+    String username = colonPos > 0 ? credentials.substring(0, colonPos) : credentials;
     synchronized (credentialsCache) {
       TimestampedToken timestampedToken = credentialsCache.get(credentials);
       if (timestampedToken == null) {
@@ -306,7 +308,7 @@ public class Authenticator {
       }
     }
   }
-  
+
   private void cacheToken(Log log, String credentials, LocalDateTime expiration, String token) {
     if (expiration != null) {
       LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
@@ -318,7 +320,7 @@ public class Authenticator {
       }
     }
   }
-  
+
   /**
    * Validate a JWT using the configured rules.
    *
@@ -332,9 +334,9 @@ public class Authenticator {
   }
 
   private Future<RequestContext> buildRequestContextWithoutCookie(Log log, RoutingContext routingContext, RequestContext requestContext) {
-    
+
     HttpServerRequest request = routingContext.request();
-    
+
     String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
     String openIdIntrospectionHeader = Strings.isNullOrEmpty(openIdIntrospectionHeaderName) ? null : request.getHeader(openIdIntrospectionHeaderName);
@@ -364,7 +366,7 @@ public class Authenticator {
         log.warn().log("Failed to decode credentials using base64, will try again with base64url: ", ex);
         decodedCredentials = new String(Base64.getUrlDecoder().decode(encodedCredentials), StandardCharsets.UTF_8);
       }
-      
+
       int colon = decodedCredentials.indexOf(":");
       String username = decodedCredentials.substring(0, colon);
       String password = decodedCredentials.substring(colon + 1);
@@ -431,7 +433,7 @@ public class Authenticator {
                 }
               })
               .onFailure(ex -> {
-                request.resume();
+                log.warn().log("Password request failed: ", ex);
               })
               .map(jwt -> requestContext);
 
@@ -442,7 +444,7 @@ public class Authenticator {
         return Future.failedFuture(new ServiceException(401, "Forbiedden"));
       }
 
-      
+
       String token = authHeader.substring(BEARER.length());
       request.pause();
       return validator.validateToken(issuer(request), token, audList, false)
@@ -583,6 +585,10 @@ public class Authenticator {
               Buffer body = response.body();
               try {
                 log.trace().log("ROPC request to {} returned: {} {}", authEndpoint, response.statusCode(), body);
+                if (response.statusCode() < 200 || response.statusCode() > 300) {
+                  log.warn().log("ROPC failed with to {} returned: {} {}", authEndpoint, response.statusCode(), body);
+                  return Future.failedFuture(new ServiceException(HttpStatus.SC_UNAUTHORIZED, "Failed authentication"));
+                }
                 JsonObject bodyJson = body.toJsonObject();
                 String token = bodyJson.getString("access_token");
                 log.debug().log("User {}@{} got token {}", username, authEndpoint, token);
@@ -592,6 +598,8 @@ public class Authenticator {
                 log.warn().log("Failed to process client credentials grant for {}@{}: ", username, authEndpoint, ex);
                 return Future.failedFuture(ex);
               }
+            }).onFailure(ex -> {
+              log.warn().log("ROPC request to {} failed: ", authEndpoint, ex);
             });
   }
 

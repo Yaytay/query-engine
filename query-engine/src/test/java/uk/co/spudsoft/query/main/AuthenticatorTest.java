@@ -18,12 +18,15 @@ package uk.co.spudsoft.query.main;
 
 import inet.ipaddr.IPAddressString;
 import io.vertx.core.Future;
-import io.vertx.core.net.impl.HostAndPortImpl;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import io.vertx.core.MultiMap;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.net.impl.HostAndPortImpl;
+import io.vertx.ext.web.client.HttpRequest;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.ext.web.client.WebClient;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import org.junit.jupiter.api.Test;
@@ -31,19 +34,21 @@ import org.junit.jupiter.api.Test;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.logging.Log;
+import uk.co.spudsoft.query.web.ServiceException;
 
-/**
- *
- * @author jtalbut
- */
 public class AuthenticatorTest {
 
   private static final Logger logger = LoggerFactory.getLogger(AuthenticatorTest.class);
@@ -413,5 +418,221 @@ public class AuthenticatorTest {
 
     assertTrue(future.failed());
     assertNotNull(future.cause());
+  }
+
+  @Test
+  void testPerformClientCredentialsGrant_SendFormFailure() throws Exception {
+    WebClient webClient = mock(WebClient.class);
+    @SuppressWarnings("unchecked")
+    HttpRequest<Buffer> request = mock(HttpRequest.class);
+    RuntimeException expected = new RuntimeException("sendForm failed");
+
+    when(webClient.postAbs("https://idp.example/token")).thenReturn(request);
+    when(request.sendForm(any(MultiMap.class))).thenReturn(Future.failedFuture(expected));
+
+    Future<String> future = invokePerformClientCredentialsGrant(
+            createAuthenticator(webClient),
+            new Log(logger, new PipelineContext(null, null)),
+            "https://idp.example/token",
+            "client-id",
+            "client-secret"
+    );
+
+    assertTrue(future.failed());
+    assertEquals(expected, future.cause());
+  }
+
+  @Test
+  void testPerformClientCredentialsGrant_InvalidJsonBody() throws Exception {
+    WebClient webClient = mock(WebClient.class);
+    @SuppressWarnings("unchecked")
+    HttpRequest<Buffer> request = mock(HttpRequest.class);
+    @SuppressWarnings("unchecked")
+    HttpResponse<Buffer> response = mock(HttpResponse.class);
+
+    when(webClient.postAbs("https://idp.example/token")).thenReturn(request);
+    when(request.sendForm(any(MultiMap.class))).thenReturn(Future.succeededFuture(response));
+    when(response.statusCode()).thenReturn(200);
+    when(response.body()).thenReturn(Buffer.buffer("not json"));
+
+    Future<String> future = invokePerformClientCredentialsGrant(
+            createAuthenticator(webClient),
+            new Log(logger, new PipelineContext(null, null)),
+            "https://idp.example/token",
+            "client-id",
+            "client-secret"
+    );
+
+    assertTrue(future.failed());
+    assertNotNull(future.cause());
+  }
+
+  @Test
+  void testPerformResourceOwnerPasswordCredentials_SendFormFailure() throws Exception {
+    WebClient webClient = mock(WebClient.class);
+    @SuppressWarnings("unchecked")
+    HttpRequest<Buffer> request = mock(HttpRequest.class);
+    RuntimeException expected = new RuntimeException("sendForm failed");
+
+    when(webClient.postAbs("https://idp.example/auth")).thenReturn(request);
+    when(request.sendForm(any(MultiMap.class))).thenReturn(Future.failedFuture(expected));
+
+    Endpoint endpoint = new Endpoint();
+    endpoint.setUrl("https://idp.example/auth");
+
+    Future<String> future = invokePerformResourceOwnerPasswordCredentials(
+            createAuthenticator(webClient),
+            new Log(logger, new PipelineContext(null, null)),
+            endpoint,
+            "alice",
+            "secret"
+    );
+
+    assertTrue(future.failed());
+    assertEquals(expected, future.cause());
+  }
+
+  @Test
+  void testPerformResourceOwnerPasswordCredentials_FailureStatusCode() throws Exception {
+    WebClient webClient = mock(WebClient.class);
+    @SuppressWarnings("unchecked")
+    HttpRequest<Buffer> request = mock(HttpRequest.class);
+    @SuppressWarnings("unchecked")
+    HttpResponse<Buffer> response = mock(HttpResponse.class);
+
+    when(webClient.postAbs("https://idp.example/auth")).thenReturn(request);
+    when(request.sendForm(any(MultiMap.class))).thenReturn(Future.succeededFuture(response));
+    when(response.statusCode()).thenReturn(401);
+    when(response.body()).thenReturn(Buffer.buffer("Bad credentials"));
+
+    Endpoint endpoint = new Endpoint();
+    endpoint.setUrl("https://idp.example/auth");
+
+    Future<String> future = invokePerformResourceOwnerPasswordCredentials(
+            createAuthenticator(webClient),
+            new Log(logger, new PipelineContext(null, null)),
+            endpoint,
+            "alice",
+            "secret"
+    );
+
+    assertTrue(future.failed());
+    ServiceException cause = assertInstanceOf(ServiceException.class, future.cause());
+    assertEquals(401, cause.getStatusCode());
+    assertEquals("Failed authentication", cause.getMessage());
+  }
+
+  @Test
+  void testPerformResourceOwnerPasswordCredentials_InvalidJsonBody() throws Exception {
+    WebClient webClient = mock(WebClient.class);
+    @SuppressWarnings("unchecked")
+    HttpRequest<Buffer> request = mock(HttpRequest.class);
+    @SuppressWarnings("unchecked")
+    HttpResponse<Buffer> response = mock(HttpResponse.class);
+
+    when(webClient.postAbs("https://idp.example/auth")).thenReturn(request);
+    when(request.sendForm(any(MultiMap.class))).thenReturn(Future.succeededFuture(response));
+    when(response.statusCode()).thenReturn(200);
+    when(response.body()).thenReturn(Buffer.buffer("not json"));
+
+    Endpoint endpoint = new Endpoint();
+    endpoint.setUrl("https://idp.example/auth");
+
+    Future<String> future = invokePerformResourceOwnerPasswordCredentials(
+            createAuthenticator(webClient),
+            new Log(logger, new PipelineContext(null, null)),
+            endpoint,
+            "alice",
+            "secret"
+    );
+
+    assertTrue(future.failed());
+    assertNotNull(future.cause());
+  }
+
+  @Test
+  void testPerformResourceOwnerPasswordCredentials_WithEndpointCredentials() throws Exception {
+    WebClient webClient = mock(WebClient.class);
+    @SuppressWarnings("unchecked")
+    HttpRequest<Buffer> request = mock(HttpRequest.class);
+    @SuppressWarnings("unchecked")
+    HttpResponse<Buffer> response = mock(HttpResponse.class);
+
+    when(webClient.postAbs("https://idp.example/auth")).thenReturn(request);
+    when(request.basicAuthentication("endpoint-user", "endpoint-password")).thenReturn(request);
+    when(request.sendForm(any(MultiMap.class))).thenReturn(Future.succeededFuture(response));
+    when(response.statusCode()).thenReturn(401);
+    when(response.body()).thenReturn(Buffer.buffer("Bad credentials"));
+
+    Endpoint endpoint = new Endpoint();
+    endpoint.setUrl("https://idp.example/auth");
+    endpoint.setCredentials(new Credentials("endpoint-user", "endpoint-password"));
+
+    Future<String> future = invokePerformResourceOwnerPasswordCredentials(
+            createAuthenticator(webClient),
+            new Log(logger, new PipelineContext(null, null)),
+            endpoint,
+            "alice",
+            "secret"
+    );
+
+    assertTrue(future.failed());
+    ServiceException cause = assertInstanceOf(ServiceException.class, future.cause());
+    assertEquals(401, cause.getStatusCode());
+  }
+
+  private Authenticator createAuthenticator(WebClient webClient) {
+    return new Authenticator(
+            webClient,
+            null,
+            null,
+            null,
+            null,
+            null,
+            true,
+            null,
+            false,
+            null,
+            null,
+            null
+    );
+  }
+
+  @SuppressWarnings("unchecked")
+  private Future<String> invokePerformClientCredentialsGrant(
+          Authenticator authenticator,
+          Log log,
+          String tokenEndpoint,
+          String clientId,
+          String clientSecret
+  ) throws Exception {
+    Method method = Authenticator.class.getDeclaredMethod(
+            "performClientCredentialsGrant",
+            Log.class,
+            String.class,
+            String.class,
+            String.class
+    );
+    method.setAccessible(true);
+    return (Future<String>) method.invoke(authenticator, log, tokenEndpoint, clientId, clientSecret);
+  }
+
+  @SuppressWarnings("unchecked")
+  private Future<String> invokePerformResourceOwnerPasswordCredentials(
+          Authenticator authenticator,
+          Log log,
+          Endpoint endpoint,
+          String username,
+          String password
+  ) throws Exception {
+    Method method = Authenticator.class.getDeclaredMethod(
+            "performResourceOwnerPasswordCredentials",
+            Log.class,
+            Endpoint.class,
+            String.class,
+            String.class
+    );
+    method.setAccessible(true);
+    return (Future<String>) method.invoke(authenticator, log, endpoint, username, password);
   }
 }
