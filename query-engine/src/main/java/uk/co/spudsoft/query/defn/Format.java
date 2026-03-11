@@ -218,7 +218,7 @@ public interface Format {
   @Schema(description = """
                         <P>The filename to specify in the Content-Disposition header as a <a href="http://www.stringtemplate.org">String Template</a>.</P>
                         <P>
-                        If not specified then the leaf name of the pipeline (with extension the value of {@link #getExtension()} appended) will be used.
+                        If not specified then the leaf name of the pipeline (with extension the value of the extension field appended) will be used.
                         </P>
                         """
           , maxLength = 1000
@@ -237,7 +237,7 @@ public interface Format {
   @Schema(description = """
                         <P>The filename to specify in the Content-Disposition header.</P>
                         <P>
-                        If not specified then the leaf name of the pipeline (with extension the value of {@link #getExtension()} appended) will be used.
+                        If not specified then the leaf name of the pipeline (with extension the value of the extension field appended) will be used.
                         </P>
                         """
           , maxLength = 100

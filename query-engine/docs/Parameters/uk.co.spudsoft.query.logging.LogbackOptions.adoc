@@ -54,8 +54,8 @@ encoder.setWithContext(false);
 
 
 | [[level]]level
-| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Map.html[Map]<link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String], link:https://www.slf4j.org/api/org/slf4j/event/Level.html[Level]>
-| Override the level of individual link:https://www.slf4j.org/api/org/slf4j/Logger.html[org.slf4j.Logger] s.
+| link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Map.html[Map]<link:https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html[String], org.slf4j.event.Level>
+| Override the level of individual org.slf4j.Logger s.
 
 This enables configuration like (system property):
  
