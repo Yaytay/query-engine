@@ -433,7 +433,11 @@ public class Authenticator {
                 }
               })
               .onFailure(ex -> {
-                log.warn().log("Password request failed: ", ex);
+                if (ex instanceof IllegalArgumentException) {
+                  log.warn().log("Login request failed: \n{}", summariseExceptionChain(ex));
+                } else {
+                  log.warn().log("Login request failed: ", ex);
+                }
               })
               .map(jwt -> requestContext);
 
@@ -603,4 +607,32 @@ public class Authenticator {
             });
   }
 
+  private static String summariseExceptionChain(Throwable ex) {
+    StringBuilder sb = new StringBuilder();
+    Throwable current = ex;
+    boolean first = true;
+
+    while (current != null) {
+      sb.append("  ");
+      if (!first) {
+        sb.append("Caused by: ");
+      }
+      first = false;
+
+      sb.append(current.getClass().getSimpleName());
+      if (!Strings.isNullOrEmpty(current.getMessage())) {
+        sb.append(": ").append(current.getMessage());
+      }
+      sb.append("\n");
+
+      StackTraceElement[] stack = current.getStackTrace();
+      if (stack != null && stack.length > 0) {
+        sb.append("    at ").append(stack[0]).append("\n");
+      }
+
+      current = current.getCause();
+    }
+
+    return sb.toString();
+  }
 }
