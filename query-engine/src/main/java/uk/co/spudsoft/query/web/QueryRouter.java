@@ -491,7 +491,7 @@ public class QueryRouter implements Handler<RoutingContext> {
     }
 
     if (outputAllErrorMessages) {
-      message = ExceptionToString.convert(ex, "\n\t");
+      message = ExceptionToString.convert(ex, "\n\t", "\n\t\t", 8);
     }
 
     HttpServerResponse response = routingContext.response();

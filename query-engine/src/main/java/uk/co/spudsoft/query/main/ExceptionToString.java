@@ -31,10 +31,12 @@ public class ExceptionToString {
   /**
    * Convert an exception to a string detailing the exception, it's stack trace and the chain of causes.
    * @param ex The {@link java.lang.Throwable} to process.
-   * @param delimiter Delimiter to put between each exception.
+   * @param delimiter Delimiter to put before each exception except the first.
+   * @param stackDelimiter Delimiter to put before each stack trace entry.
+   * @param stackCount Limit to the number of stack trace rows to output per exception
    * @return A string detailing the exception.
    */
-  public static String convert(Throwable ex, String delimiter) {
+  public static String convert(Throwable ex, String delimiter, String stackDelimiter, int stackCount) {
     if (ex == null) {
       return null;
     }
@@ -46,26 +48,25 @@ public class ExceptionToString {
       } else {
         started = true;
       }
+      
       StackTraceElement[] stackTrace = current.getStackTrace();
-      if (Strings.isNullOrEmpty(current.getMessage())) {
-        result.append(current.getClass().getSimpleName());
-        appendClassDetails(stackTrace, result);
-      } else {
-        result.append(current.getMessage())
-                .append(" (from ")
-                .append(current.getClass().getSimpleName());
-        appendClassDetails(stackTrace, result);
-        result.append(")");
+      result.append(current.getClass().getSimpleName());
+      if (!Strings.isNullOrEmpty(current.getMessage())) {
+        result.append(": ").append(current.getMessage());
       }
+      appendStackDetails(stackTrace, stackDelimiter, stackCount, result);
     }
     return result.toString();   
   }  
 
-  private static void appendClassDetails(StackTraceElement[] stackTrace, StringBuilder result) {
+  private static void appendStackDetails(StackTraceElement[] stackTrace, String stackDelimiter, int stackCount, StringBuilder result) {
     if (stackTrace != null && stackTrace.length > 0) {
-      result.append("@").append(stackTrace[0].getClassName());
-      if (stackTrace[0].getLineNumber() > 0) {
-        result.append(":").append(stackTrace[0].getLineNumber());
+      for (int i = 0; i < stackCount && i < stackTrace.length; ++i) {
+        StackTraceElement ste = stackTrace[i];
+        result.append(stackDelimiter).append(ste.getClassName());
+        if (ste.getLineNumber() > 0) {
+          result.append(":").append(ste.getLineNumber());
+        }
       }
     }
   }

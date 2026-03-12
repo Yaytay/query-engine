@@ -817,7 +817,7 @@ public class AuditorPersistenceImpl implements Auditor {
                JdbcHelper.setLocalDateTimeUTC(ps, 1, LocalDateTime.now(ZoneOffset.UTC));
                ps.setString(2, JdbcHelper.limitLength(ex.getClass().getCanonicalName(), 1000));
                ps.setString(3, JdbcHelper.limitLength(ex.getMessage(), 1000));
-               ps.setString(4, ExceptionToString.convert(ex, "; "));
+               ps.setString(4, ExceptionToString.convert(ex, "; ", "@", 1));
                ps.setString(5, requestId);
       });
     }

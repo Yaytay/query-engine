@@ -312,7 +312,7 @@ public class AuditorMemoryImpl implements Auditor {
       row.exceptionTime = LocalDateTime.now(ZoneOffset.UTC);
       row.exceptionClass = JdbcHelper.limitLength(ex.getClass().getCanonicalName(), 1000);
       row.exceptionMessage = JdbcHelper.limitLength(ex.getMessage(), 1000);
-      row.exceptionStackTrace = ExceptionToString.convert(ex, "; ");
+      row.exceptionStackTrace = ExceptionToString.convert(ex, "; ", "@", 1);
     }
   }
 

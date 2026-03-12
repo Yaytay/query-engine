@@ -218,7 +218,7 @@ public class InfoHandler {
     }
 
     if (outputAllErrorMessages) {
-      message = ExceptionToString.convert(ex, "\n\t");
+      message = ExceptionToString.convert(ex, "\n\t", "\n\t\t", 8);
     }
     
     response.resume(
