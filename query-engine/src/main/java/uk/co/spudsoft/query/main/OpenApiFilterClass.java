@@ -60,31 +60,31 @@ public class OpenApiFilterClass extends AbstractSpecFilter {
   @Override
   @SuppressWarnings({"unchecked", "rawtypes"})
   public Optional<Schema> filterSchemaProperty(Schema propertySchema, Schema parentSchema, String propName, Map<String, List<String>> params, Map<String, String> cookies, Map<String, List<String>> headers) {
-    fixBooleanDefault(propertySchema);
+    // fixBooleanDefault(propertySchema);
     return super.filterSchemaProperty(propertySchema, parentSchema, propName, params, cookies, headers);
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
-  private static void fixBooleanDefault(Schema schema) {
-    if (schema == null) {
-      return;
-    }
-
-    Object def = schema.getDefault();
-    boolean isBooleanSchema = "boolean".equals(schema.getType()) || (schema.getTypes() != null && schema.getTypes().contains("boolean"));
-
-    if (isBooleanSchema && def instanceof String s) {
-      if ("true".equalsIgnoreCase(s)) {
-        schema.setDefault(Boolean.TRUE);
-        if (schema.getTypes() != null) {
-          schema.getTypes().remove("string");
-        }
-      } else if ("false".equalsIgnoreCase(s)) {
-        schema.setDefault(Boolean.FALSE);
-        if (schema.getTypes() != null) {
-          schema.getTypes().remove("string");
-        }
-      }
-    }
-  }
+//  @SuppressWarnings({"unchecked", "rawtypes"})
+//  private static void fixBooleanDefault(Schema schema) {
+//    if (schema == null) {
+//      return;
+//    }
+//
+//    Object def = schema.getDefault();
+//    boolean isBooleanSchema = "boolean".equals(schema.getType()) || (schema.getTypes() != null && schema.getTypes().contains("boolean"));
+//
+//    if (isBooleanSchema && def instanceof String s) {
+//      if ("true".equalsIgnoreCase(s)) {
+//        schema.setDefault(Boolean.TRUE);
+//        if (schema.getTypes() != null) {
+//          schema.getTypes().remove("string");
+//        }
+//      } else if ("false".equalsIgnoreCase(s)) {
+//        schema.setDefault(Boolean.FALSE);
+//        if (schema.getTypes() != null) {
+//          schema.getTypes().remove("string");
+//        }
+//      }
+//    }
+//  }
 }
