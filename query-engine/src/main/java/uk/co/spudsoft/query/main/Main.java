@@ -31,7 +31,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.exporter.zipkin.ZipkinSpanExporter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.OpenTelemetrySdkBuilder;
 import io.opentelemetry.sdk.resources.Resource;
@@ -147,8 +146,6 @@ import uk.co.spudsoft.query.web.rest.InfoHandler;
 import uk.co.spudsoft.query.web.rest.SessionHandler;
 import uk.co.spudsoft.vertx.rest.JaxRsHandler;
 import uk.co.spudsoft.vertx.rest.OpenApiHandler;
-import zipkin2.reporter.BytesMessageSender;
-import zipkin2.reporter.urlconnection.URLConnectionSender;
 
 /**
  * The main entry point for the Query Engine.
@@ -1114,10 +1111,6 @@ public class Main extends Application {
     SpanExporter spanExporter = switch (config.getProtocol()) {
       case none -> null;
       case otlphttp -> OtlpHttpSpanExporter.builder()
-              .setEndpoint(config.getUrl())
-              .build();
-      case zipkin -> ZipkinSpanExporter.builder()
-              .setSender((BytesMessageSender) URLConnectionSender.create(config.getUrl()))
               .setEndpoint(config.getUrl())
               .build();
     };

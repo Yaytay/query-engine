@@ -126,10 +126,10 @@ public class MainIT {
       , "--session.oauth.GitHub.credentials.id=bdab017f4732085a51f9"
       , "--session.oauth.GitHub.credentials.secret=" + System.getProperty("queryEngineGithubSecret")
       , "--session.oauth.GitHub.pkce=false"
-      , "--tracing.protocol=zipkin"
+      , "--tracing.protocol=otlphttp"
       , "--tracing.sampler=ratio"
       , "--tracing.sampleRatio=0.5"
-      , "--tracing.url=http://nonexistent/zipkin"
+      , "--tracing.url=http://nonexistent/otlphttp"
     }
             , stdout
             , ImmutableMap.<String, String>builder()

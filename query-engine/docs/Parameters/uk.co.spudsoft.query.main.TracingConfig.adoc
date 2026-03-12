@@ -2,7 +2,7 @@
 
 Configuration of distributed tracing.
 
-The Query Engine can use either Open Telemetry (using HTTP) or Zipkin.
+The Query Engine can use Open Telemetry (using HTTP) to participate in distributed tracing.
 
 
 All services participating in a distributed tracing must use the same propagation technique

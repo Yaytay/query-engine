@@ -59,12 +59,6 @@ public class ServerProviderDistributedTracing {
       url = "http://localhost:" + findPort(container.ports, 4318) + "/v1/traces";
       return this;
     } 
-    container = AbstractServerProvider.findContainer("/query-engine-zipkin-1");
-    if (container != null) {
-      protocol = TracingProtocol.zipkin;
-      url = "http://localhost:" + findPort(container.ports, 9411) + "/api/v2/spans";
-      return this;
-    }
     GenericContainer<?> jc = new GenericContainer<>("jaegertracing/all-in-one:latest");
     jc.addEnv("COLLECTOR_OTLP_ENABLED", "true");
     jc.addExposedPorts(

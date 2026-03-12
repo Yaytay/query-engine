@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 jtalbut
+ * Copyright (C) 2026 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ import java.net.URI;
 /**
  * Configuration of distributed tracing.
  * <p>
- * The Query Engine can use either Open Telemetry (using HTTP) or Zipkin.
+ * The Query Engine can use Open Telemetry (using HTTP) to participate in distributed tracing.
  * <p>
  * All services participating in a distributed tracing must use the same propagation technique
  * - it is important that {@link #propagator} is configured correctly.

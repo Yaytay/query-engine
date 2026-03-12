@@ -32,12 +32,6 @@ public enum TracingProtocol {
   none
   , 
   /**
-   * Use the Zipkin protocol.
-   * See <a href="https://github.com/openzipkin/zipkin-api/blob/master/zipkin.proto">https://github.com/openzipkin/zipkin-api/blob/master/zipkin.proto</a>
-   */
-  zipkin
-  , 
-  /**
    * Use to OTLP protocol over HTTP.
    * See <a href="https://github.com/open-telemetry/oteps/blob/main/text/0035-opentelemetry-protocol.md">https://github.com/open-telemetry/oteps/blob/main/text/0035-opentelemetry-protocol.md</a>.
    */

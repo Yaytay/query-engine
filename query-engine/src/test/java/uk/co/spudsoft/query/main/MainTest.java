@@ -17,7 +17,6 @@
 package uk.co.spudsoft.query.main;
 
 import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
-import io.opentelemetry.exporter.zipkin.ZipkinSpanExporter;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 import java.io.ByteArrayOutputStream;
@@ -210,21 +209,6 @@ public class MainTest {
     result = Main.spanExporter(config);
     assertNotNull(result);
     assertThat(result, instanceOf(OtlpHttpSpanExporter.class));
-  }
-
-  @Test
-  void testSpanExporterZipkin() {
-    TracingConfig config = new TracingConfig();
-    config.setProtocol(TracingProtocol.zipkin);
-    assertEquals(TracingProtocol.zipkin, config.getProtocol());
-
-    SpanExporter result = Main.spanExporter(config);
-    assertNull(result);
-    
-    config.setUrl("http://localhost");
-    result = Main.spanExporter(config);
-    assertNotNull(result);
-    assertThat(result, instanceOf(ZipkinSpanExporter.class));
   }
 
 }
