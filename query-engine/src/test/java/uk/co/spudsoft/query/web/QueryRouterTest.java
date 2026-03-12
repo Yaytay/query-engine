@@ -119,7 +119,7 @@ public class QueryRouterTest {
     router.handle(routingContext);
 
     verify(response).setStatusCode(400);
-    verify(response).end(matches("Invalid path \\(from ServiceException@uk\\.co\\.spudsoft\\.query\\.web\\.QueryRouter:\\d+\\)"));
+    verify(response).end(matches("ServiceException: Invalid path\n\t\tuk\\.co\\.spudsoft\\.query\\.web\\.QueryRouter:\\d+.*"));
   }
 
   @Test
@@ -140,8 +140,7 @@ public class QueryRouterTest {
     verify(response).end(messageCaptor.capture());
 
     assertEquals(400, statusCaptor.getValue());
-    assertThat(messageCaptor.getValue(), startsWith("Bad arg (from"));
-    assertThat(messageCaptor.getValue(), containsString("IllegalArgumentException"));
+    assertThat(messageCaptor.getValue(), startsWith("IllegalArgumentException: Bad arg"));
   }
 
   @Test
@@ -183,8 +182,7 @@ public class QueryRouterTest {
     verify(response).end(messageCaptor.capture());
 
     assertEquals(500, statusCaptor.getValue());
-    assertThat(messageCaptor.getValue(), startsWith("Bad state (from"));
-    assertThat(messageCaptor.getValue(), containsString("IllegalStateException"));
+    assertThat(messageCaptor.getValue(), startsWith("IllegalStateException: Bad state"));
   }
 
   @Test
@@ -226,7 +224,7 @@ public class QueryRouterTest {
     verify(response).end(messageCaptor.capture());
 
     assertEquals(123, statusCaptor.getValue());
-    assertThat(messageCaptor.getValue(), startsWith("Something special went wrong (from"));
+    assertThat(messageCaptor.getValue(), startsWith("ServiceException: Something special went wrong"));
     assertThat(messageCaptor.getValue(), containsString("ServiceException"));
   }
 
