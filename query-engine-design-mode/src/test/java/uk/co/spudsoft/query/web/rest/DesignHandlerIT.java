@@ -178,7 +178,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(400)
             .contentType(equalTo("text/plain;charset=UTF-8"))
-            .body(startsWith("The JSON body cannot be parsed as a Pipeline: Unrecognized token 'not'"))
+            .body(startsWith("ServiceException: The JSON body cannot be parsed as a Pipeline: Unrecognized token 'not'"))
             .extract().body().asString();
 
     // Can also fail to validate a JSON pipeline
@@ -189,7 +189,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(400)
             .contentType(equalTo("text/plain;charset=UTF-8"))
-            .body(startsWith("The Pipeline is not valid"))
+            .body(startsWith("ServiceException: The Pipeline is not valid"))
             .extract().body().asString();
 
     // Can also fail to validate a YAML pipeline
@@ -199,7 +199,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(400)
             .contentType(startsWith("text/plain"))
-            .body(startsWith("The Pipeline is not valid"))
+            .body(startsWith("ServiceException: The Pipeline is not valid"))
             .extract().body().asString();
 
     // Can get a json template file as specific type
@@ -233,7 +233,7 @@ public class DesignHandlerIT {
             .statusCode(404)
             .contentType(startsWith("text/plain"))
             // Outputs the full error message because this is in "outputAllErrorMessages" mode
-            .body(startsWith("Unable to read file at path 'target" + File.separator + "query-engine" + File.separator + "samples-designhandlerit" + File.separator + "sub4" + File.separator + "sub5" + File.separator + "Nonexistent.yml'"));
+            .body(startsWith("FileSystemException: Unable to read file at path 'target" + File.separator + "query-engine" + File.separator + "samples-designhandlerit" + File.separator + "sub4" + File.separator + "sub5" + File.separator + "Nonexistent.yml'"));
     
     // Request for a valid file using .. should fail
     given().accept(ContentType.ANY).log().all()
@@ -241,7 +241,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(400)
             .contentType(equalTo("text/plain;charset=UTF-8"))
-            .body(startsWith("Path may not contain .. (from ServiceException"));
+            .body(startsWith("ServiceException: Path may not contain .."));
     
     // Request for a file with a leading / should fail
     given().accept(ContentType.ANY).log().all()
@@ -250,7 +250,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(400)
             .contentType(equalTo("text/plain;charset=UTF-8"))
-            .body(startsWith("Path may not start with / (from ServiceException"));
+            .body(startsWith("ServiceException: Path may not start with /"));
     
     // Request for a file with a \ should fail
     given().accept(ContentType.ANY).log().all()
@@ -259,7 +259,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(400)
             .contentType(equalTo("text/plain;charset=UTF-8"))
-            .body(startsWith("Path may not contain banned characters (must not match /\\\"|\\||<|>|\\:|\\?|\\*|\\\\|\\p{C}/) (from ServiceException"));
+            .body(startsWith("ServiceException: Path may not contain banned characters (must not match /\\\"|\\||<|>|\\:|\\?|\\*|\\\\|\\p{C}/)"));
     
     given().log().all()
             .get("/api/design/file/sub1/sub2/permissions.jexl")
@@ -292,7 +292,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(400)
             .contentType(ContentType.TEXT)
-            .body(startsWith("Illegal folder name (from ServiceException@uk.co.spudsoft.query.web.rest.DesignHandler:"));
+            .body(startsWith("ServiceException: Illegal folder name"));
 
     // Cannot put file without extension
     given().log().all()
@@ -302,7 +302,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(400)
             .contentType(ContentType.TEXT)
-            .body(startsWith("Illegal file name (from ServiceException@uk.co.spudsoft.query.web.rest.DesignHandler:"));
+            .body(startsWith("ServiceException: Illegal file name"));
 
     // Cannot put file with wrong extension
     given().log().all()
@@ -312,7 +312,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(400)
             .contentType(ContentType.TEXT)
-            .body(startsWith("Illegal file name; extension does not match content-type (from ServiceException@uk.co.spudsoft.query.web.rest.DesignHandler:"));
+            .body(startsWith("ServiceException: Illegal file name; extension does not match content-type"));
 
     // Can put correct file
     given().log().all()
@@ -350,7 +350,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(400)
             .contentType(ContentType.TEXT)
-            .body(startsWith("Destination file already exists (from ServiceException@uk.co.spudsoft.query.web.rest.DesignHandler:"));
+            .body(startsWith("ServiceException: Destination file already exists"));
 
     // Cannot rename file to no extension
     given().log().all()
@@ -359,7 +359,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(400)
             .contentType(ContentType.TEXT)
-            .body(startsWith("Illegal file name (from ServiceException@uk.co.spudsoft.query.web.rest.DesignHandler:"));
+            .body(startsWith("ServiceException: Illegal file name"));
 
     // Cannot rename file to new extension
     given().log().all()
@@ -368,7 +368,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(400)
             .contentType(ContentType.TEXT)
-            .body(startsWith("Illegal file name (extension has been changed) (from ServiceException@uk.co.spudsoft.query.web.rest.DesignHandler:"));
+            .body(startsWith("ServiceException: Illegal file name (extension has been changed)"));
 
     // Cannot rename folder with extension
     given().log().all()
@@ -377,7 +377,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(400)
             .contentType(ContentType.TEXT)
-            .body(startsWith("Illegal folder name (from ServiceException@uk.co.spudsoft.query.web.rest.DesignHandler:"));
+            .body(startsWith("ServiceException: Illegal folder name"));
 
     // Cannot delete dir containing files
     given().log().all()
@@ -385,7 +385,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(400)
             .contentType(ContentType.TEXT)
-            .body(startsWith("Directory not empty (from IllegalArgumentException@uk.co.spudsoft.query.web.rest.DesignHandler:"));
+            .body(startsWith("IllegalArgumentException: Directory not empty"));
 
     // Can rename dir with contents
     given().log().all()
@@ -403,7 +403,7 @@ public class DesignHandlerIT {
             .then().log().all()
             .statusCode(404)
             .contentType(ContentType.TEXT)
-            .body(startsWith("File not found (from FileNotFoundException@uk.co.spudsoft.query.web.rest.DesignHandler:"));
+            .body(startsWith("FileNotFoundException: File not found"));
 
     // Can delete file
     given().log().all()
