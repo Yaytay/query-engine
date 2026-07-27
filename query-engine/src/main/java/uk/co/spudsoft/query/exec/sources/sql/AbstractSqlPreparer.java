@@ -48,7 +48,7 @@ public abstract class AbstractSqlPreparer {
   private static final Logger logger = LoggerFactory.getLogger(AbstractSqlPreparer.class);
 
   private final Log log;
-  
+
   /**
    * Constructor.
    * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
@@ -67,7 +67,7 @@ public abstract class AbstractSqlPreparer {
   public record QueryAndArgs(String query, List<Object> args) {
   }
   ;
-  
+
   /**
    * For a multi-valued parameter, return the selected parameter.
    * @param instance The ArgumentInstance that encapsulates the past in values.
@@ -149,7 +149,13 @@ public abstract class AbstractSqlPreparer {
 
     // Group 1 is naked argument reference
     // Group 2 is a complete BIND expression
-    Pattern pattern = Pattern.compile(":(" + Argument.VALID_NAME.pattern() + "+)|/\\*\\s*BIND(([^:]*:" + Argument.VALID_NAME.pattern() + "+)+?[^:]*\\s*)\\*/");
+    Pattern pattern = Pattern.compile(":(" + Argument.VALID_NAME.pattern() + "+)"
+      + "|/\\*\\s*BIND("
+      + "((?:(?!\\*/)[^:])*+:"
+      + Argument.VALID_NAME.pattern()
+      + "+)++"
+      + "(?:(?!\\*/)[^:])*+\\s*"
+      + ")\\*/");
     Matcher matcher = pattern.matcher(definitionSql);
     while (matcher.find()) {
       String varName = matcher.group(1);

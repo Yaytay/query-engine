@@ -21,6 +21,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 import org.apache.commons.jexl3.JexlBuilder;
 import org.apache.commons.jexl3.JexlContext;
 import org.apache.commons.jexl3.JexlEngine;
@@ -77,6 +78,8 @@ public class JexlEvaluator {
   private static final Logger logger = LoggerFactory.getLogger(JexlEvaluator.class);
 
   private static final JexlEngine JEXL = createJexlEngine();
+
+  private static final Pattern WS_PATTERN = Pattern.compile("\\s*+\\\\\\r?\\n\\s*+");
 
   static JexlEngine createJexlEngine() {
     Map<String, Object> namespaces = new HashMap<>();
@@ -148,36 +151,7 @@ public class JexlEvaluator {
     if (input == null) {
       return null;
     }
-
-    StringBuilder result = new StringBuilder(input.length());
-
-    for (int i = 0; i < input.length(); i++) {
-      char ch = input.charAt(i);
-
-      if (ch == '\\' && i + 1 < input.length() && input.charAt(i + 1) == '\n') {
-
-        // Remove any whitespace already added before the backslash.
-        while (result.length() > 0
-          && Character.isWhitespace(result.charAt(result.length() - 1))) {
-          result.setLength(result.length() - 1);
-        }
-
-        i += 2; // skip backslash and newline
-
-        // Skip following whitespace.
-        while (i < input.length()
-          && Character.isWhitespace(input.charAt(i))) {
-          i++;
-        }
-
-        result.append(' ');
-        i--; // compensate for loop increment
-      } else {
-        result.append(ch);
-      }
-    }
-
-    return result.toString().trim();
+    return WS_PATTERN.matcher(input).replaceAll(" ").trim();
   }
 
   /**

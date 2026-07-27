@@ -16,12 +16,12 @@ import uk.co.spudsoft.query.exec.context.RequestContext;
  * @author jtalbut
  */
 public class MySqlPreparerTest {
-    
+
   @Test
   public void testSingleProvidedSingleValuedParameter() {
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    
+
     AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of("id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L)));
@@ -29,12 +29,12 @@ public class MySqlPreparerTest {
     assertEquals("select * from bob where id = ?", result.query());
     assertEquals(7L, result.args().get(0));
   }
-  
+
   @Test
   public void testTwoProvidedSingleValuedParameters() {
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    
+
     AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
@@ -47,12 +47,12 @@ public class MySqlPreparerTest {
     assertEquals("fred", result.args().get(1));
     assertEquals(2, result.args().size());
   }
-  
+
   @Test
   public void testTwoProvidedParametersOneMultiValued() {
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    
+
     AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
@@ -66,12 +66,12 @@ public class MySqlPreparerTest {
     assertEquals("bob", result.args().get(2));
     assertEquals(3, result.args().size());
   }
-   
+
   @Test
   public void testOneProvidedParameterOneNotProvided() {
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    
+
     AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
@@ -88,7 +88,7 @@ public class MySqlPreparerTest {
   public void testTwoProvidedSingleValuedParametersOneReferencedTwice() {
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    
+
     AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
@@ -107,7 +107,7 @@ public class MySqlPreparerTest {
   public void testOneSingleValuedOneMultiValuedParameterReferencedTwice() {
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    
+
     AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
@@ -128,7 +128,7 @@ public class MySqlPreparerTest {
   public void testUnprovidedParameterReferencedTwice() {
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    
+
     AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
@@ -146,25 +146,25 @@ public class MySqlPreparerTest {
   public void testBindTwoSingleValuedParameters() {
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    
+
     AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
             "id", new ArgumentInstance(Argument.builder().name("id").type(DataType.Long).build(), ImmutableList.of(7L))
             , "name", new ArgumentInstance(Argument.builder().name("name").type(DataType.String).build(), ImmutableList.of("fred"))
     );
-    AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id /* BIND and name = :name */", Boolean.TRUE, argSrc);
-    assertEquals("select * from bob where id = ?  and name = ? ", result.query());
+    AbstractSqlPreparer.QueryAndArgs result = instance.prepareSqlStatement("select * from bob where id = :id /* BIND and name = :name */ /* BIND and name = :other */ /* comment */", Boolean.TRUE, argSrc);
+    assertEquals("select * from bob where id = ?  and name = ?   /* comment */", result.query());
     assertEquals(7L, result.args().get(0));
     assertEquals("fred", result.args().get(1));
     assertEquals(2, result.args().size());
   }
-  
+
   @Test
   public void testBindOneSingleValuedParameterOneMissingParameter() {
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    
+
     AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
@@ -175,12 +175,12 @@ public class MySqlPreparerTest {
     assertEquals(7L, result.args().get(0));
     assertEquals(1, result.args().size());
   }
-  
+
   @Test
   public void testBindOneSingleValuedOneMultiValuedParameter() {
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    
+
     AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
@@ -194,12 +194,12 @@ public class MySqlPreparerTest {
     assertEquals("bob", result.args().get(2));
     assertEquals(3, result.args().size());
   }
-  
+
   @Test
   public void testBindOneSingleValuedOneMultiValuedParameterReferencedTwice() {
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    
+
     AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
@@ -215,12 +215,12 @@ public class MySqlPreparerTest {
     assertEquals("bob", result.args().get(4));
     assertEquals(5, result.args().size());
   }
-  
+
   @Test
   public void testBindOneSingleValuedOneMultiValuedParameterReferencedTwiceInBinds() {
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    
+
     AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
@@ -236,12 +236,12 @@ public class MySqlPreparerTest {
     assertEquals("bob", result.args().get(4));
     assertEquals(5, result.args().size());
   }
-    
+
   @Test
   public void testRepalceDoubleQuote() {
     RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-    
+
     AbstractSqlPreparer instance = new MySqlPreparer(pipelineContext);
 
     ImmutableMap<String, ArgumentInstance> argSrc = ImmutableMap.of(
@@ -257,5 +257,5 @@ public class MySqlPreparerTest {
     assertEquals("bob", result.args().get(4));
     assertEquals(5, result.args().size());
   }
-  
+
 }
