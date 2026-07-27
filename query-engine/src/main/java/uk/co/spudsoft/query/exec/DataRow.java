@@ -41,8 +41,8 @@ import org.slf4j.LoggerFactory;
  * Representation of a single row in the stream.
  * @author jtalbut
  */
-public class DataRow {
-  
+public final class DataRow {
+
   private final Types types;
   private final LinkedHashMap<String, Comparable<?>> data;
 
@@ -50,7 +50,7 @@ public class DataRow {
    * An empty row that should never be modified.
    */
   public static final DataRow EMPTY_ROW = new DataRow(new Types(), new LinkedHashMap<>());
-  
+
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "It is expected that the types map change between instances of the DataRow")
   private DataRow(Types types, LinkedHashMap<String, Comparable<?>> data) {
     Objects.requireNonNull(types);
@@ -58,22 +58,22 @@ public class DataRow {
     this.types = types;
     this.data = data;
   }
-  
+
   /**
    * Factory method to create a new DataRow instance.
    * <p>
    * Multiple DataRow instances should share a single {@link Types} object.
-   * 
+   *
    * @param types The known Types to use for this DataRow.
    * @return a newly created DataRow object.
    */
   public static DataRow create(Types types) {
     return new DataRow(types, new LinkedHashMap<>());
   }
-  
+
   /**
    * Factory method for test cases.
-   * 
+   *
    * @param types The Types that must be created externally to be shared amongst different instances.
    * @param entries Array of pairs made up of a string key followed by an Object value.
    * @return A newly created DataRow.
@@ -88,14 +88,14 @@ public class DataRow {
     }
     return result;
   }
-  
+
   /**
    * Set the type for a field if it is not already set.
    * @param key the name of the field.
    * @param type the DataType.
    * @throws IllegalStateException if the field already has a type that is not {@link DataType#Null} or the same as type.
    */
-  public final void putTypeIfAbsent(String key, DataType type) throws IllegalStateException {
+  public void putTypeIfAbsent(String key, DataType type) throws IllegalStateException {
     types.putIfAbsent(key, type);
   }
 
@@ -106,7 +106,7 @@ public class DataRow {
    * @param type the DataType.
    * @throws IllegalStateException if the field already has a type that is not {@link DataType#Null} or the same as type.
    */
-  public final void putTypeIfAbsent(String key, String name, DataType type) throws IllegalStateException {
+  public void putTypeIfAbsent(String key, String name, DataType type) throws IllegalStateException {
     types.putIfAbsent(key, name, type);
   }
 
@@ -133,7 +133,7 @@ public class DataRow {
   public Comparable<?> get(String key) {
     return data.get(key);
   }
-  
+
   /**
    * Get the type of a field from this DataRow.
    * @param key The name of the field.
@@ -150,9 +150,9 @@ public class DataRow {
   public int size() {
     return data == null ? 0 : data.size();
   }
-  
+
   private static final Logger logger = LoggerFactory.getLogger(DataRow.class);
-  
+
   /**
    * Get the approximate size of this DataRow, in bytes.
    * <p>
@@ -176,7 +176,7 @@ public class DataRow {
     });
     return total[0];
   }
-  
+
   /**
    * Carry out action for each column in this DataRow.
    * <p>
@@ -209,7 +209,7 @@ public class DataRow {
     DataType type = DataType.fromObject(value);
     return put(key, key, type, value);
   }
-  
+
   /**
    * Add a value to this DataRow.
    * @param key The key for the field being set - for lookup.
@@ -223,7 +223,7 @@ public class DataRow {
     data.put(key, value);
     return this;
   }
-  
+
   /**
    * Add a value to this DataRow.
    * @param key The key for the field being set.
@@ -234,10 +234,10 @@ public class DataRow {
   public DataRow put(String key, DataType type, Comparable<?> value) {
     return put(key, key, type, value);
   }
-  
+
   /**
    * Add a value to this DataRow, but allow a wider variety of input classes.
-   * 
+   *
    * @param key The name of the field being set.
    * @param value The value of the field.
    * @return this, so that this method may be used in a fluent manner.
@@ -262,7 +262,7 @@ public class DataRow {
     } else if (value instanceof LocalDateTime v) {
       put(key, v);
     } else if (value instanceof LocalTime v) {
-      put(key, v);    
+      put(key, v);
     } else if (value instanceof java.sql.Date d) {
       put(key, d.toLocalDate());
     } else if (value instanceof java.sql.Time d) {
@@ -277,14 +277,14 @@ public class DataRow {
     }
     return this;
   }
-  
+
   /**
    * Convert a value to one that is acceptable to a DataRow, if possible.
    * @param value The value to be converted.
    * @return A value that can be stored in a DataRow.
    */
   public static Comparable<?> convert(Object value) {
-    if (value == null 
+    if (value == null
             || value instanceof Integer
             || value instanceof Long
             || value instanceof Float
@@ -311,7 +311,7 @@ public class DataRow {
       return value.toString();
     }
   }
-  
+
   /**
    * Get an unmodifiable copy of the internal map of field names to values.
    * @return an unmodifiable copy of the internal map of field names to values.
@@ -344,5 +344,5 @@ public class DataRow {
   public Types types() {
     return types;
   }
-  
+
 }

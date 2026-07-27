@@ -23,7 +23,6 @@ import inet.ipaddr.IPAddressString;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
@@ -74,9 +73,9 @@ import uk.co.spudsoft.query.main.OperatorsInstance;
 @ExtendWith(VertxExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class PipelineExecutorImplTest {
-  
+
   private static final Logger logger = LoggerFactory.getLogger(PipelineExecutorImplTest.class);
-  
+
   @Test
   public void testValidatePipeline(Vertx vertx, VertxTestContext testContext) {
     Pipeline definition = Pipeline.builder()
@@ -118,7 +117,7 @@ public class PipelineExecutorImplTest {
             , "localhost"
             , null
             , null
-            , HeadersMultiMap.httpHeaders().add("Host", "localhost:123")
+            , MultiMap.caseInsensitiveMultiMap().add("Host", "localhost:123")
             , null
             , new IPAddressString("127.0.0.1")
             , null
@@ -131,14 +130,14 @@ public class PipelineExecutorImplTest {
                     , Argument.builder().type(DataType.String).name("arg2").optional(true).defaultValueExpression("'message'").build()
                     , Argument.builder().type(DataType.String).name("arg3").optional(true).build()
             )
-            , 
+            ,
             MultiMap.caseInsensitiveMultiMap()
             );
     assertEquals(3, result.size());
     assertEquals(12L, result.get("arg1").getValues().get(0));
     assertEquals("message", result.get("arg2").getValues().get(0));
     assertEquals(0, result.get("arg3").getValues().size());
-    
+
     result = instance.prepareArguments(
             req
             , Arrays.asList(
@@ -146,7 +145,7 @@ public class PipelineExecutorImplTest {
                     , Argument.builder().type(DataType.String).name("arg2").defaultValueExpression("message").build()
                     , Argument.builder().type(DataType.String).name("arg3").optional(true).build()
             )
-            , 
+            ,
             MultiMap.caseInsensitiveMultiMap()
                     .add("arg1", "17")
                     .add("arg2", "second")
@@ -161,7 +160,7 @@ public class PipelineExecutorImplTest {
   @Test
   @Timeout(timeUnit = TimeUnit.SECONDS, value = 60)
   public void testInitializePipeline(Vertx vertx, VertxTestContext testContext) throws Throwable {
-    
+
     Pipeline definition = Pipeline.builder()
             .source(SourceTest.builder().name("test").build())
             .processors(
@@ -173,7 +172,7 @@ public class PipelineExecutorImplTest {
             .build();
     Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
     PipelineExecutor instance = PipelineExecutor.create(null, auditor, new FilterFactory(Collections.emptyList()), null);
-    
+
     RequestContext req = new RequestContext(
             null
             , null
@@ -181,38 +180,38 @@ public class PipelineExecutorImplTest {
             , "localhost"
             , null
             , null
-            , HeadersMultiMap.httpHeaders().add("Host", "localhost:123")
+            , MultiMap.caseInsensitiveMultiMap().add("Host", "localhost:123")
             , null
             , new IPAddressString("127.0.0.1")
             , null
     );
     PipelineContext pipelineContext = new PipelineContext("test", req);
-    
+
     List<ProcessorInstance> processors = instance.createProcessors(vertx, pipelineContext, definition, null);
 
     Map<String, ArgumentInstance> arguments = instance.prepareArguments(
             req
-            , 
+            ,
             Arrays.asList(
                     Argument.builder().type(DataType.Long).name("arg1").optional(true).defaultValueExpression("12").build()
                     , Argument.builder().type(DataType.String).name("arg2").optional(true).defaultValueExpression("message").build()
                     , Argument.builder().type(DataType.String).name("arg3").optional(true).build()
             )
-            , 
+            ,
             MultiMap.caseInsensitiveMultiMap()
             );
-    
+
     SourceTest sourceDefn = SourceTest.builder().name("test").rowCount(7).build();
     SourceInstance source = sourceDefn.createInstance(vertx, null, auditor, pipelineContext, instance);
     FormatDelimited destDefn = FormatDelimited.builder().build();
     FormatInstance dest = destDefn.createInstance(vertx, pipelineContext, new LoggingWriteStream<>(rows -> {}));
-    
+
     PipelineInstance pi = new PipelineInstance(pipelineContext, definition, arguments, null, null, source, processors, dest);
-    
+
     instance.initializePipeline(pipelineContext, pi);
-    pi.getFinalPromise().future().onComplete(testContext.succeedingThenComplete());    
+    pi.getFinalPromise().future().onComplete(testContext.succeedingThenComplete());
   }
-  
+
   @Test
   public void testGetFormat() {
     FormatRequest drBlank = FormatRequest.builder().build();
@@ -242,7 +241,7 @@ public class PipelineExecutorImplTest {
             )
             .build();
     logger.debug("PDF 1.0, Wildcard 0.1: {}", drAcceptWild.getAccept());
-    
+
     FormatRequest drAcceptXlsxOverWild = FormatRequest
             .builder()
             .accept(
@@ -254,7 +253,7 @@ public class PipelineExecutorImplTest {
             )
             .build();
     logger.debug("Wildcard 1.0, XLSX 1.0, Partial wildcard 1.0: {}", drAcceptXlsxOverWild.getAccept());
-    
+
     FormatRequest drAcceptJsonOverXlsx = FormatRequest
             .builder()
             .accept(
@@ -265,7 +264,7 @@ public class PipelineExecutorImplTest {
             )
             .build();
     logger.debug("JSON 0.7, XLSX 0.1: {}", drAcceptJsonOverXlsx.getAccept());
-    
+
     FormatRequest drAcceptXlsxOverJson = FormatRequest
             .builder()
             .accept(
@@ -274,9 +273,9 @@ public class PipelineExecutorImplTest {
                             , MediaType.parse("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet; q=0.5")
                     )
             )
-            .build();    
+            .build();
     logger.debug("JSON 0.1, XLSX 0.5: {}", drAcceptXlsxOverJson.getAccept());
-    
+
     FormatRequest drAcceptXlsxOverJsonWithBadQ = FormatRequest
             .builder()
             .accept(
@@ -285,13 +284,13 @@ public class PipelineExecutorImplTest {
                             , MediaType.parse("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet; q=0.5")
                     )
             )
-            .build();    
+            .build();
     logger.debug("JSON 0.1, XLSX 0.5: {}", drAcceptXlsxOverJson.getAccept());
-    
+
     List<Format> formats = Arrays.asList(FormatJson.builder().build()
             , FormatXlsx.builder().build()
     );
-    
+
     PipelineExecutor instance = PipelineExecutor.create(null, null, new FilterFactory(Collections.emptyList()), null);
 
     RequestContext req = new RequestContext(
@@ -301,13 +300,13 @@ public class PipelineExecutorImplTest {
             , "localhost"
             , null
             , null
-            , HeadersMultiMap.httpHeaders().add("Host", "localhost:123")
+            , MultiMap.caseInsensitiveMultiMap().add("Host", "localhost:123")
             , null
             , new IPAddressString("127.0.0.1")
             , null
     );
     PipelineContext pipelineContext = new PipelineContext("test", req);
-    
+
     assertEquals(FormatType.JSON, instance.getFormat(pipelineContext, formats, drBlank).getType());
     assertEquals(FormatType.XLSX, instance.getFormat(pipelineContext, formats, drFormat).getType());
     assertThrows(IllegalArgumentException.class, () -> instance.getFormat(pipelineContext, formats, drBadFormat).getType());
@@ -354,7 +353,7 @@ public class PipelineExecutorImplTest {
     assertEquals("The argument \"test\" was passed a value which cannot be converted to Long.", assertThrows(IllegalArgumentException.class, () -> {
       PipelineExecutorImpl.addCastItem(pipctx, "test", builder, DataType.Long, "12:34");
     }).getMessage());
-    
+
     assertEquals(Arrays.asList(LocalTime.of(12, 34)), builder.build());
   }
 
@@ -362,13 +361,13 @@ public class PipelineExecutorImplTest {
   public void testEvaluateDefaultValues() throws Throwable {
     RequestContext requestContext = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", requestContext);
-    
+
     Argument arg = Argument.builder()
             .type(DataType.Date)
             .multiValued(true)
             .defaultValueExpression("['1971-05-06', '1968-07-30', ...]")
             .build();
-    
+
     ImmutableList<Comparable<?>> values = PipelineExecutorImpl.evaluateDefaultValues(pipelineContext, arg, null);
     assertNotNull(values);
     assertEquals(Arrays.asList(LocalDate.of(1971, 5, 6), LocalDate.of(1968, 7, 30)), values);
@@ -378,7 +377,7 @@ public class PipelineExecutorImplTest {
             .multiValued(true)
             .defaultValueExpression("['1923-05-06', '2042-07-30']")
             .build();
-    
+
     values = PipelineExecutorImpl.evaluateDefaultValues(pipelineContext, arg, null);
     assertNotNull(values);
     assertEquals(Arrays.asList(LocalDate.of(1923, 5, 6), LocalDate.of(2042, 7, 30)), values);
@@ -388,7 +387,7 @@ public class PipelineExecutorImplTest {
             .multiValued(true)
             .defaultValueExpression("[23, 45, null, ...]")
             .build();
-    
+
     values = PipelineExecutorImpl.evaluateDefaultValues(pipelineContext, arg, null);
     assertNotNull(values);
     assertEquals(Arrays.asList(23, 45), values);
@@ -398,7 +397,7 @@ public class PipelineExecutorImplTest {
             .multiValued(true)
             .defaultValueExpression("[23, 45, null]")
             .build();
-    
+
     values = PipelineExecutorImpl.evaluateDefaultValues(pipelineContext, arg, null);
     assertNotNull(values);
     assertEquals(Arrays.asList(23, 45), values);
@@ -409,7 +408,7 @@ public class PipelineExecutorImplTest {
             .permittedValuesRegex("\\d{4}-\\d{2}-\\d{2}")
             .defaultValueExpression("['1971-05-06', '1968-07-30', ...]")
             .build();
-    
+
     values = PipelineExecutorImpl.evaluateDefaultValues(pipelineContext, arg, null);
     assertNotNull(values);
     assertEquals(Arrays.asList(LocalDate.of(1971, 5, 6), LocalDate.of(1968, 7, 30)), values);
@@ -421,7 +420,7 @@ public class PipelineExecutorImplTest {
             .permittedValuesRegex("ABCD")
             .defaultValueExpression("['1971-05-06', '1968-07-30', ...]")
             .build();
-    
+
     values = PipelineExecutorImpl.evaluateDefaultValues(pipelineContext, arg, null);
     assertNotNull(values);
     assertEquals(Arrays.asList(LocalDate.of(1971, 5, 6), LocalDate.of(1968, 7, 30)), values);
@@ -440,10 +439,10 @@ public class PipelineExecutorImplTest {
             .possibleValues(ImmutableList.of())
             .defaultValueExpression("firstMatchingStringWithPrefix(request.groups, '/Department_', true)")
             .build();
-    
+
     Jwt jwt = new Jwt(new JsonObject(), new JsonObject().put("groups", Arrays.asList("Bob", "/Department_First department")), null, null);
     requestContext.setJwt(jwt);
-            
+
     values = PipelineExecutorImpl.evaluateDefaultValues(pipelineContext, arg, null);
     assertNotNull(values);
     assertEquals(ImmutableList.of("First department"), values);
@@ -455,14 +454,14 @@ public class PipelineExecutorImplTest {
     PipelineContext pipelineContext = new PipelineContext("test", requestContext);
 
     Argument arg;
-    
+
     // No constraints and casting is handled later:
     arg = Argument.builder()
             .type(DataType.Integer)
             .multiValued(true)
             .build();
     PipelineExecutorImpl.validateArgumentValue(pipelineContext, arg, null, "fred", true);
-    
+
     // Still no constraints because possible values is empty and casting is handled later:
     arg = Argument.builder()
             .type(DataType.Integer)
@@ -470,7 +469,7 @@ public class PipelineExecutorImplTest {
             .multiValued(true)
             .build();
     PipelineExecutorImpl.validateArgumentValue(pipelineContext, arg, null, "fred", true);
-    
+
     // Now fail because value is not in possible values
     Argument argPermitsBob = Argument.builder()
             .name("testarg")
@@ -489,7 +488,7 @@ public class PipelineExecutorImplTest {
               PipelineExecutorImpl.validateArgumentValue(pipelineContext, argPermitsBob, null, "fred", false);
             }).getMessage()
             );
-    
+
     // Now fail because value is not in regex
     Argument argPermitsRegex = Argument.builder()
             .name("testarg")
@@ -509,9 +508,9 @@ public class PipelineExecutorImplTest {
               PipelineExecutorImpl.validateArgumentValue(pipelineContext, argPermitsRegex, pattern, "fred", false);
             }).getMessage()
             );
-    
-    
-    
+
+
+
   }
 
 }

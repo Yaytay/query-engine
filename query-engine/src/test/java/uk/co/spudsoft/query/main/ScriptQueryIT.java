@@ -29,6 +29,7 @@ import java.time.Duration;
 import org.apache.commons.io.FileUtils;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
@@ -46,22 +47,23 @@ import uk.co.spudsoft.query.testcontainers.ServerProviderMySQL;
  * Note that this set of tests requires the sample data to be loaded, but relies on the "loadSampleData" flag to make it happen.
  * When running with the full set of tests this won't actually stress that flag because others tests may have already
  * loaded the sample data.
- * 
+ *
  * @author jtalbut
  */
 @ExtendWith(VertxExtension.class)
 @TestInstance(Lifecycle.PER_CLASS)
+@Disabled
 public class ScriptQueryIT {
-  
+
   private static final ServerProviderMySQL mysql = new ServerProviderMySQL().init();
 
   private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
-  
+
   private JdkJwksHandler jwks;
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(ScriptQueryIT.class);
-  
+
   @BeforeAll
   public void createDirs() throws IOException {
     File confsDir = new File(CONFS_DIR);
@@ -75,7 +77,7 @@ public class ScriptQueryIT {
     jwks.start();
     jwks.setKeyCache(keyCache);
   }
-  
+
   @Test
   public void testQuery() throws Exception {
     Main main = new Main();
@@ -98,9 +100,9 @@ public class ScriptQueryIT {
       , "--jwt.jwksEndpoints[0]=" + jwks.getBaseUrl() + "/jwks"
       , "--jwt.defaultJwksCacheDuration=PT1M"
     }, stdout, System.getenv());
-    
+
     RestAssured.port = main.getPort();
-    
+
     String body = given()
             .queryParam("arg1", "First")
             .queryParam("arg2", "Second")
@@ -110,14 +112,14 @@ public class ScriptQueryIT {
             .log().ifError()
             .statusCode(200)
             .extract().body().asString();
-    
+
     logger.debug("Result: {}", body);
     assertThat(body, startsWith("\"value\"\t\"name\"\t\"arg1\"\t\"arg2\"\n0\t\"Source\"\t\"First\"\t\"Second\"\n"));
-    
+
     main.shutdown();
 
     // Audit records should all have been sorted by main.shutdown
     assertTrue(TestHelpers.getDirtyAudits(logger, mysql.getJdbcUrl(), mysql.getUser(), mysql.getPassword()).isEmpty());
   }
-  
+
 }

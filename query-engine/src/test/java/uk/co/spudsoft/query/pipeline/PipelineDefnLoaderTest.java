@@ -19,8 +19,8 @@ package uk.co.spudsoft.query.pipeline;
 import inet.ipaddr.IPAddressString;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.core.json.Json;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.dircache.DirCache;
 import uk.co.spudsoft.query.exec.context.RequestContext;
 import uk.co.spudsoft.query.main.CacheConfig;
-import uk.co.spudsoft.query.web.rest.DocNodesTree;
 
 /**
  *
@@ -43,9 +42,9 @@ import uk.co.spudsoft.query.web.rest.DocNodesTree;
  */
 @ExtendWith(VertxExtension.class)
 public class PipelineDefnLoaderTest {
-  
+
   private static final Logger logger = LoggerFactory.getLogger(PipelineDefnLoaderTest.class);
-  
+
   @Test
   public void testGetAccessible(Vertx vertx, VertxTestContext testContext) throws Exception {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
@@ -62,7 +61,7 @@ public class PipelineDefnLoaderTest {
             , "localhost"
             , null
             , null
-            , HeadersMultiMap.httpHeaders().add("Host", "localhost:123")
+            , MultiMap.caseInsensitiveMultiMap().add("Host", "localhost:123")
             , null
             , new IPAddressString("127.0.0.1")
             , null
@@ -97,36 +96,36 @@ public class PipelineDefnLoaderTest {
                   assertEquals("sub1/sub2/ConditionalArgument", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(2).getPath());
                   assertEquals("ConditionalArgument", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(2).getName());
 
-                  assertEquals("sub1/sub2/DemoStatic", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(3).getPath());                  
+                  assertEquals("sub1/sub2/DemoStatic", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(3).getPath());
                   assertEquals("DemoStatic", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(3).getName());
 
                   assertEquals("sub1/sub2/DynamicEndpointPipelineJdbcIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(4).getPath());
                   assertEquals("DynamicEndpointPipelineJdbcIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(4).getName());
-                  
+
                   assertEquals("sub1/sub2/DynamicEndpointPipelineSqlIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(5).getPath());
                   assertEquals("DynamicEndpointPipelineSqlIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(5).getName());
-                  
+
                   assertEquals("sub1/sub2/EmptyDataIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(6).getPath());
                   assertEquals("EmptyDataIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(6).getName());
-                  
+
                   assertEquals("sub1/sub2/JsonToPipelineIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(7).getPath());
                   assertEquals("JsonToPipelineIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(7).getName());
-                  
+
                   assertEquals("sub1/sub2/LookupIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(8).getPath());
                   assertEquals("LookupIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(8).getName());
-                  
+
                   assertEquals("sub1/sub2/SortableIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(9).getPath());
                   assertEquals("SortableIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(9).getName());
-                  
+
                   assertEquals("sub1/sub2/TemplatedJsonToPipelineIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(10).getPath());
                   assertEquals("TemplatedJsonToPipelineIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(10).getName());
-                  
+
                   assertEquals("sub1/sub2/TemplatedYamlToPipelineIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(11).getPath());
                   assertEquals("TemplatedYamlToPipelineIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(11).getName());
-                  
+
                   assertEquals("sub1/sub2/TestData", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(12).getPath());
                   assertEquals("TestData", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(12).getName());
-                  
+
                   assertEquals("sub1/sub2/YamlToPipelineIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(13).getPath());
                   assertEquals("YamlToPipelineIT", dir(dir(root.getChildren().get(2)).getChildren().get(0)).getChildren().get(13).getName());
                 });
@@ -138,7 +137,7 @@ public class PipelineDefnLoaderTest {
   private PipelineNodesTree.PipelineDir dir(PipelineNodesTree.PipelineNode node) {
     return (PipelineNodesTree.PipelineDir) node;
   }
-  
+
   @Test
   public void testGetInaccessible(Vertx vertx, VertxTestContext testContext) throws Exception {
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
@@ -154,7 +153,7 @@ public class PipelineDefnLoaderTest {
             , "unknown"
             , null
             , null
-            , HeadersMultiMap.httpHeaders().add("Host", "bad")
+            , MultiMap.caseInsensitiveMultiMap().add("Host", "bad")
             , null
             , new IPAddressString("12.34.56.78")
             , null

@@ -23,7 +23,6 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -61,12 +60,12 @@ import uk.co.spudsoft.query.main.OperatorsInstance;
 @ExtendWith(VertxExtension.class)
 @TestInstance(Lifecycle.PER_CLASS)
 public class YamlToPipelineIT {
-  
+
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(YamlToPipelineIT.class);
 
   private final ServerProvider serverProvider = new ServerProviderPostgreSQL();
-    
+
   @Test
   @Timeout(value = 120, timeUnit = TimeUnit.SECONDS)
   public void testParsingJsonToPipelineStreamingWithoutArg(Vertx vertx, VertxTestContext testContext) throws Throwable {
@@ -79,7 +78,7 @@ public class YamlToPipelineIT {
     PipelineExecutor executor = PipelineExecutor.create(meterRegistry, auditor, new FilterFactory(Collections.emptyList()), null);
 
     MultiMap args = MultiMap.caseInsensitiveMultiMap();
-    
+
     RequestContext req = new RequestContext(
             null
             , null
@@ -87,12 +86,12 @@ public class YamlToPipelineIT {
             , "localhost"
             , null
             , null
-            , HeadersMultiMap.httpHeaders().add("Host", "localhost:123")
+            , MultiMap.caseInsensitiveMultiMap().add("Host", "localhost:123")
             , null
             , new IPAddressString("127.0.0.1")
             , null
     );
-    
+
     serverProvider
             .prepareContainer(vertx)
             .compose(v -> serverProvider.prepareTestDatabase(vertx))
@@ -129,7 +128,7 @@ public class YamlToPipelineIT {
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);
               }
-      
+
               assertNotNull(instance);
 
               return executor.initializePipeline(pipelineContext, instance);
@@ -151,7 +150,7 @@ public class YamlToPipelineIT {
             });
   }
 
-    
+
   @Test
   @Timeout(value = 120, timeUnit = TimeUnit.SECONDS)
   public void testParsingJsonToPipelineStreaming(Vertx vertx, VertxTestContext testContext) throws Throwable {
@@ -164,7 +163,7 @@ public class YamlToPipelineIT {
 
     MultiMap args = MultiMap.caseInsensitiveMultiMap();
     args.add("maxId", "20");
-    
+
     RequestContext req = new RequestContext(
             null
             , null
@@ -172,7 +171,7 @@ public class YamlToPipelineIT {
             , "localhost"
             , null
             , null
-            , HeadersMultiMap.httpHeaders().add("Host", "localhost:123")
+            , MultiMap.caseInsensitiveMultiMap().add("Host", "localhost:123")
             , null
             , new IPAddressString("127.0.0.1")
             , null
@@ -215,7 +214,7 @@ public class YamlToPipelineIT {
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);
               }
-      
+
               assertNotNull(instance);
 
               return executor.initializePipeline(pipelineContext, instance);

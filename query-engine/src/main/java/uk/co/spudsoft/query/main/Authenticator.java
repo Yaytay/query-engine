@@ -27,7 +27,6 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.Cookie;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.HostAndPort;
 import io.vertx.ext.web.RoutingContext;
@@ -551,7 +550,7 @@ public class Authenticator {
 
   private Future<String> performClientCredentialsGrant(Log log, String tokenEndpoint, String clientId, String clientSecret) {
     log.debug().log("Performing client_credentials request to {}", tokenEndpoint);
-    MultiMap form = HeadersMultiMap.httpHeaders();
+    MultiMap form = MultiMap.caseInsensitiveMultiMap();
     form.add("grant_type", "client_credentials");
     form.add("client_id", clientId);
     form.add("client_secret", clientSecret);
@@ -575,7 +574,7 @@ public class Authenticator {
 
   private Future<String> performResourceOwnerPasswordCredentials(Log log, Endpoint authEndpoint, String username, String password) {
     log.debug().log("Performing password request to {}", authEndpoint);
-    MultiMap form = HeadersMultiMap.httpHeaders();
+    MultiMap form = MultiMap.caseInsensitiveMultiMap();
     form.add("grant_type", "password");
     form.add("username", username);
     form.add("password", password);

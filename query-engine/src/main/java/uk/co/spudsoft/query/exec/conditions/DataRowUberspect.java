@@ -111,7 +111,9 @@ public final class DataRowUberspect implements JexlUberspect {
   public JexlPropertySet getPropertySet(List<PropertyResolver> resolvers, Object obj, Object identifier, Object arg) {
     if (obj instanceof DataRow row && identifier instanceof String name && arg instanceof Comparable<?> comp) {
       return new JexlPropertySet() {
+
         @Override
+        @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "It is expected that the data may change")
         public Object invoke(Object obj, Object arg) {
           row.put(name, comp);
           return row;

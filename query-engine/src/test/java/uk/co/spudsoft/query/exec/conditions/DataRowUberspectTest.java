@@ -30,6 +30,8 @@ import org.apache.commons.jexl3.JexlBuilder;
 import org.apache.commons.jexl3.JexlContext;
 import org.apache.commons.jexl3.JexlEngine;
 import static org.apache.commons.jexl3.JexlEngine.TRY_FAILED;
+
+import org.apache.commons.jexl3.JexlFeatures;
 import org.apache.commons.jexl3.MapContext;
 import org.apache.commons.jexl3.internal.introspection.Uberspect;
 import org.apache.commons.jexl3.introspection.JexlPermissions;
@@ -56,9 +58,15 @@ public class DataRowUberspectTest {
     // Build a default engine to obtain its default uberspect as delegate
     JexlEngine base = new JexlBuilder().create();
     JexlUberspect delegate = base.getUberspect();
+
+    JexlFeatures features = new JexlFeatures()
+      .sideEffect(true)        // Allows local/general side effects (assignments)
+      .sideEffectGlobal(true); // Allows modifying global/context variables
+
     // Wrap with our DataRowUberspect
     return new JexlBuilder()
         .uberspect(new DataRowUberspect(delegate))
+        .features(features)
         .create();
   }
 
@@ -154,7 +162,7 @@ public class DataRowUberspectTest {
     assertEquals(7, v);
     assertTrue(row.containsKey("v"));
   }
-  
+
   private static JexlUberspect newUberspect() {
     JexlPermissions permissions = JexlPermissions.RESTRICTED
             .compose(
@@ -170,7 +178,7 @@ public class DataRowUberspectTest {
 
     return new Uberspect(log, null, permissions);
   }
-  
+
   @Test
   public void testGetClassLoader() {
     DataRowUberspect dru = new DataRowUberspect(newUberspect());
@@ -178,23 +186,23 @@ public class DataRowUberspectTest {
     dru.setClassLoader(this.getClass().getClassLoader());
     assertEquals(this.getClass().getClassLoader(), dru.getClassLoader());
   }
-  
+
   @Test
   public void testGetIterator() {
     DataRowUberspect dru = new DataRowUberspect(newUberspect());
     assertNotNull(dru.getIterator(Arrays.asList(1,2,3)));
   }
-  
+
   @Test
   public void testGetConstructor() {
-    
+
     Map<String, String> environment = new HashMap<>();
     HttpServerRequest request = mock(HttpServerRequest.class);
-    
+
     DataRowUberspect dru = new DataRowUberspect(newUberspect());
     assertNotNull(dru.getConstructor(RequestContext.class, environment, request));
   }
-  
+
   @Test
   public void testPropertyManually() {
     DataRowUberspect dru = new DataRowUberspect(newUberspect());
@@ -202,7 +210,7 @@ public class DataRowUberspectTest {
     DataRow dr = DataRow.create(types);
     dr.put("field1", 3);
     dr.put("field2", "bob");
-    
+
     JexlPropertyGet getter = dru.getPropertyGet(dr, "field1");
     assertTrue(getter.isCacheable());
     assertEquals(3, getter.tryInvoke(dr, "field1"));
@@ -211,7 +219,7 @@ public class DataRowUberspectTest {
     assertEquals(TRY_FAILED, getter.tryInvoke(new HashMap<>(), "field3"));
     assertTrue(getter.tryFailed(TRY_FAILED));
     assertFalse(getter.tryFailed(3));
-    
+
     JexlPropertySet setter = dru.getPropertySet(dr, "field1", 4);
     assertTrue(setter.isCacheable());
     assertEquals(dr, setter.tryInvoke(dr, "field1", 4));
@@ -224,8 +232,8 @@ public class DataRowUberspectTest {
     Map<String, String> map = new HashMap<>();
     setter = dru.getPropertySet(map, "field1", 4);
     assertNotNull(setter);
-    assertTrue(setter.isCacheable());    
-    
+    assertTrue(setter.isCacheable());
+
     assertNull(dru.getPropertyGet(dr, Long.MIN_VALUE));
     assertNotNull(dru.getPropertyGet(new HashMap<>(), "key"));
 
@@ -233,5 +241,5 @@ public class DataRowUberspectTest {
     assertNull(dru.getPropertySet(dr, "field1", new Point(0,0)));
 
   }
-  
+
 }

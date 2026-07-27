@@ -22,7 +22,6 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpHeaders;
-import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.healthchecks.Status;
@@ -374,19 +373,19 @@ public class AuditorPersistenceImplTest {
     assertNull(AuditorPersistenceImpl.multiMapToJson(reqctx, null));
 
     // Test 2: Empty MultiMap
-    MultiMap emptyMap = HeadersMultiMap.httpHeaders();
+    MultiMap emptyMap = MultiMap.caseInsensitiveMultiMap();
     JsonObject emptyResult = AuditorPersistenceImpl.multiMapToJson(reqctx, emptyMap);
     assertNotNull(emptyResult);
     assertEquals(0, emptyResult.size());
 
     // Test 3: Single key-value pair
-    MultiMap singleMap = HeadersMultiMap.httpHeaders().add("key1", "value1");
+    MultiMap singleMap = MultiMap.caseInsensitiveMultiMap().add("key1", "value1");
     JsonObject singleResult = AuditorPersistenceImpl.multiMapToJson(reqctx, singleMap);
     assertEquals(1, singleResult.size());
     assertEquals("value1", singleResult.getString("key1"));
 
     // Test 4: Multiple different keys
-    MultiMap multipleKeysMap = HeadersMultiMap.httpHeaders()
+    MultiMap multipleKeysMap = MultiMap.caseInsensitiveMultiMap()
             .add("key1", "value1")
             .add("key2", "value2")
             .add("key3", "value3");
@@ -397,7 +396,7 @@ public class AuditorPersistenceImplTest {
     assertEquals("value3", multipleKeysResult.getString("key3"));
 
     // Test 5: Duplicate keys (should create JsonArray)
-    MultiMap duplicateKeysMap = HeadersMultiMap.httpHeaders()
+    MultiMap duplicateKeysMap = MultiMap.caseInsensitiveMultiMap()
             .add("duplicate", "first")
             .add("duplicate", "second");
     JsonObject duplicateKeysResult = AuditorPersistenceImpl.multiMapToJson(reqctx, duplicateKeysMap);
@@ -406,7 +405,7 @@ public class AuditorPersistenceImplTest {
     assertEquals(expectedArray, duplicateKeysResult.getJsonArray("duplicate"));
 
     // Test 6: Multiple values for same key (more than 2)
-    MultiMap multipleValuesMap = HeadersMultiMap.httpHeaders()
+    MultiMap multipleValuesMap = MultiMap.caseInsensitiveMultiMap()
             .add("multi", "first")
             .add("multi", "second")
             .add("multi", "third")
@@ -417,7 +416,7 @@ public class AuditorPersistenceImplTest {
     assertEquals(expectedMultiArray, multipleValuesResult.getJsonArray("multi"));
 
     // Test 7: Authorization header with Bearer token (should be protected)
-    MultiMap authBearerMap = HeadersMultiMap.httpHeaders()
+    MultiMap authBearerMap = MultiMap.caseInsensitiveMultiMap()
             .add(HttpHeaders.AUTHORIZATION.toString(), "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c");
     JsonObject authBearerResult = AuditorPersistenceImpl.multiMapToJson(reqctx, authBearerMap);
     assertEquals(1, authBearerResult.size());
@@ -427,7 +426,7 @@ public class AuditorPersistenceImplTest {
     assertFalse(protectedBearer.contains("SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"));
 
     // Test 8: Authorization header with Basic auth (should be protected)
-    MultiMap authBasicMap = HeadersMultiMap.httpHeaders()
+    MultiMap authBasicMap = MultiMap.caseInsensitiveMultiMap()
             .add(HttpHeaders.AUTHORIZATION.toString(), "Basic dXNlcm5hbWU6cGFzc3dvcmQ=");
     JsonObject authBasicResult = AuditorPersistenceImpl.multiMapToJson(reqctx, authBasicMap);
     assertEquals(1, authBasicResult.size());
@@ -448,7 +447,7 @@ public class AuditorPersistenceImplTest {
     assertEquals("Basic secret", authArray.getString(1)); // This isn't valid basic auth so it hasn't been protected
 
     // Test 10: Mixed scenario - single values, multiple values, and auth headers
-    MultiMap mixedMap = HeadersMultiMap.httpHeaders()
+    MultiMap mixedMap = MultiMap.caseInsensitiveMultiMap()
             .add("single", "value")
             .add("multiple", "first")
             .add("multiple", "second")
@@ -482,7 +481,7 @@ public class AuditorPersistenceImplTest {
     assertEquals("text/html", acceptArray.getString(1));
 
     // Test 11: Empty string values
-    MultiMap emptyValueMap = HeadersMultiMap.httpHeaders()
+    MultiMap emptyValueMap = MultiMap.caseInsensitiveMultiMap()
             .add("empty", "")
             .add("null-like", "null")
             .add("empty", "not-empty");
@@ -495,7 +494,7 @@ public class AuditorPersistenceImplTest {
     assertEquals("null", emptyValueResult.getString("null-like"));
 
     // Test 12: Special characters in keys and values
-    MultiMap specialCharsMap = HeadersMultiMap.httpHeaders()
+    MultiMap specialCharsMap = MultiMap.caseInsensitiveMultiMap()
             .add("key-with-dashes", "value with spaces")
             .add("key_with_underscores", "value@with#special$chars")
             .add("UPPERCASE_KEY", "MixedCaseValue");
@@ -1046,7 +1045,7 @@ public class AuditorPersistenceImplTest {
     HistoryFilters filters = new HistoryFilters(null, null, null, null, null, null);
 
     AuditorPersistenceImpl.buildHistoryRowsFilter(flags, filterBuilder, args, quote, "iss", "sub", filters);
-    
+
     assertThat(filterBuilder.toString(), equalTo(" 1 = 1 "));
     assertThat(args, empty());
   }

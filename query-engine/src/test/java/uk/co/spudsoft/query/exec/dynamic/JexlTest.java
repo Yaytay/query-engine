@@ -17,7 +17,6 @@
 package uk.co.spudsoft.query.exec.dynamic;
 
 import io.vertx.core.MultiMap;
-import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.jexl3.JexlContext;
@@ -84,7 +83,7 @@ public class JexlTest {
     JexlExpression expression = JEXL.createExpression(exp);
 
     JexlContext context = new MapContext();
-    MultiMap args = HeadersMultiMap.httpHeaders();
+    MultiMap args = MultiMap.caseInsensitiveMultiMap();
     context.set("args", args);
 
     Object result = expression.evaluate(context);
@@ -115,7 +114,7 @@ public class JexlTest {
     JexlExpression expression = JEXL.createExpression(exp);
 
     JexlContext context = new MapContext();
-    MultiMap args = HeadersMultiMap.httpHeaders();
+    MultiMap args = MultiMap.caseInsensitiveMultiMap();
     context.set("args", args);
     args.add("param1", "true");
 
@@ -147,7 +146,7 @@ public class JexlTest {
     JexlExpression expression = JEXL.createExpression(exp);
 
     JexlContext context = new MapContext();
-    MultiMap args = HeadersMultiMap.httpHeaders();
+    MultiMap args = MultiMap.caseInsensitiveMultiMap();
     context.set("args", args);
     args.add("param1", "true");
 
@@ -179,7 +178,7 @@ public class JexlTest {
     JexlExpression expression = JEXL.createExpression(exp);
 
     JexlContext context = new MapContext();
-    MultiMap args = HeadersMultiMap.httpHeaders();
+    MultiMap args = MultiMap.caseInsensitiveMultiMap();
     context.set("args", args);
     args.add("param1", "true");
 

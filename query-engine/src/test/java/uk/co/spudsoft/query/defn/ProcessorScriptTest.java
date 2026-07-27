@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author jtalbut
  */
 public class ProcessorScriptTest {
-  
+
   @Test
   public void testSetType() {
     ProcessorScript instance = ProcessorScript.builder().type(ProcessorType.SCRIPT).build();
@@ -38,5 +38,35 @@ public class ProcessorScriptTest {
     }
   }
 
-  
+  @Test
+  public void testLanguage() {
+    ProcessorScript ps = ProcessorScript
+      .builder()
+      .type(ProcessorType.SCRIPT)
+      .language("Noop")
+      .build();
+    assertEquals("Noop", ps.getLanguage());
+  }
+
+  @Test
+  public void testPredicate() {
+    ProcessorScript ps = ProcessorScript
+      .builder()
+      .type(ProcessorType.SCRIPT)
+      .predicate("TRUE")
+      .build();
+    assertEquals("TRUE", ps.getPredicate());
+  }
+
+  @Test
+  public void testProcess() {
+    ProcessorScript ps = ProcessorScript
+      .builder()
+      .type(ProcessorType.SCRIPT)
+      .process("x = 5")
+      .build();
+    assertEquals("x = 5", ps.getProcess());
+  }
+
+
 }

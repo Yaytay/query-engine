@@ -33,14 +33,14 @@ import uk.co.spudsoft.dircache.FileTree.NodeType;
  * Implementation of {@link uk.co.spudsoft.dircache.FileTree} specialized for reporting the Query Engine documentation.
  * @author jtalbut
  */
-public class DocNodesTree implements FileTree<DocNodesTree.DocNode> {
+public final class DocNodesTree implements FileTree<DocNodesTree.DocNode> {
 
   /**
    * Constructor.
    */
   private DocNodesTree() {
   }
-  
+
   /**
    * Base class for documentation files and the directories that contain them.
    */
@@ -68,19 +68,19 @@ public class DocNodesTree implements FileTree<DocNodesTree.DocNode> {
           }
   )
   public abstract static class DocNode implements FileTree.FileTreeNode {
-    
+
     private final String name;
     private final String path;
 
     /**
      * Constructor that will result in a File node.
-     * 
+     *
      * @param path the relative path to the node.
      */
     public DocNode(String path) {
       this.name = nameFromPath(path);
       this.path = path;
-    }    
+    }
 
     /**
      * Get the type of this node, whether it is a dir or a file.
@@ -96,7 +96,7 @@ public class DocNodesTree implements FileTree<DocNodesTree.DocNode> {
     )
     @Override
     public abstract NodeType getType();
-    
+
     /**
      * Get the relative path to the node from the root.
      * @return the relative path to the node from the root.
@@ -149,7 +149,7 @@ public class DocNodesTree implements FileTree<DocNodesTree.DocNode> {
     }
 
   }
-  
+
   /**
    * A directory containing documentation files.
    */
@@ -164,7 +164,7 @@ public class DocNodesTree implements FileTree<DocNodesTree.DocNode> {
   public static class DocDir extends DocNode implements FileTree.FileTreeDir<DocNode> {
 
     private List<DocNode> children;
-    
+
     /**
      * Constructor.
      * @param path The relative path to the dir.
@@ -202,9 +202,9 @@ public class DocNodesTree implements FileTree<DocNodesTree.DocNode> {
     public List<DocNode> getChildren() {
       return children;
     }
-    
+
   }
-  
+
   /**
    * A documentation file.
    */
@@ -216,10 +216,10 @@ public class DocNodesTree implements FileTree<DocNodesTree.DocNode> {
                         """
           , allOf = DocNode.class
   )
-  public static class DocFile extends DocNode {
-    
+  public static final class DocFile extends DocNode {
+
     private final String title;
-    
+
     /**
      * Constructor.
      * @param path The relative path to the document.
@@ -255,7 +255,7 @@ public class DocNodesTree implements FileTree<DocNodesTree.DocNode> {
     public String getTitle() {
       return title;
     }
-    
+
   }
-  
+
 }

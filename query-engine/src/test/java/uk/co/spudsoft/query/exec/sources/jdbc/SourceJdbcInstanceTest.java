@@ -21,7 +21,6 @@ import inet.ipaddr.IPAddressString;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.util.Arrays;
@@ -52,41 +51,41 @@ import uk.co.spudsoft.query.main.ProtectedCredentials;
  */
 @ExtendWith(VertxExtension.class)
 public class SourceJdbcInstanceTest {
-  
+
   @Test
   public void testPrepareSqlStatement() {
   }
 
   @Test
   public void testInitializeEndpointNotFound(Vertx vertx, VertxTestContext testContext) {
-    
+
     vertx.getOrCreateContext().runOnContext(v -> {
       RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
     PipelineContext pipelineContext = new PipelineContext("test", reqctx);
-      
+
       Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
       PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, auditor, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
-      
+
       SourceJdbc definition = SourceJdbc.builder()
               .endpoint("bob")
               .build();
       SourceJdbcInstance instance = new SourceJdbcInstance(vertx, null, auditor, pipelineContext, definition);
-      
+
       Pipeline pipeline = Pipeline.builder()
               .sourceEndpoints(
                       Arrays.asList(
                               Endpoint.builder()
                                       .name("fred")
-                                      .build()                              
-                              
+                                      .build()
+
                       )
               )
               .source(definition)
               .build();
-      
-      MultiMap params = HeadersMultiMap.httpHeaders();
-      
+
+      MultiMap params = MultiMap.caseInsensitiveMultiMap();
+
       RequestContext req = new RequestContext(
               null
               , null
@@ -94,12 +93,12 @@ public class SourceJdbcInstanceTest {
               , "localhost"
               , null
               , null
-              , HeadersMultiMap.httpHeaders().add("Host", "localhost:123")
+              , MultiMap.caseInsensitiveMultiMap().add("Host", "localhost:123")
               , null
               , new IPAddressString("127.0.0.1")
               , null
       );
-      
+
       PipelineInstance pipelineInstance;
       try {
         pipelineInstance= new PipelineInstance(
@@ -116,7 +115,7 @@ public class SourceJdbcInstanceTest {
         testContext.failNow(ex);
         return;
       }
-      
+
       Future<ReadStreamWithTypes> future = instance.initialize(pipelineExecutor, pipelineInstance);
       testContext.verify(() -> {
         assertTrue(future.isComplete());
@@ -125,24 +124,24 @@ public class SourceJdbcInstanceTest {
       });
       testContext.completeNow();
     });
-    
+
   }
-  
+
   @Test
   public void testInitializeEndpointNotPermitted(Vertx vertx, VertxTestContext testContext) {
-    
+
     vertx.getOrCreateContext().runOnContext(v -> {
       RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
       PipelineContext pipelineContext = new PipelineContext("test", reqctx);
       Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
       PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, auditor, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
-      
+
       SourceJdbc definition = SourceJdbc.builder()
               .endpoint("bob")
               .build();
       SourceJdbcInstance instance = new SourceJdbcInstance(vertx, null, auditor, pipelineContext, definition);
-      
+
       Pipeline pipeline = Pipeline.builder()
               .sourceEndpoints(
                       Arrays.asList(
@@ -151,15 +150,15 @@ public class SourceJdbcInstanceTest {
                                       .condition(
                                               new Condition("false")
                                       )
-                                      .build()                              
-                              
+                                      .build()
+
                       )
               )
               .source(definition)
               .build();
-      
-      MultiMap params = HeadersMultiMap.httpHeaders();
-      
+
+      MultiMap params = MultiMap.caseInsensitiveMultiMap();
+
       RequestContext req = new RequestContext(
               null
               , null
@@ -167,12 +166,12 @@ public class SourceJdbcInstanceTest {
               , "localhost"
               , null
               , null
-              , HeadersMultiMap.httpHeaders().add("Host", "localhost:123")
+              , MultiMap.caseInsensitiveMultiMap().add("Host", "localhost:123")
               , null
               , new IPAddressString("127.0.0.1")
               , null
       );
-      
+
       PipelineInstance pipelineInstance;
       try {
         pipelineInstance= new PipelineInstance(
@@ -189,7 +188,7 @@ public class SourceJdbcInstanceTest {
         testContext.failNow(ex);
         return;
       }
-      
+
       Future<ReadStreamWithTypes> future = instance.initialize(pipelineExecutor, pipelineInstance);
       testContext.verify(() -> {
         assertTrue(future.isComplete());
@@ -198,7 +197,7 @@ public class SourceJdbcInstanceTest {
       });
       testContext.completeNow();
     });
-    
+
   }
-  
+
 }

@@ -25,7 +25,6 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -114,7 +113,7 @@ public class PipelineExecutorImpl implements PipelineExecutor {
 
     for (int index = 0; index < definition.getProcessors().size(); ++index) {
       Processor processor =  definition.getProcessors().get(index);
-      
+
       String processorName = pipelineContext.getPipe()
               + "."
               + (Strings.isNullOrEmpty(processor.getName()) ? ("processors[" + index + "]") : processor.getName())
@@ -258,11 +257,11 @@ public class PipelineExecutorImpl implements PipelineExecutor {
   public Map<String, ArgumentInstance> prepareArguments(RequestContext requestContext, List<Argument> definitions, MultiMap valuesMap) throws Throwable {
 
     PipelineContext pipelineContext = new PipelineContext(null, requestContext);
-    
+
     Map<String, ArgumentInstance> result = new HashMap<>();
     Map<String, Object> arguments = new HashMap<>();
     if (valuesMap == null) {
-      valuesMap = HeadersMultiMap.httpHeaders();
+      valuesMap = MultiMap.caseInsensitiveMultiMap();
     }
     for (Argument arg : definitions) {
       if (arg.isIgnored()) {

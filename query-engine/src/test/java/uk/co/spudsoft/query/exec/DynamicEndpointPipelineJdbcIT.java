@@ -24,7 +24,6 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -73,16 +72,16 @@ import uk.co.spudsoft.query.main.OperatorsInstance;
 @ExtendWith(VertxExtension.class)
 @TestInstance(Lifecycle.PER_CLASS)
 public class DynamicEndpointPipelineJdbcIT {
-  
+
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(DynamicEndpointPipelineJdbcIT.class);
 
   private final ServerProvider serverProviderMs = new ServerProviderMsSQL();
   private final ServerProvider serverProviderMy = new ServerProviderMySQL();
   private final ServerProvider serverProviderPg = new ServerProviderPostgreSQL();
-  
+
   private Future<Void> databasesPrepped = null;
-  
+
   public Future<Void> prepareDatabase(Vertx vertx) {
     if (databasesPrepped == null) {
       databasesPrepped = Future.all(
@@ -102,7 +101,7 @@ public class DynamicEndpointPipelineJdbcIT {
     }
     return databasesPrepped;
   }
-    
+
   @Test
   @Timeout(value = 600, timeUnit = TimeUnit.SECONDS)
   public void testHandlingWithDynamicEndpoint(Vertx vertx, VertxTestContext testContext) throws Throwable {
@@ -111,11 +110,11 @@ public class DynamicEndpointPipelineJdbcIT {
     ch.qos.logback.classic.Logger lg = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(PipelineDefnLoader.class);
     ch.qos.logback.classic.Level origLvl = lg.getLevel();
     lg.setLevel(ch.qos.logback.classic.Level.DEBUG);
-        
+
     Future<Void> prepFuture = prepareDatabase(vertx);
     Awaitility.await().atMost(60, TimeUnit.SECONDS).until(() -> prepFuture.isComplete());
     assertTrue(prepFuture.succeeded());
-    
+
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
     CacheConfig cacheConfig = new CacheConfig();
@@ -127,7 +126,7 @@ public class DynamicEndpointPipelineJdbcIT {
 
     MultiMap args = MultiMap.caseInsensitiveMultiMap();
     args.set("maxId", "14");
-    
+
     RequestContext req = new RequestContext(
             null
             , null
@@ -135,12 +134,12 @@ public class DynamicEndpointPipelineJdbcIT {
             , "localhost"
             , null
             , null
-            , HeadersMultiMap.httpHeaders().add("Host", "localhost:123")
+            , MultiMap.caseInsensitiveMultiMap().add("Host", "localhost:123")
             , null
             , new IPAddressString("127.0.0.1")
             , null
     );
-    
+
     logger.info("Preparing dynamic endpoints");
     SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getVertxUrl());
     connectOptions.setUser(serverProviderMy.getUser());
@@ -160,9 +159,9 @@ public class DynamicEndpointPipelineJdbcIT {
             })
             .onComplete(ar -> {
               logger.debug("Data prepped");
-              
+
               vertx.getOrCreateContext().put("req", req);
-              
+
               args.set("port", Integer.toString(serverProviderMy.getPort()));
             })
             .compose(v -> {
@@ -193,7 +192,7 @@ public class DynamicEndpointPipelineJdbcIT {
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);
               }
-      
+
               assertNotNull(instance);
               assertEquals(1, instance.getPreProcessors().size());
               assertEquals("dynamicEndpoints[0]", instance.getPreProcessors().get(0).getName());
@@ -226,7 +225,7 @@ public class DynamicEndpointPipelineJdbcIT {
     Future<Void> prepFuture = prepareDatabase(vertx);
     Awaitility.await().atMost(60, TimeUnit.SECONDS).until(() -> prepFuture.isComplete());
     assertTrue(prepFuture.succeeded());
-        
+
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
     CacheConfig cacheConfig = new CacheConfig();
@@ -238,7 +237,7 @@ public class DynamicEndpointPipelineJdbcIT {
 
     MultiMap args = MultiMap.caseInsensitiveMultiMap();
     args.set("maxId", "14");
-    
+
     RequestContext req = new RequestContext(
             null
             , null
@@ -246,12 +245,12 @@ public class DynamicEndpointPipelineJdbcIT {
             , "localhost"
             , null
             , null
-            , HeadersMultiMap.httpHeaders().add("Host", "localhost:123")
+            , MultiMap.caseInsensitiveMultiMap().add("Host", "localhost:123")
             , null
             , new IPAddressString("127.0.0.1")
             , null
     );
-    
+
     SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getVertxUrl());
     connectOptions.setUser(serverProviderMy.getUser());
     connectOptions.setPassword(serverProviderMy.getPassword());
@@ -301,7 +300,7 @@ public class DynamicEndpointPipelineJdbcIT {
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);
               }
-      
+
               assertNotNull(instance);
 
               return executor.initializePipeline(pipelineContext, instance);
@@ -332,7 +331,7 @@ public class DynamicEndpointPipelineJdbcIT {
     Future<Void> prepFuture = prepareDatabase(vertx);
     Awaitility.await().atMost(60, TimeUnit.SECONDS).until(() -> prepFuture.isComplete());
     assertTrue(prepFuture.succeeded());
-    
+
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
     CacheConfig cacheConfig = new CacheConfig();
@@ -344,7 +343,7 @@ public class DynamicEndpointPipelineJdbcIT {
 
     MultiMap args = MultiMap.caseInsensitiveMultiMap();
     args.set("maxId", "7");
-    
+
     RequestContext req = new RequestContext(
             null
             , null
@@ -352,12 +351,12 @@ public class DynamicEndpointPipelineJdbcIT {
             , "localhost"
             , null
             , null
-            , HeadersMultiMap.httpHeaders().add("Host", "localhost:123")
+            , MultiMap.caseInsensitiveMultiMap().add("Host", "localhost:123")
             , null
             , new IPAddressString("127.0.0.1")
             , null
     );
-    
+
     SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getVertxUrl());
     connectOptions.setUser(serverProviderMy.getUser());
     connectOptions.setPassword(serverProviderMy.getPassword());
@@ -406,7 +405,7 @@ public class DynamicEndpointPipelineJdbcIT {
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);
               }
-      
+
               assertNotNull(instance);
 
               return executor.initializePipeline(pipelineContext, instance);
@@ -436,7 +435,7 @@ public class DynamicEndpointPipelineJdbcIT {
     Future<Void> prepFuture = prepareDatabase(vertx);
     Awaitility.await().atMost(60, TimeUnit.SECONDS).until(() -> prepFuture.isComplete());
     assertTrue(prepFuture.succeeded());
-    
+
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
     CacheConfig cacheConfig = new CacheConfig();
@@ -446,7 +445,7 @@ public class DynamicEndpointPipelineJdbcIT {
 
     MultiMap args = MultiMap.caseInsensitiveMultiMap();
     args.set("maxId", "14");
-    
+
     RequestContext req = new RequestContext(
             null
             , null
@@ -454,12 +453,12 @@ public class DynamicEndpointPipelineJdbcIT {
             , "localhost"
             , null
             , null
-            , HeadersMultiMap.httpHeaders().add("Host", "localhost:123")
+            , MultiMap.caseInsensitiveMultiMap().add("Host", "localhost:123")
             , null
             , new IPAddressString("127.0.0.1")
             , null
     );
-    
+
     logger.info("Preparing dynamic endpoints");
     SqlConnectOptions connectOptions = SqlConnectOptions.fromUri(serverProviderMy.getVertxUrl());
     connectOptions.setUser(serverProviderMy.getUser());
@@ -509,7 +508,7 @@ public class DynamicEndpointPipelineJdbcIT {
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);
               }
-      
+
               assertNotNull(instance);
 
               return executor.initializePipeline(pipelineContext, instance);

@@ -26,9 +26,10 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.SqlConnectOptions;
+
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.co.spudsoft.query.defn.SourcePipeline;
@@ -40,9 +41,9 @@ import uk.co.spudsoft.query.logging.Log;
  * @author jtalbut
  */
 public class PoolCreator {
-  
+
   private static final Logger logger = LoggerFactory.getLogger(PoolCreator.class);
-  
+
   private final Cache<JsonObject, Pool> poolCache;
 
   /**
@@ -52,7 +53,7 @@ public class PoolCreator {
   public PoolCreator(MeterRegistry meterRegistry) {
     poolCache = CacheBuilder.newBuilder()
           .recordStats()
-          .expireAfterAccess(1, TimeUnit.MINUTES)
+          .expireAfterAccess(Duration.ofMinutes(1))
           .maximumSize(100)
           .recordStats()
           .removalListener(notification -> {
@@ -73,7 +74,7 @@ public class PoolCreator {
       });
     }
   }
-  
+
   /**
    * Create a {@link Pool} from the given configuration.
    * @param vertx the Vert.x instance.
@@ -107,5 +108,5 @@ public class PoolCreator {
       return Pool.pool(vertx, database, options);
     }
   }
-  
+
 }

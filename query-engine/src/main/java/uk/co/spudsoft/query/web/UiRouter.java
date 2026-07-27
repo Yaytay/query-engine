@@ -36,23 +36,23 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.impl.Utils;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Vertx Web Router for handling UI requests.
- * 
+ *
  * The files are all loaded from resources.
- * 
+ *
  * @author jtalbut
  */
 public class UiRouter implements Handler<RoutingContext> {
-  
+
   private static final Logger logger = LoggerFactory.getLogger(UiRouter.class);
 
   private final Vertx vertx;
@@ -60,13 +60,13 @@ public class UiRouter implements Handler<RoutingContext> {
   private final String baseResourcePath;
   private final String defaultFilePath;
   private final Cache<String, byte[]> cache;
-  
+
   private final long bootTime = System.currentTimeMillis();
 
   private final Map<String, String> pathCspMap = ImmutableMap.<String, String>builder()
           .put("/index.html", "default-src 'self' 'sha256-GCoez1mDsbThY8diormWuepHO+IOb9/MxWt3wZH5+Fs=' 'sha256-uyCb6HK6D9ebM/jHz2e/N3b441L00QG/aknT2VzHqXU='")
           .build();
-  
+
   /**
    * Factory method.
    * @param vertx The Vert.x instance.
@@ -81,14 +81,14 @@ public class UiRouter implements Handler<RoutingContext> {
   }
 
   private record LoadedFile(String path, byte[] contents) {}
-  
+
   private UiRouter(Vertx vertx, MeterRegistry meterRegistry, String stripPath, String baseResourcePath, String defaultFilePath) {
     this.vertx = vertx;
     this.stripPath = stripPath;
     this.baseResourcePath = baseResourcePath;
     this.defaultFilePath = defaultFilePath;
     this.cache = CacheBuilder.newBuilder()
-            .expireAfterAccess(60, TimeUnit.MINUTES)
+            .expireAfterAccess(Duration.ofMinutes(60))
             .maximumSize(150)
             .recordStats()
             .build();
@@ -105,12 +105,12 @@ public class UiRouter implements Handler<RoutingContext> {
       });
     }
   }
-  
+
   /**
    * Remove . and .. path components.
-   * 
+   *
    * This must be called with a URL path, NOT a filesystem path, as the latter can lead to a escape from the resource location.
-   * 
+   *
    * @param path The input path that may contain dots.
    * @return The path without any dots.
    */
@@ -156,7 +156,7 @@ public class UiRouter implements Handler<RoutingContext> {
         strippedPath = "/index.html";
       }
       String path = baseResourcePath + strippedPath;
-              
+
       logger.debug("UI request for {}", path);
 
       byte[] fileBody = cache.getIfPresent(path);
@@ -177,13 +177,13 @@ public class UiRouter implements Handler<RoutingContext> {
       }
     }
   }
-  
+
   /**
    * Return the file extension given a path or filename.
-   * 
+   *
    * The extension is from the last dot to the end of the filename, as long as the dot is not the leading or trailing character
    * (in which case null is returned).
-   * 
+   *
    * @param file The filename.
    * @return The extension.
    */
@@ -195,16 +195,16 @@ public class UiRouter implements Handler<RoutingContext> {
       return null;
     }
   }
-  
+
   private void sendFile(RoutingContext context, LoadedFile loadedFile) {
 
     HttpServerResponse response = context.response();
     String extension = getFileExtension(loadedFile.path);
     String contentType = extension == null ? "text/html" : MimeTypes.getMimeTypeForExtension(extension);
     logger.debug("File {} has extension {} and content type {}", loadedFile.path, extension, contentType);
-    
+
     MultiMap headers = response.headers();
-    
+
     if (contentType != null) {
       if (contentType.startsWith("text") && !contentType.contains("charset")) {
         headers.add(HttpHeaders.CONTENT_TYPE, contentType + ";charset=utf-8");
@@ -214,7 +214,7 @@ public class UiRouter implements Handler<RoutingContext> {
     }
 
     headers.add(X_FRAME_OPTIONS, "SAMEORIGIN");
-    
+
     long maxAgeSeconds = 86400;
     if (loadedFile.path.endsWith("index.html")) {
       // Only cache index.html for 10 minutes
@@ -224,7 +224,7 @@ public class UiRouter implements Handler<RoutingContext> {
     Utils.addToMapIfAbsent(headers, HttpHeaders.LAST_MODIFIED, Utils.formatRFC1123DateTime(bootTime));
     // date header is mandatory
     headers.set("date", Utils.formatRFC1123DateTime(System.currentTimeMillis()));
-    
+
     response
             .setStatusCode(200)
             .end(context.request().method() == HttpMethod.HEAD ? Buffer.buffer() : Buffer.buffer(loadedFile.contents));
@@ -245,7 +245,7 @@ public class UiRouter implements Handler<RoutingContext> {
     }
     return new LoadedFile(defaultFilePath, defaultFileBody);
   }
-  
+
   /**
    * Load a resource and stick it in the cache.
    * Blocking method
@@ -271,5 +271,5 @@ public class UiRouter implements Handler<RoutingContext> {
       throw ex;
     }
   }
-  
+
 }

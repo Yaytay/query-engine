@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="false" scan="true" scanPeriod="10 minutes">
-  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+  <appender name="FILE" class="ch.qos.logback.core.FileAppender" >
     <file>target/test-logs.log</file>
     <append>true</append>
     <encoder>
@@ -16,7 +16,7 @@
   <logger name="liquibase.changelog" level="WARN" />
 
   <root level="INFO">
-    <appender-ref ref="STDOUTPUT"/>
+    <appender-ref ref="FILE"/>
   </root>
 
 </configuration>

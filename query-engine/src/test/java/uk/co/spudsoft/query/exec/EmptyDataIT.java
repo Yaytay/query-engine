@@ -26,7 +26,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.file.AsyncFile;
 import io.vertx.core.file.FileSystem;
 import io.vertx.core.file.OpenOptions;
-import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -61,18 +60,18 @@ import uk.co.spudsoft.query.main.OperatorsInstance;
 @ExtendWith(VertxExtension.class)
 @TestInstance(Lifecycle.PER_CLASS)
 public class EmptyDataIT {
-  
+
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(EmptyDataIT.class);
 
   private final ServerProvider serverProvider = new ServerProviderPostgreSQL();
-    
+
   @Test
   @Timeout(value = 120, timeUnit = TimeUnit.SECONDS)
   public void testParsingJsonToPipelineStreaming(Vertx vertx, VertxTestContext testContext) throws Throwable {
 
     Files.createDirectories(new File("target/temp/EmptyDataIT").toPath());
-    
+
     MeterRegistry meterRegistry = new SimpleMeterRegistry();
     Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
     CacheConfig cacheConfig = new CacheConfig();
@@ -83,7 +82,7 @@ public class EmptyDataIT {
     MultiMap args = MultiMap.caseInsensitiveMultiMap();
 
     FileSystem fs = vertx.fileSystem();
-    
+
     RequestContext req = new RequestContext(
             null
             , null
@@ -91,7 +90,7 @@ public class EmptyDataIT {
             , "localhost"
             , null
             , args
-            , HeadersMultiMap.httpHeaders().add("Host", "localhost:123")
+            , MultiMap.caseInsensitiveMultiMap().add("Host", "localhost:123")
             , null
             , new IPAddressString("127.0.0.1")
             , null
@@ -134,7 +133,7 @@ public class EmptyDataIT {
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);
               }
-      
+
               assertNotNull(instance);
 
               return executor.initializePipeline(pipelineContext, instance);
@@ -151,5 +150,5 @@ public class EmptyDataIT {
               }
             });
   }
-  
+
 }

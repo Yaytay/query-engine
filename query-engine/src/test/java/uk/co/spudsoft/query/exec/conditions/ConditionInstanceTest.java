@@ -60,14 +60,14 @@ public class ConditionInstanceTest {
 
   private static final String OPENID = Base64.getEncoder().encodeToString("{\"jti\":\"a28849b9-3624-42c3-aaad-21c5f80ffc55\",\"exp\":1653142100,\"nbf\":0,\"iat\":1653142040,\"iss\":\"http://ca.localtest.me\",\"aud\":\"security-admin-console\",\"sub\":\"af78202f-b54a-439d-913c-0bbe99ba6bf8\",\"typ\":\"Bearer\",\"azp\":\"QE2\",\"scope\":\"openid profile email qe2\",\"email_verified\":false,\"name\":\"Bob Fred\",\"preferred_username\":\"bob.fred\",\"given_name\":\"Bob\",\"family_name\":\"Fred\",\"email\":\"bob@localtest.me\",\"groups\":[\"group1\",\"group2\",\"group3\"]}".getBytes(StandardCharsets.UTF_8));
   private static final String OPENID2 = Base64.getEncoder().encodeToString("{\"jti\":\"a28849b9-3624-42c3-aaad-21c5f80ffc55\",\"exp\":1653142100,\"nbf\":0,\"iat\":1653142040,\"iss\":\"http://ca.localtest.me\",\"aud\":[\"service-query-engine\", \"client-root-bob.fred.net\", \"client-root-bob.carol.net\", \"thingummy\"],\"sub\":\"af78202f-b54a-439d-913c-0bbe99ba6bf8\",\"typ\":\"Bearer\",\"azp\":\"QE2\",\"scope\":\"openid profile email qe2\",\"email_verified\":false,\"name\":\"Bob Fred\",\"preferred_username\":\"bob.fred\",\"given_name\":\"Bob\",\"family_name\":\"Fred\",\"email\":\"bob@localtest.me\",\"groups\":[\"group1\",\"group2\",\"group3\"]}".getBytes(StandardCharsets.UTF_8));
-    
+
 
   @Test
   public void testWithRequestContext() {
     ch.qos.logback.classic.Logger lg = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(ConditionInstance.class);
     ch.qos.logback.classic.Level origLvl = lg.getLevel();
     lg.setLevel(ch.qos.logback.classic.Level.DEBUG);
-    
+
     HttpServerRequest req = mock(HttpServerRequest.class);
     when(req.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
     when(req.getHeader("X-OpenID-Introspection")).thenReturn(OPENID);
@@ -76,7 +76,7 @@ public class ConditionInstanceTest {
     Authenticator rcb = new Authenticator(null, null, null, new LoginDaoMemoryImpl(Duration.ZERO), null, null, true, "X-OpenID-Introspection", false, null, Collections.singletonList("aud"), null);
 
     Map<String, String> environment = ImmutableMap.<String, String>builder().put("ev1", "good").put("ev2", "bad").build();
-    
+
     RequestContext ctx = new RequestContext(environment
             , UUID.randomUUID().toString()
             , "http://bob/fred?param1=value1&param2=value2&param1=value3&param3=true"
@@ -109,7 +109,7 @@ public class ConditionInstanceTest {
     assertFalse(new ConditionInstance("'good' == request.env['ev2']").evaluate(ctx, null, null));
     assertFalse(new ConditionInstance("'good' == request.env['ev3']").evaluate(ctx, null, null));
     assertFalse(new ConditionInstance("'good' == request.env.ev3").evaluate(ctx, null, null));
-    
+
     ctx.setJwt(
             new Jwt(null, new JsonObject(new String(Base64.getDecoder().decode(OPENID2))), null, null)
     );
@@ -121,7 +121,7 @@ public class ConditionInstanceTest {
     assertTrue(new ConditionInstance("allStringsWithPrefix(request.getAudience(), 'client-root-', true).equals(list('bob.fred.net','bob.carol.net'))").evaluate(ctx, null, null));
     assertTrue(new ConditionInstance("allStringsWithPrefix(request.audience, 'client-root-', false).equals(list('client-root-bob.fred.net','client-root-bob.carol.net'))").evaluate(ctx, null, null));
     assertTrue(new ConditionInstance("allStringsWithPrefix(request.aud, 'client-root-', true).equals(list('bob.fred.net','bob.carol.net'))").evaluate(ctx, null, null));
-    
+
     lg.setLevel(origLvl);
   }
 

@@ -21,7 +21,6 @@ import inet.ipaddr.IPAddressString;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.sqlclient.PoolOptions;
@@ -59,40 +58,40 @@ import uk.co.spudsoft.query.main.ProtectedCredentials;
  */
 @ExtendWith(VertxExtension.class)
 public class SourceSqlStreamingInstanceTest {
-  
+
   @Test
   public void testPrepareSqlStatement() {
   }
 
   @Test
   public void testInitializeEndpointNotFound(Vertx vertx, VertxTestContext testContext) {
-    
+
     vertx.getOrCreateContext().runOnContext(v -> {
       RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
       Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
       PipelineContext pipelineContext = new PipelineContext("test", reqctx);
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
       PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, auditor, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
-      
+
       SourceSql definition = SourceSql.builder()
               .endpoint("bob")
               .build();
       SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, null, auditor, pipelineContext, pipelineExecutor, definition);
-      
+
       Pipeline pipeline = Pipeline.builder()
               .sourceEndpoints(
                       Arrays.asList(
                               Endpoint.builder()
                                       .name("fred")
-                                      .build()                              
-                              
+                                      .build()
+
                       )
               )
               .source(definition)
               .build();
-      
-      MultiMap params = HeadersMultiMap.httpHeaders();
-      
+
+      MultiMap params = MultiMap.caseInsensitiveMultiMap();
+
       RequestContext req = new RequestContext(
               null
               , null
@@ -100,12 +99,12 @@ public class SourceSqlStreamingInstanceTest {
               , "localhost"
               , null
               , null
-              , HeadersMultiMap.httpHeaders().add("Host", "localhost:123")
+              , MultiMap.caseInsensitiveMultiMap().add("Host", "localhost:123")
               , null
               , new IPAddressString("127.0.0.1")
               , null
       );
-      
+
       PipelineInstance pipelineInstance;
       try {
         pipelineInstance= new PipelineInstance(
@@ -122,7 +121,7 @@ public class SourceSqlStreamingInstanceTest {
         testContext.failNow(ex);
         return;
       }
-      
+
       Future<ReadStreamWithTypes> future = instance.initialize(pipelineExecutor, pipelineInstance);
       testContext.verify(() -> {
         assertTrue(future.isComplete());
@@ -131,24 +130,24 @@ public class SourceSqlStreamingInstanceTest {
       });
       testContext.completeNow();
     });
-    
+
   }
-  
+
   @Test
   public void testInitializeEndpointNotPermitted(Vertx vertx, VertxTestContext testContext) {
-    
+
     vertx.getOrCreateContext().runOnContext(v -> {
       Auditor auditor = new AuditorMemoryImpl(vertx, new OperatorsInstance(null));
       RequestContext reqctx = new RequestContext(null, "id", "url", "host", "path", null, null, null, new IPAddressString("127.0.0.1"), null);
       PipelineContext pipelineContext = new PipelineContext("test", reqctx);
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
       PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, auditor, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
-      
+
       SourceSql definition = SourceSql.builder()
               .endpoint("bob")
               .build();
       SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, null, auditor, pipelineContext, pipelineExecutor, definition);
-      
+
       Pipeline pipeline = Pipeline.builder()
               .sourceEndpoints(
                       Arrays.asList(
@@ -157,15 +156,15 @@ public class SourceSqlStreamingInstanceTest {
                                       .condition(
                                               new Condition("false")
                                       )
-                                      .build()                              
-                              
+                                      .build()
+
                       )
               )
               .source(definition)
               .build();
-      
-      MultiMap params = HeadersMultiMap.httpHeaders();
-      
+
+      MultiMap params = MultiMap.caseInsensitiveMultiMap();
+
       RequestContext req = new RequestContext(
               null
               , null
@@ -173,12 +172,12 @@ public class SourceSqlStreamingInstanceTest {
               , "localhost"
               , null
               , null
-              , HeadersMultiMap.httpHeaders().add("Host", "localhost:123")
+              , MultiMap.caseInsensitiveMultiMap().add("Host", "localhost:123")
               , null
               , new IPAddressString("127.0.0.1")
               , null
       );
-      
+
       PipelineInstance pipelineInstance;
       try {
         pipelineInstance= new PipelineInstance(
@@ -195,7 +194,7 @@ public class SourceSqlStreamingInstanceTest {
         testContext.failNow(ex);
         return;
       }
-      
+
       Future<ReadStreamWithTypes> future = instance.initialize(pipelineExecutor, pipelineInstance);
       testContext.verify(() -> {
         assertTrue(future.isComplete());
@@ -204,9 +203,9 @@ public class SourceSqlStreamingInstanceTest {
       });
       testContext.completeNow();
     });
-    
+
   }
-  
+
   @Test
   public void testGetPreparer(Vertx vertx, VertxTestContext testContext) {
     vertx.getOrCreateContext().runOnContext(v -> {
@@ -215,13 +214,13 @@ public class SourceSqlStreamingInstanceTest {
       PipelineContext pipelineContext = new PipelineContext("test", reqctx);
       FilterFactory filterFactory = new FilterFactory(Collections.emptyList());
       PipelineExecutor pipelineExecutor = PipelineExecutor.create(null, auditor, filterFactory, ImmutableMap.<String, ProtectedCredentials>builder().build());
-      
+
       SourceSql definition = SourceSql.builder()
               .endpoint("bob")
               .build();
-      
+
       SourceSqlStreamingInstance instance = new SourceSqlStreamingInstance(vertx, null, auditor, pipelineContext, pipelineExecutor, definition);
-      
+
       testContext.verify(() -> {
         assertThat(instance.getPreparer("sqlserver:nonsense"), instanceOf(MsSqlPreparer.class));
         assertThat(instance.getPreparer("postgresql:nonsense"), instanceOf(PostgreSqlPreparer.class));
@@ -231,13 +230,13 @@ public class SourceSqlStreamingInstanceTest {
       testContext.completeNow();
     });
   }
-  
+
   @Test
   public void testPoolOptions() {
     PoolOptions po = SourceSqlStreamingInstance.poolOptions(SourceSql.builder().build(), Endpoint.builder().build());
     assertEquals(PoolOptions.DEFAULT_CONNECTION_TIMEOUT, po.getConnectionTimeout());
     assertEquals(PoolOptions.DEFAULT_CONNECTION_TIMEOUT_TIME_UNIT, po.getConnectionTimeoutUnit());
-    
+
     Endpoint endpoint = Endpoint.builder()
             .connectionTimeout(Duration.ofDays(1))
             .idleTimeout(Duration.ofMillis(12))
@@ -251,14 +250,14 @@ public class SourceSqlStreamingInstanceTest {
     assertEquals(12, po.getIdleTimeout());
     assertEquals(TimeUnit.MILLISECONDS, po.getIdleTimeoutUnit());
   }
-  
+
   @Test
   public void testCoalesce() {
     assertEquals("two", SourceSqlStreamingInstance.coalesce(null, "two"));
     assertEquals("one", SourceSqlStreamingInstance.coalesce("one", "two"));
     assertNull(SourceSqlStreamingInstance.coalesce(null, null));
   }
-  
+
   @Test
   public void isPositive() {
     assertEquals(true, SourceSqlStreamingInstance.isPositive(Duration.of(1, ChronoUnit.MINUTES)));
@@ -266,5 +265,5 @@ public class SourceSqlStreamingInstanceTest {
     assertEquals(false, SourceSqlStreamingInstance.isPositive(Duration.of(-1, ChronoUnit.DAYS)));
     assertEquals(false, SourceSqlStreamingInstance.isPositive(Duration.of(0, ChronoUnit.DAYS)));
   }
-  
+
 }

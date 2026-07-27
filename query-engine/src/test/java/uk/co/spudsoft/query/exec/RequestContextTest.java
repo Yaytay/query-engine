@@ -22,7 +22,6 @@ import inet.ipaddr.IPAddressString;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.SocketAddress;
 import io.vertx.core.net.impl.HostAndPortImpl;
@@ -47,7 +46,7 @@ import uk.co.spudsoft.jwtvalidatorvertx.Jwt;
  * @author jtalbut
  */
 public class RequestContextTest {
-  
+
   public static MultiMap params(String uri) {
     QueryStringDecoder queryStringDecoder = new QueryStringDecoder(uri);
     Map<String, List<String>> prms = queryStringDecoder.parameters();
@@ -58,7 +57,7 @@ public class RequestContextTest {
       }
     }
     return params;
-  }  
+  }
 
   @Test
   public void testAttemptBase64Decode() {
@@ -111,7 +110,7 @@ public class RequestContextTest {
   @Test
   public void testGetUser() {
     HttpServerRequest request = mock(HttpServerRequest.class);
-    MultiMap headers = HeadersMultiMap.httpHeaders();
+    MultiMap headers = MultiMap.caseInsensitiveMultiMap();
     headers.add("X-Forwarded-Proto", "https");
     headers.add("X-Forwarded-Port", "443");
     when(request.getHeader("X-Forwarded-For")).thenReturn("111.122.133.144");
@@ -296,10 +295,10 @@ public class RequestContextTest {
     when(request.scheme()).thenReturn("http");
     when(request.authority()).thenReturn(HostAndPortImpl.parseAuthority("localhost", 80));
     when(request.params()).thenReturn(params("http://bob/fred?param1=value1&param2=value2&param1=value3"));
-   
+
     RequestContext ctx = new RequestContext(null, request);
     ctx.setJwt(new Jwt(null, new JsonObject(new String(Base64.getDecoder().decode(OPENID_PREFERREDUSERNAME))), null, null));
-    
+
     assertTrue(ctx.isInGroup("group1"));
     assertFalse(ctx.isInGroup("group4"));
     assertTrue(ctx.isInGroup("group4", "group2"));

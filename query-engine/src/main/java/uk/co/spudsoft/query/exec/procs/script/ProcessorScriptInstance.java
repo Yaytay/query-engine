@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 jtalbut
+ * Copyright (C) 2026 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,46 +16,33 @@
  */
 package uk.co.spudsoft.query.exec.procs.script;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.github.tsegismont.streamutils.impl.MappingStream;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.streams.ReadStream;
-import java.time.ZoneId;
-import java.util.function.BiFunction;
-import org.graalvm.polyglot.Engine;
-import org.graalvm.polyglot.Source;
-import org.graalvm.polyglot.Value;
-import org.graalvm.polyglot.proxy.ProxyObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.co.spudsoft.query.defn.Pipeline;
 import uk.co.spudsoft.query.defn.ProcessorScript;
 import uk.co.spudsoft.query.defn.SourcePipeline;
 import uk.co.spudsoft.query.exec.Auditor;
+import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.PipelineExecutor;
 import uk.co.spudsoft.query.exec.PipelineInstance;
-import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
 import uk.co.spudsoft.query.exec.context.PipelineContext;
+import uk.co.spudsoft.query.exec.dynamic.JexlEvaluator;
 import uk.co.spudsoft.query.exec.procs.AbstractProcessor;
-import uk.co.spudsoft.query.exec.procs.query.FilteringStream;
-import uk.co.spudsoft.query.logging.Log;
 import uk.co.spudsoft.query.main.ImmutableCollectionTools;
 
+import java.time.ZoneId;
 
 /**
- * Process rows of the output using GraalVM scripting.
- *
- * Any installed language may be used, though by default this is restricted to Javascript.
- *
- * @author jtalbut
+ * Processor that executes a script.
+ * Noop stand-in at the moment.
  */
-public final class ProcessorScriptInstance extends AbstractProcessor {
+public class ProcessorScriptInstance extends AbstractProcessor {
 
   @SuppressWarnings("constantname")
   private static final Logger slf4jlogger = LoggerFactory.getLogger(ProcessorScriptInstance.class);
@@ -65,15 +52,12 @@ public final class ProcessorScriptInstance extends AbstractProcessor {
   private final ProcessorScript definition;
   private ReadStream<DataRow> stream;
 
-  private Engine engine;
-
-  private Source predicateSource;
-  private Source processSource;
-
-  private Pipeline pipeline;
-  private ImmutableMap<String, Object> arguments;
+  private final ImmutableMap<String, Object> arguments;
 
   private Types types;
+
+  private JexlEvaluator predicate;
+  private JexlEvaluator field;
 
 
   /**
@@ -85,128 +69,14 @@ public final class ProcessorScriptInstance extends AbstractProcessor {
    * @param definition the definition of this processor.
    * @param name the name of this processor, used in tracking and logging.
    */
-  @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
   public ProcessorScriptInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, ProcessorScript definition, String name) {
     super(slf4jlogger, vertx, meterRegistry, auditor, pipelineContext, name);
     this.definition = definition;
-  }
-
-  private boolean runPredicate(DataRow data) {
-    return runSource(engine, "predicate", definition.getLanguage(), predicateSource, data, (returnValue, row) -> {
-      logger.debug().log("returnValue ({}): {}", nullableClass(returnValue), returnValue);
-      logger.debug().log("row ({}): {}", nullableClass(row), row);
-      return returnValue.asBoolean();
-    });
-  }
-
-  static Class<?> nullableClass(Object o) {
-    if (o == null) {
-      return null;
-    } else {
-      return o.getClass();
-    }
-  }
-
-  private DataRow runProcess(DataRow data) {
-    return runSource(engine, "process", definition.getLanguage(), processSource, data, (returnValue, row) -> {
-      logger.debug().log("returnValue ({}): {}", nullableClass(returnValue), returnValue);
-      logger.debug().log("row ({}): {}", nullableClass(row), row);
-      return row;
-     });
-  }
-
-  // Compare the bindings with PipelineInstance#renderTemplate and ConditionInstance#evaluate
-  <T> T runSource(Engine engine, String name, String language, Source source, DataRow data, BiFunction<Value, DataRow, T> postProcess) {
-    try (org.graalvm.polyglot.Context graalContext = org.graalvm.polyglot.Context.newBuilder(language).engine(engine).build()) {
-      Value bindings = graalContext.getBindings(language);
-      bindings.putMember("request", pipelineContext.getRequestContext());
-      bindings.putMember("pipeline", pipeline);
-      bindings.putMember("args", ProxyObject.fromMap(arguments));
-      bindings.putMember("row", new ProxyDataRow(pipelineContext, data)); // ProxyObject.fromMap(data.getMap()));
-      Value outputValue = graalContext.eval(source);
-      T result = postProcess.apply(outputValue, data);
-      logger.debug().log("Running {} {} gave {}", name, source.getCharacters(), result);
-      return result;
-    } catch (Throwable ex) {
-      logger.warn().log("Failed to evaluate {}: ", name, ex);
-      return null;
-    }
-  }
-
-  static Comparable<?> mapToNativeObject(PipelineContext pipelineContext, Value value) {
-    if (value.isNull()) {
-      return null;
-    } else if (value.isNumber()) {
-      if (value.fitsInLong()) {
-        return value.asLong();
-      } else {
-        return value.asDouble();
-      }
-    } else if (value.isBoolean()) {
-      return value.asBoolean();
-    } else if (value.isString()) {
-      return value.asString();
-    } else if (value.isDate()) {
-      if (value.isTime()) {
-        if (value.isTimeZone()) {
-          ZoneId zoneId = value.asTimeZone();
-          if (zoneId.equals(UTC)) {
-            return value.asInstant();
-          } else {
-            return value.asDate().atTime(value.asTime()).atZone(value.asTimeZone());
-          }
-        } else {
-          return value.asDate().atTime(value.asTime());
-        }
-      } else {
-        return value.asDate();
-      }
-    } else if (value.isTime()) {
-      return value.asTime();
-    } else if (value.isDuration()) {
-      return value.asDuration();
-//    } else if (value.isHostObject()) {
-//      return value.asHostObject();
-//    } else if (value.isNativePointer()) {
-//      return value.asNativePointer();
-    } else if (value.isException()) {
-      value.throwException();
-    }
-    Log.decorate(slf4jlogger.atWarn(), pipelineContext).log("Unknown value type: {}", value);
-    return null;
+    this.arguments = ImmutableCollectionTools.copy(pipelineContext.getRequestContext() == null ? null : pipelineContext.getRequestContext().getArguments());
   }
 
   @Override
   public Future<ReadStreamWithTypes> initialize(PipelineExecutor executor, PipelineInstance pipeline, String parentSource, int processorIndex, ReadStreamWithTypes input) {
-    this.pipeline = pipeline.getDefinition();
-    this.arguments = ImmutableCollectionTools.copy(pipelineContext.getRequestContext() == null ? null : pipelineContext.getRequestContext().getArguments());
-    try {
-      engine = Engine.newBuilder()
-              .option("engine.WarnInterpreterOnly", "false")
-              .build();
-    } catch (Throwable ex) {
-      engine = Engine.newBuilder()
-              .option("engine.WarnInterpreterOnly", "false")
-              .build();
-    }
-
-    this.types = input.getTypes();
-    this.stream = input.getStream();
-    if (!Strings.isNullOrEmpty(definition.getPredicate())) {
-      predicateSource = Source.newBuilder(definition.getLanguage(), definition.getPredicate(), Integer.toString(hashCode()) + ":predicate").cached(true).buildLiteral();
-      stream = new FilteringStream<>(pipelineContext, stream, this::runPredicate);
-    }
-    if (!Strings.isNullOrEmpty(definition.getProcess())) {
-      processSource = Source.newBuilder(definition.getLanguage(), definition.getProcess(), Integer.toString(hashCode()) + ":process").cached(true).buildLiteral();
-      stream = new MappingStream<>(stream, this::runProcess);
-    }
-
-    this.stream.endHandler(v -> {
-      if (engine != null) {
-        engine.close();
-      }
-    });
-    return Future.succeededFuture(new ReadStreamWithTypes(stream, types));
+    return Future.succeededFuture(input);
   }
-
 }

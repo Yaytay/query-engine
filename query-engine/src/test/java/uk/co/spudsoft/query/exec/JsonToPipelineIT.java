@@ -23,7 +23,6 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -58,12 +57,12 @@ import uk.co.spudsoft.query.main.OperatorsInstance;
 @ExtendWith(VertxExtension.class)
 @TestInstance(Lifecycle.PER_CLASS)
 public class JsonToPipelineIT {
-  
+
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(JsonToPipelineIT.class);
 
   private final ServerProvider serverProvider = new ServerProviderMsSQL();
-    
+
   @Test
   @Timeout(value = 120, timeUnit = TimeUnit.SECONDS)
   public void testParsingJsonToPipelineStreaming(Vertx vertx, VertxTestContext testContext) throws Throwable {
@@ -73,7 +72,7 @@ public class JsonToPipelineIT {
     CacheConfig cacheConfig = new CacheConfig();
     cacheConfig.setMaxDuration(Duration.ZERO);
     PipelineDefnLoader loader = new PipelineDefnLoader(meterRegistry, vertx, cacheConfig, DirCache.cache(new File("target/classes/samples").toPath(), Duration.ofSeconds(2), Pattern.compile("\\..*"), null));
-    PipelineExecutor executor = PipelineExecutor.create(meterRegistry, auditor, new FilterFactory(Collections.emptyList()), null);   
+    PipelineExecutor executor = PipelineExecutor.create(meterRegistry, auditor, new FilterFactory(Collections.emptyList()), null);
 
     RequestContext req = new RequestContext(
             null
@@ -82,12 +81,12 @@ public class JsonToPipelineIT {
             , "localhost"
             , null
             , null
-            , HeadersMultiMap.httpHeaders().add("Host", "localhost:123")
+            , MultiMap.caseInsensitiveMultiMap().add("Host", "localhost:123")
             , null
             , new IPAddressString("127.0.0.1")
             , null
     );
-    
+
     serverProvider
             .prepareContainer(vertx)
             .compose(v -> serverProvider.prepareTestDatabase(vertx))
@@ -125,7 +124,7 @@ public class JsonToPipelineIT {
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);
               }
-      
+
               assertNotNull(instance);
 
               return executor.initializePipeline(pipelineContext, instance);
@@ -142,5 +141,5 @@ public class JsonToPipelineIT {
               }
             });
   }
-  
+
 }

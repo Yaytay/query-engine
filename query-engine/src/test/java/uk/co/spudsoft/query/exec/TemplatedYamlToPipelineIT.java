@@ -23,7 +23,6 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.junit5.Timeout;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -58,12 +57,12 @@ import uk.co.spudsoft.query.main.OperatorsInstance;
 @ExtendWith(VertxExtension.class)
 @TestInstance(Lifecycle.PER_CLASS)
 public class TemplatedYamlToPipelineIT {
-  
+
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(TemplatedYamlToPipelineIT.class);
 
-  private final ServerProvider serverProvider = new ServerProviderPostgreSQL();  
-  
+  private final ServerProvider serverProvider = new ServerProviderPostgreSQL();
+
   @Test
   @Timeout(value = 120, timeUnit = TimeUnit.SECONDS)
   public void testParsingJsonToPipelineStreaming(Vertx vertx, VertxTestContext testContext) throws Throwable {
@@ -84,12 +83,12 @@ public class TemplatedYamlToPipelineIT {
             , "localhost"
             , null
             , args
-            , HeadersMultiMap.httpHeaders().add("Host", "localhost:123")
+            , MultiMap.caseInsensitiveMultiMap().add("Host", "localhost:123")
             , null
             , new IPAddressString("127.0.0.1")
             , null
     );
-    
+
     serverProvider
             .prepareContainer(vertx)
             .compose(v -> serverProvider.prepareTestDatabase(vertx))
@@ -126,7 +125,7 @@ public class TemplatedYamlToPipelineIT {
               } catch (Throwable ex) {
                 return Future.failedFuture(ex);
               }
-      
+
               assertNotNull(instance);
 
               return executor.initializePipeline(pipelineContext, instance);

@@ -30,6 +30,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import io.vertx.core.json.Json;
 import org.apache.commons.io.FileUtils;
 import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.BeforeAll;
@@ -45,18 +47,18 @@ import uk.co.spudsoft.query.main.Main;
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class DocHandlerAltIT {
-  
+
   private static final Logger logger = LoggerFactory.getLogger(DocHandlerAltIT.class.getName());
-  
+
   private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
-  
+
   @BeforeAll
   public void createDirs() {
     File confsDir = new File(CONFS_DIR);
     FileUtils.deleteQuietly(confsDir);
     confsDir.mkdirs();
   }
-  
+
   @Test
   public void testDocs() throws Exception {
     Main main = new Main();
@@ -71,22 +73,23 @@ public class DocHandlerAltIT {
     }, stdout, System.getenv());
 
     RestAssured.port = main.getPort();
-    
-    ObjectNode json = given()
+
+    String jsonStr = given()
             .log().all()
             .get("/api/docs")
             .then()
             .log().ifError()
             .statusCode(200)
             .extract()
-            .body().as(ObjectNode.class)
+            .body().asString();
             ;
+    ObjectNode json = Json.decodeValue(jsonStr, ObjectNode.class);
     DocNodesTree.DocDir docsDir = toDocsDir(json);
-        
+
     Set<String> foundDocs = new HashSet<>();
     getAllDocs(foundDocs, docsDir);
     logger.debug("Found docs: {}", foundDocs);
-    
+
     List<String> allDocs = DocHandlerTest.findAllDocs("target/test-classes/alt-docs");
     logger.debug("All docs: {}", allDocs);
     for (String realDoc : allDocs) {
@@ -94,7 +97,7 @@ public class DocHandlerAltIT {
         fail("Document " + realDoc + " not configured");
       }
     }
-    
+
     given()
             .log().all()
             .get("/api/docs/Docs.html")
@@ -103,7 +106,7 @@ public class DocHandlerAltIT {
             .statusCode(200)
             .contentType(ContentType.HTML)
             ;
-    
+
     given()
             .log().all()
             .get("/api/docs/query-engine-compose.yml")
@@ -111,20 +114,20 @@ public class DocHandlerAltIT {
             .log().ifError()
             .statusCode(404)
             ;
-    
+
     given()
             .log().all()
             .get("/api/docs/Samples/Test Database ERD.svg")
             .then()
             .log().ifError()
             .statusCode(404)
-            ;    
-    
+            ;
+
     main.shutdown();
   }
-  
+
   private DocNodesTree.DocDir toDocsDir(ObjectNode json) {
-  
+
     List<DocNodesTree.DocNode> children = new ArrayList<>();
     for (JsonNode child : ((ArrayNode) json.get("children"))) {
       if (child.has("children")) {
@@ -134,14 +137,14 @@ public class DocHandlerAltIT {
       }
     }
     return new DocNodesTree.DocDir(json.get("path").textValue(), children);
-    
+
   }
-  
+
   void getAllDocs(Set<String> foundDocs, DocNodesTree.DocDir docs) {
     for (DocNodesTree.DocNode node : docs.getChildren()) {
       if (node instanceof DocNodesTree.DocFile doc) {
         foundDocs.add(doc.getPath());
-        
+
         given()
                 .log().all()
                 .get("/api/docs/" + doc.getPath())
@@ -149,7 +152,7 @@ public class DocHandlerAltIT {
                 .log().ifError()
                 .statusCode(200)
                 ;
-        
+
       } else if (node instanceof DocNodesTree.DocDir dir) {
         getAllDocs(foundDocs, dir);
       }

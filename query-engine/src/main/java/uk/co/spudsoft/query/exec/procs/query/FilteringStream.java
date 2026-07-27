@@ -28,12 +28,12 @@ import uk.co.spudsoft.query.logging.Log;
 
 /**
  * {@link io.vertx.core.streams.ReadStream} that wraps another ReadStream and evaluates a predicate on each item handled to and only passes it on if the predicate returns true.
- * 
- * 
+ *
+ *
  * @author jtalbut
  * @param <T> The type of item in the stream.
  */
-public class FilteringStream<T> implements ReadStream<T> {
+public final class FilteringStream<T> implements ReadStream<T> {
 
   private static final Logger logger = LoggerFactory.getLogger(FilteringStream.class);
 

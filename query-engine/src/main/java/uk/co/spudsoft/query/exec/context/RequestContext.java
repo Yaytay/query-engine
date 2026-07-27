@@ -25,7 +25,6 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.Cookie;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.core.net.HostAndPort;
 import io.vertx.ext.web.RoutingContext;
 import java.net.URI;
@@ -59,15 +58,15 @@ public final class RequestContext {
 
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(RequestContext.class);
-  
+
   private static final String REQUEST_CONTEXT = RequestContext.class.getName();
-  
+
   private static final Base64.Decoder B64 = Base64.getDecoder();
 
   private final long startTime;
 
   private final String requestId;
-  
+
   private final Span span;
 
   private final String url;
@@ -97,7 +96,7 @@ public final class RequestContext {
   private long rowsWritten;
 
   private final ImmutableMap<String, String> environment;
-  
+
   /**
    * Constructor.
    *
@@ -157,7 +156,7 @@ public final class RequestContext {
     this.path = path;
     this.params = params;
     this.arguments = multiMapToMap(params);
-    this.headers = headers == null ? HeadersMultiMap.httpHeaders() : headers;
+    this.headers = headers == null ? MultiMap.caseInsensitiveMultiMap() : headers;
     this.cookies = ImmutableSet.copyOf(cookies == null ? Collections.emptySet() : cookies);
     this.clientIp = clientIp;
     this.jwt = jwt;
@@ -173,7 +172,7 @@ public final class RequestContext {
     }
     logEvent.log("Created {} RequestContext@{} from values", requestId, System.identityHashCode(this));
   }
-  
+
   private static String extractSpanId(Span span) {
     if (span != null) {
       SpanContext spanContext = span.getSpanContext();
@@ -183,11 +182,11 @@ public final class RequestContext {
     }
     return UUID.randomUUID().toString();
   }
-  
+
   private static URI parseURI(String url) {
     if (url == null) {
       return null;
-    } else {      
+    } else {
       return URI.create(url);
     }
   }
@@ -290,9 +289,9 @@ public final class RequestContext {
 
   /**
    * Get the {@link Span} associated with the request at the time of the request.
-   * 
+   *
    * This does not provide any mechanism for hierarchies of spans within Query Engine, which is not currently a problem.
-   * 
+   *
    * @return the {@link Span} associated with the request at the time of the request.
    */
   public Span getSpan() {
@@ -339,7 +338,7 @@ public final class RequestContext {
   public String getRunID() {
     return runId;
   }
-  
+
   /**
    * Store the requestContext into the Vert.x RoutingContext.
    * @param routingContext the Vert.x routing context.
@@ -347,7 +346,7 @@ public final class RequestContext {
   public void storeInRoutingContext(RoutingContext routingContext) {
     routingContext.put(REQUEST_CONTEXT, this);
   }
-  
+
   /**
    * Retrieve the requestContext from the Vert.x RoutingContext.
    * @param routingContext the Vert.x routing context.
@@ -541,7 +540,7 @@ public final class RequestContext {
   public Set<Cookie> getCookies() {
     return cookies;
   }
-  
+
   /**
    * Get the environment data of the context.
    * @return the environment data of the context.
@@ -684,7 +683,7 @@ public final class RequestContext {
    * Checks if the current user belongs to at least one of the specified groups.
    * <P>
    * Each listed group will be treated as a regular expression.
-   * 
+   *
    * @param requirements the group names to check against, provided as a variable number of arguments
    * @return true if the user is part of at least one of the specified groups, false otherwise
    */
@@ -708,7 +707,7 @@ public final class RequestContext {
    * Checks if the current user belongs to at least one of the specified roles.
    * <P>
    * Each listed role will be treated as a regular expression.
-   * 
+   *
    * @param requirements the role names to check against, provided as a variable number of arguments
    * @return true if the user is part of at least one of the specified roles, false otherwise
    */
@@ -747,7 +746,7 @@ public final class RequestContext {
     return false;
   }
 
-  
+
   /**
    * Append a Map to a StringBuilder as JSON.
    * @param builder the StringBuilder that is used to build up the JSON.

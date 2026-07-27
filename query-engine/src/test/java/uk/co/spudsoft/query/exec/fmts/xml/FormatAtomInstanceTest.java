@@ -17,11 +17,11 @@
 package uk.co.spudsoft.query.exec.fmts.xml;
 
 import inet.ipaddr.IPAddressString;
+import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.FileSystem;
 import io.vertx.core.file.OpenOptions;
-import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.core.streams.WriteStream;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -31,7 +31,6 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import uk.co.spudsoft.query.defn.DataType;
 import uk.co.spudsoft.query.defn.FormatAtom;
-import uk.co.spudsoft.query.exec.ColumnDefn;
 import uk.co.spudsoft.query.exec.DataRow;
 import uk.co.spudsoft.query.exec.ReadStreamWithTypes;
 import uk.co.spudsoft.query.exec.Types;
@@ -45,7 +44,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.startsWith;
@@ -93,14 +91,14 @@ public class FormatAtomInstanceTest {
       , "/data/atom"
       , "localhost"
       , "/data/atom"
-      , HeadersMultiMap.httpHeaders()
-      , HeadersMultiMap.httpHeaders().add("Host", "localhost:123")
+      , MultiMap.caseInsensitiveMultiMap()
+      , MultiMap.caseInsensitiveMultiMap().add("Host", "localhost:123")
       , null
       , new IPAddressString("127.0.0.1")
       , null
     );
     PipelineContext pipelineContext = new PipelineContext("test", req);
-    
+
     FormatAtomInstance instance = defn.createInstance(vertx, pipelineContext, writeStream);
 
     Types types = buildTypes();

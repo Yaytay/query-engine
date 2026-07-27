@@ -32,7 +32,7 @@ import uk.co.spudsoft.query.exec.procs.script.ProcessorScriptInstance;
  * The difference between the ProcessorScript and the {@link ProcessorExpression} is that the evaluation of JEXL expressions is a lot faster that the evaluation of JavaScript,
  * but there are fewer things that can be done in a single JEXL expression.
  * In general, prefer {@link ProcessorExpression} unless it is unable to achieve what you want.
- * 
+ *
  * @author jtalbut
  */
 @JsonDeserialize(builder = ProcessorScript.Builder.class)
@@ -41,7 +41,7 @@ import uk.co.spudsoft.query.exec.procs.script.ProcessorScriptInstance;
                       """
 )
 public class ProcessorScript implements Processor {
-  
+
   private final ProcessorType type;
   private final Condition condition;
   private final String name;
@@ -53,12 +53,12 @@ public class ProcessorScript implements Processor {
   public ProcessorScriptInstance createInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, String name) {
     return new ProcessorScriptInstance(vertx, meterRegistry, auditor, pipelineContext, this, name);
   }
-  
+
   @Override
   public void validate(RequestContext requestContext) {
     validateType(ProcessorType.SCRIPT, type);
   }
-  
+
   @Override
   public ProcessorType getType() {
     return type;
@@ -157,7 +157,7 @@ public class ProcessorScript implements Processor {
       this.condition = value;
       return this;
     }
-    
+
     /**
      * Set the {@link ProcessorScript#name} value in the builder.
      * @param value The value for the {@link ProcessorScript#name}.
@@ -225,8 +225,8 @@ public class ProcessorScript implements Processor {
     this.predicate = predicate;
     this.process = process;
   }
-  
-  
-  
-  
+
+
+
+
 }

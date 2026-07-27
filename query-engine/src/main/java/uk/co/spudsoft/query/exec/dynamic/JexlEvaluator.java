@@ -87,6 +87,7 @@ public class JexlEvaluator {
 
     JexlPermissions permissions = JexlPermissions.RESTRICTED
             .compose(
+                    "com.google.common.collect.*",
                     "io.vertx.core.http.impl.headers.*",
                      "uk.co.spudsoft.jwtvalidatorvertx.*",
                      "uk.co.spudsoft.query.exec.DataRow",

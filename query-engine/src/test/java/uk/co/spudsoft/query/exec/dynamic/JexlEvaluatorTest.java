@@ -21,7 +21,6 @@ import uk.co.spudsoft.query.exec.context.RequestContext;
 import inet.ipaddr.IPAddressString;
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.Cookie;
-import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.core.json.JsonObject;
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -43,10 +42,10 @@ public class JexlEvaluatorTest {
 
   @Test
   public void testDefaultValueExpressions() {
-    
-    
-    MultiMap params = HeadersMultiMap.httpHeaders();
-    MultiMap headers = HeadersMultiMap.httpHeaders();
+
+
+    MultiMap params = MultiMap.caseInsensitiveMultiMap();
+    MultiMap headers = MultiMap.caseInsensitiveMultiMap();
     Set<Cookie> cookies = new HashSet<>();
     Jwt jwt = new Jwt(new JsonObject()
             , new JsonObject()
@@ -57,9 +56,9 @@ public class JexlEvaluatorTest {
             , "signature"
     );
     IPAddressString clientIp = new IPAddressString("127.0.0.2");
-    
+
     RequestContext request = new RequestContext(null, "requestId", "http://url", "host", "path", params, headers, cookies, clientIp, jwt);
-    
+
     assertEquals(1, new JexlEvaluator("1").evaluateAsObject(request, null));
     assertEquals(28, new JexlEvaluator("28").evaluateAsObject(request, null));
     assertEquals(Boolean.FALSE, new JexlEvaluator("andFn(true, null)").evaluateAsObject(request, null));
@@ -74,9 +73,9 @@ public class JexlEvaluatorTest {
     assertEquals("Feed", new JexlEvaluator("'Feed'").evaluateAsObject(request, null));
     assertNull(new JexlEvaluator("null").evaluateAsObject(request, null));
     assertEquals(LocalDate.now(), new JexlEvaluator("now().toLocalDate()").evaluateAsObject(request, null));
-    assertEquals(LocalDate.now().withDayOfMonth(1).minusMonths(1), new JexlEvaluator("now().toLocalDate().withDayOfMonth(1).minusMonths(1)").evaluateAsObject(request, null));    
+    assertEquals(LocalDate.now().withDayOfMonth(1).minusMonths(1), new JexlEvaluator("now().toLocalDate().withDayOfMonth(1).minusMonths(1)").evaluateAsObject(request, null));
   }
-  
+
   @Test
   public void testStripWhitespace() {
     assertNull(JexlEvaluator.collapseWhitespace(null));
@@ -86,7 +85,7 @@ public class JexlEvaluatorTest {
     assertEquals("Bob Carol", JexlEvaluator.collapseWhitespace("Bob\\\n\t \t \t \t Carol"));
     assertEquals("Bob Carol", JexlEvaluator.collapseWhitespace("Bob  \\\n\t \t \t \t Carol"));
   }
-  
+
   @Test
   public void testIsNullOrBlank() {
     assertTrue(JexlEvaluator.isNullOrBlank(null));
@@ -94,6 +93,6 @@ public class JexlEvaluatorTest {
     assertTrue(JexlEvaluator.isNullOrBlank(Condition.builder().expression("").build()));
     assertFalse(JexlEvaluator.isNullOrBlank(Condition.builder().expression("true").build()));
   }
-  
-  
+
+
 }
