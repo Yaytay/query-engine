@@ -467,28 +467,11 @@ public class Main extends Application {
     }
 
     if (params.isHealthCheck()) {
-      int port = params.getHttpServerOptions().getPort();
-      if (params.getManagementEndpointPort() != null) {
-        port = params.getManagementEndpointPort();
-      }
-      if (port == 0) {
+      if (HealthChecker.healthCheck(params.getHttpServerOptions().getPort(), params.getManagementEndpointPort())) {
+        return Future.succeededFuture(0);
+      } else {
         return Future.succeededFuture(1);
       }
-      try (java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient()) {
-        java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
-            .uri(java.net.URI.create("http://localhost:" + port + "/manage/health"))
-            .GET()
-            .build();
-
-        java.net.http.HttpResponse<Void> response =
-            client.send(request, java.net.http.HttpResponse.BodyHandlers.discarding());
-        if (response.statusCode() != 200) {
-          return Future.succeededFuture(1);
-        }
-      } catch (Throwable ex) {
-        return Future.succeededFuture(1);
-      }
-      return Future.succeededFuture(0);
     }
 
     ProcessorSortInstance.setMemoryLimit(params.getProcessors().getInMemorySortLimitBytes());

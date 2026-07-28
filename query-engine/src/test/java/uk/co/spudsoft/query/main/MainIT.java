@@ -53,21 +53,21 @@ import uk.co.spudsoft.query.web.MockOidcServer;
 @ExtendWith(VertxExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class MainIT {
-  
+
   private static final ServerProviderPostgreSQL postgres = new ServerProviderPostgreSQL().init();
-  
+
   @SuppressWarnings("constantname")
   private static final Logger logger = LoggerFactory.getLogger(MainIT.class);
-  
+
   private static final String CONFS_DIR = "target/query-engine/samples-" + MethodHandles.lookup().lookupClass().getSimpleName().toLowerCase();
-  
+
   @BeforeAll
   public void createDirs() {
     File confsDir = new File(CONFS_DIR);
     FileUtils.deleteQuietly(confsDir);
     confsDir.mkdirs();
   }
-    
+
   @Test
   public void testHelp() throws Exception {
     logger.debug("Running testHelp");
@@ -83,10 +83,10 @@ public class MainIT {
                     .put("LOGGING_LEVEL_UK_co_sPuDsoft_query_logging", "trace")
                     .build());
     logger.debug("Help:\n{}", stdout);
-    
+
     main.shutdown();
   }
-    
+
   @Test
   public void testHelpEnv() throws Exception {
     logger.debug("Running testHelpEnv");
@@ -97,10 +97,10 @@ public class MainIT {
       "--helpenv"
     }, stdout, System.getenv());
     logger.debug("HelpEnv:\n{}", stdout);
-    
+
     main.shutdown();
   }
-  
+
   @Test
   public void testBadAudit() throws Exception {
     logger.debug("Running testBadAudit");
@@ -137,10 +137,10 @@ public class MainIT {
                     .put("LOGGING_LEVEL_UK_co_sPuDsoft_query_logging", "trace")
                     .build());
     assertEquals(0, stdoutStream.size());
-    
+
     main.shutdown();
   }
-  
+
   @Test
   public void testMainDaemon() throws Exception {
     logger.debug("Running testMainDaemon");
@@ -152,7 +152,7 @@ public class MainIT {
       "--persistence.datasource.url=" + postgres.getJdbcUrl()
       , "--persistence.datasource.adminUser.username=" + postgres.getUser()
       , "--persistence.datasource.adminUser.password=" + postgres.getPassword()
-      , "--persistence.datasource.schema=public" 
+      , "--persistence.datasource.schema=public"
       , "--baseConfigPath=" + CONFS_DIR
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
@@ -184,23 +184,23 @@ public class MainIT {
                     .put("LOGGING_LEVEL_UK_co_sPuDsoft_query_logging", "trace")
                     .build());
     assertEquals(0, stdoutStream.size());
-    
+
     RestAssured.port = main.getPort();
-    
+
     given()
             .get("/query/sub1/sub2/TemplatedJsonToPipelineIT.json.vm")
             .then()
             .statusCode(400)
             .log().ifError()
             ;
-    
+
     given()
             .post("/query/sub1/sub2/TemplatedJsonToPipelineIT.json.vm")
             .then()
             .statusCode(404)
             .log().ifError()
             ;
-    
+
     // Basic auth passed in but not configured
     given()
             .header("Authorization", "Basic bm9ib2R5OmlycmVsZXZhbnQ")
@@ -209,7 +209,7 @@ public class MainIT {
             .statusCode(401)
             .log().ifError()
             ;
-    
+
     // Basic auth passed in but not configured
     given()
             .header("Authorization", "Basic bm9ib2R5OmlycmVsZXZhbnQ")
@@ -218,7 +218,7 @@ public class MainIT {
             .statusCode(401)
             .log().ifError()
             ;
-    
+
     // Bearer auth passed in but not configured
     given()
             .header("Authorization", "Bearer non.access.token")
@@ -227,7 +227,7 @@ public class MainIT {
             .statusCode(401)
             .log().ifError()
             ;
-    
+
     // Bearer auth passed in but not configured
     given()
             .header("Authorization", "Bearer non.access.token")
@@ -236,7 +236,7 @@ public class MainIT {
             .statusCode(401)
             .log().ifError()
             ;
-    
+
     // This isn't a short path because the router stop it reaching the QueryRouter
     given()
             .post("/query")
@@ -244,28 +244,28 @@ public class MainIT {
             .statusCode(404)
             .log().ifError()
             ;
-    
+
      given()
             .get("/query/bob")
             .then()
             .statusCode(404)
             .log().ifError()
             ;
-    
+
      given()
             .get("/ui/index.html")
             .then()
             .statusCode(200)
             .log().ifError()
             ;
-    
+
      given()
             .get("/ui")
             .then()
             .statusCode(200)
             .log().ifError()
             ;
-    
+
      given()
             .config(RestAssuredConfig.config().redirect(redirectConfig().followRedirects(false)))
             .get("/")
@@ -274,7 +274,7 @@ public class MainIT {
             .statusCode(307)
             .header("Location", "/ui/")
             ;
-     
+
      given()
             .get("/manage")
             .then()
@@ -282,7 +282,7 @@ public class MainIT {
             .statusCode(200)
             .body(equalTo("{\"location\":\"http://localhost:" + mgmtPort + "/manage\"}"))
             ;
-    
+
      String manageEndpointsString = given()
             .get(URI.create("http://localhost:" + mgmtPort + "/manage"))
             .then()
@@ -293,7 +293,7 @@ public class MainIT {
     logger.info("Management endpoints: {}", manageEndpointsString);
     // Note that ordering is NOT governed by the order of configuration
     assertEquals("[{\"name\":\"Thread Dump\",\"url\":\"http://localhost:" + mgmtPort + "/manage/threads\"},{\"name\":\"Up\",\"url\":\"http://localhost:" + mgmtPort + "/manage/up\"},{\"name\":\"Prometheus\",\"url\":\"http://localhost:" + mgmtPort + "/manage/prometheus\"}]", manageEndpointsString);
-    
+
      given()
             .get(URI.create("http://localhost:" + mgmtPort + "/manage/up"))
             .then()
@@ -301,7 +301,7 @@ public class MainIT {
             .statusCode(200)
             .body(equalTo(""))
             ;
-    
+
      // Health endpoint isn't enabled
      given()
             .get(URI.create("http://localhost:" + mgmtPort + "/manage/health"))
@@ -309,7 +309,7 @@ public class MainIT {
             .log().ifError()
             .statusCode(404)
             ;
-    
+
     given()
             .config(RestAssuredConfig.config().redirect(redirectConfig().followRedirects(false)))
             .get("/api")
@@ -328,7 +328,7 @@ public class MainIT {
             .extract().body().asString()
             ;
     assertEquals("{\"version\":\"" + Version.MAVEN_PROJECT_NAME + " " + Version.MAVEN_PROJECT_VERSION + "\"}", nonProfile);
-            
+
     String authConfig = given()
             .get("/api/auth-config")
             .then()
@@ -337,14 +337,22 @@ public class MainIT {
             .extract().body().asString()
             ;
     assertEquals("[{\"name\":\"GitHub\",\"logo\":\"https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg\"}]", authConfig);
-                
+
+
+    Main main2 = new Main();
+    ByteArrayOutputStream stdoutStream2 = new ByteArrayOutputStream();
+    PrintStream stdout2 = new PrintStream(stdoutStream);
+    int healthExitCode = main2.testMain(new String[]{"--healthCheck", "--managementEndpointPort=" + mgmtPort}, stdout2, null);
+    assertEquals("", stdoutStream2.toString());
+    assertEquals(0, healthExitCode);
+
     main.shutdown();
   }
-  
+
   @Test
   public void testAuthRequired() throws Exception {
     logger.debug("Running testAuthRequired");
-    int mgmtPort = MockOidcServer.findUnusedPort();  
+    int mgmtPort = MockOidcServer.findUnusedPort();
     Main main = new Main();
     ByteArrayOutputStream stdoutStream = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(stdoutStream);
@@ -352,7 +360,7 @@ public class MainIT {
       "--persistence.datasource.url=" + postgres.getJdbcUrl()
       , "--persistence.datasource.adminUser.username=" + postgres.getUser()
       , "--persistence.datasource.adminUser.password=" + postgres.getPassword()
-      , "--persistence.datasource.schema=public" 
+      , "--persistence.datasource.schema=public"
       , "--baseConfigPath=" + CONFS_DIR
       , "--jwt.acceptableIssuerRegexes[0]=.*"
       , "--jwt.defaultJwksCacheDuration=PT1M"
@@ -382,9 +390,9 @@ public class MainIT {
       , "--tracing.url=http://nonexistent/otlphttp"
     }, stdout, System.getenv());
     assertEquals(0, stdoutStream.size());
-    
+
     RestAssured.port = main.getPort();
-    
+
     // UI does not require auth
     given()
             .get("/ui/index.html")
@@ -392,7 +400,7 @@ public class MainIT {
             .statusCode(200)
             .log().ifError()
             ;
-    
+
     // Manage endpoints do not require auth
     given()
             .get("/manage")
@@ -401,14 +409,14 @@ public class MainIT {
             .statusCode(200)
             .body(equalTo("{\"location\":\"http://localhost:" + mgmtPort + "/manage\"}"))
             ;
-    
+
     given()
             .get("/api/session/profile")
             .then()
             .statusCode(401)
             .log().ifError()
             ;
-           
+
     // Autho config does not require auth
     String authConfig = given()
             .get("/api/auth-config")
@@ -418,21 +426,21 @@ public class MainIT {
             .extract().body().asString()
             ;
     assertEquals("[{\"name\":\"GitHub\",\"logo\":\"https://upload.wikimedia.org/wikipedia/commons/c/c2/GitHub_Invertocat_Logo.svg\"}]", authConfig);
-            
+
     given()
             .get("/api/docs/")
             .then()
             .statusCode(401)
             .log().ifError()
             ;
-            
+
     given()
             .get("/api/formio/doesntmatterwhatgoeshere-authfailsfirst")
             .then()
             .statusCode(401)
             .log().ifError()
             ;
-            
+
     given()
             .get("/api/info/available")
             .then()
@@ -451,7 +459,7 @@ public class MainIT {
     logger.info("Management endpoints: {}", manageEndpointsString);
     // Note that ordering is NOT governed by the order of configuration
     assertEquals("[{\"name\":\"Thread Dump\",\"url\":\"http://localhost:" + mgmtPort + "/manage/threads\"},{\"name\":\"Up\",\"url\":\"http://localhost:" + mgmtPort + "/manage/up\"},{\"name\":\"Prometheus\",\"url\":\"http://localhost:" + mgmtPort + "/manage/prometheus\"},{\"name\":\"Dir Cache\",\"url\":\"http://localhost:" + mgmtPort + "/manage/dircache\"}]", manageEndpointsString);
-        
+
     String dirCacheString = given()
             .get(URI.create("http://localhost:" + mgmtPort + "/manage/dircache"))
             .then()
@@ -495,5 +503,5 @@ public class MainIT {
 
     main.shutdown();
   }
-  
+
 }
