@@ -36,6 +36,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.lang.invoke.MethodHandles;
 import java.net.URI;
+import java.util.HashMap;
+
 import org.apache.commons.io.FileUtils;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -342,7 +344,7 @@ public class MainIT {
     Main main2 = new Main();
     ByteArrayOutputStream stdoutStream2 = new ByteArrayOutputStream();
     PrintStream stdout2 = new PrintStream(stdoutStream);
-    int healthExitCode = main2.testMain(new String[]{"--healthCheck", "--managementEndpointPort=" + mgmtPort}, stdout2, null);
+    int healthExitCode = main2.testMain(new String[]{"--healthCheck", "--managementEndpointPort=" + mgmtPort}, stdout2, new HashMap<>());
     assertEquals("", stdoutStream2.toString());
     assertEquals(0, healthExitCode);
 
