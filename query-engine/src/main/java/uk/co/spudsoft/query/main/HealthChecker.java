@@ -16,8 +16,6 @@
  */
 package uk.co.spudsoft.query.main;
 
-import io.vertx.core.Future;
-
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
