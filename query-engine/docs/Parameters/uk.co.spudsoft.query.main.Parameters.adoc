@@ -243,7 +243,7 @@ Pipeline are run in parallel in Verticles, but the actual write to the network h
 If the context hop from the Verticle to the HttpServer context happens too often it will be a drain on CPU cycles
 , but making it too large will cause the response to stutter.
 
-Recommended Buffer Sizes 
+Recommended Buffer Sizes
 
 
 !===
@@ -361,4 +361,11 @@ This should be secure even in a production environment (because the caller must 
 | Set the conditions for defining operators.
 
 Operators make no difference to query running, but can access more data via the API.
+
+| [[healthCheck]]healthCheck
+| boolean
+| Get whether this process will perform a healthcheck
+
+The healthcheck consists of an HTTP GET to the /manage/health endpoint of the service,
+if this returns a 200 response the process will end with a 0 exit code, otherwise it will end with an exit code of 1.
 |===

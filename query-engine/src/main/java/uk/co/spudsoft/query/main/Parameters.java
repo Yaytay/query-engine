@@ -93,10 +93,18 @@ public class Parameters {
   private boolean exitOnRun = false;
 
   /**
+   * If true the process will perform a healthcheck and then end.
+   * The healthcheck consists of an HTTP GET to the /manage/health endpoint of the service,
+   * if this returns a 200 response the process will end with a 0 exit code, otherwise it will end with an exit code of 1.
+   *
+   */
+  private boolean healthCheck = false;
+
+  /**
    * The path to the root of the configuration files.
-   * 
+   *
    * Default value "/var/query-engine".
-   * 
+   *
    */
   private String baseConfigPath = "/var/query-engine";
 
@@ -125,25 +133,25 @@ public class Parameters {
    * This is not much use in a path hijack situation, so this allows for the provision of an alternative.
    * <P>
    * The redirection is literally to the string provided here, so this may either be a full URL or a path (which may be relative or absolute).
-   * 
+   *
    * This is not much use in a path hijack situation, so allow for the provision of an alternative.
-   * 
+   *
    * Default value null.
-   * 
+   *
    */
   private String rootRedirectUrl;
-  
+
   /**
    * If true, the path /login/forcejwt can be PUT to create a session based on the the JWT in the message body.
    * This should be secure even in a production environment (because the caller must be still be able to create an acceptable JWT)
    * , but for the sake of safety it defaults to being disabled.
-   * 
+   *
    * Default value false.
-   * 
+   *
    */
   private boolean enableForceJwt = false;
 
-  
+
   /**
    * Conditions for defining operators.
    * <P>
@@ -179,16 +187,16 @@ public class Parameters {
    */
   private String outputCacheDir = System.getProperty("java.io.tmpdir");
 
-  
+
   /**
    * The amount of data to cache before writing to the output stream.
-   * 
+   *
    * Pipeline are run in parallel in Verticles, but the actual write to the network has to occur from the HttpServer Context.
-   * 
+   *
    * If the context hop from the Verticle to the HttpServer context happens too often it will be a drain on CPU cycles
    * , but making it too large will cause the response to stutter.
-   * 
-   * Recommended Buffer Sizes 
+   *
+   * Recommended Buffer Sizes
    * <table class="striped">
    *   <caption>Table of recommended buffer sizes</caption>
    *   <thead>
@@ -221,23 +229,23 @@ public class Parameters {
    *     </tr>
    *   </tbody>
    * </table>
-   * 
+   *
    * Default value 32 * 1024.
-   * 
+   *
    */
   private int writeStreamBufferSize = 32 * 1024;
-  
+
   /**
    * The maximum number of buffers in the response queue before back-pressure kicks in.
-   * 
+   *
    * Without setting the WriteQueueMaxSize the Netty buffers can get very large with no back pressure.
    * The value provided is a count of writes, so the actual memory used is responseWriteQueueMaxSize * writeStreamBufferSize.
-   * 
+   *
    * Default value 32.
-   * 
+   *
    */
   private int responseWriteQueueMaxSize = 32;
-  
+
   /**
    * Configuration of specific processors.
    */
@@ -257,7 +265,7 @@ public class Parameters {
    * If this value is less than zero file notifications will be disabled.
    * <p>
    * Default value 2.
-   * 
+   *
    */
   private int fileStabilisationDelaySeconds = 2;
 
@@ -272,7 +280,7 @@ public class Parameters {
    * If this value is less than or equal to zero polling will be disabled.
    *
    * Default value 0.
-   * 
+   *
    */
   private int filePollPeriodSeconds = 0;
 
@@ -291,9 +299,9 @@ public class Parameters {
 
   /**
    * If set to false any bearer auth header will be ignored.
-   * 
+   *
    * Default value true.
-   * 
+   *
    */
   private boolean enableBearerAuth = true;
 
@@ -402,7 +410,7 @@ public class Parameters {
    * It is not usually necessary to set this.
    */
   private String openApiExplorerUrl;
-  
+
   /**
    * Configuration of the session management for the UI and REST API.
    */
@@ -571,6 +579,18 @@ public class Parameters {
    */
   public boolean isExitOnRun() {
     return exitOnRun;
+  }
+
+  /**
+   * Get whether this process will perform a healthcheck
+   *
+   * The healthcheck consists of an HTTP GET to the /manage/health endpoint of the service,
+   * if this returns a 200 response the process will end with a 0 exit code, otherwise it will end with an exit code of 1.
+   *
+   * @return the healthCheck value.
+   */
+  public boolean isHealthCheck() {
+    return healthCheck;
   }
 
   /**
@@ -1169,15 +1189,15 @@ public class Parameters {
 
   /**
    * Get the WriteStream buffer size.
-   * 
+   *
    * The amount of data to cache before writing to the output stream.
-   * 
+   *
    * Pipeline are run in parallel in Verticles, but the actual write to the network has to occur from the HttpServer Context.
-   * 
+   *
    * If the context hop from the Verticle to the HttpServer context happens too often it will be a drain on CPU cycles
    * , but making it too large will cause the response to stutter.
-   * 
-   * Recommended Buffer Sizes 
+   *
+   * Recommended Buffer Sizes
    * <table class="striped">
    *   <caption>Table of recommended buffer sizes</caption>
    *   <thead>
@@ -1210,7 +1230,7 @@ public class Parameters {
    *     </tr>
    *   </tbody>
    * </table>
-   * 
+   *
    * @return the WriteStream buffer size.
    */
   public int getWriteStreamBufferSize() {
@@ -1219,15 +1239,15 @@ public class Parameters {
 
   /**
    * Set the WriteStream buffer size.
-   * 
+   *
    * The amount of data to cache before writing to the output stream.
-   * 
+   *
    * Pipeline are run in parallel in Verticles, but the actual write to the network has to occur from the HttpServer Context.
-   * 
+   *
    * If the context hop from the Verticle to the HttpServer context happens too often it will be a drain on CPU cycles
    * , but making it too large will cause the response to stutter.
-   * 
-   * Recommended Buffer Sizes 
+   *
+   * Recommended Buffer Sizes
    * <table class="striped">
    *   <caption>Table of recommended buffer sizes</caption>
    *   <thead>
@@ -1260,7 +1280,7 @@ public class Parameters {
    *     </tr>
    *   </tbody>
    * </table>
-   * 
+   *
    * @param writeStreamBufferSize the WriteStream buffer size.
    */
   public void setWriteStreamBufferSize(int writeStreamBufferSize) {
@@ -1269,10 +1289,10 @@ public class Parameters {
 
   /**
    * Get the maximum number of buffers in the response queue before back-pressure kicks in.
-   * 
+   *
    * Without setting the WriteQueueMaxSize the Netty buffers can get very large with no back pressure.
    * The value provided is a count of writes, so the actual memory used is responseWriteQueueMaxSize * writeStreamBufferSize.
-   * 
+   *
    * @return the maximum number of buffers in the response queue before back-pressure kicks in.
    */
   public int getResponseWriteQueueMaxSize() {
@@ -1281,10 +1301,10 @@ public class Parameters {
 
   /**
    * Set the maximum number of buffers in the response queue before back-pressure kicks in.
-   * 
+   *
    * Without setting the WriteQueueMaxSize the Netty buffers can get very large with no back pressure.
    * The value provided is a count of writes, so the actual memory used is responseWriteQueueMaxSize * writeStreamBufferSize.
-   * 
+   *
    * @param responseWriteQueueMaxSize the maximum number of buffers in the response queue before back-pressure kicks in.
    */
   public void setResponseWriteQueueMaxSize(int responseWriteQueueMaxSize) {
@@ -1292,7 +1312,7 @@ public class Parameters {
   }
 
 
-  
+
   /**
    * Get the configuration of the handling of requests using basic authentication for data requests.
    * <P>
@@ -1445,7 +1465,7 @@ public class Parameters {
    * This is not much use in a path hijack situation, so this allows for the provision of an alternative.
    * <P>
    * The redirection is literally to the string provided here, so this may either be a full URL or a path (which may be relative or absolute).
-   * 
+   *
    * @return the URL to redirect requests to / to.
    */
   public String getRootRedirectUrl() {
@@ -1508,7 +1528,7 @@ public class Parameters {
    * If true, the path /login/forcejwt can be PUT to create a session based on the the JWT in the message body.
    * This should be secure even in a production environment (because the caller must be still be able to create an acceptable JWT)
    * , but for the sake of safety it defaults to being disabled.
-   * 
+   *
    * @return the enableForceJwt parameter.
    */
   public boolean isEnableForceJwt() {
@@ -1521,7 +1541,7 @@ public class Parameters {
    * If true, the path /login/forcejwt can be PUT to create a session based on the the JWT in the message body.
    * This should be secure even in a production environment (because the caller must be still be able to create an acceptable JWT)
    * , but for the sake of safety it defaults to being disabled.
-   * 
+   *
    * @param enableForceJwt the enableForceJwt parameter.
    */
   public void setEnableForceJwt(boolean enableForceJwt) {
@@ -1550,8 +1570,8 @@ public class Parameters {
     this.operators = operators;
   }
 
-  
-  
+
+
   /**
    * Validate the provided parameters.
    *

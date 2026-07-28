@@ -226,7 +226,7 @@ public class Main extends Application {
   Authenticator getAuthenticator() {
     return authenticator;
   }
-  
+
   /**
    * Get the {@link DirCache} for the {@link uk.co.spudsoft.query.defn.Pipeline} definitions.
    * @return the {@link DirCache} for the {@link uk.co.spudsoft.query.defn.Pipeline} definitions.
@@ -423,8 +423,8 @@ public class Main extends Application {
 
     LoggingConfiguration.configureLogbackFromEnvironment((LoggerContext) LoggerFactory.getILoggerFactory(), env);
     Parameters params = p4j.gatherParameters();
-    
-    RequestCollatingAppender requestLoggingAppender = new RequestCollatingAppender();    
+
+    RequestCollatingAppender requestLoggingAppender = new RequestCollatingAppender();
     LoggingConfiguration.configureLogback((LoggerContext) LoggerFactory.getILoggerFactory(), params.getLogging(), requestLoggingAppender);
 
     SLF4JBridgeHandler.removeHandlersForRootLogger();
@@ -434,7 +434,9 @@ public class Main extends Application {
     ObjectMapperConfiguration.configureObjectMapper(DatabindCodec.mapper());
 
     try {
-      logger.info("Params: {}", DatabindCodec.mapper().writeValueAsString(params));
+      if (!params.isHealthCheck()) {
+        logger.info("Params: {}", DatabindCodec.mapper().writeValueAsString(params));
+      }
     } catch (JsonProcessingException ex) {
       logger.error("Failed to convert params to json: ", ex);
     }
@@ -462,6 +464,31 @@ public class Main extends Application {
       buildUsage(usage, p4j, false);
       stdout.println(usage.toString());
       return Future.succeededFuture(4);
+    }
+
+    if (params.isHealthCheck()) {
+      int port = params.getHttpServerOptions().getPort();
+      if (params.getManagementEndpointPort() != null) {
+        port = params.getManagementEndpointPort();
+      }
+      if (port == 0) {
+        return Future.succeededFuture(1);
+      }
+      try (java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient()) {
+        java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+            .uri(java.net.URI.create("http://localhost:" + port + "/manage/health"))
+            .GET()
+            .build();
+
+        java.net.http.HttpResponse<Void> response =
+            client.send(request, java.net.http.HttpResponse.BodyHandlers.discarding());
+        if (response.statusCode() != 200) {
+          return Future.succeededFuture(1);
+        }
+      } catch (Throwable ex) {
+        return Future.succeededFuture(1);
+      }
+      return Future.succeededFuture(0);
     }
 
     ProcessorSortInstance.setMemoryLimit(params.getProcessors().getInMemorySortLimitBytes());
@@ -495,7 +522,7 @@ public class Main extends Application {
     vertx.setPeriodic(Duration.ofHours(1).toMillis(), id -> {
       requestLoggingAppender.purgeOlderThanDefault();
     });
-    
+
     LoginDao loginDao;
     OperatorsInstance operators = new OperatorsInstance(params.getOperators());
     if (params.getPersistence().getDataSource() != null
@@ -569,7 +596,7 @@ public class Main extends Application {
             , "'sha256-0mzu5UIu3gOiGyl6mvUx0nLHxxPI+oMcehePE41fbMA='"
             , "https://cdn.form.io/"
     );
-    List<String> cspContentSrcs = 
+    List<String> cspContentSrcs =
             Strings.isNullOrEmpty(params.getManagementEndpointUrl()) ? null : Arrays.asList(params.getManagementEndpointUrl());
     List<String> cspScriptSrcs = Arrays.asList(
             "'unsafe-inline'"
@@ -648,12 +675,12 @@ public class Main extends Application {
 
     PipelineExecutor pipelineExecutor = PipelineExecutor.create(meterRegistry, auditor, filterFactory, params.getSecrets());
     vertx.fileSystem().mkdirs(params.getOutputCacheDir());
-    
+
     int pipelineVerticleInstances = params.getVertxOptions().getEventLoopPoolSize();
     if (pipelineVerticleInstances < 1) {
       pipelineVerticleInstances = 2 * CpuCoreSensor.availableProcessors();
     }
-    
+
     QueryRouter queryRouter = new QueryRouter(vertx
             , meterRegistry
             , auditor
@@ -667,7 +694,7 @@ public class Main extends Application {
             , outputAllErrorMessages()
             , pipelineVerticleInstances
     );
-    
+
     router.route(QueryRouter.PATH_ROOT + "/*").handler(queryRouter);
 
     ManagementRoute.createAndDeploy(vertx
@@ -709,7 +736,7 @@ public class Main extends Application {
         rc.redirect(params.getRootRedirectUrl());
       }
     });
-    
+
     addExtraRoutes(params, router);
 
     return queryRouter.deploy()
@@ -996,12 +1023,12 @@ public class Main extends Application {
             , jwtConfig.getRequiredAudiences()
             , params.getSession().getSessionCookie() != null ? params.getSession().getSessionCookie().getName() : null
     );
-    
+
     vertx.setPeriodic(Duration.ofHours(1).toMillis(), id -> {
       auther.purgeCache();
     });
-    
-    return auther;    
+
+    return auther;
   }
 
   static OpenAPIConfiguration createOpenapiConfiguration(List<Object> resources, Object application, String openApiContextId, boolean useOpenApi31) {
@@ -1139,7 +1166,7 @@ public class Main extends Application {
    */
   protected void addExtraControllers(Parameters params, List<Object> controllers) {
   }
-  
+
   /**
    * Allow subclasses to provide additional Vertx-web routes
    * <p>
@@ -1148,7 +1175,7 @@ public class Main extends Application {
    * @param params the Parameters object that may be required to configure the additional controllers.
    * @param router the top level {@link Router} that may be modified.
    */
-  protected void addExtraRoutes(Parameters params, Router router) {    
+  protected void addExtraRoutes(Parameters params, Router router) {
   }
 
 }
