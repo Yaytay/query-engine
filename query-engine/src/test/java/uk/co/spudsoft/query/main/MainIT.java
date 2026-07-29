@@ -167,6 +167,7 @@ public class MainIT {
       , "--managementEndpoints[0]=up"
       , "--managementEndpoints[2]=prometheus"
       , "--managementEndpoints[3]=threads"
+      , "--managementEndpoints[4]=health"
       , "--managementEndpointPort=" + mgmtPort
       , "--managementEndpointUrl=http://localhost:" + mgmtPort + "/manage"
       , "--session.requireSession=false"
@@ -294,7 +295,7 @@ public class MainIT {
             ;
     logger.info("Management endpoints: {}", manageEndpointsString);
     // Note that ordering is NOT governed by the order of configuration
-    assertEquals("[{\"name\":\"Thread Dump\",\"url\":\"http://localhost:" + mgmtPort + "/manage/threads\"},{\"name\":\"Up\",\"url\":\"http://localhost:" + mgmtPort + "/manage/up\"},{\"name\":\"Prometheus\",\"url\":\"http://localhost:" + mgmtPort + "/manage/prometheus\"}]", manageEndpointsString);
+    assertEquals("[{\"name\":\"Thread Dump\",\"url\":\"http://localhost:" + mgmtPort + "/manage/threads\"},{\"name\":\"Up\",\"url\":\"http://localhost:" + mgmtPort + "/manage/up\"},{\"name\":\"Health\",\"url\":\"http://localhost:" + mgmtPort + "/manage/health\"},{\"name\":\"Prometheus\",\"url\":\"http://localhost:" + mgmtPort + "/manage/prometheus\"}]", manageEndpointsString);
 
      given()
             .get(URI.create("http://localhost:" + mgmtPort + "/manage/up"))
@@ -309,7 +310,7 @@ public class MainIT {
             .get(URI.create("http://localhost:" + mgmtPort + "/manage/health"))
             .then()
             .log().ifError()
-            .statusCode(404)
+            .statusCode(200)
             ;
 
     given()
@@ -377,6 +378,7 @@ public class MainIT {
       , "--managementEndpoints[2]=prometheus"
       , "--managementEndpoints[3]=threads"
       , "--managementEndpoints[4]=dircache"
+      , "--managementEndpoints[5]=health"
       , "--managementEndpointPort=" + mgmtPort
       , "--managementEndpointUrl=http://localhost:" + mgmtPort + "/manage"
       , "--session.requireSession=true"
@@ -460,7 +462,7 @@ public class MainIT {
             ;
     logger.info("Management endpoints: {}", manageEndpointsString);
     // Note that ordering is NOT governed by the order of configuration
-    assertEquals("[{\"name\":\"Thread Dump\",\"url\":\"http://localhost:" + mgmtPort + "/manage/threads\"},{\"name\":\"Up\",\"url\":\"http://localhost:" + mgmtPort + "/manage/up\"},{\"name\":\"Prometheus\",\"url\":\"http://localhost:" + mgmtPort + "/manage/prometheus\"},{\"name\":\"Dir Cache\",\"url\":\"http://localhost:" + mgmtPort + "/manage/dircache\"}]", manageEndpointsString);
+    assertEquals("[{\"name\":\"Thread Dump\",\"url\":\"http://localhost:" + mgmtPort + "/manage/threads\"},{\"name\":\"Up\",\"url\":\"http://localhost:" + mgmtPort + "/manage/up\"},{\"name\":\"Health\",\"url\":\"http://localhost:" + mgmtPort + "/manage/health\"},{\"name\":\"Prometheus\",\"url\":\"http://localhost:" + mgmtPort + "/manage/prometheus\"},{\"name\":\"Dir Cache\",\"url\":\"http://localhost:" + mgmtPort + "/manage/dircache\"}]", manageEndpointsString);
 
     String dirCacheString = given()
             .get(URI.create("http://localhost:" + mgmtPort + "/manage/dircache"))
