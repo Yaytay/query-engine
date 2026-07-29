@@ -7,8 +7,8 @@ ARG mainClass
 WORKDIR /app
 
 # Copy application bits from the builder stage
-COPY --from=builder /dependencies /dependencies
-COPY --from=builder /app.jar /app.jar
+COPY target/dependencies /dependencies
+COPY target/*.jar /
 
 # Configure classpath and entrypoint environment variables
 ENV CLASSPATH=${DEPS}:/app.jar
