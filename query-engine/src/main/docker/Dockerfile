@@ -22,5 +22,5 @@ ENTRYPOINT ["java", \
 
 HEALTHCHECK CMD "java", \
               "-XX:-OmitStackTraceInFastThrow", \
-              "${mainClass}"
+              "${mainClass}" \
               "--healthCheck"
