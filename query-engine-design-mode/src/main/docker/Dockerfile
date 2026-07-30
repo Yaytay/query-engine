@@ -15,7 +15,14 @@ ENV CLASSPATH=${DEPS}:/app.jar
 
 EXPOSE 8080
 
+
+
 # Distroless nonroot user runs with UID 65532 by default
 ENTRYPOINT ["java", \
   "-XX:-OmitStackTraceInFastThrow", \
   "${mainClass}"]
+
+HEALTHCHECK CMD "java", \
+              "-XX:-OmitStackTraceInFastThrow", \
+              "${mainClass}"
+              "--healthCheck"

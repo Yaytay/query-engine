@@ -19,3 +19,8 @@ EXPOSE 8080
 ENTRYPOINT ["java", \
   "-XX:-OmitStackTraceInFastThrow", \
   "${mainClass}"]
+
+HEALTHCHECK CMD "java", \
+              "-XX:-OmitStackTraceInFastThrow", \
+              "${mainClass}"
+              "--healthCheck"
