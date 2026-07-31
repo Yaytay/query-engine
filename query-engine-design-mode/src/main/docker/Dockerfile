@@ -4,14 +4,14 @@ ARG DEPS
 ARG mainClass
 
 # Set working directory
-WORKDIR /app
+WORKDIR /query-engine
 
 # Copy application bits from the builder stage
-COPY target/dependencies /dependencies
-COPY target/*.jar /
+COPY target/dependencies /query-engine/dependencies/
+COPY target/*.jar /query-engine/
 
 # Configure classpath and entrypoint environment variables
-ENV CLASSPATH=${DEPS}:/app.jar
+ENV CLASSPATH=${DEPS}
 
 EXPOSE 8080
 
