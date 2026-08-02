@@ -119,10 +119,6 @@ import uk.co.spudsoft.query.exec.filters.WithoutFilter;
 import uk.co.spudsoft.query.exec.procs.sort.ProcessorSortInstance;
 import uk.co.spudsoft.query.json.ObjectMapperConfiguration;
 import uk.co.spudsoft.query.logging.RequestCollatingAppender;
-import static uk.co.spudsoft.query.main.TracingSampler.alwaysOff;
-import static uk.co.spudsoft.query.main.TracingSampler.alwaysOn;
-import static uk.co.spudsoft.query.main.TracingSampler.parent;
-import static uk.co.spudsoft.query.main.TracingSampler.ratio;
 import uk.co.spudsoft.query.main.sample.SampleDataLoader;
 import uk.co.spudsoft.query.main.sample.SampleDataLoaderMsSQL;
 import uk.co.spudsoft.query.main.sample.SampleDataLoaderMySQL;
@@ -186,6 +182,7 @@ public class Main extends Application {
   private JdbcHelper jdbcHelper;
   private Authenticator authenticator;
 
+  private Exiter exiter;
 
   /**
    * Constructor.
@@ -244,6 +241,15 @@ public class Main extends Application {
   }
 
   /**
+   * Set the {@link Exiter}.
+   * Purely for test purposes.
+   * @param exiter the {@link Exiter}.
+   */
+  public void setExiter(Exiter exiter) {
+    this.exiter = exiter;
+  }
+
+  /**
    * Main method.
    * @param args Command line arguments that should have the same form as properties with the query-engine prefix, no dashes are required.
    *7
@@ -272,7 +278,7 @@ public class Main extends Application {
    */
   protected void shutdown(int statusCode) {
     shutdown();
-    System.exit(statusCode);
+    exiter.exit(statusCode);
   }
 
   /**
@@ -424,6 +430,17 @@ public class Main extends Application {
     LoggingConfiguration.configureLogbackFromEnvironment((LoggerContext) LoggerFactory.getILoggerFactory(), env);
     Parameters params = p4j.gatherParameters();
 
+    if (params.isHealthCheck()) {
+      // No background processing started, so we can just exit from here
+      if (HealthChecker.healthCheck(params.getHttpServerOptions().getPort(), params.getManagementEndpointPort())) {
+        exiter.exit(0);
+        return Future.succeededFuture(0);
+      } else {
+        exiter.exit(1);
+        return Future.succeededFuture(1);
+      }
+    }
+
     RequestCollatingAppender requestLoggingAppender = new RequestCollatingAppender();
     LoggingConfiguration.configureLogback((LoggerContext) LoggerFactory.getILoggerFactory(), params.getLogging(), requestLoggingAppender);
 
@@ -464,14 +481,6 @@ public class Main extends Application {
       buildUsage(usage, p4j, false);
       stdout.println(usage.toString());
       return Future.succeededFuture(4);
-    }
-
-    if (params.isHealthCheck()) {
-      if (HealthChecker.healthCheck(params.getHttpServerOptions().getPort(), params.getManagementEndpointPort())) {
-        return Future.succeededFuture(0);
-      } else {
-        return Future.succeededFuture(1);
-      }
     }
 
     ProcessorSortInstance.setMemoryLimit(params.getProcessors().getInMemorySortLimitBytes());

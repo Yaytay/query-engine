@@ -343,11 +343,13 @@ public class MainIT {
 
 
     Main main2 = new Main();
+    MockExiter mockExiter = new MockExiter();
+    main2.setExiter(mockExiter);
     ByteArrayOutputStream stdoutStream2 = new ByteArrayOutputStream();
     PrintStream stdout2 = new PrintStream(stdoutStream);
-    int healthExitCode = main2.testMain(new String[]{"--healthCheck", "--managementEndpointPort=" + mgmtPort}, stdout2, new HashMap<>());
+    int result = main2.testMain(new String[]{"--healthCheck", "--managementEndpointPort=" + mgmtPort}, stdout2, new HashMap<>());
     assertEquals("", stdoutStream2.toString());
-    assertEquals(0, healthExitCode);
+    assertEquals(0, mockExiter.getExitCode());
 
     main.shutdown();
   }

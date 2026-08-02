@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 jtalbut
+ * Copyright (C) 2026 jtalbut
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,29 +14,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package uk.co.spudsoft.query.main;
 
-/**
- * Set the version from the pom.
- * <p>
- * This file is updated by com.google.code.maven-replacer-plugin/replacer maven plugin.
- * 
- * @author jtalbut
- */
-public final class Version {
+public class MockExiter extends Exiter {
 
-  /**
-   * The project name, as set in the Maven pom.xml.
-   */
-  public static final String MAVEN_PROJECT_NAME = "SpudSoft Query Engine";
-  
-  /**
-   * The project version, as set in the Maven pom.xml.
-   */
-  public static final String MAVEN_PROJECT_VERSION = "0.2.48-main";
+  private int exitCode = Integer.MIN_VALUE;
 
-  private Version() {
+  public int getExitCode() {
+    return exitCode;
   }
-  
+
+  @Override
+  public void exit(int exitCode) {
+    this.exitCode = exitCode;
+  }
 }
