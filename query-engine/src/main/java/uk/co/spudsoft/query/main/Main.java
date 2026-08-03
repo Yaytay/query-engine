@@ -182,7 +182,7 @@ public class Main extends Application {
   private JdbcHelper jdbcHelper;
   private Authenticator authenticator;
 
-  private Exiter exiter;
+  private Exiter exiter = new Exiter();
 
   /**
    * Constructor.
