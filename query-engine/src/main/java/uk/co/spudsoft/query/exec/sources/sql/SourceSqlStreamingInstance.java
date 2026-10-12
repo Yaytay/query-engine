@@ -84,7 +84,7 @@ public class SourceSqlStreamingInstance extends AbstractSource {
   @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The requestContext should not be modified by this class")
   public SourceSqlStreamingInstance(Vertx vertx, MeterRegistry meterRegistry, Auditor auditor, PipelineContext pipelineContext, SharedMap sharedMap, SourceSql definition) {
     super(vertx, meterRegistry, auditor, pipelineContext);
-
+    
     Object pco = sharedMap.get(PoolCreator.class.toString());
     if (pco instanceof PoolCreator pc) {
       this.poolCreator = pc;
@@ -95,6 +95,8 @@ public class SourceSqlStreamingInstance extends AbstractSource {
 
     this.definition = definition;
     this.log = new Log(logger, pipelineContext);
+    
+    log.warn().log("Instantiated deprecated SQL Source, use JDBC Source instead");
   }
 
   @SuppressFBWarnings(value = "SQL_INJECTION_VERTX", justification = "The query from the configuration is definitely a SQL injection vector, but it is not built from end-user input")
