@@ -35,9 +35,9 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <argLine></argLine>
-    <vertx.version>5.1.5</vertx.version>
-    <jackson.version>2.22.1</jackson.version>
-    <slf4j.version>2.0.18</slf4j.version>
+    <vertx.version>5.2.0</vertx.version>
+    <jackson.version>2.22.3</jackson.version>
+    <slf4j.version>2.0.20</slf4j.version>
     <junit-jupiter.version>6.1.2</junit-jupiter.version>
     <junit-platform.version>6.1.2</junit-platform.version>
     <testcontainers.version>2.0.5</testcontainers.version>
@@ -60,7 +60,7 @@
 
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.15.0</version>
+          <version>3.16.0</version>
           <configuration>
             <source>${jdk.version}</source>
             <release>${jdk.version}</release>
@@ -76,7 +76,7 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>versions-maven-plugin</artifactId>
-          <version>2.21.0</version>
+          <version>2.22.0</version>
           <executions>
             <execution>
               <id>display-plugin-updates</id>
@@ -117,7 +117,7 @@
                     <version>3.9.0</version>
                   </requireMavenVersion>
                   <requireJavaVersion>
-                    <version>[17.0,26)</version>
+                    <version>[17.0,)</version>
                   </requireJavaVersion>
                 </rules>
               </configuration>
@@ -128,7 +128,7 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>build-helper-maven-plugin</artifactId>
-          <version>3.6.1</version>
+          <version>3.6.2</version>
           <executions>
             <execution>
               <phase>initialize</phase>
@@ -206,9 +206,8 @@
         <plugin>
           <groupId>com.github.spotbugs</groupId>
           <artifactId>spotbugs-maven-plugin</artifactId>
-          <version>4.10.3.0</version>
+          <version>4.10.4.1</version>
           <configuration>
-            <fork>true</fork>
             <effort>Max</effort>
             <xmlOutput>true</xmlOutput>
             <excludeFilterFile>${basedir}/../findbugsFilterFile.xml</excludeFilterFile>
@@ -263,7 +262,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.5.6</version>
+          <version>3.6.0</version>
           <configuration>
             <forkCount>1</forkCount>
             <parallel>none</parallel>
@@ -283,7 +282,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-failsafe-plugin</artifactId>
-          <version>3.5.6</version>
+          <version>3.6.0</version>
           <executions>
             <execution>
               <id>one-fork-integration-tests</id>
@@ -431,7 +430,7 @@
         <plugin>
           <groupId>org.owasp</groupId>
           <artifactId>dependency-check-maven</artifactId>
-          <version>12.2.2</version>
+          <version>13.0.0</version>
           <configuration>
             <failBuildOnCVSS>8</failBuildOnCVSS>
             <failOnError>false</failOnError>
@@ -552,7 +551,7 @@
         <plugin>
           <groupId>org.cyclonedx</groupId>
           <artifactId>cyclonedx-maven-plugin</artifactId>
-          <version>2.9.2</version>
+          <version>2.9.3</version>
           <executions>
             <execution>
               <phase>package</phase>
@@ -580,7 +579,7 @@
         <plugin>
           <groupId>io.fabric8</groupId>
           <artifactId>docker-maven-plugin</artifactId>
-          <version>0.48.1</version>
+          <version>0.49.0</version>
           <executions>
             <execution>
               <phase>install</phase>
@@ -617,7 +616,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-deploy-plugin</artifactId>
-          <version>3.1.4</version>
+          <version>3.2.0</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -679,7 +678,6 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.15</version>
         <configuration>
           <dataFile>${project.build.directory}/jacoco-merged.exec</dataFile>
         </configuration>
