@@ -35,6 +35,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <argLine></argLine>
+    <jacoco.check.skip>false</jacoco.check.skip>
     <vertx.version>5.2.3</vertx.version>
     <jackson.version>2.22.3</jackson.version>
     <slf4j.version>2.0.20</slf4j.version>
@@ -393,6 +394,7 @@
                 <goal>check</goal>
               </goals>
               <configuration>
+                <skip>${jacoco.check.skip}</skip>
                 <excludes>
                   <exclude>uk/co/spudsoft/query/main/Exiter*</exclude>
                   <exclude>uk/co/spudsoft/query/exec/procs/script/ProcessorScriptInstance*</exclude>
