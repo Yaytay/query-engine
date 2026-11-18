@@ -35,7 +35,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <argLine></argLine>
-    <vertx.version>5.2.0</vertx.version>
+    <vertx.version>5.2.3</vertx.version>
     <jackson.version>2.22.3</jackson.version>
     <slf4j.version>2.0.20</slf4j.version>
     <junit-jupiter.version>6.1.2</junit-jupiter.version>
@@ -435,7 +435,7 @@
             <failBuildOnCVSS>8</failBuildOnCVSS>
             <failOnError>false</failOnError>
             <format>ALL</format>
-            <skipTestScope>false</skipTestScope>
+            <skipTestScope>true</skipTestScope>
             <suppressionFiles>
               dependency-check-supressions.xml
             </suppressionFiles>

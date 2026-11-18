@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.invoke.MethodHandles;
+import java.time.Duration;
 import org.apache.commons.io.FileUtils;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeAll;
@@ -120,7 +121,7 @@ public class EmptyQueryIT {
     byte[] bodyBytes;
 
     body = given()
-            .config(RestAssuredConfig.config().httpClient(HttpClientConfig.httpClientConfig().setParam("http.socket.timeout",10000)))
+            .config(RestAssuredConfig.config().httpClient(HttpClientConfig.httpClientConfig().connectTimeout(Duration.ofMillis(10000))))
             .queryParam("key", "PostgreSQL")
             .queryParam("port", postgres.getPort())
             .queryParam("_fmt", "tab")
@@ -134,7 +135,7 @@ public class EmptyQueryIT {
     assertThat(body, not(containsString("\t\t\t\t\t\t\t")));
 
     body = given()
-            .config(RestAssuredConfig.config().httpClient(HttpClientConfig.httpClientConfig().setParam("http.socket.timeout",10000)))
+            .config(RestAssuredConfig.config().httpClient(HttpClientConfig.httpClientConfig().connectTimeout(Duration.ofMillis(10000))))
             .queryParam("key", "PostgreSQL")
             .queryParam("port", postgres.getPort())
             .queryParam("_fmt", "html")
@@ -148,7 +149,7 @@ public class EmptyQueryIT {
     assertThat(body, not(containsString("\t\t\t\t\t\t\t")));
 
     bodyBytes = given()
-            .config(RestAssuredConfig.config().httpClient(HttpClientConfig.httpClientConfig().setParam("http.socket.timeout",10000)))
+            .config(RestAssuredConfig.config().httpClient(HttpClientConfig.httpClientConfig().connectTimeout(Duration.ofMillis(10000))))
             .queryParam("key", "PostgreSQL")
             .queryParam("port", postgres.getPort())
             .queryParam("_fmt", "xlsx")
@@ -163,7 +164,7 @@ public class EmptyQueryIT {
     }
 
     body = given()
-            .config(RestAssuredConfig.config().httpClient(HttpClientConfig.httpClientConfig().setParam("http.socket.timeout",10000)))
+            .config(RestAssuredConfig.config().httpClient(HttpClientConfig.httpClientConfig().connectTimeout(Duration.ofMillis(10000))))
             .queryParam("minDate", "2971-05-06")
             .queryParam("maxId", "20")
             .queryParam("_fmt", "tab")

@@ -25,6 +25,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
 import java.lang.invoke.MethodHandles;
+import java.time.Duration;
 import org.apache.commons.io.FileUtils;
 import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.jupiter.api.BeforeAll;
@@ -112,7 +113,7 @@ public class SortIT {
     
     RestAssured.config = RestAssured.config().httpClient(
         HttpClientConfig.httpClientConfig()
-            .setParam("http.socket.timeout", 120000)
+                .connectTimeout(Duration.ofMinutes(2))
     );
 
     String body = given()

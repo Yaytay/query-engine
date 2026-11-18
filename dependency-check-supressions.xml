@@ -14,4 +14,20 @@
     <packageUrl regex="true">^pkg:maven/org.testcontainers/testcontainers-postgresql@.*$</packageUrl>
     <cpe>cpe:/a:postgresql:postgresql</cpe>
   </suppress>
+  <suppress>
+    <notes><![CDATA[
+   Completely false positive, CVE-2026-54285 relates to a JavaScript client.
+   ]]></notes>
+    <packageUrl regex="true">^pkg:maven/io.opentelemetry/opentelemetry-api@.*$</packageUrl>
+    <cpe>cpe:2.3:a:opentelemetry:opentelemetry:1.68.0:*:*:*:*:*:*:*</cpe>
+    <cve>CVE-2026-54285</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+   Completely false positive, CVE-2026-54285 relates to a JavaScript client.
+   ]]></notes>
+    <packageUrl regex="true">^pkg:maven/io.opentelemetry/opentelemetry-api-incubator@.*$</packageUrl>
+    <cpe>cpe:2.3:a:opentelemetry:opentelemetry:1.68.0:alpha:*:*:*:*:*:*</cpe>
+    <cve>CVE-2026-54285</cve>
+  </suppress>
 </suppressions>

@@ -1,4 +1,11 @@
-FROM gcr.io/distroless/java25-debian13:nonroot
+# ==========================================
+# STAGE 1: Build & Custom Runtime Generation
+# ==========================================
+FROM azul-zulu:25.38-25.0.5.1-jre-headless-debian13 
+
+# Set environment variables for the runtime
+ENV JAVA_HOME=/opt/jdk
+ENV PATH="$JAVA_HOME/bin:$PATH"
 
 ARG DEPS
 ARG mainClass
