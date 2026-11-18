@@ -64,9 +64,11 @@ jobs:
           
     - name: Deploy container image
       run: |
-        IFS=' ' read -ra PARTS <<< `docker image ls | grep query-engine | grep -v design-mode | grep -v ghcr` && \
-        docker tag ${PARTS[2]} ghcr.io/yaytay/${PARTS[0]}:${PARTS[1]} && \
-        docker push ghcr.io/yaytay/${PARTS[0]}:${PARTS[1]}
+        for REPO in query-engine query-engine-design-mode; do
+          read -r NAME TAG ID <<< "$(docker image ls --format '{{.Repository}} {{.Tag}} {{.ID}}' | awk -v r="$REPO" '$1 == r' | head -n 1)"
+          docker tag "$ID" "ghcr.io/yaytay/${NAME}:${TAG}"
+          docker push "ghcr.io/yaytay/${NAME}:${TAG}"
+        done
         IFS=' ' read -ra PARTS <<< `docker image ls | grep query-engine-design-mode | grep -v ghcr` && \
         docker tag ${PARTS[2]} ghcr.io/yaytay/${PARTS[0]}:${PARTS[1]} && \
         docker push ghcr.io/yaytay/${PARTS[0]}:${PARTS[1]}
