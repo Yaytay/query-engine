@@ -1,7 +1,7 @@
 # ==========================================
 # STAGE 1: Build & Custom Runtime Generation
 # ==========================================
-FROM azul-zulu:25.38-25.0.5.1-jre-headless-debian13 AS builder
+FROM azul-zulu:27.30-27.0.1.1-jre-headless-debian13 AS builder
 
 # Set environment variables for the runtime
 ENV JAVA_HOME=/opt/jdk
