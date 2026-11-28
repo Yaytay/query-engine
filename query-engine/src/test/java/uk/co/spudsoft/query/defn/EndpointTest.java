@@ -16,9 +16,11 @@
  */
 package uk.co.spudsoft.query.defn;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -26,6 +28,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * @author jtalbut
  */
 public class EndpointTest {
+
+  @Test
+  public void testMaxConcurrentConnections() throws Exception {
+    assertNull(Endpoint.builder().build().getMaxConcurrentConnections());
+    assertEquals(5, Endpoint.builder().maxConcurrentConnections(5).build().getMaxConcurrentConnections());
+    Endpoint endpoint = new ObjectMapper().readValue("{\"maxConcurrentConnections\": 7}", Endpoint.class);
+    assertEquals(7, endpoint.getMaxConcurrentConnections());
+  }
   
   @Test
   public void testValidate() {

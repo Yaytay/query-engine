@@ -132,15 +132,15 @@ public class SourceJdbcInstance extends AbstractSource {
       return Future.failedFuture(ex);
     }
 
-    return runInitialization(endpointName, finalUrl, credentials, finalQuery, pipeline);
+    return runInitialization(endpointName, finalUrl, credentials, finalQuery, pipeline, endpoint.getMaxConcurrentConnections());
   }
 
   @SuppressFBWarnings(value = {"OBL_UNSATISFIED_OBLIGATION", "ODR_OPEN_DATABASE_RESOURCE", "SQL_INJECTION_JDBC"}, justification = "JDBC objects must be closed by JdbcReadStream")
-  private Future<ReadStreamWithTypes> runInitialization(String endpointName, String finalUrl, String[] credentials, String finalQuery, PipelineInstance pipeline) throws RuntimeException {
+  private Future<ReadStreamWithTypes> runInitialization(String endpointName, String finalUrl, String[] credentials, String finalQuery, PipelineInstance pipeline, Integer maxConcurrentConnections) throws RuntimeException {
 
     Promise<ReadStreamWithTypes> result = Promise.promise();
 
-    jdbcReadStream = new JdbcReadStream(Vertx.currentContext(), auditor, pipelineContext, endpointName, definition, result);
+    jdbcReadStream = new JdbcReadStream(Vertx.currentContext(), auditor, pipelineContext, endpointName, maxConcurrentConnections, definition, result);
     jdbcReadStream.exceptionHandler(ex -> {
       log.error().log("Exception occurred in stream: ", ex);
     });

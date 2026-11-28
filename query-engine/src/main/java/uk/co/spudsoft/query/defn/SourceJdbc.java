@@ -40,7 +40,7 @@ import uk.co.spudsoft.query.main.ImmutableCollectionTools;
  * Pipeline data source that gets data from a SQL database.
  * <P>
  * This is the standard source of data for pipelines.
- * 
+ *
  * @author jtalbut
  */
 @JsonDeserialize(builder = SourceJdbc.Builder.class)
@@ -71,13 +71,12 @@ public final class SourceJdbc implements Source {
   private final String queryTemplate;
   private final int jdbcFetchSize;
   private final int processingBatchSize;
-  
+
   private final Duration connectionTimeout;
   private final Boolean replaceDoubleQuotes;
   private final ImmutableList<ColumnType> columnTypeOverrides;
   private final ImmutableMap<String, DataType> columnTypeOverrideMap;
-  
-  
+
   @Override
   public void validate(PipelineContext pipelineContext) throws IllegalArgumentException {
     validateType(SourceType.JDBC, type);
@@ -99,7 +98,7 @@ public final class SourceJdbc implements Source {
       throw new IllegalArgumentException("ProcessingBatchSize must be at least 100");
     }
   }
-  
+
   @Override
   public SourceType getType() {
     return type;
@@ -109,7 +108,7 @@ public final class SourceJdbc implements Source {
   public String getName() {
     return name;
   }
-  
+
   /**
    * The name of the endpoint that provides the data for the Source.
    * <P>
@@ -117,7 +116,7 @@ public final class SourceJdbc implements Source {
    * <P>
    * The endpoint must be specified as either a straight name (this field) or as a template value (endpointEmplate).
    * If both fields are provided it is an error.
-   * 
+   *
    * @return the name of the endpoint that provides the data for the Source.
    */
   @Schema(description = """
@@ -143,7 +142,7 @@ public final class SourceJdbc implements Source {
    * <P>
    * The endpoint must be specified as either a template value (this field) or as a straight name (endpoint).
    * If both fields are provided it is an error.
-   * 
+   *
    * @return a <a href="http://www.stringtemplate.org">String Template</a> version of the name of the endpoint that provides the data for the Source.
    */
   @Schema(description = """
@@ -169,7 +168,7 @@ public final class SourceJdbc implements Source {
    * <p>
    * The query must be specified as either a plain SQL statement (this field) or as a template value (queryTemplate).
    * If both fields are provided it is an error.
-   * 
+   *
    * @return the query to run against the Endpoint.
    */
   @Schema(description = """
@@ -187,7 +186,7 @@ public final class SourceJdbc implements Source {
   public String getQuery() {
     return query;
   }
-  
+
   /**
    * The query to run against the Endpoint, as a <a href="http://www.stringtemplate.org">String Template</a> that will be rendered first.
    * <P>
@@ -221,7 +220,7 @@ public final class SourceJdbc implements Source {
    * but uses more memory.
    * <P>
    * Typical values are in the range 100-5000.
-   * 
+   *
    * @return the JDBC fetch size to use when retrieving data from the database.
    */
   @Schema(description = """
@@ -259,7 +258,7 @@ public final class SourceJdbc implements Source {
    * A larger processing batch size can improve throughput but uses more memory.
    * <P>
    * Typical values are in the range 100-1000.
-   * 
+   *
    * @return the number of rows to buffer for processing in the pipeline.
    */
   @Schema(description = """
@@ -288,7 +287,7 @@ public final class SourceJdbc implements Source {
    * so if the query needs to contain a double quote that is not quoting an identifier then this must be set to false.
    * <P>
    * This is only useful when it is not known what flavour of database is being queried, which should be rare.
-   * 
+   *
    * @return true if all double quotes in the query should be replaced with the identifier quoting character for the target.
    */
   @Schema(description = """
@@ -324,7 +323,7 @@ public final class SourceJdbc implements Source {
    * The fractional part may have from zero to 9 digits.
    * <P>
    * The ISO8601 period format permits negative values, but they make no sense for timeouts and will cause an error.
-   * 
+   *
    * @return the connection timeout for the connections that will be created.
    */
   @Schema(
@@ -355,16 +354,16 @@ public final class SourceJdbc implements Source {
 
   /**
    * Get the overrides for column types.
-   * 
+   *
    * This is a map of column names (from the results for this query) to the Query Engine {@link DataType} that should be used in the
    * result stream.
-   * 
+   *
    * This facility is rarely required, but can be useful when a data base does not provide adequate information for Query Engine to correctly identify the type of a field.
-   * 
+   *
    * This is known to be useful for boolean fields with MySQL.
-   * 
+   *
    * Setting a column to use a type that the result does not fit is going to cause problems (loss of data or errors) - so be sure you do this with care.
-   * 
+   *
    * @return the overrides for column types.
    */
   @Schema(
@@ -384,7 +383,7 @@ public final class SourceJdbc implements Source {
   public List<ColumnType> getColumnTypeOverrides() {
     return columnTypeOverrides;
   }
-  
+
   /**
    * Get the defined {@link #columnTypeOverrides} as a map.
    * @return the defined {@link #columnTypeOverrides} as a map.
@@ -393,7 +392,7 @@ public final class SourceJdbc implements Source {
   public Map<String, DataType> getColumnTypeOverrideMap() {
     return columnTypeOverrideMap;
   }
-  
+
   /**
    * Builder class for SourceJdbc.
    */

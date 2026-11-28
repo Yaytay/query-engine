@@ -86,6 +86,7 @@ public class Endpoint {
   private final Condition condition;
   private final Duration connectionTimeout;
   private final Duration idleTimeout;
+  private final Integer maxConcurrentConnections;
 
   /**
    * Validate the configuration.
@@ -312,6 +313,21 @@ public class Endpoint {
   }
 
   /**
+   * Get the maximum number of connections permitted to this endpoint or others sharing its URL.
+   *
+   * @return the maximum number of concurrent connections.
+   */
+  @Schema(description = """
+                        <P>Limit the maximum number of connections permitted to this endpoint (or any other sharing the same URL).</P>
+                        <P>This is only read for the first Endpoint seen with a given URL.</P>
+                        """,
+           requiredMode = Schema.RequiredMode.NOT_REQUIRED
+  )
+  public Integer getMaxConcurrentConnections() {
+    return maxConcurrentConnections;
+  }
+
+  /**
    * Builder class for {@link Endpoint} objects.
    */
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
@@ -327,6 +343,7 @@ public class Endpoint {
     private Condition condition;
     private Duration connectionTimeout;
     private Duration idleTimeout;
+    private Integer maxConcurrentConnections;
 
     private Builder() {
     }
@@ -442,12 +459,23 @@ public class Endpoint {
     }
 
     /**
+     * Set the maximum number of concurrent connections in the builder.
+     *
+     * @param value the maximum number of concurrent connections.
+     * @return this, so that the builder may be used fluently.
+     */
+    public Builder maxConcurrentConnections(final Integer value) {
+      this.maxConcurrentConnections = value;
+      return this;
+    }
+
+    /**
      * Construct a new Endpoint object.
      *
      * @return a new Endpoint object.
      */
     public Endpoint build() {
-      return new Endpoint(name, type, url, urlTemplate, secret, username, password, condition, connectionTimeout, idleTimeout);
+      return new Endpoint(name, type, url, urlTemplate, secret, username, password, condition, connectionTimeout, idleTimeout, maxConcurrentConnections);
     }
   }
 
@@ -460,7 +488,7 @@ public class Endpoint {
     return new Endpoint.Builder();
   }
 
-  private Endpoint(final String name, final EndpointType type, final String url, final String urlTemplate, final String secret, final String username, final String password, final Condition condition, final Duration connectionTimeout, final Duration idleTimeout) {
+  private Endpoint(final String name, final EndpointType type, final String url, final String urlTemplate, final String secret, final String username, final String password, final Condition condition, final Duration connectionTimeout, final Duration idleTimeout, final Integer maxConcurrentConnections) {
     this.name = name;
     this.type = type;
     this.url = url;
@@ -471,6 +499,7 @@ public class Endpoint {
     this.condition = condition;
     this.connectionTimeout = connectionTimeout;
     this.idleTimeout = idleTimeout;
+    this.maxConcurrentConnections = maxConcurrentConnections;
   }
   
 }

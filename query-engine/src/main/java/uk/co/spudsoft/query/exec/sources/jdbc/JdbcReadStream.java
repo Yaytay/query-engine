@@ -35,6 +35,8 @@ import java.util.Calendar;
 import java.util.Deque;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
@@ -62,9 +64,13 @@ public class JdbcReadStream implements ReadStream<DataRow> {
 
   private static final Logger logger = LoggerFactory.getLogger(JdbcReadStream.class);
 
+  private static final int DEFAULT_MAX_CONNECTIONS_PER_URL = 100;
+  private static final ConcurrentHashMap<String, Semaphore> connectionsPerUrl = new ConcurrentHashMap<>();
+
   private final Context context;
   private final Auditor auditor;
   private final String endpointName;
+  private final Integer maxConcurrentConnections;
   private final SourceJdbc definition;
   private final int processingBatchSize;
   private final Promise<ReadStreamWithTypes> initPromise;
@@ -98,14 +104,16 @@ public class JdbcReadStream implements ReadStream<DataRow> {
    * @param auditor The auditor that the source should use for recording details of the data accessed.
    * @param pipelineContext The context in which this {@link SourcePipeline} is being run.
    * @param endpointName The name of selected endpoint.
+   * @param maxConcurrentConnections The maximum number of concurrent connections to the established URL, only honoured when the Semaphore is created on first use of URL.
    * @param definition The source definition.
    * @param initPromise The promise to complete when the query starts returning data.
    */
   @SuppressFBWarnings("EI_EXPOSE_REP2")
-  public JdbcReadStream(Context context, Auditor auditor, PipelineContext pipelineContext, String endpointName, SourceJdbc definition, Promise<ReadStreamWithTypes> initPromise) {
+  public JdbcReadStream(Context context, Auditor auditor, PipelineContext pipelineContext, String endpointName, Integer maxConcurrentConnections, SourceJdbc definition, Promise<ReadStreamWithTypes> initPromise) {
     this.context = context;
     this.auditor = auditor;
     this.endpointName = endpointName;
+    this.maxConcurrentConnections = maxConcurrentConnections;
     this.pipelineContext = pipelineContext;
     this.definition = definition;
     this.processingBatchSize = definition.getProcessingBatchSize();
@@ -161,112 +169,125 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     ResultSet rs = null;
     ResultSetMetaData rsmeta = null;
 
+    Semaphore sem = connectionsPerUrl.computeIfAbsent(dataSourceUrl,
+        k -> new Semaphore(this.maxConcurrentConnections == null ? DEFAULT_MAX_CONNECTIONS_PER_URL : maxConcurrentConnections, true));
+
     long start = System.currentTimeMillis();
 
     try (Scope scope = this.telemetryContext.makeCurrent()) {
-      log.trace().log("Current scope: {}", scope);
+      log.debug().addKeyValue("url", dataSourceUrl).log("Acquiring semaphore ({}, {})", sem.availablePermits(), sem.getQueueLength());
       try {
-        log.debug().log("{}: Connecting to {}", (System.currentTimeMillis() - start) / 1000.0, dataSourceUrl);
-        connection = DriverManager.getConnection(dataSourceUrl, credentials[0], credentials[1]);
-      } catch (Throwable ex) {
-        log.warn().log("{}: Failed to connect to {} for {}: ", (System.currentTimeMillis() - start) / 1000.0, dataSourceUrl, credentials[0], ex);
-        context.runOnContext(v -> {
-          initPromise.fail(new RuntimeException("Failed to establish connection to JDBC URL (" + dataSourceUrl + "): ", ex));
-        });
-        return ;
+        sem.acquire();
+      } catch (InterruptedException e) {
+        log.error().log("Semaphore acquisition interrupted, request being terminated");
+        throw new RuntimeException(e);
       }
-
-      String preparedSql = null;
       try {
-        AbstractSqlPreparer preparer = new JdbcSqlPreparer(pipelineContext, connection);
-        AbstractSqlPreparer.QueryAndArgs queryAndArgs = preparer.prepareSqlStatement(sql, definition.getReplaceDoubleQuotes(), pipeline.getArgumentInstances());
-        preparedSql = queryAndArgs.query();
-
         try {
-          log.debug().log("{}: Preparing statement {}", (System.currentTimeMillis() - start) / 1000.0, preparedSql);
-          statement = connection.prepareStatement(preparedSql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-          setFetchSize(definition, dataSourceUrl, statement);
-          statement.setFetchDirection(ResultSet.FETCH_FORWARD);
+          log.debug().log("{}: Connecting to {}", (System.currentTimeMillis() - start) / 1000.0, dataSourceUrl);
+          connection = DriverManager.getConnection(dataSourceUrl, credentials[0], credentials[1]);
         } catch (Throwable ex) {
-          throw new RuntimeException("Failed to prepare statement for (" + sql + "): ", ex);
+          log.warn().log("{}: Failed to connect to {} for {}: ", (System.currentTimeMillis() - start) / 1000.0, dataSourceUrl, credentials[0], ex);
+          context.runOnContext(v -> {
+            initPromise.fail(new RuntimeException("Failed to establish connection to JDBC URL (" + dataSourceUrl + "): ", ex));
+          });
+          return;
         }
 
-        if (queryAndArgs.args() != null) {
-          for (int i = 0; i < queryAndArgs.args().size(); ++i) {
-            statement.setObject(i + 1, queryAndArgs.args().get(i));
+        String preparedSql = null;
+        try {
+          AbstractSqlPreparer preparer = new JdbcSqlPreparer(pipelineContext, connection);
+          AbstractSqlPreparer.QueryAndArgs queryAndArgs = preparer.prepareSqlStatement(sql, definition.getReplaceDoubleQuotes(), pipeline.getArgumentInstances());
+          preparedSql = queryAndArgs.query();
+
+          try {
+            log.debug().log("{}: Preparing statement {}", (System.currentTimeMillis() - start) / 1000.0, preparedSql);
+            statement = connection.prepareStatement(preparedSql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            setFetchSize(definition, dataSourceUrl, statement);
+            statement.setFetchDirection(ResultSet.FETCH_FORWARD);
+          } catch (Throwable ex) {
+            throw new RuntimeException("Failed to prepare statement for (" + sql + "): ", ex);
           }
-        }
 
-        String auditSql = preparedSql;
-        context.runOnContext(v -> {
-          auditor.recordSource(pipelineContext, endpointName, dataSourceUrl, credentials[0], auditSql, queryAndArgs.args());
-        });
-
-
-      } catch (Throwable ex) {
-        log.warn().log("{}: Failed to prepare statement \"{}\": ", (System.currentTimeMillis() - start) / 1000.0, preparedSql, ex);
-        context.runOnContext(v -> {
-          initPromise.fail(new RuntimeException("Failed to prepare statement: ", ex));
-        });
-        return;
-      }
-
-      try {
-        log.debug().log("{}: Executing query", (System.currentTimeMillis() - start) / 1000.0);
-        rs = statement.executeQuery();
-        types = new Types();
-        log.debug().log("{}: Getting metadata", (System.currentTimeMillis() - start) / 1000.0);
-        rsmeta = rs.getMetaData();
-        for (int i = 0; i < rsmeta.getColumnCount(); ++i) {
-          String name = rsmeta.getColumnLabel(i + 1);
-          int jdbcType = rsmeta.getColumnType(i + 1);
-
-          DataType type = DataType.fromJdbcType(pipelineContext, JDBCType.valueOf(jdbcType));
-
-          if (definition.getColumnTypeOverrideMap() != null) {
-            Map<String, DataType> ctomap = definition.getColumnTypeOverrideMap();
-            if (ctomap.containsKey(name)) {
-              type = ctomap.get(name);
+          if (queryAndArgs.args() != null) {
+            for (int i = 0; i < queryAndArgs.args().size(); ++i) {
+              statement.setObject(i + 1, queryAndArgs.args().get(i));
             }
           }
-          types.putIfAbsent(name, type);
+
+          String auditSql = preparedSql;
+          context.runOnContext(v -> {
+            auditor.recordSource(pipelineContext, endpointName, dataSourceUrl, credentials[0], auditSql, queryAndArgs.args());
+          });
+
+
+        } catch (Throwable ex) {
+          log.warn().log("{}: Failed to prepare statement \"{}\": ", (System.currentTimeMillis() - start) / 1000.0, preparedSql, ex);
+          context.runOnContext(v -> {
+            initPromise.fail(new RuntimeException("Failed to prepare statement: ", ex));
+          });
+          return;
         }
-      } catch (Throwable ex) {
-        log.warn().log("{}: Failed to execute statement: ", (System.currentTimeMillis() - start) / 1000.0, ex);
+
+        try {
+          log.debug().log("{}: Executing query", (System.currentTimeMillis() - start) / 1000.0);
+          rs = statement.executeQuery();
+          types = new Types();
+          log.debug().log("{}: Getting metadata", (System.currentTimeMillis() - start) / 1000.0);
+          rsmeta = rs.getMetaData();
+          for (int i = 0; i < rsmeta.getColumnCount(); ++i) {
+            String name = rsmeta.getColumnLabel(i + 1);
+            int jdbcType = rsmeta.getColumnType(i + 1);
+
+            DataType type = DataType.fromJdbcType(pipelineContext, JDBCType.valueOf(jdbcType));
+
+            if (definition.getColumnTypeOverrideMap() != null) {
+              Map<String, DataType> ctomap = definition.getColumnTypeOverrideMap();
+              if (ctomap.containsKey(name)) {
+                type = ctomap.get(name);
+              }
+            }
+            types.putIfAbsent(name, type);
+          }
+        } catch (Throwable ex) {
+          log.warn().log("{}: Failed to execute statement: ", (System.currentTimeMillis() - start) / 1000.0, ex);
+          context.runOnContext(v -> {
+            initPromise.fail(new RuntimeException("Failed to execute statement: ", ex));
+          });
+          return;
+        }
+
         context.runOnContext(v -> {
-          initPromise.fail(new RuntimeException("Failed to execute statement: ", ex));
+          initPromise.complete(new ReadStreamWithTypes(this, types));
         });
-        return;
+
+        log.debug().log("{}: Processing results", (System.currentTimeMillis() - start) / 1000.0);
+        resultSetWalk(rs, rsmeta);
+      } finally {
+        if (statement != null) {
+          try {
+            statement.close();
+          } catch (Throwable ex) {
+            log.warn().log("Exception closing PreparedStatement: ", ex);
+          }
+        }
+        if (rs != null) {
+          try {
+            rs.close();
+          } catch (Throwable ex) {
+            log.warn().log("Exception closing ResultSet: ", ex);
+          }
+        }
+        if (connection != null) {
+          try {
+            connection.close();
+          } catch (Throwable ex) {
+            log.warn().log("Exception closing Connection: ", ex);
+          }
+        }
       }
-
-      context.runOnContext(v -> {
-        initPromise.complete(new ReadStreamWithTypes(this, types));
-      });
-
-      log.debug().log("{}: Processing results", (System.currentTimeMillis() - start) / 1000.0);
-      resultSetWalk(rs, rsmeta);
     } finally {
-      if (statement != null) {
-        try {
-          statement.close();
-        } catch (Throwable ex) {
-          log.warn().log("Exception closing PreparedStatement: ", ex);
-        }
-      }
-      if (rs != null) {
-        try {
-          rs.close();
-        } catch (Throwable ex) {
-          log.warn().log("Exception closing ResultSet: ", ex);
-        }
-      }
-      if (connection != null) {
-        try {
-          connection.close();
-        } catch (Throwable ex) {
-          log.warn().log("Exception closing Connection: ", ex);
-        }
-      }
+      sem.release();
     }
   }
 
