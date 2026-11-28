@@ -65,7 +65,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
   private static final Logger logger = LoggerFactory.getLogger(JdbcReadStream.class);
 
   private static final int DEFAULT_MAX_CONNECTIONS_PER_URL = 100;
-  private static final ConcurrentHashMap<String, Semaphore> connectionsPerUrl = new ConcurrentHashMap<>();
+  private static final ConcurrentHashMap<String, Semaphore> CONNECTIONS_PER_URL = new ConcurrentHashMap<>();
 
   private final Context context;
   private final Auditor auditor;
@@ -169,7 +169,7 @@ public class JdbcReadStream implements ReadStream<DataRow> {
     ResultSet rs = null;
     ResultSetMetaData rsmeta = null;
 
-    Semaphore sem = connectionsPerUrl.computeIfAbsent(dataSourceUrl,
+    Semaphore sem = CONNECTIONS_PER_URL.computeIfAbsent(dataSourceUrl,
         k -> new Semaphore(this.maxConcurrentConnections == null ? DEFAULT_MAX_CONNECTIONS_PER_URL : maxConcurrentConnections, true));
 
     long start = System.currentTimeMillis();
